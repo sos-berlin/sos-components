@@ -9,6 +9,7 @@
   "properties": {
     "jobscheduler": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "$ref": "jobSchedulerObjectFilter-schema.json"
       }

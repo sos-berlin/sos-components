@@ -42,6 +42,7 @@ public class JsonValidator {
 
         {   
             put("CalendarDatesFilter", "calendar/calendarDatesFilter-schema.json");
+            put("CalendarsFilter", "calendar/calendarsFilter-schema.json");
             
             put("ClusterRestart", "cluster/restart-schema.json");
             put("ClusterSwitchMember", "cluster/switch-schema.json");

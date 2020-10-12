@@ -146,15 +146,14 @@ public class Globals {
     }
 
     public static void setProperties() {
-        if (sosCockpitProperties != null) {
-            LOGGER.info("properties changed? " + sosCockpitProperties.isChanged());
+        if (sosCockpitProperties.isChanged()) {
+            setJobSchedulerConnectionTimeout();
+            setJobSchedulerSocketTimeout();
+            setHostnameVerification();
+            setForceCommentsForAuditLog();
+            setTimeoutForTempFiles();
+            getDefaultProfileUserAccount();
         }
-        setJobSchedulerConnectionTimeout();
-        setJobSchedulerSocketTimeout();
-        setHostnameVerification();
-        setForceCommentsForAuditLog();
-        setTimeoutForTempFiles();
-        getDefaultProfileUserAccount();
         setSSLContext();
     }
 

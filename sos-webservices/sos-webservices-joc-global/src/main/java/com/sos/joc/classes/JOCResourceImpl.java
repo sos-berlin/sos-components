@@ -116,18 +116,17 @@ public class JOCResourceImpl {
 		return Date.from(fromEpochMilli);
 	}
 
-	public JOCDefaultResponse init(String request, Object body, String accessToken, String schedulerId,
-			boolean permission) throws JocException {
-		this.accessToken = accessToken;
-		if (jobschedulerUser == null) {
-			jobschedulerUser = new JobSchedulerUser(accessToken);
-		}
-		SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(null);
-		sosPermissionsCreator.loginFromAccessToken(accessToken);
+    public JOCDefaultResponse init(String request, Object body, String accessToken, String schedulerId, boolean permission) throws JocException {
+        this.accessToken = accessToken;
+        if (jobschedulerUser == null) {
+            jobschedulerUser = new JobSchedulerUser(accessToken);
+        }
+        SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(null);
+        sosPermissionsCreator.loginFromAccessToken(accessToken);
 
-		initLogging(request, body);
-		return init(schedulerId, permission);
-	}
+        initLogging(request, body);
+        return init(schedulerId, permission);
+    }
 
 	public JOCDefaultResponse init(String request, String accessToken) throws Exception {
 		this.accessToken = accessToken;

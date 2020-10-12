@@ -114,6 +114,7 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
                         cal.setPath(item.getPath());
                         cal.setName(item.getName());
                         cal.setTitle(item.getTitle());
+                        cal.setType(CalendarType.fromValue(item.getType()));
                         if (calendarsFilter.getCompact() == Boolean.TRUE) {
                             cal.setIncludes(null);
                             cal.setExcludes(null);
