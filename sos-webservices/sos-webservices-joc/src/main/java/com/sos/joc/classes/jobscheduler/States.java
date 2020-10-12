@@ -127,7 +127,7 @@ public class States {
             case EMPTY:
                 break;
             default:
-                final String activeClusterUri = clusterState.getIdToUri().getAdditionalProperties().get(clusterState.getActiveId());
+                final String activeClusterUri = clusterState.getSetting().getIdToUri().getAdditionalProperties().get(clusterState.getSetting().getActiveId());
                 Predicate<DBItemInventoryJSInstance> predicate = i -> activeClusterUri.equalsIgnoreCase(i.getClusterUri()) || activeClusterUri
                         .equalsIgnoreCase(i.getUri());
                 Optional<DBItemInventoryJSInstance> o = controllerInstances.stream().filter(predicate).findAny();

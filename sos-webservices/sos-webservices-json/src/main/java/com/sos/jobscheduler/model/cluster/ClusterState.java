@@ -18,23 +18,19 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
-    "idToUri",
-    "activeId"
+    "setting"
 })
 public class ClusterState {
 
-    @JsonProperty("TYPE")
-    private ClusterType tYPE;
     /**
-     * IdToUri
-     * <p>
      * 
+     * (Required)
      * 
      */
-    @JsonProperty("idToUri")
-    private IdToUri idToUri;
-    @JsonProperty("activeId")
-    private String activeId;
+    @JsonProperty("TYPE")
+    private ClusterType tYPE;
+    @JsonProperty("setting")
+    private ClusterSetting setting;
 
     /**
      * No args constructor for use in serialization
@@ -45,67 +41,53 @@ public class ClusterState {
 
     /**
      * 
-     * @param idToUri
-     * @param activeId
      * @param tYPE
+     * @param setting
      */
-    public ClusterState(ClusterType tYPE, IdToUri idToUri, String activeId) {
+    public ClusterState(ClusterType tYPE, ClusterSetting setting) {
         super();
         this.tYPE = tYPE;
-        this.idToUri = idToUri;
-        this.activeId = activeId;
+        this.setting = setting;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("TYPE")
     public ClusterType getTYPE() {
         return tYPE;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("TYPE")
     public void setTYPE(ClusterType tYPE) {
         this.tYPE = tYPE;
     }
 
-    /**
-     * IdToUri
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("idToUri")
-    public IdToUri getIdToUri() {
-        return idToUri;
+    @JsonProperty("setting")
+    public ClusterSetting getSetting() {
+        return setting;
     }
 
-    /**
-     * IdToUri
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("idToUri")
-    public void setIdToUri(IdToUri idToUri) {
-        this.idToUri = idToUri;
-    }
-
-    @JsonProperty("activeId")
-    public String getActiveId() {
-        return activeId;
-    }
-
-    @JsonProperty("activeId")
-    public void setActiveId(String activeId) {
-        this.activeId = activeId;
+    @JsonProperty("setting")
+    public void setSetting(ClusterSetting setting) {
+        this.setting = setting;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("idToUri", idToUri).append("activeId", activeId).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("setting", setting).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(idToUri).append(activeId).append(tYPE).toHashCode();
+        return new HashCodeBuilder().append(tYPE).append(setting).toHashCode();
     }
 
     @Override
@@ -117,7 +99,7 @@ public class ClusterState {
             return false;
         }
         ClusterState rhs = ((ClusterState) other);
-        return new EqualsBuilder().append(idToUri, rhs.idToUri).append(activeId, rhs.activeId).append(tYPE, rhs.tYPE).isEquals();
+        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(setting, rhs.setting).isEquals();
     }
 
 }

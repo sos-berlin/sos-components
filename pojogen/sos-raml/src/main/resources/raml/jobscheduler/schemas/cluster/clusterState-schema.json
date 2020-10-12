@@ -4,7 +4,7 @@
   "javaType": "com.sos.jobscheduler.model.cluster.ClusterState",
   "type": "object",
   "required": [
-  	"version"
+  	"TYPE"
   ],
   "properties": {
     "TYPE": {
@@ -21,11 +21,18 @@
         "CoupledActiveShutDown" 
       ]
     },
-    "idToUri": {
-      "$ref": "idToUri-schema.json"
-    },
-    "activeId": {
-      "type": "string"
+    "setting": {
+      "type": "object",
+      "javaType": "com.sos.jobscheduler.model.cluster.ClusterSetting",
+      "properties": {
+        "idToUri": {
+          "$ref": "idToUri-schema.json"
+        },
+        "activeId": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

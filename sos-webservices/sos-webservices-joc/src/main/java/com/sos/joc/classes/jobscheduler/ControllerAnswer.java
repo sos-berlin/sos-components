@@ -94,11 +94,13 @@ public class ControllerAnswer extends Controller {
 			    case EMPTY:
 			        isActive = true;
 			        break;
-			    default:
-			        String activeClusterUri = clusterStateJson.getIdToUri().getAdditionalProperties().get(clusterStateJson.getActiveId());
-                    isActive = activeClusterUri.equalsIgnoreCase(dbInstance.getClusterUri()) || activeClusterUri.equalsIgnoreCase(dbInstance.getUri());
-			        break;
-			    }
+                default:
+                    String activeClusterUri = clusterStateJson.getSetting().getIdToUri().getAdditionalProperties().get(clusterStateJson.getSetting()
+                            .getActiveId());
+                    isActive = activeClusterUri.equalsIgnoreCase(dbInstance.getClusterUri()) || activeClusterUri.equalsIgnoreCase(dbInstance
+                            .getUri());
+                    break;
+                }
 	        }
 			if (clusterState != null && clusterState == ClusterType.PREPARED_TO_BE_COUPLED) {
 			    setComponentState(States.getComponentState(ComponentStateText.inoperable));
