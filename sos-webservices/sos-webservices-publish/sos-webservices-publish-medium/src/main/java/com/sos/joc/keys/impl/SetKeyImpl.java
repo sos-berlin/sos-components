@@ -28,10 +28,11 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
     private static final String API_CALL = "./publish/set_key";
 
     @Override
-    public JOCDefaultResponse postSetKey(String xAccessToken, SetKeyFilter setKeyFilter) throws Exception {
+    public JOCDefaultResponse postSetKey(String xAccessToken, byte[] filter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
-            JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(setKeyFilter), SetKeyFilter.class);
+            JsonValidator.validateFailFast(filter, SetKeyFilter.class);
+            SetKeyFilter setKeyFilter = Globals.objectMapper.readValue(filter, SetKeyFilter.class);
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, setKeyFilter, xAccessToken, "",
 //                    getPermissonsJocCockpit(null, xAccessToken).getInventory().getConfigurations().getPublish().isSetKey()
                     true);

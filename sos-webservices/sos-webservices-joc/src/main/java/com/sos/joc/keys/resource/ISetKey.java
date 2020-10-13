@@ -14,5 +14,5 @@ public interface ISetKey {
     @POST
     @Path("set_key")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postSetKey(@HeaderParam("X-Access-Token") String xAccessToken, SetKeyFilter setKeyFilter) throws Exception;
+    public JOCDefaultResponse postSetKey(@HeaderParam("X-Access-Token") String xAccessToken, byte[] setKeyFilter) throws Exception;
 }

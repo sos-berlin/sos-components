@@ -26,10 +26,11 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
     private static final String API_CALL = "./publish/generate_key";
 
     @Override
-    public JOCDefaultResponse postGenerateKey(String xAccessToken, GenerateKeyFilter filter) throws Exception {
+    public JOCDefaultResponse postGenerateKey(String xAccessToken, byte[] generateKeyFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
-        JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(filter), GenerateKeyFilter.class);
         try {
+            JsonValidator.validateFailFast(generateKeyFilter, GenerateKeyFilter.class);
+            GenerateKeyFilter filter = Globals.objectMapper.readValue(generateKeyFilter, GenerateKeyFilter.class);
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, null, xAccessToken, "",
                     getPermissonsJocCockpit(null, xAccessToken).getInventory().getConfigurations().getPublish().isGenerateKey());
             if (jocDefaultResponse != null) {

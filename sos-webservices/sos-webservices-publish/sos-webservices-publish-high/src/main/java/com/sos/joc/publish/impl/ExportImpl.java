@@ -52,10 +52,11 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
     private ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
     
 	@Override
-	public JOCDefaultResponse postExportConfiguration(String xAccessToken, ExportFilter filter) throws Exception {
+	public JOCDefaultResponse postExportConfiguration(String xAccessToken, byte[] exportFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
-        JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(filter), ExportFilter.class);
         try {
+            JsonValidator.validateFailFast(exportFilter, ExportFilter.class);
+            ExportFilter filter = Globals.objectMapper.readValue(exportFilter, ExportFilter.class);
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, "", 
             		getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isExport());
             if (jocDefaultResponse != null) {

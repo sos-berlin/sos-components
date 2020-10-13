@@ -14,5 +14,5 @@ public interface IGenerateKey {
     @POST
     @Path("generate_key")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postGenerateKey(@HeaderParam("X-Access-Token") String xAccessToken, GenerateKeyFilter filter) throws Exception;
+    public JOCDefaultResponse postGenerateKey(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filter) throws Exception;
 }

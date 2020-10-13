@@ -14,5 +14,5 @@ public interface ISetVersion {
     @POST
     @Path("set_version")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postSetVersion(@HeaderParam("X-Access-Token") String xAccessToken, SetVersionFilter setVersionFilter) throws Exception;
+    public JOCDefaultResponse postSetVersion(@HeaderParam("X-Access-Token") String xAccessToken, byte[] setVersionFilter) throws Exception;
 }

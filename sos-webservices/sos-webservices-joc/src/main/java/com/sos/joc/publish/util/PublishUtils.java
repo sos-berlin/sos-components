@@ -80,6 +80,7 @@ import com.sos.joc.publish.mapper.UpDownloadMapper;
 
 import io.vavr.control.Either;
 import js7.base.crypt.SignedString;
+import js7.base.crypt.SignerId;
 import js7.base.problem.Problem;
 import js7.data.agent.AgentRefPath;
 import js7.data.item.VersionId;
@@ -450,20 +451,16 @@ public abstract class PublishUtils {
         return verifiedDeployment;
     }
 
-    public static CompletableFuture<Either<Problem, Void>> updateRepoAddOrUpdate(
+    public static CompletableFuture<Either<Problem, Void>> updateRepoAddOrUpdatePGP(
             String versionId,  Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, 
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer, String keyAlgorythm) 
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer, String keyAlgorithm) 
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
-        if ("RSA".equals(keyAlgorythm) || "ECDSA".equals(keyAlgorythm)) {
-            keyAlgorythm = "X509";
-        } else {
-            keyAlgorythm = "PGP";
-        }
+        String keyType = keyAlgorithm;
         Set<JUpdateRepoOperation> updateRepoOperations = new HashSet<JUpdateRepoOperation>();
         if (drafts != null) {
             for (DBItemInventoryConfiguration draft : drafts.keySet()) {
                 if (draft != null) {
-                    SignedString signedString = SignedString.of(draft.getContent(), keyAlgorythm, drafts.get(draft).getSignature());
+                    SignedString signedString = SignedString.of(draft.getContent(), keyType, drafts.get(draft).getSignature());
                     JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
                     updateRepoOperations.add(operation);
                 }
@@ -472,7 +469,7 @@ public abstract class PublishUtils {
         if (alreadyDeployed != null) {
             for (DBItemDeploymentHistory reDeploy : alreadyDeployed.keySet()) {
                 if (reDeploy != null) {
-                    SignedString signedString = SignedString.of(reDeploy.getContent(), keyAlgorythm, alreadyDeployed.get(reDeploy).getSignature());
+                    SignedString signedString = SignedString.of(reDeploy.getContent(), keyAlgorithm, alreadyDeployed.get(reDeploy).getSignature());
                     JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
                     updateRepoOperations.add(operation);
                 }
@@ -484,16 +481,18 @@ public abstract class PublishUtils {
     public static CompletableFuture<Either<Problem, Void>> updateRepoAddOrUpdateWithX509(
             String versionId,  Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, 
             Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer, String keyAlgorithm,
-            String checksumAlgorithm, String signerDN) 
+            String signatureAlgorithm, String signerDN) 
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+        String keyType = null;
         if ("RSA".equals(keyAlgorithm) || "ECDSA".equals(keyAlgorithm)) {
-            keyAlgorithm = "X509";
+            keyType = "X509";
         }
         Set<JUpdateRepoOperation> updateRepoOperations = new HashSet<JUpdateRepoOperation>();
         if (drafts != null) {
             for (DBItemInventoryConfiguration draft : drafts.keySet()) {
                 if (draft != null) {
-                    SignedString signedString = SignedString.of(draft.getContent(), keyAlgorithm, drafts.get(draft).getSignature());
+                    SignedString signedString = SignedString.x509WithSignedId(
+                            draft.getContent(), drafts.get(draft).getSignature(), signatureAlgorithm, SignerId.of(signerDN));
                     JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
                     updateRepoOperations.add(operation);
                 }
@@ -502,7 +501,8 @@ public abstract class PublishUtils {
         if (alreadyDeployed != null) {
             for (DBItemDeploymentHistory reDeploy : alreadyDeployed.keySet()) {
                 if (reDeploy != null) {
-                    SignedString signedString = SignedString.of(reDeploy.getContent(), keyAlgorithm, alreadyDeployed.get(reDeploy).getSignature());
+                    SignedString signedString = SignedString.x509WithSignedId(
+                            reDeploy.getContent(), alreadyDeployed.get(reDeploy).getSignature(), signatureAlgorithm, SignerId.of(signerDN));
                     JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
                     updateRepoOperations.add(operation);
                 }

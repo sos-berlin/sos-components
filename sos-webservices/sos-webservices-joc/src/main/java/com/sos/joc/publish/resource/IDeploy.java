@@ -14,5 +14,5 @@ public interface IDeploy {
     @POST
     @Path("deploy")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postDeploy(@HeaderParam("X-Access-Token") String xAccessToken, DeployFilter deployFilter) throws Exception;
+    public JOCDefaultResponse postDeploy(@HeaderParam("X-Access-Token") String xAccessToken, byte[] deployFilter) throws Exception;
 }

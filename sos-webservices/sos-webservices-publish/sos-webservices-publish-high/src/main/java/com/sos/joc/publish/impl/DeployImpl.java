@@ -53,10 +53,11 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     private List<Err419> listOfErrors = new ArrayList<Err419>();
 
     @Override
-    public JOCDefaultResponse postDeploy(String xAccessToken, DeployFilter deployFilter) throws Exception {
+    public JOCDefaultResponse postDeploy(String xAccessToken, byte[] filter) throws Exception {
         SOSHibernateSession hibernateSession = null;
-        JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(deployFilter), DeployFilter.class);
        try {
+            JsonValidator.validateFailFast(filter, DeployFilter.class);
+            DeployFilter deployFilter = Globals.objectMapper.readValue(filter, DeployFilter.class);
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, deployFilter, xAccessToken, "", 
                     getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isDeploy());
             if (jocDefaultResponse != null) {
@@ -126,7 +127,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 PublishUtils.checkPathRenamingForUpdate(verifiedReDeployables.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm());
 
                 // call updateRepo command via Proxy of given controllers
-                PublishUtils.updateRepoAddOrUpdate(versionId, verifiedConfigurations, verifiedReDeployables, controllerId, dbLayer, keyPair.getKeyAlgorithm())
+                PublishUtils.updateRepoAddOrUpdatePGP(versionId, verifiedConfigurations, verifiedReDeployables, controllerId, dbLayer, keyPair.getKeyAlgorithm())
                     .thenAccept(either -> {
                     if (either.isRight()) {
                         Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(verifiedConfigurations,

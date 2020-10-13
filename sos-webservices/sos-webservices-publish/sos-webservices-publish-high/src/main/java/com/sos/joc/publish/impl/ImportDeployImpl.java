@@ -165,7 +165,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 PublishUtils.checkPathRenamingForUpdate(importedObjects.keySet(), controller.getController(), dbLayer, keyPair.getKeyAlgorithm());
 
                 // call updateRepo command via Proxy of given controllers
-                PublishUtils.updateRepoAddOrUpdate(versionId, importedObjects, null, controller.getController(), dbLayer, keyPair.getKeyAlgorithm())
+                PublishUtils.updateRepoAddOrUpdatePGP(versionId, importedObjects, null, controller.getController(), dbLayer, keyPair.getKeyAlgorithm())
                     .thenAccept(either -> {
                     if (either.isRight()) {
                         Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(importedObjects,

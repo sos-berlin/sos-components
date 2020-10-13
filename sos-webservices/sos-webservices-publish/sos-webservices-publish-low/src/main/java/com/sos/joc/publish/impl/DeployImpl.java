@@ -54,10 +54,11 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     private List<Err419> listOfErrors = new ArrayList<Err419>();
 
     @Override
-    public JOCDefaultResponse postDeploy(String xAccessToken, DeployFilter deployFilter) throws Exception {
+    public JOCDefaultResponse postDeploy(String xAccessToken, byte[] filter) throws Exception {
         SOSHibernateSession hibernateSession = null;
-        JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(deployFilter), DeployFilter.class);
         try {
+            JsonValidator.validateFailFast(filter, DeployFilter.class);
+            DeployFilter deployFilter = Globals.objectMapper.readValue(filter, DeployFilter.class);
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, deployFilter, xAccessToken, "",
                 getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isDeploy());
             if (jocDefaultResponse != null) {
@@ -109,7 +110,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 // call updateRepo command via Proxy of given controllers
 //                Either<Problem, Void> either = 
 //                CompletableFuture<Void> future = 
-                PublishUtils.updateRepoAddOrUpdate(
+                PublishUtils.updateRepoAddOrUpdatePGP(
                         versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId, dbLayer, keyPair.getKeyAlgorithm())
                     .thenAccept(either -> {
                     if (either.isRight()) {
