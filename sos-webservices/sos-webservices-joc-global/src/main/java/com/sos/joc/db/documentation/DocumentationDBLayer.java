@@ -9,7 +9,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.hibernate.criterion.MatchMode;
@@ -334,13 +333,13 @@ public class DocumentationDBLayer {
             if (result == null || result.isEmpty()) {
                 return null;
             }
-            Map<JobSchedulerObjectType, List<String>> dbUsages = result.stream().collect(Collectors.groupingBy(ObjectOfDocumentation::getType,
-                    Collectors.mapping(ObjectOfDocumentation::getPath, Collectors.toList())));
+//            Map<JobSchedulerObjectType, List<String>> dbUsages = result.stream().collect(Collectors.groupingBy(ObjectOfDocumentation::getType,
+//                    Collectors.mapping(ObjectOfDocumentation::getPath, Collectors.toList())));
 //            String hqlStr = "select name from %s where instanceId = :instanceId and name in (:paths)";
             List<JobSchedulerObject> jsObjs = new ArrayList<JobSchedulerObject>();
-            for (Entry<JobSchedulerObjectType, List<String>> entry : dbUsages.entrySet()) {
-                String sql = null;
-                switch (entry.getKey()) {
+//            for (Entry<JobSchedulerObjectType, List<String>> entry : dbUsages.entrySet()) {
+//                String sql = null;
+//                switch (entry.getKey()) {
 //                case JOB:
 //                    sql = String.format(hqlStr, DBITEM_INVENTORY_JOBS);
 //                    break;
@@ -350,10 +349,10 @@ public class DocumentationDBLayer {
 //                case ORDER:
 //                    sql = String.format(hqlStr, DBITEM_INVENTORY_ORDERS);
 //                    break;
-                case NONWORKINGDAYSCALENDAR:
-                case WORKINGDAYSCALENDAR:
-                    sql = String.format("select name from %s where schedulerId = :schedulerId and name in (:paths)", DBLayer.DBITEM_CALENDARS_DEPRECATED);
-                    break;
+//                case NONWORKINGDAYSCALENDAR:
+//                case WORKINGDAYSCALENDAR:
+//                    sql = String.format("select name from %s where schedulerId = :schedulerId and name in (:paths)", DBLayer.DBITEM_CALENDARS_DEPRECATED);
+//                    break;
 //                case PROCESSCLASS:
 //                    sql = String.format(hqlStr, DBITEM_INVENTORY_PROCESS_CLASSES);
 //                    break;
@@ -363,28 +362,28 @@ public class DocumentationDBLayer {
 //                case SCHEDULE:
 //                    sql = String.format(hqlStr, DBITEM_INVENTORY_SCHEDULES);
 //                    break;
-                default:
-                    break;
-                }
-                if (sql != null) {
-                    Query<String> query2 = session.createQuery(sql);
-                    if (entry.getKey() == JobSchedulerObjectType.NONWORKINGDAYSCALENDAR || entry.getKey() == JobSchedulerObjectType.WORKINGDAYSCALENDAR) {
-                        query2.setParameter("schedulerId", schedulerId);
-//                    } else {
-//                        query2.setParameter("instanceId", instanceId);
-                    }
-                    query2.setParameterList("paths", entry.getValue());
-                    List<String> paths = session.getResultList(query2);
-                    if (paths != null && !paths.isEmpty()) {
-                        for (String path : paths) {
-                            JobSchedulerObject jsObj = new JobSchedulerObject();
-                            jsObj.setPath(path);
-                            jsObj.setType(entry.getKey());
-                            jsObjs.add(jsObj);
-                        }
-                    }
-                }
-            }
+//                default:
+//                    break;
+//                }
+//                if (sql != null) {
+//                    Query<String> query2 = session.createQuery(sql);
+//                    if (entry.getKey() == JobSchedulerObjectType.NONWORKINGDAYSCALENDAR || entry.getKey() == JobSchedulerObjectType.WORKINGDAYSCALENDAR) {
+//                        query2.setParameter("schedulerId", schedulerId);
+////                    } else {
+////                        query2.setParameter("instanceId", instanceId);
+//                    }
+//                    query2.setParameterList("paths", entry.getValue());
+//                    List<String> paths = session.getResultList(query2);
+//                    if (paths != null && !paths.isEmpty()) {
+//                        for (String path : paths) {
+//                            JobSchedulerObject jsObj = new JobSchedulerObject();
+//                            jsObj.setPath(path);
+//                            jsObj.setType(entry.getKey());
+//                            jsObjs.add(jsObj);
+//                        }
+//                    }
+//                }
+//            }
             return jsObjs;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);

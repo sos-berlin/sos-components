@@ -6,9 +6,7 @@ import java.time.Instant;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
-import com.sos.joc.db.calendars.CalendarsDBLayer;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
-import com.sos.joc.db.inventory.deprecated.calendar.DBItemCalendarDeprecated;
 import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentation;
 import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentationUsage;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -17,7 +15,6 @@ import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.JobSchedulerObjectType;
-import com.sos.joc.model.inventory.common.CalendarType;
 
 public class Documentation {
 
@@ -33,13 +30,13 @@ public class Documentation {
 			connection = Globals.createSosHibernateStatelessConnection(apiCall);
 			DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
 			String type = objType.name();
-			if (objType == JobSchedulerObjectType.WORKINGDAYSCALENDAR) {
-				CalendarsDBLayer calDbLayer = new CalendarsDBLayer(connection);
-				DBItemCalendarDeprecated dbCalendar = calDbLayer.getCalendar(jobschedulerId, jsObjectPath);
-				if (CalendarType.NONWORKINGDAYSCALENDAR.name().equals(dbCalendar.getType())) {
-					type = JobSchedulerObjectType.NONWORKINGDAYSCALENDAR.name();
-				}
-			}
+//			if (objType == JobSchedulerObjectType.WORKINGDAYSCALENDAR) {
+//				CalendarsDBLayer calDbLayer = new CalendarsDBLayer(connection);
+//				DBItemCalendarDeprecated dbCalendar = calDbLayer.getCalendar(jobschedulerId, jsObjectPath);
+//				if (CalendarType.NONWORKINGDAYSCALENDAR.name().equals(dbCalendar.getType())) {
+//					type = JobSchedulerObjectType.NONWORKINGDAYSCALENDAR.name();
+//				}
+//			}
 			DBItemDocumentationUsage dbDocUsage = dbLayer.getDocumentationUsageForAssignment(jobschedulerId,
 					jsObjectPath, type);
 			DBItemDocumentation dbDoc = dbLayer.getDocumentation(jobschedulerId, docPath);
@@ -70,13 +67,13 @@ public class Documentation {
 			connection = Globals.createSosHibernateStatelessConnection(apiCall);
 			DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
 			String type = objType.name();
-			if (objType == JobSchedulerObjectType.WORKINGDAYSCALENDAR) {
-				CalendarsDBLayer calDbLayer = new CalendarsDBLayer(connection);
-				DBItemCalendarDeprecated dbCalendar = calDbLayer.getCalendar(jobschedulerId, jsObjectPath);
-				if (CalendarType.NONWORKINGDAYSCALENDAR.name().equals(dbCalendar.getType())) {
-					type = JobSchedulerObjectType.NONWORKINGDAYSCALENDAR.name();
-				}
-			}
+//			if (objType == JobSchedulerObjectType.WORKINGDAYSCALENDAR) {
+//				CalendarsDBLayer calDbLayer = new CalendarsDBLayer(connection);
+//				DBItemCalendarDeprecated dbCalendar = calDbLayer.getCalendar(jobschedulerId, jsObjectPath);
+//				if (CalendarType.NONWORKINGDAYSCALENDAR.name().equals(dbCalendar.getType())) {
+//					type = JobSchedulerObjectType.NONWORKINGDAYSCALENDAR.name();
+//				}
+//			}
 			DBItemDocumentationUsage dbDocUsage = dbLayer.getDocumentationUsageForAssignment(jobschedulerId,
 					jsObjectPath, type);
 			if (dbDocUsage != null) {

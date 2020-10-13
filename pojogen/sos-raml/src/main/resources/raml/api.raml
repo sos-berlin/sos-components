@@ -108,38 +108,38 @@ traits:
         schema200: !include joc/schemas/audit/comments-schema.json
         example200: !include joc/examples/audit/comments-example.json
 
-/calendar:
-  description: This is not an API call. Use its children!!
-          
-  /documentation:
-    get:
-    type:
-      postDocu:
-        description: Show documentation
-        jsObjectParam: calendar
-        jsObject: Calendar
-    /assign:
-      type:
-        postDocuWithOkResponse:
-          description: Assigns a Documentation to the Calendar
-          description1: !include joc/documentation/docu/docPath.md
-          description2: " "
-          description3: !include joc/documentation/calendar/calendarRequired.md
-          description4: " "
-          schema: !include joc/schemas/calendar/calendarDocuFilter-schema.json
-          example: TODO
-          audit: !include joc/documentation/audit/auditLog.md
-    /unassign:
-      type:
-        postDocuWithOkResponse:
-          description: Unassigns a Documentation of the Calendar
-          description1: " "
-          description2: " "
-          description3: !include joc/documentation/calendar/calendarRequired.md
-          description4: " "
-          schema: !include joc/schemas/calendar/calendarDocuFilter-schema.json
-          example: TODO
-          audit: !include joc/documentation/audit/auditLog.md
+#/calendar:
+#  description: This is not an API call. Use its children!!
+#          
+#  /documentation:
+#    get:
+#    type:
+#      postDocu:
+#        description: Show documentation
+#        jsObjectParam: calendar
+#        jsObject: Calendar
+#    /assign:
+#      type:
+#        postDocuWithOkResponse:
+#          description: Assigns a Documentation to the Calendar
+#          description1: !include joc/documentation/docu/docPath.md
+#          description2: " "
+#          description3: !include joc/documentation/calendar/calendarRequired.md
+#          description4: " "
+#          schema: !include joc/schemas/calendar/calendarDocuFilter-schema.json
+#          example: TODO
+#          audit: !include joc/documentation/audit/auditLog.md
+#    /unassign:
+#      type:
+#        postDocuWithOkResponse:
+#          description: Unassigns a Documentation of the Calendar
+#          description1: " "
+#          description2: " "
+#          description3: !include joc/documentation/calendar/calendarRequired.md
+#          description4: " "
+#          schema: !include joc/schemas/calendar/calendarDocuFilter-schema.json
+#          example: TODO
+#          audit: !include joc/documentation/audit/auditLog.md
             
 /calendars:
   type:
