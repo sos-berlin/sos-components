@@ -1635,7 +1635,7 @@ traits:
       postJSONWithoutJSId:
         description: generates a new private key (ASCII format only)
         description1: !include joc/documentation/publish/generateKeyValidUntil.md
-        description2: !include joc/documentation/publish/keyAlgorithm.md
+        description2: !include joc/documentation/publish/setKeyAlgorithm.md
         description3: " "
         description4: " "
         description5: " "
@@ -1671,11 +1671,11 @@ traits:
     type:
       postJSONWithOkWithoutJSId:
         description: sets a new Public Key, a Certificate or Private key (ASCII format only)
-        description1: !include joc/documentation/publish/setPrivateKey.md
-        description2: !include joc/documentation/publish/setPublicKey.md
-        description3: !include joc/documentation/publish/setCertificate.md
-        description4: !include joc/documentation/publish/keyAlgorithm.md
-        description5: " "
+        description1: !include joc/documentation/publish/setKey.md
+        description2: !include joc/documentation/publish/setPrivateKey.md
+        description3: !include joc/documentation/publish/setPublicKey.md
+        description4: !include joc/documentation/publish/setCertificate.md
+        description5: !include joc/documentation/publish/setKeyAlgorithm.md
         schema: !include joc/schemas/publish/setKey-schema.json
         example: !include joc/examples/publish/setKey-example.json
   /set_version:
