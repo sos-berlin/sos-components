@@ -20,11 +20,17 @@ public class WeeklyDay {
      * dayOfWeek number
      * <p>
      * digit from 0-6, 0=Sunday, 1=Monday, ..., 6=Saturday
+     * (Required)
      * 
      */
     @JsonProperty("day")
     @JsonPropertyDescription("digit from 0-6, 0=Sunday, 1=Monday, ..., 6=Saturday")
     private Integer day;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("weekOfMonth")
     private Integer weekOfMonth;
 
@@ -32,6 +38,7 @@ public class WeeklyDay {
      * dayOfWeek number
      * <p>
      * digit from 0-6, 0=Sunday, 1=Monday, ..., 6=Saturday
+     * (Required)
      * 
      */
     @JsonProperty("day")
@@ -43,6 +50,7 @@ public class WeeklyDay {
      * dayOfWeek number
      * <p>
      * digit from 0-6, 0=Sunday, 1=Monday, ..., 6=Saturday
+     * (Required)
      * 
      */
     @JsonProperty("day")
@@ -50,11 +58,21 @@ public class WeeklyDay {
         this.day = day;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("weekOfMonth")
     public Integer getWeekOfMonth() {
         return weekOfMonth;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("weekOfMonth")
     public void setWeekOfMonth(Integer weekOfMonth) {
         this.weekOfMonth = weekOfMonth;

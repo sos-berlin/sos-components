@@ -28,11 +28,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class Months {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("months")
     private List<Integer> months = null;
     /**
@@ -60,21 +55,11 @@ public class Months {
     @JsonProperty("ultimos")
     private List<MonthDays> ultimos = null;
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("months")
     public List<Integer> getMonths() {
         return months;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("months")
     public void setMonths(List<Integer> months) {
         this.months = months;

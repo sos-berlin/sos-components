@@ -19,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  * 
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "id",
     "path",
@@ -106,6 +106,7 @@ public class Calendar implements ICalendarObject, IConfigurationObject
      * frequencies
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("includes")
@@ -299,6 +300,7 @@ public class Calendar implements ICalendarObject, IConfigurationObject
      * frequencies
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("includes")
@@ -310,6 +312,7 @@ public class Calendar implements ICalendarObject, IConfigurationObject
      * frequencies
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("includes")

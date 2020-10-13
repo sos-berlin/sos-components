@@ -106,9 +106,10 @@ public class DeployablesResourceImplTest {
             for (ResponseDeployableVersion version : item.getDeployablesVersions()) {
                 LOGGER.info(String.format("   [versionDate=%s][id=%s][deploymentId=%s]", version.getVersionDate(), version.getId(), version
                         .getDeploymentId()));
-
-                for (ResponseItemDeployment id : version.getVersions()) {
-                    LOGGER.info(String.format("       [controllerId=%s][version=%s]", id.getControllerId(), id.getVersion()));
+                if (version.getVersions() != null) {
+                    for (ResponseItemDeployment id : version.getVersions()) {
+                        LOGGER.info(String.format("       [controllerId=%s][version=%s]", id.getControllerId(), id.getVersion()));
+                    }
                 }
             }
         }

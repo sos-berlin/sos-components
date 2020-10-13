@@ -2,7 +2,6 @@
 package com.sos.joc.model.inventory.deploy;
 
 import java.util.Date;
-import java.util.LinkedHashSet;
 import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -21,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  * 
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "id",
     "deploymentId",
@@ -76,7 +75,7 @@ public class ResponseDeployableVersion {
     private Date versionDate;
     @JsonProperty("versions")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<ResponseItemDeployment> versions = new LinkedHashSet<ResponseItemDeployment>();
+    private Set<ResponseItemDeployment> versions = null;
 
     /**
      * non negative long

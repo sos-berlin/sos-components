@@ -207,7 +207,7 @@ public class ProxyTest {
             LOGGER.info(Instant.now().toString());
             boolean controllerReady = false;
 
-            controllerProxy.controllerEventBus().<Event> subscribe(Arrays.asList(ControllerEvent.class, ClusterEvent.class), (stampedEvent,
+            controllerProxy.controllerEventBus().subscribe(Arrays.asList(ControllerEvent.class, ClusterEvent.class), (stampedEvent,
                     state) -> LOGGER.info(orderEventToString(stampedEvent)));
 
             final String restartJson = Globals.objectMapper.writeValueAsString(new Terminate(true, null));

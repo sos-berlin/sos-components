@@ -31,6 +31,11 @@ public class Holidays {
      */
     @JsonProperty("nationalCalendar")
     private String nationalCalendar;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("dates")
     private List<String> dates = null;
 
@@ -56,11 +61,21 @@ public class Holidays {
         this.nationalCalendar = nationalCalendar;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("dates")
     public List<String> getDates() {
         return dates;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("dates")
     public void setDates(List<String> dates) {
         this.dates = dates;

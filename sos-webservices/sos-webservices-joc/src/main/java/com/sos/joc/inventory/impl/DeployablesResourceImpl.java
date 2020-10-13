@@ -186,6 +186,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                         if (date == null || !date.equals(deployment.getDeployment().getDeploymentDate())) {
                             dv = new ResponseDeployableVersion();
                             dv.setId(deployment.getId());
+                            dv.setVersions(new LinkedHashSet<ResponseItemDeployment>());
                             dv.setVersionDate(deployment.getDeployment().getDeploymentDate());
                             dv.setDeploymentId(deployment.getDeployment().getId());
                             dv.setDeploymentOperation(OperationType.fromValue(deployment.getDeployment().getOperation()).name().toLowerCase());

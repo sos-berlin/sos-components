@@ -3,6 +3,7 @@ package com.sos.joc.model.calendar;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -36,10 +37,11 @@ public class Period {
     /**
      * whenHoliday type
      * <p>
-     * 
+     * default: SUPPRESS
      * 
      */
     @JsonProperty("whenHoliday")
+    @JsonPropertyDescription("default: SUPPRESS")
     private WhenHolidayType whenHoliday;
 
     @JsonProperty("singleStart")
@@ -85,7 +87,7 @@ public class Period {
     /**
      * whenHoliday type
      * <p>
-     * 
+     * default: SUPPRESS
      * 
      */
     @JsonProperty("whenHoliday")
@@ -96,7 +98,7 @@ public class Period {
     /**
      * whenHoliday type
      * <p>
-     * 
+     * default: SUPPRESS
      * 
      */
     @JsonProperty("whenHoliday")
