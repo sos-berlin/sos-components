@@ -3,17 +3,13 @@
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"type": "object",
 	"javaType": "com.sos.joc.model.dailyplan.PlannedOrderItem",
-	"oneOf": [
-		{
-			"required": [
-				"surveyDate",
-				"workflow",
-				"orderId",
-				"plannedStartTime",
-				"expectedEndTime",
-				"startMode"
-			]
-		}
+	"required": [
+		"surveyDate",
+		"workflow",
+		"orderId",
+		"plannedStartTime",
+		"expectedEndTime",
+		"startMode"
 	],
 	"properties": {
 		"surveyDate": {

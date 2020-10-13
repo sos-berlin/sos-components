@@ -4,7 +4,7 @@
   "javaType": "com.sos.joc.model.calendar.CalendarDatesFilter",
   "type": "object",
   "description": "one of the fields: calendar, id or path is required.",
-  "oneOf": [
+  "anyOf": [
         {
             "required": [
                 "id"

@@ -8,7 +8,6 @@
    	"com.sos.joc.model.common.ICalendarObject"
   ],
   "required": [
-    "path",
     "includes"
   ], 
   "properties": {
