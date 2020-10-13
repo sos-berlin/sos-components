@@ -62,6 +62,10 @@ public class DBItemInventoryConfiguration extends DBItem {
     @Type(type = "numeric_boolean")
     private boolean deployed;
 
+    @Column(name = "[RELEASED]", nullable = false)
+    @Type(type = "numeric_boolean")
+    private boolean released;
+
     @Column(name = "[AUDIT_LOG_ID]", nullable = false)
     private Long auditLogId;
 
@@ -165,6 +169,14 @@ public class DBItemInventoryConfiguration extends DBItem {
 
     public void setDeployed(boolean val) {
         deployed = val;
+    }
+    
+    public boolean getReleased() {
+        return released;
+    }
+
+    public void setReleased(boolean val) {
+        released = val;
     }
 
     public Long getAuditLogId() {

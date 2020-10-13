@@ -78,8 +78,8 @@
 							</includes>
 							<excludes>
 								<exclude>user/*.json</exclude>
-								<exclude>jobschedulerEvent/*.json</exclude>
 								<exclude>calendar/*.json</exclude>
+								<exclude>inventory/*.json</exclude>
 							</excludes>
 						</configuration>
 						<goals>
@@ -87,7 +87,7 @@
 						</goals>
 					</execution>
 					<execution>
-						<id>generate-calendar-model</id>
+						<id>generate-inventory-model</id>
 						<phase>generate-sources</phase>
 						<configuration>
 							<sourceDirectory>${basedir}/src/main/resources/raml/joc/schemas</sourceDirectory>
@@ -96,31 +96,13 @@
 							<annotationStyle>jackson2</annotationStyle>
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>false</includeAdditionalProperties>
+							<inclusionLevel>NON_EMPTY</inclusionLevel>
 							<initializeCollections>false</initializeCollections>
 							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
 							<addCompileSourceRoot>false</addCompileSourceRoot>
 							<includes>
 								<include>calendar/*.json</include>
-							</includes>
-						</configuration>
-						<goals>
-							<goal>generate</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>generate-event-model</id>
-						<phase>generate-sources</phase>
-						<configuration>
-							<sourceDirectory>${basedir}/src/main/resources/raml/joc/schemas</sourceDirectory>
-							<targetPackage>com.sos.jobscheduler.model</targetPackage>
-							<removeOldOutput>false</removeOldOutput>
-							<annotationStyle>jackson2</annotationStyle>
-							<propertyWordDelimiters>- </propertyWordDelimiters>
-							<includeAdditionalProperties>false</includeAdditionalProperties>
-							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
-							<addCompileSourceRoot>false</addCompileSourceRoot>
-							<includes>
-								<include>jobschedulerEvent/*.json</include>
+								<include>inventory/*.json</include>
 							</includes>
 						</configuration>
 						<goals>

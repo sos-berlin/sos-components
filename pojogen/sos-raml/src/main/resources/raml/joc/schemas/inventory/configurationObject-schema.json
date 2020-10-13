@@ -37,6 +37,9 @@
 		"deployed": {
 			"type": "boolean"
 		},
+		"released": {
+			"type": "boolean"
+		},
 		"deployments": {
 			"type": "array",
 			"items": {

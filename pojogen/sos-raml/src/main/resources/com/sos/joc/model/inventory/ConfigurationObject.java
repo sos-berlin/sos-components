@@ -24,7 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  * 
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "id",
     "path",
@@ -101,6 +101,8 @@ public class ConfigurationObject {
     private Boolean deleted;
     @JsonProperty("deployed")
     private Boolean deployed;
+    @JsonProperty("released")
+    private Boolean released;
     @JsonProperty("deployments")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<ResponseDeployableVersion> deployments = new LinkedHashSet<ResponseDeployableVersion>();
@@ -264,6 +266,16 @@ public class ConfigurationObject {
         return deployed;
     }
 
+    @JsonProperty("released")
+    public void setReleased(Boolean released) {
+        this.released = released;
+    }
+    
+    @JsonProperty("released")
+    public Boolean getReleased() {
+        return released;
+    }
+
     @JsonProperty("deployed")
     public void setDeployed(Boolean deployed) {
         this.deployed = deployed;
@@ -325,12 +337,12 @@ public class ConfigurationObject {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("objectType", objectType).append("configuration", configuration).append("state", state).append("valid", valid).append("invalidMsg", invalidMsg).append("deleted", deleted).append("deployed", deployed).append("deployments", deployments).append("configurationDate", configurationDate).append("deliveryDate", deliveryDate).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("objectType", objectType).append("configuration", configuration).append("state", state).append("valid", valid).append("invalidMsg", invalidMsg).append("deleted", deleted).append("deployed", deployed).append("released", released).append("deployments", deployments).append("configurationDate", configurationDate).append("deliveryDate", deliveryDate).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(valid).append(invalidMsg).append(configurationDate).append(path).append(deployments).append(deleted).append(configuration).append(deployed).append(id).append(state).append(deliveryDate).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(valid).append(invalidMsg).append(configurationDate).append(path).append(deployments).append(deleted).append(configuration).append(deployed).append(released).append(id).append(state).append(deliveryDate).append(objectType).toHashCode();
     }
 
     @Override
@@ -342,7 +354,7 @@ public class ConfigurationObject {
             return false;
         }
         ConfigurationObject rhs = ((ConfigurationObject) other);
-        return new EqualsBuilder().append(valid, rhs.valid).append(invalidMsg, rhs.invalidMsg).append(configurationDate, rhs.configurationDate).append(path, rhs.path).append(deployments, rhs.deployments).append(deleted, rhs.deleted).append(configuration, rhs.configuration).append(deployed, rhs.deployed).append(id, rhs.id).append(state, rhs.state).append(deliveryDate, rhs.deliveryDate).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(valid, rhs.valid).append(invalidMsg, rhs.invalidMsg).append(configurationDate, rhs.configurationDate).append(path, rhs.path).append(deployments, rhs.deployments).append(deleted, rhs.deleted).append(released, rhs.released).append(configuration, rhs.configuration).append(deployed, rhs.deployed).append(id, rhs.id).append(state, rhs.state).append(deliveryDate, rhs.deliveryDate).append(objectType, rhs.objectType).isEquals();
     }
 
 }

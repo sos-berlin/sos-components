@@ -352,6 +352,7 @@ public class DBLayerDeploy {
                 newJsObject.setAuditLogId(auditLogId);
                 newJsObject.setDocumentationId(0L);
                 newJsObject.setDeployed(false);
+                newJsObject.setReleased(false);
                 session.save(newJsObject);
                 // save or update signature in different Table
                 if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {
@@ -369,6 +370,7 @@ public class DBLayerDeploy {
                 newJsObject.setAuditLogId(auditLogId);
                 newJsObject.setDocumentationId(0L);
                 newJsObject.setDeployed(false);
+                newJsObject.setReleased(false);
                 session.save(newJsObject);
                 // save signature in different Table
                 if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {

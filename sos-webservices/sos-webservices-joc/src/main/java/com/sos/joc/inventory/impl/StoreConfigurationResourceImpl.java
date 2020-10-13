@@ -129,6 +129,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                     item.setObjectType(JocInventory.getType(config.getType()));
                     item.setValid(config.getValid());
                     item.setDeployed(config.getDeployed());
+                    item.setReleased(config.getReleased());
                     return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(item));
                 }
 
@@ -312,6 +313,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         }
         
         item.setDeployed(false);
+        item.setReleased(false);
         item.setModified(Date.from(Instant.now()));
         return item;
     }
