@@ -355,13 +355,13 @@ public abstract class KeyUtil {
                 }
             } else if (SOSPGPConstants.DEFAULT_ALGORYTHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                 try {
-                    KeyPair kp = getKeyPairFromRSAPrivatKeyString(key);
-                    if (kp != null && kp.getPrivate() != null) {
+                    PrivateKey pk = getPrivateKeyFromString(key);
+                    if (pk != null) {
                         return true;
                     } else {
                         return false;
                     }
-                } catch (NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
+                } catch (ClassCastException|NoSuchAlgorithmException|InvalidKeySpecException|IOException e) {
                     return false;
                 }
             } else if (SOSPGPConstants.ECDSA_ALGORYTHM_NAME.equals(keyPair.getKeyAlgorithm())) {
