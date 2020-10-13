@@ -3,6 +3,9 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.joc.model.pgp.JocKeyPair",
   "type": "object",
+  "required": [
+    "keyAlgorithm"
+  ],
   "properties": {
     "privateKey": {
       "type": "string"

@@ -31,8 +31,8 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
     @Override
     public JOCDefaultResponse postSetKey(String xAccessToken, SetKeyFilter setKeyFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
-        JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(setKeyFilter), SetKeyFilter.class);
         try {
+            JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(setKeyFilter), SetKeyFilter.class);
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, setKeyFilter, xAccessToken, "",
 //                    getPermissonsJocCockpit(null, xAccessToken).getInventory().getConfigurations().getPublish().isSetKey()
                     true);
@@ -40,7 +40,7 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
                 return jocDefaultResponse;
             }
             JocKeyPair keyPair = setKeyFilter.getKeys();
-            keyPair.setKeyAlgorithm(setKeyFilter.getKeyAlgorithm());
+//            keyPair.setKeyAlgorithm(setKeyFilter.getKeyAlgorithm());
             boolean valid = false;
             if (keyPairNotEmpty(keyPair)) {
                 if (JocKeyAlgorithm.ECDSA.name().equals(keyPair.getKeyAlgorithm())) {

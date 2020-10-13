@@ -18,8 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "keys",
-    "keyAlgorithm"
+    "keys"
 })
 public class SetKeyFilter {
 
@@ -32,13 +31,6 @@ public class SetKeyFilter {
      */
     @JsonProperty("keys")
     private JocKeyPair keys;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("keyAlgorithm")
-    private String keyAlgorithm;
 
     /**
      * SOS PGP Key Pair
@@ -64,34 +56,14 @@ public class SetKeyFilter {
         this.keys = keys;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("keyAlgorithm")
-    public String getKeyAlgorithm() {
-        return keyAlgorithm;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("keyAlgorithm")
-    public void setKeyAlgorithm(String keyAlgorithm) {
-        this.keyAlgorithm = keyAlgorithm;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("keys", keys).append("keyAlgorithm", keyAlgorithm).toString();
+        return new ToStringBuilder(this).append("keys", keys).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(keys).append(keyAlgorithm).toHashCode();
+        return new HashCodeBuilder().append(keys).toHashCode();
     }
 
     @Override
@@ -103,7 +75,7 @@ public class SetKeyFilter {
             return false;
         }
         SetKeyFilter rhs = ((SetKeyFilter) other);
-        return new EqualsBuilder().append(keys, rhs.keys).append(keyAlgorithm, rhs.keyAlgorithm).isEquals();
+        return new EqualsBuilder().append(keys, rhs.keys).isEquals();
     }
 
 }

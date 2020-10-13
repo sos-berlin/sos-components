@@ -40,6 +40,11 @@ public class JocKeyPair {
     private Date validUntil;
     @JsonProperty("keyType")
     private String keyType;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("keyAlgorithm")
     private String keyAlgorithm;
 
@@ -103,11 +108,21 @@ public class JocKeyPair {
         this.keyType = keyType;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("keyAlgorithm")
     public String getKeyAlgorithm() {
         return keyAlgorithm;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("keyAlgorithm")
     public void setKeyAlgorithm(String keyAlgorithm) {
         this.keyAlgorithm = keyAlgorithm;
