@@ -41,6 +41,7 @@ import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
@@ -262,7 +263,7 @@ public class CATests {
                 SOSPGPConstants.CERTIFICATE_HEADER, SOSPGPConstants.CERTIFICATE_FOOTER);
         LOGGER.info("************************************  User Certificate:  **********************************************");
         LOGGER.info("\n" + userCert);
-        logCertificateProperties(userCertificate);
+//        logCertificateProperties(userCertificate);
         try {
             LOGGER.info("************************************  Verify user Certificate:  ***************************************");
             userCertificate.verify(userKeyPair.getPublic());
@@ -321,6 +322,7 @@ public class CATests {
         LOGGER.info("************************************  Test create rootCertificate, CSR and userCertificate finished ***");
     }
     
+    @Ignore
     @Test
     public void testECNames () {
         if (ECNamedCurveTable.getNames().hasMoreElements()) {
