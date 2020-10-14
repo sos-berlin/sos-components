@@ -1,15 +1,20 @@
 package com.sos.joc.keys.impl;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
 import java.util.Date;
 
 import javax.ws.rs.Path;
+import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.io.IOUtils;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -61,20 +66,38 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
                 if (jocKeyPair.getPublicKey() == null) {
                     jocKeyPair.setKeyType(JocKeyType.PRIVATE.name());
                     // determine if key is a PGP or RSA key
-                    if (jocKeyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
+                    if (SOSPGPConstants.PGP_ALGORITHM_NAME.equals(jocKeyPair.getKeyAlgorithm())) {
                         // restore public key from private key
                         jocKeyPair.setPublicKey(KeyUtil.extractPublicKey(jocKeyPair.getPrivateKey()));
                         // calculate validity period
                         InputStream privateKeyStream = IOUtils.toInputStream(jocKeyPair.getPrivateKey());
                         publicPGPKey = KeyUtil.extractPGPPublicKey(privateKeyStream);
-                    } else if (jocKeyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
+                    } else if (SOSPGPConstants.RSA_ALGORITHM_NAME.equals(jocKeyPair.getKeyAlgorithm())) {
                         // restore public key from private key
+//                        try {
+//                            PrivateKey pk = KeyUtil.getPrivateKeyFromString(jocKeyPair.getPrivateKey());
+//                        } catch (ClassCastException e) {
+//                            try {
+//                                KeyPair kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(jocKeyPair.getPrivateKey());
+//                            } catch (NoSuchAlgorithmException|InvalidKeySpecException|IOException e1) {
+//                                LOGGER.error(e.getMessage(), e);
+//                            }
+//                        }catch (NoSuchAlgorithmException|InvalidKeySpecException|IOException e) {
+//                            LOGGER.error(e.getMessage(), e);
+//                        }
                         keyPair = KeyUtil.getKeyPairFromRSAPrivatKeyString(jocKeyPair.getPrivateKey());
                         publicKey = keyPair.getPublic();
                         jocKeyPair.setPublicKey(KeyUtil.formatEncodedDataString(
                                 new String(Base64.encode(publicKey.getEncoded()), StandardCharsets.UTF_8), 
                                 SOSPGPConstants.PUBLIC_RSA_KEY_HEADER, 
                                 SOSPGPConstants.PUBLIC_RSA_KEY_FOOTER));
+                    } else if (SOSPGPConstants.ECDSA_ALGORITHM_NAME.equals(jocKeyPair.getKeyAlgorithm())) {
+                        keyPair = KeyUtil.getKeyPairFromECDSAPrivatKeyString(jocKeyPair.getPrivateKey());
+                        publicKey = keyPair.getPublic();
+                        jocKeyPair.setPublicKey(KeyUtil.formatEncodedDataString(
+                                new String(Base64.encode(publicKey.getEncoded()), StandardCharsets.UTF_8), 
+                                SOSPGPConstants.PUBLIC_EC_KEY_HEADER, 
+                                SOSPGPConstants.PUBLIC_EC_KEY_FOOTER));
                     } else {
                         // restore public key from private key
                         keyPair = KeyUtil.getKeyPairFromPrivatKeyString(jocKeyPair.getPrivateKey());
@@ -85,13 +108,13 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
                                 SOSPGPConstants.PUBLIC_KEY_FOOTER));
                     }
                 } else {
-                    // determine if key is a PGP or RSA key
+                    // determine if public key is a PGP, RSA or ECDSA key
                     jocKeyPair.setKeyType(JocKeyType.PUBLIC.name());
-                    if (jocKeyPair.getPublicKey().startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
+                    if (SOSPGPConstants.PGP_ALGORITHM_NAME.equals(jocKeyPair.getKeyAlgorithm())) {
                         publicPGPKey = KeyUtil.getPGPPublicKeyFromString(jocKeyPair.getPublicKey());                          
-                    } else if (jocKeyPair.getPublicKey().startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
+                    } else if (SOSPGPConstants.RSA_ALGORITHM_NAME.equals(jocKeyPair.getKeyAlgorithm())) {
                         publicKey = (PublicKey)KeyUtil.getSubjectPublicKeyInfo(jocKeyPair.getPublicKey());
-                    } else if (jocKeyPair.getPublicKey().startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER)) {
+                    } else if (SOSPGPConstants.ECDSA_ALGORITHM_NAME.equals(jocKeyPair.getKeyAlgorithm())) {
                         publicKey = KeyUtil.convertToPublicKey(KeyUtil.decodePublicKeyString(jocKeyPair.getPublicKey()));
                     }
                 }
