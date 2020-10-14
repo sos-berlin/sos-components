@@ -7,6 +7,7 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
@@ -32,7 +33,6 @@ import java.util.zip.ZipOutputStream;
 import javax.security.auth.x500.X500Principal;
 import javax.xml.bind.DatatypeConverter;
 
-import org.apache.commons.codec.Charsets;
 import org.bouncycastle.cert.CertException;
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.X509Principal;
@@ -339,7 +339,7 @@ public class CATests {
             LOGGER.info("subfolder \"created_test_files\" created in target folder.");
         }
         out = Files.newOutputStream(Paths.get("target").resolve("created_test_files").resolve(filename));
-        zipOut = new ZipOutputStream(new BufferedOutputStream(out), Charsets.UTF_8);
+        zipOut = new ZipOutputStream(new BufferedOutputStream(out), StandardCharsets.UTF_8);
         ZipEntry rootKeyEntry = new ZipEntry("root_private.key");
         zipOut.putNextEntry(rootKeyEntry);
         zipOut.write(rootKey.getBytes());
