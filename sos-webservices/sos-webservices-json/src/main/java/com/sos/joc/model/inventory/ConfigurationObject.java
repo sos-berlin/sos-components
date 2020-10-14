@@ -35,6 +35,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "invalidMsg",
     "deleted",
     "deployed",
+    "released",
     "deployments",
     "configurationDate",
     "deliveryDate"

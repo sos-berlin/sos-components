@@ -3,6 +3,10 @@
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.joc.model.inventory.deploy.RequestFilter",
 	"type": "object",
+	"anyOf": [
+	  { "required": ["id"] },
+	  { "required": ["path"] }
+	],
 	"properties": {
 		"id": {
 			"$ref": "../../common/nonNegativeLong-schema.json"

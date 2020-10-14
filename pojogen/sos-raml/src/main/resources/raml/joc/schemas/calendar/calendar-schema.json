@@ -5,7 +5,8 @@
   "type": "object",
   "javaInterfaces" : [
    	"com.sos.joc.model.common.IConfigurationObject",
-   	"com.sos.joc.model.common.ICalendarObject"
+   	"com.sos.joc.model.common.ICalendarObject",
+   	"com.sos.joc.model.common.IReleaseObject"
   ],
   "required": [
     "includes"

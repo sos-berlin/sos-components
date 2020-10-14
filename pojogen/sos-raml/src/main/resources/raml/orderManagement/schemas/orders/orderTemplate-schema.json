@@ -5,7 +5,8 @@
 	"type": "object",
 	"description": "The order template for scheduling orders to JobScheduler",
  	"javaInterfaces" : [
-    	"com.sos.joc.model.common.IConfigurationObject"
+    	"com.sos.joc.model.common.IConfigurationObject",
+    	"com.sos.joc.model.common.IReleaseObject"
   	],
   	"required": [
 		"path",

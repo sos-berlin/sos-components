@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.ICalendarObject;
 import com.sos.joc.model.common.IConfigurationObject;
+import com.sos.joc.model.common.IReleaseObject;
 import com.sos.joc.model.inventory.common.CalendarType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -32,7 +33,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "includes",
     "excludes"
 })
-public class Calendar implements ICalendarObject, IConfigurationObject
+public class Calendar implements ICalendarObject, IConfigurationObject, IReleaseObject
 {
 
     /**

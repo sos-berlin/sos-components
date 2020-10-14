@@ -24,9 +24,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.inventory.resource.IDeployablesResource;
-import com.sos.joc.model.common.JobSchedulerObjectType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ResponseItemDeployment;
 import com.sos.joc.model.inventory.deploy.RequestFilter;
@@ -44,7 +42,9 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
     @Override
     public JOCDefaultResponse deployables(final String accessToken, final byte[] inBytes) {
         try {
-            JsonValidator.validateFailFast(inBytes, RequestFilter.class);
+            // don't use JsonValidator.validateFailFast because of anyOf-Requirements
+            initLogging(IMPL_PATH, inBytes, accessToken);
+            JsonValidator.validate(inBytes, RequestFilter.class);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
             if (in.getPath() != null) {
                 in.setPath(normalizeFolder(in.getPath()));
@@ -72,19 +72,19 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             boolean addVersions = false;
             List<InventoryDeployablesTreeFolderItem> list = null;
             if (in.getId() != null) {
+                // TODO only deployables (not Calendars and OrderTemplates)
                 list = dbLayer.getConfigurationsWithAllDeployments(in.getId());
                 addVersions = true;
             } else if (in.getPath() != null) {
                 if (in.getRecursive() != null && in.getRecursive()) {
+                    // TODO only deployables (not Calendars and OrderTemplates)
                     list = dbLayer.getConfigurationsWithMaxDeployment(in.getPath().equals("/") ? null : in.getPath(), true);
                 } else {
+                    // TODO only deployables (not Calendars and OrderTemplates)
                     list = dbLayer.getConfigurationsWithAllDeployments(in.getPath(), in.getObjectType() == null ? null : in.getObjectType()
                             .intValue());
                     addVersions = true;
                 }
-            } else {
-                session.commit();
-                throw new JocMissingRequiredParameterException("Missing id or path parameter");
             }
             session.commit();
             session = null;
@@ -138,7 +138,6 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 }
             }
 
-            JobSchedulerObjectType.fromValue(type.name());// throws exception if not exists
             if (folderPermissions != null && !folderPermissions.isPermittedForFolder(getParent(item.getPath()))) {
                 LOGGER.info(String.format("[skip][%s]due to folder permissions", item.getPath()));
                 continue;
@@ -250,7 +249,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
         boolean permission = permissions.getInventory().getConfigurations().isEdit();
 
-        JOCDefaultResponse response = init(IMPL_PATH, in, accessToken, "", permission);
+        JOCDefaultResponse response = initPermissions(null, permission);
         if (response == null) {
             if (in.getPath() != null && !folderPermissions.isPermittedForFolder(in.getPath())) {
                 return accessDeniedResponse();

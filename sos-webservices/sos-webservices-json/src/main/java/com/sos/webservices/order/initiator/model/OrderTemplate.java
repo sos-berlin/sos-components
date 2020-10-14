@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.IConfigurationObject;
+import com.sos.joc.model.common.IReleaseObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -31,7 +32,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "nonWorkingCalendars",
     "variables"
 })
-public class OrderTemplate implements IConfigurationObject
+public class OrderTemplate implements IConfigurationObject, IReleaseObject
 {
 
     /**
@@ -86,6 +87,7 @@ public class OrderTemplate implements IConfigurationObject
      * Assigned Calendars
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("calendars")
@@ -245,6 +247,7 @@ public class OrderTemplate implements IConfigurationObject
      * Assigned Calendars
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("calendars")
@@ -256,6 +259,7 @@ public class OrderTemplate implements IConfigurationObject
      * Assigned Calendars
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("calendars")
