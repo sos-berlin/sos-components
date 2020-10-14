@@ -39,7 +39,7 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
             Date validUntil = filter.getValidUntil();
             String keyAlgorithm = filter.getKeyAlgorithm();
             if(keyAlgorithm == null) {
-                keyAlgorithm = SOSPGPConstants.DEFAULT_ALGORYTHM_NAME;
+                keyAlgorithm = SOSPGPConstants.RSA_ALGORITHM_NAME;
             }
             JocKeyPair keyPair = null;
             if ("PGP".equals(keyAlgorithm)) {
@@ -49,7 +49,7 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
                 } else {
                     keyPair = KeyUtil.createKeyPair(Globals.defaultProfileAccount, null, null);
                 }                
-            } else if (SOSPGPConstants.DEFAULT_ALGORYTHM_NAME.equals(keyAlgorithm)) {
+            } else if (SOSPGPConstants.RSA_ALGORITHM_NAME.equals(keyAlgorithm)) {
                 keyPair = KeyUtil.createRSAJocKeyPair();
                 //default
             } else {

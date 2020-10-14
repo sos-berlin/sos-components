@@ -63,7 +63,7 @@ public class SignObject {
 
 	public static String signPGP(InputStream privateKey, InputStream original, String passPhrase) throws IOException, PGPException {
 	    Security.addProvider(new BouncyCastleProvider());
-		PGPSecretKey secretKey = readSecretKey(privateKey);
+		PGPSecretKey secretKey = KeyUtil.readSecretKey(privateKey);
 		PGPPrivateKey pgpPrivateKey = null;
 		if (passPhrase != null) {
 			pgpPrivateKey = secretKey.extractPrivateKey(new JcePBESecretKeyDecryptorBuilder()
@@ -88,22 +88,6 @@ public class SignObject {
 		}
 		return new String(signatureOutput.toByteArray(), "UTF-8");
 	}
-
-	private static PGPSecretKey readSecretKey(InputStream input) throws IOException, PGPException {
-        PGPSecretKeyRingCollection pgpSec = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(input), new JcaKeyFingerprintCalculator());
-        Iterator<PGPSecretKeyRing> keyRingIter = pgpSec.getKeyRings();
-        while (keyRingIter.hasNext()) {
-            PGPSecretKeyRing keyRing = keyRingIter.next();
-            Iterator<PGPSecretKey> keyIter = keyRing.getSecretKeys();
-            while (keyIter.hasNext()) {
-                PGPSecretKey key = keyIter.next();
-                if (key.isSigningKey()) {
-                    return key;
-                }
-            }
-        }
-        throw new IllegalArgumentException("Can't find signing key in key ring.");
-    }
 
 	private static void processStream(InputStream is, StreamHandler handler) throws IOException {
 		int read;

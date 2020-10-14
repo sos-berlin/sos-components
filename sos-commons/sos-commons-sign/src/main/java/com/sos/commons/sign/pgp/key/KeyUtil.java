@@ -67,6 +67,7 @@ import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
+import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
@@ -82,6 +83,7 @@ import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
+import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
@@ -102,16 +104,16 @@ public abstract class KeyUtil {
     
     public static JocKeyPair createKeyPair(String userId, String passphrase, Long secondsToExpire) 
             throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException, IOException, PGPException {
-                return createKeyPair(userId, passphrase, secondsToExpire, SOSPGPConstants.DEFAULT_ALGORYTHM_BIT_LENGTH);
+                return createKeyPair(userId, passphrase, secondsToExpire, SOSPGPConstants.DEFAULT_RSA_ALGORITHM_BIT_LENGTH);
     }
     
     public static JocKeyPair createKeyPair(String userId, String passphrase, Long secondsToExpire, Integer algorythmBitLength) 
             throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException, IOException, PGPException {
         Security.addProvider(new BouncyCastleProvider());
         KeyPairGenerator kpg;
-        kpg = KeyPairGenerator.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME, BouncyCastleProvider.PROVIDER_NAME);
+        kpg = KeyPairGenerator.getInstance(SOSPGPConstants.RSA_ALGORITHM_NAME, BouncyCastleProvider.PROVIDER_NAME);
         if (algorythmBitLength == null) {
-            kpg.initialize(SOSPGPConstants.DEFAULT_ALGORYTHM_BIT_LENGTH);
+            kpg.initialize(SOSPGPConstants.DEFAULT_RSA_ALGORITHM_BIT_LENGTH);
         } else {
             kpg.initialize(algorythmBitLength);
         }
@@ -134,8 +136,8 @@ public abstract class KeyUtil {
     }
     
     public static JocKeyPair createRSAJocKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException {
-        KeyPairGenerator kpg = KeyPairGenerator.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
-        kpg.initialize(SOSPGPConstants.DEFAULT_ALGORYTHM_BIT_LENGTH);
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance(SOSPGPConstants.RSA_ALGORITHM_NAME);
+        kpg.initialize(SOSPGPConstants.DEFAULT_RSA_ALGORITHM_BIT_LENGTH);
         KeyPair kp = kpg.generateKeyPair();
         JocKeyPair keyPair = new JocKeyPair();
         byte[] encodedPrivate = kp.getPrivate().getEncoded();
@@ -149,10 +151,14 @@ public abstract class KeyUtil {
     }
     
     public static JocKeyPair createECDSAJOCKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+        return createECDSAJOCKeyPair("prime256v1");
+    }
+    
+    public static JocKeyPair createECDSAJOCKeyPair(String curveName) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
         Provider bcProvider = new BouncyCastleProvider();
         Security.addProvider(bcProvider);
-        ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec("prime256v1");
-        KeyPairGenerator kpg = KeyPairGenerator.getInstance(SOSPGPConstants.ECDSA_ALGORYTHM_NAME);
+        ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec(curveName);
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance(SOSPGPConstants.ECDSA_ALGORITHM_NAME);
         kpg.initialize(ecSpec, new SecureRandom());
         KeyPair kp = kpg.generateKeyPair();
         JocKeyPair keyPair = new JocKeyPair();
@@ -167,16 +173,24 @@ public abstract class KeyUtil {
     }
     
     public static KeyPair createRSAKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException {
-        KeyPairGenerator kpg = KeyPairGenerator.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
-        kpg.initialize(SOSPGPConstants.DEFAULT_ALGORYTHM_BIT_LENGTH);
+        return createRSAKeyPair(SOSPGPConstants.DEFAULT_RSA_ALGORITHM_BIT_LENGTH);
+    }
+    
+    public static KeyPair createRSAKeyPair(int bitLength) throws NoSuchAlgorithmException, NoSuchProviderException {
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance(SOSPGPConstants.RSA_ALGORITHM_NAME);
+        kpg.initialize(bitLength);
         return kpg.generateKeyPair();
     }
     
     public static KeyPair createECDSAKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+        return createECDSAKeyPair("prime256v1");
+    }
+    
+    public static KeyPair createECDSAKeyPair(String curveName) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
         Provider bcProvider = new BouncyCastleProvider();
         Security.addProvider(bcProvider);
-        ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec("prime256v1");
-        KeyPairGenerator kpg = KeyPairGenerator.getInstance(SOSPGPConstants.ECDSA_ALGORYTHM_NAME, bcProvider.getName());
+        ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec(curveName);
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance(SOSPGPConstants.ECDSA_ALGORITHM_NAME, bcProvider.getName());
         kpg.initialize(ecSpec, new SecureRandom());
         return kpg.generateKeyPair();
     }
@@ -342,18 +356,18 @@ public abstract class KeyUtil {
     public static boolean isKeyPairValid(JocKeyPair keyPair) {
         String key = keyPair.getPrivateKey();
         if (key != null) {
-            if (SOSPGPConstants.PGP_ALGORYTHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+            if (SOSPGPConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                 try {
-                    String publicFromPrivateKey = extractPublicKey(IOUtils.toInputStream(key));
-                    if (publicFromPrivateKey != null) {
+                    PGPPrivateKey priv = getPrivatePGPKey(keyPair.getPrivateKey());
+                    if (priv != null) {
                         return true;
                     } else {
                         return false;
                     }
-                } catch (IOException | PGPException e) {
+                } catch (IOException | IllegalArgumentException | PGPException e) {
                     return false;
                 }
-            } else if (SOSPGPConstants.DEFAULT_ALGORYTHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+            } else if (SOSPGPConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                 try {
                     PrivateKey pk = getPrivateKeyFromString(key);
                     if (pk != null) {
@@ -361,10 +375,21 @@ public abstract class KeyUtil {
                     } else {
                         return false;
                     }
-                } catch (ClassCastException|NoSuchAlgorithmException|InvalidKeySpecException|IOException e) {
+                } catch (ClassCastException e) {
+                    try {
+                        KeyPair kp = getKeyPairFromRSAPrivatKeyString(key);
+                        if (kp != null && kp.getPrivate() != null) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    } catch (NoSuchAlgorithmException|InvalidKeySpecException|IOException e1) {
+                        return false;
+                    }
+                }catch (NoSuchAlgorithmException|InvalidKeySpecException|IOException e) {
                     return false;
                 }
-            } else if (SOSPGPConstants.ECDSA_ALGORYTHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+            } else if (SOSPGPConstants.ECDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                 try {
                     KeyPair kp = getKeyPairFromECDSAPrivatKeyString(key);
                     if (kp != null && kp.getPrivate() != null) {
@@ -379,7 +404,7 @@ public abstract class KeyUtil {
         } else {
             key = keyPair.getPublicKey();
             if (key != null) {
-                if (SOSPGPConstants.PGP_ALGORYTHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+                if (SOSPGPConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                     try {
                         PGPPublicKey publicKey = getPGPPublicKeyFromString(key);
                         if (publicKey != null) {
@@ -390,10 +415,28 @@ public abstract class KeyUtil {
                     } catch (IOException | PGPException e) {
                         return false;
                     }
-                } else if (SOSPGPConstants.DEFAULT_ALGORYTHM_NAME.equals(keyPair.getKeyAlgorithm())) {
-                    
-                } else if (SOSPGPConstants.ECDSA_ALGORYTHM_NAME.equals(keyPair.getKeyAlgorithm())) {
-                    
+                } else if (SOSPGPConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+                    try {
+                        PublicKey pub = getRSAPublicKeyFromString(key, SOSPGPConstants.RSA_ALGORITHM_NAME);
+                        if (pub != null) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+                        return false;
+                    }
+                } else if (SOSPGPConstants.ECDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+                    try {
+                        PublicKey pub = getECDSAPublicKeyFromString(key, SOSPGPConstants.ECDSA_ALGORITHM_NAME);
+                        if (pub != null) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+                        return false;
+                    }
                 }
             }
         }
@@ -507,7 +550,7 @@ public abstract class KeyUtil {
     // checks if the provided String really is an ASCII representation of a PGP or RSA key
     public static boolean isKeyValid(String key, String keyAlgorithm) {
         if (key != null) {
-            if (SOSPGPConstants.PGP_ALGORYTHM_NAME.equals(keyAlgorithm)) {
+            if (SOSPGPConstants.PGP_ALGORITHM_NAME.equals(keyAlgorithm)) {
                 if (key.startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
                     try {
                         String publicFromPrivateKey = extractPublicKey(key);
@@ -535,7 +578,7 @@ public abstract class KeyUtil {
                         return false;
                     }
                 }
-            } else if (SOSPGPConstants.DEFAULT_ALGORYTHM_NAME.equals(keyAlgorithm)) {
+            } else if (SOSPGPConstants.RSA_ALGORITHM_NAME.equals(keyAlgorithm)) {
                 if (key.startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
                     try {
                         KeyPair kp = getKeyPairFromRSAPrivatKeyString(key);
@@ -567,7 +610,7 @@ public abstract class KeyUtil {
                         return false;
                     }
                 }
-            } else if (SOSPGPConstants.ECDSA_ALGORYTHM_NAME.equals(keyAlgorithm)) {
+            } else if (SOSPGPConstants.ECDSA_ALGORITHM_NAME.equals(keyAlgorithm)) {
                 
             }
        }
@@ -623,7 +666,7 @@ public abstract class KeyUtil {
         PEMParser pemParser = new PEMParser(new StringReader(privateKey));
         final PEMKeyPair pemKeyPair = (PEMKeyPair) pemParser.readObject();
         final byte[] privateEncoded = pemKeyPair.getPrivateKeyInfo().getEncoded();
-        KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
+        KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.RSA_ALGORITHM_NAME);
         PrivateKey privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(privateEncoded));
         pemParser.close();
         return privKey;
@@ -635,7 +678,7 @@ public abstract class KeyUtil {
         PEMKeyPair pemKeyPair = (PEMKeyPair) pemParser.readObject();
         final byte[] privateEncoded = pemKeyPair.getPrivateKeyInfo().getEncoded();
         final byte[] publicEncoded = pemKeyPair.getPublicKeyInfo().getEncoded();
-        KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
+        KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.RSA_ALGORITHM_NAME);
         PrivateKey privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(privateEncoded));
         PublicKey publicKey = kf.generatePublic(new X509EncodedKeySpec(publicEncoded));
         pemParser.close();
@@ -644,27 +687,32 @@ public abstract class KeyUtil {
     
     public static KeyPair getKeyPairFromECDSAPrivatKeyString (String privateKey)
             throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
-        PrivateKey privKey = getPrivateKeyFromString(privateKey);
+        PrivateKey privKey = getPrivateECDSAKeyFromString(privateKey);
         ECPrivateKey ecdsaPrivateKey = (ECPrivateKey) privKey;
         ECPublicKeySpec ecPublicKeySpec = new ECPublicKeySpec(ecdsaPrivateKey.getParams().getGenerator(), ecdsaPrivateKey.getParams());
-        KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.ECDSA_ALGORYTHM_NAME);
+        KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.EC_ALGORITHM_NAME);
         PublicKey publicKey = kf.generatePublic(ecPublicKeySpec);
         return new KeyPair(publicKey, privKey);
     }
     
     public static KeyPair getKeyPairFromPrivatKeyString (String privateKey)
             throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
-        PrivateKey privKey = getPrivateKeyFromString(privateKey);
+        PrivateKey privKey;
+        try {
+            privKey = getPrivateKeyFromString(privateKey);
+        } catch (Exception e1) {
+            privKey = getPemPrivateKeyFromRSAString(privateKey);
+        }
         try {
             RSAPrivateCrtKey rsaPrivateKey = (RSAPrivateCrtKey)privKey;
             RSAPublicKeySpec rsaPubKeySpec = new RSAPublicKeySpec(rsaPrivateKey.getModulus(), rsaPrivateKey.getPublicExponent());
-            KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
+            KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.RSA_ALGORITHM_NAME);
             PublicKey publicKey = kf.generatePublic(rsaPubKeySpec);
             return new KeyPair(publicKey, privKey);
         } catch (ClassCastException | NoSuchAlgorithmException|InvalidKeySpecException e) {
             ECPrivateKey ecdsaPrivateKey = (ECPrivateKey) privKey;
             ECPublicKeySpec ecPublicKeySpec = new ECPublicKeySpec(ecdsaPrivateKey.getParams().getGenerator(), ecdsaPrivateKey.getParams());
-            KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.EC_ALGORYTHM_NAME);
+            KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.EC_ALGORITHM_NAME);
             PublicKey publicKey = kf.generatePublic(ecPublicKeySpec);
             return new KeyPair(publicKey, privKey);
         }
@@ -744,7 +792,7 @@ public abstract class KeyUtil {
         }
         PrivateKey privKey = getPemPrivateKeyFromRSAString(privateKey);
         byte[] privateKeyData = privKeyAsPemObject.getContent();
-        KeyFactory keyFact = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
+        KeyFactory keyFact = KeyFactory.getInstance(SOSPGPConstants.RSA_ALGORITHM_NAME);
         KeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyData);
         if (!(privKey instanceof RSAPrivateKey)) {
             throw new IllegalArgumentException("Key file does not contain an X.509 encoded private key");
@@ -876,17 +924,45 @@ public abstract class KeyUtil {
             throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
         PrivateKeyInfo privateKeyInfo = (PrivateKeyInfo)KeyUtil.readPemObject(privateKey);
         try {
-            KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
+            KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.RSA_ALGORITHM_NAME);
             return kf.generatePrivate(new PKCS8EncodedKeySpec(privateKeyInfo.getEncoded()));
         } catch (NoSuchAlgorithmException|InvalidKeySpecException e) {
-            KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.EC_ALGORYTHM_NAME);
+            KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.EC_ALGORITHM_NAME);
             return kf.generatePrivate(new PKCS8EncodedKeySpec(privateKeyInfo.getEncoded()));
         }
     }
     
+    public static PGPPrivateKey getPrivatePGPKey(String privateKey) throws IOException, PGPException {
+        InputStream privateKeyStream = IOUtils.toInputStream(privateKey); 
+        Security.addProvider(new BouncyCastleProvider());
+        PGPSecretKey secretKey = readSecretKey(privateKeyStream);
+        return secretKey.extractPrivateKey(new JcePBESecretKeyDecryptorBuilder().setProvider(
+                BouncyCastleProvider.PROVIDER_NAME).build("".toCharArray()));
+    }
+    
+    public static PrivateKey getPrivateECDSAKeyFromString (String privateKey)
+            throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
+        PEMParser pemParser = new PEMParser(new StringReader(privateKey));
+        PEMKeyPair pemKeyPair = (PEMKeyPair)KeyUtil.readPemObject(privateKey);
+        final byte[] privateEncoded = pemKeyPair.getPrivateKeyInfo().getEncoded();
+        final byte[] publicEncoded = pemKeyPair.getPublicKeyInfo().getEncoded();
+        KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.EC_ALGORITHM_NAME);
+        PrivateKey privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(privateEncoded));
+        PublicKey publicKey = kf.generatePublic(new X509EncodedKeySpec(publicEncoded));
+        pemParser.close();
+        return privKey;
+//        try {
+//            KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
+//            return kf.generatePrivate(new PKCS8EncodedKeySpec(pemKeyPair.getEncoded()));
+//        } catch (NoSuchAlgorithmException|InvalidKeySpecException e) {
+//            KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.EC_ALGORYTHM_NAME);
+//            return kf.generatePrivate(new PKCS8EncodedKeySpec(pemKeyPair.getEncoded()));
+//        }
+    }
+    
     public static PublicKey getRSAPublicKeyFromString (String publicKey, String keyAlgorythm) throws NoSuchAlgorithmException, InvalidKeySpecException {
         byte[] decoded = null;
-        KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
+        KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.RSA_ALGORITHM_NAME);
         if (publicKey.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
             decoded = Base64.decode(stripFormatFromPublicRSAKey(publicKey));
         } else if (publicKey.startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER)) {
@@ -902,7 +978,7 @@ public abstract class KeyUtil {
         byte[] decoded = null;
         Provider bcProvider = new BouncyCastleProvider();
         Security.addProvider(bcProvider);
-        KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.ECDSA_ALGORYTHM_NAME);
+        KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.ECDSA_ALGORITHM_NAME);
         if (publicKey.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
             decoded = Base64.decode(stripFormatFromPublicRSAKey(publicKey));
         } else if (publicKey.startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER)) {
@@ -927,7 +1003,7 @@ public abstract class KeyUtil {
     }
     
     public static PublicKey getPublicKeyFromString (byte[] decoded) throws NoSuchAlgorithmException, InvalidKeySpecException {
-        KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
+        KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.RSA_ALGORITHM_NAME);
         X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(decoded);
         return kf.generatePublic(pubKeySpec);
     }
@@ -935,7 +1011,7 @@ public abstract class KeyUtil {
     
     public static PublicKey extractPublicKey (PrivateKey privateKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateKey.getEncoded());
-        KeyFactory keyFactory = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
+        KeyFactory keyFactory = KeyFactory.getInstance(SOSPGPConstants.RSA_ALGORITHM_NAME);
         PublicKey publicKey = keyFactory.generatePublic(keySpec);
         return publicKey;
     }
@@ -946,7 +1022,7 @@ public abstract class KeyUtil {
         BigInteger modulus = ((ASN1Integer) e.nextElement()).getValue();
         BigInteger publicExponent = ((ASN1Integer) e.nextElement()).getValue();
         RSAPublicKeySpec spec = new RSAPublicKeySpec(modulus, publicExponent);
-        KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM_NAME);
+        KeyFactory kf = KeyFactory.getInstance(SOSPGPConstants.RSA_ALGORITHM_NAME);
         PublicKey pk = kf.generatePublic(spec);
         return pk;
     }
@@ -1156,4 +1232,19 @@ public abstract class KeyUtil {
         return key.replaceAll("(.{64})", "$1\n").trim();
     }
 
+    public static PGPSecretKey readSecretKey(InputStream input) throws IOException, PGPException {
+        PGPSecretKeyRingCollection pgpSec = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(input), new JcaKeyFingerprintCalculator());
+        Iterator<PGPSecretKeyRing> keyRingIter = pgpSec.getKeyRings();
+        while (keyRingIter.hasNext()) {
+            PGPSecretKeyRing keyRing = keyRingIter.next();
+            Iterator<PGPSecretKey> keyIter = keyRing.getSecretKeys();
+            while (keyIter.hasNext()) {
+                PGPSecretKey key = keyIter.next();
+                if (key.isSigningKey()) {
+                    return key;
+                }
+            }
+        }
+        throw new IllegalArgumentException("Can't find signing key in key ring.");
+    }
 }

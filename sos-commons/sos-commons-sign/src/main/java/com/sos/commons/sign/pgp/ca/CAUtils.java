@@ -104,7 +104,7 @@ public abstract class CAUtils {
       GeneralNames san = new GeneralNames(altName);
       certgen.addExtension(new ASN1ObjectIdentifier("2.5.29.17"), false, san);
       ContentSigner signer = null;
-      if (algorythm.equals(SOSPGPConstants.DEFAULT_ALGORYTHM)) {
+      if (algorythm.equals(SOSPGPConstants.RSA_ALGORITHM)) {
           signer = new BcRSAContentSignerBuilder(sigAlgId, digAlgId).build(PrivateKeyFactory.createKey( privateKey.getEncoded()));
       } else {
           signer = new BcECContentSignerBuilder(sigAlgId, digAlgId).build(PrivateKeyFactory.createKey( privateKey.getEncoded()));

@@ -103,7 +103,7 @@ public class VerifySignature {
     
     public static Boolean verifyX509 (PublicKey publicKey, String original, String signature)
             throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        Signature sig = Signature.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM);
+        Signature sig = Signature.getInstance(SOSPGPConstants.RSA_ALGORITHM);
         sig.initVerify(publicKey);
         sig.update(original.getBytes());
         return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));
@@ -119,7 +119,7 @@ public class VerifySignature {
     
     public static Boolean verifyX509(X509Certificate certificate, String original, String signature)
             throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException, NoSuchProviderException {
-        Signature sig = Signature.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM);
+        Signature sig = Signature.getInstance(SOSPGPConstants.RSA_ALGORITHM);
         sig.initVerify(certificate);
         sig.update(original.getBytes());
         return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));
@@ -135,7 +135,7 @@ public class VerifySignature {
     
     public static Boolean verifyX509(Certificate certificate, String original, String signature)
             throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException, NoSuchProviderException {
-        Signature sig = Signature.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM);
+        Signature sig = Signature.getInstance(SOSPGPConstants.RSA_ALGORITHM);
         sig.initVerify(certificate);
         sig.update(original.getBytes());
         return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));
@@ -144,7 +144,7 @@ public class VerifySignature {
     public static Boolean verifyX509BC(X509Certificate certificate, String original, String signature)
             throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException, NoSuchProviderException {
         Security.addProvider(new BouncyCastleProvider());
-        Signature sig = Signature.getInstance(SOSPGPConstants.DEFAULT_ALGORYTHM, BouncyCastleProvider.PROVIDER_NAME);
+        Signature sig = Signature.getInstance(SOSPGPConstants.RSA_ALGORITHM, BouncyCastleProvider.PROVIDER_NAME);
         sig.initVerify(certificate.getPublicKey());
         sig.update(original.getBytes());
         return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));

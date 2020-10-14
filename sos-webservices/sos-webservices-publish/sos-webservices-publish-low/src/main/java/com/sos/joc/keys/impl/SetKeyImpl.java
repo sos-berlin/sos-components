@@ -44,13 +44,14 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
 //            keyPair.setKeyAlgorithm(setKeyFilter.getKeyAlgorithm());
             boolean valid = false;
             if (keyPairNotEmpty(keyPair)) {
-                if (JocKeyAlgorithm.ECDSA.name().equals(keyPair.getKeyAlgorithm())) {
-                    valid = KeyUtil.isECDSAKeyPairValid(keyPair);
-                } else if (JocKeyAlgorithm.RSA.name().equals(keyPair.getKeyAlgorithm()) ||
-                        JocKeyAlgorithm.PGP.name().equals(keyPair.getKeyAlgorithm())) {
-                    valid = KeyUtil.isKeyPairValid(keyPair);
-                } 
-                if (valid) {
+                if (KeyUtil.isKeyPairValid(keyPair)) {
+//                if (JocKeyAlgorithm.ECDSA.name().equals(keyPair.getKeyAlgorithm())) {
+//                    valid = KeyUtil.isECDSAKeyPairValid(keyPair);
+//                } else if (JocKeyAlgorithm.RSA.name().equals(keyPair.getKeyAlgorithm()) ||
+//                        JocKeyAlgorithm.PGP.name().equals(keyPair.getKeyAlgorithm())) {
+//                    valid = KeyUtil.isKeyPairValid(keyPair);
+//                } 
+//                if (valid) {
                     hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
                     String account = Globals.defaultProfileAccount;
                     if (keyPair.getPrivateKey() != null && !keyPair.getPrivateKey().isEmpty()) {
