@@ -59,6 +59,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
     public JOCDefaultResponse storeJobscheduler(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
+            initLogging(API_CALL_REGISTER, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, RegisterParameters.class);
             RegisterParameters jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, RegisterParameters.class);
             
@@ -94,8 +95,8 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 index++;
             }
             
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_REGISTER, jobSchedulerBody, accessToken, "", getPermissonsJocCockpit(jobschedulerId,
-                    accessToken).getJS7Controller().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getPermissonsJocCockpit(jobschedulerId, accessToken).getJS7Controller()
+                    .getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -223,12 +224,12 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
     public JOCDefaultResponse deleteJobscheduler(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
+            initLogging(API_CALL_DELETE, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_DELETE, jobSchedulerBody, accessToken, "",
-                    getPermissonsJocCockpit(jobSchedulerBody.getJobschedulerId(), accessToken).getJS7Controller().getAdministration()
-                            .isRemoveOldInstances());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getPermissonsJocCockpit(jobSchedulerBody.getJobschedulerId(), accessToken)
+                    .getJS7Controller().getAdministration().isRemoveOldInstances());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -266,6 +267,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
     @Override
     public JOCDefaultResponse testConnectionJobscheduler(String accessToken, byte[] filterBytes) {
         try {
+            initLogging(API_CALL_TEST, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             
@@ -273,8 +275,8 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             if (jobSchedulerBody.getJobschedulerId() != null) {
                 jobschedulerId = jobSchedulerBody.getJobschedulerId();
             }
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_TEST, jobSchedulerBody, accessToken, "", getPermissonsJocCockpit(
-                    jobschedulerId, accessToken).getJS7Controller().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getPermissonsJocCockpit(jobschedulerId, accessToken).getJS7Controller()
+                    .getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

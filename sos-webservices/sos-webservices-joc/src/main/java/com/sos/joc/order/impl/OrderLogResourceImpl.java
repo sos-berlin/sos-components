@@ -26,14 +26,14 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
     @Override
     public JOCDefaultResponse postOrderLog(String accessToken, byte[] filterBytes) {
         try {
+            initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrderHistoryFilter.class);
             OrderHistoryFilter orderHistoryFilter = Globals.objectMapper.readValue(filterBytes, OrderHistoryFilter.class);
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, orderHistoryFilter, accessToken, orderHistoryFilter.getJobschedulerId(),
-                    getPermissonsJocCockpit(orderHistoryFilter.getJobschedulerId(), accessToken).getOrder().getView().isOrderLog());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(orderHistoryFilter.getJobschedulerId(), getPermissonsJocCockpit(orderHistoryFilter
+                    .getJobschedulerId(), accessToken).getOrder().getView().isOrderLog());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            checkRequiredParameter("historyId", orderHistoryFilter.getHistoryId());
             
             LogOrderContent logOrderContent = new LogOrderContent(orderHistoryFilter.getHistoryId());
             return JOCDefaultResponse.responseStatus200(logOrderContent.getOrderLog());
@@ -63,14 +63,14 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
     @Override
     public JOCDefaultResponse downloadOrderLog(String accessToken, byte[] filterBytes) {
         try {
+            initLogging(API_CALL_DOWNLOAD, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrderHistoryFilter.class);
             OrderHistoryFilter orderHistoryFilter = Globals.objectMapper.readValue(filterBytes, OrderHistoryFilter.class);
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_DOWNLOAD, orderHistoryFilter, accessToken, orderHistoryFilter.getJobschedulerId(),
-                    getPermissonsJocCockpit(orderHistoryFilter.getJobschedulerId(), accessToken).getOrder().getView().isOrderLog());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(orderHistoryFilter.getJobschedulerId(), getPermissonsJocCockpit(orderHistoryFilter
+                    .getJobschedulerId(), accessToken).getOrder().getView().isOrderLog());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            checkRequiredParameter("historyId", orderHistoryFilter.getHistoryId());
 
             LogOrderContent logOrderContent = new LogOrderContent(orderHistoryFilter.getHistoryId());
             return JOCDefaultResponse.responseOctetStreamDownloadStatus200(logOrderContent.getStreamOutput(), logOrderContent.getDownloadFilename(),
@@ -86,15 +86,14 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
     @Override
     public JOCDefaultResponse postRollingOrderLog(String accessToken, byte[] filterBytes) {
         try {
+            initLogging(API_CALL_RUNNING, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrderRunningLogFilter.class);
             OrderRunningLogFilter orderHistoryFilter = Globals.objectMapper.readValue(filterBytes, OrderRunningLogFilter.class);
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_RUNNING, orderHistoryFilter, accessToken, orderHistoryFilter.getJobschedulerId(),
-                    getPermissonsJocCockpit(orderHistoryFilter.getJobschedulerId(), accessToken).getOrder().getView().isOrderLog());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(orderHistoryFilter.getJobschedulerId(), getPermissonsJocCockpit(orderHistoryFilter
+                    .getJobschedulerId(), accessToken).getOrder().getView().isOrderLog());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            checkRequiredParameter("historyId", orderHistoryFilter.getHistoryId());
-            checkRequiredParameter("eventId", orderHistoryFilter.getEventId());
             
             LogOrderContent logOrderContent = new LogOrderContent(orderHistoryFilter);
             return JOCDefaultResponse.responseStatus200(logOrderContent.getOrderLog());

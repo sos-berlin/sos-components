@@ -33,6 +33,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
     @Override
     public JOCDefaultResponse read(final String accessToken, final byte[] inBytes) {
         try {
+            initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, RequestFilter.class);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 
@@ -156,7 +157,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
     private JOCDefaultResponse checkPermissions(final String accessToken, final RequestFilter in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
         boolean permission = permissions.getInventory().getConfigurations().isEdit();
-        return init(IMPL_PATH, in, accessToken, "", permission);
+        return initPermissions(null, permission);
     }
 
 }

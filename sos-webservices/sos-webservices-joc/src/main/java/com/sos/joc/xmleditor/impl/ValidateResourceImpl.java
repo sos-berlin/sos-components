@@ -31,6 +31,7 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
     @Override
     public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
         try {
+            initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ValidateConfiguration.class);
             ValidateConfiguration in = Globals.objectMapper.readValue(filterBytes, ValidateConfiguration.class);
             
@@ -81,7 +82,7 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
     private JOCDefaultResponse checkPermissions(final String accessToken, final ValidateConfiguration in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
         boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return init(IMPL_PATH, in, accessToken, in.getJobschedulerId(), permission);
+        return initPermissions(in.getJobschedulerId(), permission);
     }
 
     public static ValidateConfigurationAnswer getError(XsdValidatorException e) {

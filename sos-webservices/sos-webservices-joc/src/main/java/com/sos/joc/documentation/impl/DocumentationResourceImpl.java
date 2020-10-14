@@ -36,8 +36,9 @@ public class DocumentationResourceImpl extends JOCResourceImpl implements IDocum
         SOSHibernateSession connection = null;
         try {
             String request = String.format("%s/%s/%s/%s", API_CALL, jobschedulerId, accessToken, path);
+            initLogging(request, null, accessToken);
             boolean perm = getPermissonsJocCockpit(jobschedulerId, accessToken).getDocumentation().isView();
-            JOCDefaultResponse jocDefaultResponse = init(request, null, accessToken, jobschedulerId, perm);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(jobschedulerId, perm);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

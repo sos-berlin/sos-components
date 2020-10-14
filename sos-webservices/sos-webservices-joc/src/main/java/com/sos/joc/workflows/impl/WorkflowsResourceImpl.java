@@ -39,10 +39,11 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
     public JOCDefaultResponse postWorkflows(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
+            initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, WorkflowsFilter.class);
             WorkflowsFilter workflowsFilter = Globals.objectMapper.readValue(filterBytes, WorkflowsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, workflowsFilter, accessToken, workflowsFilter.getJobschedulerId(),
-                    getPermissonsJocCockpit(workflowsFilter.getJobschedulerId(), accessToken).getOrder().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(workflowsFilter.getJobschedulerId(), getPermissonsJocCockpit(workflowsFilter
+                    .getJobschedulerId(), accessToken).getOrder().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

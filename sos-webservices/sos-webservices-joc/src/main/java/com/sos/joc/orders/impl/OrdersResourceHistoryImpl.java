@@ -44,10 +44,11 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
     public JOCDefaultResponse postOrdersHistory(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
+            initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrdersFilter.class);
             OrdersFilter ordersFilter = Globals.objectMapper.readValue(filterBytes, OrdersFilter.class);
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, ordersFilter, accessToken, ordersFilter.getJobschedulerId(),
-                    getPermissonsJocCockpit(ordersFilter.getJobschedulerId(), accessToken).getHistory().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(ordersFilter.getJobschedulerId(), getPermissonsJocCockpit(ordersFilter
+                    .getJobschedulerId(), accessToken).getHistory().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

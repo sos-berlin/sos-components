@@ -27,6 +27,7 @@ public class RenameResourceImpl extends JOCResourceImpl implements IRenameResour
     public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
+            initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, RenameConfiguration.class);
             RenameConfiguration in = Globals.objectMapper.readValue(filterBytes, RenameConfiguration.class);
 
@@ -119,7 +120,7 @@ public class RenameResourceImpl extends JOCResourceImpl implements IRenameResour
     private JOCDefaultResponse checkPermissions(final String accessToken, final RenameConfiguration in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
         boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return init(IMPL_PATH, in, accessToken, in.getJobschedulerId(), permission);
+        return initPermissions(in.getJobschedulerId(), permission);
     }
 
     private RenameConfigurationAnswer getSuccess(Long id, Date modified) {

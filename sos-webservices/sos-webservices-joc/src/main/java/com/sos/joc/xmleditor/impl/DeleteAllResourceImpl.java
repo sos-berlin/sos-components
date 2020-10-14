@@ -33,6 +33,7 @@ public class DeleteAllResourceImpl extends JOCResourceImpl implements IDeleteAll
     @Override
     public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
         try {
+            initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DeleteAll.class);
             DeleteAll in = Globals.objectMapper.readValue(filterBytes, DeleteAll.class);
 
@@ -67,7 +68,7 @@ public class DeleteAllResourceImpl extends JOCResourceImpl implements IDeleteAll
     private JOCDefaultResponse checkPermissions(final String accessToken, final DeleteAll in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
         boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return init(IMPL_PATH, in, accessToken, in.getJobschedulerId(), permission);
+        return initPermissions(in.getJobschedulerId(), permission);
     }
 
     private DeleteAllAnswer getSuccess() throws Exception {

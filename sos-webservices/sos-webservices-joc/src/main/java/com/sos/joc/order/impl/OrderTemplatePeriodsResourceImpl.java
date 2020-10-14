@@ -54,11 +54,11 @@ public class OrderTemplatePeriodsResourceImpl extends JOCResourceImpl implements
     public JOCDefaultResponse postOrderTemplatePeriods(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
+            initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrderTemplateDatesFilter.class);
             OrderTemplateDatesFilter in = Globals.objectMapper.readValue(filterBytes, OrderTemplateDatesFilter.class);
             // TODO permission
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, in, accessToken, null, getPermissonsJocCockpit(null, accessToken).getOrder()
-                    .getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getPermissonsJocCockpit(null, accessToken).getOrder().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

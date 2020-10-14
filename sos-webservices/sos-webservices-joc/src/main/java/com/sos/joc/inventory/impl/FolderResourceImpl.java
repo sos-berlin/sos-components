@@ -32,6 +32,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
     @Override
     public JOCDefaultResponse readFolder(final String accessToken, final byte[] inBytes) {
         try {
+            initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, RequestFolder.class);
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 
@@ -134,7 +135,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
         boolean permission = permissions.getInventory().getConfigurations().isEdit();
 
-        JOCDefaultResponse response = init(IMPL_PATH, in, accessToken, "", permission);
+        JOCDefaultResponse response = initPermissions(null, permission);
         if (response == null) {
             if (JocInventory.ROOT_FOLDER.equals(in.getPath())) {
                 if (!folderPermissions.isPermittedForFolder(in.getPath())) {

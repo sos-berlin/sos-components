@@ -48,6 +48,11 @@ public class JobSchedulerResourceMastersImpl extends JOCResourceImpl implements 
         SOSHibernateSession connection = null;
 
         try {
+            String apiCall = API_CALL;
+            if (onlyDb) {
+                apiCall += "/p";
+            }
+            initLogging(apiCall, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, JobSchedulerId.class);
             JobSchedulerId jobSchedulerFilter = Globals.objectMapper.readValue(filterBytes, JobSchedulerId.class);
 
@@ -62,12 +67,7 @@ public class JobSchedulerResourceMastersImpl extends JOCResourceImpl implements 
             if (!jobSchedulerId.isEmpty()) {
                 isPermitted = user.getSosPermissionJocCockpit(jobSchedulerId).getJS7Controller().getView().isStatus();
             }
-
-            String apiCall = API_CALL;
-            if (onlyDb) {
-                apiCall += "/p";
-            }
-            JOCDefaultResponse jocDefaultResponse = init(apiCall, null, accessToken, jobSchedulerId, isPermitted);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(jobSchedulerId, isPermitted);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

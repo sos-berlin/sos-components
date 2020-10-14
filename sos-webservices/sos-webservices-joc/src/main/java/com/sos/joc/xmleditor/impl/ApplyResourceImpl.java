@@ -9,15 +9,15 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
-import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.classes.xmleditor.exceptions.XsdValidatorException;
 import com.sos.joc.classes.xmleditor.validator.XsdValidator;
-import com.sos.joc.exceptions.JobSchedulerBadRequestException;
+import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
+import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.xmleditor.apply.ApplyConfiguration;
 import com.sos.joc.model.xmleditor.apply.ApplyConfigurationAnswer;
@@ -28,8 +28,6 @@ import com.sos.joc.xmleditor.common.Xml2JsonConverter;
 import com.sos.joc.xmleditor.resource.IApplyResource;
 import com.sos.schema.JsonValidator;
 
-import com.sos.commons.util.SOSString;
-
 @Path(JocXmlEditor.APPLICATION_PATH)
 public class ApplyResourceImpl extends JOCResourceImpl implements IApplyResource {
 
@@ -39,6 +37,7 @@ public class ApplyResourceImpl extends JOCResourceImpl implements IApplyResource
     public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
+            initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ApplyConfiguration.class);
             ApplyConfiguration in = Globals.objectMapper.readValue(filterBytes, ApplyConfiguration.class);
 
@@ -192,7 +191,7 @@ public class ApplyResourceImpl extends JOCResourceImpl implements IApplyResource
     private JOCDefaultResponse checkPermissions(final String accessToken, final ApplyConfiguration in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
         boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return init(IMPL_PATH, in, accessToken, in.getJobschedulerId(), permission);
+        return initPermissions(in.getJobschedulerId(), permission);
     }
 
     private DBItemXmlEditorConfiguration getOthersObject(DbLayerXmlEditor dbLayer, ApplyConfiguration in, String name) throws Exception {

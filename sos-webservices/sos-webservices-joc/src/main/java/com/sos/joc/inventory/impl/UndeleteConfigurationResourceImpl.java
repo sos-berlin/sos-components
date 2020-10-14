@@ -27,6 +27,7 @@ public class UndeleteConfigurationResourceImpl extends JOCResourceImpl implement
     @Override
     public JOCDefaultResponse undelete(final String accessToken, final byte[] inBytes) {
         try {
+            initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, RequestFilter.class);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
             if (in.getPath() != null) {
@@ -129,6 +130,7 @@ public class UndeleteConfigurationResourceImpl extends JOCResourceImpl implement
 
     private void undeleteFolder(InventoryDBLayer dbLayer, String folder) throws Exception {
         dbLayer.getSession().beginTransaction();
+        // TODO why getConfigurationsWithMaxDeployment? we need only id!!!
         List<InventoryDeployablesTreeFolderItem> items = dbLayer.getConfigurationsWithMaxDeployment(folder, true);
         if (items != null) {
             for (InventoryDeployablesTreeFolderItem item : items) {
@@ -143,7 +145,7 @@ public class UndeleteConfigurationResourceImpl extends JOCResourceImpl implement
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
         boolean permission = permissions.getInventory().getConfigurations().isEdit();
 
-        return init(IMPL_PATH, in, accessToken, "", permission);
+        return initPermissions(null, permission);
     }
 
     private void storeAuditLog(ConfigurationType objectType, String path, String folder) {

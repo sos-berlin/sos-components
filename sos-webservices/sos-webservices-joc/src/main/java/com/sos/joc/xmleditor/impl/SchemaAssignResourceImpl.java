@@ -25,6 +25,7 @@ public class SchemaAssignResourceImpl extends JOCResourceImpl implements ISchema
     @Override
     public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
         try {
+            initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, SchemaAssignConfiguration.class);
             SchemaAssignConfiguration in = Globals.objectMapper.readValue(filterBytes, SchemaAssignConfiguration.class);
 
@@ -56,7 +57,7 @@ public class SchemaAssignResourceImpl extends JOCResourceImpl implements ISchema
     private JOCDefaultResponse checkPermissions(final String accessToken, final SchemaAssignConfiguration in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
         boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return init(IMPL_PATH, in, accessToken, in.getJobschedulerId(), permission);
+        return initPermissions(in.getJobschedulerId(), permission);
     }
 
     private SchemaAssignConfigurationAnswer getSuccess(final SchemaAssignConfiguration in) throws Exception {

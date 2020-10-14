@@ -27,7 +27,8 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
     @Override
     public JOCDefaultResponse delete(final String accessToken, final byte[] inBytes) {
         try {
-            // don't use JsonValidator.validateFailFast because of oneOf-Requirements
+            // don't use JsonValidator.validateFailFast because of anyOf-Requirements
+            initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, RequestFilter.class);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
             if (in.getPath() != null) {
@@ -95,6 +96,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
 
     private InventoryDeployablesTreeFolderItem getSingle(InventoryDBLayer dbLayer, Long id) throws Exception {
         dbLayer.getSession().beginTransaction();
+        // TODO why getConfigurationsWithMaxDeployment? we need only DBItemInventoryConfiguration!!!
         InventoryDeployablesTreeFolderItem config = dbLayer.getConfigurationWithMaxDeployment(id);
         dbLayer.getSession().commit();
         return config;
@@ -112,6 +114,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
 
     private void deleteFolder(InventoryDBLayer dbLayer, String folder) throws Exception {
         dbLayer.getSession().beginTransaction();
+        // TODO why getConfigurationsWithMaxDeployment? we need only id!!!
         List<InventoryDeployablesTreeFolderItem> items = dbLayer.getConfigurationsWithMaxDeployment(folder, true);
         if (items != null) {
             for (InventoryDeployablesTreeFolderItem item : items) {
@@ -124,8 +127,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
     private JOCDefaultResponse checkPermissions(final String accessToken, final RequestFilter in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
         boolean permission = permissions.getInventory().getConfigurations().isEdit();
-
-        return init(IMPL_PATH, in, accessToken, "", permission);
+        return initPermissions(null, permission);
     }
 
     private void storeAuditLog(ConfigurationType objectType, String path, String folder) {

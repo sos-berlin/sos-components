@@ -30,6 +30,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
     public JOCDefaultResponse delete(final String accessToken, final byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of oneOf-Requirements
+            initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, RequestFilter.class);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 
@@ -152,8 +153,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
     private JOCDefaultResponse checkPermissions(final String accessToken, final RequestFilter in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
         boolean permission = permissions.getInventory().getConfigurations().isEdit();
-
-        return init(IMPL_PATH, in, accessToken, "", permission);
+        return initPermissions(null, permission);
     }
 
 }

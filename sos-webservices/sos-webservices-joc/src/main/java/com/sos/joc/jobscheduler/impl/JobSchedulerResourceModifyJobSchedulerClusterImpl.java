@@ -37,13 +37,14 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
     @Override
     public JOCDefaultResponse postJobschedulerSwitchOver(String accessToken, byte[] filterBytes) {
         try {
+            initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter urlParameter = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
 
             boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken).getJS7ControllerCluster().getExecute()
                     .isSwitchOver();
 
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, urlParameter, accessToken, urlParameter.getJobschedulerId(), permission);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(urlParameter.getJobschedulerId(), permission);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

@@ -66,11 +66,12 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
     public JOCDefaultResponse postOrdersModify(Action action, String accessToken, byte[] filterBytes) {
         try {
+            initLogging(API_CALL + "/" + action.name().toLowerCase(), filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ModifyOrders.class);
             ModifyOrders modifyOrders = Globals.objectMapper.readValue(filterBytes, ModifyOrders.class);
             // TODO permissions
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL + "/" + action.name().toLowerCase(), modifyOrders, accessToken, modifyOrders
-                    .getJobschedulerId(), getPermissonsJocCockpit(modifyOrders.getJobschedulerId(), accessToken).getOrder().getExecute().isStart());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getJobschedulerId(), getPermissonsJocCockpit(modifyOrders
+                    .getJobschedulerId(), accessToken).getOrder().getExecute().isStart());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

@@ -46,10 +46,11 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
     public JOCDefaultResponse postTasksHistory(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
+            initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, JobsFilter.class);
             JobsFilter jobsFilter = Globals.objectMapper.readValue(filterBytes, JobsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, jobsFilter, accessToken, jobsFilter.getJobschedulerId(), getPermissonsJocCockpit(
-                    jobsFilter.getJobschedulerId(), accessToken).getHistory().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(jobsFilter.getJobschedulerId(), getPermissonsJocCockpit(jobsFilter
+                    .getJobschedulerId(), accessToken).getHistory().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

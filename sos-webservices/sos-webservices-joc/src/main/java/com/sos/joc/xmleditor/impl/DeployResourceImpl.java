@@ -37,6 +37,7 @@ public class DeployResourceImpl extends JOCResourceImpl implements IDeployResour
     public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
+            initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DeployConfiguration.class);
             DeployConfiguration in = Globals.objectMapper.readValue(filterBytes, DeployConfiguration.class);
 
@@ -113,7 +114,7 @@ public class DeployResourceImpl extends JOCResourceImpl implements IDeployResour
     private JOCDefaultResponse checkPermissions(final String accessToken, final DeployConfiguration in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
         boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return init(IMPL_PATH, in, accessToken, in.getJobschedulerId(), permission);
+        return initPermissions(in.getJobschedulerId(), permission);
     }
 
     private DBItemXmlEditorConfiguration getItem(DbLayerXmlEditor dbLayer, DeployConfiguration in) throws Exception {

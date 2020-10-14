@@ -45,8 +45,9 @@ public class SchemaDownloadResourceImpl extends JOCResourceImpl implements ISche
             }
             String json = builder.build().toString();
 
+            initLogging(IMPL_PATH, json.getBytes(), accessToken);
             JsonValidator.validateFailFast(json.getBytes(), SchemaDownloadConfiguration.class);
-            SchemaDownloadConfiguration in = Globals.objectMapper.readValue(json.getBytes(), SchemaDownloadConfiguration.class);
+            SchemaDownloadConfiguration in = Globals.objectMapper.readValue(json, SchemaDownloadConfiguration.class);
 
             checkRequiredParameters(in);
 
@@ -75,7 +76,7 @@ public class SchemaDownloadResourceImpl extends JOCResourceImpl implements ISche
     private JOCDefaultResponse checkPermissions(final String accessToken, final SchemaDownloadConfiguration in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
         boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return init(IMPL_PATH, in, accessToken, in.getJobschedulerId(), permission);
+        return initPermissions(in.getJobschedulerId(), permission);
     }
 
     private JOCDefaultResponse download(SchemaDownloadConfiguration in) throws Exception {

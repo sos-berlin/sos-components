@@ -22,6 +22,7 @@ public class Xml2JsonResourceImpl extends JOCResourceImpl implements IXml2JsonRe
     @Override
     public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
         try {
+            initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, Xml2JsonConfiguration.class);
             Xml2JsonConfiguration in = Globals.objectMapper.readValue(filterBytes, Xml2JsonConfiguration.class);
             
@@ -62,7 +63,7 @@ public class Xml2JsonResourceImpl extends JOCResourceImpl implements IXml2JsonRe
     private JOCDefaultResponse checkPermissions(final String accessToken, final Xml2JsonConfiguration in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
         boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return init(IMPL_PATH, in, accessToken, in.getJobschedulerId(), permission);
+        return initPermissions(in.getJobschedulerId(), permission);
     }
 
     private Xml2JsonConfigurationAnswer getSuccess(String json) {

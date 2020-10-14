@@ -43,15 +43,17 @@ public class JobSchedulerResourceImpl extends JOCResourceImpl implements IJobSch
     public JOCDefaultResponse postJobscheduler(String accessToken, byte[] filterBytes, boolean onlyDb) {
         SOSHibernateSession connection = null;
         try {
-            JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
-            UrlParameter jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
-            
             String apiCall = API_CALL;
             if (onlyDb) {
                 apiCall += "/p";
             }
-            JOCDefaultResponse jocDefaultResponse = init(apiCall, jobSchedulerBody, accessToken, jobSchedulerBody.getJobschedulerId(),
-                    getPermissonsJocCockpit(jobSchedulerBody.getJobschedulerId(), accessToken).getJS7Controller().getView().isStatus());
+            initLogging(apiCall, filterBytes, accessToken);
+            JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
+            UrlParameter jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
+            
+            
+            JOCDefaultResponse jocDefaultResponse = initPermissions(jobSchedulerBody.getJobschedulerId(), getPermissonsJocCockpit(jobSchedulerBody
+                    .getJobschedulerId(), accessToken).getJS7Controller().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

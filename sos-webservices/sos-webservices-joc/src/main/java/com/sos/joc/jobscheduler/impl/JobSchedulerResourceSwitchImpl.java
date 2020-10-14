@@ -27,11 +27,12 @@ public class JobSchedulerResourceSwitchImpl extends JOCResourceImpl implements I
     public JOCDefaultResponse postJobschedulerSwitch(String accessToken, byte[] filterBytes) {
 
         try {
+            initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, JobSchedulerId.class);
             JobSchedulerId jobSchedulerId = Globals.objectMapper.readValue(filterBytes, JobSchedulerId.class);
 
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, jobSchedulerId, accessToken, jobSchedulerId.getJobschedulerId(),
-                    getPermissonsJocCockpit(jobSchedulerId.getJobschedulerId(), accessToken).getJS7Controller().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(jobSchedulerId.getJobschedulerId(), getPermissonsJocCockpit(jobSchedulerId
+                    .getJobschedulerId(), accessToken).getJS7Controller().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

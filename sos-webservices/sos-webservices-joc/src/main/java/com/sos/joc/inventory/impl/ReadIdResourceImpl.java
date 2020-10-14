@@ -23,6 +23,7 @@ public class ReadIdResourceImpl extends JOCResourceImpl implements IReadIdResour
     @Override
     public JOCDefaultResponse read(final String accessToken, final byte[] inBytes) {
         try {
+            initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, RequestFilter.class);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 
@@ -71,7 +72,7 @@ public class ReadIdResourceImpl extends JOCResourceImpl implements IReadIdResour
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
         boolean permission = permissions.getInventory().getConfigurations().isEdit();
 
-        JOCDefaultResponse response = init(IMPL_PATH, in, accessToken, "", permission);
+        JOCDefaultResponse response = initPermissions(null, permission);
         if (response == null) {
             if (!folderPermissions.isPermittedForFolder(getParent(in.getPath()))) {
                 return accessDeniedResponse();

@@ -28,6 +28,7 @@ public class StoreResourceImpl extends JOCResourceImpl implements IStoreResource
     public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
+            initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, StoreConfiguration.class);
             StoreConfiguration in = Globals.objectMapper.readValue(filterBytes, StoreConfiguration.class);
 
@@ -142,7 +143,7 @@ public class StoreResourceImpl extends JOCResourceImpl implements IStoreResource
     private JOCDefaultResponse checkPermissions(final String accessToken, final StoreConfiguration in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
         boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return init(IMPL_PATH, in, accessToken, in.getJobschedulerId(), permission);
+        return initPermissions(in.getJobschedulerId(), permission);
     }
 
     private StoreConfigurationAnswer getSuccess(ObjectType type, Long id, Date modified, Date deployed) {

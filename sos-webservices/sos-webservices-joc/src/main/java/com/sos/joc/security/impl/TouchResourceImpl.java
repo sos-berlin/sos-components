@@ -23,9 +23,9 @@ public class TouchResourceImpl extends JOCResourceImpl implements ITouchResource
 
     public JOCDefaultResponse postTouch(String accessToken) throws Exception {
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, accessToken);
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
+            initLogging(API_CALL, null, accessToken);
+            if (!jobschedulerUser.isAuthenticated()) {
+                return JOCDefaultResponse.responseStatus401(JOCDefaultResponse.getError401Schema(jobschedulerUser));
             }
             try {
                  jobschedulerUser.resetTimeOut();

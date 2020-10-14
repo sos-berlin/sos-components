@@ -35,6 +35,7 @@ public class DeleteResourceImpl extends JOCResourceImpl implements IDeleteResour
     @Override
     public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
         try {
+            initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DeleteDraft.class);
             DeleteDraft in = Globals.objectMapper.readValue(filterBytes, DeleteDraft.class);
             
@@ -69,7 +70,7 @@ public class DeleteResourceImpl extends JOCResourceImpl implements IDeleteResour
     private JOCDefaultResponse checkPermissions(final String accessToken, final DeleteDraft in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
         boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return init(IMPL_PATH, in, accessToken, in.getJobschedulerId(), permission);
+        return initPermissions(in.getJobschedulerId(), permission);
     }
 
     private ReadStandardConfigurationAnswer handleStandardConfiguration(DeleteDraft in) throws Exception {

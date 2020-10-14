@@ -52,11 +52,12 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
     @Override
     public JOCDefaultResponse postOrdersAdd(String accessToken, byte[] filterBytes) {
         try {
+            initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, StartOrders.class);
             StartOrders startOrders = Globals.objectMapper.readValue(filterBytes, StartOrders.class);
 
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, startOrders, accessToken, startOrders.getJobschedulerId(),
-                    getPermissonsJocCockpit(startOrders.getJobschedulerId(), accessToken).getOrder().getExecute().isStart());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(startOrders.getJobschedulerId(), getPermissonsJocCockpit(startOrders
+                    .getJobschedulerId(), accessToken).getOrder().getExecute().isStart());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

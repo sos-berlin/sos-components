@@ -27,7 +27,8 @@ public class CommentsResourceImpl extends JOCResourceImpl implements ICommentsRe
     public JOCDefaultResponse postComments(String accessToken) throws Exception {
         
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, null, accessToken, "", true);
+            initLogging(API_CALL, null, accessToken);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

@@ -36,11 +36,12 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
     @Override
     public JOCDefaultResponse postRollingTaskLog(String accessToken, byte[] filterBytes) {
         try {
+            initLogging(API_CALL_RUNNING, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, RunningTaskLogsFilter.class);
             RunningTaskLogs taskLogs = Globals.objectMapper.readValue(filterBytes, RunningTaskLogs.class);
 
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_RUNNING, taskLogs, accessToken, taskLogs.getJobschedulerId(),
-                    getPermissonsJocCockpit(taskLogs.getJobschedulerId(), accessToken).getJob().getView().isTaskLog());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(taskLogs.getJobschedulerId(), getPermissonsJocCockpit(taskLogs
+                    .getJobschedulerId(), accessToken).getJob().getView().isTaskLog());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -93,11 +94,12 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
     public JOCDefaultResponse execute(String apiCall, String accessToken, byte[] filterBytes) {
 
         try {
+            initLogging(apiCall, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, TaskFilter.class);
             TaskFilter taskFilter = Globals.objectMapper.readValue(filterBytes, TaskFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = init(apiCall, taskFilter, accessToken, taskFilter.getJobschedulerId(), getPermissonsJocCockpit(
-                    taskFilter.getJobschedulerId(), accessToken).getJob().getView().isTaskLog());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(taskFilter.getJobschedulerId(), getPermissonsJocCockpit(taskFilter
+                    .getJobschedulerId(), accessToken).getJob().getView().isTaskLog());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

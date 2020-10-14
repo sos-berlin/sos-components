@@ -12,7 +12,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.deployment.DBItemDepVersions;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.ISetVersion;
@@ -27,10 +26,11 @@ public class SetVersionImpl extends JOCResourceImpl implements ISetVersion {
     public JOCDefaultResponse postSetVersion(String xAccessToken, byte[] setVersionFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
+            initLogging(API_CALL, setVersionFilter, xAccessToken);
             JsonValidator.validateFailFast(setVersionFilter, SetVersionFilter.class);
             SetVersionFilter filter = Globals.objectMapper.readValue(setVersionFilter, SetVersionFilter.class);
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, "", 
-                    getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isSetVersion());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations()
+                    .getPublish().isSetVersion());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

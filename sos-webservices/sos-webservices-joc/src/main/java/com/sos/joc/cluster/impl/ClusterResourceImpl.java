@@ -5,7 +5,6 @@ import java.util.Date;
 
 import javax.ws.rs.Path;
 
-import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -32,10 +31,11 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
     @Override
     public JOCDefaultResponse restart(String accessToken, byte[] filterBytes) {
         try {
+            initLogging(API_CALL_RESTART, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ClusterRestart.class);
             ClusterRestart in = Globals.objectMapper.readValue(filterBytes, ClusterRestart.class);
-
-            JOCDefaultResponse response = checkPermissions(API_CALL_RESTART, accessToken, in);
+            // TODO permission for restart
+            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getJoc().getView().isLog());
             if (response == null) {
                 if (in.getType().equals(ClusterServices.cluster)) {
                     processAnswer(JocClusterService.getInstance().restart());
@@ -56,10 +56,11 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
     @Override
     public JOCDefaultResponse switchMember(String accessToken, byte[] filterBytes) {
         try {
+            initLogging(API_CALL_SWITCH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ClusterSwitchMember.class);
             ClusterSwitchMember in = Globals.objectMapper.readValue(filterBytes, ClusterSwitchMember.class);
-
-            JOCDefaultResponse response = checkPermissions(API_CALL_SWITCH, accessToken, in);
+            // TODO permission for switchMember
+            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getJoc().getView().isLog());
             if (response == null) {
                 processAnswer(JocClusterService.getInstance().switchMember(in.getMemberId()));
                 response = JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -82,13 +83,6 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
                 throw new JocServiceException(answer.getError().getMessage());
             }
         }
-    }
-
-    // TODO permission restart/switchmember
-    private JOCDefaultResponse checkPermissions(final String request, final String accessToken, final Object in) throws Exception {
-        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
-        boolean permission = permissions.getJoc().getView().isLog();
-        return init(request, in, accessToken, "", permission);
     }
 
 }

@@ -30,6 +30,7 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
     @Override
     public JOCDefaultResponse postTree(String accessToken, byte[] treeBodyBytes) {
         try {
+            initLogging(API_CALL, treeBodyBytes, accessToken);
             JsonValidator.validateFailFast(treeBodyBytes, TreeFilter.class);
             TreeFilter treeBody = Globals.objectMapper.readValue(treeBodyBytes, TreeFilter.class);
 
@@ -38,7 +39,7 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             List<TreeType> types = TreePermanent.getAllowedTypes(treeBody.getTypes(), getPermissonsJocCockpit(treeBody.getJobschedulerId(),
                     accessToken), treeForInventory);
 
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, treeBody, accessToken, treeBody.getJobschedulerId(), types.size() > 0);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(treeBody.getJobschedulerId(), types.size() > 0);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

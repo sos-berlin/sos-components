@@ -30,10 +30,11 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
     @Override
     public JOCDefaultResponse postOrder(String accessToken, byte[] filterBytes) {
         try {
+            initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrderFilter.class);
             OrderFilter orderFilter = Globals.objectMapper.readValue(filterBytes, OrderFilter.class);
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, orderFilter, accessToken, orderFilter.getJobschedulerId(), getPermissonsJocCockpit(
-                    orderFilter.getJobschedulerId(), accessToken).getOrder().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(orderFilter.getJobschedulerId(), getPermissonsJocCockpit(orderFilter
+                    .getJobschedulerId(), accessToken).getOrder().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

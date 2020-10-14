@@ -27,11 +27,12 @@ public class JobSchedulerLogImpl extends JOCResourceImpl implements IJobSchedule
 
     public JOCDefaultResponse getLog(String accessToken, byte[] filterBytes) {
         try {
+            initLogging(LOG_API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter urlParamSchema = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
 
-            JOCDefaultResponse jocDefaultResponse = init(LOG_API_CALL, urlParamSchema, accessToken, urlParamSchema.getJobschedulerId(),
-                    getPermissonsJocCockpit(urlParamSchema.getJobschedulerId(), accessToken).getJS7Controller().getView().isMainlog());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(urlParamSchema.getJobschedulerId(), getPermissonsJocCockpit(urlParamSchema
+                    .getJobschedulerId(), accessToken).getJS7Controller().getView().isMainlog());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

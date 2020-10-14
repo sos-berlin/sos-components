@@ -64,13 +64,14 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
         SOSHibernateSession connection = null;
 
         try {
+            initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, JobSchedulerId.class);
             JobSchedulerId jobSchedulerFilter = Globals.objectMapper.readValue(filterBytes, JobSchedulerId.class);
 
             checkRequiredParameter("jobschedulerId", jobSchedulerFilter.getJobschedulerId());
 
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, jobSchedulerFilter, accessToken, jobSchedulerFilter.getJobschedulerId(),
-                    getPermissonsJocCockpit(jobSchedulerFilter.getJobschedulerId(), accessToken).getJS7Controller().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(jobSchedulerFilter.getJobschedulerId(), getPermissonsJocCockpit(jobSchedulerFilter
+                    .getJobschedulerId(), accessToken).getJS7Controller().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -124,7 +125,8 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
         return hostname;
     }
     
-    private List<Cockpit> setCockpits(SOSHibernateSession connection, List<ControllerConnectionState> fakeControllerConnections) throws DBConnectionRefusedException, DBInvalidDataException {
+    private List<Cockpit> setCockpits(SOSHibernateSession connection, List<ControllerConnectionState> fakeControllerConnections)
+            throws DBConnectionRefusedException, DBInvalidDataException {
         JocInstancesDBLayer dbLayer = new JocInstancesDBLayer(connection);
         List<DBItemJocInstance> instances = dbLayer.getInstances();
         DBItemJocCluster activeInstance = dbLayer.getCluster();

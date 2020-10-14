@@ -34,7 +34,8 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
     @Override
     public JOCDefaultResponse read(final String accessToken, final byte[] inBytes) {
         try {
-            // don't use JsonValidator.validateFailFast because of oneOf-Requirements
+            // don't use JsonValidator.validateFailFast because of anyOf-Requirements
+            initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, CalendarDatesFilter.class);
             CalendarDatesFilter in = Globals.objectMapper.readValue(inBytes, CalendarDatesFilter.class);
 
@@ -92,7 +93,7 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
     private JOCDefaultResponse checkPermissions(final String accessToken, final CalendarDatesFilter in) throws Exception {
         SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
         boolean permission = permissions.getInventory().getConfigurations().isView();
-        return init(IMPL_PATH, in, accessToken, "", permission);
+        return initPermissions(null, permission);
     }
     
     private static Dates getCalendarDates(InventoryDBLayer dbLayer, CalendarDatesFilter calendarFilter) throws SOSHibernateException,

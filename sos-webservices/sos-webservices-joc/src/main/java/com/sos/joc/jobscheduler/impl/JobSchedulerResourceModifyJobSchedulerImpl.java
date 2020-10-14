@@ -39,7 +39,7 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl 
     @Override
     public JOCDefaultResponse postJobschedulerTerminate(String accessToken, byte[] filterBytes) {
         try {
-            UrlParameter urlParameter = getUrlParameter(filterBytes);
+            UrlParameter urlParameter = getUrlParameter(filterBytes, accessToken, "terminate");
 
             boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken).getJS7Controller().getExecute()
                     .isTerminate();
@@ -59,7 +59,7 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl 
     @Override
     public JOCDefaultResponse postJobschedulerRestartTerminate(String accessToken, byte[] filterBytes) {
         try {
-            UrlParameter urlParameter = getUrlParameter(filterBytes);
+            UrlParameter urlParameter = getUrlParameter(filterBytes, accessToken, "restart");
 
             boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken).getJS7Controller().getExecute()
                     .getRestart().isTerminate();
@@ -79,7 +79,7 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl 
     @Override
     public JOCDefaultResponse postJobschedulerAbort(String accessToken, byte[] filterBytes) {
         try {
-            UrlParameter urlParameter = getUrlParameter(filterBytes);
+            UrlParameter urlParameter = getUrlParameter(filterBytes, accessToken, "abort");
 
             boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken).getJS7Controller().getExecute()
                     .isAbort();
@@ -95,7 +95,7 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl 
     @Override
     public JOCDefaultResponse postJobschedulerRestartAbort(String accessToken, byte[] filterBytes) {
         try {
-            UrlParameter urlParameter = getUrlParameter(filterBytes);
+            UrlParameter urlParameter = getUrlParameter(filterBytes, accessToken, "abort_and_restart");
 
             boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken).getJS7Controller().getExecute()
                     .getRestart().isAbort();
@@ -108,14 +108,15 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl 
         }
     }
 
-    private UrlParameter getUrlParameter(byte[] filterBytes) throws SOSJsonSchemaException, IOException {
+    private UrlParameter getUrlParameter(byte[] filterBytes, String accessToken, String request) throws SOSJsonSchemaException, IOException {
+        initLogging(API_CALL + request, filterBytes, accessToken);
         JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
         return Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
     }
 
     private JOCDefaultResponse executeModifyJobSchedulerCommand(String request, Command cmd, UrlParameter urlParameter, String accessToken,
             boolean permission) throws JsonProcessingException, JocException {
-        JOCDefaultResponse jocDefaultResponse = init(API_CALL + request, urlParameter, accessToken, urlParameter.getJobschedulerId(), permission);
+        JOCDefaultResponse jocDefaultResponse = initPermissions(urlParameter.getJobschedulerId(), permission);
         if (jocDefaultResponse != null) {
             return jocDefaultResponse;
         }

@@ -48,11 +48,12 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
     public JOCDefaultResponse postCalendars(String accessToken, byte[] filterBytes, boolean withUsedBy) {
         SOSHibernateSession session = null;
         try {
+            initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, CalendarsFilter.class);
             CalendarsFilter calendarsFilter = Globals.objectMapper.readValue(filterBytes, CalendarsFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, calendarsFilter, accessToken, null, getPermissonsJocCockpit("", accessToken)
-                    .getCalendar().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getPermissonsJocCockpit("", accessToken).getCalendar().getView()
+                    .isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

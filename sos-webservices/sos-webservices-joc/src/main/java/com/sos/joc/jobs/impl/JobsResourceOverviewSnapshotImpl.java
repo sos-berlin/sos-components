@@ -29,11 +29,12 @@ public class JobsResourceOverviewSnapshotImpl extends JOCResourceImpl implements
     @Override
     public JOCDefaultResponse postJobsOverviewSnapshot(String accessToken, byte[] filterBytes) {
         try {
+            initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, JobSchedulerId.class);
             JobSchedulerId jobScheduler = Globals.objectMapper.readValue(filterBytes, JobSchedulerId.class);
             
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, jobScheduler, accessToken, jobScheduler.getJobschedulerId(),
-                    getPermissonsJocCockpit(jobScheduler.getJobschedulerId(), accessToken).getJob().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(jobScheduler.getJobschedulerId(), getPermissonsJocCockpit(jobScheduler
+                    .getJobschedulerId(), accessToken).getJob().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

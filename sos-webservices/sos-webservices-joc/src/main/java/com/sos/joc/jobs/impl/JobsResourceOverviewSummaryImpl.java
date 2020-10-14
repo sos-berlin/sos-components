@@ -33,11 +33,12 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
     public JOCDefaultResponse postJobsOverviewSummary(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
+            initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, JobsFilter.class);
             JobsFilter jobsFilter = Globals.objectMapper.readValue(filterBytes, JobsFilter.class);
             
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, jobsFilter, accessToken, jobsFilter.getJobschedulerId(), getPermissonsJocCockpit(
-                    jobsFilter.getJobschedulerId(), accessToken).getJob().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(jobsFilter.getJobschedulerId(), getPermissonsJocCockpit(jobsFilter
+                    .getJobschedulerId(), accessToken).getJob().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
