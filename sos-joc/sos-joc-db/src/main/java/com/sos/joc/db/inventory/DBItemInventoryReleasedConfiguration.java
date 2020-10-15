@@ -36,6 +36,9 @@ public class DBItemInventoryReleasedConfiguration extends DBItem {
     @Column(name = "[PATH]", nullable = false)
     private String path;
 
+    @Column(name = "[CID]", nullable = false)
+    private Long cid;
+
     @Column(name = "[NAME]", nullable = false)
     private String name;
 
@@ -94,6 +97,14 @@ public class DBItemInventoryReleasedConfiguration extends DBItem {
 
     public void setPath(String val) {
         path = val;
+    }
+    
+    public Long getCid() {
+        return cid;
+    }
+
+    public void setCid(Long val) {
+        cid = val;
     }
 
     public String getName() {

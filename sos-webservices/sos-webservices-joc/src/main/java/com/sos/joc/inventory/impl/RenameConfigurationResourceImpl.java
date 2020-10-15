@@ -17,6 +17,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.inventory.resource.IRenameConfigurationResource;
 import com.sos.joc.model.common.IConfigurationObject;
@@ -35,9 +36,6 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
             initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, RequestFilter.class);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
-
-            checkRequiredParameter("id", in.getId());
-            checkRequiredParameter("name", in.getName());
 
             JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
             if (response == null) {
@@ -78,9 +76,13 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                     try {
                         switch (type) {
                         case JOB:
-                        case FOLDER:
                             //obsolete: don't have path in json to update
                             break;
+                        case FOLDER:
+                            //obsolete: don't have path in json to update
+                            // but all item recursive get a new path, folder, ...
+                            throw new JocNotImplementedException("renaming of a folder is not yet implemented!");
+                            //break;
                         default:
                             IConfigurationObject obj = (IConfigurationObject) Globals.objectMapper.readValue(config.getContent(), JocInventory.CLASS_MAPPING.get(type));
                             obj.setPath(config.getPath());

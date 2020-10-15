@@ -62,6 +62,25 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("configId", configId);
         return getSession().getResultList(query);
     }
+    
+    public DBItemInventoryReleasedConfiguration getReleasedConfiguration(String path, Integer type) throws SOSHibernateException {
+        boolean isCalendar = JocInventory.isCalendar(type);
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+        hql.append(" where lower(path)=:path");
+        if (isCalendar) {
+            hql.append(" and type in (:types)");
+        } else {
+            hql.append(" and type=:type");
+        }
+        Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("path", path.toLowerCase());
+        if (isCalendar) {
+            query.setParameterList("types", JocInventory.getCalendarTypes());
+        } else {
+            query.setParameter("type", type);
+        }
+        return getSession().getSingleResult(query);
+    }
 
     public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive) throws SOSHibernateException {
         return getConfigurationsByFolder(folder, recursive, null, false);
@@ -593,6 +612,7 @@ public class InventoryDBLayer extends DBLayer {
     public int resetConfigurationDraft(final Long configId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
         hql.append("set deployed=false");
+        hql.append(",released=false ");
         hql.append(",content=null ");
         hql.append("where id=:configId ");
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());

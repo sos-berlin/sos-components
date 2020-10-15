@@ -217,7 +217,6 @@ public class JocInventory {
                 config.setValid(true);
                 config.setDeployed(false);
                 config.setReleased(false);
-                config.setValid(true);
             } else {
                 config = dbLayer.getConfiguration(in.getPath(), in.getObjectType().intValue());
                 if (config == null) {
