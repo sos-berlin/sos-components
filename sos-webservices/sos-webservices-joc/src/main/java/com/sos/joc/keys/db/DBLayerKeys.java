@@ -87,14 +87,26 @@ public class DBLayerKeys {
             existingKey.setKeyType(type);
             existingKey.setCertificate(certificate);
             existingKey.setKey(key);
-            existingKey.setKeyAlgorythm(JocKeyAlgorithm.valueOf(keyAlgorythm).value());
+            if (SOSPGPConstants.PGP_ALGORITHM_NAME.equals(keyAlgorythm)) {
+                existingKey.setKeyAlgorythm(JocKeyAlgorithm.PGP.value());
+            } else if (SOSPGPConstants.RSA_ALGORITHM_NAME.equals(keyAlgorythm)) {
+                existingKey.setKeyAlgorythm(JocKeyAlgorithm.RSA.value());
+            } else if (SOSPGPConstants.ECDSA_ALGORITHM_NAME.equals(keyAlgorythm)) {
+                existingKey.setKeyAlgorythm(JocKeyAlgorithm.ECDSA.value());
+            }
             session.update(existingKey);
         } else {
             DBItemDepKeys newKey = new DBItemDepKeys();
             newKey.setKeyType(type);
             newKey.setCertificate(certificate);
             newKey.setKey(key);
-            newKey.setKeyAlgorythm(JocKeyAlgorithm.valueOf(keyAlgorythm).value());
+            if (SOSPGPConstants.PGP_ALGORITHM_NAME.equals(keyAlgorythm)) {
+                newKey.setKeyAlgorythm(JocKeyAlgorithm.PGP.value());
+            } else if (SOSPGPConstants.RSA_ALGORITHM_NAME.equals(keyAlgorythm)) {
+                newKey.setKeyAlgorythm(JocKeyAlgorithm.RSA.value());
+            } else if (SOSPGPConstants.ECDSA_ALGORITHM_NAME.equals(keyAlgorythm)) {
+                newKey.setKeyAlgorythm(JocKeyAlgorithm.ECDSA.value());
+            }
             newKey.setAccount(account);
             newKey.setSecLvl(secLvl.intValue());
             session.save(newKey);

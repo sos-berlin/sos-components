@@ -4,11 +4,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.security.PublicKey;
+import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.Date;
 
 import javax.ws.rs.Path;
 
+import org.bouncycastle.openpgp.PGPPublicKey;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -55,10 +58,10 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
     }
 
     private JOCDefaultResponse postImportKey(String xAccessToken, FormDataBodyPart body, AuditParams auditLog, String importKeyFilter) throws Exception {
-        JsonValidator.validateFailFast(importKeyFilter.getBytes(StandardCharsets.UTF_8), ImportFilter.class);
-        ImportFilter filter = Globals.objectMapper.readValue(importKeyFilter, ImportFilter.class);
         InputStream stream = null;
         try {
+            JsonValidator.validateFailFast(importKeyFilter.getBytes(StandardCharsets.UTF_8), ImportFilter.class);
+            ImportFilter filter = Globals.objectMapper.readValue(importKeyFilter, ImportFilter.class);
             filter.setAuditLog(auditLog);
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, "",
                     getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isImportKey());
@@ -72,32 +75,70 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             JocKeyPair keyPair = new JocKeyPair();
             String keyFromFile = readFileContent(stream, filter);
             keyPair.setPrivateKey(null);
+            keyPair.setKeyAlgorithm(filter.getKeyAlgorithm());
+            String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             if (keyFromFile != null) {
                 if (keyFromFile.startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER) 
-                        || keyFromFile.startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
+                        || keyFromFile.startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)
+                        || keyFromFile.startsWith(SOSPGPConstants.PRIVATE_KEY_HEADER)
+                        || keyFromFile.startsWith(SOSPGPConstants.PRIVATE_EC_KEY_HEADER)
+                        || keyFromFile.startsWith(SOSPGPConstants.PRIVATE_ECDSA_KEY_HEADER)) {
                     throw new JocUnsupportedKeyTypeException("Wrong key type. expected: public | received: private");
-                } else if (keyFromFile.startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
-                    keyPair.setPublicKey(keyFromFile);
-                } else if (keyFromFile.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER)) {
-                    keyPair.setPublicKey(new String(KeyUtil.getSubjectPublicKeyInfo(keyFromFile).getEncoded(), StandardCharsets.UTF_8));
+                } else if (SOSPGPConstants.PGP_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
+                    try {
+                        PGPPublicKey pubKey = KeyUtil.getPGPPublicKeyFromString(keyFromFile);
+                        if (pubKey != null) {
+                            keyPair.setPublicKey(keyFromFile);
+                        }
+                    } catch (Exception e) {
+                        throw new JocKeyNotValidException("The provided file does not contain a valid public PGP key!");
+                    }
+                } else if (SOSPGPConstants.RSA_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())
+                        && !keyFromFile.startsWith(SOSPGPConstants.CERTIFICATE_HEADER)) {
+                    try {
+                        PublicKey pubKey = KeyUtil.getRSAPublicKeyFromString(keyFromFile);
+                        if (pubKey != null) {
+                            keyPair.setPublicKey(keyFromFile);
+                        }
+                    } catch (Exception e) {
+                        throw new JocKeyNotValidException("The provided file does not contain a valid public RSA key!");
+                    }
+                } else if (SOSPGPConstants.ECDSA_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())
+                        && !keyFromFile.startsWith(SOSPGPConstants.CERTIFICATE_HEADER)) {
+                    try {
+                        PublicKey pubKey = KeyUtil.getECDSAPublicKeyFromString(keyFromFile);
+                        if (pubKey != null) {
+                            keyPair.setPublicKey(keyFromFile);
+                        }
+                    } catch (Exception e) {
+                        throw new JocKeyNotValidException("The provided file does not contain a valid public ECDSA key!");
+                    }
                 } else if (keyFromFile.startsWith(SOSPGPConstants.CERTIFICATE_HEADER)) {
-                    String pubKey = KeyUtil.getPublicKeyAsString(KeyUtil.getSubjectPublicKeyInfoFromCertificate(keyFromFile));
+                    try {
+                        X509Certificate cert = KeyUtil.getX509Certificate(keyFromFile);
+                        if (cert != null) {
+                            keyPair.setCertificate(keyFromFile);
+                        }
+                        String pubKey = null;
+                        PublicKey publicKey = cert.getPublicKey();
+                        if (SOSPGPConstants.RSA_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
+                            pubKey = KeyUtil.formatPublicRSAKey(publicKey.getEncoded());
+                        } else if (SOSPGPConstants.ECDSA_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
+                            pubKey = KeyUtil.formatPublicECDSAKey(publicKey.getEncoded());
+                        }
                         keyPair.setPublicKey(pubKey);
-                    keyPair.setCertificate(keyFromFile);
+                    } catch (Exception e) {
+                        throw new JocKeyNotValidException("The provided file does not contain a valid X.509 certificate!");
+                    }
                 } else {
-                    throw new JocKeyNotValidException("The provided file does not contain a valid PGP key!");
+                    throw new JocKeyNotValidException(
+                            "The provided file does not contain a valid public PGP, RSA or ECDSA key nor a valid X.509 certificate!");
                 }
             }
-            
-            if (KeyUtil.isKeyPairValid(keyPair)) {
-                hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-                String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
-                PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.HIGH);
-                storeAuditLogEntry(importAudit);
-                return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-            } else {
-                throw new JocKeyNotValidException("The provided file does not contain a valid PGP key!");
-            }
+            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.HIGH);
+            storeAuditLogEntry(importAudit);
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);

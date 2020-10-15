@@ -7,7 +7,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.model.publish.ExportFilter;
 
 public interface IExportResource {
 
