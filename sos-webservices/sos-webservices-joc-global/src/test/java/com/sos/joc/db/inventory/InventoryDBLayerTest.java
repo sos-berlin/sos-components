@@ -86,39 +86,6 @@ public class InventoryDBLayerTest {
 
     @Ignore
     @Test
-    public void testGetConfigurationProperties() throws Exception {
-        SOSHibernateSession session = null;
-        try {
-            session = factory.openStatelessSession();
-            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            session.beginTransaction();
-
-            Set<Long> ids = new HashSet<Long>();
-            ids.add(1L);
-            ids.add(2L);
-
-            List<Object[]> items = dbLayer.getConfigurationProperties(ids, "id,type");
-            for (Object[] item : items) {
-                Long id = (Long) item[0];
-                Integer type = (Integer) item[1];
-                LOGGER.info(String.format("id=%s, type=%s", id, ConfigurationType.fromValue(type).name()));
-            }
-
-            session.commit();
-        } catch (Exception e) {
-            if (session != null && session.isTransactionOpened()) {
-                session.rollback();
-            }
-            throw e;
-        } finally {
-            if (session != null) {
-                session.close();
-            }
-        }
-    }
-
-    @Ignore
-    @Test
     public void testJocInventoryDeleteConfigurations() throws Exception {
         SOSHibernateSession session = null;
         try {

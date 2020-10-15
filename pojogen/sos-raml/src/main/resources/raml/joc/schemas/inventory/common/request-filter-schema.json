@@ -1,7 +1,7 @@
 {
-	"title": "Filter Delete Draft",
+	"title": "common inventory request filter",
 	"$schema": "http://json-schema.org/draft-04/schema#",
-	"javaType": "com.sos.joc.model.inventory.delete.RequestFilter",
+	"javaType": "com.sos.joc.model.inventory.common.RequestFilter",
 	"type": "object",
 	"anyOf": [
         {
@@ -25,9 +25,6 @@
 		},
 		"objectType": {
 			"$ref": "../common/configurationType-schema.json"
-		},
-		"recursive": {
-			"type": "boolean"
 		}
 	}
 }

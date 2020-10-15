@@ -94,7 +94,11 @@ public class DBItemInventoryConfiguration extends DBItem {
 
     @Transient
     public ConfigurationType getTypeAsEnum() {
-        return ConfigurationType.fromValue(type);
+        try {
+            return ConfigurationType.fromValue(type);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public void setType(Integer val) {

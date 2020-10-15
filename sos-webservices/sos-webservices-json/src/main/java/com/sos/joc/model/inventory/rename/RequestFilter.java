@@ -17,59 +17,25 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "id",
     "name"
 })
-public class RequestFilter {
+public class RequestFilter
+    extends com.sos.joc.model.inventory.common.RequestFilter
+{
 
-    /**
-     * non negative long
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("id")
-    private Long id;
     /**
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("name")
     private String name;
 
     /**
-     * non negative long
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("id")
-    public Long getId() {
-        return id;
-    }
-
-    /**
-     * non negative long
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("id")
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    /**
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("name")
@@ -81,7 +47,6 @@ public class RequestFilter {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("name")
@@ -91,12 +56,12 @@ public class RequestFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("name", name).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("name", name).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(id).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(name).toHashCode();
     }
 
     @Override
@@ -108,7 +73,7 @@ public class RequestFilter {
             return false;
         }
         RequestFilter rhs = ((RequestFilter) other);
-        return new EqualsBuilder().append(name, rhs.name).append(id, rhs.id).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(name, rhs.name).isEquals();
     }
 
 }

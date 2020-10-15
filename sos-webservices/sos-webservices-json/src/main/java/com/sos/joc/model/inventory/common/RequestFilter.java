@@ -1,18 +1,17 @@
 
-package com.sos.joc.model.inventory.delete;
+package com.sos.joc.model.inventory.common;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.inventory.common.ConfigurationType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Filter Delete Draft
+ * common inventory request filter
  * <p>
  * 
  * 
@@ -21,8 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "id",
     "path",
-    "objectType",
-    "recursive"
+    "objectType"
 })
 public class RequestFilter {
 
@@ -51,8 +49,6 @@ public class RequestFilter {
      */
     @JsonProperty("objectType")
     private ConfigurationType objectType;
-    @JsonProperty("recursive")
-    private Boolean recursive;
 
     /**
      * non negative long
@@ -120,24 +116,14 @@ public class RequestFilter {
         this.objectType = objectType;
     }
 
-    @JsonProperty("recursive")
-    public Boolean getRecursive() {
-        return recursive;
-    }
-
-    @JsonProperty("recursive")
-    public void setRecursive(Boolean recursive) {
-        this.recursive = recursive;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("objectType", objectType).append("recursive", recursive).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("objectType", objectType).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(id).append(recursive).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(path).append(id).append(objectType).toHashCode();
     }
 
     @Override
@@ -149,7 +135,7 @@ public class RequestFilter {
             return false;
         }
         RequestFilter rhs = ((RequestFilter) other);
-        return new EqualsBuilder().append(path, rhs.path).append(id, rhs.id).append(recursive, rhs.recursive).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(id, rhs.id).append(objectType, rhs.objectType).isEquals();
     }
 
 }

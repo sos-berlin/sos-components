@@ -703,11 +703,43 @@ traits:
         schema200: !include joc/schemas/calendar/dates-schema.json
         example200: TODO
         
+  /delete:
+    type:
+      postJSONWithOkWithoutJSId:
+        description: Delete configuration of an inventory object
+        description1: !include joc/documentation/inventory/idOrPathAndType.md
+        description2: " "
+        description3: " "
+        description4: " "
+        description5: " "
+        schema: !include joc/schemas/inventory/common/request-filter-schema.json
+        example: TODO
+  
+  /deletedraft:
+    type:
+      postJSONWithoutJSId:
+        description: Delete configuration draft of an inventory object
+        description1: !include joc/documentation/inventory/idOrPathAndType.md
+        description2: " "
+        description3: " "
+        description4: " "
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: " "
+        schema: !include joc/schemas/inventory/common/request-filter-schema.json
+        example: TODO
+        schema200: !include joc/schemas/inventory/delete/response-item-schema.json
+        example200: TODO
+  
   /read/configuration:
     type:
       postJSONWithoutJSId:
         description: Read configuration of an inventory object
-        description1: !include joc/documentation/inventory/id-required.md
+        description1: !include joc/documentation/inventory/idOrPathAndType.md
         description2: " "
         description3: " "
         description4: " "
@@ -718,7 +750,7 @@ traits:
         description9: " "
         description10: " "
         description200: !include joc/documentation/inventory/configuration-response.md
-        schema: !include joc/schemas/inventory/read/configuration/request-filter-schema.json
+        schema: !include joc/schemas/inventory/common/request-filter-schema.json
         example: TODO
         schema200: !include joc/schemas/inventory/configurationObject-schema.json
         example200: TODO
@@ -747,7 +779,7 @@ traits:
     type:
       postJSONWithOkWithoutJSId:
         description: Renames inventory object
-        description1: !include joc/documentation/inventory/id-required.md
+        description1: !include joc/documentation/inventory/idOrPathAndType.md
         description2: !include joc/documentation/inventory/name.md
         description3: " "
         description4: " "
@@ -774,7 +806,19 @@ traits:
         example: TODO
         schema200: !include joc/schemas/inventory/configurationObject-schema.json
         example200: !include joc/examples/inventory/store-response-example.json
-
+  
+  /undelete:
+    type:
+      postJSONWithOkWithoutJSId:
+        description: Delete configuration of an inventory object
+        description1: !include joc/documentation/inventory/idOrPathAndType.md
+        description2: " "
+        description3: " "
+        description4: " "
+        description5: " "
+        schema: !include joc/schemas/inventory/common/request-filter-schema.json
+        example: TODO
+  
 /job:
   /documentation:
     get:
