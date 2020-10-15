@@ -287,7 +287,7 @@ public class JOCResourceImpl {
             request = "-";
         }
         String bodyStr = "-";
-        if (body == null) {
+        if (body != null) {
             bodyStr = new String(body, StandardCharsets.UTF_8);
         }
         jocAuditLog = new JocAuditLog(user, request);
