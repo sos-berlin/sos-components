@@ -135,7 +135,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                 }
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.LOW);
+            PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.MEDIUM);
             storeAuditLogEntry(importAudit);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
