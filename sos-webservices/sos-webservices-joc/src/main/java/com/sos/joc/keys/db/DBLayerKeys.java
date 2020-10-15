@@ -87,10 +87,10 @@ public class DBLayerKeys {
         query.setParameter("secLvl", secLvl.intValue());
         DBItemDepKeys existingKey =  session.getSingleResult(query);
         if (existingKey != null) {
-            existingKey.setKeyType(type);
             if (key.startsWith(SOSPGPConstants.CERTIFICATE_HEADER)) {
                 existingKey.setCertificate(key);
             } else {
+                existingKey.setKeyType(type);
                 existingKey.setKey(key);
             }
             if (SOSPGPConstants.PGP_ALGORITHM_NAME.equals(keyAlgorythm)) {
@@ -103,11 +103,11 @@ public class DBLayerKeys {
             session.update(existingKey);
         } else {
             DBItemDepKeys newKey = new DBItemDepKeys();
-            newKey.setKeyType(type);
             if (key.startsWith(SOSPGPConstants.CERTIFICATE_HEADER)) {
                 newKey.setCertificate(key);
             } else {
                 newKey.setKey(key);
+                newKey.setKeyType(type);
             }
             if (SOSPGPConstants.PGP_ALGORITHM_NAME.equals(keyAlgorythm)) {
                 newKey.setKeyAlgorithm(JocKeyAlgorithm.PGP.value());
