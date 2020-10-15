@@ -10,9 +10,10 @@ post:
           description: The file to be uploaded
           required: true
           type: file
-        keyAlgorithm:
-          description: The algorithm of the key, possible values are&colon; PGP, RSA, ECDSA
+        importKeyFilter:
+          description: The algorithm of the key, possible values are - PGP, RSA, ECDSA
           required: true
+          example: <div>{</br>&nbsp;&nbsp;"keyAlgorithm"&#58; "RSA"</br>}</div>
           type: string
         comment:
           description: for auditLog
