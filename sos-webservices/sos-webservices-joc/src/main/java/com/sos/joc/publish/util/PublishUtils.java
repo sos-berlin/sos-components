@@ -133,9 +133,9 @@ public abstract class PublishUtils {
     }
 
     public static Map<DBItemInventoryConfiguration, DBItemDepSignatures> getDraftsWithSignature(String versionId, String account,
-            Set<DBItemInventoryConfiguration> unsignedDrafts, SOSHibernateSession session, JocSecurityLevel secLvl) throws JocMissingKeyException,
-            JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException, NoSuchAlgorithmException,
-            InvalidKeySpecException, InvalidKeyException, SignatureException {
+            Set<DBItemInventoryConfiguration> unsignedDrafts, SOSHibernateSession session, JocSecurityLevel secLvl) 
+                throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException, 
+                NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
         if (keyPair != null) {

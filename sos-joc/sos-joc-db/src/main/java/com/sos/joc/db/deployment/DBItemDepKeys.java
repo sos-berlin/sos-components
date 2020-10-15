@@ -30,7 +30,7 @@ public class DBItemDepKeys extends DBItem {
 
     /* 0=PGP, 1=RSA */
     @Column(name = "[KEY_ALG]", nullable = false)
-    private Integer keyAlgorythm;
+    private Integer keyAlgorithm;
 
     @Column(name = "[KEY]", nullable = false)
     private String key;
@@ -59,11 +59,11 @@ public class DBItemDepKeys extends DBItem {
         this.keyType = type;
     }
 
-    public Integer getKeyAlgorythm() {
-        return keyAlgorythm;
+    public Integer getKeyAlgorithm() {
+        return keyAlgorithm;
     }
-    public void setKeyAlgorythm(Integer keyAlgorythm) {
-        this.keyAlgorythm = keyAlgorythm;
+    public void setKeyAlgorithm(Integer keyAlgorithm) {
+        this.keyAlgorithm = keyAlgorithm;
     }
 
     public String getKey() {

@@ -42,7 +42,7 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
                 keyAlgorithm = SOSPGPConstants.RSA_ALGORITHM_NAME;
             }
             JocKeyPair keyPair = null;
-            if ("PGP".equals(keyAlgorithm)) {
+            if (SOSPGPConstants.PGP_ALGORITHM_NAME.equals(keyAlgorithm)) {
                 if (validUntil != null) {
                     Long secondsToExpire = validUntil.getTime() / 1000;
                     keyPair = KeyUtil.createKeyPair(Globals.defaultProfileAccount, null, secondsToExpire);
@@ -52,15 +52,17 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
             } else if (SOSPGPConstants.RSA_ALGORITHM_NAME.equals(keyAlgorithm)) {
                 keyPair = KeyUtil.createRSAJocKeyPair();
                 //default
-            } else {
+            } else if (SOSPGPConstants.ECDSA_ALGORITHM_NAME.equals(keyAlgorithm)) {
                 keyPair = KeyUtil.createECDSAJOCKeyPair();
             }
+            keyPair.setKeyAlgorithm(filter.getKeyAlgorithm());
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
             // store private key to the db
-            dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.value(), 
-                    keyPair.getPrivateKey(), 
-                    jobschedulerUser.getSosShiroCurrentUser().getUsername(), JocSecurityLevel.LOW, keyPair.getKeyAlgorithm());
+            dbLayerKeys.saveOrUpdateGeneratedKey(JocKeyType.PRIVATE.value(), 
+                    keyPair, 
+                    jobschedulerUser.getSosShiroCurrentUser().getUsername(),
+                    JocSecurityLevel.LOW);
             return JOCDefaultResponse.responseStatus200(keyPair);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

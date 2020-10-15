@@ -144,8 +144,8 @@ public abstract class KeyUtil {
         String encodedPrivateToString = DatatypeConverter.printBase64Binary(encodedPrivate);
         byte[] encodedPublic = kp.getPublic().getEncoded();
         String encodedPublicToString = DatatypeConverter.printBase64Binary(encodedPublic);
-        keyPair.setPrivateKey(formatPrivateKey(encodedPrivateToString));
-        keyPair.setPublicKey(formatPublicKey(encodedPublicToString));
+        keyPair.setPrivateKey(formatPrivateRSAKey(encodedPrivateToString));
+        keyPair.setPublicKey(formatPublicRSAKey(encodedPublicToString));
         keyPair.setKeyID(getRSAKeyIDAsHexString(kp.getPublic()).toUpperCase());
         return keyPair;
     }
@@ -166,9 +166,8 @@ public abstract class KeyUtil {
         String encodedPrivateToString = DatatypeConverter.printBase64Binary(encodedPrivate);
         byte[] encodedPublic = kp.getPublic().getEncoded();
         String encodedPublicToString = DatatypeConverter.printBase64Binary(encodedPublic);
-        keyPair.setPrivateKey(formatPrivateKey(encodedPrivateToString));
-        keyPair.setPublicKey(formatPublicKey(encodedPublicToString));
-        keyPair.setKeyID(getRSAKeyIDAsHexString(kp.getPublic()).toUpperCase());
+        keyPair.setPrivateKey(formatPrivateECDSAKey(encodedPrivateToString));
+        keyPair.setPublicKey(formatPublicECDSAKey(encodedPublicToString));
         return keyPair;
     }
     
@@ -291,6 +290,10 @@ public abstract class KeyUtil {
     }
 
     public static String getRSAKeyIDAsHexString(PublicKey key) {
+        return toHex(createRSAKeyID(key));
+    }
+
+    public static String getECDSAKeyIDAsHexString(PublicKey key) {
         return toHex(createRSAKeyID(key));
     }
 

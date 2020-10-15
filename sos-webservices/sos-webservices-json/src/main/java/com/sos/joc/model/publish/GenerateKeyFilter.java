@@ -25,6 +25,11 @@ public class GenerateKeyFilter {
 
     @JsonProperty("validUntil")
     private Date validUntil;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("keyAlgorithm")
     private String keyAlgorithm;
 
@@ -38,11 +43,21 @@ public class GenerateKeyFilter {
         this.validUntil = validUntil;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("keyAlgorithm")
     public String getKeyAlgorithm() {
         return keyAlgorithm;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("keyAlgorithm")
     public void setKeyAlgorithm(String keyAlgorithm) {
         this.keyAlgorithm = keyAlgorithm;
