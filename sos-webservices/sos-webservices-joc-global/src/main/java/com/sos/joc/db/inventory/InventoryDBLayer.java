@@ -41,7 +41,7 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("id as deploymentId,version,operation,deploymentDate,content,path,controllerId");
         hql.append(") ");
         hql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-        hql.append("where id=");
+        hql.append(" where id=");
         hql.append("(");
         hql.append("  select max(dhsub.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dhsub ");
         hql.append("  where dhsub.inventoryConfigurationId=:configId");
@@ -57,7 +57,7 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("id as deploymentId,version,operation,deploymentDate,content,path,controllerId");
         hql.append(") ");
         hql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-        hql.append("where inventoryConfigurationId=:configId ");
+        hql.append(" where inventoryConfigurationId=:configId ");
         Query<InventoryDeploymentItem> query = getSession().createQuery(hql.toString());
         query.setParameter("configId", configId);
         return getSession().getResultList(query);
@@ -274,8 +274,7 @@ public class InventoryDBLayer extends DBLayer {
         hql.append(" and type in (:types)");
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("path", path.toLowerCase());
-        query.setParameterList("types", Arrays.asList(ConfigurationType.WORKINGDAYSCALENDAR.intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR
-                .intValue()));
+        query.setParameterList("types", JocInventory.getCalendarTypes());
         return getSession().getSingleResult(query);
     }
     
@@ -290,8 +289,7 @@ public class InventoryDBLayer extends DBLayer {
         if (!paths.isEmpty()) {
             query.setParameterList("paths", paths);
         }
-        query.setParameterList("types", Arrays.asList(ConfigurationType.WORKINGDAYSCALENDAR.intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR
-                .intValue()));
+        query.setParameterList("types", JocInventory.getCalendarTypes());
         return getSession().getResultList(query);
     }
     
