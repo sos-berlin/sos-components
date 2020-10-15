@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -42,11 +43,12 @@ public class JocServletContainer extends ServletContainer {
 
         Globals.sosCockpitProperties = new JocCockpitProperties();
         Proxies.startAll(Globals.sosCockpitProperties, ProxyUser.JOC);
-        SOSShell.printSystemInfos();
-        SOSShell.printJVMInfos();
         Globals.readUnmodifiables();
-        LOGGER.info("Security Level = " + Globals.getJocSecurityLevel().value());
         Globals.setProperties();
+        CompletableFuture.runAsync(() -> {
+            SOSShell.printSystemInfos();
+            SOSShell.printJVMInfos();
+        });
         
         JocClusterService.getInstance().start();
 

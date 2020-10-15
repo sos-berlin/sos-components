@@ -9,7 +9,6 @@ import javax.ws.rs.Path;
 
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -22,8 +21,8 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IReadConfigurationResource;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
+import com.sos.joc.model.inventory.common.RequestFilter;
 import com.sos.joc.model.inventory.deploy.ResponseDeployableVersion;
-import com.sos.joc.model.inventory.read.configuration.RequestFilter;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.schema.JsonValidator;
 
@@ -33,13 +32,12 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
     @Override
     public JOCDefaultResponse read(final String accessToken, final byte[] inBytes) {
         try {
+            // don't use JsonValidator.validateFailFast because of anyOf-Requirements
             initLogging(IMPL_PATH, inBytes, accessToken);
-            JsonValidator.validateFailFast(inBytes, RequestFilter.class);
+            JsonValidator.validate(inBytes, RequestFilter.class);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 
-            checkRequiredParameter("id", in.getId());
-
-            JOCDefaultResponse response = checkPermissions(accessToken, in);
+            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
             if (response == null) {
                 response = read(in);
             }
@@ -61,19 +59,10 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
             List<InventoryDeploymentItem> deployments = null;
             InventoryDeploymentItem lastDeployment = null;
 
-            session.beginTransaction();
-            DBItemInventoryConfiguration config = dbLayer.getConfiguration(in.getId());
-            if (config != null) {
+            DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, in, folderPermissions);
+            
+            if (JocInventory.isDeployable(config.getTypeAsEnum())) {
                 deployments = dbLayer.getDeploymentHistory(config.getId());
-            }
-            session.commit();
-
-            if (config == null) {
-                throw new DBMissingDataException(String.format("configuration not found: %s", SOSString.toString(in)));
-            }
-
-            if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
-                return accessDeniedResponse();
             }
 
             if (deployments != null && !deployments.isEmpty()) {
@@ -142,22 +131,14 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
             } else {
                 item.setDeployments(null);
             }
-            
+
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(item));
         } catch (Throwable e) {
-            if (session != null && session.isTransactionOpened()) {
-                Globals.rollback(session);
-            }
+            Globals.rollback(session);
             throw e;
         } finally {
             Globals.disconnect(session);
         }
-    }
-
-    private JOCDefaultResponse checkPermissions(final String accessToken, final RequestFilter in) throws Exception {
-        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
-        boolean permission = permissions.getInventory().getConfigurations().isEdit();
-        return initPermissions(null, permission);
     }
 
 }

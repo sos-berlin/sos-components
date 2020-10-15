@@ -4,14 +4,25 @@
 	"javaType": "com.sos.joc.model.inventory.rename.RequestFilter",
 	"type": "object",
 	"description": "",
-	"required": [
-	    "id",
-	    "name"
-	],
+  	"extends" : {
+    	"$ref": "../common/request-filter-schema.json"
+  	},
+	"anyOf": [
+        {
+            "required": [
+                "id",
+                "name"
+            ]
+        },
+        {
+            "required": [
+                "path",
+                "objectType",
+                "name"
+            ]
+        }
+    ],
 	"properties": {
-		"id": {
-			"$ref": "../../common/nonNegativeLong-schema.json"
-		},
 		"name": {
 			"$ref": "../../common/string255-schema.json"
 		}

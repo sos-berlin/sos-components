@@ -88,9 +88,8 @@ public class JsonValidator {
             put("TreeFilter", "tree/treeFilter-schema.json");
 
             put("RequestFolder", "inventory/common/request-folder-schema.json");
-            put("com.sos.joc.model.inventory.delete.RequestFilter", "inventory/delete/request-filter-schema.json");
+            put("com.sos.joc.model.inventory.common.RequestFilter", "inventory/common/request-filter-schema.json");
             put("com.sos.joc.model.inventory.deploy.RequestFilter", "inventory/deploy/request-filter-schema.json");
-            put("com.sos.joc.model.inventory.read.configuration.RequestFilter", "inventory/read/configuration/request-filter-schema.json");
             put("com.sos.joc.model.inventory.read.id.RequestFilter", "inventory/read/id/request-filter-schema.json");
             put("com.sos.joc.model.inventory.rename.RequestFilter", "inventory/rename/request-filter-schema.json");
             put("com.sos.joc.model.inventory.ConfigurationObject", "inventory/configurationObject-schema.json");

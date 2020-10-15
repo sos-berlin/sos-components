@@ -143,6 +143,7 @@ public class Globals {
     
     public static void readUnmodifiables() {
         readVersion();
+        LOGGER.info("Security Level = " + Globals.getJocSecurityLevel().value());
     }
 
     public static void setProperties() {

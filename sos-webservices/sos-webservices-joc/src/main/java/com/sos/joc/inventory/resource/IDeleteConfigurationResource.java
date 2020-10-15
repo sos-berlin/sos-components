@@ -12,13 +12,21 @@ import com.sos.joc.classes.inventory.JocInventory;
 
 public interface IDeleteConfigurationResource {
 
-    public static final String PATH = "delete";
-    public static final String IMPL_PATH = JocInventory.getResourceImplPath(PATH);
+    public static final String PATH_DELETE = "delete";
+    public static final String IMPL_PATH_DELETE = JocInventory.getResourceImplPath(PATH_DELETE);
+    public static final String PATH_UNDELETE = "undelete";
+    public static final String IMPL_PATH_UNDELETE = JocInventory.getResourceImplPath(PATH_UNDELETE);
 
     @POST
-    @Path(PATH)
+    @Path(PATH_DELETE)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse delete(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    
+    @POST
+    @Path(PATH_UNDELETE)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse undelete(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
 
 }
