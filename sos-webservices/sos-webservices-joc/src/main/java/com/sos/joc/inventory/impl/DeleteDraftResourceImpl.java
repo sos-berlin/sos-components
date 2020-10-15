@@ -66,10 +66,10 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             if (JocInventory.isDeployable(type)) {
                 InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(config.getId());
                 if (lastDeployment == null || OperationType.DELETE.value() == lastDeployment.getOperation() || lastDeployment.getContent() == null) {
-                    //never deployed before or deleted or without content
+                    // never deployed before or deleted or without content
                     dbLayer.getSession().delete(config);
                 } else { 
-                    //deployed
+                    // deployed
                     r.setDeleteFromTree(false);
                     config.setDeployed(true);
                     config.setContent(lastDeployment.getContent());
@@ -77,12 +77,12 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                     dbLayer.getSession().update(config);
                 }
             } else if (JocInventory.isReleasable(type)) {
-                DBItemInventoryReleasedConfiguration releasedItem = dbLayer.getReleasedConfiguration(config.getPath(), config.getType());
+                DBItemInventoryReleasedConfiguration releasedItem = dbLayer.getReleasedConfiguration(config.getId());
                 if (releasedItem == null || releasedItem.getContent() == null) {
-                    //never released before or without content
+                    // never released before or without content
                     dbLayer.getSession().delete(config);
                 } else {
-                    //released
+                    // released
                     r.setDeleteFromTree(false);
                     config.setReleased(true);
                     config.setContent(releasedItem.getContent());

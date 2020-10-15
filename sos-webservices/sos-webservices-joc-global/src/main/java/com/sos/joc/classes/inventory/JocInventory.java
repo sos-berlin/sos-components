@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.rest.SOSShiroFolderPermissions;
-import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.model.agent.AgentRef;
@@ -28,7 +27,6 @@ import com.sos.jobscheduler.model.lock.Lock;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.CheckJavaVariableName;
-import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -194,33 +192,38 @@ public class JocInventory {
     
     public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, RequestFilter in,
             SOSShiroFolderPermissions folderPermissions) throws Exception {
+        return getConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), folderPermissions);
+    }
+    
+    public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, Long id,
+            String path, ConfigurationType type, SOSShiroFolderPermissions folderPermissions) throws Exception {
         DBItemInventoryConfiguration config = null;
-        if (in.getId() != null) {
-            config = dbLayer.getConfiguration(in.getId());
+        if (id != null) {
+            config = dbLayer.getConfiguration(id);
             if (config == null) {
-                throw new DBMissingDataException(String.format("configuration not found: %s", in.getId()));
+                throw new DBMissingDataException(String.format("configuration not found: %s", id));
             }
             if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
                 throw new JocFolderPermissionsException("Access denied for folder: " + config.getFolder());
             }
         } else {
-            if (!folderPermissions.isPermittedForFolder(in.getPath())) {
-                throw new JocFolderPermissionsException("Access denied for folder: " + in.getPath());
+            if (!folderPermissions.isPermittedForFolder(path)) {
+                throw new JocFolderPermissionsException("Access denied for folder: " + path);
             }
-            if (JocInventory.ROOT_FOLDER.equals(in.getPath()) && ConfigurationType.FOLDER.equals(in.getObjectType())) {
+            if (JocInventory.ROOT_FOLDER.equals(path) && ConfigurationType.FOLDER.equals(type)) {
                 config = new DBItemInventoryConfiguration();
                 config.setId(0L);
-                config.setPath(in.getPath());
-                config.setType(in.getObjectType());
-                config.setFolder(in.getPath());
+                config.setPath(path);
+                config.setType(type);
+                config.setFolder(path);
                 config.setDeleted(false);
                 config.setValid(true);
                 config.setDeployed(false);
                 config.setReleased(false);
             } else {
-                config = dbLayer.getConfiguration(in.getPath(), in.getObjectType().intValue());
+                config = dbLayer.getConfiguration(path, type.intValue());
                 if (config == null) {
-                    throw new DBMissingDataException(String.format("%s not found: %s", in.getObjectType().value().toLowerCase(), in.getPath()));
+                    throw new DBMissingDataException(String.format("%s not found: %s", type.value().toLowerCase(), path));
                 }
             }
         }

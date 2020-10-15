@@ -5,8 +5,10 @@
   "type": "string",
   "enum": [
     "DEPLOYMENT_IS_NEWER",
+    "RELEASE_IS_NEWER",
     "DRAFT_IS_NEWER",
     "DEPLOYMENT_NOT_EXIST",
+    "RELEASE_NOT_EXIST",
     "DRAFT_NOT_EXIST",
     "NO_CONFIGURATION_EXIST"
   ]

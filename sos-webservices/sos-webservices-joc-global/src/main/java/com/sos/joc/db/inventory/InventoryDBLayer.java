@@ -63,6 +63,14 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
     
+    public DBItemInventoryReleasedConfiguration getReleasedConfiguration(Long cid) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+        hql.append(" where cid=:cid");
+        Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("cid", cid);
+        return getSession().getSingleResult(query);
+    }
+    
     public DBItemInventoryReleasedConfiguration getReleasedConfiguration(String path, Integer type) throws SOSHibernateException {
         boolean isCalendar = JocInventory.isCalendar(type);
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
