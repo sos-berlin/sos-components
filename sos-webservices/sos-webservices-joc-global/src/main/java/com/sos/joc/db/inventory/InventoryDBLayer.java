@@ -54,7 +54,7 @@ public class InventoryDBLayer extends DBLayer {
     public List<InventoryDeploymentItem> getDeploymentHistory(Long configId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeploymentItem.class.getName());
         hql.append("(");
-        hql.append("id as deploymentId,version,operation,deploymentDate,content,path,controllerId");
+        hql.append("id as deploymentId,version,operation,deploymentDate,path,controllerId");
         hql.append(") ");
         hql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY);
         hql.append(" where inventoryConfigurationId=:configId ");
@@ -63,12 +63,32 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
     
-    public DBItemInventoryReleasedConfiguration getReleasedConfiguration(Long cid) throws SOSHibernateException {
+    public List<DBItemInventoryReleasedConfiguration> getReleasedConfiguration(Long configId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
-        hql.append(" where cid=:cid");
+        hql.append(" where cid=:configId");
+        hql.append(" order by modified desc");
         Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameter("cid", cid);
+        query.setParameter("configId", configId);
+        return getSession().getResultList(query);
+    }
+    
+    public DBItemInventoryReleasedConfiguration getLastReleasedConfiguration(Long configId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+        hql.append(" where cid=:configId");
+        hql.append(" order by modified desc");
+        Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
+        query.setMaxResults(1);
+        query.setParameter("configId", configId);
         return getSession().getSingleResult(query);
+    }
+    
+    public <T> List<T> getReleasedConfigurationProperty(Long configId, String propertyName) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select ").append(propertyName).append(" from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+        hql.append(" where cid=:configId");
+        hql.append(" order by modified desc");
+        Query<T> query = getSession().createQuery(hql.toString());
+        query.setParameter("configId", configId);
+        return getSession().getResultList(query);
     }
     
     public DBItemInventoryReleasedConfiguration getReleasedConfiguration(String path, Integer type) throws SOSHibernateException {
@@ -181,6 +201,8 @@ public class InventoryDBLayer extends DBLayer {
                 hql.append("where ic.folder=:folder ");
             }
         }
+        hql.append("and ic.type in (:types) ");
+        hql.append("and ic.valid = 1");
         Query<InventoryDeployablesTreeFolderItem> query = getSession().createQuery(hql.toString());
         if (folder != null) {
             query.setParameter("folder", folder);
@@ -192,6 +214,7 @@ public class InventoryDBLayer extends DBLayer {
                 }
             }
         }
+        query.setParameterList("types", JocInventory.getDeployableTypes());
         return getSession().getResultList(query);
     }
 
@@ -238,8 +261,11 @@ public class InventoryDBLayer extends DBLayer {
             hql.append("where ic.folder=:folder ");
             if (type != null) {
                 hql.append("and ic.type=:type ");
+            } else {
+                hql.append("and ic.type in (:types) ");
             }
         }
+        hql.append("and ic.valid = 1");
         hql.append("order by ic.id");
 
         Query<InventoryDeployablesTreeFolderItem> query = getSession().createQuery(hql.toString());
@@ -249,6 +275,8 @@ public class InventoryDBLayer extends DBLayer {
             query.setParameter("folder", folder);
             if (type != null) {
                 query.setParameter("type", type);
+            } else {
+                query.setParameterList("types", JocInventory.getDeployableTypes());
             }
         }
         return getSession().getResultList(query);
@@ -614,17 +642,6 @@ public class InventoryDBLayer extends DBLayer {
         hql.append(" where ").append(entity).append(" in (:ids)");
         Query<?> query = getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
-        return getSession().executeUpdate(query);
-    }
-
-    public int resetConfigurationDraft(final Long configId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
-        hql.append("set deployed=false");
-        hql.append(",released=false ");
-        hql.append(",content=null ");
-        hql.append("where id=:configId ");
-        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameter("configId", configId);
         return getSession().executeUpdate(query);
     }
 

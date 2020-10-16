@@ -19,7 +19,7 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
 @Entity
-@Table(name = DBLayer.TABLE_INV_RELEASED_CONFIGURATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[TYPE]", "[PATH]" }) })
+@Table(name = DBLayer.TABLE_INV_RELEASED_CONFIGURATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[TYPE]", "[PATH]", "[CONTROLLER_ID]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_INV_RELEASED_CONFIGURATIONS_SEQUENCE, sequenceName = DBLayer.TABLE_INV_RELEASED_CONFIGURATIONS_SEQUENCE, allocationSize = 1)
 public class DBItemInventoryReleasedConfiguration extends DBItem {
 
@@ -35,6 +35,9 @@ public class DBItemInventoryReleasedConfiguration extends DBItem {
 
     @Column(name = "[PATH]", nullable = false)
     private String path;
+
+    @Column(name = "[CONTROLLER_ID]", nullable = false)
+    private String controllerId;
 
     @Column(name = "[CID]", nullable = false)
     private Long cid;
@@ -97,6 +100,14 @@ public class DBItemInventoryReleasedConfiguration extends DBItem {
 
     public void setPath(String val) {
         path = val;
+    }
+    
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    public void setControllerId(String val) {
+        controllerId = val;
     }
     
     public Long getCid() {

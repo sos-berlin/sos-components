@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -130,6 +131,14 @@ public class JocInventory {
     
     public static Collection<Integer> getCalendarTypes() {
         return Arrays.asList(ConfigurationType.WORKINGDAYSCALENDAR.intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue());
+    }
+    
+    public static Collection<Integer> getDeployableTypes() {
+        return DEPLOYABLE_OBJECTS.stream().map(ConfigurationType::intValue).collect(Collectors.toSet());
+    }
+    
+    public static Collection<Integer> getReleasableTypes() {
+        return RELEASABLE_OBJECTS.stream().map(ConfigurationType::intValue).collect(Collectors.toSet());
     }
     
     public static boolean isDeployable(ConfigurationType type) {

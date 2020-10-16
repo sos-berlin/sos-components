@@ -11,6 +11,16 @@ public class InventoryDeploymentItem {
     private String content;
     private String controllerId;
     private String path;
+    
+    public InventoryDeploymentItem(Long deploymentId, String deploymentVersion, Integer deploymentOperation, Date deploymentDate, String path,
+            String controllerId) {
+        this.id = deploymentId;
+        this.version = deploymentVersion;
+        this.operation = deploymentOperation;
+        this.deploymentDate = deploymentDate;
+        this.path = path;
+        this.controllerId = controllerId;
+    }
 
     public InventoryDeploymentItem(Long deploymentId, String deploymentVersion, Integer deploymentOperation, Date deploymentDate, String content,
             String path, String controllerId) {

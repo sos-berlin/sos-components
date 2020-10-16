@@ -15,13 +15,10 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
-import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
-import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IReadConfigurationResource;
-import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
@@ -74,11 +71,14 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
             item.setState(ItemStateEnum.NO_CONFIGURATION_EXIST);
             item.setConfigurationDate(config.getModified());
             item.setConfiguration(null);
+            item.setDeployed(config.getDeployed());
+            item.setReleased(config.getReleased());
+            item.setConfiguration(JocInventory.content2IJSObject(config.getContent(), config.getType()));
             
             if (JocInventory.isDeployable(type)) {
                 
                 item.setReleased(false);
-                item.setDeployed(config.getDeployed());
+                
                 List<InventoryDeploymentItem> deployments = dbLayer.getDeploymentHistory(config.getId());
                 InventoryDeploymentItem lastDeployment = null;
                 
@@ -88,26 +88,17 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                 }
                 
                 if (config.getDeployed()) {
-                    if (lastDeployment == null) {
-                        throw new DBMissingDataException(String.format("[%s][%s] deployments not found", config.getTypeAsEnum().name(), config
-                                .getPath()));
-                    }
-
-                    item.setConfigurationDate(lastDeployment.getDeploymentDate());
-                    IConfigurationObject conf = JocInventory.content2IJSObject(lastDeployment.getContent(), config.getType());
-                    if (conf == null) {
-                        conf = JocInventory.content2IJSObject(config.getContent(), config.getType());
-                    }
-                    if (conf != null) {
+//                    if (lastDeployment == null) {
+//                        throw new DBMissingDataException(String.format("[%s][%s] deployments not found", config.getTypeAsEnum().name(), config
+//                                .getPath()));
+//                    }
+                    
+                    if (item.getConfiguration() != null) {
                         item.setState(ItemStateEnum.DRAFT_NOT_EXIST);
                     }
-                    item.setConfiguration(conf);
-
                 } else {
-                    IConfigurationObject conf = JocInventory.content2IJSObject(config.getContent(), config.getType());
-                    item.setConfiguration(conf);
 
-                    if (conf != null) {
+                    if (item.getConfiguration() != null) {
                         if (lastDeployment == null) {
                             item.setState(ItemStateEnum.DEPLOYMENT_NOT_EXIST);
                         } else {
@@ -138,37 +129,31 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                 
             } else if (JocInventory.isReleasable(type)) {
                 
-                item.setReleased(config.getReleased());
                 item.setDeployed(false);
                 
-                DBItemInventoryReleasedConfiguration releasedItem = dbLayer.getReleasedConfiguration(config.getId());
+                List<Date> releasedModifieds = dbLayer.getReleasedConfigurationProperty(config.getId(), "modified");
+                Date releasedLastModified = null;
+                if (releasedModifieds != null && !releasedModifieds.isEmpty()) {
+                    releasedLastModified = releasedModifieds.get(0);
+                }
                 
                 if (config.getReleased()) {
-                    if (releasedItem == null) {
-                        throw new DBMissingDataException(String.format("[%s][%s] release not found", config.getTypeAsEnum().name(), config
-                                .getPath()));
-                    }
+//                    if (releasedLastModified == null) {
+//                        throw new DBMissingDataException(String.format("[%s][%s] release not found", config.getTypeAsEnum().name(), config
+//                                .getPath()));
+//                    }
 
-                    item.setConfigurationDate(releasedItem.getModified());
-                    IConfigurationObject conf = JocInventory.content2IJSObject(releasedItem.getContent(), config.getType());
-                    if (conf == null) {
-                        conf = JocInventory.content2IJSObject(config.getContent(), config.getType());
-                    }
-                    if (conf != null) {
+                    if (item.getConfiguration() != null) {
                         item.setState(ItemStateEnum.DRAFT_NOT_EXIST);
                     }
-                    item.setConfiguration(conf);
                     
                 } else {
 
-                    IConfigurationObject conf = JocInventory.content2IJSObject(config.getContent(), config.getType());
-                    item.setConfiguration(conf);
-                    
-                    if (conf != null) {
-                        if (releasedItem == null) {
+                    if (item.getConfiguration() != null) {
+                        if (releasedLastModified == null) {
                             item.setState(ItemStateEnum.RELEASE_NOT_EXIST);
                         } else {
-                            if (releasedItem.getModified().after(config.getModified())) {
+                            if (releasedLastModified.after(config.getModified())) {
                                 item.setState(ItemStateEnum.RELEASE_IS_NEWER);
                             } else {
                                 item.setState(ItemStateEnum.DRAFT_IS_NEWER);

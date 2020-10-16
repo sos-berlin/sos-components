@@ -1,15 +1,10 @@
 package com.sos.joc.inventory.impl;
 
-import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
-import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -67,12 +62,16 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, in, folderPermissions);
             ConfigurationType type = config.getTypeAsEnum();
             if (ConfigurationType.FOLDER.equals(type)) {
-                deleteOrUndeleteFolder(dbLayer, config.getPath(), IMPL_PATH_DELETE.equals(action));
+                // deleteOrUndeleteFolder(dbLayer, config.getPath(), IMPL_PATH_DELETE.equals(action));
+                // no recursive action otherwise information get lost after delete AND undelete. Deleted folder has to be consider at the deploy/release
+                if (!JocInventory.ROOT_FOLDER.equals(config.getPath())) {
+                    deleteOrUndeleteSingle(dbLayer, config, IMPL_PATH_DELETE.equals(action));
+                    storeAuditLog(type, config.getPath(), config.getFolder());
+                }
             } else {
                 deleteOrUndeleteSingle(dbLayer, config, IMPL_PATH_DELETE.equals(action));
+                storeAuditLog(type, config.getPath(), config.getFolder());
             }
-
-            storeAuditLog(type, config.getPath(), config.getFolder());
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {
@@ -87,9 +86,9 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         try {
             dbLayer.getSession().beginTransaction();
             dbLayer.markConfigurationAsDeleted(config.getId(), deleteFlag);
-            if (!deleteFlag) {
-                handleParentFolders(dbLayer, config.getFolder());
-            }
+//            if (!deleteFlag) {
+//                handleParentFolders(dbLayer, config.getFolder());
+//            }
             Globals.commit(dbLayer.getSession());
         } catch (Exception e) {
             Globals.rollback(dbLayer.getSession());
@@ -97,32 +96,32 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         }
     }
     
-    private void handleParentFolders(InventoryDBLayer dbLayer, final String folder) throws Exception {
-        if (folder != null && !folder.equals(JocInventory.ROOT_FOLDER)) {
-            java.nio.file.Path p = Paths.get(folder);
-            List<String> parentFolders = new ArrayList<>();
-            for (int i = 0; i < p.getNameCount(); i++) {
-                parentFolders.add(("/" + p.subpath(0, i+1)).replace('\\', '/'));
-            }
-            if (!parentFolders.isEmpty()) {
-                dbLayer.markFoldersAsDeleted(parentFolders, false);
-            }
-        }
-    }
-
-    private void deleteOrUndeleteFolder(InventoryDBLayer dbLayer, String folder, boolean deleteFlag) throws Exception {
-        try {
-            dbLayer.getSession().beginTransaction();
-            List<DBItemInventoryConfiguration> items = dbLayer.getFolderContent(folder, true);
-            if (items != null) {
-                dbLayer.markConfigurationsAsDeleted(items.stream().map(DBItemInventoryConfiguration::getId).collect(Collectors.toSet()), deleteFlag);
-            }
-            Globals.commit(dbLayer.getSession());
-        } catch (Exception e) {
-            Globals.rollback(dbLayer.getSession());
-            throw e;
-        }
-    }
+//    private void handleParentFolders(InventoryDBLayer dbLayer, final String folder) throws Exception {
+//        if (folder != null && !folder.equals(JocInventory.ROOT_FOLDER)) {
+//            java.nio.file.Path p = Paths.get(folder);
+//            List<String> parentFolders = new ArrayList<>();
+//            for (int i = 0; i < p.getNameCount(); i++) {
+//                parentFolders.add(("/" + p.subpath(0, i+1)).replace('\\', '/'));
+//            }
+//            if (!parentFolders.isEmpty()) {
+//                dbLayer.markFoldersAsDeleted(parentFolders, false);
+//            }
+//        }
+//    }
+//
+//    private void deleteOrUndeleteFolder(InventoryDBLayer dbLayer, String folder, boolean deleteFlag) throws Exception {
+//        try {
+//            dbLayer.getSession().beginTransaction();
+//            List<DBItemInventoryConfiguration> items = dbLayer.getFolderContent(folder, true);
+//            if (items != null) {
+//                dbLayer.markConfigurationsAsDeleted(items.stream().map(DBItemInventoryConfiguration::getId).collect(Collectors.toSet()), deleteFlag);
+//            }
+//            Globals.commit(dbLayer.getSession());
+//        } catch (Exception e) {
+//            Globals.rollback(dbLayer.getSession());
+//            throw e;
+//        }
+//    }
 
     private void storeAuditLog(ConfigurationType objectType, String path, String folder) {
         InventoryAudit audit = new InventoryAudit(objectType, path, folder);
