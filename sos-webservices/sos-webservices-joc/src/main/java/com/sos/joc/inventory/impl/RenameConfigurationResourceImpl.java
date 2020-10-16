@@ -59,7 +59,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
             DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, in, folderPermissions);
 
             if (!config.getName().equalsIgnoreCase(in.getName())) {
-                String newPath = config.getFolder() + "/" + in.getName();
+                String newPath = (config.getFolder() + "/" + in.getName()).replaceAll("//+", "/");
 
                 DBItemInventoryConfiguration configNewPath = dbLayer.getConfiguration(newPath, config.getType());
                 if (configNewPath != null) {
