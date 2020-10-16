@@ -122,18 +122,38 @@ public abstract class PublishUtils {
         if (keyPair != null) {
             if (keyPair.getPrivateKey() != null) {
                 dbLayerKeys.saveOrUpdateKey(
-                        JocKeyType.PRIVATE.value(), keyPair.getPrivateKey(), keyPair.getCertificate(), account, secLvl, keyPair.getKeyAlgorithm());
+                        JocKeyType.PRIVATE.value(), 
+                        keyPair.getPrivateKey(), 
+                        keyPair.getCertificate(), 
+                        account, 
+                        secLvl, 
+                        keyPair.getKeyAlgorithm());
             } else if (keyPair.getPrivateKey() == null && keyPair.getPublicKey() != null) {
                 dbLayerKeys.saveOrUpdateKey(
-                        JocKeyType.PUBLIC.value(), keyPair.getPublicKey(), keyPair.getCertificate(), account, secLvl, keyPair.getKeyAlgorithm());
+                        JocKeyType.PUBLIC.value(), 
+                        keyPair.getPublicKey(), 
+                        keyPair.getCertificate(), 
+                        account, 
+                        secLvl, 
+                        keyPair.getKeyAlgorithm());
             } else if (keyPair.getPrivateKey() == null && keyPair.getPublicKey() == null && keyPair.getCertificate() != null) {
                 switch(secLvl) {
                 case LOW:
                 case MEDIUM:
-                    dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.value(), keyPair.getCertificate(), account, secLvl, keyPair.getKeyAlgorithm());
+                    dbLayerKeys.saveOrUpdateKey(
+                            JocKeyType.PRIVATE.value(), 
+                            keyPair.getCertificate(), 
+                            account, 
+                            secLvl, 
+                            keyPair.getKeyAlgorithm());
                     break;
                 case HIGH:
-                    dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getCertificate(), account, secLvl, keyPair.getKeyAlgorithm());
+                    dbLayerKeys.saveOrUpdateKey(
+                            JocKeyType.PUBLIC.value(), 
+                            keyPair.getCertificate(), 
+                            account, 
+                            secLvl, 
+                            keyPair.getKeyAlgorithm());
                 }
             } 
         }
@@ -159,7 +179,8 @@ public abstract class PublishUtils {
         boolean isPGPKey = false;
         Map<DBItemInventoryConfiguration, DBItemDepSignatures> signedDrafts = new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
         if (keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
-            throw new JocMissingKeyException("No private key found fo signing! - Please check your private key from the key management section in your profile.");
+            throw new JocMissingKeyException(
+                    "No private key found fo signing! - Please check your private key from the key management section in your profile.");
         } else {
             if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
                 isPGPKey = true;
@@ -197,9 +218,9 @@ public abstract class PublishUtils {
     }
 
     public static Map<DBItemDeploymentHistory, DBItemDepSignatures> getDeploymentsWithSignature(String versionId, String account,
-            Set<DBItemDeploymentHistory> depHistoryToRedeploy, SOSHibernateSession session, JocSecurityLevel secLvl) throws JocMissingKeyException,
-            JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException, NoSuchAlgorithmException,
-            InvalidKeySpecException, InvalidKeyException, SignatureException {
+            Set<DBItemDeploymentHistory> depHistoryToRedeploy, SOSHibernateSession session, JocSecurityLevel secLvl)
+                    throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException,
+                    NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
         if (keyPair != null) {
@@ -216,7 +237,8 @@ public abstract class PublishUtils {
         boolean isPGPKey = false;
         Map<DBItemDeploymentHistory, DBItemDepSignatures> signedReDeployable = new HashMap<DBItemDeploymentHistory, DBItemDepSignatures>();
         if (keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
-            throw new JocMissingKeyException("No private key found for signing! - Please check your private key from the key management section in your profile.");
+            throw new JocMissingKeyException(
+                    "No private key found for signing! - Please check your private key from the key management section in your profile.");
         } else {
             if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
                 isPGPKey = true;
@@ -327,7 +349,8 @@ public abstract class PublishUtils {
             if(dbSignature != null) {
                 verified = VerifySignature.verifyPGP(publicKey, draft.getContent(), dbSignature.getSignature());
                 if (!verified) {
-                    LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", draft.getPath()));
+                    LOGGER.trace(
+                            String.format("Signature of object %1$s could not be verified! Object will not be deployed.", draft.getPath()));
                 } else {
                     verifiedDrafts.add(draft);
                 }
@@ -367,7 +390,8 @@ public abstract class PublishUtils {
         Boolean verified = false;
         verified = VerifySignature.verifyPGP(publicKey, signedDeployment.getContent(), deployedSignature.getSignature());
         if (!verified) {
-            LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", signedDeployment.getPath()));
+            LOGGER.trace(
+                    String.format("Signature of object %1$s could not be verified! Object will not be deployed.", signedDeployment.getPath()));
         } else {
             verifiedDeployment = signedDeployment;
         }
@@ -398,14 +422,16 @@ public abstract class PublishUtils {
         if (cert != null) {
             verified = VerifySignature.verifyX509(cert, signedDraft.getContent(), draftSignature.getSignature());
             if (!verified) {
-                LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", signedDraft.getPath()));
+                LOGGER.trace(
+                        String.format("Signature of object %1$s could not be verified! Object will not be deployed.", signedDraft.getPath()));
             } else {
                 verifiedDraft = signedDraft;
             }
         } else if (publicKey != null) {
             verified = VerifySignature.verifyX509(publicKey, signedDraft.getContent(), draftSignature.getSignature());
             if (!verified) {
-                LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", signedDraft.getPath()));
+                LOGGER.trace(
+                        String.format("Signature of object %1$s could not be verified! Object will not be deployed.", signedDraft.getPath()));
             } else {
                 verifiedDraft = signedDraft;
             }
@@ -439,16 +465,16 @@ public abstract class PublishUtils {
         if (cert != null) {
             verified = VerifySignature.verifyX509(cert, signedDeployment.getContent(), deployedSignature.getSignature());
             if (!verified) {
-                LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", signedDeployment
-                        .getPath()));
+                LOGGER.trace(String.format(
+                        "Signature of object %1$s could not be verified! Object will not be deployed.", signedDeployment.getPath()));
             } else {
                 verifiedDeployment = signedDeployment;
             }
         } else if (publicKey != null) {
             verified = VerifySignature.verifyX509(publicKey, signedDeployment.getContent(), deployedSignature.getSignature());
             if (!verified) {
-                LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", signedDeployment
-                        .getPath()));
+                LOGGER.trace(String.format(
+                        "Signature of object %1$s could not be verified! Object will not be deployed.", signedDeployment.getPath()));
             } else {
                 verifiedDeployment = signedDeployment;
             }
@@ -476,7 +502,8 @@ public abstract class PublishUtils {
         if (alreadyDeployed != null) {
             for (DBItemDeploymentHistory reDeploy : alreadyDeployed.keySet()) {
                 if (reDeploy != null) {
-                    SignedString signedString = SignedString.of(reDeploy.getContent(), keyAlgorithm, alreadyDeployed.get(reDeploy).getSignature());
+                    SignedString signedString = 
+                            SignedString.of(reDeploy.getContent(), keyAlgorithm, alreadyDeployed.get(reDeploy).getSignature());
                     JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
                     updateRepoOperations.add(operation);
                 }
@@ -518,8 +545,8 @@ public abstract class PublishUtils {
         return ControllerApi.of(controllerId).updateRepo(VersionId.of(versionId), Flux.fromIterable(updateRepoOperations));
     }
 
-    public static CompletableFuture<Either<Problem, Void>> updateRepoDelete(
-            String versionId, List<DBItemDeploymentHistory> alreadyDeployedtoDelete, String controllerId, DBLayerDeploy dbLayer, String keyAlgorythm) 
+    public static CompletableFuture<Either<Problem, Void>> updateRepoDelete(String versionId,
+            List<DBItemDeploymentHistory> alreadyDeployedtoDelete, String controllerId, DBLayerDeploy dbLayer, String keyAlgorythm) 
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         if ("RSA".equals(keyAlgorythm) || "ECDSA".equals(keyAlgorythm)) {
             keyAlgorythm = "X509";
@@ -570,7 +597,8 @@ public abstract class PublishUtils {
         if (alreadyDeployed != null) {
             for (DBItemDeploymentHistory reDeploy : alreadyDeployed.keySet()) {
                 if (reDeploy != null) {
-                    SignedString signedString = SignedString.of(reDeploy.getContent(), keyAlgorythm, alreadyDeployed.get(reDeploy).getSignature());
+                    SignedString signedString = 
+                            SignedString.of(reDeploy.getContent(), keyAlgorythm, alreadyDeployed.get(reDeploy).getSignature());
                     JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
                     updateRepoOperations.add(operation);
                 }
@@ -652,8 +680,8 @@ public abstract class PublishUtils {
     }
 
     public static Set<DBItemDeploymentHistory> cloneInvConfigurationsToDepHistoryItems(
-            Map<DBItemInventoryConfiguration, DBItemDepSignatures> draftsWithSignature, String account, DBLayerDeploy dbLayerDeploy, String versionId,
-            String controllerId, Date deploymentDate) {
+            Map<DBItemInventoryConfiguration, DBItemDepSignatures> draftsWithSignature, String account, DBLayerDeploy dbLayerDeploy,
+            String versionId, String controllerId, Date deploymentDate) {
         Set<DBItemDeploymentHistory> deployedObjects;
         try {
             DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
@@ -665,7 +693,8 @@ public abstract class PublishUtils {
                 newDeployedObject.setVersion(null);
                 newDeployedObject.setPath(draft.getPath());
                 newDeployedObject.setFolder(draft.getFolder());
-                newDeployedObject.setType(PublishUtils.mapInventoryMetaConfigurationType(ConfigurationType.fromValue(draft.getType())).intValue());
+                newDeployedObject.setType(
+                        PublishUtils.mapInventoryMetaConfigurationType(ConfigurationType.fromValue(draft.getType())).intValue());
                 newDeployedObject.setCommitId(versionId);
                 newDeployedObject.setContent(draft.getContent());
                 newDeployedObject.setSignedContent(draftsWithSignature.get(draft).getSignature());
@@ -684,8 +713,9 @@ public abstract class PublishUtils {
         return deployedObjects;
     }
 
-    public static Set<DBItemDeploymentHistory> cloneInvConfigurationsToDepHistoryItems(Map<DBItemInventoryConfiguration, JSObject> importedObjects,
-            String account, DBLayerDeploy dbLayerDeploy, String controllerId, Date deploymentDate, String versionId) {
+    public static Set<DBItemDeploymentHistory> cloneInvConfigurationsToDepHistoryItems(
+            Map<DBItemInventoryConfiguration, JSObject> importedObjects, String account, DBLayerDeploy dbLayerDeploy, String controllerId,
+            Date deploymentDate, String versionId) {
         Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
         try {
             DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
@@ -696,7 +726,8 @@ public abstract class PublishUtils {
                 newDeployedObject.setVersion(null);
                 newDeployedObject.setPath(draft.getPath());
                 newDeployedObject.setFolder(draft.getFolder());
-                newDeployedObject.setType(PublishUtils.mapInventoryMetaConfigurationType(ConfigurationType.fromValue(draft.getType())).intValue());
+                newDeployedObject.setType(
+                        PublishUtils.mapInventoryMetaConfigurationType(ConfigurationType.fromValue(draft.getType())).intValue());
                 newDeployedObject.setCommitId(versionId);
                 newDeployedObject.setContent(draft.getContent());
                 newDeployedObject.setSignedContent(importedObjects.get(draft).getSignedContent());
@@ -716,8 +747,8 @@ public abstract class PublishUtils {
     }
 
     public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToRedeployed(
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> redeployedWithSignature, String account, DBLayerDeploy dbLayerDeploy, String versionId,
-            String controllerId, Date deploymentDate) {
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> redeployedWithSignature, String account, DBLayerDeploy dbLayerDeploy,
+            String versionId, String controllerId, Date deploymentDate) {
         Set<DBItemDeploymentHistory> deployedObjects;
         try {
             DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
@@ -862,8 +893,6 @@ public abstract class PublishUtils {
                 deletedDeployItems.stream().map(path -> path.getPath()).forEach(path -> {
                     LOGGER.trace(String.format("Object '%1$s' deleted from controller '%2$s'", path, controllerId));
                 });
-                
-                
             }
         }
     }
@@ -983,8 +1012,8 @@ public abstract class PublishUtils {
         return signaturePaths;
     }
 
-    public static Signature verifyWorkflows(SOSHibernateSession hibernateSession, Set<SignaturePath> signaturePaths, Workflow workflow, String account)
-            throws JocSignatureVerificationException, SOSHibernateException {
+    public static Signature verifyWorkflows(SOSHibernateSession hibernateSession, Set<SignaturePath> signaturePaths, Workflow workflow,
+            String account) throws JocSignatureVerificationException, SOSHibernateException {
         SignaturePath signaturePath = signaturePaths.stream().filter(signaturePathFromStream -> signaturePathFromStream.getObjectPath()
                 .equals(workflow.getPath())).map(signaturePathFromStream -> signaturePathFromStream).findFirst().get();
         DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
@@ -1020,8 +1049,8 @@ public abstract class PublishUtils {
         return signaturePath.getSignature();
     }
 
-    public static Signature verifyAgentRefs(SOSHibernateSession hibernateSession, Set<SignaturePath> signaturePaths, AgentRef agentRef, String account)
-            throws JocSignatureVerificationException, SOSHibernateException {
+    public static Signature verifyAgentRefs(SOSHibernateSession hibernateSession, Set<SignaturePath> signaturePaths, AgentRef agentRef,
+            String account) throws JocSignatureVerificationException, SOSHibernateException {
         SignaturePath signaturePath = signaturePaths.stream().filter(signaturePathFromStream -> signaturePathFromStream.getObjectPath()
                 .equals(agentRef.getPath())).map(signaturePathFromStream -> signaturePathFromStream).findFirst().get();
         DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
@@ -1030,7 +1059,8 @@ public abstract class PublishUtils {
             if (signaturePath != null && signaturePath.getSignature() != null) {
                 JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.HIGH);
                 String publicKey = keyPair.getPublicKey();
-                verified = VerifySignature.verifyPGP(publicKey, om.writeValueAsString(agentRef), signaturePath.getSignature().getSignatureString());
+                verified = VerifySignature.verifyPGP(publicKey, om.writeValueAsString(agentRef), 
+                        signaturePath.getSignature().getSignatureString());
                 if (!verified) {
                     LOGGER.debug(String.format("signature verification for agentRef %1$s was not successful!", agentRef.getPath()));
                 } 
