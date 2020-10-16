@@ -114,22 +114,17 @@ public class SignObject {
         Signature signature = Signature.getInstance("SHA256WithRSA");
         signature.initSign(privateKey);
         signature.update(original.getBytes("UTF-8"));
-        return KeyUtil.formatEncodedDataString(
-                new String(Base64.encode(signature.sign()), StandardCharsets.UTF_8), 
-                SOSPGPConstants.SIGNATURE_HEADER, 
-                SOSPGPConstants.SIGNATURE_FOOTER);
-}
+        return java.util.Base64.getMimeEncoder().encodeToString(signature.sign());
+    }
 
     public static String signX509(String algorythm, PrivateKey privateKey, String original) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException,
             SignatureException, IOException {
+        Security.addProvider(new BouncyCastleProvider());
         Signature signature = Signature.getInstance(algorythm);
         signature.initSign(privateKey);
         signature.update(original.getBytes("UTF-8"));
-        return KeyUtil.formatEncodedDataString(
-                new String(Base64.encode(signature.sign()), StandardCharsets.UTF_8), 
-                SOSPGPConstants.SIGNATURE_HEADER, 
-                SOSPGPConstants.SIGNATURE_FOOTER);
-}
+        return java.util.Base64.getMimeEncoder().encodeToString(signature.sign());
+    }
 
 	public static final String signX509(String privateKey, String original) 
 	        throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, DataLengthException, CryptoException {
@@ -140,10 +135,21 @@ public class SignObject {
 	    signer.init(true, akpPrivateKey);
 	    signer.update(original.getBytes(), 0, original.getBytes().length);
 	    byte[] signature = signer.generateSignature();
-	    return KeyUtil.formatEncodedDataString(
-	            new String(Base64.encode(signature), StandardCharsets.UTF_8), 
-	            SOSPGPConstants.SIGNATURE_HEADER, 
-	            SOSPGPConstants.SIGNATURE_FOOTER);
+        return java.util.Base64.getMimeEncoder().encodeToString(signature);
 	}
 	
+    public static final String signX509Old(String privateKey, String original) 
+            throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, DataLengthException, CryptoException {
+        PEMKeyPair keyPair = KeyUtil.getPemKeyPairFromRSAPrivatKeyString(privateKey);
+        PrivateKeyInfo pki = keyPair.getPrivateKeyInfo();
+        AsymmetricKeyParameter akpPrivateKey = PrivateKeyFactory.createKey(pki);
+        RSADigestSigner signer = new RSADigestSigner(new SHA256Digest());
+        signer.init(true, akpPrivateKey);
+        signer.update(original.getBytes(), 0, original.getBytes().length);
+        byte[] signature = signer.generateSignature();
+      return KeyUtil.formatEncodedDataString(
+              new String(Base64.encode(signature), StandardCharsets.UTF_8), 
+              SOSPGPConstants.SIGNATURE_HEADER, 
+              SOSPGPConstants.SIGNATURE_FOOTER);
+    }
 }

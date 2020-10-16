@@ -12,6 +12,7 @@ import java.security.PublicKey;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -162,7 +163,7 @@ public abstract class PublishUtils {
     public static Map<DBItemInventoryConfiguration, DBItemDepSignatures> getDraftsWithSignature(String versionId, String account,
             Set<DBItemInventoryConfiguration> unsignedDrafts, SOSHibernateSession session, JocSecurityLevel secLvl) 
                 throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException, 
-                NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
+                NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, CertificateException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
         if (keyPair != null) {
@@ -175,27 +176,24 @@ public abstract class PublishUtils {
     public static Map<DBItemInventoryConfiguration, DBItemDepSignatures> getDraftsWithSignature(String versionId, String account,
             Set<DBItemInventoryConfiguration> unsignedDrafts, JocKeyPair keyPair, SOSHibernateSession session) throws JocMissingKeyException,
             JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException, NoSuchAlgorithmException,
-            InvalidKeySpecException, InvalidKeyException, SignatureException {
+            InvalidKeySpecException, InvalidKeyException, SignatureException, CertificateException {
         boolean isPGPKey = false;
         Map<DBItemInventoryConfiguration, DBItemDepSignatures> signedDrafts = new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
         if (keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
             throw new JocMissingKeyException(
                     "No private key found fo signing! - Please check your private key from the key management section in your profile.");
         } else {
-            if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
-                isPGPKey = true;
-            }
             DBItemDepSignatures sig = null;
             for (DBItemInventoryConfiguration draft : unsignedDrafts) {
                 updateVersionIdOnDraftObject(draft, versionId, session);
-                if (isPGPKey) {
+                if (SOSPGPConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                     sig = new DBItemDepSignatures();
                     sig.setAccount(account);
                     sig.setInvConfigurationId(draft.getId());
                     sig.setModified(Date.from(Instant.now()));
                     sig.setSignature(SignObject.signPGP(keyPair.getPrivateKey(), draft.getContent(), null));
                     signedDrafts.put(draft, sig);
-                } else {
+                } else if (SOSPGPConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                     KeyPair kp = null;
                     if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
                         kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(keyPair.getPrivateKey());
@@ -207,6 +205,19 @@ public abstract class PublishUtils {
                     sig.setInvConfigurationId(draft.getId());
                     sig.setModified(Date.from(Instant.now()));
                     sig.setSignature(SignObject.signX509(kp.getPrivate(), draft.getContent()));
+                    signedDrafts.put(draft, sig);
+                } else if (SOSPGPConstants.ECDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+                    KeyPair kp = KeyUtil.getKeyPairFromECDSAPrivatKeyString(keyPair.getPrivateKey());
+                    sig = new DBItemDepSignatures();
+                    sig.setAccount(account);
+                    sig.setInvConfigurationId(draft.getId());
+                    sig.setModified(Date.from(Instant.now()));
+                    X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+                    if (cert != null) {
+                        sig.setSignature(SignObject.signX509(cert.getSigAlgName(), kp.getPrivate(), draft.getContent()));
+                    } else {
+                        sig.setSignature(SignObject.signX509("SHA512WithECDSA", kp.getPrivate(), draft.getContent()));
+                    }
                     signedDrafts.put(draft, sig);
                 }
                 if (sig != null) {
