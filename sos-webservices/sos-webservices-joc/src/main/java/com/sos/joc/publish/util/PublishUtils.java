@@ -127,7 +127,14 @@ public abstract class PublishUtils {
                 dbLayerKeys.saveOrUpdateKey(
                         JocKeyType.PUBLIC.value(), keyPair.getPublicKey(), keyPair.getCertificate(), account, secLvl, keyPair.getKeyAlgorithm());
             } else if (keyPair.getPrivateKey() == null && keyPair.getPublicKey() == null && keyPair.getCertificate() != null) {
-                dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getCertificate(), account, secLvl, keyPair.getKeyAlgorithm());
+                switch(secLvl) {
+                case LOW:
+                case MEDIUM:
+                    dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.value(), keyPair.getCertificate(), account, secLvl, keyPair.getKeyAlgorithm());
+                    break;
+                case HIGH:
+                    dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getCertificate(), account, secLvl, keyPair.getKeyAlgorithm());
+                }
             } 
         }
     }
