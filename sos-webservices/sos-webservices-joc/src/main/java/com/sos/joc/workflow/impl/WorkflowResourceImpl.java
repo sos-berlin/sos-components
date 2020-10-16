@@ -2,10 +2,17 @@ package com.sos.joc.workflow.impl;
 
 import java.sql.Date;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.jobscheduler.model.instruction.ForkJoin;
+import com.sos.jobscheduler.model.instruction.IfElse;
+import com.sos.jobscheduler.model.instruction.Instruction;
+import com.sos.jobscheduler.model.instruction.TryCatch;
+import com.sos.jobscheduler.model.workflow.Branch;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -39,7 +46,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
-            com.sos.jobscheduler.model.workflow.Workflow item = dbLayer.getDeployedInventory(workflowFilter);
+            com.sos.jobscheduler.model.workflow.Workflow item = addWorkflowPositions(dbLayer.getDeployedInventory(workflowFilter));
             if (item == null) {
                 throw new DBMissingDataException(String.format("Workflow '%s' doesn't exist", workflowFilter.getWorkflowId().getPath()));
             }
@@ -92,5 +99,55 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
 //            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
 //        }
 //    }
+    
+    private com.sos.jobscheduler.model.workflow.Workflow addWorkflowPositions(com.sos.jobscheduler.model.workflow.Workflow w) {
+        if (w == null) {
+            return null;
+        }
+        Object[] o = {};
+        setWorkflowPositions(o, w.getInstructions());
+        return w;
+    }
+    
+    private void setWorkflowPositions(Object[] parentPosition, List<Instruction> insts) {
+        if (insts != null) {
+            for (int i = 0; i < insts.size(); i++) {
+                Object[] pos = extendArray(parentPosition, i);
+                pos[parentPosition.length] = i;
+                Instruction inst = insts.get(i);
+                inst.setPosition(Arrays.asList(pos));
+                switch (inst.getTYPE()) {
+                case FORK:
+                    ForkJoin f = inst.cast();
+                    for(Branch b : f.getBranches()) {
+                        setWorkflowPositions(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions());
+                    }
+                    break;
+                case IF:
+                    IfElse ie = inst.cast();
+                    setWorkflowPositions(extendArray(pos, "then"), ie.getThen().getInstructions());
+                    if (ie.getElse() != null) {
+                        setWorkflowPositions(extendArray(pos, "else"), ie.getElse().getInstructions());
+                    }
+                    break;
+                case TRY:
+                    TryCatch tc = inst.cast();
+                    setWorkflowPositions(extendArray(pos, "try+0"), tc.getTry().getInstructions());
+                    if (tc.getCatch() != null) {
+                        setWorkflowPositions(extendArray(pos, "catch+0"), tc.getCatch().getInstructions());
+                    }
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+    }
+    
+    private Object[] extendArray(Object[] position, Object extValue) {
+        Object[] pos = Arrays.copyOf(position, position.length + 1);
+        pos[position.length] = extValue;
+        return pos;
+    }
 
 }

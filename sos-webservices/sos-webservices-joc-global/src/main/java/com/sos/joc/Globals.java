@@ -71,7 +71,7 @@ public class Globals {
     public static String loginClientId="";
     
 
-    public static SOSHibernateFactory getHibernateFactory() throws JocConfigurationException {
+    public static synchronized SOSHibernateFactory getHibernateFactory() throws JocConfigurationException {
         if (sosHibernateFactory == null || sosHibernateFactory.getSessionFactory() == null) {
             try {
                 Path confFile = getHibernateConfFile();

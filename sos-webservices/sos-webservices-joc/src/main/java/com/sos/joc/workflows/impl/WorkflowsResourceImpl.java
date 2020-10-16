@@ -16,6 +16,12 @@ import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.model.deploy.DeployType;
+import com.sos.jobscheduler.model.instruction.ForkJoin;
+import com.sos.jobscheduler.model.instruction.IfElse;
+import com.sos.jobscheduler.model.instruction.Instruction;
+import com.sos.jobscheduler.model.instruction.TryCatch;
+import com.sos.jobscheduler.model.workflow.Branch;
+import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.jobscheduler.model.workflow.WorkflowId;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -87,7 +93,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             if (contents != null) {
                 Stream<com.sos.jobscheduler.model.workflow.Workflow> workflowsStream = contents.stream().map(c -> {
                     try {
-                        return Globals.objectMapper.readValue(c, com.sos.jobscheduler.model.workflow.Workflow.class);
+                        return addWorkflowPositions(Globals.objectMapper.readValue(c, com.sos.jobscheduler.model.workflow.Workflow.class));
                     } catch (Exception e) {
                         // TODO
                         return null;
@@ -111,6 +117,55 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
         } finally {
             Globals.disconnect(connection);
         }
+    }
+    
+    private Workflow addWorkflowPositions(Workflow w) {
+        if (w == null) {
+            return null;
+        }
+        Object[] o = {};
+        setWorkflowPositions(o, w.getInstructions());
+        return w;
+    }
+    
+    private void setWorkflowPositions(Object[] parentPosition, List<Instruction> insts) {
+        if (insts != null) {
+            for (int i = 0; i < insts.size(); i++) {
+                Object[] pos = extendArray(parentPosition, i);
+                Instruction inst = insts.get(i);
+                inst.setPosition(Arrays.asList(pos));
+                switch (inst.getTYPE()) {
+                case FORK:
+                    ForkJoin f = inst.cast();
+                    for(Branch b : f.getBranches()) {
+                        setWorkflowPositions(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions());
+                    }
+                    break;
+                case IF:
+                    IfElse ie = inst.cast();
+                    setWorkflowPositions(extendArray(pos, "then"), ie.getThen().getInstructions());
+                    if (ie.getElse() != null) {
+                        setWorkflowPositions(extendArray(pos, "else"), ie.getElse().getInstructions());
+                    }
+                    break;
+                case TRY:
+                    TryCatch tc = inst.cast();
+                    setWorkflowPositions(extendArray(pos, "try+0"), tc.getTry().getInstructions());
+                    if (tc.getCatch() != null) {
+                        setWorkflowPositions(extendArray(pos, "catch+0"), tc.getCatch().getInstructions());
+                    }
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+    }
+    
+    private Object[] extendArray(Object[] position, Object extValue) {
+        Object[] pos = Arrays.copyOf(position, position.length + 1);
+        pos[position.length] = extValue;
+        return pos;
     }
 
 }

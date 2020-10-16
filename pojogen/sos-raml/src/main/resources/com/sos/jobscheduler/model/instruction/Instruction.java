@@ -1,6 +1,8 @@
 
 package com.sos.jobscheduler.model.instruction;
 
+import java.util.List;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -22,7 +24,8 @@ import com.sos.jobscheduler.model.common.ClassHelper;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "TYPE"
+    "TYPE",
+    "position"
 })
 @JsonTypeInfo(
 		use = JsonTypeInfo.Id.NAME, 
@@ -53,6 +56,9 @@ public abstract class Instruction
     @JsonProperty("TYPE")
     @JsonIgnore
     private InstructionType tYPE;
+    
+    @JsonProperty("position")
+    private List<Object> position;
 
     /**
      * No args constructor for use in serialization
@@ -95,6 +101,16 @@ public abstract class Instruction
         this.tYPE = tYPE;
     }
     
+    @JsonProperty("position")
+    public List<Object> getPosition() {
+        return position;
+    }
+    
+    @JsonProperty("position")
+    public void setPosition(List<Object> position) {
+        this.position = position;
+    }
+    
     @JsonIgnore
 	public Boolean isRetry() {
 		try {
@@ -110,12 +126,12 @@ public abstract class Instruction
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("tYPE", tYPE).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("tYPE", tYPE).append("position", position).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(tYPE).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(tYPE).append(position).toHashCode();
     }
 
     @Override
@@ -127,7 +143,7 @@ public abstract class Instruction
             return false;
         }
         Instruction rhs = ((Instruction) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(tYPE, rhs.tYPE).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(tYPE, rhs.tYPE).append(position, rhs.position).isEquals();
     }
 
 }
