@@ -1,8 +1,5 @@
 package com.sos.joc.inventory.impl;
 
-import java.time.Instant;
-import java.util.Date;
-
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;

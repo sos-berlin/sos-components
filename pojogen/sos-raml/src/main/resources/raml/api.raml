@@ -683,6 +683,24 @@ traits:
 /inventory:
   description: This is not an API call. Use its children!!
   
+  /{objectType}/validate:
+    type: error
+    post:
+      description: !include joc/documentation/inventory/validate.md
+      body:
+        application/json:
+      responses:
+        200:
+          body:
+            application/json:
+              schema: !include joc/schemas/inventory/validate-schema.json
+        420:
+          body:
+            application/json:
+        440:
+          body:
+            application/json:
+            
   /calendar/dates:
     type:
       postJSONWithoutJSId:

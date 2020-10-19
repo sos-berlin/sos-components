@@ -13,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * folder item
  * <p>
- * 
+ * the field 'order' is only relevant for Workflows
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -26,7 +26,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "valid",
     "deleted",
     "deployed",
-    "hasDeployments"
+    "released",
+    "hasDeployments",
+    "order"
 })
 public class ResponseFolderItem {
 
@@ -80,8 +82,19 @@ public class ResponseFolderItem {
     private Boolean deleted;
     @JsonProperty("deployed")
     private Boolean deployed;
+    @JsonProperty("released")
+    private Boolean released;
     @JsonProperty("hasDeployments")
     private Boolean hasDeployments;
+    /**
+     * folder item
+     * <p>
+     * the field 'order' is only relevant for Workflows
+     * 
+     */
+    @JsonProperty("order")
+    @JsonPropertyDescription("the field 'order' is only relevant for Workflows")
+    private ResponseFolderItem order;
 
     /**
      * non negative long
@@ -229,6 +242,16 @@ public class ResponseFolderItem {
         this.deployed = deployed;
     }
 
+    @JsonProperty("released")
+    public Boolean getReleased() {
+        return released;
+    }
+
+    @JsonProperty("released")
+    public void setReleased(Boolean released) {
+        this.released = released;
+    }
+
     @JsonProperty("hasDeployments")
     public Boolean getHasDeployments() {
         return hasDeployments;
@@ -239,14 +262,36 @@ public class ResponseFolderItem {
         this.hasDeployments = hasDeployments;
     }
 
+    /**
+     * folder item
+     * <p>
+     * the field 'order' is only relevant for Workflows
+     * 
+     */
+    @JsonProperty("order")
+    public ResponseFolderItem getOrder() {
+        return order;
+    }
+
+    /**
+     * folder item
+     * <p>
+     * the field 'order' is only relevant for Workflows
+     * 
+     */
+    @JsonProperty("order")
+    public void setOrder(ResponseFolderItem order) {
+        this.order = order;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("objectType", objectType).append("title", title).append("valid", valid).append("deleted", deleted).append("deployed", deployed).append("hasDeployments", hasDeployments).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("objectType", objectType).append("title", title).append("valid", valid).append("deleted", deleted).append("deployed", deployed).append("released", released).append("hasDeployments", hasDeployments).append("order", order).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(valid).append(path).append(deleted).append(hasDeployments).append(name).append(deployed).append(id).append(title).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(valid).append(path).append(deleted).append(hasDeployments).append(name).append(deployed).append(id).append(title).append(released).append(objectType).append(order).toHashCode();
     }
 
     @Override
@@ -258,7 +303,7 @@ public class ResponseFolderItem {
             return false;
         }
         ResponseFolderItem rhs = ((ResponseFolderItem) other);
-        return new EqualsBuilder().append(valid, rhs.valid).append(path, rhs.path).append(deleted, rhs.deleted).append(hasDeployments, rhs.hasDeployments).append(name, rhs.name).append(deployed, rhs.deployed).append(id, rhs.id).append(title, rhs.title).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(valid, rhs.valid).append(path, rhs.path).append(deleted, rhs.deleted).append(hasDeployments, rhs.hasDeployments).append(name, rhs.name).append(deployed, rhs.deployed).append(id, rhs.id).append(title, rhs.title).append(released, rhs.released).append(objectType, rhs.objectType).append(order, rhs.order).isEquals();
     }
 
 }

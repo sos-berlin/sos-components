@@ -18,6 +18,7 @@ import com.sos.joc.classes.audit.InventoryAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JocInventory.InventoryPath;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryWorkflowOrder;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -30,6 +31,7 @@ import com.sos.joc.model.inventory.common.CalendarType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.schema.JsonValidator;
+import com.sos.webservices.order.initiator.model.OrderTemplate;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class StoreConfigurationResourceImpl extends JOCResourceImpl implements IStoreConfigurationResource {
@@ -121,7 +123,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
 //                session.update(config);
 //            }
 
-//            switch (in.getObjectType()) {
+            switch (in.getObjectType()) {
 //            case WORKFLOW:
 //                // Workflow w = (Workflow) in.getConfiguration();
 //                break;
@@ -203,29 +205,31 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
 //                    session.update(j);
 //                }
 //                break;
-//            case ORDER:
-//                DBItemInventoryWorkflowOrder wo = dbLayer.getWorkflowOrder(config.getId());
-//                if (wo == null) {
-//                    wo = new DBItemInventoryWorkflowOrder();
-//                    wo.setCid(config.getId());
-//
-//                    wo.setCidWorkflow(0L); // TODO
-//                    wo.setCidCalendar(0L);
-//                    wo.setCidNwCalendar(0L);
-//
-//                    session.save(wo);
-//                } else {
-//                    // TODO update
-//                    // session.update(wo);
-//                }
-//                break;
+            case ORDER:
+                OrderTemplate orderTemplate = (OrderTemplate) in.getConfiguration();
+                DBItemInventoryWorkflowOrder wo = dbLayer.getWorkflowOrder(config.getId());
+                Long workflowId = dbLayer.getConfigurationProperty(orderTemplate.getWorkflowPath(), ConfigurationType.WORKFLOW.intValue(), "id");
+                if (wo == null) {
+                    wo = new DBItemInventoryWorkflowOrder();
+                    wo.setCid(config.getId());
+                    wo.setCidWorkflow(workflowId);
+                    // bad data model; we have more than one Calendar
+                    //wo.setCidCalendar(0L);
+                    //wo.setCidNwCalendar(0L);
+
+                    session.save(wo);
+                } else if (wo.getCidWorkflow() != workflowId) {
+                    wo.setCidWorkflow(workflowId);
+                    session.update(wo);
+                }
+                break;
 //            case WORKINGDAYSCALENDAR:
 //            case NONWORKINGDAYSCALENDAR:
 //                // Nothing to do
 //                break;
-//            default:
-//                break;
-//            }
+            default:
+                break;
+            }
 //            session.commit();
 
             ConfigurationObject item = new ConfigurationObject();

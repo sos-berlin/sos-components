@@ -3,8 +3,11 @@ package com.sos.joc.inventory.impl;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -70,14 +73,18 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             ResponseFolder folder = new ResponseFolder();
             folder.setDeliveryDate(Date.from(Instant.now()));
             folder.setPath(in.getPath());
+            
+            Map<String, InventoryTreeFolderItem> orders = new HashMap<>();
+            Set<ResponseFolderItem> workflows = new HashSet<>();
 
-            if (items != null && items.size() > 0) {
+            if (items != null && !items.isEmpty()) {
                 for (InventoryTreeFolderItem config : items) {
                     ConfigurationType type = config.getObjectType();
                     if (type != null) {
                         switch (type) {
                         case WORKFLOW:
-                            folder.getWorkflows().add(config);
+                            workflows.add(config);
+                            //folder.getWorkflows().add(config);
                             break;
                         case JOB:
                             folder.getJobs().add(config);
@@ -95,6 +102,9 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                             folder.getJunctions().add(config);
                             break;
                         case ORDER:
+                            if (config.getWorkflowPath() != null) {
+                                orders.put(config.getWorkflowPath(), config);
+                            }
                             folder.getOrders().add(config);
                             break;
                         case WORKINGDAYSCALENDAR:
@@ -106,7 +116,14 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                         }
                     }
                 }
-                folder.setWorkflows(sort(folder.getWorkflows()));
+                
+                // put OrderTemplate to Workflow
+                workflows.stream().map(item -> {
+                    item.setOrder(orders.remove(item.getPath()));
+                    return item;
+                }).collect(Collectors.toSet());
+                
+                folder.setWorkflows(sort(workflows));
                 folder.setJobs(sort(folder.getJobs()));
                 folder.setJobClasses(sort(folder.getJobClasses()));
                 folder.setAgentClusters(sort(folder.getAgentClusters()));

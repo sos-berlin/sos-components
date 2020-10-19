@@ -135,12 +135,9 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
           result = dbLayer.getCountConfigurationsByFolder(folder, true);
           dbLayer.getSession().commit();
       } catch (SOSHibernateException e) {
-          try {
-              dbLayer.getSession().rollback();
-          } catch (SOSHibernateException e1) {
-          }
+          Globals.rollback(dbLayer.getSession());
       }
-      return result == null || result.equals(1L);
+      return result != null && result.equals(1L);
   }
 
     private void storeAuditLog(ConfigurationType objectType, String path, String folder) {
