@@ -1,12 +1,18 @@
 package com.sos.joc.db.inventory;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -58,11 +64,12 @@ public class InventoryDBLayer extends DBLayer {
         hql.append(") ");
         hql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY);
         hql.append(" where inventoryConfigurationId=:configId ");
+        hql.append(" order by id desc ");
         Query<InventoryDeploymentItem> query = getSession().createQuery(hql.toString());
         query.setParameter("configId", configId);
         return getSession().getResultList(query);
     }
-    
+
     public List<DBItemInventoryReleasedConfiguration> getReleasedConfiguration(Long configId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
         hql.append(" where cid=:configId");
@@ -71,7 +78,7 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("configId", configId);
         return getSession().getResultList(query);
     }
-    
+
     public DBItemInventoryReleasedConfiguration getLastReleasedConfiguration(Long configId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
         hql.append(" where cid=:configId");
@@ -81,7 +88,7 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("configId", configId);
         return getSession().getSingleResult(query);
     }
-    
+
     public <T> List<T> getReleasedConfigurationProperty(Long configId, String propertyName) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select ").append(propertyName).append(" from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
         hql.append(" where cid=:configId");
@@ -90,7 +97,7 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("configId", configId);
         return getSession().getResultList(query);
     }
-    
+
     public DBItemInventoryReleasedConfiguration getReleasedConfiguration(String path, Integer type) throws SOSHibernateException {
         boolean isCalendar = JocInventory.isCalendar(type);
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
@@ -109,13 +116,119 @@ public class InventoryDBLayer extends DBLayer {
         }
         return getSession().getSingleResult(query);
     }
+    
+    public List<String> getDeletedFolders() throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select path from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where deleted = 1");
+        hql.append(" and type = :type ");
+        Query<String> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.FOLDER.intValue());
+        return getSession().getResultList(query);
+    }
+
+//    public Set<DBItemInventoryConfiguration> getDeletedConfigurationsWithDeletedFolderContent(Collection<Integer> types, Collection<String> deletedFolders)
+//            throws SOSHibernateException {
+//        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+//        hql.append(" where deleted = 1");
+//        if (types != null && !types.isEmpty()) {
+//            hql.append(" and type in (:types) ");
+//        }
+//        if (deletedFolders != null && !deletedFolders.isEmpty()) {
+//            List<String> clause = new ArrayList<>();
+//            for (String folder : deletedFolders) {
+//                clause.add("(folder = '" + folder + "' or folder like '"+ folder + "/%')");
+//            }
+//            hql.append(clause.stream().collect(Collectors.joining(" or ", " or (", ")")));
+//        }
+//        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+//        if (types != null && !types.isEmpty()) {
+//            query.setParameterList("types", types);
+//        }
+//        List<DBItemInventoryConfiguration> result = getSession().getResultList(query);
+//        if (result != null) {
+//            return result.stream().collect(Collectors.toSet()); 
+//        }
+//        return Collections.emptySet();
+//    }
+    
+    public List<DBItemInventoryConfiguration> getDeletedConfigurations(Collection<Integer> types, String folder, boolean recursive,
+            Collection<String> deletedFolders) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where deleted = 1");
+        if (types != null && !types.isEmpty()) {
+            hql.append(" and type in (:types) ");
+        }
+        if (deletedFolders != null && !deletedFolders.isEmpty()) {
+            List<String> clause = new ArrayList<>();
+            for (String deletedFolder : deletedFolders) {
+                clause.add("folder not like '" + deletedFolder + "/%'");
+            }
+            hql.append(clause.stream().collect(Collectors.joining(" and ", " and (", ")")));
+        }
+        if (folder != null && !folder.isEmpty()) {
+            if (recursive) {
+                hql.append(" and (folder = :folder or folder like :likeFolder)");
+            } else {
+                hql.append(" and folder = :folder");
+            }
+        }
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        if (types != null && !types.isEmpty()) {
+            query.setParameterList("types", types);
+        }
+        if (folder != null && !folder.isEmpty()) {
+            query.setParameter("folder", folder);
+            if (recursive) {
+                query.setParameter("likeFolder", (folder + "/%").replaceAll("//+", "/"));
+            }
+        }
+        return getSession().getResultList(query);
+    }
+
+    public Set<Long> getNotDeletedConfigurations(Collection<Integer> types, String folder, boolean recursive, Collection<String> deletedFolders)
+            throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select id from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where deleted = 0");
+        if (types != null && !types.isEmpty()) {
+            hql.append(" and type in (:types) ");
+        }
+        if (deletedFolders != null && !deletedFolders.isEmpty()) {
+            List<String> clause = new ArrayList<>();
+            for (String deleteFolder : deletedFolders) {
+                clause.add("(folder != '" + deleteFolder + "' and folder not like '" + deleteFolder + "/%')");
+            }
+            hql.append(clause.stream().collect(Collectors.joining(" and ", " and (", ")")));
+        }
+        if (folder != null && !folder.isEmpty()) {
+            if (recursive) {
+                hql.append(" and (folder = :folder or folder like :likeFolder)");
+            } else {
+                hql.append(" and folder = :folder");
+            }
+        }
+        Query<Long> query = getSession().createQuery(hql.toString());
+        if (types != null && !types.isEmpty()) {
+            query.setParameterList("types", types);
+        }
+        if (folder != null && !folder.isEmpty()) {
+            query.setParameter("folder", folder);
+            if (recursive) {
+                query.setParameter("likeFolder", (folder + "/%").replaceAll("//+", "/"));
+            }
+        }
+        List<Long> result = getSession().getResultList(query);
+        if (result != null) {
+            return result.stream().collect(Collectors.toSet());
+        }
+        return Collections.emptySet();
+    }
 
     public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive) throws SOSHibernateException {
         return getConfigurationsByFolder(folder, recursive, null, false);
     }
 
-    public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive, Collection<Integer> configTypes, Boolean onlyValidObjects)
-            throws SOSHibernateException {
+    public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive, Collection<Integer> configTypes,
+            Boolean onlyValidObjects) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryTreeFolderItem.class.getName());
         hql.append("(ic.id, ic.type, ic.path, ic.name, ic.title, ic.valid, ic.deleted, ic.deployed, count(dh.id)) from ").append(
                 DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
@@ -160,11 +273,10 @@ public class InventoryDBLayer extends DBLayer {
 
     public Long getCountConfigurationsByFolder(String folder, boolean recursive, Integer configType) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select count(id) from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
-        hql.append("where type != :folderType ");
         if (recursive) {
-            hql.append("and (folder=:folder or folder like :likeFolder) ");
+            hql.append("where (folder=:folder or folder like :likeFolder) ");
         } else {
-            hql.append("and folder=:folder ");
+            hql.append("where folder=:folder ");
         }
         if (configType != null) {
             hql.append("and type=:configType ");
@@ -181,47 +293,35 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
-    public List<InventoryDeployablesTreeFolderItem> getConfigurationsWithMaxDeployment(String folder, boolean recursive)
-            throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select new ").append(InventoryDeployablesTreeFolderItem.class.getName());
-        hql.append("(");
-        hql.append("ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.valid,ic.deleted,ic.deployed,ic.modified");
-        hql.append(",dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,dh.path,dh.controllerId");
-        hql.append(") ");
-        hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
-        hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
-        hql.append("on ic.id=dh.inventoryConfigurationId ");
-        hql.append("and dh.id=(");
-        hql.append("select max(dhsub.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dhsub where ic.id=dhsub.inventoryConfigurationId");
-        hql.append(") ");
-        if (folder != null) {
-            if (recursive) {
-                hql.append("where (ic.folder=:folder or ic.folder like :likeFolder) ");
-            } else {
-                hql.append("where ic.folder=:folder ");
+    public List<InventoryDeployablesTreeFolderItem> getConfigurationsWithMaxDeployment(Collection<Long> configIds) throws SOSHibernateException {
+        if (configIds != null && !configIds.isEmpty()) {
+            StringBuilder hql = new StringBuilder("select new ").append(InventoryDeployablesTreeFolderItem.class.getName());
+            hql.append("(");
+            hql.append("ic");
+            hql.append(",dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,dh.path,dh.controllerId");
+            hql.append(") ");
+            hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
+            hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
+            hql.append("on ic.id=dh.inventoryConfigurationId ");
+            hql.append("and dh.id=(");
+            hql.append("select max(dhsub.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dhsub where ic.id=dhsub.inventoryConfigurationId");
+            hql.append(") ");
+            hql.append("where ic.id in (:configIds) ");
+
+            Query<InventoryDeployablesTreeFolderItem> query = getSession().createQuery(hql.toString());
+            if (configIds != null && !configIds.isEmpty()) {
+                query.setParameterList("configIds", configIds);
             }
+            return getSession().getResultList(query);
+        } else {
+            return Collections.emptyList();
         }
-        hql.append("and ic.type in (:types) ");
-        hql.append("and ic.valid = 1");
-        Query<InventoryDeployablesTreeFolderItem> query = getSession().createQuery(hql.toString());
-        if (folder != null) {
-            query.setParameter("folder", folder);
-            if (recursive) {
-                if (folder.equals("/")) {
-                    query.setParameter("likeFolder", folder + "%");
-                } else {
-                    query.setParameter("likeFolder", folder + "/%");
-                }
-            }
-        }
-        query.setParameterList("types", JocInventory.getDeployableTypes());
-        return getSession().getResultList(query);
     }
 
     public InventoryDeployablesTreeFolderItem getConfigurationWithMaxDeployment(Long configId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeployablesTreeFolderItem.class.getName());
         hql.append("(");
-        hql.append("ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.valid,ic.deleted,ic.deployed,ic.modified");
+        hql.append("ic");
         hql.append(",dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,dh.path,dh.controllerId");
         hql.append(") ");
         hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
@@ -237,49 +337,32 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
-    public List<InventoryDeployablesTreeFolderItem> getConfigurationsWithAllDeployments(Long configId) throws SOSHibernateException {
-        return getConfigurationsWithAllDeployments(configId, null, null);
-    }
-
-    public List<InventoryDeployablesTreeFolderItem> getConfigurationsWithAllDeployments(String folder, Integer type) throws SOSHibernateException {
-        return getConfigurationsWithAllDeployments(null, folder, type);
-    }
-
-    private List<InventoryDeployablesTreeFolderItem> getConfigurationsWithAllDeployments(Long configId, String folder, Integer type)
+    public Map<DBItemInventoryConfiguration, Set<InventoryDeploymentItem>> getConfigurationsWithAllDeployments(Collection<Long> configIds)
             throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select new ").append(InventoryDeployablesTreeFolderItem.class.getName());
-        hql.append("(");
-        hql.append("ic.id as configId,ic.path,ic.folder,ic.name,ic.type,ic.valid,ic.deleted,ic.deployed,ic.modified");
-        hql.append(",dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,dh.path,dh.controllerId");
-        hql.append(") ");
-        hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
-        hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
-        hql.append("on ic.id=dh.inventoryConfigurationId ");
-        if (configId != null) {
-            hql.append("where ic.id=:configId ");
-        } else if (folder != null) {
-            hql.append("where ic.folder=:folder ");
-            if (type != null) {
-                hql.append("and ic.type=:type ");
-            } else {
-                hql.append("and ic.type in (:types) ");
-            }
-        }
-        hql.append("and ic.valid = 1");
-        hql.append("order by ic.id");
+        if (configIds != null && !configIds.isEmpty()) {
+            StringBuilder hql = new StringBuilder("select new ").append(InventoryDeployablesTreeFolderItem.class.getName());
+            hql.append("(");
+            hql.append("ic");
+            hql.append(",dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,dh.path,dh.controllerId");
+            hql.append(") ");
+            hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
+            hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
+            hql.append("on ic.id=dh.inventoryConfigurationId ");
+            hql.append("where ic.id in (:configIds) ");
 
-        Query<InventoryDeployablesTreeFolderItem> query = getSession().createQuery(hql.toString());
-        if (configId != null) {
-            query.setParameter("configId", configId);
-        } else if (folder != null) {
-            query.setParameter("folder", folder);
-            if (type != null) {
-                query.setParameter("type", type);
-            } else {
-                query.setParameterList("types", JocInventory.getDeployableTypes());
+            Query<InventoryDeployablesTreeFolderItem> query = getSession().createQuery(hql.toString());
+            if (configIds != null && !configIds.isEmpty()) {
+                query.setParameterList("configIds", configIds);
+            }
+            List<InventoryDeployablesTreeFolderItem> result = getSession().getResultList(query);
+            if (result != null && !result.isEmpty()) {
+                Comparator<InventoryDeploymentItem> comp = Comparator.nullsFirst(Comparator.comparing(InventoryDeploymentItem::getDeploymentDate)
+                        .reversed());
+                return result.stream().collect(Collectors.groupingBy(InventoryDeployablesTreeFolderItem::getConfiguration, Collectors.mapping(
+                        InventoryDeployablesTreeFolderItem::getDeployment, Collectors.toCollection(() -> new TreeSet<>(comp)))));
             }
         }
-        return getSession().getResultList(query);
+        return Collections.emptyMap();
     }
 
     public DBItemInventoryConfiguration getConfiguration(Long id) throws SOSHibernateException {
@@ -322,7 +405,7 @@ public class InventoryDBLayer extends DBLayer {
         }
         return getSession().getSingleResult(query);
     }
-    
+
     public DBItemInventoryConfiguration getCalendar(String path) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where lower(path)=:path");
@@ -332,7 +415,7 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameterList("types", JocInventory.getCalendarTypes());
         return getSession().getSingleResult(query);
     }
-    
+
     public List<DBItemInventoryConfiguration> getCalendars(Stream<String> pathsStream) throws SOSHibernateException {
         Set<String> paths = pathsStream.map(String::toLowerCase).collect(Collectors.toSet());
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
@@ -347,7 +430,7 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameterList("types", JocInventory.getCalendarTypes());
         return getSession().getResultList(query);
     }
-    
+
     public List<DBItemInventoryConfiguration> getConfigurations(Stream<String> pathsStream, Collection<Integer> types, Boolean onlyValidObjects)
             throws SOSHibernateException {
         Set<String> paths = pathsStream.map(String::toLowerCase).collect(Collectors.toSet());
@@ -372,7 +455,7 @@ public class InventoryDBLayer extends DBLayer {
         }
         return getSession().getResultList(query);
     }
-    
+
     public List<DBItemInventoryConfiguration> getConfigurations(Collection<Long> ids) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         if (ids != null && !ids.isEmpty()) {
@@ -384,7 +467,7 @@ public class InventoryDBLayer extends DBLayer {
         }
         return getSession().getResultList(query);
     }
-    
+
     public List<DBItemInventoryConfiguration> getFolderContent(String folder, boolean recursive) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         if (recursive) {
@@ -648,7 +731,7 @@ public class InventoryDBLayer extends DBLayer {
     public int markConfigurationAsDeleted(final Long configId, boolean deleted) throws SOSHibernateException {
         return markConfigurationsAsDeleted(Arrays.asList(configId), deleted);
     }
-    
+
     public int markConfigurationsAsDeleted(final Collection<Long> configIds, boolean deleted) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
         hql.append("set modified=:modified ");
@@ -696,12 +779,12 @@ public class InventoryDBLayer extends DBLayer {
         getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_WORKFLOW_ORDER_VARIABLES);
     }
 
-    public Set<Tree> getFoldersByFolderAndType(String folder, Set<Integer> inventoryTypes, Boolean onlyValidObjects) throws DBConnectionRefusedException,
-            DBInvalidDataException {
+    public Set<Tree> getFoldersByFolderAndType(String folder, Set<Integer> inventoryTypes, Boolean onlyValidObjects)
+            throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             List<String> whereClause = new ArrayList<String>();
             StringBuilder sql = new StringBuilder();
-            sql.append("select folder, deleted from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            sql.append("select folder from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             if (folder != null && !folder.isEmpty() && !folder.equals(JocInventory.ROOT_FOLDER)) {
                 whereClause.add("(folder = :folder or folder like :likeFolder)");
             }
@@ -718,8 +801,8 @@ public class InventoryDBLayer extends DBLayer {
             if (!whereClause.isEmpty()) {
                 sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
             }
-            sql.append(" group by folder, deleted");
-            Query<Object[]> query = getSession().createQuery(sql.toString());
+            sql.append(" group by folder");
+            Query<String> query = getSession().createQuery(sql.toString());
             if (folder != null && !folder.isEmpty() && !folder.equals(JocInventory.ROOT_FOLDER)) {
                 query.setParameter("folder", folder);
                 query.setParameter("likeFolder", folder + "/%");
@@ -732,6 +815,39 @@ public class InventoryDBLayer extends DBLayer {
                 }
             }
 
+            List<String> result = getSession().getResultList(query);
+            if (result != null && !result.isEmpty()) {
+                Set<String> folderWithParents = new HashSet<>();
+                for (String f : result) {
+                    Path p = Paths.get(f);
+                    for (int i = 0; i < p.getNameCount(); i++) {
+                        folderWithParents.add(("/" + p.subpath(0, i + 1)).replace('\\', '/'));
+                    }
+                }
+                Set<Tree> tree = getFoldersByFolder(folderWithParents);
+                Tree root = new Tree();
+                root.setPath(JocInventory.ROOT_FOLDER);
+                root.setDeleted(false);
+                tree.add(root);
+
+                return tree;
+            }
+            return Collections.emptySet();
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    private Set<Tree> getFoldersByFolder(Collection<String> folders) throws SOSHibernateException {
+        if (folders != null && !folders.isEmpty()) {
+            StringBuilder sql = new StringBuilder();
+            sql.append("select path, deleted from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            sql.append(" where path in (:folders) and type=:type");
+            Query<Object[]> query = getSession().createQuery(sql.toString());
+            query.setParameterList("folders", folders);
+            query.setParameter("type", ConfigurationType.FOLDER.intValue());
             List<Object[]> result = getSession().getResultList(query);
             if (result != null && !result.isEmpty()) {
                 return result.stream().map(s -> {
@@ -740,18 +856,9 @@ public class InventoryDBLayer extends DBLayer {
                     tree.setDeleted((Boolean) s[1]);
                     return tree;
                 }).collect(Collectors.toSet());
-            } else if (folder.equals(JocInventory.ROOT_FOLDER)) {
-                Tree tree = new Tree();
-                tree.setPath(JocInventory.ROOT_FOLDER);
-                tree.setDeleted(false);
-                return Arrays.asList(tree).stream().collect(Collectors.toSet());
             }
-            return Collections.emptySet();
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
         }
+        return Collections.emptySet();
     }
 
     public class InventoryDeleteResult {

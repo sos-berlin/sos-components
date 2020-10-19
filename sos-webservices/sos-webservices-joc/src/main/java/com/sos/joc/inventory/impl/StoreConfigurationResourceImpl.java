@@ -3,10 +3,7 @@ package com.sos.joc.inventory.impl;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.ws.rs.Path;
 
@@ -38,23 +35,6 @@ import com.sos.schema.JsonValidator;
 public class StoreConfigurationResourceImpl extends JOCResourceImpl implements IStoreConfigurationResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreConfigurationResourceImpl.class);
-    public static final Map<ConfigurationType, String> SCHEMA_LOCATION = Collections.unmodifiableMap(new HashMap<ConfigurationType, String>() {
-
-        private static final long serialVersionUID = 1L;
-
-        {
-            put(ConfigurationType.AGENTCLUSTER, "classpath:/raml/jobscheduler/schemas/agent/agentRef-schema.json");
-            put(ConfigurationType.WORKINGDAYSCALENDAR, "classpath:/raml/joc/schemas/calendar/calendar-schema.json");
-            put(ConfigurationType.NONWORKINGDAYSCALENDAR, "classpath:/raml/joc/schemas/calendar/calendar-schema.json");
-            put(ConfigurationType.JOB, "classpath:/raml/jobscheduler/schemas/job/job-schema.json");
-            put(ConfigurationType.JOBCLASS, "classpath:/raml/jobscheduler/schemas/jobClass/jobClass-schema.json");
-            put(ConfigurationType.JUNCTION, "classpath:/raml/jobscheduler/schemas/junction/junction-schema.json");
-            put(ConfigurationType.LOCK, "classpath:/raml/jobscheduler/schemas/lock/lock-schema.json");
-            put(ConfigurationType.ORDER, "classpath:/raml/orderManagement/schemas/orders/orderTemplate-schema.json");
-            put(ConfigurationType.WORKFLOW, "classpath:/raml/jobscheduler/schemas/workflow/workflow-schema.json");
-            put(ConfigurationType.FOLDER, "classpath:/raml/jobscheduler/schemas/inventory/folder/folder-schema.json");
-        }
-    });
 
     @Override
     public JOCDefaultResponse store(final String accessToken, final byte[] inBytes) {
@@ -314,6 +294,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             }
         } else {
             item.setTitle(null);
+            item.setValid(true);
         }
         
         item.setDeployed(false);
@@ -326,7 +307,8 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         try {
             byte[] objBytes = Globals.objectMapper.writeValueAsBytes(obj);
             item.setContent(new String(objBytes, StandardCharsets.UTF_8));
-            JsonValidator.validate(objBytes, URI.create(SCHEMA_LOCATION.get(in.getObjectType())));
+            JsonValidator.validate(objBytes, URI.create(JocInventory.SCHEMA_LOCATION.get(in.getObjectType())));
+            item.setValid(true);
         } catch (Throwable e) {
             item.setValid(false);
             in.setInvalidMsg(e.getMessage());

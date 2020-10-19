@@ -10,7 +10,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Filter Delete Draft
+ * response Delete Draft
  * <p>
  * 
  * 

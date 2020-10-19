@@ -28,75 +28,75 @@ public class DeployablesResourceImplTest {
 
     private SOSHibernateFactory factory;
 
-    @Ignore
-    @Test
-    public void testDeployablesTreeWithMaxDeployment() throws Exception {
-        SOSHibernateSession session = null;
-        try {
-            session = factory.openStatelessSession();
-            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+//    @Ignore
+//    @Test
+//    public void testDeployablesTreeWithMaxDeployment() throws Exception {
+//        SOSHibernateSession session = null;
+//        try {
+//            session = factory.openStatelessSession();
+//            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+//
+//            session.beginTransaction();
+//            String folder = "/";
+//            List<InventoryDeployablesTreeFolderItem> list = dbLayer.getConfigurationsWithMaxDeployment(folder, true);
+//            session.commit();
+//            session = null;
+//
+//            for (InventoryDeployablesTreeFolderItem item : list) {
+//                LOGGER.info(SOSString.toString(item));
+//            }
+//
+//            DeployablesResourceImpl impl = new DeployablesResourceImpl();
+//            ResponseDeployables result = impl.getDeployables(dbLayer, list, folder, false);
+//            printTree(result);
+//
+//        } catch (Exception e) {
+//            if (session != null && session.isTransactionOpened()) {
+//                session.rollback();
+//            }
+//            throw e;
+//        } finally {
+//            if (session != null) {
+//                session.close();
+//            }
+//        }
+//    }
 
-            session.beginTransaction();
-            String folder = "/";
-            List<InventoryDeployablesTreeFolderItem> list = dbLayer.getConfigurationsWithMaxDeployment(folder, true);
-            session.commit();
-            session = null;
-
-            for (InventoryDeployablesTreeFolderItem item : list) {
-                LOGGER.info(SOSString.toString(item));
-            }
-
-            DeployablesResourceImpl impl = new DeployablesResourceImpl();
-            ResponseDeployables result = impl.getDeployables(dbLayer, list, folder, false);
-            printTree(result);
-
-        } catch (Exception e) {
-            if (session != null && session.isTransactionOpened()) {
-                session.rollback();
-            }
-            throw e;
-        } finally {
-            if (session != null) {
-                session.close();
-            }
-        }
-    }
-
-    @Ignore
-    @Test
-    public void testDeployablesTreeWithAllDeployments() throws Exception {
-        SOSHibernateSession session = null;
-        try {
-            JOCResourceImpl r = new JOCResourceImpl();
-            String folder = r.normalizeFolder("/");
-
-            session = factory.openStatelessSession();
-            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-
-            session.beginTransaction();
-            List<InventoryDeployablesTreeFolderItem> list = dbLayer.getConfigurationsWithAllDeployments(folder, ConfigurationType.WORKFLOW.intValue());
-            session.commit();
-            session = null;
-
-            for (InventoryDeployablesTreeFolderItem item : list) {
-                LOGGER.info(SOSString.toString(item));
-            }
-
-            DeployablesResourceImpl impl = new DeployablesResourceImpl();
-            ResponseDeployables result = impl.getDeployables(dbLayer, list, folder, true);
-            printTree(result);
-
-        } catch (Exception e) {
-            if (session != null && session.isTransactionOpened()) {
-                session.rollback();
-            }
-            throw e;
-        } finally {
-            if (session != null) {
-                session.close();
-            }
-        }
-    }
+//    @Ignore
+//    @Test
+//    public void testDeployablesTreeWithAllDeployments() throws Exception {
+//        SOSHibernateSession session = null;
+//        try {
+//            JOCResourceImpl r = new JOCResourceImpl();
+//            String folder = r.normalizeFolder("/");
+//
+//            session = factory.openStatelessSession();
+//            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+//
+//            session.beginTransaction();
+//            List<InventoryDeployablesTreeFolderItem> list = dbLayer.getConfigurationsWithAllDeployments(folder, ConfigurationType.WORKFLOW.intValue());
+//            session.commit();
+//            session = null;
+//
+//            for (InventoryDeployablesTreeFolderItem item : list) {
+//                LOGGER.info(SOSString.toString(item));
+//            }
+//
+//            DeployablesResourceImpl impl = new DeployablesResourceImpl();
+//            ResponseDeployables result = impl.getDeployables(dbLayer, list, folder, true);
+//            printTree(result);
+//
+//        } catch (Exception e) {
+//            if (session != null && session.isTransactionOpened()) {
+//                session.rollback();
+//            }
+//            throw e;
+//        } finally {
+//            if (session != null) {
+//                session.close();
+//            }
+//        }
+//    }
 
     private void printTree(ResponseDeployables result) {
         LOGGER.info("-----------------------------------------" + result.getDeployables().size());

@@ -718,7 +718,7 @@ traits:
   /deletedraft:
     type:
       postJSONWithoutJSId:
-        description: Delete configuration draft of an inventory object
+        description: Deletes configuration draft of an inventory object
         description1: !include joc/documentation/inventory/idOrPathAndType.md
         description2: " "
         description3: " "
@@ -735,10 +735,50 @@ traits:
         schema200: !include joc/schemas/inventory/delete/response-item-schema.json
         example200: TODO
   
+  /deployable:
+    type:
+      postJSONWithoutJSId:
+        description: Sends deployable object
+        description1: !include joc/documentation/inventory/idOrPathAndDeployableType.md
+        description2: !include joc/documentation/inventory/onlyValidObjects.md
+        description3: !include joc/documentation/inventory/withVersions.md
+        description4: " "
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: " "
+        schema: !include joc/schemas/inventory/deploy/request-deployable-schema.json
+        example: TODO
+        schema200: !include joc/schemas/inventory/deploy/response-deployable-schema.json
+        example200: TODO
+        
+  /deployables:
+    type:
+      postJSONWithoutJSId:
+        description: Sends deployables object
+        description1: !include joc/documentation/inventory/folder.md
+        description2: !include joc/documentation/common/recursive.md
+        description3: !include joc/documentation/inventory/deployableTypes.md
+        description4: !include joc/documentation/inventory/onlyValidObjects.md
+        description5: !include joc/documentation/inventory/withVersions.md
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: " "
+        schema: !include joc/schemas/inventory/deploy/request-deployables-schema.json
+        example: TODO
+        schema200: !include joc/schemas/inventory/deploy/response-deployables-schema.json
+        example200: TODO
+  
   /read/configuration:
     type:
       postJSONWithoutJSId:
-        description: Read configuration of an inventory object
+        description: Reads configuration of an inventory object
         description1: !include joc/documentation/inventory/idOrPathAndType.md
         description2: " "
         description3: " "
@@ -758,7 +798,7 @@ traits:
   /read/folder:
     type:
       postJSONWithoutJSId:
-        description: Read folder content
+        description: Reads folder content
         description1: !include joc/documentation/inventory/path.md
         description2: !include joc/documentation/inventory/objectTypes.md
         description3: !include joc/documentation/common/recursive.md
@@ -810,7 +850,7 @@ traits:
   /undelete:
     type:
       postJSONWithOkWithoutJSId:
-        description: Delete configuration of an inventory object
+        description: Deletes configuration of an inventory object
         description1: !include joc/documentation/inventory/idOrPathAndType.md
         description2: " "
         description3: " "

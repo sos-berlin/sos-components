@@ -1,5 +1,5 @@
 {
-	"title": "filter for inventory requests",
+	"title": "ResponseDeployableTreeItem",
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.joc.model.inventory.deploy.ResponseDeployableTreeItem",
 	"type": "object",

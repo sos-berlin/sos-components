@@ -89,8 +89,8 @@ public class JsonValidator {
 
             put("RequestFolder", "inventory/common/request-folder-schema.json");
             put("com.sos.joc.model.inventory.common.RequestFilter", "inventory/common/request-filter-schema.json");
-            put("com.sos.joc.model.inventory.deploy.RequestFilter", "inventory/deploy/request-filter-schema.json");
-            put("com.sos.joc.model.inventory.read.id.RequestFilter", "inventory/read/id/request-filter-schema.json");
+            put("com.sos.joc.model.inventory.deploy.DeployableFilter", "inventory/deploy/request-deployable-schema.json");
+            put("com.sos.joc.model.inventory.deploy.DeployablesFilter", "inventory/deploy/request-deployables-schema.json");
             put("com.sos.joc.model.inventory.rename.RequestFilter", "inventory/rename/request-filter-schema.json");
             put("com.sos.joc.model.inventory.ConfigurationObject", "inventory/configurationObject-schema.json");
 

@@ -54,35 +54,35 @@ public class InventoryDBLayerTest {
         }
     }
 
-    @Ignore
-    @Test
-    public void testDeployablesTreeFolder() throws Exception {
-        SOSHibernateSession session = null;
-        try {
-            session = factory.openStatelessSession();
-            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            session.beginTransaction();
-
-            List<InventoryDeployablesTreeFolderItem> deployables = dbLayer.getConfigurationsWithMaxDeployment("/", true);
-            for (InventoryDeployablesTreeFolderItem item : deployables) {
-                LOGGER.info(SOSString.toString(item));
-            }
-
-            InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(1L);
-            LOGGER.info("lastDeployment:" + SOSString.toString(lastDeployment));
-
-            session.commit();
-        } catch (Exception e) {
-            if (session != null && session.isTransactionOpened()) {
-                session.rollback();
-            }
-            throw e;
-        } finally {
-            if (session != null) {
-                session.close();
-            }
-        }
-    }
+//    @Ignore
+//    @Test
+//    public void testDeployablesTreeFolder() throws Exception {
+//        SOSHibernateSession session = null;
+//        try {
+//            session = factory.openStatelessSession();
+//            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+//            session.beginTransaction();
+//
+//            List<InventoryDeployablesTreeFolderItem> deployables = dbLayer.getConfigurationsWithMaxDeployment("/", true);
+//            for (InventoryDeployablesTreeFolderItem item : deployables) {
+//                LOGGER.info(SOSString.toString(item));
+//            }
+//
+//            InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(1L);
+//            LOGGER.info("lastDeployment:" + SOSString.toString(lastDeployment));
+//
+//            session.commit();
+//        } catch (Exception e) {
+//            if (session != null && session.isTransactionOpened()) {
+//                session.rollback();
+//            }
+//            throw e;
+//        } finally {
+//            if (session != null) {
+//                session.close();
+//            }
+//        }
+//    }
 
     @Ignore
     @Test
@@ -115,34 +115,34 @@ public class InventoryDBLayerTest {
         }
     }
 
-    @Ignore
-    @Test
-    public void testGetConfigurationsWithMaxDeployment() throws Exception {
-        SOSHibernateSession session = null;
-        try {
-            session = factory.openStatelessSession();
-            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            session.beginTransaction();
-
-            List<InventoryDeployablesTreeFolderItem> items = dbLayer.getConfigurationsWithMaxDeployment("/", true);
-            if (items != null) {
-                for (InventoryDeployablesTreeFolderItem item : items) {
-                    LOGGER.info(SOSString.toString(item));
-                }
-            }
-
-            session.commit();
-        } catch (Exception e) {
-            if (session != null && session.isTransactionOpened()) {
-                session.rollback();
-            }
-            throw e;
-        } finally {
-            if (session != null) {
-                session.close();
-            }
-        }
-    }
+//    @Ignore
+//    @Test
+//    public void testGetConfigurationsWithMaxDeployment() throws Exception {
+//        SOSHibernateSession session = null;
+//        try {
+//            session = factory.openStatelessSession();
+//            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+//            session.beginTransaction();
+//
+//            List<InventoryDeployablesTreeFolderItem> items = dbLayer.getConfigurationsWithMaxDeployment("/", true);
+//            if (items != null) {
+//                for (InventoryDeployablesTreeFolderItem item : items) {
+//                    LOGGER.info(SOSString.toString(item));
+//                }
+//            }
+//
+//            session.commit();
+//        } catch (Exception e) {
+//            if (session != null && session.isTransactionOpened()) {
+//                session.rollback();
+//            }
+//            throw e;
+//        } finally {
+//            if (session != null) {
+//                session.close();
+//            }
+//        }
+//    }
 
     @Ignore
     @Test

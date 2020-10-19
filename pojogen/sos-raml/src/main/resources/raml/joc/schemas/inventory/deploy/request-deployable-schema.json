@@ -1,7 +1,7 @@
 {
-	"title": "filter for rename",
+	"title": "filter for deploy",
 	"$schema": "http://json-schema.org/draft-04/schema#",
-	"javaType": "com.sos.joc.model.inventory.rename.RequestFilter",
+	"javaType": "com.sos.joc.model.inventory.deploy.DeployableFilter",
 	"type": "object",
 	"description": "",
   	"extends" : {
@@ -10,21 +10,24 @@
 	"anyOf": [
         {
             "required": [
-                "id",
-                "name"
+                "id"
             ]
         },
         {
             "required": [
                 "path",
-                "objectType",
-                "name"
+                "objectType"
             ]
         }
     ],
 	"properties": {
-		"name": {
-			"$ref": "../../common/string255-schema.json"
+		"onlyValidObjects": {
+			"type": "boolean",
+			"default": false
+		},
+		"withVersions": {
+			"type": "boolean",
+			"default": false
 		}
 	}
 }

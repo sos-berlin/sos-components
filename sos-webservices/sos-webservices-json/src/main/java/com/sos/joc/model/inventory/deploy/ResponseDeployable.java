@@ -2,20 +2,17 @@
 package com.sos.joc.model.inventory.deploy;
 
 import java.util.Date;
-import java.util.LinkedHashSet;
-import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * ResponseDeployables
+ * ResponseDeployable
  * <p>
  * 
  * 
@@ -23,9 +20,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
-    "deployables"
+    "deployable"
 })
-public class ResponseDeployables {
+public class ResponseDeployable {
 
     /**
      * timestamp
@@ -36,9 +33,14 @@ public class ResponseDeployables {
     @JsonProperty("deliveryDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
-    @JsonProperty("deployables")
-    @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<ResponseDeployableTreeItem> deployables = new LinkedHashSet<ResponseDeployableTreeItem>();
+    /**
+     * ResponseDeployableTreeItem
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("deployable")
+    private ResponseDeployableTreeItem deployable;
 
     /**
      * timestamp
@@ -62,24 +64,36 @@ public class ResponseDeployables {
         this.deliveryDate = deliveryDate;
     }
 
-    @JsonProperty("deployables")
-    public Set<ResponseDeployableTreeItem> getDeployables() {
-        return deployables;
+    /**
+     * ResponseDeployableTreeItem
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("deployable")
+    public ResponseDeployableTreeItem getDeployable() {
+        return deployable;
     }
 
-    @JsonProperty("deployables")
-    public void setDeployables(Set<ResponseDeployableTreeItem> deployables) {
-        this.deployables = deployables;
+    /**
+     * ResponseDeployableTreeItem
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("deployable")
+    public void setDeployable(ResponseDeployableTreeItem deployable) {
+        this.deployable = deployable;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("deployables", deployables).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("deployable", deployable).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(deployables).toHashCode();
+        return new HashCodeBuilder().append(deliveryDate).append(deployable).toHashCode();
     }
 
     @Override
@@ -87,11 +101,11 @@ public class ResponseDeployables {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ResponseDeployables) == false) {
+        if ((other instanceof ResponseDeployable) == false) {
             return false;
         }
-        ResponseDeployables rhs = ((ResponseDeployables) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(deployables, rhs.deployables).isEquals();
+        ResponseDeployable rhs = ((ResponseDeployable) other);
+        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(deployable, rhs.deployable).isEquals();
     }
 
 }

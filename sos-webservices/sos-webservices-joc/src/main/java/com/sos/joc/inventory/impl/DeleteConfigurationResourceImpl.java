@@ -6,6 +6,7 @@ import java.util.Date;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -65,8 +66,12 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
                 // deleteOrUndeleteFolder(dbLayer, config.getPath(), IMPL_PATH_DELETE.equals(action));
                 // no recursive action otherwise information get lost after delete AND undelete. Deleted folder has to be consider at the deploy/release
                 if (!JocInventory.ROOT_FOLDER.equals(config.getPath())) {
-                    deleteOrUndeleteSingle(dbLayer, config, IMPL_PATH_DELETE.equals(action));
-                    storeAuditLog(type, config.getPath(), config.getFolder());
+                    if (isFolderEmpty(dbLayer, config.getPath())) {
+                        dbLayer.getSession().delete(config);
+                    } else {
+                        deleteOrUndeleteSingle(dbLayer, config, IMPL_PATH_DELETE.equals(action));
+                        storeAuditLog(type, config.getPath(), config.getFolder());
+                    }
                 }
             } else {
                 deleteOrUndeleteSingle(dbLayer, config, IMPL_PATH_DELETE.equals(action));
@@ -122,6 +127,21 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
 //            throw e;
 //        }
 //    }
+    
+    private boolean isFolderEmpty(InventoryDBLayer dbLayer, String folder) {
+      Long result = null;
+      try {
+          dbLayer.getSession().beginTransaction();
+          result = dbLayer.getCountConfigurationsByFolder(folder, true);
+          dbLayer.getSession().commit();
+      } catch (SOSHibernateException e) {
+          try {
+              dbLayer.getSession().rollback();
+          } catch (SOSHibernateException e1) {
+          }
+      }
+      return result == null || result.equals(1L);
+  }
 
     private void storeAuditLog(ConfigurationType objectType, String path, String folder) {
         InventoryAudit audit = new InventoryAudit(objectType, path, folder);

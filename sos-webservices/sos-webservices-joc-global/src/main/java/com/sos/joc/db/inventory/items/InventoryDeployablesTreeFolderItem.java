@@ -2,6 +2,8 @@ package com.sos.joc.db.inventory.items;
 
 import java.util.Date;
 
+import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+
 public class InventoryDeployablesTreeFolderItem {
 
     private Long id;
@@ -15,6 +17,19 @@ public class InventoryDeployablesTreeFolderItem {
     private Date modified;
 
     private InventoryDeploymentItem deployment;
+    private DBItemInventoryConfiguration configuration;
+    
+    public InventoryDeployablesTreeFolderItem(DBItemInventoryConfiguration conf, Long deploymentId, String deploymentVersion,
+            Integer deploymentOperation, Date deploymentDate, String deploymentPath, String controllerId) {
+        if (conf != null) {
+            conf.setContent(null);
+        }
+        configuration = conf;
+        if (deploymentId != null) {
+            deployment = new InventoryDeploymentItem(deploymentId, deploymentVersion, deploymentOperation, deploymentDate, null, deploymentPath,
+                    controllerId);
+        }
+    }
 
     public InventoryDeployablesTreeFolderItem(Long configId, String configPath, String configFolder, String configName, Integer configType,
             boolean configValid, boolean configDeleted, boolean configDeployed, Date configModified, Long deploymentId, String deploymentVersion,
@@ -29,10 +44,14 @@ public class InventoryDeployablesTreeFolderItem {
         deployed = configDeployed;
         modified = configModified;
 
-        if (controllerId != null) {
+        if (deploymentId != null) {
             deployment = new InventoryDeploymentItem(deploymentId, deploymentVersion, deploymentOperation, deploymentDate, null, deploymentPath,
                     controllerId);
         }
+    }
+    
+    public DBItemInventoryConfiguration getConfiguration() {
+        return configuration;
     }
 
     public Long getId() {

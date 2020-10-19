@@ -10,7 +10,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * filter for joe requests
+ * filter for rename
  * <p>
  * 
  * 

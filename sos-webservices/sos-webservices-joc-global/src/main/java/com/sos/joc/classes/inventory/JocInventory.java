@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -45,6 +46,24 @@ public class JocInventory {
     public static final String APPLICATION_PATH = "inventory";
     public static final String ROOT_FOLDER = "/";
     
+    public static final Map<ConfigurationType, String> SCHEMA_LOCATION = Collections.unmodifiableMap(new HashMap<ConfigurationType, String>() {
+
+        private static final long serialVersionUID = 1L;
+
+        {
+            put(ConfigurationType.AGENTCLUSTER, "classpath:/raml/jobscheduler/schemas/agent/agentRef-schema.json");
+            put(ConfigurationType.WORKINGDAYSCALENDAR, "classpath:/raml/joc/schemas/calendar/calendar-schema.json");
+            put(ConfigurationType.NONWORKINGDAYSCALENDAR, "classpath:/raml/joc/schemas/calendar/calendar-schema.json");
+            put(ConfigurationType.JOB, "classpath:/raml/jobscheduler/schemas/job/job-schema.json");
+            put(ConfigurationType.JOBCLASS, "classpath:/raml/jobscheduler/schemas/jobClass/jobClass-schema.json");
+            put(ConfigurationType.JUNCTION, "classpath:/raml/jobscheduler/schemas/junction/junction-schema.json");
+            put(ConfigurationType.LOCK, "classpath:/raml/jobscheduler/schemas/lock/lock-schema.json");
+            put(ConfigurationType.ORDER, "classpath:/raml/orderManagement/schemas/orders/orderTemplate-schema.json");
+            put(ConfigurationType.WORKFLOW, "classpath:/raml/jobscheduler/schemas/workflow/workflow-schema.json");
+            put(ConfigurationType.FOLDER, "classpath:/raml/jobscheduler/schemas/inventory/folder/folder-schema.json");
+        }
+    });
+    
     public static final Map<ConfigurationType, Class<?>> CLASS_MAPPING = Collections.unmodifiableMap(new HashMap<ConfigurationType, Class<?>>() {
 
         private static final long serialVersionUID = 1L;
@@ -69,7 +88,7 @@ public class JocInventory {
 
     public static final Set<ConfigurationType> RELEASABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(ConfigurationType.ORDER,
             ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR)));
-
+    
     public static String getResourceImplPath(final String path) {
         return String.format("./%s/%s", APPLICATION_PATH, path);
     }
@@ -129,15 +148,15 @@ public class JocInventory {
         return Arrays.asList(ConfigurationType.WORKINGDAYSCALENDAR.intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue()).contains(type);
     }
     
-    public static Collection<Integer> getCalendarTypes() {
+    public static List<Integer> getCalendarTypes() {
         return Arrays.asList(ConfigurationType.WORKINGDAYSCALENDAR.intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue());
     }
     
-    public static Collection<Integer> getDeployableTypes() {
+    public static Set<Integer> getDeployableTypes() {
         return DEPLOYABLE_OBJECTS.stream().map(ConfigurationType::intValue).collect(Collectors.toSet());
     }
     
-    public static Collection<Integer> getReleasableTypes() {
+    public static Set<Integer> getReleasableTypes() {
         return RELEASABLE_OBJECTS.stream().map(ConfigurationType::intValue).collect(Collectors.toSet());
     }
     
@@ -147,6 +166,32 @@ public class JocInventory {
     
     public static boolean isReleasable(ConfigurationType type) {
         return RELEASABLE_OBJECTS.contains(type);
+    }
+    
+    public static Set<Integer> getDeployableTypes(Collection<ConfigurationType> objectTypes) {
+        if (objectTypes == null || objectTypes.isEmpty()) {
+            return getDeployableTypes();
+        }
+        return objectTypes.stream().filter(type -> isDeployable(type)).map(ConfigurationType::intValue).collect(Collectors.toSet());
+    }
+    
+    public static Set<Integer> getDeployableTypesWithFolder(Collection<ConfigurationType> objectTypes) {
+        Set<Integer> deployables = getDeployableTypes(objectTypes);
+        deployables.add(ConfigurationType.FOLDER.intValue());
+        return deployables;
+    }
+    
+    public static Set<Integer> getReleasableTypes(Collection<ConfigurationType> objectTypes) {
+        if (objectTypes == null || objectTypes.isEmpty()) {
+            return getReleasableTypes();
+        }
+        return objectTypes.stream().filter(type -> isReleasable(type)).map(ConfigurationType::intValue).collect(Collectors.toSet());
+    }
+    
+    public static Set<Integer> getReleasableTypesWithFolder(Collection<ConfigurationType> objectTypes) {
+        Set<Integer> releasables = getReleasableTypes(objectTypes);
+        releasables.add(ConfigurationType.FOLDER.intValue());
+        return releasables;
     }
 
     public static IConfigurationObject content2IJSObject(String content, Integer typeNum) throws JsonParseException, JsonMappingException,
@@ -174,7 +219,11 @@ public class JocInventory {
                 Path p = Paths.get(path);
                 name = p.getFileName().toString();
                 CheckJavaVariableName.test(type.value().toLowerCase(), name);
-                folder = normalizeFolder(p.getParent());
+                if (ConfigurationType.FOLDER.equals(type)) {
+                    folder = path;
+                } else {
+                    folder = normalizeFolder(p.getParent());
+                }
             }
         }
 
@@ -215,6 +264,8 @@ public class JocInventory {
             if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
                 throw new JocFolderPermissionsException("Access denied for folder: " + config.getFolder());
             }
+            // temp. because of rename error on rot folder
+            config.setPath(config.getPath().replace("//+", "/"));
         } else {
             if (!folderPermissions.isPermittedForFolder(path)) {
                 throw new JocFolderPermissionsException("Access denied for folder: " + path);

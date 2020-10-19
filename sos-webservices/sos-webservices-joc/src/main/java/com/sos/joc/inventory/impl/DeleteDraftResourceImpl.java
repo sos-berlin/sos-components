@@ -71,6 +71,8 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                 } else { 
                     // deployed
                     r.setDeleteFromTree(false);
+                    config.setValid(true);
+                    config.setReleased(false);
                     config.setDeployed(true);
                     config.setContent(lastDeployment.getContent());
                     config.setModified(lastDeployment.getDeploymentDate());
@@ -84,7 +86,9 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                 } else {
                     // released
                     r.setDeleteFromTree(false);
+                    config.setValid(true);
                     config.setReleased(true);
+                    config.setDeployed(false);
                     config.setContent(releasedItem.getContent());
                     config.setModified(releasedItem.getModified());
                     dbLayer.getSession().update(config);

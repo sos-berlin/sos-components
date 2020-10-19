@@ -10,15 +10,15 @@ import javax.ws.rs.core.MediaType;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.inventory.JocInventory;
 
-public interface IReadIdResource {
+public interface IDeployableResource {
 
-    public static final String PATH = "read/id";
+    public static final String PATH = "deployable";
     public static final String IMPL_PATH = JocInventory.getResourceImplPath(PATH);
 
     @POST
     @Path(PATH)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse read(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse deployable(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
 
 }
