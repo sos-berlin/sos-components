@@ -124,16 +124,16 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             Boolean onlyValidObjects, Set<Folder> permittedFolders) {
         if (map != null) {
             final Set<String> paths = map.keySet().stream().map(item -> item.getPath()).collect(Collectors.toSet());
-            Predicate<Map.Entry<DBItemInventoryConfiguration, Set<InventoryDeploymentItem>>> folderIsEmpty = entry -> {
+            Predicate<Map.Entry<DBItemInventoryConfiguration, Set<InventoryDeploymentItem>>> folderIsNotEmpty = entry -> {
               if (ConfigurationType.FOLDER.intValue() != entry.getKey().getType()) {
                   return true;
               } else {
-                  return folderIsEmpty(entry.getKey().getPath(), paths);
+                  return folderIsNotEmpty(entry.getKey().getPath(), paths);
               }
             };
             return map.entrySet().stream()
                     //.filter(entry -> ConfigurationType.FOLDER.intValue() != entry.getKey().getType())
-                    .filter(folderIsEmpty)
+                    .filter(folderIsNotEmpty)
                     .filter(entry -> !onlyValidObjects || (entry.getValue() != null && entry.getValue().iterator().next() != null) || entry.getKey().getValid())
                     .filter(entry -> folderIsPermitted(entry.getKey().getFolder(), permittedFolders))
                     .map(entry -> {
@@ -171,16 +171,16 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             Boolean onlyValidObjects, Set<Folder> permittedFolders) {
         if (list != null) {
             final Set<String> paths = list.stream().map(item -> item.getConfiguration().getPath()).collect(Collectors.toSet());
-            Predicate<InventoryDeployablesTreeFolderItem> folderIsEmpty = item -> {
+            Predicate<InventoryDeployablesTreeFolderItem> folderIsNotEmpty = item -> {
               if (ConfigurationType.FOLDER.intValue() != item.getConfiguration().getType()) {
                   return true;
               } else {
-                  return folderIsEmpty(item.getConfiguration().getPath(), paths);
+                  return folderIsNotEmpty(item.getConfiguration().getPath(), paths);
               }
             };
             return list.stream()
                     //.filter(item -> ConfigurationType.FOLDER.intValue() != item.getConfiguration().getType())
-                    .filter(folderIsEmpty)
+                    .filter(folderIsNotEmpty)
                     .filter(item -> !onlyValidObjects || item.getDeployment() != null || item.getConfiguration().getValid())
                     .filter(item -> folderIsPermitted(item.getConfiguration().getFolder(), permittedFolders))
                     .map(item -> {
@@ -198,9 +198,9 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
         }
     }
     
-    private static boolean folderIsEmpty(String folder, Set<String> paths) {
+    private static boolean folderIsNotEmpty(String folder, Set<String> paths) {
         Predicate<String> filter = f -> f.startsWith((folder + "/").replaceAll("//+", "/"));
-        return !paths.stream().parallel().anyMatch(filter);
+        return paths.stream().parallel().anyMatch(filter);
     }
 
 //    public ResponseDeployables getDeployables(InventoryDBLayer dbLayer, List<InventoryDeployablesTreeFolderItem> list, String folder,

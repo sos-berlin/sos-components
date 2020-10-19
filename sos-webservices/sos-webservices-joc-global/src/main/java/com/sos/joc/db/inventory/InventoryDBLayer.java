@@ -832,7 +832,7 @@ public class InventoryDBLayer extends DBLayer {
 
                 return tree;
             }
-            return Collections.emptySet();
+            return new HashSet<>();
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -858,7 +858,7 @@ public class InventoryDBLayer extends DBLayer {
                 }).collect(Collectors.toSet());
             }
         }
-        return Collections.emptySet();
+        return new HashSet<>();
     }
 
     public class InventoryDeleteResult {
