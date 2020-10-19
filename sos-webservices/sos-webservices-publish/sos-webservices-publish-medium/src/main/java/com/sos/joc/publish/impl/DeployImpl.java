@@ -107,12 +107,13 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
             JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, Globals.getJocSecurityLevel());
             for (String controllerId : controllerIds) {
-//                List<DBItemInventoryJSInstance> controllerDBItems = Proxies.getControllerDbInstances().get(controllerId);
                 // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename 
                 // and subsequently call delete for the object with the previous path before committing the update 
                 PublishUtils.checkPathRenamingForUpdate(verifiedConfigurations.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm());
                 PublishUtils.checkPathRenamingForUpdate(verifiedReDeployables.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm());
-                // call updateRepo command via Proxy of given controllers
+                // call updateRepo command via ControllerApi of given controllers
+                String signerDN = null;
+                X509Certificate cert = null;
                 switch(keyPair.getKeyAlgorithm()) {
                 case SOSPGPConstants.PGP_ALGORITHM_NAME:
                     PublishUtils.updateRepoAddOrUpdatePGP(
@@ -123,13 +124,22 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     }).get();
                     break;
                 case SOSPGPConstants.RSA_ALGORITHM_NAME:
-                case SOSPGPConstants.ECDSA_ALGORITHM_NAME:
-                    X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                    String signatureAlgorithm = cert.getSigAlgName();
-                    String signerDN = cert.getSubjectDN().getName();
+                    cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+                    signerDN = cert.getSubjectDN().getName();
                     PublishUtils.updateRepoAddOrUpdateWithX509(
                             versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId, dbLayer, keyPair.getKeyAlgorithm(),
-                            signatureAlgorithm, signerDN)
+                            SOSPGPConstants.RSA_ALGORITHM_NAME, signerDN)
+                        .thenAccept(either -> {
+                            processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, versionIdForUpdate, controllerId,
+                                    deploymentDate);
+                    }).get();
+                    break;
+                case SOSPGPConstants.ECDSA_ALGORITHM_NAME:
+                    cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+                    signerDN = cert.getSubjectDN().getName();
+                    PublishUtils.updateRepoAddOrUpdateWithX509(
+                            versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId, dbLayer, keyPair.getKeyAlgorithm(),
+                            SOSPGPConstants.ECDSA_ALGORITHM, signerDN)
                         .thenAccept(either -> {
                             processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, versionIdForUpdate, controllerId,
                                     deploymentDate);
@@ -142,9 +152,9 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 final String versionIdForDelete = UUID.randomUUID().toString();
                 for (String controller : allControllers.keySet()) {
                     // call updateRepo command via Proxy of given controllers
-//                    Either<Problem, Void> either = 
-                    PublishUtils.updateRepoDelete(versionIdForDelete, depHistoryDBItemsToDeployDelete, controller, dbLayer, keyPair.getKeyAlgorithm()).thenAccept(either -> {
-                        processAfterDelete(either, depHistoryDBItemsToDeployDelete, controller, account, versionIdForDelete);
+                    PublishUtils.updateRepoDelete(versionIdForDelete, depHistoryDBItemsToDeployDelete, controller, dbLayer, 
+                            keyPair.getKeyAlgorithm()).thenAccept(either -> {
+                            processAfterDelete(either, depHistoryDBItemsToDeployDelete, controller, account, versionIdForDelete);
                     }).get();
                     JocInventory.deleteConfigurations(configurationIdsToDelete);
                 }

@@ -64,14 +64,10 @@ import com.sos.joc.publish.mapper.UpDownloadMapper;
 public class DeploymentTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeploymentTest.class);
-    private static final String PUBLICKEY_PATH = "src/test/resources/test_public.asc";
-    private static final String PRIVATEKEY_PATH = "src/test/resources/test_private.asc";
     private static final String PUBLICKEY_RESOURCE_PATH = "/test_public.asc";
     private static final String PRIVATEKEY_RESOURCE_PATH = "/test_private.asc";
     private static final String PRIVATE_RSA_PKCS8_KEY_PATH = "src/test/resources/sp2.key";
-    private static final String PRIVATE_RSA_PKCS8_KEY_RESOURCE_PATH = "/sp2.key";
     private static final String PRIVATE_RSA_KEY_PATH = "src/test/resources/sp.key";
-    private static final String PRIVATE_RSA_KEY_RESOURCE_PATH = "/sp.key";
     private static final String TARGET_FILENAME = "bundle_js_workflows.zip";
     private static final String TARGET_FILENAME_SINGLE = "bundle_js_single_workflow.zip";
     private static ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
@@ -241,6 +237,7 @@ public class DeploymentTest {
         int counterSigned = 0;
         for (Workflow workflow : workflows) {
             Signature signature = signWorkflowRSA(workflow);
+            LOGGER.info("Base64 MIME encoded: " + signature.getSignatureString());
             JSObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow, signature);
             assertNotNull(jsObject.getSignedContent());
             counterSigned++;
@@ -398,6 +395,7 @@ public class DeploymentTest {
         LOGGER.info("");
     }
 
+    @SuppressWarnings("unused")
     @Test
     @Ignore
     public void test09UpdateRepo() {
@@ -476,6 +474,7 @@ public class DeploymentTest {
         }
     }
 
+    @SuppressWarnings("unused")
     private void exportSingleWorkflow(Set<JSObject> jsObjectsToExport) throws IOException {
         ZipOutputStream zipOut = null;
         OutputStream out = null;
@@ -533,6 +532,7 @@ public class DeploymentTest {
         return workflows;
     }
 
+    @SuppressWarnings("unused")
     private Set<Workflow> importSingleWorkflow() throws IOException {
         Set<Workflow> workflows = new HashSet<Workflow>();
         LOGGER.info("archive to read from exists: " + Files.exists(Paths.get("target/created_test_files").resolve(TARGET_FILENAME_SINGLE)));
@@ -599,6 +599,7 @@ public class DeploymentTest {
         return signature;
     }
 
+    @SuppressWarnings("unused")
     private Signature signSingleWorkflowPGP(Workflow workflow) throws IOException, PGPException {
         Signature signature = new Signature();
         String passphrase = null;
@@ -629,6 +630,7 @@ public class DeploymentTest {
         return signature;
     }
 
+    @SuppressWarnings("unused")
     private Signature signAgentRefPGP(AgentRef agent) throws IOException, PGPException {
         Signature signature = new Signature();
         String passphrase = null;
@@ -641,6 +643,7 @@ public class DeploymentTest {
         return signature;
     }
 
+    @SuppressWarnings("unused")
     private Signature signAgentRefRSA(AgentRef agent)
             throws IOException, DataLengthException, NoSuchAlgorithmException, InvalidKeySpecException, CryptoException  {
         Signature signature = new Signature();

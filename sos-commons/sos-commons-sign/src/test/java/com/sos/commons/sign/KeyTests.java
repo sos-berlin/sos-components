@@ -1141,61 +1141,80 @@ public class KeyTests {
         } 
     }
     
-//    @Test
-//    public void testExtRSAKeyAndCertificate () throws IOException {
-//        String privateKeyString = new String(Files.readAllBytes(Paths.get("src/test/resources/sos.private-rsa-key.pem")), StandardCharsets.UTF_8);
-//        String certificateString = new String(Files.readAllBytes(Paths.get("src/test/resources/sos.certificate-rsa-key.pem")), StandardCharsets.UTF_8);
-//        KeyPair keyPair = null;
-//        String signature = null;
-//        try {
-//            keyPair = KeyUtil.getKeyPairFromRSAPrivatKeyString(privateKeyString);
-//            X509Certificate certificate =  KeyUtil.getX509Certificate(certificateString);
-//            signature = SignObject.signX509(keyPair.getPrivate(), ORIGINAL_STRING);
-//            assertNotNull(signature);
-//            assertNotEquals(signature, "");
-//            LOGGER.info("Signing was successful!");
-//            LOGGER.info(String.format("Signature:\n%1$s%2$s", signature.substring(0, 120), "..."));
-//            Boolean verified = VerifySignature.verifyX509(certificate, ORIGINAL_STRING, signature);
-//            assertTrue(verified);
-//        } catch (NoSuchAlgorithmException|
-//                InvalidKeySpecException|
-//                CertificateException | 
-//                InvalidKeyException | 
-//                SignatureException | 
-//                NoSuchProviderException e) {
-//            LOGGER.error(e.getMessage(), e);
-//        }
-//    }
-//
-//    @Test
-//    public void testExtECDSAKeyAndCertificate () throws IOException {
-//        String privateKeyString = new String(Files.readAllBytes(Paths.get("src/test/resources/sos.private-ec-key.pem")), StandardCharsets.UTF_8);
-//        String certificateString = new String(Files.readAllBytes(Paths.get("src/test/resources/sos.certificate-ec-key.pem")), StandardCharsets.UTF_8);
-//        KeyPair keyPair = null;
-//        String signature = null;
-//        try {
-//            keyPair = KeyUtil.getKeyPairFromECDSAPrivatKeyString(privateKeyString);
-//            X509Certificate certificate =  KeyUtil.getX509Certificate(certificateString);
-//            signature = SignObject.signX509(SOSPGPConstants.ECDSA_ALGORITHM, keyPair.getPrivate(), ORIGINAL_STRING);
-//            assertNotNull(signature);
-//            assertNotEquals(signature, "");
-//            LOGGER.info("Signing was successful!");
-//            LOGGER.info(String.format("Signature:\n%1$s%2$s", signature.substring(0, 120), "..."));
-//            boolean verified = VerifySignature.verifyX509BC(SOSPGPConstants.ECDSA_ALGORITHM, certificate, ORIGINAL_STRING, signature);
-//            LOGGER.info("Signature verification with method \"VerifySignature.verifyX509BC\" successful: " + verified);
-//            verified = VerifySignature.verifyX509(SOSPGPConstants.ECDSA_ALGORITHM, certificate.getPublicKey(), ORIGINAL_STRING, signature);
-//            LOGGER.info("Signature verification with method \"VerifySignature.verifyX509 (PublicKey from Certificate)\" successful: " + verified);
-//            assertTrue(verified);
-//        } catch (NoSuchAlgorithmException|
-//                InvalidKeySpecException|
-//                CertificateException | 
-//                InvalidKeyException | 
-//                SignatureException | 
-//                NoSuchProviderException e) {
-//            LOGGER.error(e.getMessage(), e);
-//        }
-//    }
-//
+    @Test
+    public void test27ExtRSAKeyAndCertificate () throws IOException {
+        LOGGER.info("*********  Test 27: use OpenSSL generated RSA Key and X.509 certificate  ***********************");
+        String privateKeyString = new String(Files.readAllBytes(
+                Paths.get("src/test/resources/sos.private-rsa-key.pem")), StandardCharsets.UTF_8);
+        String certificateString = new String(Files.readAllBytes(
+                Paths.get("src/test/resources/sos.certificate-rsa-key.pem")), StandardCharsets.UTF_8);
+        KeyPair keyPair = null;
+        String signature = null;
+        try {
+            LOGGER.info("*********  create KeyPair Object with RSA private Key from File  *******************************");
+            keyPair = KeyUtil.getKeyPairFromRSAPrivatKeyString(privateKeyString);
+            assertNotNull(keyPair);
+            LOGGER.info("*********  create X.509 certifcate Object from File  *******************************************");
+            X509Certificate certificate =  KeyUtil.getX509Certificate(certificateString);
+            assertNotNull(certificate);
+            LOGGER.info("*********  create signature of example String with private RSA key from KeyPair object  ********");
+            signature = SignObject.signX509(keyPair.getPrivate(), ORIGINAL_STRING);
+            assertNotNull(signature);
+            assertNotEquals(signature, "");
+            LOGGER.info("Signing was successful!");
+            LOGGER.info(String.format("Signature:\n%1$s%2$s", signature.substring(0, 120), "..."));
+            LOGGER.info("*********  verify signature with X.509 certificate object  *************************************");
+            Boolean verified = VerifySignature.verifyX509(certificate, ORIGINAL_STRING, signature);
+            assertTrue(verified);
+        } catch (NoSuchAlgorithmException|
+                InvalidKeySpecException|
+                CertificateException | 
+                InvalidKeyException | 
+                SignatureException | 
+                NoSuchProviderException e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
+    @Test
+    public void test28ExtECDSAKeyAndCertificate () throws IOException {
+        LOGGER.info("*********  Test 27: use OpenSSL generated ECDSA Key and X.509 certificate  *********************");
+        String privateKeyString = new String(Files.readAllBytes(
+                Paths.get("src/test/resources/sos.private-ec-key.pem")), StandardCharsets.UTF_8);
+        String certificateString = new String(Files.readAllBytes(
+                Paths.get("src/test/resources/sos.certificate-ec-key.pem")), StandardCharsets.UTF_8);
+        KeyPair keyPair = null;
+        String signature = null;
+        try {
+            LOGGER.info("*********  create KeyPair Object with ECDSA private Key from File  *****************************");
+            keyPair = KeyUtil.getKeyPairFromECDSAPrivatKeyString(privateKeyString);
+            assertNotNull(keyPair);
+            LOGGER.info("*********  create X.509 certifcate Object from File  *******************************************");
+            X509Certificate certificate =  KeyUtil.getX509Certificate(certificateString);
+            assertNotNull(certificate);
+            LOGGER.info("*********  create signature of example String with private ECDSA key from KeyPair object  ******");
+            signature = SignObject.signX509(SOSPGPConstants.ECDSA_ALGORITHM, keyPair.getPrivate(), ORIGINAL_STRING);
+            assertNotNull(signature);
+            assertNotEquals(signature, "");
+            LOGGER.info("Signing was successful!");
+            LOGGER.info(String.format("Signature:\n%1$s", signature));
+            LOGGER.info("*********  verify signature with X.509 certificate object  *************************************");
+            boolean verified = VerifySignature.verifyX509BC(SOSPGPConstants.ECDSA_ALGORITHM, certificate, ORIGINAL_STRING, signature);
+            LOGGER.info("Signature verification with method \"VerifySignature.verifyX509BC\" successful: " + verified);
+            verified = VerifySignature.verifyX509(SOSPGPConstants.ECDSA_ALGORITHM, certificate.getPublicKey(), ORIGINAL_STRING, signature);
+            LOGGER.info(
+                    "Signature verification with method \"VerifySignature.verifyX509 (PublicKey from Certificate)\" successful: " + verified);
+            assertTrue(verified);
+        } catch (NoSuchAlgorithmException|
+                InvalidKeySpecException|
+                CertificateException | 
+                InvalidKeyException | 
+                SignatureException | 
+                NoSuchProviderException e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
     @SuppressWarnings("unused")
     private static String byteArrayToHexString(byte[] ba) {
         MessageDigest digest;

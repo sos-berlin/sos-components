@@ -213,11 +213,7 @@ public abstract class PublishUtils {
                     sig.setInvConfigurationId(draft.getId());
                     sig.setModified(Date.from(Instant.now()));
                     X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                    if (cert != null) {
-                        sig.setSignature(SignObject.signX509(cert.getSigAlgName(), kp.getPrivate(), draft.getContent()));
-                    } else {
-                        sig.setSignature(SignObject.signX509("SHA512WithECDSA", kp.getPrivate(), draft.getContent()));
-                    }
+                    sig.setSignature(SignObject.signX509(SOSPGPConstants.ECDSA_ALGORITHM, kp.getPrivate(), draft.getContent()));
                     signedDrafts.put(draft, sig);
                 }
                 if (sig != null) {

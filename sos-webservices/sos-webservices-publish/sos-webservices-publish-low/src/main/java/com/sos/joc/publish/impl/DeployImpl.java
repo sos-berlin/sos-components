@@ -113,6 +113,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 PublishUtils.checkPathRenamingForUpdate(verifiedConfigurations.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm());
                 PublishUtils.checkPathRenamingForUpdate(verifiedReDeployables.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm());
                 // call updateRepo command via ControllerApi of given controllers
+                String signerDN = null;
+                X509Certificate cert = null;
                 switch(keyPair.getKeyAlgorithm()) {
                 case SOSPGPConstants.PGP_ALGORITHM_NAME:
                     PublishUtils.updateRepoAddOrUpdatePGP(
@@ -123,13 +125,22 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     }).get();
                     break;
                 case SOSPGPConstants.RSA_ALGORITHM_NAME:
-                case SOSPGPConstants.ECDSA_ALGORITHM_NAME:
-                    X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                    String signatureAlgorithm = cert.getSigAlgName();
-                    String signerDN = cert.getSubjectDN().getName();
+                    cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+                    signerDN = cert.getSubjectDN().getName();
                     PublishUtils.updateRepoAddOrUpdateWithX509(
                             versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId, dbLayer, keyPair.getKeyAlgorithm(),
-                            signatureAlgorithm, signerDN)
+                            SOSPGPConstants.RSA_ALGORITHM, signerDN)
+                        .thenAccept(either -> {
+                            processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, versionIdForUpdate, controllerId,
+                                    deploymentDate);
+                    }).get();
+                    break;
+                case SOSPGPConstants.ECDSA_ALGORITHM_NAME:
+                    cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+                    signerDN = cert.getSubjectDN().getName();
+                    PublishUtils.updateRepoAddOrUpdateWithX509(
+                            versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId, dbLayer, keyPair.getKeyAlgorithm(),
+                            SOSPGPConstants.ECDSA_ALGORITHM, signerDN)
                         .thenAccept(either -> {
                             processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, versionIdForUpdate, controllerId,
                                     deploymentDate);
