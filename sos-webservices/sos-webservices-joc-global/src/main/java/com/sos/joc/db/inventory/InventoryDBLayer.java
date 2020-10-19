@@ -282,7 +282,6 @@ public class InventoryDBLayer extends DBLayer {
             hql.append("and type=:configType ");
         }
         Query<Long> query = getSession().createQuery(hql.toString());
-        query.setParameter("folderType", ConfigurationType.FOLDER.intValue());
         query.setParameter("folder", folder);
         if (recursive) {
             query.setParameter("likeFolder", folder + "/%");
