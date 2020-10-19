@@ -758,7 +758,7 @@ traits:
   /deployables:
     type:
       postJSONWithoutJSId:
-        description: Sends deployables object
+        description: Sends deployable objects
         description1: !include joc/documentation/inventory/folder.md
         description2: !include joc/documentation/common/recursive.md
         description3: !include joc/documentation/inventory/deployableTypes.md
@@ -815,6 +815,46 @@ traits:
         schema200: !include joc/schemas/inventory/common/response-folder-schema.json
         example200: TODO
               
+  /releasable:
+    type:
+      postJSONWithoutJSId:
+        description: Sends releasable object
+        description1: !include joc/documentation/inventory/idOrPathAndReleasableType.md
+        description2: !include joc/documentation/inventory/onlyValidObjects.md
+        description3: !include joc/documentation/inventory/withVersions.md
+        description4: " "
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: " "
+        schema: !include joc/schemas/inventory/deploy/request-deployable-schema.json
+        example: TODO
+        schema200: !include joc/schemas/inventory/release/response-releasable-schema.json
+        example200: TODO
+        
+  /releasables:
+    type:
+      postJSONWithoutJSId:
+        description: Sends releasable objects
+        description1: !include joc/documentation/inventory/folder.md
+        description2: !include joc/documentation/common/recursive.md
+        description3: !include joc/documentation/inventory/releasableTypes.md
+        description4: !include joc/documentation/inventory/onlyValidObjects.md
+        description5: !include joc/documentation/inventory/withVersions.md
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: " "
+        schema: !include joc/schemas/inventory/deploy/request-deployables-schema.json
+        example: TODO
+        schema200: !include joc/schemas/inventory/release/response-releasables-schema.json
+        example200: TODO
+        
   /rename:
     type:
       postJSONWithOkWithoutJSId:
