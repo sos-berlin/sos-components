@@ -1,10 +1,13 @@
 
 package com.sos.joc.model.inventory.common;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -13,7 +16,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * folder item
  * <p>
- * the field 'order' is only relevant for Workflows
+ * the field 'orders' is only relevant for Workflows
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -28,7 +31,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "deployed",
     "released",
     "hasDeployments",
-    "order"
+    "orders"
 })
 public class ResponseFolderItem {
 
@@ -87,14 +90,13 @@ public class ResponseFolderItem {
     @JsonProperty("hasDeployments")
     private Boolean hasDeployments;
     /**
-     * folder item
-     * <p>
-     * the field 'order' is only relevant for Workflows
+     * only relevant for Workflows
      * 
      */
-    @JsonProperty("order")
-    @JsonPropertyDescription("the field 'order' is only relevant for Workflows")
-    private ResponseFolderItem order;
+    @JsonProperty("orders")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    @JsonPropertyDescription("only relevant for Workflows")
+    private Set<ResponseFolderItem> orders = new LinkedHashSet<ResponseFolderItem>();
 
     /**
      * non negative long
@@ -263,35 +265,31 @@ public class ResponseFolderItem {
     }
 
     /**
-     * folder item
-     * <p>
-     * the field 'order' is only relevant for Workflows
+     * only relevant for Workflows
      * 
      */
-    @JsonProperty("order")
-    public ResponseFolderItem getOrder() {
-        return order;
+    @JsonProperty("orders")
+    public Set<ResponseFolderItem> getOrders() {
+        return orders;
     }
 
     /**
-     * folder item
-     * <p>
-     * the field 'order' is only relevant for Workflows
+     * only relevant for Workflows
      * 
      */
-    @JsonProperty("order")
-    public void setOrder(ResponseFolderItem order) {
-        this.order = order;
+    @JsonProperty("orders")
+    public void setOrders(Set<ResponseFolderItem> orders) {
+        this.orders = orders;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("objectType", objectType).append("title", title).append("valid", valid).append("deleted", deleted).append("deployed", deployed).append("released", released).append("hasDeployments", hasDeployments).append("order", order).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("objectType", objectType).append("title", title).append("valid", valid).append("deleted", deleted).append("deployed", deployed).append("released", released).append("hasDeployments", hasDeployments).append("orders", orders).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(valid).append(path).append(deleted).append(hasDeployments).append(name).append(deployed).append(id).append(title).append(released).append(objectType).append(order).toHashCode();
+        return new HashCodeBuilder().append(valid).append(path).append(deleted).append(hasDeployments).append(name).append(deployed).append(orders).append(id).append(title).append(released).append(objectType).toHashCode();
     }
 
     @Override
@@ -303,7 +301,7 @@ public class ResponseFolderItem {
             return false;
         }
         ResponseFolderItem rhs = ((ResponseFolderItem) other);
-        return new EqualsBuilder().append(valid, rhs.valid).append(path, rhs.path).append(deleted, rhs.deleted).append(hasDeployments, rhs.hasDeployments).append(name, rhs.name).append(deployed, rhs.deployed).append(id, rhs.id).append(title, rhs.title).append(released, rhs.released).append(objectType, rhs.objectType).append(order, rhs.order).isEquals();
+        return new EqualsBuilder().append(valid, rhs.valid).append(path, rhs.path).append(deleted, rhs.deleted).append(hasDeployments, rhs.hasDeployments).append(name, rhs.name).append(deployed, rhs.deployed).append(orders, rhs.orders).append(id, rhs.id).append(title, rhs.title).append(released, rhs.released).append(objectType, rhs.objectType).isEquals();
     }
 
 }

@@ -74,7 +74,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             folder.setDeliveryDate(Date.from(Instant.now()));
             folder.setPath(in.getPath());
             
-            Map<String, InventoryTreeFolderItem> orders = new HashMap<>();
+            Map<String, Set<ResponseFolderItem>> orders = new HashMap<>();
             Set<ResponseFolderItem> workflows = new HashSet<>();
 
             if (items != null && !items.isEmpty()) {
@@ -103,7 +103,8 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                             break;
                         case ORDER:
                             if (config.getWorkflowPath() != null) {
-                                orders.put(config.getWorkflowPath(), config);
+                                orders.putIfAbsent(config.getWorkflowPath(), new LinkedHashSet<ResponseFolderItem>());
+                                orders.get(config.getWorkflowPath()).add(config);
                             }
                             folder.getOrders().add(config);
                             break;
@@ -119,7 +120,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                 
                 // put OrderTemplate to Workflow
                 workflows.stream().map(item -> {
-                    item.setOrder(orders.remove(item.getPath()));
+                    item.setOrders(sort(orders.remove(item.getPath())));
                     return item;
                 }).collect(Collectors.toSet());
                 

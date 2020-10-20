@@ -3,7 +3,7 @@
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.joc.model.inventory.common.ResponseFolderItem",
 	"type": "object",
-	"description": "the field 'order' is only relevant for Workflows",
+	"description": "the field 'orders' is only relevant for Workflows",
 	"required": [
 		"name",
 		"path",
@@ -40,9 +40,13 @@
 		"hasDeployments": {
 			"type": "boolean"
 		},
-		"order": {
+		"orders": {
 			"description": "only relevant for Workflows",
-			"$ref": "response-folderItem-schema.json"
+			"type": "array",
+			"items": {
+				"$ref": "response-folderItem-schema.json"
+			},
+			"uniqueItems": true
 		}
 	}
 }

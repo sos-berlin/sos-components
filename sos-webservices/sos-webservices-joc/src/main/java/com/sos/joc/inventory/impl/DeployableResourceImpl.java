@@ -19,6 +19,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
+import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocNotImplementedException;
@@ -68,6 +69,9 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
             
             if (ConfigurationType.FOLDER.equals(type)) {
                 throw new JocNotImplementedException("use ./inventory/deployables for folders!");
+            }
+            if (!JocInventory.isDeployable(type)) {
+                throw new JobSchedulerInvalidResponseDataException("Object is not a 'Controller Object': " + type.value());
             }
             
             // get deleted folders

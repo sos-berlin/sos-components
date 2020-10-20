@@ -207,20 +207,24 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
 //                break;
             case ORDER:
                 OrderTemplate orderTemplate = (OrderTemplate) in.getConfiguration();
-                DBItemInventoryWorkflowOrder wo = dbLayer.getWorkflowOrder(config.getId());
-                Long workflowId = dbLayer.getConfigurationProperty(orderTemplate.getWorkflowPath(), ConfigurationType.WORKFLOW.intValue(), "id");
-                if (wo == null) {
-                    wo = new DBItemInventoryWorkflowOrder();
-                    wo.setCid(config.getId());
-                    wo.setCidWorkflow(workflowId);
-                    // bad data model; we have more than one Calendar
-                    //wo.setCidCalendar(0L);
-                    //wo.setCidNwCalendar(0L);
+                if (orderTemplate.getWorkflowPath() != null && !orderTemplate.getWorkflowPath().isEmpty()) {
+                    Long workflowId = dbLayer.getConfigurationProperty(orderTemplate.getWorkflowPath(), ConfigurationType.WORKFLOW.intValue(), "id");
+                    if (workflowId != null) {
+                        DBItemInventoryWorkflowOrder wo = dbLayer.getWorkflowOrder(config.getId());
+                        if (wo == null) {
+                            wo = new DBItemInventoryWorkflowOrder();
+                            wo.setCid(config.getId());
+                            wo.setCidWorkflow(workflowId);
+                            // bad data model; we have more than one Calendar
+                            // wo.setCidCalendar(0L);
+                            // wo.setCidNwCalendar(0L);
 
-                    session.save(wo);
-                } else if (wo.getCidWorkflow() != workflowId) {
-                    wo.setCidWorkflow(workflowId);
-                    session.update(wo);
+                            session.save(wo);
+                        } else if (wo.getCidWorkflow() != workflowId) {
+                            wo.setCidWorkflow(workflowId);
+                            session.update(wo);
+                        }
+                    }
                 }
                 break;
 //            case WORKINGDAYSCALENDAR:
