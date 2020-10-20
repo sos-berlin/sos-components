@@ -9,9 +9,9 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.InventoryAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
-import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
+import com.sos.joc.db.inventory.items.InventoryReleaseItem;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IDeleteDraftResource;
@@ -76,7 +76,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                     dbLayer.getSession().update(config);
                 }
             } else if (JocInventory.isReleasable(type)) {
-                DBItemInventoryReleasedConfiguration releasedItem = dbLayer.getLastReleasedConfiguration(config.getId());
+                InventoryReleaseItem releasedItem = dbLayer.getLastReleasedConfiguration(config.getId());
                 if (releasedItem == null || releasedItem.getContent() == null) {
                     // never released before or without content
                     dbLayer.getSession().delete(config);
@@ -87,7 +87,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                     config.setReleased(true);
                     config.setDeployed(false);
                     config.setContent(releasedItem.getContent());
-                    config.setModified(releasedItem.getModified());
+                    config.setModified(releasedItem.getReleaseDate());
                     dbLayer.getSession().update(config);
                 }
             }

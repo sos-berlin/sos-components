@@ -153,7 +153,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                                     versions.add(draft);
                                 }
                             }
-                            versions.addAll(DeployableResourceImpl.getVersions(deployments));
+                            versions.addAll(DeployableResourceImpl.getVersions(conf.getId(), deployments));
                             if (versions.isEmpty()) {
                                 versions = null;
                             }

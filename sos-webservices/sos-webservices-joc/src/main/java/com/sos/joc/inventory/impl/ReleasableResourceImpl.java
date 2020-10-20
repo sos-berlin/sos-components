@@ -23,26 +23,25 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
+import com.sos.joc.db.inventory.items.InventoryReleaseItem;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocNotImplementedException;
-import com.sos.joc.inventory.resource.IDeployableResource;
+import com.sos.joc.inventory.resource.IReleasableResource;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.inventory.common.ResponseItemDeployment;
 import com.sos.joc.model.inventory.deploy.DeployableFilter;
-import com.sos.joc.model.inventory.deploy.ResponseDeployable;
-import com.sos.joc.model.inventory.deploy.ResponseDeployableTreeItem;
-import com.sos.joc.model.inventory.deploy.ResponseDeployableVersion;
-import com.sos.joc.model.publish.OperationType;
+import com.sos.joc.model.inventory.release.ResponseItemRelease;
+import com.sos.joc.model.inventory.release.ResponseReleasable;
+import com.sos.joc.model.inventory.release.ResponseReleasableTreeItem;
+import com.sos.joc.model.inventory.release.ResponseReleasableVersion;
 import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
-public class DeployableResourceImpl extends JOCResourceImpl implements IDeployableResource {
+public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasableResource {
 
     @Override
-    public JOCDefaultResponse deployable(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse releasable(final String accessToken, final byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
             initLogging(IMPL_PATH, inBytes, accessToken);
@@ -52,7 +51,7 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
             JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
 
             if (response == null) {
-                response = JOCDefaultResponse.responseStatus200(deployable(in));
+                response = JOCDefaultResponse.responseStatus200(releasable(in));
             }
             return response;
         } catch (JocException e) {
@@ -63,7 +62,7 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
         }
     }
 
-    private ResponseDeployable deployable(DeployableFilter in) throws Exception {
+    private ResponseReleasable releasable(DeployableFilter in) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -73,10 +72,10 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
             ConfigurationType type = config.getTypeAsEnum();
             
             if (ConfigurationType.FOLDER.equals(type)) {
-                throw new JocNotImplementedException("use ./inventory/deployables for folders!");
+                throw new JocNotImplementedException("use ./inventory/releasables for folders!");
             }
-            if (!JocInventory.isDeployable(type)) {
-                throw new JobSchedulerInvalidResponseDataException("Object is not a 'Controller Object': " + type.value());
+            if (!JocInventory.isReleasable(type)) {
+                throw new JobSchedulerInvalidResponseDataException("Object is not a 'Scheduling Object': " + type.value());
             }
             
             // get deleted folders
@@ -87,45 +86,45 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
                 config.setDeleted(true);
             }
             
-            ResponseDeployableTreeItem treeItem = getResponseDeployableTreeItem(config);
+            ResponseReleasableTreeItem treeItem = getResponseReleasableTreeItem(config);
             
             if (in.getWithVersions()) {
-                List<InventoryDeploymentItem> deployments = dbLayer.getDeploymentHistory(config.getId());
-                if (deployments != null && !deployments.isEmpty()) {
-                    Set<ResponseDeployableVersion> versions = new LinkedHashSet<>();
-                    if (treeItem.getDeployed()) {
-                        treeItem.setDeploymentId(deployments.iterator().next().getId());
+                List<InventoryReleaseItem> releases = dbLayer.getReleasedConfigurations(config.getId());
+                if (releases != null && !releases.isEmpty()) {
+                    Set<ResponseReleasableVersion> versions = new LinkedHashSet<>();
+                    if (treeItem.getReleased()) {
+                        treeItem.setReleaseId(releases.iterator().next().getId());
                     } else {
                         if (config.getValid()) {
-                            ResponseDeployableVersion draft = new ResponseDeployableVersion();
+                            ResponseReleasableVersion draft = new ResponseReleasableVersion();
                             draft.setId(config.getId());
                             draft.setVersionDate(config.getModified());
                             draft.setVersions(null);
                             versions.add(draft);
                         }
                     }
-                    versions.addAll(getVersions(config.getId(), deployments));
+                    versions.addAll(getVersions(config.getId(), releases));
                     if (versions.isEmpty()) {
                         versions = null;
                     }
-                    treeItem.setDeployablesVersions(versions);
+                    treeItem.setReleaseVersions(versions);
                 } else if (in.getOnlyValidObjects() && !config.getValid()) {
                     throw new JocDeployException(String.format("%s not valid: %s", type.value().toLowerCase(), config.getPath()));
                 }
             } else {
-                InventoryDeploymentItem depItem = dbLayer.getLastDeploymentHistory(config.getId());
-                if (depItem != null) {
-                    if (treeItem.getDeployed() || !config.getValid()) {
-                        treeItem.setDeploymentId(depItem.getId());
+                InventoryReleaseItem releaseItem = dbLayer.getLastReleasedConfiguration(config.getId());
+                if (releaseItem != null) {
+                    if (treeItem.getReleased() || !config.getValid()) {
+                        treeItem.setReleaseId(releaseItem.getId());
                     } else if (in.getOnlyValidObjects() && !config.getValid()) {
                         throw new JocDeployException(String.format("%s not valid: %s", type.value().toLowerCase(), config.getPath()));
                     }
                 }
             }
 
-            ResponseDeployable result = new ResponseDeployable();
+            ResponseReleasable result = new ResponseReleasable();
             result.setDeliveryDate(Date.from(Instant.now()));
-            result.setDeployable(treeItem);
+            result.setReleasable(treeItem);
             return result;
         } catch (Throwable e) {
             Globals.rollback(session);
@@ -135,45 +134,43 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
         }
     }
     
-    public static Set<ResponseDeployableVersion> getVersions(Long confId, Collection<InventoryDeploymentItem> deployments) {
-        if (deployments == null) {
+    public static Set<ResponseReleasableVersion> getVersions(Long confId, Collection<InventoryReleaseItem> releases) {
+        if (releases == null) {
             return Collections.emptySet();
         }
         
-        Map<Date, Set<ResponseItemDeployment>> versions = deployments.stream().filter(Objects::nonNull)
-                .collect(Collectors.groupingBy(InventoryDeploymentItem::getDeploymentDate, Collectors.mapping(deployment -> {
-            ResponseItemDeployment id = new ResponseItemDeployment();
-            id.setVersion(deployment.getVersion());
-            id.setControllerId(deployment.getControllerId());
+        Map<Date, Set<ResponseItemRelease>> versions = releases.stream().filter(Objects::nonNull)
+                .collect(Collectors.groupingBy(InventoryReleaseItem::getReleaseDate, Collectors.mapping(release -> {
+            ResponseItemRelease id = new ResponseItemRelease();
+            id.setControllerId(release.getControllerId());
             return id;
         }, Collectors.toSet())));
         
-        Map<Date, InventoryDeploymentItem> mapDateGrouped = deployments.stream().filter(Objects::nonNull)
-                .collect(Collectors.toMap(InventoryDeploymentItem::getDeploymentDate, Function.identity()));
+        Map<Date, InventoryReleaseItem> mapDateGrouped = releases.stream().filter(Objects::nonNull)
+                .collect(Collectors.toMap(InventoryReleaseItem::getReleaseDate, Function.identity()));
         
         return mapDateGrouped.entrySet().stream().sorted(Comparator.comparing(Map.Entry::getKey)).map(e -> {
-            InventoryDeploymentItem deployment = e.getValue();
-            ResponseDeployableVersion dv = new ResponseDeployableVersion();
+            InventoryReleaseItem release = e.getValue();
+            ResponseReleasableVersion dv = new ResponseReleasableVersion();
             dv.setId(confId);
-            dv.setVersions(versions.get(deployment.getDeploymentDate()));
-            dv.setVersionDate(deployment.getDeploymentDate());
-            dv.setDeploymentId(deployment.getId());
-            dv.setDeploymentOperation(OperationType.fromValue(deployment.getOperation()).name().toLowerCase());
-            dv.setDeploymentPath(deployment.getPath());
+            dv.setVersions(versions.get(release.getReleaseDate()));
+            dv.setVersionDate(release.getReleaseDate());
+            dv.setReleaseId(release.getId());
+            dv.setReleasePath(release.getPath());
             return dv;
         }).collect(Collectors.toCollection(LinkedHashSet::new));
     }
     
-    public static ResponseDeployableTreeItem getResponseDeployableTreeItem(DBItemInventoryConfiguration item) {
-        ResponseDeployableTreeItem treeItem = new ResponseDeployableTreeItem();
+    public static ResponseReleasableTreeItem getResponseReleasableTreeItem(DBItemInventoryConfiguration item) {
+        ResponseReleasableTreeItem treeItem = new ResponseReleasableTreeItem();
         treeItem.setId(item.getId());
         treeItem.setFolder(item.getFolder());
         treeItem.setObjectName(item.getName());
         treeItem.setObjectType(JocInventory.getType(item.getType()));
         treeItem.setDeleted(item.getDeleted());
-        treeItem.setDeployed(item.getDeployed());
+        treeItem.setReleased(item.getReleased());
         treeItem.setValid(item.getValid());
-        treeItem.setDeployablesVersions(null);
+        treeItem.setReleaseVersions(null);
         return treeItem;
     }
 

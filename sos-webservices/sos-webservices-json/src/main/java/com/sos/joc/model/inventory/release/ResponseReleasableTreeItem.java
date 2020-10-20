@@ -92,7 +92,7 @@ public class ResponseReleasableTreeItem {
     private Long releaseId;
     @JsonProperty("releaseVersions")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<ResponseDeployableVersion> releaseVersions = new LinkedHashSet<ResponseDeployableVersion>();
+    private Set<ResponseReleasableVersion> releaseVersions = new LinkedHashSet<ResponseReleasableVersion>();
 
     /**
      * non negative long
@@ -257,12 +257,12 @@ public class ResponseReleasableTreeItem {
     }
 
     @JsonProperty("releaseVersions")
-    public Set<ResponseDeployableVersion> getReleaseVersions() {
+    public Set<ResponseReleasableVersion> getReleaseVersions() {
         return releaseVersions;
     }
 
     @JsonProperty("releaseVersions")
-    public void setReleaseVersions(Set<ResponseDeployableVersion> releaseVersions) {
+    public void setReleaseVersions(Set<ResponseReleasableVersion> releaseVersions) {
         this.releaseVersions = releaseVersions;
     }
 

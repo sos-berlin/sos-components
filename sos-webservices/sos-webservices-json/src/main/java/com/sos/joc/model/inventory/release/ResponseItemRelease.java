@@ -22,7 +22,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "releaseId",
     "path",
     "controllerId",
-    "version",
     "releaseDate"
 })
 public class ResponseItemRelease {
@@ -52,14 +51,6 @@ public class ResponseItemRelease {
      */
     @JsonProperty("controllerId")
     private String controllerId;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("version")
-    private String version;
     /**
      * timestamp
      * <p>
@@ -137,28 +128,6 @@ public class ResponseItemRelease {
     }
 
     /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("version")
-    public String getVersion() {
-        return version;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("version")
-    public void setVersion(String version) {
-        this.version = version;
-    }
-
-    /**
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
@@ -182,12 +151,12 @@ public class ResponseItemRelease {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("releaseId", releaseId).append("path", path).append("controllerId", controllerId).append("version", version).append("releaseDate", releaseDate).toString();
+        return new ToStringBuilder(this).append("releaseId", releaseId).append("path", path).append("controllerId", controllerId).append("releaseDate", releaseDate).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(controllerId).append(releaseId).append(version).append(releaseDate).toHashCode();
+        return new HashCodeBuilder().append(path).append(controllerId).append(releaseId).append(releaseDate).toHashCode();
     }
 
     @Override
@@ -199,7 +168,7 @@ public class ResponseItemRelease {
             return false;
         }
         ResponseItemRelease rhs = ((ResponseItemRelease) other);
-        return new EqualsBuilder().append(path, rhs.path).append(controllerId, rhs.controllerId).append(releaseId, rhs.releaseId).append(version, rhs.version).append(releaseDate, rhs.releaseDate).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(controllerId, rhs.controllerId).append(releaseId, rhs.releaseId).append(releaseDate, rhs.releaseDate).isEquals();
     }
 
 }

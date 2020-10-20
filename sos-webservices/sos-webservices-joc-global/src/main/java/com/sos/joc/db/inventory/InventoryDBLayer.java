@@ -26,6 +26,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
+import com.sos.joc.db.inventory.items.InventoryReleaseItem;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
 import com.sos.joc.db.joc.DBItemJocLock;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -70,20 +71,24 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public List<DBItemInventoryReleasedConfiguration> getReleasedConfiguration(Long configId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+    public List<InventoryReleaseItem> getReleasedConfigurations(Long configId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select new ").append(InventoryReleaseItem.class.getName());
+        hql.append("(id, modified, path, controllerId)");
+        hql.append(" from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
         hql.append(" where cid=:configId");
         hql.append(" order by modified desc");
-        Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
+        Query<InventoryReleaseItem> query = getSession().createQuery(hql.toString());
         query.setParameter("configId", configId);
         return getSession().getResultList(query);
     }
 
-    public DBItemInventoryReleasedConfiguration getLastReleasedConfiguration(Long configId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+    public InventoryReleaseItem getLastReleasedConfiguration(Long configId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select new ").append(InventoryReleaseItem.class.getName());
+        hql.append("(id, modified, path, content, controllerId)");
+        hql.append(" from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
         hql.append(" where cid=:configId");
         hql.append(" order by modified desc");
-        Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
+        Query<InventoryReleaseItem> query = getSession().createQuery(hql.toString());
         query.setMaxResults(1);
         query.setParameter("configId", configId);
         return getSession().getSingleResult(query);

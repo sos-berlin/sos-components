@@ -143,7 +143,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
     }
 
     private Set<ResponseFolderItem> sort(Set<ResponseFolderItem> set) {
-        if (set == null || set.size() == 0) {
+        if (set == null || !set.isEmpty()) {
             return set;
         }
         return set.stream().sorted(Comparator.comparing(ResponseFolderItem::getPath)).collect(Collectors.toCollection(LinkedHashSet::new));

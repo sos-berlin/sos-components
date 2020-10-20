@@ -28,7 +28,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "versionDate",
     "versions"
 })
-public class ResponseDeployableVersion {
+public class ResponseReleasableVersion {
 
     /**
      * non negative long
@@ -181,10 +181,10 @@ public class ResponseDeployableVersion {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ResponseDeployableVersion) == false) {
+        if ((other instanceof ResponseReleasableVersion) == false) {
             return false;
         }
-        ResponseDeployableVersion rhs = ((ResponseDeployableVersion) other);
+        ResponseReleasableVersion rhs = ((ResponseReleasableVersion) other);
         return new EqualsBuilder().append(releasePath, rhs.releasePath).append(id, rhs.id).append(releaseId, rhs.releaseId).append(versionDate, rhs.versionDate).append(versions, rhs.versions).isEquals();
     }
 
