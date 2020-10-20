@@ -5,6 +5,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -13,6 +14,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
@@ -40,6 +42,7 @@ import js7.base.problem.Problem;
 import js7.controller.data.ControllerCommand.AddOrdersResponse;
 import js7.data.order.OrderId;
 import js7.data.workflow.WorkflowPath;
+import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.data.order.JFreshOrder;
 import reactor.core.publisher.Flux;
 
@@ -98,8 +101,12 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
 //                ControllerApi.of(startOrders.getJobschedulerId()).addOrders(Flux.fromStream(result.get(true)
 //                        .stream().map(Either::get))).thenApplyAsync(either -> { return "....do something in database...."; });
                 try {
-                    Either<Problem, AddOrdersResponse> response = ControllerApi.of(startOrders.getJobschedulerId()).addOrders(Flux.fromStream(result.get(true)
-                            .stream().map(Either::get))).get(Globals.httpSocketTimeout, TimeUnit.MILLISECONDS);
+                    List<OrderId> oIds = result.get(true).stream().map(Either::get).map(o -> o.id()).collect(Collectors.toList());
+                    Stream<JFreshOrder> freshOrders = result.get(true).stream().map(Either::get);
+                    final JControllerApi controllerApi = ControllerApi.of(startOrders.getJobschedulerId());
+                    Either<Problem, Void> response = controllerApi.addOrders(Flux.fromStream(freshOrders)).thenApply(
+                            e -> controllerApi.removeOrdersWhenTerminated(oIds)).get().get(Globals.httpSocketTimeout, TimeUnit.MILLISECONDS);
+
                     ProblemHelper.throwProblemIfExist(response);
                 } catch (TimeoutException e) {
                     throw new JobSchedulerNoResponseException(String.format("No response from controller '%s' after %ds", startOrders

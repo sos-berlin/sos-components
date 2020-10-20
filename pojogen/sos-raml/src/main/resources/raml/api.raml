@@ -1590,7 +1590,9 @@ traits:
   /cancel:
     type:
       modifyOrder:
-        description: Cancel orders - <b>IN PROGRESS</b>
+        description: Cancel order
+        signalParam: !include joc/documentation/order/signal.md
+        positionParam: ""
         audit: !include joc/documentation/audit/auditLog.md
   /history:
     type:
@@ -1672,12 +1674,16 @@ traits:
   /resume:
     type:
       modifyOrder:
-        description: Resume orders - <b>IN PROGRESS</b>
+        description: Resume orders
+        signalParam: " "
+        positionParam: !include joc/documentation/order/position.md
         audit: !include joc/documentation/audit/auditLog.md
   /suspend:
     type:
       modifyOrder:
-        description: Suspend orders - <b>IN PROGRESS</b>
+        description: Suspend orders
+        signalParam: " "
+        positionParam: " "
         audit: !include joc/documentation/audit/auditLog.md
   /variables:
     type:
