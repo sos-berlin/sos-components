@@ -32,7 +32,7 @@ public class DBItemDepKeys extends DBItem {
     @Column(name = "[KEY_ALG]", nullable = false)
     private Integer keyAlgorithm;
 
-    @Column(name = "[KEY]", nullable = false)
+    @Column(name = "[KEY]", nullable = true)
     private String key;
 
     @Column(name = "[CERTIFICATE]", nullable = false)
