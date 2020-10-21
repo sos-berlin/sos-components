@@ -7,7 +7,7 @@
 		"deliveryDate": {
 			"$ref": "../../common/timestamp-schema.json"
 		},
-		"deployables": {
+		"releasables": {
 			"type": "array",
 			"items": {
 				"$ref": "response-releasableTreeItem-schema.json"

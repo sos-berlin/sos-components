@@ -26,6 +26,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
+import com.sos.joc.db.inventory.items.InventoryReleasablesTreeFolderItem;
 import com.sos.joc.db.inventory.items.InventoryReleaseItem;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
 import com.sos.joc.db.joc.DBItemJocLock;
@@ -92,6 +93,14 @@ public class InventoryDBLayer extends DBLayer {
         query.setMaxResults(1);
         query.setParameter("configId", configId);
         return getSession().getSingleResult(query);
+    }
+    
+    public Integer deleteReleasedConfigurations(Collection<Long> configIds) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+        hql.append(" where cid in (:configIds)");
+        Query<Integer> query = getSession().createQuery(hql.toString());
+        query.setParameter("configIds", configIds);
+        return getSession().executeUpdate(query);
     }
 
     public <T> List<T> getReleasedConfigurationProperty(Long configId, String propertyName) throws SOSHibernateException {
@@ -321,24 +330,6 @@ public class InventoryDBLayer extends DBLayer {
         }
     }
 
-    public InventoryDeployablesTreeFolderItem getConfigurationWithMaxDeployment(Long configId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select new ").append(InventoryDeployablesTreeFolderItem.class.getName());
-        hql.append("(");
-        hql.append("ic,dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,dh.path,dh.controllerId");
-        hql.append(") ");
-        hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
-        hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
-        hql.append("on ic.id=dh.inventoryConfigurationId ");
-        hql.append("and dh.id=(");
-        hql.append("select max(dhsub.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dhsub where ic.id=dhsub.inventoryConfigurationId");
-        hql.append(") ");
-        hql.append("where ic.id=:configId ");
-
-        Query<InventoryDeployablesTreeFolderItem> query = getSession().createQuery(hql.toString());
-        query.setParameter("configId", configId);
-        return getSession().getSingleResult(query);
-    }
-
     public Map<DBItemInventoryConfiguration, Set<InventoryDeploymentItem>> getConfigurationsWithAllDeployments(Collection<Long> configIds)
             throws SOSHibernateException {
         if (configIds != null && !configIds.isEmpty()) {
@@ -362,6 +353,53 @@ public class InventoryDBLayer extends DBLayer {
                         .reversed());
                 return result.stream().collect(Collectors.groupingBy(InventoryDeployablesTreeFolderItem::getConfiguration, Collectors.mapping(
                         InventoryDeployablesTreeFolderItem::getDeployment, Collectors.toCollection(() -> new TreeSet<>(comp)))));
+            }
+        }
+        return Collections.emptyMap();
+    }
+    
+    public List<InventoryReleasablesTreeFolderItem> getConfigurationsWithMaxRelease(Collection<Long> configIds) throws SOSHibernateException {
+        if (configIds != null && !configIds.isEmpty()) {
+            StringBuilder hql = new StringBuilder("select new ").append(InventoryReleasablesTreeFolderItem.class.getName());
+            hql.append("(ic, irc.id as releaseId, irc.modified, irc.path, irc.controllerId) ");
+            hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
+            hql.append("left join ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" irc ");
+            hql.append("on ic.id=irc.cid ");
+            hql.append("and irc.id=(");
+            hql.append("select max(ircsub.id) from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" ircsub where ic.id=ircsub.cid");
+            hql.append(") ");
+            hql.append("where ic.id in (:configIds) ");
+
+            Query<InventoryReleasablesTreeFolderItem> query = getSession().createQuery(hql.toString());
+            if (configIds != null && !configIds.isEmpty()) {
+                query.setParameterList("configIds", configIds);
+            }
+            return getSession().getResultList(query);
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    public Map<DBItemInventoryConfiguration, Set<InventoryReleaseItem>> getConfigurationsWithAllReleases(Collection<Long> configIds)
+            throws SOSHibernateException {
+        if (configIds != null && !configIds.isEmpty()) {
+            StringBuilder hql = new StringBuilder("select new ").append(InventoryReleasablesTreeFolderItem.class.getName());
+            hql.append("(ic, irc.id as releaseId, irc.modified, irc.path, irc.controllerId) ");
+            hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
+            hql.append("left join ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" irc ");
+            hql.append("on ic.id=irc.cid ");
+            hql.append("where ic.id in (:configIds) ");
+
+            Query<InventoryReleasablesTreeFolderItem> query = getSession().createQuery(hql.toString());
+            if (configIds != null && !configIds.isEmpty()) {
+                query.setParameterList("configIds", configIds);
+            }
+            List<InventoryReleasablesTreeFolderItem> result = getSession().getResultList(query);
+            if (result != null && !result.isEmpty()) {
+                Comparator<InventoryReleaseItem> comp = Comparator.nullsFirst(Comparator.comparing(InventoryReleaseItem::getReleaseDate)
+                        .reversed());
+                return result.stream().collect(Collectors.groupingBy(InventoryReleasablesTreeFolderItem::getConfiguration, Collectors.mapping(
+                        InventoryReleasablesTreeFolderItem::getRelease, Collectors.toCollection(() -> new TreeSet<>(comp)))));
             }
         }
         return Collections.emptyMap();
@@ -470,14 +508,22 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public List<DBItemInventoryConfiguration> getFolderContent(String folder, boolean recursive) throws SOSHibernateException {
+    public List<DBItemInventoryConfiguration> getFolderContent(String folder, boolean recursive, Collection<Integer> types) throws SOSHibernateException {
+        if (folder == null) {
+            folder = "/";
+        }
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         if (recursive) {
             if (!"/".equals(folder)) {
                 hql.append(" where folder=:folder or folder like :likeFolder");
+            } else {
+                hql.append(" where 1=1");
             }
         } else {
             hql.append(" where folder=:folder");
+        }
+        if (types != null && !types.isEmpty()) {
+            hql.append(" and type in (:types)");
         }
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         if (recursive) {
@@ -487,6 +533,9 @@ public class InventoryDBLayer extends DBLayer {
             }
         } else {
             query.setParameter("folder", folder);
+        }
+        if (types != null && !types.isEmpty()) {
+            query.setParameterList("types", types);
         }
         return getSession().getResultList(query);
     }

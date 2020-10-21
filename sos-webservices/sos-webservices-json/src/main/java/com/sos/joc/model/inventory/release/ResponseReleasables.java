@@ -23,7 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
-    "deployables"
+    "releasables"
 })
 public class ResponseReleasables {
 
@@ -36,9 +36,9 @@ public class ResponseReleasables {
     @JsonProperty("deliveryDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
-    @JsonProperty("deployables")
+    @JsonProperty("releasables")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<ResponseReleasableTreeItem> deployables = new LinkedHashSet<ResponseReleasableTreeItem>();
+    private Set<ResponseReleasableTreeItem> releasables = new LinkedHashSet<ResponseReleasableTreeItem>();
 
     /**
      * timestamp
@@ -62,24 +62,24 @@ public class ResponseReleasables {
         this.deliveryDate = deliveryDate;
     }
 
-    @JsonProperty("deployables")
-    public Set<ResponseReleasableTreeItem> getDeployables() {
-        return deployables;
+    @JsonProperty("releasables")
+    public Set<ResponseReleasableTreeItem> getReleasables() {
+        return releasables;
     }
 
-    @JsonProperty("deployables")
-    public void setDeployables(Set<ResponseReleasableTreeItem> deployables) {
-        this.deployables = deployables;
+    @JsonProperty("releasables")
+    public void setReleasables(Set<ResponseReleasableTreeItem> releasables) {
+        this.releasables = releasables;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("deployables", deployables).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("releasables", releasables).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(deployables).toHashCode();
+        return new HashCodeBuilder().append(deliveryDate).append(releasables).toHashCode();
     }
 
     @Override
@@ -91,7 +91,7 @@ public class ResponseReleasables {
             return false;
         }
         ResponseReleasables rhs = ((ResponseReleasables) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(deployables, rhs.deployables).isEquals();
+        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(releasables, rhs.releasables).isEquals();
     }
 
 }
