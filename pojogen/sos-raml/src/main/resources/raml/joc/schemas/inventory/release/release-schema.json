@@ -3,12 +3,14 @@
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.joc.model.inventory.release.ReleaseFilter",
 	"type": "object",
-	"required": [ 
-		"controllerIds" 
+	"anyOf": [
+		{ "required": [ "controllerIds", "update" ] },
+		{ "required": [ "delete" ] }
 	],
 	"properties": {
 		"controllerIds": {
 			"type": "array",
+			"uniqueItems": true,
 			"items": {
 				"$ref": "../../common/string100-schema.json"
 			}
@@ -16,32 +18,17 @@
 		"update": {
 			"type": "array",
 			"items": {
-				"type": "object",
-        		"javaType": "com.sos.joc.model.inventory.release.ReleaseUpdate",
-        		"properties": {
-          			"configurationId": {
-            			"$ref": "../../common/nonNegativeLong-schema.json"
-          			},
-          			"releaseId": {
-            			"$ref": "../../common/nonNegativeLong-schema.json"
-          			}
-        		}
+				"$ref": "../common/request-filter-schema.json"
 			}
 		},
 		"delete": {
       		"type": "array",
       		"items": {
-        		"type": "object",
-        		"javaType": "com.sos.joc.model.inventory.release.ReleaseDelete",
-        		"properties": {
-          			"configurationId": {
-            			"$ref": "../../common/nonNegativeLong-schema.json"
-          			}
-        		}
+        		"$ref": "../common/request-filter-schema.json"
       		}
+    	},
+    	"auditLog": {
+      		"$ref": "../../audit/auditParams-schema.json"
     	}
-  	},
-    "auditLog": {
-      "$ref": "../../audit/auditParams-schema.json"
-    }
+  	}
 }

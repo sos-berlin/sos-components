@@ -109,15 +109,15 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
                         versions = null;
                     }
                     treeItem.setDeployablesVersions(versions);
-                } else if (in.getOnlyValidObjects() && !config.getValid()) {
+                } else if (in.getOnlyValidObjects() && !config.getValid() && !config.getDeleted()) {
                     throw new JocDeployException(String.format("%s not valid: %s", type.value().toLowerCase(), config.getPath()));
                 }
             } else {
                 InventoryDeploymentItem depItem = dbLayer.getLastDeploymentHistory(config.getId());
                 if (depItem != null) {
-                    if (treeItem.getDeployed() || !config.getValid()) {
+                    if (config.getDeployed() || !config.getValid()) {
                         treeItem.setDeploymentId(depItem.getId());
-                    } else if (in.getOnlyValidObjects() && !config.getValid()) {
+                    } else if (in.getOnlyValidObjects() && !config.getValid() && !config.getDeleted()) {
                         throw new JocDeployException(String.format("%s not valid: %s", type.value().toLowerCase(), config.getPath()));
                     }
                 }

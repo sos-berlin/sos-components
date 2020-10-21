@@ -108,7 +108,7 @@ public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasab
                         versions = null;
                     }
                     treeItem.setReleaseVersions(versions);
-                } else if (in.getOnlyValidObjects() && !config.getValid()) {
+                } else if (in.getOnlyValidObjects() && !config.getValid() && !config.getDeleted()) {
                     throw new JocDeployException(String.format("%s not valid: %s", type.value().toLowerCase(), config.getPath()));
                 }
             } else {
@@ -116,7 +116,7 @@ public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasab
                 if (releaseItem != null) {
                     if (treeItem.getReleased() || !config.getValid()) {
                         treeItem.setReleaseId(releaseItem.getId());
-                    } else if (in.getOnlyValidObjects() && !config.getValid()) {
+                    } else if (in.getOnlyValidObjects() && !config.getValid() && !config.getDeleted()) {
                         throw new JocDeployException(String.format("%s not valid: %s", type.value().toLowerCase(), config.getPath()));
                     }
                 }

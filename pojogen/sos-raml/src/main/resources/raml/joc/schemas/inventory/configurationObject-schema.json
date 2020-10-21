@@ -49,6 +49,12 @@
 		"released": {
 			"type": "boolean"
 		},
+		"hasDeployments": {
+			"type": "boolean"
+		},
+		"hasReleases": {
+			"type": "boolean"
+		},
 		"deployments": {
 			"type": "array",
 			"items": {

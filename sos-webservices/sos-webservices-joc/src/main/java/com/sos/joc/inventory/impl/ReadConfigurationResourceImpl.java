@@ -1,10 +1,7 @@
 package com.sos.joc.inventory.impl;
 
 import java.time.Instant;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 
 import javax.ws.rs.Path;
@@ -23,8 +20,6 @@ import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.inventory.common.RequestFilter;
-import com.sos.joc.model.inventory.deploy.ResponseDeployableVersion;
-import com.sos.joc.model.publish.OperationType;
 import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
@@ -70,22 +65,25 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
             item.setDeleted(config.getDeleted());
             item.setState(ItemStateEnum.NO_CONFIGURATION_EXIST);
             item.setConfigurationDate(config.getModified());
-            item.setConfiguration(null);
             item.setDeployed(config.getDeployed());
             item.setReleased(config.getReleased());
+            item.setDeployments(null);
+            item.setHasDeployments(false);
+            item.setHasReleases(false);
             item.setConfiguration(JocInventory.content2IJSObject(config.getContent(), config.getType()));
             
             if (JocInventory.isDeployable(type)) {
                 
                 item.setReleased(false);
                 
-                List<InventoryDeploymentItem> deployments = dbLayer.getDeploymentHistory(config.getId());
-                InventoryDeploymentItem lastDeployment = null;
+//                List<InventoryDeploymentItem> deployments = dbLayer.getDeploymentHistory(config.getId());
+                InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(config.getId());
+                item.setHasDeployments(lastDeployment != null);
                 
-                if (deployments != null && !deployments.isEmpty()) {
-                    Collections.sort(deployments, Comparator.comparing(InventoryDeploymentItem::getDeploymentDate).reversed());
-                    lastDeployment = deployments.get(0);
-                }
+//                if (deployments != null && !deployments.isEmpty()) {
+//                    Collections.sort(deployments, Comparator.comparing(InventoryDeploymentItem::getDeploymentDate).reversed());
+//                    lastDeployment = deployments.get(0);
+//                }
                 
                 if (config.getDeployed()) {
 //                    if (lastDeployment == null) {
@@ -111,21 +109,21 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                     } 
                 }
                 
-                if (lastDeployment != null) {
-                    if (item.getDeployments() == null) {
-                        item.setDeployments(new HashSet<ResponseDeployableVersion>());
-                    }
-                    for (InventoryDeploymentItem d : deployments) {
-                        ResponseDeployableVersion v = new ResponseDeployableVersion();
-                        v.setId(config.getId());
-                        v.setDeploymentId(d.getId());
-                        v.setDeploymentOperation(OperationType.fromValue(d.getOperation()).name().toLowerCase());
-                        v.setVersionDate(d.getDeploymentDate());
-                        item.getDeployments().add(v);
-                    }
-                } else {
-                    item.setDeployments(null);
-                }
+//                if (lastDeployment != null) {
+//                    if (item.getDeployments() == null) {
+//                        item.setDeployments(new HashSet<ResponseDeployableVersion>());
+//                    }
+//                    for (InventoryDeploymentItem d : deployments) {
+//                        ResponseDeployableVersion v = new ResponseDeployableVersion();
+//                        v.setId(config.getId());
+//                        v.setDeploymentId(d.getId());
+//                        v.setDeploymentOperation(OperationType.fromValue(d.getOperation()).name().toLowerCase());
+//                        v.setVersionDate(d.getDeploymentDate());
+//                        item.getDeployments().add(v);
+//                    }
+//                } else {
+//                    item.setDeployments(null);
+//                }
                 
             } else if (JocInventory.isReleasable(type)) {
                 
@@ -135,6 +133,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                 Date releasedLastModified = null;
                 if (releasedModifieds != null && !releasedModifieds.isEmpty()) {
                     releasedLastModified = releasedModifieds.get(0);
+                    item.setHasReleases(true);
                 }
                 
                 if (config.getReleased()) {

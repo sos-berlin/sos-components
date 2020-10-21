@@ -87,6 +87,7 @@ public class JsonValidator {
 
             put("TreeFilter", "tree/treeFilter-schema.json");
 
+            put("ReleaseFilter", "inventory/release/release-schema.json");
             put("RequestFolder", "inventory/common/request-folder-schema.json");
             put("com.sos.joc.model.inventory.common.RequestFilter", "inventory/common/request-filter-schema.json");
             put("com.sos.joc.model.inventory.deploy.DeployableFilter", "inventory/deploy/request-deployable-schema.json");

@@ -4,7 +4,8 @@
   "javaType": "com.sos.jobscheduler.model.instruction.NamedJob",
   "type": "object",
   "required": [
-  	"jobName"
+  	"jobName",
+  	"label"
   ],
   "extends" : {
     "$ref": "instruction-schema.json"

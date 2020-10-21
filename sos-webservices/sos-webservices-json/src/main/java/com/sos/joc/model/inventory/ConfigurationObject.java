@@ -36,6 +36,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "deleted",
     "deployed",
     "released",
+    "hasDeployments",
+    "hasReleases",
     "deployments",
     "configurationDate",
     "deliveryDate"
@@ -104,6 +106,10 @@ public class ConfigurationObject {
     private Boolean deployed;
     @JsonProperty("released")
     private Boolean released;
+    @JsonProperty("hasDeployments")
+    private Boolean hasDeployments;
+    @JsonProperty("hasReleases")
+    private Boolean hasReleases;
     @JsonProperty("deployments")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<ResponseDeployableVersion> deployments = new LinkedHashSet<ResponseDeployableVersion>();
@@ -276,6 +282,26 @@ public class ConfigurationObject {
     public Boolean getReleased() {
         return released;
     }
+    
+    @JsonProperty("hasReleases")
+    public void setHasReleases(Boolean hasReleases) {
+        this.hasReleases = hasReleases;
+    }
+    
+    @JsonProperty("hasReleases")
+    public Boolean getHasReleases() {
+        return hasReleases;
+    }
+    
+    @JsonProperty("hasDeployments")
+    public void setHasDeployments(Boolean hasDeployments) {
+        this.hasDeployments = hasDeployments;
+    }
+    
+    @JsonProperty("hasDeployments")
+    public Boolean getHasDeployments() {
+        return hasDeployments;
+    }
 
     @JsonProperty("deployed")
     public void setDeployed(Boolean deployed) {
@@ -338,12 +364,12 @@ public class ConfigurationObject {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("objectType", objectType).append("configuration", configuration).append("state", state).append("valid", valid).append("invalidMsg", invalidMsg).append("deleted", deleted).append("deployed", deployed).append("released", released).append("deployments", deployments).append("configurationDate", configurationDate).append("deliveryDate", deliveryDate).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("objectType", objectType).append("configuration", configuration).append("state", state).append("valid", valid).append("invalidMsg", invalidMsg).append("deleted", deleted).append("deployed", deployed).append("released", released).append("hasReleases", hasReleases).append("hasDeployments", hasDeployments).append("deployments", deployments).append("configurationDate", configurationDate).append("deliveryDate", deliveryDate).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(valid).append(invalidMsg).append(configurationDate).append(path).append(deployments).append(deleted).append(configuration).append(deployed).append(released).append(id).append(state).append(deliveryDate).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(valid).append(configurationDate).append(path).append(deleted).append(configuration).append(deployed).append(released).append(id).append(state).append(deliveryDate).append(objectType).toHashCode();
     }
 
     @Override
@@ -355,7 +381,7 @@ public class ConfigurationObject {
             return false;
         }
         ConfigurationObject rhs = ((ConfigurationObject) other);
-        return new EqualsBuilder().append(valid, rhs.valid).append(invalidMsg, rhs.invalidMsg).append(configurationDate, rhs.configurationDate).append(path, rhs.path).append(deployments, rhs.deployments).append(deleted, rhs.deleted).append(released, rhs.released).append(configuration, rhs.configuration).append(deployed, rhs.deployed).append(id, rhs.id).append(state, rhs.state).append(deliveryDate, rhs.deliveryDate).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(valid, rhs.valid).append(configurationDate, rhs.configurationDate).append(path, rhs.path).append(deleted, rhs.deleted).append(released, rhs.released).append(configuration, rhs.configuration).append(deployed, rhs.deployed).append(id, rhs.id).append(state, rhs.state).append(deliveryDate, rhs.deliveryDate).append(objectType, rhs.objectType).isEquals();
     }
 
 }
