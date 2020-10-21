@@ -45,9 +45,9 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.sos.commons.sign.pgp.key.KeyUtil;
-import com.sos.commons.sign.pgp.sign.SignObject;
-import com.sos.commons.sign.pgp.verify.VerifySignature;
+import com.sos.commons.sign.keys.key.KeyUtil;
+import com.sos.commons.sign.keys.sign.SignObject;
+import com.sos.commons.sign.keys.verify.VerifySignature;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.command.UpdateRepo;
 import com.sos.jobscheduler.model.workflow.Workflow;
