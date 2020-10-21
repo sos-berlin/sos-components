@@ -1,7 +1,10 @@
 package com.sos.joc.inventory.impl;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.Path;
 
@@ -66,8 +69,12 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
                 // deleteOrUndeleteFolder(dbLayer, config.getPath(), IMPL_PATH_DELETE.equals(action));
                 // no recursive action otherwise information get lost after delete AND undelete. Deleted folder has to be consider at the deploy/release
                 if (!JocInventory.ROOT_FOLDER.equals(config.getPath())) {
-                    if (isFolderEmpty(dbLayer, config.getPath())) {
-                        dbLayer.getSession().delete(config);
+                    if (isFolderEmptyOrHasOnlyEmptySubFolders(dbLayer, config.getPath())) {
+                        List<DBItemInventoryConfiguration> emptyFolders = dbLayer.getFolderContent(config.getPath(), true, Arrays.asList(
+                                ConfigurationType.FOLDER.intValue()));
+                        for (DBItemInventoryConfiguration emptyFolder : emptyFolders) {
+                            dbLayer.getSession().delete(emptyFolder);
+                        }
                     } else {
                         deleteOrUndeleteSingle(dbLayer, config, IMPL_PATH_DELETE.equals(action));
                         storeAuditLog(type, config.getPath(), config.getFolder());
@@ -128,16 +135,18 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
 //        }
 //    }
     
-    private boolean isFolderEmpty(InventoryDBLayer dbLayer, String folder) {
+    private boolean isFolderEmptyOrHasOnlyEmptySubFolders(InventoryDBLayer dbLayer, String folder) {
       Long result = null;
       try {
           dbLayer.getSession().beginTransaction();
-          result = dbLayer.getCountConfigurationsByFolder(folder, true);
+          Set<Integer> types = JocInventory.getDeployableTypes();
+          types.addAll(JocInventory.getReleasableTypes());
+          result = dbLayer.getCountConfigurationsByFolder(folder, true, types);
           dbLayer.getSession().commit();
       } catch (SOSHibernateException e) {
           Globals.rollback(dbLayer.getSession());
       }
-      return result != null && result.equals(1L);
+      return result != null && result.equals(0L);
   }
 
     private void storeAuditLog(ConfigurationType objectType, String path, String folder) {

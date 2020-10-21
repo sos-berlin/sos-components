@@ -287,23 +287,23 @@ public class InventoryDBLayer extends DBLayer {
         return getCountConfigurationsByFolder(folder, recursive, null);
     }
 
-    public Long getCountConfigurationsByFolder(String folder, boolean recursive, Integer configType) throws SOSHibernateException {
+    public Long getCountConfigurationsByFolder(String folder, boolean recursive, Collection<Integer> configTypes) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select count(id) from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
         if (recursive) {
             hql.append("where (folder=:folder or folder like :likeFolder) ");
         } else {
             hql.append("where folder=:folder ");
         }
-        if (configType != null) {
-            hql.append("and type=:configType ");
+        if (configTypes != null && !configTypes.isEmpty()) {
+            hql.append("and type in (:configTypes) ");
         }
         Query<Long> query = getSession().createQuery(hql.toString());
         query.setParameter("folder", folder);
         if (recursive) {
             query.setParameter("likeFolder", folder + "/%");
         }
-        if (configType != null) {
-            query.setParameter("configType", configType);
+        if (configTypes != null && !configTypes.isEmpty()) {
+            query.setParameterList("configTypes", configTypes);
         }
         return getSession().getSingleResult(query);
     }
