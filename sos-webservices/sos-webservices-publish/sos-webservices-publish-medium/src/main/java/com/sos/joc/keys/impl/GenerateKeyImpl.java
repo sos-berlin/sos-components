@@ -5,8 +5,8 @@ import java.util.Date;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.sign.pgp.SOSPGPConstants;
-import com.sos.commons.sign.pgp.key.KeyUtil;
+import com.sos.commons.sign.keys.SOSKeyConstants;
+import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -15,7 +15,6 @@ import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.keys.resource.IGenerateKey;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.pgp.JocKeyPair;
-import com.sos.joc.model.pgp.JocKeyType;
 import com.sos.joc.model.publish.GenerateKeyFilter;
 import com.sos.schema.JsonValidator;
 
@@ -29,37 +28,37 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
     public JOCDefaultResponse postGenerateKey(String xAccessToken, byte[] generateKeyFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
+            initLogging(API_CALL, generateKeyFilter, xAccessToken);
             JsonValidator.validateFailFast(generateKeyFilter, GenerateKeyFilter.class);
             GenerateKeyFilter filter = Globals.objectMapper.readValue(generateKeyFilter, GenerateKeyFilter.class);
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, null, xAccessToken, "",
-                    getPermissonsJocCockpit(null, xAccessToken).getInventory().getConfigurations().getPublish().isGenerateKey());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", 
+                    getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isGenerateKey());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
             Date validUntil = filter.getValidUntil();
-            String keyAlgorithm = filter.getKeyAlgorithm();
-            if(keyAlgorithm == null) {
-                keyAlgorithm = SOSPGPConstants.RSA_ALGORITHM_NAME;
+            if(filter.getKeyAlgorithm() == null) {
+                filter.setKeyAlgorithm(SOSKeyConstants.RSA_ALGORITHM_NAME);
             }
             JocKeyPair keyPair = null;
-            if (SOSPGPConstants.PGP_ALGORITHM_NAME.equals(keyAlgorithm)) {
+            if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
                 if (validUntil != null) {
                     Long secondsToExpire = validUntil.getTime() / 1000;
                     keyPair = KeyUtil.createKeyPair(jobschedulerUser.getSosShiroCurrentUser().getUsername(), null, secondsToExpire);
                 } else {
                     keyPair = KeyUtil.createKeyPair(jobschedulerUser.getSosShiroCurrentUser().getUsername(), null, null);
                 }                
-            } else if (SOSPGPConstants.RSA_ALGORITHM_NAME.equals(keyAlgorithm)) {
+            } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
                 keyPair = KeyUtil.createRSAJocKeyPair();
                 //default
-            } else {
+            } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
                 keyPair = KeyUtil.createECDSAJOCKeyPair();
             }
+            keyPair.setKeyAlgorithm(filter.getKeyAlgorithm());
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
             // store private key to the db
-            dbLayerKeys.saveOrUpdateGeneratedKey(JocKeyType.PRIVATE.value(), 
-                    keyPair, 
+            dbLayerKeys.saveOrUpdateGeneratedKey(keyPair, 
                     jobschedulerUser.getSosShiroCurrentUser().getUsername(),
                     JocSecurityLevel.MEDIUM);
             return JOCDefaultResponse.responseStatus200(keyPair);

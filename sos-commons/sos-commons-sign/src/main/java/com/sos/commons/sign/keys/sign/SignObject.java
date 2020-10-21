@@ -1,4 +1,4 @@
-package com.sos.commons.sign.pgp.sign;
+package com.sos.commons.sign.keys.sign;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -14,7 +14,6 @@ import java.security.Security;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Iterator;
 
 import org.apache.commons.io.IOUtils;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
@@ -30,20 +29,17 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
-import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.util.encoders.Base64;
 
-import com.sos.commons.sign.pgp.SOSPGPConstants;
-import com.sos.commons.sign.pgp.interfaces.StreamHandler;
-import com.sos.commons.sign.pgp.key.KeyUtil;
+import com.sos.commons.sign.keys.SOSKeyConstants;
+import com.sos.commons.sign.keys.interfaces.StreamHandler;
+import com.sos.commons.sign.keys.key.KeyUtil;
 
 public class SignObject {
 
@@ -149,7 +145,7 @@ public class SignObject {
         byte[] signature = signer.generateSignature();
       return KeyUtil.formatEncodedDataString(
               new String(Base64.encode(signature), StandardCharsets.UTF_8), 
-              SOSPGPConstants.SIGNATURE_HEADER, 
-              SOSPGPConstants.SIGNATURE_FOOTER);
+              SOSKeyConstants.SIGNATURE_HEADER, 
+              SOSKeyConstants.SIGNATURE_FOOTER);
     }
 }

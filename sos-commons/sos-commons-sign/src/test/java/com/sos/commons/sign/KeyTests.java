@@ -38,10 +38,10 @@ import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.sign.pgp.SOSPGPConstants;
-import com.sos.commons.sign.pgp.key.KeyUtil;
-import com.sos.commons.sign.pgp.sign.SignObject;
-import com.sos.commons.sign.pgp.verify.VerifySignature;
+import com.sos.commons.sign.keys.SOSKeyConstants;
+import com.sos.commons.sign.keys.key.KeyUtil;
+import com.sos.commons.sign.keys.sign.SignObject;
+import com.sos.commons.sign.keys.verify.VerifySignature;
 import com.sos.joc.model.pgp.JocKeyAlgorithm;
 import com.sos.joc.model.pgp.JocKeyPair;
 
@@ -137,7 +137,8 @@ public class KeyTests {
             + "FnpfDFXjx2FNcn/OUAOy8bmmDRmCxBPKbW68joGTHSrS1BNvsIChwkmiqSowHPlO\r\n"
             + "FgMx9RdCIAQZSqFzXas25+84++1DyH9W9GdvV10xoMQ/8xumV2J5AzmZiob+5w8l\r\n"
             + "plaJ+LpWvEcmyrfiajTRS62iGa7MxNhY+hkV1NJmmvwR9hZU1zHPD9SkPHxgIq85\r\n"
-            + "XVDf/ydZ29B10HZTh0v28wSPkK7SPRY2h4WXCuu7C8DUAXcDW0AqIXDzxCUFIjLe\r\n" + "3QlBbv74poqlIVijloelm8E1PUfUp+51+fnCag==\r\n" + "=5342\r\n"
+            + "XVDf/ydZ29B10HZTh0v28wSPkK7SPRY2h4WXCuu7C8DUAXcDW0AqIXDzxCUFIjLe\r\n"
+            + "3QlBbv74poqlIVijloelm8E1PUfUp+51+fnCag==\r\n" + "=5342\r\n"
             + "-----END PGP PRIVATE KEY BLOCK-----";
     private static final String PUBLICKEY_PATH = "src/test/resources/test_public.asc";
     private static final String PUBLICKEY_RESOURCE_PATH = "/test_public.asc";
@@ -790,7 +791,7 @@ public class KeyTests {
         LOGGER.info("***************  check 5a: JocKeyPair private key; valid true  *********************************");
         JocKeyPair keyPair = new JocKeyPair();               
         keyPair.setPrivateKey(PRIVATEKEY_STRING);
-        keyPair.setKeyAlgorithm(SOSPGPConstants.PGP_ALGORITHM_NAME);
+        keyPair.setKeyAlgorithm(SOSKeyConstants.PGP_ALGORITHM_NAME);
         keyPair.setPublicKey(null);
         valid = KeyUtil.isKeyPairValid(keyPair);
         LOGGER.info("KeyPair is valid: " + valid);
@@ -798,7 +799,7 @@ public class KeyTests {
         LOGGER.info("***************  check 5b: JocKeyPair public key; valid true  **********************************");
         keyPair.setPrivateKey(null);
         keyPair.setPublicKey(PUBLICKEY_STRING);
-        keyPair.setKeyAlgorithm(SOSPGPConstants.PGP_ALGORITHM_NAME);
+        keyPair.setKeyAlgorithm(SOSKeyConstants.PGP_ALGORITHM_NAME);
         valid = KeyUtil.isKeyPairValid(keyPair);
         LOGGER.info("KeyPair is valid: " + valid);
         assertTrue(valid);
@@ -1193,15 +1194,15 @@ public class KeyTests {
             X509Certificate certificate =  KeyUtil.getX509Certificate(certificateString);
             assertNotNull(certificate);
             LOGGER.info("*********  create signature of example String with private ECDSA key from KeyPair object  ******");
-            signature = SignObject.signX509(SOSPGPConstants.ECDSA_ALGORITHM, keyPair.getPrivate(), ORIGINAL_STRING);
+            signature = SignObject.signX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair.getPrivate(), ORIGINAL_STRING);
             assertNotNull(signature);
             assertNotEquals(signature, "");
             LOGGER.info("Signing was successful!");
             LOGGER.info(String.format("Signature:\n%1$s", signature));
             LOGGER.info("*********  verify signature with X.509 certificate object  *************************************");
-            boolean verified = VerifySignature.verifyX509BC(SOSPGPConstants.ECDSA_ALGORITHM, certificate, ORIGINAL_STRING, signature);
+            boolean verified = VerifySignature.verifyX509BC(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, certificate, ORIGINAL_STRING, signature);
             LOGGER.info("Signature verification with method \"VerifySignature.verifyX509BC\" successful: " + verified);
-            verified = VerifySignature.verifyX509(SOSPGPConstants.ECDSA_ALGORITHM, certificate.getPublicKey(), ORIGINAL_STRING, signature);
+            verified = VerifySignature.verifyX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, certificate.getPublicKey(), ORIGINAL_STRING, signature);
             LOGGER.info(
                     "Signature verification with method \"VerifySignature.verifyX509 (PublicKey from Certificate)\" successful: " + verified);
             assertTrue(verified);

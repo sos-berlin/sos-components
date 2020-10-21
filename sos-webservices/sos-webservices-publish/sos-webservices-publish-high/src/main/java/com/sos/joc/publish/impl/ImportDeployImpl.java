@@ -3,6 +3,7 @@ package com.sos.joc.publish.impl;
 import java.io.InputStream;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
@@ -11,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.ws.rs.Path;
 
@@ -18,8 +20,9 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.sign.keys.SOSKeyConstants;
+import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.agent.AgentRefPublish;
 import com.sos.jobscheduler.model.workflow.Workflow;
@@ -46,10 +49,12 @@ import com.sos.joc.model.publish.ImportDeployFilter;
 import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignaturePath;
 import com.sos.joc.publish.db.DBLayerDeploy;
-import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.resource.IImportDeploy;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
+
+import io.vavr.control.Either;
+import js7.base.problem.Problem;
 
 @Path("publish")
 public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
@@ -60,7 +65,6 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
     private Set<Workflow> workflows = new HashSet<Workflow>();
     private Set<AgentRef> agentRefs = new HashSet<AgentRef>();
     private Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
-    private ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
     private DBLayerDeploy dbLayer = null;
     private boolean hasErrors = false;
     private List<Err419> listOfErrors = new ArrayList<Err419>();
@@ -83,24 +87,25 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
 
 	private JOCDefaultResponse postImportDeploy(String xAccessToken, FormDataBodyPart body,
 			AuditParams auditLog, String importDeployFilter) throws Exception {
-        JsonValidator.validateFailFast(importDeployFilter.getBytes(StandardCharsets.UTF_8), ImportDeployFilter.class);
-        ImportDeployFilter filter = Globals.objectMapper.readValue(importDeployFilter, ImportDeployFilter.class);
-	    
         InputStream stream = null;
         String uploadFileName = null;
         SOSHibernateSession hibernateSession = null;
         try {
+            initLogging(API_CALL, importDeployFilter.getBytes(StandardCharsets.UTF_8), xAccessToken);
+            JsonValidator.validateFailFast(importDeployFilter.getBytes(StandardCharsets.UTF_8), ImportDeployFilter.class);
+            ImportDeployFilter filter = Globals.objectMapper.readValue(importDeployFilter, ImportDeployFilter.class);
             filter.setAuditLog(auditLog);
+            // copy&paste Permission, has to be changed to the correct permission for upload 
+            JOCDefaultResponse jocDefaultResponse = initPermissions("",
+                   getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isImport() &&
+                   getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isDeploy());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
             if (body != null) {
                 uploadFileName = URLDecoder.decode(body.getContentDisposition().getFileName(), "UTF-8");
             } else {
                 throw new JocMissingRequiredParameterException("undefined 'file'");
-            }
-             // copy&paste Permission, has to be changed to the correct permission for upload 
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, "",
-            		getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isImport());
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
             }
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             stream = body.getEntityAs(InputStream.class);
@@ -113,13 +118,15 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             } else if (mediaSubType.contains("tgz") || mediaSubType.contains("tar.gz") || mediaSubType.contains("gzip")) {
                 PublishUtils.readTarGzipFileContent(stream, workflows, agentRefs);
             } else {
-            	throw new JocUnsupportedFileTypeException(String.format("The file %1$s to be uploaded must have the format zip!", uploadFileName)); 
+            	throw new JocUnsupportedFileTypeException(
+            	        String.format("The file %1$s to be uploaded must have the format zip!", uploadFileName)); 
             }
             // process signature verification and save or update objects
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(importAudit);
             dbLayer = new DBLayerDeploy(hibernateSession);
-            Map<DBItemInventoryConfiguration, DBItemDepSignatures> importedObjects = new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
+            Map<DBItemInventoryConfiguration, DBItemDepSignatures> importedObjects = 
+                    new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
             String versionId = null;
             if (workflows != null && !workflows.isEmpty()) {
                 versionId = workflows.stream().findFirst().get().getVersionId();
@@ -133,8 +140,8 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                         wfEdit.setSignedContent(signature.getSignatureString());
                     } 
                 }
-                DBItemInventoryConfiguration dbItem = 
-                        dbLayer.saveOrUpdateInventoryConfiguration(workflow.getPath(), wfEdit, workflow.getTYPE(), account, dbItemAuditLog.getId());
+                DBItemInventoryConfiguration dbItem = dbLayer.saveOrUpdateInventoryConfiguration(
+                        workflow.getPath(), wfEdit, workflow.getTYPE(), account, dbItemAuditLog.getId());
                 DBItemDepSignatures dbItemSignature = dbLayer.saveOrUpdateSignature(dbItem.getId(), wfEdit, account, workflow.getTYPE());
                 importedObjects.put(dbItem, dbItemSignature);
             }
@@ -147,8 +154,8 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                         arEdit.setSignedContent(signature.getSignatureString());
                     } 
                 }
-                DBItemInventoryConfiguration dbItem = 
-                        dbLayer.saveOrUpdateInventoryConfiguration(agentRef.getPath(), arEdit, agentRef.getTYPE(), account, dbItemAuditLog.getId());
+                DBItemInventoryConfiguration dbItem = dbLayer.saveOrUpdateInventoryConfiguration(
+                        agentRef.getPath(), arEdit, agentRef.getTYPE(), account, dbItemAuditLog.getId());
                 DBItemDepSignatures dbItemSignature = dbLayer.saveOrUpdateSignature(dbItem.getId(), arEdit, account, agentRef.getTYPE());
                 importedObjects.put(dbItem, dbItemSignature);
             }
@@ -160,37 +167,57 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
             JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, Globals.getJocSecurityLevel());
             for (Controller controller : controllers) {
-                // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename
-                // and subsequently call delete for the object with the previous path before committing the update
-                PublishUtils.checkPathRenamingForUpdate(importedObjects.keySet(), controller.getController(), dbLayer, keyPair.getKeyAlgorithm());
-
-                // call updateRepo command via Proxy of given controllers
-                PublishUtils.updateRepoAddOrUpdatePGP(versionId, importedObjects, null, controller.getController(), dbLayer, keyPair.getKeyAlgorithm())
-                    .thenAccept(either -> {
-                    if (either.isRight()) {
-                        Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(importedObjects,
-                                account, dbLayer, versionIdForUpdate, controller.getController(), deploymentDate);
-                        PublishUtils.prepareNextInvConfigGeneration(importedObjects.keySet(), dbLayer.getSession());
-                        LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controller.getController()));
-                    } else if (either.isLeft()) {
-                        // an error occurred
-                        String message = String.format("Response from Controller \"%1$s:\": %2$s", controller.getController(), either.getLeft().message());
-                        LOGGER.warn(message);
-                        // updateRepo command is atomic, therefore all items are rejected
-                        List<DBItemDeploymentHistory> failedDeployUpdateItems = dbLayer.updateFailedDeploymentForUpdate(importedObjects,
-                                null, controller.getController(), account, versionIdForUpdate, either.getLeft().message());
-                        // if not successful the objects and the related controllerId have to be stored
-                        // in a submissions table for reprocessing
-                        dbLayer.cloneFailedDeployment(failedDeployUpdateItems);
-                        hasErrors = true;
-                        if (either.getLeft().codeOrNull() != null) {
-                            listOfErrors.add(new BulkError().get(new JocError(either.getLeft().message()), "/"));
-                        } else {
-                            listOfErrors.add(new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), either.getLeft().message()),
-                                    "/"));
-                        }
-                    }
-                }).get();
+                List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkPathRenamingForUpdate(
+                        importedObjects.keySet(), controller.getController(), dbLayer, keyPair.getKeyAlgorithm());
+                // and subsequently call delete for the object with the previous path before committing the update 
+                if (toDeleteForRename != null && !toDeleteForRename.isEmpty()) {
+                    // clone list as it has to be final now for processing in CompleteableFuture.thenAccept method
+                    final List<DBItemDeploymentHistory> toDelete = toDeleteForRename;
+                    // set new versionId for second round (delete items)
+                    final String versionIdForDeleteRenamed = UUID.randomUUID().toString();
+                        // call updateRepo command via Proxy of given controllers
+                        PublishUtils.updateRepoDelete(versionIdForDeleteRenamed, toDelete, controller.getController(), dbLayer, 
+                                keyPair.getKeyAlgorithm()).thenAccept(either -> {
+                                processAfterDelete(either, toDelete, controller.getController(), account, versionIdForDeleteRenamed);
+                        }).get();
+                }
+            }
+            for (Controller controller : controllers) {
+                // call updateRepo command via ControllerApi for given controllers
+                String signerDN = null;
+                X509Certificate cert = null;
+                switch(keyPair.getKeyAlgorithm()) {
+                case SOSKeyConstants.PGP_ALGORITHM_NAME:
+                    PublishUtils.updateRepoAddOrUpdatePGP(
+                            versionIdForUpdate, importedObjects, null, controller.getController(), dbLayer, keyPair.getKeyAlgorithm())
+                        .thenAccept(either -> {
+                            processAfterAdd(either, importedObjects, null, account, versionIdForUpdate, controller.getController(),
+                                    deploymentDate);
+                    }).get();
+                    break;
+                case SOSKeyConstants.RSA_ALGORITHM_NAME:
+                    cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+                    signerDN = cert.getSubjectDN().getName();
+                    PublishUtils.updateRepoAddOrUpdateWithX509(
+                            versionIdForUpdate, importedObjects, null, controller.getController(), dbLayer, keyPair.getKeyAlgorithm(),
+                            SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN)
+                        .thenAccept(either -> {
+                            processAfterAdd(either, importedObjects, null, account, versionIdForUpdate, controller.getController(),
+                                    deploymentDate);
+                    }).get();
+                    break;
+                case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
+                    cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+                    signerDN = cert.getSubjectDN().getName();
+                    PublishUtils.updateRepoAddOrUpdateWithX509(
+                            versionIdForUpdate, importedObjects, null, controller.getController(), dbLayer, keyPair.getKeyAlgorithm(),
+                            SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN)
+                        .thenAccept(either -> {
+                            processAfterAdd(either, importedObjects, null, account, versionIdForUpdate, controller.getController(),
+                                    deploymentDate);
+                    }).get();
+                    break;
+                }
             }
             storeAuditLogEntry(importAudit);
             if (hasErrors) {
@@ -217,4 +244,71 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
         }
 	}
 
+    private void processAfterAdd (
+            Either<Problem, Void> either, 
+            Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations,
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedReDeployables,
+            String account,
+            String versionIdForUpdate,
+            String controllerId,
+            Date deploymentDate) {
+        if (either.isRight()) {
+            // no error occurred
+            Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(
+                    verifiedConfigurations, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate);
+            deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(
+                    verifiedReDeployables, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
+            PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), dbLayer.getSession());
+            LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
+        } else if (either.isLeft()) {
+            // an error occurred
+            String message = String.format(
+                    "Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
+            LOGGER.error(message);
+            // updateRepo command is atomic, therefore all items are rejected
+            List<DBItemDeploymentHistory> failedDeployUpdateItems = dbLayer.updateFailedDeploymentForUpdate(
+                    verifiedConfigurations, verifiedReDeployables, controllerId, account, versionIdForUpdate, either.getLeft().message());
+            // if not successful the objects and the related controllerId have to be stored 
+            // in a submissions table for reprocessing
+            dbLayer.cloneFailedDeployment(failedDeployUpdateItems);
+            hasErrors = true;
+            if (either.getLeft().codeOrNull() != null) {
+                listOfErrors.add(
+                        new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), either.getLeft().message()), "/"));
+            } else {
+                listOfErrors.add(new BulkError().get(new JocError(either.getLeft().message()), "/"));
+            }
+        }
+    }
+    
+    private void processAfterDelete (
+            Either<Problem, Void> either, 
+            List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete, 
+            String controller, 
+            String account, 
+            String versionIdForDelete) {
+        if (either.isRight()) {
+            Set<DBItemDeploymentHistory> deletedDeployItems = 
+                    PublishUtils.updateDeletedDepHistory(depHistoryDBItemsToDeployDelete, dbLayer);
+        } else if (either.isLeft()) {
+            String message = String.format("Response from Controller \"%1$s:\": %2$s", controller, either.getLeft().message());
+            LOGGER.warn(message);
+            // updateRepo command is atomic, therefore all items are rejected
+            List<DBItemDeploymentHistory> failedDeployDeleteItems = dbLayer.updateFailedDeploymentForDelete(
+                    depHistoryDBItemsToDeployDelete, controller, account, versionIdForDelete, either.getLeft().message());
+            // if not successful the objects and the related controllerId have to be stored 
+            // in a submissions table for reprocessing
+            dbLayer.cloneFailedDeployment(failedDeployDeleteItems);
+            hasErrors = true;
+            if (either.getLeft().codeOrNull() != null) {
+                listOfErrors.add(
+                        new BulkError().get(new JocError(either.getLeft().message()), "/"));
+            } else {
+                listOfErrors.add(
+                        new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), 
+                                either.getLeft().message()), "/"));
+            }
+        }
+    }
+    
 }

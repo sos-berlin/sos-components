@@ -6,6 +6,8 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.ECPublicKey;
+import java.security.interfaces.RSAPublicKey;
 import java.time.Instant;
 import java.util.Date;
 
@@ -16,8 +18,8 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.sign.pgp.SOSPGPConstants;
-import com.sos.commons.sign.pgp.key.KeyUtil;
+import com.sos.commons.sign.keys.SOSKeyConstants;
+import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -33,6 +35,7 @@ import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.resource.IImportKey;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.JocSecurityLevel;
+import com.sos.joc.model.pgp.JocKeyAlgorithm;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.publish.ImportFilter;
 import com.sos.joc.publish.util.PublishUtils;
@@ -46,7 +49,8 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
 
     @Override
     public JOCDefaultResponse postImportKey(
-            String xAccessToken, FormDataBodyPart body, String timeSpent, String ticketLink, String comment, String importKeyFilter) throws Exception {
+            String xAccessToken, FormDataBodyPart body, String timeSpent, String ticketLink, String comment, String importKeyFilter)
+                    throws Exception {
         AuditParams auditLog = new AuditParams();
         auditLog.setComment(comment);
         auditLog.setTicketLink(ticketLink);
@@ -57,13 +61,15 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
         return postImportKey(xAccessToken, body, auditLog, importKeyFilter);
     }
 
-    private JOCDefaultResponse postImportKey(String xAccessToken, FormDataBodyPart body, AuditParams auditLog, String importKeyFilter) throws Exception {
+    private JOCDefaultResponse postImportKey(String xAccessToken, FormDataBodyPart body, AuditParams auditLog, String importKeyFilter)
+            throws Exception {
         InputStream stream = null;
         try {
+            initLogging(API_CALL, importKeyFilter.getBytes(), xAccessToken);
             JsonValidator.validateFailFast(importKeyFilter.getBytes(StandardCharsets.UTF_8), ImportFilter.class);
             ImportFilter filter = Globals.objectMapper.readValue(importKeyFilter, ImportFilter.class);
             filter.setAuditLog(auditLog);
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, "",
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", 
                     getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isImportKey());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -78,13 +84,13 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             keyPair.setKeyAlgorithm(filter.getKeyAlgorithm());
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             if (keyFromFile != null) {
-                if (keyFromFile.startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER) 
-                        || keyFromFile.startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)
-                        || keyFromFile.startsWith(SOSPGPConstants.PRIVATE_KEY_HEADER)
-                        || keyFromFile.startsWith(SOSPGPConstants.PRIVATE_EC_KEY_HEADER)
-                        || keyFromFile.startsWith(SOSPGPConstants.PRIVATE_ECDSA_KEY_HEADER)) {
+                if (keyFromFile.startsWith(SOSKeyConstants.PRIVATE_PGP_KEY_HEADER) 
+                        || keyFromFile.startsWith(SOSKeyConstants.PRIVATE_RSA_KEY_HEADER)
+                        || keyFromFile.startsWith(SOSKeyConstants.PRIVATE_KEY_HEADER)
+                        || keyFromFile.startsWith(SOSKeyConstants.PRIVATE_EC_KEY_HEADER)
+                        || keyFromFile.startsWith(SOSKeyConstants.PRIVATE_ECDSA_KEY_HEADER)) {
                     throw new JocUnsupportedKeyTypeException("Wrong key type. expected: public | received: private");
-                } else if (SOSPGPConstants.PGP_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
+                } else if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
                     try {
                         PGPPublicKey pubKey = KeyUtil.getPGPPublicKeyFromString(keyFromFile);
                         if (pubKey != null) {
@@ -93,8 +99,8 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                     } catch (Exception e) {
                         throw new JocKeyNotValidException("The provided file does not contain a valid public PGP key!");
                     }
-                } else if (SOSPGPConstants.RSA_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())
-                        && !keyFromFile.startsWith(SOSPGPConstants.CERTIFICATE_HEADER)) {
+                } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())
+                        && !keyFromFile.startsWith(SOSKeyConstants.CERTIFICATE_HEADER)) {
                     try {
                         PublicKey pubKey = KeyUtil.getRSAPublicKeyFromString(keyFromFile);
                         if (pubKey != null) {
@@ -103,8 +109,8 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                     } catch (Exception e) {
                         throw new JocKeyNotValidException("The provided file does not contain a valid public RSA key!");
                     }
-                } else if (SOSPGPConstants.ECDSA_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())
-                        && !keyFromFile.startsWith(SOSPGPConstants.CERTIFICATE_HEADER)) {
+                } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())
+                        && !keyFromFile.startsWith(SOSKeyConstants.CERTIFICATE_HEADER)) {
                     try {
                         PublicKey pubKey = KeyUtil.getECDSAPublicKeyFromString(keyFromFile);
                         if (pubKey != null) {
@@ -113,20 +119,18 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                     } catch (Exception e) {
                         throw new JocKeyNotValidException("The provided file does not contain a valid public ECDSA key!");
                     }
-                } else if (keyFromFile.startsWith(SOSPGPConstants.CERTIFICATE_HEADER)) {
+                } else if (keyFromFile.startsWith(SOSKeyConstants.CERTIFICATE_HEADER)) {
                     try {
                         X509Certificate cert = KeyUtil.getX509Certificate(keyFromFile);
                         if (cert != null) {
                             keyPair.setCertificate(keyFromFile);
+                            PublicKey pub = cert.getPublicKey();
+                            if (pub instanceof RSAPublicKey) {
+                                keyPair.setKeyAlgorithm(JocKeyAlgorithm.RSA.name());
+                            } else if (pub instanceof ECPublicKey) {
+                                keyPair.setKeyAlgorithm(JocKeyAlgorithm.ECDSA.name());
+                            }
                         }
-                        String pubKey = null;
-                        PublicKey publicKey = cert.getPublicKey();
-                        if (SOSPGPConstants.RSA_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
-                            pubKey = KeyUtil.formatPublicRSAKey(publicKey.getEncoded());
-                        } else if (SOSPGPConstants.ECDSA_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
-                            pubKey = KeyUtil.formatPublicECDSAKey(publicKey.getEncoded());
-                        }
-                        keyPair.setPublicKey(pubKey);
                     } catch (Exception e) {
                         throw new JocKeyNotValidException("The provided file does not contain a valid X.509 certificate!");
                     }

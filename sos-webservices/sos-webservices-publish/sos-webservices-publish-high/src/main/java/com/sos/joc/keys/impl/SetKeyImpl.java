@@ -6,7 +6,7 @@ import java.util.Date;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.sign.pgp.key.KeyUtil;
+import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -31,17 +31,17 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
     public JOCDefaultResponse postSetKey(String xAccessToken, byte[] filter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
+            initLogging(API_CALL, filter, xAccessToken);
             JsonValidator.validateFailFast(filter, SetKeyFilter.class);
             SetKeyFilter setKeyFilter = Globals.objectMapper.readValue(filter, SetKeyFilter.class);
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, setKeyFilter, xAccessToken, "",
+            JOCDefaultResponse jocDefaultResponse = initPermissions("",
 //                    getPermissonsJocCockpit(null, xAccessToken).getInventory().getConfigurations().getPublish().isSetKey()
                     true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
             JocKeyPair keyPair = setKeyFilter.getKeys();
-//            keyPair.setKeyAlgorithm(setKeyFilter.getKeyAlgorithm());
-            if (keyPairNotEmpty(keyPair)) {
+            if (PublishUtils.jocKeyPairNotEmpty(keyPair)) {
                 if (KeyUtil.isKeyPairValid(keyPair)) {
                     hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
                     String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
@@ -67,31 +67,4 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
         }
     }
 
-    private Boolean keyPairNotEmpty (JocKeyPair keyPair) {
-        Boolean checkNotEmpty = false;
-        if(keyPair != null) {
-            if(keyPair.getPrivateKey() != null && !"".equals(keyPair.getPrivateKey())) {
-                checkNotEmpty = true;
-            } else if (keyPair.getPrivateKey() != null && "".equals(keyPair.getPrivateKey())) {
-                checkNotEmpty = false;
-            } else if (keyPair.getPrivateKey() == null) {
-                checkNotEmpty = false;
-            } 
-            if (checkNotEmpty) {
-                return checkNotEmpty;
-            } else {
-                if (keyPair.getPublicKey() == null) {
-                    checkNotEmpty = false;
-                } else if (!"".equals(keyPair.getPublicKey())) {
-                    checkNotEmpty = true;
-                } else if ("".equals(keyPair.getPublicKey())) {
-                    checkNotEmpty = false;
-                }
-                return checkNotEmpty;
-            }
-        } else {
-            checkNotEmpty = false;
-        }
-        return checkNotEmpty;
-    }
 }

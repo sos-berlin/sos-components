@@ -42,10 +42,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.sign.pgp.SOSPGPConstants;
-import com.sos.commons.sign.pgp.key.KeyUtil;
-import com.sos.commons.sign.pgp.sign.SignObject;
-import com.sos.commons.sign.pgp.verify.VerifySignature;
+import com.sos.commons.sign.keys.SOSKeyConstants;
+import com.sos.commons.sign.keys.key.KeyUtil;
+import com.sos.commons.sign.keys.sign.SignObject;
+import com.sos.commons.sign.keys.verify.VerifySignature;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.Workflow;
@@ -67,7 +67,6 @@ import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.pgp.JocKeyAlgorithm;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.pgp.JocKeyType;
 import com.sos.joc.model.publish.JSDeploymentState;
@@ -186,16 +185,16 @@ public abstract class PublishUtils {
             DBItemDepSignatures sig = null;
             for (DBItemInventoryConfiguration draft : unsignedDrafts) {
                 updateVersionIdOnDraftObject(draft, versionId, session);
-                if (SOSPGPConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+                if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                     sig = new DBItemDepSignatures();
                     sig.setAccount(account);
                     sig.setInvConfigurationId(draft.getId());
                     sig.setModified(Date.from(Instant.now()));
                     sig.setSignature(SignObject.signPGP(keyPair.getPrivateKey(), draft.getContent(), null));
                     signedDrafts.put(draft, sig);
-                } else if (SOSPGPConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+                } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                     KeyPair kp = null;
-                    if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
+                    if (keyPair.getPrivateKey().startsWith(SOSKeyConstants.PRIVATE_RSA_KEY_HEADER)) {
                         kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(keyPair.getPrivateKey());
                     } else {
                         kp = KeyUtil.getKeyPairFromPrivatKeyString(keyPair.getPrivateKey());
@@ -206,14 +205,14 @@ public abstract class PublishUtils {
                     sig.setModified(Date.from(Instant.now()));
                     sig.setSignature(SignObject.signX509(kp.getPrivate(), draft.getContent()));
                     signedDrafts.put(draft, sig);
-                } else if (SOSPGPConstants.ECDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+                } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                     KeyPair kp = KeyUtil.getKeyPairFromECDSAPrivatKeyString(keyPair.getPrivateKey());
                     sig = new DBItemDepSignatures();
                     sig.setAccount(account);
                     sig.setInvConfigurationId(draft.getId());
                     sig.setModified(Date.from(Instant.now()));
                     X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                    sig.setSignature(SignObject.signX509(SOSPGPConstants.ECDSA_ALGORITHM, kp.getPrivate(), draft.getContent()));
+                    sig.setSignature(SignObject.signX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, kp.getPrivate(), draft.getContent()));
                     signedDrafts.put(draft, sig);
                 }
                 if (sig != null) {
@@ -247,7 +246,7 @@ public abstract class PublishUtils {
             throw new JocMissingKeyException(
                     "No private key found for signing! - Please check your private key from the key management section in your profile.");
         } else {
-            if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
+            if (keyPair.getPrivateKey().startsWith(SOSKeyConstants.PRIVATE_PGP_KEY_HEADER)) {
                 isPGPKey = true;
             }
             DBItemDepSignatures sig = null;
@@ -262,7 +261,7 @@ public abstract class PublishUtils {
                     signedReDeployable.put(deployed, sig);
                 } else {
                     KeyPair kp = null;
-                    if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
+                    if (keyPair.getPrivateKey().startsWith(SOSKeyConstants.PRIVATE_RSA_KEY_HEADER)) {
                         kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(keyPair.getPrivateKey());
                     } else {
                         kp = KeyUtil.getKeyPairFromPrivatKeyString(keyPair.getPrivateKey());
@@ -290,13 +289,13 @@ public abstract class PublishUtils {
         JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
         if (keyPair != null) {
             if (keyPair.getPrivateKey() != null) {
-                if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
+                if (keyPair.getPrivateKey().startsWith(SOSKeyConstants.PRIVATE_PGP_KEY_HEADER)) {
                     return verifyPGPSignature(account, signedDraft, draftSignature, keyPair);
                 } else {
                     return verifyRSASignature(signedDraft, draftSignature, keyPair);
                 }
             } else if (keyPair.getPublicKey() != null) {
-                if (keyPair.getPublicKey().startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
+                if (keyPair.getPublicKey().startsWith(SOSKeyConstants.PUBLIC_PGP_KEY_HEADER)) {
                     return verifyPGPSignature(account, signedDraft, draftSignature, keyPair);
                 } else {
                     return verifyRSASignature(signedDraft, draftSignature, keyPair);
@@ -319,13 +318,13 @@ public abstract class PublishUtils {
         JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
         if (keyPair != null) {
             if (keyPair.getPrivateKey() != null) {
-                if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
+                if (keyPair.getPrivateKey().startsWith(SOSKeyConstants.PRIVATE_PGP_KEY_HEADER)) {
                     return verifyPGPSignature(account, signedDeployments, draftSignature, keyPair);
                 } else {
                     return verifyRSASignature(signedDeployments, draftSignature, keyPair);
                 }
             } else if (keyPair.getPublicKey() != null) {
-                if (keyPair.getPublicKey().startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
+                if (keyPair.getPublicKey().startsWith(SOSKeyConstants.PUBLIC_PGP_KEY_HEADER)) {
                     return verifyPGPSignature(account, signedDeployments, draftSignature, keyPair);
                 } else {
                     return verifyRSASignature(signedDeployments, draftSignature, keyPair);
@@ -418,7 +417,7 @@ public abstract class PublishUtils {
         }
         if (cert == null && publicKey == null) {
             KeyPair kp = null;
-            if (jocKeyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
+            if (jocKeyPair.getPrivateKey().startsWith(SOSKeyConstants.PRIVATE_RSA_KEY_HEADER)) {
                 kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(jocKeyPair.getPrivateKey());
             } else {
                 kp = KeyUtil.getKeyPairFromPrivatKeyString(jocKeyPair.getPrivateKey());
@@ -461,7 +460,7 @@ public abstract class PublishUtils {
         }
         if (cert == null && publicKey == null) {
             KeyPair kp = null;
-            if (jocKeyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_RSA_KEY_HEADER)) {
+            if (jocKeyPair.getPrivateKey().startsWith(SOSKeyConstants.PRIVATE_RSA_KEY_HEADER)) {
                 kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(jocKeyPair.getPrivateKey());
             } else {
                 kp = KeyUtil.getKeyPairFromPrivatKeyString(jocKeyPair.getPrivateKey());
@@ -811,34 +810,6 @@ public abstract class PublishUtils {
         }
     }
 
-    public static JocKeyAlgorithm getKeyAlgorythm(JocKeyPair keyPair) {
-        if (keyPair.getPrivateKey() != null) {
-            if (keyPair.getPrivateKey().startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER)) {
-                return JocKeyAlgorithm.PGP;
-            } else {
-                return JocKeyAlgorithm.RSA;
-            }
-        } else if (keyPair.getPublicKey() != null && keyPair.getCertificate() == null) {
-            if (keyPair.getPublicKey().startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
-                return JocKeyAlgorithm.PGP;
-            } else {
-                return JocKeyAlgorithm.RSA;
-            }
-        } else if (keyPair.getPublicKey() != null && keyPair.getCertificate() != null) {
-            return JocKeyAlgorithm.RSA;
-        }
-        // DEFAULT
-        return JocKeyAlgorithm.RSA;
-    }
-
-    public static JocKeyAlgorithm getKeyAlgorythm(String key) {
-        if (key.startsWith(SOSPGPConstants.PRIVATE_PGP_KEY_HEADER) || key.startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
-            return JocKeyAlgorithm.PGP;
-        } else {
-            return JocKeyAlgorithm.RSA;
-        }
-    }
-
     public static DeployType mapInventoryMetaConfigurationType(ConfigurationType inventoryType) {
         switch (inventoryType) {
         case WORKFLOW:
@@ -869,8 +840,8 @@ public abstract class PublishUtils {
         }
     }
 
-    public static <T extends DBItem> void checkPathRenamingForUpdate(
-            Set<T> verifiedObjects, String controllerId, DBLayerDeploy dbLayer, String keyAlgorythm)
+    public static <T extends DBItem> List<DBItemDeploymentHistory> checkPathRenamingForUpdate(
+            Set<T> verifiedObjects, String controllerId, DBLayerDeploy dbLayer, String keyAlgorithm)
             throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         DBItemDeploymentHistory depHistory = null;
         DBItemInventoryConfiguration invConf = null;
@@ -894,14 +865,9 @@ public abstract class PublishUtils {
                 // if not, delete the old deployed item via updateRepo before deploy of the new configuration
                 depHistory.setCommitId(versionId);
                 alreadyDeployedToDelete.add(depHistory);
-                updateRepoDelete(versionId, alreadyDeployedToDelete, controllerId, dbLayer, keyAlgorythm);
-                Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistory(alreadyDeployedToDelete, dbLayer);
-                LOGGER.debug(String.format("%1$d item(s) deleted from controller '%2$s':", deletedDeployItems.size(), controllerId));
-                deletedDeployItems.stream().map(path -> path.getPath()).forEach(path -> {
-                    LOGGER.trace(String.format("Object '%1$s' deleted from controller '%2$s'", path, controllerId));
-                });
-            }
+            } 
         }
+        return alreadyDeployedToDelete;
     }
 
     public static Set<SignaturePath> readZipFileContent(InputStream inputStream, Set<Workflow> workflows, Set<AgentRef> agentRefs
@@ -1034,12 +1000,15 @@ public abstract class PublishUtils {
                     verified = VerifySignature.verifyX509(certificate, 
                             om.writeValueAsString(workflow), signaturePath.getSignature().getSignatureString());                    
                 } else if (publicKey != null && !publicKey.isEmpty()) {
-                    if (publicKey.startsWith(SOSPGPConstants.PUBLIC_PGP_KEY_HEADER)) {
+                    if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                         verified = VerifySignature.verifyPGP(publicKey, 
                                 om.writeValueAsString(workflow), signaturePath.getSignature().getSignatureString());
-                    } else if (publicKey.startsWith(SOSPGPConstants.PUBLIC_RSA_KEY_HEADER) 
-                            || publicKey.startsWith(SOSPGPConstants.PUBLIC_KEY_HEADER)) {
+                    } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                         PublicKey pubKey = KeyUtil.getPublicKeyFromString(KeyUtil.decodePublicKeyString(publicKey)); 
+                        verified = VerifySignature.verifyX509(pubKey, 
+                                om.writeValueAsString(workflow), signaturePath.getSignature().getSignatureString());
+                    } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+                        PublicKey pubKey = KeyUtil.getECDSAPublicKeyFromString(publicKey); 
                         verified = VerifySignature.verifyX509(pubKey, 
                                 om.writeValueAsString(workflow), signaturePath.getSignature().getSignatureString());
                     }
@@ -1078,4 +1047,34 @@ public abstract class PublishUtils {
         return signaturePath.getSignature();
     }
 
+    public static boolean jocKeyPairNotEmpty (JocKeyPair keyPair) {
+        boolean checkNotEmpty = false;
+        if(keyPair != null) {
+            if(keyPair.getPrivateKey() != null && !keyPair.getPrivateKey().isEmpty()) {
+                checkNotEmpty = true;
+            } else if (keyPair.getPrivateKey() != null && keyPair.getPrivateKey().isEmpty()) {
+                checkNotEmpty = false;
+            } else if (keyPair.getPrivateKey() == null) {
+                checkNotEmpty = false;
+            } 
+            if (checkNotEmpty) {
+                return checkNotEmpty;
+            } else {
+                if (keyPair.getPublicKey() != null) {
+                    checkNotEmpty = true;
+                } else if (keyPair.getPublicKey() == null && keyPair.getCertificate() != null) {
+                    checkNotEmpty = true;
+                } else if (keyPair.getPublicKey() == null && keyPair.getCertificate() == null) {
+                    checkNotEmpty = false;
+                } else if ((keyPair.getPublicKey() != null && keyPair.getPublicKey().isEmpty()) 
+                        && (keyPair.getCertificate() != null && keyPair.getCertificate().isEmpty())) {
+                    checkNotEmpty = false;
+                }
+                return checkNotEmpty;
+            }
+        } else {
+            checkNotEmpty = false;
+        }
+        return checkNotEmpty;
+    }
 }

@@ -1,4 +1,4 @@
-package com.sos.commons.sign.pgp.verify;
+package com.sos.commons.sign.keys.verify;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,8 +29,8 @@ import org.bouncycastle.util.encoders.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.sign.pgp.SOSPGPConstants;
-import com.sos.commons.sign.pgp.key.KeyUtil;
+import com.sos.commons.sign.keys.SOSKeyConstants;
+import com.sos.commons.sign.keys.key.KeyUtil;
 
 public class VerifySignature {
 	
@@ -103,7 +103,7 @@ public class VerifySignature {
     
     public static Boolean verifyX509 (PublicKey publicKey, String original, String signature)
             throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        Signature sig = Signature.getInstance(SOSPGPConstants.RSA_ALGORITHM);
+        Signature sig = Signature.getInstance(SOSKeyConstants.RSA_SIGNER_ALGORITHM);
         sig.initVerify(publicKey);
         sig.update(original.getBytes());
         return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));
@@ -119,7 +119,7 @@ public class VerifySignature {
     
     public static Boolean verifyX509(X509Certificate certificate, String original, String signature)
             throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException, NoSuchProviderException {
-        Signature sig = Signature.getInstance(SOSPGPConstants.RSA_ALGORITHM);
+        Signature sig = Signature.getInstance(SOSKeyConstants.RSA_SIGNER_ALGORITHM);
         sig.initVerify(certificate);
         sig.update(original.getBytes());
         return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));
@@ -135,7 +135,7 @@ public class VerifySignature {
     
     public static Boolean verifyX509(Certificate certificate, String original, String signature)
             throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException, NoSuchProviderException {
-        Signature sig = Signature.getInstance(SOSPGPConstants.RSA_ALGORITHM);
+        Signature sig = Signature.getInstance(SOSKeyConstants.RSA_SIGNER_ALGORITHM);
         sig.initVerify(certificate);
         sig.update(original.getBytes());
         return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));
@@ -144,7 +144,7 @@ public class VerifySignature {
     public static Boolean verifyX509BC(X509Certificate certificate, String original, String signature)
             throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException, NoSuchProviderException {
         Security.addProvider(new BouncyCastleProvider());
-        Signature sig = Signature.getInstance(SOSPGPConstants.RSA_ALGORITHM, BouncyCastleProvider.PROVIDER_NAME);
+        Signature sig = Signature.getInstance(SOSKeyConstants.RSA_SIGNER_ALGORITHM, BouncyCastleProvider.PROVIDER_NAME);
         sig.initVerify(certificate.getPublicKey());
         sig.update(original.getBytes());
         return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));
@@ -160,7 +160,7 @@ public class VerifySignature {
     }
     
     private static String normalizeSignature(String signature) {
-        String normalizedSignature = signature.replace(SOSPGPConstants.SIGNATURE_HEADER, "").replace(SOSPGPConstants.SIGNATURE_FOOTER, "");
+        String normalizedSignature = signature.replace(SOSKeyConstants.SIGNATURE_HEADER, "").replace(SOSKeyConstants.SIGNATURE_FOOTER, "");
         return normalizedSignature.replaceAll("\\n", "");
     }
 

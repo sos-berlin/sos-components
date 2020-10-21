@@ -1,4 +1,4 @@
-package com.sos.commons.sign.pgp.ca;
+package com.sos.commons.sign.keys.ca;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -37,7 +37,7 @@ import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.pkcs.PKCS10CertificationRequestBuilder;
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
 
-import com.sos.commons.sign.pgp.SOSPGPConstants;
+import com.sos.commons.sign.keys.SOSKeyConstants;
 
 public abstract class CAUtils {
     
@@ -104,7 +104,7 @@ public abstract class CAUtils {
       GeneralNames san = new GeneralNames(altName);
       certgen.addExtension(new ASN1ObjectIdentifier("2.5.29.17"), false, san);
       ContentSigner signer = null;
-      if (algorythm.equals(SOSPGPConstants.RSA_ALGORITHM)) {
+      if (algorythm.equals(SOSKeyConstants.RSA_SIGNER_ALGORITHM)) {
           signer = new BcRSAContentSignerBuilder(sigAlgId, digAlgId).build(PrivateKeyFactory.createKey( privateKey.getEncoded()));
       } else {
           signer = new BcECContentSignerBuilder(sigAlgId, digAlgId).build(PrivateKeyFactory.createKey( privateKey.getEncoded()));

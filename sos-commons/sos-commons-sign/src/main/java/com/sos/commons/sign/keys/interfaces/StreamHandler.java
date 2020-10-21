@@ -1,4 +1,4 @@
-package com.sos.commons.sign.pgp.interfaces;
+package com.sos.commons.sign.keys.interfaces;
 
 import java.io.IOException;
 

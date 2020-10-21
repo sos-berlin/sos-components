@@ -10,10 +10,7 @@ import java.util.Set;
 import javax.ws.rs.Path;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.agent.AgentRefPublish;
@@ -32,20 +29,17 @@ import com.sos.joc.model.publish.ImportFilter;
 import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignaturePath;
 import com.sos.joc.publish.db.DBLayerDeploy;
-import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.resource.IImportResource;
 import com.sos.joc.publish.util.PublishUtils;
 
 @Path("publish")
 public class ImportImpl extends JOCResourceImpl implements IImportResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ImportImpl.class);
     private static final String API_CALL = "./publish/import";
     private SOSHibernateSession connection = null;
     private Set<Workflow> workflows = new HashSet<Workflow>();
     private Set<AgentRef> agentRefs = new HashSet<AgentRef>();
     private Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
-    private ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
 
     @Override
 	public JOCDefaultResponse postImportConfiguration(String xAccessToken, 
@@ -69,18 +63,19 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
         String uploadFileName = null;
         SOSHibernateSession hibernateSession = null;
         try {
+            initLogging(API_CALL, null, xAccessToken); 
             ImportFilter filter = new ImportFilter();
             filter.setAuditLog(auditLog);
+            // copy&paste Permission, has to be changed to the correct permission for upload 
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", 
+                    getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isImport());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
             if (body != null) {
                 uploadFileName = URLDecoder.decode(body.getContentDisposition().getFileName(), "UTF-8");
             } else {
                 throw new JocMissingRequiredParameterException("undefined 'file'");
-            }
-             // copy&paste Permission, has to be changed to the correct permission for upload 
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, "",
-                    getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isImport());
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
             }
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             stream = body.getEntityAs(InputStream.class);
