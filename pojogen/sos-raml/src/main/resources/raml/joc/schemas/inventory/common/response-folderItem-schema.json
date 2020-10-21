@@ -40,6 +40,9 @@
 		"hasDeployments": {
 			"type": "boolean"
 		},
+		"hasReleases": {
+			"type": "boolean"
+		},
 		"orders": {
 			"description": "only relevant for Workflows",
 			"type": "array",

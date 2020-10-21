@@ -244,10 +244,12 @@ public class InventoryDBLayer extends DBLayer {
     public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive, Collection<Integer> configTypes,
             Boolean onlyValidObjects) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryTreeFolderItem.class.getName());
-        hql.append("(ic, count(dh.id)) from ").append(
+        hql.append("(ic, count(dh.id), count(irc.id)) from ").append(
                 DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
         hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
         hql.append("on ic.id=dh.inventoryConfigurationId ");
+        hql.append("left join ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" irc ");
+        hql.append("on ic.id=irc.cid ");
         hql.append("where ");
         if (recursive) {
             if (!"/".equals(folder)) {

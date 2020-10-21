@@ -3,9 +3,8 @@
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.joc.model.inventory.release.ReleaseFilter",
 	"type": "object",
-	"oneOf" : [
-	  { "required": [ "controllerIds", "update" ] },
-	  { "required": [ "delete" ] }
+	"required": [ 
+		"controllerIds" 
 	],
 	"properties": {
 		"controllerIds": {
@@ -41,5 +40,8 @@
         		}
       		}
     	}
-  	}
+  	},
+    "auditLog": {
+      "$ref": "../../audit/auditParams-schema.json"
+    }
 }

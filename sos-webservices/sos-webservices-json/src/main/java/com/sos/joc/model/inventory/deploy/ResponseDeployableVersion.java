@@ -15,7 +15,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * filter for joe requests
+ * ResponseDeployableVersion
  * <p>
  * 
  * 

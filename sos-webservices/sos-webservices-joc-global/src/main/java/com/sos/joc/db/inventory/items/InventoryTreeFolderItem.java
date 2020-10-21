@@ -11,7 +11,7 @@ public class InventoryTreeFolderItem extends ResponseFolderItem {
 
     private String workflowPath;
 
-    public InventoryTreeFolderItem(DBItemInventoryConfiguration conf, Long countDeployments) {
+    public InventoryTreeFolderItem(DBItemInventoryConfiguration conf, Long countDeployments, Long countReleases) {
         if (conf != null) {
             if (conf.getContent() != null && ConfigurationType.ORDER.intValue() == conf.getType()) {
                 try {
@@ -32,6 +32,7 @@ public class InventoryTreeFolderItem extends ResponseFolderItem {
             setPath(conf.getPath());
         }
         setHasDeployments(long2boolean(countDeployments));
+        setHasReleases(long2boolean(countReleases));
     }
 
     public String getWorkflowPath() {

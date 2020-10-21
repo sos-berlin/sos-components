@@ -31,6 +31,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "deployed",
     "released",
     "hasDeployments",
+    "hasReleases",
     "orders"
 })
 public class ResponseFolderItem {
@@ -89,6 +90,8 @@ public class ResponseFolderItem {
     private Boolean released;
     @JsonProperty("hasDeployments")
     private Boolean hasDeployments;
+    @JsonProperty("hasReleases")
+    private Boolean hasReleases;
     /**
      * only relevant for Workflows
      * 
@@ -264,6 +267,16 @@ public class ResponseFolderItem {
         this.hasDeployments = hasDeployments;
     }
 
+    @JsonProperty("hasReleases")
+    public Boolean getHasReleases() {
+        return hasReleases;
+    }
+
+    @JsonProperty("hasReleases")
+    public void setHasReleases(Boolean hasReleases) {
+        this.hasReleases = hasReleases;
+    }
+
     /**
      * only relevant for Workflows
      * 
@@ -284,12 +297,12 @@ public class ResponseFolderItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("objectType", objectType).append("title", title).append("valid", valid).append("deleted", deleted).append("deployed", deployed).append("released", released).append("hasDeployments", hasDeployments).append("orders", orders).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("objectType", objectType).append("title", title).append("valid", valid).append("deleted", deleted).append("deployed", deployed).append("released", released).append("hasDeployments", hasDeployments).append("hasReleases", hasReleases).append("orders", orders).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(valid).append(path).append(deleted).append(hasDeployments).append(name).append(deployed).append(orders).append(id).append(title).append(released).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(hasDeployments).append(deployed).append(title).append(objectType).append(valid).append(path).append(deleted).append(name).append(orders).append(id).append(released).append(hasReleases).toHashCode();
     }
 
     @Override
@@ -301,7 +314,7 @@ public class ResponseFolderItem {
             return false;
         }
         ResponseFolderItem rhs = ((ResponseFolderItem) other);
-        return new EqualsBuilder().append(valid, rhs.valid).append(path, rhs.path).append(deleted, rhs.deleted).append(hasDeployments, rhs.hasDeployments).append(name, rhs.name).append(deployed, rhs.deployed).append(orders, rhs.orders).append(id, rhs.id).append(title, rhs.title).append(released, rhs.released).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(hasDeployments, rhs.hasDeployments).append(deployed, rhs.deployed).append(title, rhs.title).append(objectType, rhs.objectType).append(valid, rhs.valid).append(path, rhs.path).append(deleted, rhs.deleted).append(name, rhs.name).append(orders, rhs.orders).append(id, rhs.id).append(released, rhs.released).append(hasReleases, rhs.hasReleases).isEquals();
     }
 
 }

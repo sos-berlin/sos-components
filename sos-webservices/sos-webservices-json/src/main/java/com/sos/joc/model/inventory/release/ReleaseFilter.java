@@ -25,6 +25,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class ReleaseFilter {
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("controllerIds")
     private List<String> controllerIds = new ArrayList<String>();
     @JsonProperty("update")
@@ -32,11 +37,21 @@ public class ReleaseFilter {
     @JsonProperty("delete")
     private List<ReleaseDelete> delete = new ArrayList<ReleaseDelete>();
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("controllerIds")
     public List<String> getControllerIds() {
         return controllerIds;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("controllerIds")
     public void setControllerIds(List<String> controllerIds) {
         this.controllerIds = controllerIds;
