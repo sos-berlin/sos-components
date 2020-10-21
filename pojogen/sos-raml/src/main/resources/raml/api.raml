@@ -833,10 +833,31 @@ traits:
         schema200: !include joc/schemas/inventory/common/response-folder-schema.json
         example200: TODO
               
+  /release:
+    type:
+      postJSONWithOkWithoutJSId:
+        description: Releases objects
+        description1: !include joc/documentation/inventory/controllerIds.md
+        description2: !include joc/documentation/inventory/updateRelease.md
+        description3: !include joc/documentation/inventory/releaseIdOrPathAndReleasableType.md
+        description4: !include joc/documentation/inventory/deleteRelease.md
+        description5: !include joc/documentation/inventory/releaseIdOrPathAndReleasableType.md
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: " "
+        schema: !include joc/schemas/inventory/release/release-schema.json
+        example: TODO
+    post:
+      responses:
+        419:
+  
   /releasable:
     type:
       postJSONWithoutJSId:
-        description: Sends releasable object
+        description: Sends releasable objects
         description1: !include joc/documentation/inventory/idOrPathAndReleasableType.md
         description2: !include joc/documentation/inventory/onlyValidObjects.md
         description3: !include joc/documentation/inventory/withVersions.md

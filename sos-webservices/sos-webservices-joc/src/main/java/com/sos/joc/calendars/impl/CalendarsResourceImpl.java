@@ -18,7 +18,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.calendars.resource.ICalendarsResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.calendar.Calendar;
@@ -60,7 +60,7 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
 
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            List<DBItemInventoryConfiguration> dbCalendars = null;
+            List<DBItemInventoryReleasedConfiguration> dbCalendars = null;
 
             boolean withFolderFilter = calendarsFilter.getFolders() != null && !calendarsFilter.getFolders().isEmpty();
             final Set<Folder> folders = folderPermissions.getPermittedFolders(calendarsFilter.getFolders());
@@ -72,7 +72,7 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
             } else if (calendarsFilter.getCalendars() != null && !calendarsFilter.getCalendars().isEmpty()) {
                 calendarsFilter.setRegex(null);
                 dbCalendars = dbLayer.getConfigurations(calendarsFilter.getCalendars().stream(), Arrays.asList(CalendarType.WORKINGDAYSCALENDAR
-                        .intValue(), CalendarType.NONWORKINGDAYSCALENDAR.intValue()), false);
+                        .intValue(), CalendarType.NONWORKINGDAYSCALENDAR.intValue()));
 
             } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
                 // no folder permission
@@ -82,13 +82,13 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
                 if (calendarsFilter.getType() != null) {
                     types = Arrays.asList(calendarsFilter.getType().intValue());
                 }
-                dbCalendars = dbLayer.getConfigurations(Stream.empty(), types, true);
+                dbCalendars = dbLayer.getConfigurations(Stream.empty(), types);
             }
 
             Calendars entity = new Calendars();
 
             if (dbCalendars != null && !dbCalendars.isEmpty()) {
-                Stream<DBItemInventoryConfiguration> stream = dbCalendars.stream().filter(item -> folderIsPermitted(item.getFolder(), folders));
+                Stream<DBItemInventoryReleasedConfiguration> stream = dbCalendars.stream().filter(item -> folderIsPermitted(item.getFolder(), folders));
 
                 if (calendarsFilter.getRegex() != null && !calendarsFilter.getRegex().isEmpty()) {
                     Predicate<String> regex = Pattern.compile(calendarsFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE)

@@ -473,10 +473,10 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public List<DBItemInventoryConfiguration> getConfigurations(Stream<String> pathsStream, Collection<Integer> types, Boolean onlyValidObjects)
+    public List<DBItemInventoryReleasedConfiguration> getConfigurations(Stream<String> pathsStream, Collection<Integer> types)
             throws SOSHibernateException {
         Set<String> paths = pathsStream.map(String::toLowerCase).collect(Collectors.toSet());
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
         List<String> clause = new ArrayList<>();
         if (!paths.isEmpty()) {
             clause.add("lower(path) in (:paths)");
@@ -484,11 +484,8 @@ public class InventoryDBLayer extends DBLayer {
         if (types != null && !types.isEmpty()) {
             clause.add("type in (:types)");
         }
-        if (onlyValidObjects == Boolean.TRUE) {
-            clause.add("valid = 1");
-        }
         hql.append(clause.stream().collect(Collectors.joining(" and ", " where ", "")));
-        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
         if (!paths.isEmpty()) {
             query.setParameterList("paths", paths);
         }
@@ -498,12 +495,12 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public List<DBItemInventoryConfiguration> getConfigurations(Collection<Long> ids) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+    public List<DBItemInventoryReleasedConfiguration> getConfigurations(Collection<Long> ids) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
         if (ids != null && !ids.isEmpty()) {
             hql.append(" where id in (:ids)");
         }
-        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
         if (ids != null && !ids.isEmpty()) {
             query.setParameterList("ids", ids);
         }
