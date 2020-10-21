@@ -831,9 +831,66 @@ public class InventoryDBLayer extends DBLayer {
         getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_WORKFLOW_ORDERS);
         getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_WORKFLOW_ORDER_VARIABLES);
     }
-
-    public Set<Tree> getFoldersByFolderAndType(String folder, Set<Integer> inventoryTypes, Boolean onlyValidObjects)
+    
+    public Set<Tree> getFoldersByFolderAndTypeForViews(Collection<String> controllerIds, String folder, Set<Integer> inventoryTypes)
             throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            List<String> whereClause = new ArrayList<String>();
+            StringBuilder sql = new StringBuilder();
+            sql.append("select folder from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+            if (folder != null && !folder.isEmpty() && !folder.equals(JocInventory.ROOT_FOLDER)) {
+                whereClause.add("(folder = :folder or folder like :likeFolder)");
+            }
+            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
+                if (inventoryTypes.size() == 1) {
+                    whereClause.add("type = :type");
+                } else {
+                    whereClause.add("type in (:type)");
+                }
+            }
+            if (controllerIds != null && !controllerIds.isEmpty()) {
+                whereClause.add("controllerId in (:controllerIds)");
+            }
+            if (!whereClause.isEmpty()) {
+                sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
+            }
+            sql.append(" group by folder");
+            Query<String> query = getSession().createQuery(sql.toString());
+            if (folder != null && !folder.isEmpty() && !folder.equals(JocInventory.ROOT_FOLDER)) {
+                query.setParameter("folder", folder);
+                query.setParameter("likeFolder", folder + "/%");
+            }
+            if (inventoryTypes != null && !inventoryTypes.isEmpty()) {
+                if (inventoryTypes.size() == 1) {
+                    query.setParameter("type", inventoryTypes.iterator().next());
+                } else {
+                    query.setParameterList("type", inventoryTypes);
+                }
+            }
+            if (controllerIds != null && !controllerIds.isEmpty()) {
+                query.setParameterList("controllerIds", controllerIds);
+            }
+            List<String> result = getSession().getResultList(query);
+            if (result != null && !result.isEmpty()) {
+                return result.stream().map(s -> {
+                    Tree tree = new Tree();
+                    tree.setPath(s);
+                    return tree;
+                }).collect(Collectors.toSet());
+            } else if (folder.equals(JocInventory.ROOT_FOLDER)) {
+                Tree tree = new Tree();
+                tree.setPath(JocInventory.ROOT_FOLDER);
+                return Arrays.asList(tree).stream().collect(Collectors.toSet());
+            }
+            return new HashSet<>();
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    public Set<Tree> getFoldersByFolderAndTypeForInventory(String folder, Set<Integer> inventoryTypes, Boolean onlyValidObjects) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             List<String> whereClause = new ArrayList<String>();
             StringBuilder sql = new StringBuilder();

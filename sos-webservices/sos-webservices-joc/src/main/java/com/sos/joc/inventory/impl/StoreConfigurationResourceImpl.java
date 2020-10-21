@@ -320,7 +320,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         } catch (Throwable e) {
             item.setValid(false);
             in.setInvalidMsg(e.getMessage());
-            LOGGER.warn(String.format("[invalid][client valid=%s][%s] %s", in.getValid(), in.getConfiguration().toString(), e.toString()));
+            //LOGGER.warn(String.format("[invalid][client valid=%s][%s] %s", in.getValid(), in.getConfiguration().toString(), e.toString()));
         }
     }
 

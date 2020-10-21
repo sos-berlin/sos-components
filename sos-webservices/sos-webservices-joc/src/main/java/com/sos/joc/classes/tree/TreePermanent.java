@@ -177,7 +177,7 @@ public class TreePermanent {
             if (treeBody.getFolders() != null && !treeBody.getFolders().isEmpty()) {
                 for (Folder folder : treeBody.getFolders()) {
                     String normalizedFolder = ("/" + folder.getFolder()).replaceAll("//+", "/");
-                    results = dbLayer.getFoldersByFolderAndType(normalizedFolder, inventoryTypes, treeBody.getOnlyValidObjects());
+                    results = dbLayer.getFoldersByFolderAndTypeForInventory(normalizedFolder, inventoryTypes, treeBody.getOnlyValidObjects());
                     if (withDocus) {
                         docResults = dbDocLayer.getFoldersByFolder(normalizedFolder);
                         if (docResults != null && !docResults.isEmpty()) {
@@ -195,7 +195,7 @@ public class TreePermanent {
                     }
                 }
             } else {
-                results = dbLayer.getFoldersByFolderAndType("/", inventoryTypes, treeBody.getOnlyValidObjects());
+                results = dbLayer.getFoldersByFolderAndTypeForInventory("/", inventoryTypes, treeBody.getOnlyValidObjects());
                 if (withDocus) {
                     docResults = dbDocLayer.getFoldersByFolder("/");
                     if (docResults != null && !docResults.isEmpty()) {
@@ -257,6 +257,7 @@ public class TreePermanent {
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
             DocumentationDBLayer dbDocLayer = new DocumentationDBLayer(session);
             InventoryDBLayer dbInvLayer = new InventoryDBLayer(session);
+            List<String> controllerIds = Arrays.asList(treeBody.getJobschedulerId(), "-"); //"-" for Calendar
 
             Comparator<Tree> comparator = Comparator.comparing(Tree::getPath).reversed();
             SortedSet<Tree> folders = new TreeSet<Tree>(comparator);
@@ -280,7 +281,7 @@ public class TreePermanent {
                         }
                     }
                     if (!inventoryTypes.isEmpty()) {
-                        inventoryResults = dbInvLayer.getFoldersByFolderAndType(normalizedFolder, inventoryTypes, treeBody.getOnlyValidObjects());
+                        inventoryResults = dbInvLayer.getFoldersByFolderAndTypeForViews(controllerIds, normalizedFolder, inventoryTypes);
                         if (inventoryResults != null && !inventoryResults.isEmpty()) {
                             results.addAll(inventoryResults);
                         }
@@ -310,7 +311,7 @@ public class TreePermanent {
                     }
                 }
                 if (!inventoryTypes.isEmpty()) {
-                    inventoryResults = dbInvLayer.getFoldersByFolderAndType("/", inventoryTypes, treeBody.getOnlyValidObjects());
+                    inventoryResults = dbInvLayer.getFoldersByFolderAndTypeForViews(controllerIds, "/", inventoryTypes);
                     if (inventoryResults != null && !inventoryResults.isEmpty()) {
                         results.addAll(inventoryResults);
                     }

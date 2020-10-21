@@ -289,7 +289,7 @@ public class DocumentationDBLayer {
                 tree.setPath(JocInventory.ROOT_FOLDER);
                 return Arrays.asList(tree).stream().collect(Collectors.toSet());
             }
-            return Collections.emptySet();
+            return new HashSet<>();
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
