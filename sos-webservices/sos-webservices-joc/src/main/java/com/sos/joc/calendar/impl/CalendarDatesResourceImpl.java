@@ -1,37 +1,39 @@
-package com.sos.joc.inventory.impl;
+package com.sos.joc.calendar.impl;
 
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
+import com.sos.joc.calendar.resource.ICalendarDatesResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.calendar.FrequencyResolver;
-import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
-import com.sos.joc.inventory.resource.ICalendarDatesResource;
 import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
 import com.sos.joc.model.calendar.Dates;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.schema.JsonValidator;
 
-@Path(JocInventory.APPLICATION_PATH)
+@Path("calendar")
 public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalendarDatesResource {
+
+    private static final String API_CALL = "./calendar/dates";
 
     @Override
     public JOCDefaultResponse read(final String accessToken, final byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            initLogging(IMPL_PATH, inBytes, accessToken);
+            initLogging(API_CALL, inBytes, accessToken);
             JsonValidator.validate(inBytes, CalendarDatesFilter.class);
             CalendarDatesFilter in = Globals.objectMapper.readValue(inBytes, CalendarDatesFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isView());
+            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getCalendar().getView().isStatus());
             if (response == null) {
                 response = JOCDefaultResponse.responseStatus200(read(in));
             }
@@ -52,19 +54,19 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
             boolean calendarIdIsDefined = in.getId() != null;
             boolean calendarPathIsDefined = !SOSString.isEmpty(in.getPath());
 
-            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+            session = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             if (calendarPathIsDefined || calendarIdIsDefined) {
-                DBItemInventoryConfiguration calendarItem = null;
+                DBItemInventoryReleasedConfiguration calendarItem = null;
                 if (calendarIdIsDefined) {
-                    calendarItem = dbLayer.getConfiguration(in.getId());
+                    calendarItem = dbLayer.getReleasedConfiguration(in.getId());
                     if (calendarItem == null) {
                         throw new DBMissingDataException(String.format("calendar with id '%1$d' not found", in.getId()));
                     }
                     in.setPath(calendarItem.getPath());
                 } else {
                     String calendarPath = Globals.normalizePath(in.getPath());
-                    calendarItem = dbLayer.getCalendar(calendarPath);
+                    calendarItem = dbLayer.getReleasedConfiguration(calendarPath, ConfigurationType.WORKINGDAYSCALENDAR.intValue());
                     if (calendarItem == null) {
                         throw new DBMissingDataException(String.format("calendar '%1$s' not found", calendarPath));
                     }
