@@ -151,17 +151,17 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
         Map<Date, InventoryDeploymentItem> mapDateGrouped = deployments.stream().filter(Objects::nonNull)
                 .collect(Collectors.toMap(InventoryDeploymentItem::getDeploymentDate, Function.identity()));
         
-        return mapDateGrouped.entrySet().stream().sorted(Comparator.comparing(Map.Entry::getKey)).map(e -> {
-            InventoryDeploymentItem deployment = e.getValue();
-            ResponseDeployableVersion dv = new ResponseDeployableVersion();
-            dv.setId(confId);
-            dv.setVersions(versions.get(deployment.getDeploymentDate()));
-            dv.setVersionDate(deployment.getDeploymentDate());
-            dv.setDeploymentId(deployment.getId());
-            dv.setDeploymentOperation(OperationType.fromValue(deployment.getOperation()).name().toLowerCase());
-            dv.setDeploymentPath(deployment.getPath());
-            return dv;
-        }).collect(Collectors.toCollection(LinkedHashSet::new));
+        return mapDateGrouped.values().stream().sorted(Comparator.comparing(InventoryDeploymentItem::getDeploymentDate).reversed()).map(
+                deployment -> {
+                    ResponseDeployableVersion dv = new ResponseDeployableVersion();
+                    dv.setId(confId);
+                    dv.setVersions(versions.get(deployment.getDeploymentDate()));
+                    dv.setVersionDate(deployment.getDeploymentDate());
+                    dv.setDeploymentId(deployment.getId());
+                    dv.setDeploymentOperation(OperationType.fromValue(deployment.getOperation()).name().toLowerCase());
+                    dv.setDeploymentPath(deployment.getPath());
+                    return dv;
+                }).collect(Collectors.toCollection(LinkedHashSet::new));
     }
     
     public static ResponseDeployableTreeItem getResponseDeployableTreeItem(DBItemInventoryConfiguration item) {

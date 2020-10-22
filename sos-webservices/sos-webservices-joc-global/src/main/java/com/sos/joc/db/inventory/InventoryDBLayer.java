@@ -33,6 +33,7 @@ import com.sos.joc.db.joc.DBItemJocLock;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.publish.JSDeploymentState;
 import com.sos.joc.model.tree.Tree;
 
 public class InventoryDBLayer extends DBLayer {
@@ -65,10 +66,12 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("id as deploymentId,version,operation,deploymentDate,path,controllerId");
         hql.append(") ");
         hql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-        hql.append(" where inventoryConfigurationId=:configId ");
+        hql.append(" where inventoryConfigurationId = :configId ");
+        hql.append(" and state = :state ");
         hql.append(" order by id desc ");
         Query<InventoryDeploymentItem> query = getSession().createQuery(hql.toString());
         query.setParameter("configId", configId);
+        query.setParameter("state", JSDeploymentState.DEPLOYED.value());
         return getSession().getResultList(query);
     }
 
@@ -110,6 +113,10 @@ public class InventoryDBLayer extends DBLayer {
         Query<T> query = getSession().createQuery(hql.toString());
         query.setParameter("configId", configId);
         return getSession().getResultList(query);
+    }
+    
+    public DBItemInventoryReleasedConfiguration getReleasedConfiguration(Long id) throws SOSHibernateException {
+        return getSession().get(DBItemInventoryReleasedConfiguration.class, id);
     }
 
     public DBItemInventoryReleasedConfiguration getReleasedConfiguration(String path, Integer type) throws SOSHibernateException {
@@ -318,7 +325,7 @@ public class InventoryDBLayer extends DBLayer {
             hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
             hql.append("on ic.id=dh.inventoryConfigurationId ");
             hql.append("and dh.id=(");
-            hql.append("select max(dhsub.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dhsub where ic.id=dhsub.inventoryConfigurationId");
+            hql.append("select max(dhsub.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dhsub where ic.id=dhsub.inventoryConfigurationId and state=" + JSDeploymentState.DEPLOYED.value());
             hql.append(") ");
             hql.append("where ic.id in (:configIds) ");
 
@@ -344,11 +351,11 @@ public class InventoryDBLayer extends DBLayer {
             hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
             hql.append("on ic.id=dh.inventoryConfigurationId ");
             hql.append("where ic.id in (:configIds) ");
-
+            hql.append("and dh.state = :state ");
+            
             Query<InventoryDeployablesTreeFolderItem> query = getSession().createQuery(hql.toString());
-            if (configIds != null && !configIds.isEmpty()) {
-                query.setParameterList("configIds", configIds);
-            }
+            query.setParameterList("configIds", configIds);
+            query.setParameter("state", JSDeploymentState.DEPLOYED.value());
             List<InventoryDeployablesTreeFolderItem> result = getSession().getResultList(query);
             if (result != null && !result.isEmpty()) {
                 Comparator<InventoryDeploymentItem> comp = Comparator.nullsFirst(Comparator.comparing(InventoryDeploymentItem::getDeploymentDate)

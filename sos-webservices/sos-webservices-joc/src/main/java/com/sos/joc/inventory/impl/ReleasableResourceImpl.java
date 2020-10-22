@@ -148,9 +148,7 @@ public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasab
         
         Map<Date, InventoryReleaseItem> mapDateGrouped = releases.stream().filter(Objects::nonNull)
                 .collect(Collectors.toMap(InventoryReleaseItem::getReleaseDate, Function.identity()));
-        
-        return mapDateGrouped.entrySet().stream().sorted(Comparator.comparing(Map.Entry::getKey)).map(e -> {
-            InventoryReleaseItem release = e.getValue();
+        return mapDateGrouped.values().stream().sorted(Comparator.comparing(InventoryReleaseItem::getReleaseDate).reversed()).map(release -> {
             ResponseReleasableVersion dv = new ResponseReleasableVersion();
             dv.setId(confId);
             dv.setVersions(versions.get(release.getReleaseDate()));
