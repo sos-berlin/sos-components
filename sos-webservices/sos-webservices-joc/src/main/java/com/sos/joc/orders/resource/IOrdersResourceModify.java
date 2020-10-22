@@ -24,4 +24,9 @@ public interface IOrdersResourceModify {
     @Path("resume")
     @Produces({ "application/json" })
     public JOCDefaultResponse postOrdersResume(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
+    @POST
+    @Path("remove_when_terminated")
+    @Produces({ "application/json" })
+    public JOCDefaultResponse postOrdersRemoveWhenTerminated(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 }

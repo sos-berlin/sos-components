@@ -1631,7 +1631,7 @@ traits:
   /cancel:
     type:
       modifyOrder:
-        description: Cancel order
+        description: Cancel orders
         signalParam: !include joc/documentation/order/signal.md
         positionParam: ""
         audit: !include joc/documentation/audit/auditLog.md
@@ -1712,6 +1712,13 @@ traits:
               "dateFrom": "1d"
             }
           example200: !include joc/examples/order/summary-example.json
+  /remove_when_terminated:
+    type:
+      modifyOrder:
+        description: Remove orders when terminated
+        signalParam: " "
+        positionParam: " "
+        audit: !include joc/documentation/audit/auditLog.md
   /resume:
     type:
       modifyOrder:

@@ -1,5 +1,6 @@
 package com.sos.joc.orders.impl;
 
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Date;
@@ -27,6 +28,7 @@ import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.ModifyOrders;
 import com.sos.joc.orders.resource.IOrdersResourceModify;
 import com.sos.schema.JsonValidator;
+import com.sos.schema.exception.SOSJsonSchemaException;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
@@ -46,118 +48,19 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     private static final String API_CALL = "./orders";
 
     private enum Action {
-        CANCEL, SUSPEND, RESUME
+        CANCEL, SUSPEND, RESUME, REMOVE_WHEN_TERMINATED
     }
 
     @Override
     public JOCDefaultResponse postOrdersSuspend(String accessToken, byte[] filterBytes) {
-        return postOrdersModify(Action.SUSPEND, accessToken, filterBytes);
-    }
-
-    @Override
-    public JOCDefaultResponse postOrdersResume(String accessToken, byte[] filterBytes) {
-        return postOrdersModify(Action.RESUME, accessToken, filterBytes);
-    }
-
-    @Override
-    public JOCDefaultResponse postOrdersCancel(String accessToken, byte[] filterBytes) {
-        return postOrdersModify(Action.CANCEL, accessToken, filterBytes);
-    }
-
-    public JOCDefaultResponse postOrdersModify(Action action, String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL + "/" + action.name().toLowerCase(), filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, ModifyOrders.class);
-            ModifyOrders modifyOrders = Globals.objectMapper.readValue(filterBytes, ModifyOrders.class);
-            // TODO permissions
-            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getJobschedulerId(), getPermissonsJocCockpit(modifyOrders
-                    .getJobschedulerId(), accessToken).getOrder().getExecute().isStart());
+            ModifyOrders modifyOrders = initRequest(Action.SUSPEND, accessToken, filterBytes);
+            boolean perm = getPermissonsJocCockpit(modifyOrders.getJobschedulerId(), accessToken).getOrder().getExecute().isSuspend();
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getJobschedulerId(), perm);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-
-            checkRequiredComment(modifyOrders.getAuditLog());
-
-            List<String> orders = modifyOrders.getOrderIds();
-            List<WorkflowId> workflowIds = modifyOrders.getWorkflowIds();
-            final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-            
-            JControllerState currentState = Proxy.of(modifyOrders.getJobschedulerId()).currentState();
-            Stream<OrderId> orderStream = null;
-            
-            if (orders != null && !orders.isEmpty()) {
-                orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()) && orderIsPermitted(o, permittedFolders)).map(JOrder::id);
-            } else if (workflowIds != null && !workflowIds.isEmpty()) {
-                Set<ItemId<WorkflowPath>> workflowPaths = workflowIds.stream().map(w -> JWorkflowId.of(w.getPath(), w.getVersionId()).asScala())
-                        .collect(Collectors.toSet());
-                orderStream = currentState.ordersBy(o -> workflowPaths.contains(o.workflowId()) && orderIsPermitted(o, permittedFolders)).map(JOrder::id);
-            }
-            
-            
-            
-            
-//            final Map<String, ModifyOrder> orderIds = modifyOrders.getOrderIds().stream().collect(Collectors.toMap(ModifyOrder::getOrderId, Function
-//                    .identity()));
-//            Predicate<Order<Order.State>> permissions = o -> orderIds.containsKey(o.id().string()) && canAdd(o.workflowId().path().string(),
-//                    permittedFolders);
-
-//            Function<JOrder, Command> mapper = jOrder -> {
-//                ModifyOrder mOrder = orderIds.remove(jOrder.id().string());
-//                WorkflowId workflowId = new WorkflowId(jOrder.workflowId().path().string(), jOrder.workflowId().versionId().string());
-//                ModifyOrderAudit orderAudit = new ModifyOrderAudit(mOrder, workflowId.getPath(), modifyOrders);
-//                logAuditMessage(orderAudit);
-//                storeAuditLogEntry(orderAudit);
-//                switch (action) {
-//                case CANCEL:
-//                    return new CancelOrder(mOrder.getOrderId(), getOrderMode(mOrder, workflowId));
-//                case SUSPEND:
-//                    return new SuspendOrder(mOrder.getOrderId(), getOrderMode(mOrder, workflowId));
-//                case RESUME:
-//                    return new ResumeOrder(mOrder.getOrderId(), getWorkflowPosition(mOrder, workflowId), mOrder.getArguments());
-//                default:
-//                    return null;
-//                }
-//            };
-
-//            JControllerProxy proxy = Proxy.of(modifyOrders.getJobschedulerId());
-//            JControllerState currentState = proxy.currentState();
-//            Set<OrderId> oIds = currentState.ordersBy(JPredicates.toScalaPredicate(permissions)).map(o -> o.id()).collect(Collectors.toSet());
-            
-            Either<Problem, Void> either = callCommand(action, modifyOrders, orderStream.collect(Collectors.toSet())).get(Globals.httpSocketTimeout,
-                    TimeUnit.MILLISECONDS);
-            ProblemHelper.throwProblemIfExist(either);
-//            .thenApply(either -> {
-//                if (either.isLeft()) {
-//                    return ProblemHelper.getExceptionOfProblem(either.getLeft());
-//                }
-//            });
-            
-//            List<Command> commands = currentState.ordersBy(JPredicates.toScalaPredicate(permissions)).map(mapper).filter(Objects::nonNull).collect(
-//                    Collectors.toList());
-//            if (commands != null && !commands.isEmpty()) {
-//                Either<Problem, JControllerCommand> contollerCommand = JControllerCommand.fromJson(Globals.objectMapper.writeValueAsString(
-//                        new JSBatchCommands(commands)));
-//                if (contollerCommand.isRight()) {
-//                    try {
-//                        Either<Problem, ControllerCommand.Response> response = proxy.api().executeCommand(contollerCommand.get()).get(
-//                                Globals.httpSocketTimeout, TimeUnit.MILLISECONDS);
-//                        ProblemHelper.throwProblemIfExist(response);
-//                    } catch (TimeoutException e) {
-//                        throw new JobSchedulerNoResponseException(String.format("No response from controller '%s' after %ds", modifyOrders
-//                                .getJobschedulerId(), Globals.httpSocketTimeout));
-//                    }
-//                } else {
-//                    throw new JobSchedulerInvalidResponseDataException(ProblemHelper.getErrorMessage(contollerCommand.getLeft()));
-//                }
-//            }
-
-//            if (orderIds != null && !orderIds.isEmpty()) {
-//                List<Err419> bulkErrors = orderIds.keySet().stream().filter(o -> currentState.idToCheckedOrder(OrderId.of(o)).isLeft()).map(
-//                        o -> getBulkError(o, modifyOrders.getJobschedulerId(), getJocError())).collect(Collectors.toList());
-//                if (bulkErrors != null && !bulkErrors.isEmpty()) {
-//                    return JOCDefaultResponse.responseStatus419(bulkErrors);
-//                }
-//            }
+            postOrdersModify(Action.SUSPEND, modifyOrders);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -165,6 +68,96 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
+    }
+
+    @Override
+    public JOCDefaultResponse postOrdersResume(String accessToken, byte[] filterBytes) {
+        try {
+            ModifyOrders modifyOrders = initRequest(Action.RESUME, accessToken, filterBytes);
+            boolean perm = getPermissonsJocCockpit(modifyOrders.getJobschedulerId(), accessToken).getOrder().getExecute().isResume();
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getJobschedulerId(), perm);
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            postOrdersModify(Action.RESUME, modifyOrders);
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
+
+    @Override
+    public JOCDefaultResponse postOrdersCancel(String accessToken, byte[] filterBytes) {
+        try {
+            ModifyOrders modifyOrders = initRequest(Action.CANCEL, accessToken, filterBytes);
+            // TODO permissions
+            boolean perm = getPermissonsJocCockpit(modifyOrders.getJobschedulerId(), accessToken).getOrder().getExecute().isSuspend();
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getJobschedulerId(), perm);
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            postOrdersModify(Action.CANCEL, modifyOrders);
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
+    
+    @Override
+    public JOCDefaultResponse postOrdersRemoveWhenTerminated(String accessToken, byte[] filterBytes) {
+        try {
+            ModifyOrders modifyOrders = initRequest(Action.REMOVE_WHEN_TERMINATED, accessToken, filterBytes);
+            // TODO permissions
+            boolean perm = getPermissonsJocCockpit(modifyOrders.getJobschedulerId(), accessToken).getOrder().getExecute().isSuspend();
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getJobschedulerId(), perm);
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            postOrdersModify(Action.REMOVE_WHEN_TERMINATED, modifyOrders);
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
+
+    public void postOrdersModify(Action action, ModifyOrders modifyOrders) throws Exception {
+        checkRequiredComment(modifyOrders.getAuditLog());
+
+        List<String> orders = modifyOrders.getOrderIds();
+        List<WorkflowId> workflowIds = modifyOrders.getWorkflowIds();
+        final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+
+        JControllerState currentState = Proxy.of(modifyOrders.getJobschedulerId()).currentState();
+        Stream<OrderId> orderStream = null;
+
+        if (orders != null && !orders.isEmpty()) {
+            orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()) && orderIsPermitted(o, permittedFolders)).map(JOrder::id);
+        } else if (workflowIds != null && !workflowIds.isEmpty()) {
+            Set<ItemId<WorkflowPath>> workflowPaths = workflowIds.stream().map(w -> JWorkflowId.of(w.getPath(), w.getVersionId()).asScala()).collect(
+                    Collectors.toSet());
+            orderStream = currentState.ordersBy(o -> workflowPaths.contains(o.workflowId()) && orderIsPermitted(o, permittedFolders)).map(JOrder::id);
+        }
+            
+        Either<Problem, Void> either = callCommand(action, modifyOrders, orderStream.collect(Collectors.toSet())).get(Globals.httpSocketTimeout,
+                TimeUnit.MILLISECONDS);
+        ProblemHelper.throwProblemIfExist(either);
+//            .thenApply(either -> {
+//                if (either.isLeft()) {
+//                    return ProblemHelper.getExceptionOfProblem(either.getLeft());
+//                }
+//            });
+        
+        //TODO auditLog
+            
     }
     
     private static CompletableFuture<Either<Problem, Void>> callCommand(Action action, ModifyOrders modifyOrders, Set<OrderId> oIds) {
@@ -188,9 +181,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         case RESUME:
             //TODO missing parameter!
             return ControllerApi.of(modifyOrders.getJobschedulerId()).resumeOrders(oIds, position);
-        default: //case SUSPEND:
+        case SUSPEND:
             //TODO missing kill signal and position!
             return ControllerApi.of(modifyOrders.getJobschedulerId()).suspendOrders(oIds);
+        default: //case REMOVE_WHEN_TERMINATED
+            return ControllerApi.of(modifyOrders.getJobschedulerId()).removeOrdersWhenTerminated(oIds);
         }
     }
     
@@ -232,4 +227,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 .getFolder() + "/")));
         return listOfFolders.stream().parallel().anyMatch(filter);
     }
+    
+    private ModifyOrders initRequest(Action action, String accessToken, byte[] filterBytes) throws SOSJsonSchemaException, IOException {
+        initLogging(API_CALL + "/" + action.name().toLowerCase(), filterBytes, accessToken);
+        JsonValidator.validateFailFast(filterBytes, ModifyOrders.class);
+        return Globals.objectMapper.readValue(filterBytes, ModifyOrders.class);
+    }
+    
 }
