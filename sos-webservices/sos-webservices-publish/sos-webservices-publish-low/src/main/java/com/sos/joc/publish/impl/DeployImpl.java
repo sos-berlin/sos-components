@@ -107,7 +107,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                             JocSecurityLevel.LOW));
             // call UpdateRepo for all provided Controllers and all objects to update
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
-            JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, Globals.getJocSecurityLevel());
+            JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.LOW);
             // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename 
             for (String controller : allControllers.keySet()) {
                 List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkPathRenamingForUpdate(

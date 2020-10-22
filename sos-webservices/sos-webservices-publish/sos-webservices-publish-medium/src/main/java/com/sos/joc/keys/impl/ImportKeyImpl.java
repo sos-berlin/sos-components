@@ -57,7 +57,8 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
         return postImportKey(xAccessToken, body, auditLog, importKeyFilter);
     }
 
-    private JOCDefaultResponse postImportKey(String xAccessToken, FormDataBodyPart body, AuditParams auditLog, String importKeyFilter) throws Exception {
+    private JOCDefaultResponse postImportKey(String xAccessToken, FormDataBodyPart body, AuditParams auditLog, String importKeyFilter)
+            throws Exception {
         InputStream stream = null;
         try {
             initLogging(API_CALL, importKeyFilter.getBytes(), xAccessToken);

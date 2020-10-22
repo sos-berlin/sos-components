@@ -84,9 +84,11 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             Set<Long> configurationIdsToDelete = getConfigurationIdsToDeleteFromFilter(deployFilter);
 
             // read all objects provided in the filter from the database
-            List<DBItemInventoryConfiguration> configurationDBItemsToDeploy = dbLayer.getFilteredInventoryConfigurationsByIds(configurationIdsToDeploy);
+            List<DBItemInventoryConfiguration> configurationDBItemsToDeploy = 
+                    dbLayer.getFilteredInventoryConfigurationsByIds(configurationIdsToDeploy);
             List<DBItemDeploymentHistory> depHistoryDBItemsToDeploy = dbLayer.getFilteredDeploymentHistory(deploymentIdsToReDeploy);
-            List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete = dbLayer.getFilteredDeploymentHistory(deploymentIdsToDeleteFromConfigIds);
+            List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete = 
+                    dbLayer.getFilteredDeploymentHistory(deploymentIdsToDeleteFromConfigIds);
 
             // sign undeployed configurations
             Set<DBItemInventoryConfiguration> unsignedDrafts = new HashSet<DBItemInventoryConfiguration>(configurationDBItemsToDeploy);
@@ -101,12 +103,12 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             final Date deploymentDate = Date.from(Instant.now());
             // all items will be signed or re-signed with current versionId
             verifiedConfigurations.putAll(
-                    PublishUtils.getDraftsWithSignature(versionIdForUpdate, account, unsignedDrafts, hibernateSession, JocSecurityLevel.LOW));
-            verifiedReDeployables.putAll(
-                    PublishUtils.getDeploymentsWithSignature(versionIdForUpdate, account, unsignedReDeployables, hibernateSession, JocSecurityLevel.LOW));
+                    PublishUtils.getDraftsWithSignature(versionIdForUpdate, account, unsignedDrafts, hibernateSession, JocSecurityLevel.MEDIUM));
+            verifiedReDeployables.putAll(PublishUtils.getDeploymentsWithSignature(versionIdForUpdate, account, unsignedReDeployables, 
+                    hibernateSession, JocSecurityLevel.MEDIUM));
             // call UpdateRepo for all provided Controllers and all objects to update
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
-            JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, Globals.getJocSecurityLevel());
+            JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.MEDIUM);
             // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename 
             for (String controller : allControllers.keySet()) {
                 List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkPathRenamingForUpdate(

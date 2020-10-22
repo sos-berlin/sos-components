@@ -43,6 +43,7 @@ import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.Err419;
+import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.publish.Controller;
 import com.sos.joc.model.publish.ImportDeployFilter;
@@ -165,7 +166,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             List<Controller> controllers = filter.getControllers();
             final String versionIdForUpdate = versionId;
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
-            JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, Globals.getJocSecurityLevel());
+            JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.HIGH);
             for (Controller controller : controllers) {
                 List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkPathRenamingForUpdate(
                         importedObjects.keySet(), controller.getController(), dbLayer, keyPair.getKeyAlgorithm());

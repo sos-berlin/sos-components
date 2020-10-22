@@ -135,8 +135,9 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
         }
 	}
 
-    private Set<JSObject> getObjectsFromDB(ExportFilter filter, SOSHibernateSession connection, String versionId) throws DBConnectionRefusedException,
-            DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException, SOSHibernateException {
+    private Set<JSObject> getObjectsFromDB(ExportFilter filter, SOSHibernateSession connection, String versionId) 
+            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
+            IOException, SOSHibernateException {
         DBLayerDeploy dbLayer = new DBLayerDeploy(connection);
         Set<JSObject> allObjects = new HashSet<JSObject>();
         if (filter.getDeployments() != null) {
@@ -156,8 +157,8 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
         return allObjects;
     }
     
-    private JSObject mapInvConfigToJSObject (DBItemInventoryConfiguration item, String versionId) throws JsonParseException, JsonMappingException,
-            IOException {
+    private JSObject mapInvConfigToJSObject (DBItemInventoryConfiguration item, String versionId) throws JsonParseException, 
+            JsonMappingException, IOException {
         JSObject jsObject = new JSObject();
         jsObject.setId(item.getId());
         jsObject.setPath(item.getPath());

@@ -240,19 +240,15 @@ public abstract class PublishUtils {
             Set<DBItemDeploymentHistory> depHistoryToRedeploy, JocKeyPair keyPair, SOSHibernateSession session) throws JocMissingKeyException,
             JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException, NoSuchAlgorithmException,
             InvalidKeySpecException, InvalidKeyException, SignatureException {
-        boolean isPGPKey = false;
         Map<DBItemDeploymentHistory, DBItemDepSignatures> signedReDeployable = new HashMap<DBItemDeploymentHistory, DBItemDepSignatures>();
         if (keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
             throw new JocMissingKeyException(
                     "No private key found for signing! - Please check your private key from the key management section in your profile.");
         } else {
-            if (keyPair.getPrivateKey().startsWith(SOSKeyConstants.PRIVATE_PGP_KEY_HEADER)) {
-                isPGPKey = true;
-            }
             DBItemDepSignatures sig = null;
             for (DBItemDeploymentHistory deployed : depHistoryToRedeploy) {
                 updateVersionIdOnDeployedObject(deployed, versionId, session);
-                if (isPGPKey) {
+                if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                     sig = new DBItemDepSignatures();
                     sig.setAccount(account);
                     sig.setInvConfigurationId(deployed.getId());
@@ -261,16 +257,19 @@ public abstract class PublishUtils {
                     signedReDeployable.put(deployed, sig);
                 } else {
                     KeyPair kp = null;
-                    if (keyPair.getPrivateKey().startsWith(SOSKeyConstants.PRIVATE_RSA_KEY_HEADER)) {
+                    String signerAlgorithm = null;
+                    if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                         kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(keyPair.getPrivateKey());
+                        signerAlgorithm = SOSKeyConstants.RSA_SIGNER_ALGORITHM;
                     } else {
-                        kp = KeyUtil.getKeyPairFromPrivatKeyString(keyPair.getPrivateKey());
+                        kp = KeyUtil.getKeyPairFromECDSAPrivatKeyString(keyPair.getPrivateKey());
+                        signerAlgorithm = SOSKeyConstants.ECDSA_SIGNER_ALGORITHM;
                     }
                     sig = new DBItemDepSignatures();
                     sig.setAccount(account);
                     sig.setInvConfigurationId(deployed.getId());
                     sig.setModified(Date.from(Instant.now()));
-                    sig.setSignature(SignObject.signX509(kp.getPrivate(), deployed.getContent()));
+                    sig.setSignature(SignObject.signX509(signerAlgorithm, kp.getPrivate(), deployed.getContent()));
                     signedReDeployable.put(deployed, sig);
                 }
                 if (sig != null) {
