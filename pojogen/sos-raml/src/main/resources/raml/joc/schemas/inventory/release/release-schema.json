@@ -4,17 +4,10 @@
 	"javaType": "com.sos.joc.model.inventory.release.ReleaseFilter",
 	"type": "object",
 	"anyOf": [
-		{ "required": [ "controllerIds", "update" ] },
+		{ "required": [ "update" ] },
 		{ "required": [ "delete" ] }
 	],
 	"properties": {
-		"controllerIds": {
-			"type": "array",
-			"uniqueItems": true,
-			"items": {
-				"$ref": "../../common/string100-schema.json"
-			}
-		},
 		"update": {
 			"type": "array",
 			"items": {

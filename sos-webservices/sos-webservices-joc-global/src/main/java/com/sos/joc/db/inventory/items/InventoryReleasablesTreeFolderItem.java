@@ -9,14 +9,13 @@ public class InventoryReleasablesTreeFolderItem {
     private InventoryReleaseItem release;
     private DBItemInventoryConfiguration configuration;
 
-    public InventoryReleasablesTreeFolderItem(DBItemInventoryConfiguration conf, Long releaseId, Date releaseDate, String releasePath,
-            String controllerId) {
+    public InventoryReleasablesTreeFolderItem(DBItemInventoryConfiguration conf, Long releaseId, Date releaseDate, String releasePath) {
         if (conf != null) {
             conf.setContent(null);
         }
         configuration = conf;
         if (releaseId != null) {
-            release = new InventoryReleaseItem(releaseId, releaseDate, releasePath, controllerId);
+            release = new InventoryReleaseItem(releaseId, releaseDate, releasePath);
         }
     }
 

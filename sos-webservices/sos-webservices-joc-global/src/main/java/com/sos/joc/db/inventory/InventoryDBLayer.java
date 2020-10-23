@@ -77,7 +77,7 @@ public class InventoryDBLayer extends DBLayer {
 
     public List<InventoryReleaseItem> getReleasedConfigurations(Long configId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryReleaseItem.class.getName());
-        hql.append("(id, modified, path, controllerId)");
+        hql.append("(id, modified, path)");
         hql.append(" from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
         hql.append(" where cid=:configId");
         hql.append(" order by modified desc");
@@ -88,7 +88,7 @@ public class InventoryDBLayer extends DBLayer {
 
     public InventoryReleaseItem getLastReleasedConfiguration(Long configId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryReleaseItem.class.getName());
-        hql.append("(id, modified, path, content, controllerId)");
+        hql.append("(id, modified, path, content)");
         hql.append(" from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
         hql.append(" where cid=:configId");
         hql.append(" order by modified desc");
@@ -370,7 +370,7 @@ public class InventoryDBLayer extends DBLayer {
     public List<InventoryReleasablesTreeFolderItem> getConfigurationsWithMaxRelease(Collection<Long> configIds) throws SOSHibernateException {
         if (configIds != null && !configIds.isEmpty()) {
             StringBuilder hql = new StringBuilder("select new ").append(InventoryReleasablesTreeFolderItem.class.getName());
-            hql.append("(ic, irc.id as releaseId, irc.modified, irc.path, irc.controllerId) ");
+            hql.append("(ic, irc.id as releaseId, irc.modified, irc.path) ");
             hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
             hql.append("left join ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" irc ");
             hql.append("on ic.id=irc.cid ");
@@ -393,7 +393,7 @@ public class InventoryDBLayer extends DBLayer {
             throws SOSHibernateException {
         if (configIds != null && !configIds.isEmpty()) {
             StringBuilder hql = new StringBuilder("select new ").append(InventoryReleasablesTreeFolderItem.class.getName());
-            hql.append("(ic, irc.id as releaseId, irc.modified, irc.path, irc.controllerId) ");
+            hql.append("(ic, irc.id as releaseId, irc.modified, irc.path) ");
             hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
             hql.append("left join ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" irc ");
             hql.append("on ic.id=irc.cid ");
@@ -632,7 +632,7 @@ public class InventoryDBLayer extends DBLayer {
         getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_CONFIGURATIONS);
     }
 
-    public Set<Tree> getFoldersByFolderAndTypeForViews(Collection<String> controllerIds, String folder, Set<Integer> inventoryTypes)
+    public Set<Tree> getFoldersByFolderAndTypeForViews(String folder, Set<Integer> inventoryTypes)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             List<String> whereClause = new ArrayList<String>();
@@ -647,9 +647,6 @@ public class InventoryDBLayer extends DBLayer {
                 } else {
                     whereClause.add("type in (:type)");
                 }
-            }
-            if (controllerIds != null && !controllerIds.isEmpty()) {
-                whereClause.add("controllerId in (:controllerIds)");
             }
             if (!whereClause.isEmpty()) {
                 sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
@@ -666,9 +663,6 @@ public class InventoryDBLayer extends DBLayer {
                 } else {
                     query.setParameterList("type", inventoryTypes);
                 }
-            }
-            if (controllerIds != null && !controllerIds.isEmpty()) {
-                query.setParameterList("controllerIds", controllerIds);
             }
             List<String> result = getSession().getResultList(query);
             if (result != null && !result.isEmpty()) {

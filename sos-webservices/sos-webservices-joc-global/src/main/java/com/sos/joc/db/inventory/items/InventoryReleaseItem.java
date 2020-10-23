@@ -6,23 +6,20 @@ public class InventoryReleaseItem {
 
     private Long releaseId;
     private Date releaseDate;
-    private String controllerId;
     private String path;
     private String content;
     
-    public InventoryReleaseItem(Long id, Date modified, String path, String controllerId) {
+    public InventoryReleaseItem(Long id, Date modified, String path) {
         this.releaseId = id;
         this.releaseDate = modified;
         this.path = path;
-        this.controllerId = controllerId;
     }
     
-    public InventoryReleaseItem(Long id, Date modified, String path, String content, String controllerId) {
+    public InventoryReleaseItem(Long id, Date modified, String path, String content) {
         this.releaseId = id;
         this.releaseDate = modified;
         this.path = path;
         this.content = content;
-        this.controllerId = controllerId;
     }
 
     public Long getId() {
@@ -37,10 +34,6 @@ public class InventoryReleaseItem {
         return path;
     }
 
-    public String getControllerId() {
-        return controllerId;
-    }
-    
     public String getContent() {
         return content;
     }

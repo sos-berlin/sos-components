@@ -24,16 +24,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerIds",
     "update",
     "delete",
     "auditLog"
 })
 public class ReleaseFilter {
 
-    @JsonProperty("controllerIds")
-    @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<String> controllerIds = new LinkedHashSet<String>();
     @JsonProperty("update")
     private List<RequestFilter> update = new ArrayList<RequestFilter>();
     @JsonProperty("delete")
@@ -46,16 +42,6 @@ public class ReleaseFilter {
      */
     @JsonProperty("auditLog")
     private AuditParams auditLog;
-
-    @JsonProperty("controllerIds")
-    public Set<String> getControllerIds() {
-        return controllerIds;
-    }
-
-    @JsonProperty("controllerIds")
-    public void setControllerIds(Set<String> controllerIds) {
-        this.controllerIds = controllerIds;
-    }
 
     @JsonProperty("update")
     public List<RequestFilter> getUpdate() {
@@ -101,12 +87,12 @@ public class ReleaseFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerIds", controllerIds).append("update", update).append("delete", delete).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("update", update).append("delete", delete).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(update).append(auditLog).append(delete).append(controllerIds).toHashCode();
+        return new HashCodeBuilder().append(update).append(auditLog).append(delete).toHashCode();
     }
 
     @Override
@@ -118,7 +104,7 @@ public class ReleaseFilter {
             return false;
         }
         ReleaseFilter rhs = ((ReleaseFilter) other);
-        return new EqualsBuilder().append(update, rhs.update).append(auditLog, rhs.auditLog).append(delete, rhs.delete).append(controllerIds, rhs.controllerIds).isEquals();
+        return new EqualsBuilder().append(update, rhs.update).append(auditLog, rhs.auditLog).append(delete, rhs.delete).isEquals();
     }
 
 }

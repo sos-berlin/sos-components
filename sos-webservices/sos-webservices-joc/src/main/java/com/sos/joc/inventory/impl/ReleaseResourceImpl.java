@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -67,7 +66,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             List<Err419> errors = new ArrayList<>();
             
-            if (in.getDelete() != null) {
+            if (in.getDelete() != null && !in.getDelete().isEmpty()) {
                 errors.addAll(in.getDelete().stream().filter(Objects::nonNull).map(requestFilter -> {
                     Either<Err419, Void> either = null;
                     try {
@@ -96,7 +95,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 }).filter(e -> e.isLeft()).map(e -> e.getLeft()).collect(Collectors.toList()));
             }
             
-            if (in.getControllerIds() != null && !in.getControllerIds().isEmpty() && in.getUpdate() != null && !in.getUpdate().isEmpty()) {
+            if (in.getUpdate() != null && !in.getUpdate().isEmpty()) {
                 errors.addAll(in.getUpdate().stream().filter(Objects::nonNull).map(requestFilter -> {
                     Either<Err419, Void> either = null;
                     try {
@@ -106,7 +105,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                             throw new JobSchedulerInvalidResponseDataException(String.format("%s is not a 'Scheduling Object': %s", conf.getPath(),
                                     conf.getTypeAsEnum()));
                         } else {
-                            updateReleasedObject(conf, in.getControllerIds(), dbLayer);
+                            updateReleasedObject(conf, dbLayer);
                         }
                         either = Either.right(null);
                     } catch (Exception ex) {
@@ -142,49 +141,28 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         }
     }
 
-    private static void updateReleasedObject(DBItemInventoryConfiguration conf, Set<String> controllerIds, InventoryDBLayer dbLayer)
+    private static void updateReleasedObject(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer)
             throws SOSHibernateException {
         Date now = Date.from(Instant.now());
         List<InventoryReleaseItem> releases = dbLayer.getReleasedConfigurations(conf.getId());
-        if (JocInventory.isCalendar(conf.getType())) {  // no controllerId
-            if (releases == null || releases.isEmpty()) {
-                DBItemInventoryReleasedConfiguration release = setReleaseItem(null, "-", conf, now);
-                dbLayer.getSession().save(release);
-            } else {
-                DBItemInventoryReleasedConfiguration release = setReleaseItem(releases.get(0).getId(), "-", conf, now);
-                dbLayer.getSession().update(release);
-            }
+        if (releases == null || releases.isEmpty()) {
+            DBItemInventoryReleasedConfiguration release = setReleaseItem(null, conf, now);
+            dbLayer.getSession().save(release);
         } else {
-            if (releases == null || releases.isEmpty()) {
-                for (String controllerId : controllerIds) {
-                    DBItemInventoryReleasedConfiguration release = setReleaseItem(null, controllerId, conf, now);
-                    dbLayer.getSession().save(release);
-                }
-            } else {
-                for (InventoryReleaseItem releaseItem : releases) {
-                    if (controllerIds.remove(releaseItem.getControllerId())) {
-                        DBItemInventoryReleasedConfiguration release = setReleaseItem(releaseItem.getId(), releaseItem.getControllerId(), conf, now);
-                        dbLayer.getSession().update(release);
-                    }
-                }
-                for (String controllerId : controllerIds) {
-                    DBItemInventoryReleasedConfiguration release = setReleaseItem(null, controllerId, conf, now);
-                    dbLayer.getSession().save(release);
-                }
-            }
+            DBItemInventoryReleasedConfiguration release = setReleaseItem(releases.get(0).getId(), conf, now);
+            dbLayer.getSession().update(release);
         }
         conf.setReleased(true);
         conf.setModified(now);
         dbLayer.getSession().update(conf);
     }
     
-    private static DBItemInventoryReleasedConfiguration setReleaseItem(Long releaseId, String controllerId, DBItemInventoryConfiguration conf, Date now) {
+    private static DBItemInventoryReleasedConfiguration setReleaseItem(Long releaseId, DBItemInventoryConfiguration conf, Date now) {
         DBItemInventoryReleasedConfiguration release = new DBItemInventoryReleasedConfiguration();
         release.setId(releaseId);
         release.setAuditLogId(conf.getAuditLogId());
         release.setCid(conf.getId());
         release.setContent(conf.getContent());
-        release.setControllerId(controllerId);
         release.setCreated(now);
         release.setDocumentationId(conf.getDocumentationId());
         release.setFolder(conf.getFolder());

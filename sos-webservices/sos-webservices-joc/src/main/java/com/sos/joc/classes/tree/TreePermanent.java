@@ -257,7 +257,6 @@ public class TreePermanent {
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
             DocumentationDBLayer dbDocLayer = new DocumentationDBLayer(session);
             InventoryDBLayer dbInvLayer = new InventoryDBLayer(session);
-            List<String> controllerIds = Arrays.asList(treeBody.getJobschedulerId(), "-"); //"-" for Calendar
 
             Comparator<Tree> comparator = Comparator.comparing(Tree::getPath).reversed();
             SortedSet<Tree> folders = new TreeSet<Tree>(comparator);
@@ -281,7 +280,7 @@ public class TreePermanent {
                         }
                     }
                     if (!inventoryTypes.isEmpty()) {
-                        inventoryResults = dbInvLayer.getFoldersByFolderAndTypeForViews(controllerIds, normalizedFolder, inventoryTypes);
+                        inventoryResults = dbInvLayer.getFoldersByFolderAndTypeForViews(normalizedFolder, inventoryTypes);
                         if (inventoryResults != null && !inventoryResults.isEmpty()) {
                             results.addAll(inventoryResults);
                         }
@@ -311,7 +310,7 @@ public class TreePermanent {
                     }
                 }
                 if (!inventoryTypes.isEmpty()) {
-                    inventoryResults = dbInvLayer.getFoldersByFolderAndTypeForViews(controllerIds, "/", inventoryTypes);
+                    inventoryResults = dbInvLayer.getFoldersByFolderAndTypeForViews("/", inventoryTypes);
                     if (inventoryResults != null && !inventoryResults.isEmpty()) {
                         results.addAll(inventoryResults);
                     }
