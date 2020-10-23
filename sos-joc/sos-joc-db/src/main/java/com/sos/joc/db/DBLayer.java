@@ -30,6 +30,8 @@ import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.db.orders.DBItemDailyPlanSubmissionHistory;
 import com.sos.joc.db.orders.DBItemDailyPlanVariables;
+import com.sos.joc.db.search.DBItemSearchWorkflow;
+import com.sos.joc.db.search.DBItemSearchWorkflow2DeploymentHistory;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 
 public class DBLayer implements Serializable {
@@ -126,6 +128,14 @@ public class DBLayer implements Serializable {
             .getSimpleName();
     public static final String TABLE_DOCUMENTATION_USAGE = "INV_DOCUMENTATION_USAGES";
     public static final String TABLE_DOCUMENTATION_USAGE_SEQUENCE = "SEQ_INV_DU";
+
+    /** Search (helper) tables */
+    public static final String DBITEM_SEARCH_WORKFLOWS = DBItemSearchWorkflow.class.getSimpleName();
+    public static final String TABLE_SEARCH_WORKFLOWS = "SEARCH_WORKFLOWS";
+    public static final String TABLE_SEARCH_WORKFLOWS_SEQUENCE = "SEQ_SEARCH_W";
+
+    public static final String DBITEM_SEARCH_WORKFLOWS_DEPLOYMENT_HISTORY = DBItemSearchWorkflow2DeploymentHistory.class.getSimpleName();
+    public static final String TABLE_SEARCH_WORKFLOWS_DEPLOYMENT_HISTORY = "SEARCH_WORKFLOWS_DEP_H";
 
     /** Deployment tables */
     public static final String DBITEM_DEP_HISTORY = DBItemDeploymentHistory.class.getSimpleName();

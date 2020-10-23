@@ -1,0 +1,94 @@
+{
+	"TYPE": "Workflow",
+	"instructions": [
+		{
+			"TYPE": "Fork",
+			"branches": [
+				{
+					"id": "branch1",
+					"workflow": {
+						"instructions": [
+							{
+								"TYPE": "Execute.Named",
+								"jobName": "job_1",
+								"label": "job_1 label"
+							}
+						]
+					}
+				},
+				{
+					"id": "branch2",
+					"workflow": {
+						"instructions": [
+							{
+								"TYPE": "Execute.Named",
+								"jobName": "job_2",
+								"label": "job_2 label"
+							}
+						]
+					}
+				}
+			]
+		}
+	],
+	"jobs": {
+		"job_1": {
+			"agentRefPath": "/agent-1",
+			"executable": {
+				"TYPE": "ExecutableScript",
+				"script": "job_1 script"
+			},
+			"defaultArguments":{
+			    "job_1_arg_1" : "job_1_arg_1 value",
+			    "job_1_arg_2" : "job_1_arg_2 value"
+			},
+			"returnCodeMeaning": {
+				"success": [
+					0,
+					5
+				]
+			},
+			"taskLimit": 1
+		},
+		"job_2": {
+			"agentRefPath": "/agent-1",
+			"executable": {
+				"TYPE": "ExecutableScript",
+				"script": "job_2 script"
+			},
+			"returnCodeMeaning": {
+				"success": [
+					0
+				]
+			},
+			"taskLimit": 1
+		},
+		"job_2_1_unused": {
+			"agentRefPath": "/agent-1",
+			"executable": {
+				"TYPE": "ExecutableScript",
+				"script": "job_2 script"
+			},
+			"returnCodeMeaning": {
+				"success": [
+					0
+				]
+			},
+			"taskLimit": 1
+		},
+		"job_3_unused": {
+			"agentRefPath": "/agent-2",
+			"executable": {
+				"TYPE": "ExecutableScript",
+				"script": "job_3 script"
+			},
+			"returnCodeMeaning": {
+				"success": [
+					0
+				]
+			},
+			"taskLimit": 1
+		}
+	},
+	"path": "/workflow"
+}
