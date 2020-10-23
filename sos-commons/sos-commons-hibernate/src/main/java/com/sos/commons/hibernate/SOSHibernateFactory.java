@@ -29,6 +29,8 @@ import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.hibernate.exception.SOSHibernateConvertException;
 import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
 import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
+import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue;
+import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
 import com.sos.commons.util.SOSClassList;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
@@ -377,6 +379,8 @@ public class SOSHibernateFactory implements Serializable {
 
     private void configure() throws SOSHibernateConfigurationException {
         try {
+            addSQLFunctions();
+
             if (configFile.isPresent()) {
                 configuration.configure(configFile.get().toUri().toURL());
             } else {
@@ -398,7 +402,14 @@ public class SOSHibernateFactory implements Serializable {
         }
     }
 
-    private Enum<SOSHibernateFactory.Dbms> getDbms(Dialect dialect) {
+    private void addSQLFunctions() {
+        if (configuration != null) {
+            configuration.addSqlFunction(SOSHibernateJsonValue.NAME, new SOSHibernateJsonValue(this));
+            configuration.addSqlFunction(SOSHibernateRegexp.NAME, new SOSHibernateRegexp(this));
+        }
+    }
+
+    public static Enum<SOSHibernateFactory.Dbms> getDbms(Dialect dialect) {
         SOSHibernateFactory.Dbms db = SOSHibernateFactory.Dbms.UNKNOWN;
         if (dialect != null) {
             String dialectClassName = dialect.getClass().getSimpleName().toLowerCase();
