@@ -7,9 +7,6 @@ import java.util.Date;
 
 import javax.ws.rs.Path;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -18,7 +15,6 @@ import com.sos.joc.classes.audit.InventoryAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JocInventory.InventoryPath;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
-import com.sos.joc.db.inventory.DBItemInventoryWorkflowOrder;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -31,12 +27,9 @@ import com.sos.joc.model.inventory.common.CalendarType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.schema.JsonValidator;
-import com.sos.webservices.order.initiator.model.OrderTemplate;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class StoreConfigurationResourceImpl extends JOCResourceImpl implements IStoreConfigurationResource {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(StoreConfigurationResourceImpl.class);
 
     @Override
     public JOCDefaultResponse store(final String accessToken, final byte[] inBytes) {
@@ -64,13 +57,13 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
-//            session.beginTransaction();
+            // session.beginTransaction();
             DBItemInventoryConfiguration config;
             try {
                 config = JocInventory.getConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), folderPermissions);
                 config = setProperties(in, config, false);
                 session.update(config);
-                
+
             } catch (DBMissingDataException e) {
                 config = new DBItemInventoryConfiguration();
                 config.setType(in.getObjectType());
@@ -79,162 +72,142 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 createAuditLog(config, in.getObjectType());
                 session.save(config);
             }
-//            if (in.getId() != null && in.getId() > 0) {
-//                config = dbLayer.getConfiguration(in.getId());
-//            } else if (JocInventory.isCalendar(in.getObjectType())) {
-//                config = dbLayer.getCalendar(in.getPath());
-//            } else {
-//                config = dbLayer.getConfiguration(in.getPath(), in.getObjectType().intValue());
-//            }
-//
-//            if (config == null) {
-//                config = new DBItemInventoryConfiguration();
-//                config.setType(in.getObjectType());
-//                config = setProperties(in, config, true);
-//                config.setCreated(new Date());
-//                createAuditLog(config, in.getObjectType());
-//                session.save(config);
-//            } else {
-                // TODO
-//                if (1 == 2 && in.getConfiguration() != null) {
-//                    if (in.getValid() != null) {
-//                        if (!in.getValid().equals(config.getValid())) {
-//                            config.setValid(in.getValid());
-//                            config.setDeployed(false);
-//                            config.setModified(new Date());
-//                            session.update(config);
-//                        }
-//                    }
-//                    session.commit();
-//
-//                    ConfigurationObject item = new ConfigurationObject();
-//                    item.setId(config.getId());
-//                    item.setDeliveryDate(new Date());
-//                    item.setPath(config.getPath());
-//                    item.setConfigurationDate(config.getModified());
-//                    item.setObjectType(JocInventory.getType(config.getType()));
-//                    item.setValid(config.getValid());
-//                    item.setDeployed(config.getDeployed());
-//                    item.setReleased(config.getReleased());
-//                    return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(item));
-//                }
+            // if (in.getId() != null && in.getId() > 0) {
+            // config = dbLayer.getConfiguration(in.getId());
+            // } else if (JocInventory.isCalendar(in.getObjectType())) {
+            // config = dbLayer.getCalendar(in.getPath());
+            // } else {
+            // config = dbLayer.getConfiguration(in.getPath(), in.getObjectType().intValue());
+            // }
+            //
+            // if (config == null) {
+            // config = new DBItemInventoryConfiguration();
+            // config.setType(in.getObjectType());
+            // config = setProperties(in, config, true);
+            // config.setCreated(new Date());
+            // createAuditLog(config, in.getObjectType());
+            // session.save(config);
+            // } else {
+            // TODO
+            // if (1 == 2 && in.getConfiguration() != null) {
+            // if (in.getValid() != null) {
+            // if (!in.getValid().equals(config.getValid())) {
+            // config.setValid(in.getValid());
+            // config.setDeployed(false);
+            // config.setModified(new Date());
+            // session.update(config);
+            // }
+            // }
+            // session.commit();
+            //
+            // ConfigurationObject item = new ConfigurationObject();
+            // item.setId(config.getId());
+            // item.setDeliveryDate(new Date());
+            // item.setPath(config.getPath());
+            // item.setConfigurationDate(config.getModified());
+            // item.setObjectType(JocInventory.getType(config.getType()));
+            // item.setValid(config.getValid());
+            // item.setDeployed(config.getDeployed());
+            // item.setReleased(config.getReleased());
+            // return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(item));
+            // }
 
-//                config = setProperties(in, config, false);
-//                session.update(config);
-//            }
+            // config = setProperties(in, config, false);
+            // session.update(config);
+            // }
 
             switch (in.getObjectType()) {
-//            case WORKFLOW:
-//                // Workflow w = (Workflow) in.getConfiguration();
-//                break;
-//            case JOBCLASS:
-//                JobClass jobClass = (JobClass) in.getConfiguration();
-//                Integer maxProcesses = jobClass.getMaxProcesses();
-//                if (maxProcesses == null) {
-//                    maxProcesses = 30;
-//                }
-//                DBItemInventoryJobClass jc = dbLayer.getJobClass(config.getId());
-//                if (jc == null) {
-//                    jc = new DBItemInventoryJobClass();
-//                    jc.setCid(config.getId());
-//                    jc.setMaxProcesses(maxProcesses);
-//                    session.save(jc);
-//                } else if (jc.getMaxProcesses() != maxProcesses) {
-//                    jc.setMaxProcesses(maxProcesses);
-//                    session.update(jc);
-//                }
-//                break;
-//            case AGENTCLUSTER:
-//                DBItemInventoryAgentCluster ac = dbLayer.getAgentCluster(config.getId());
-//                if (ac == null) {
-//                    ac = new DBItemInventoryAgentCluster();
-//                    ac.setCid(config.getId());
-//                    ac.setNumberOfAgents(1L); // TODO
-//                    ac.setSchedulingType(AgentClusterSchedulingType.FIXED_PRIORITY); // TODO
-//                    session.save(ac);
-//                } else {
-//                    // ac.setNumberOfAgents(1L); // TODO
-//                    // ac.setSchedulingType(AgentClusterSchedulingType.FIXED_PRIORITY); // TODO
-//                    // session.update(ac);
-//                }
-//                break;
-//            case LOCK:
-//                Lock lock = (Lock) in.getConfiguration();
-//                LockType lockType = LockType.EXCLUSIVE;  // TODO a lock is not exclusive but it could be used exclusive by a job
-//                Integer maxNonExclusive = 0;
-//
-//                Integer inConfigMaxNonExclusive = lock.getMaxNonExclusive();
-//                if (inConfigMaxNonExclusive != null) {
-//                    maxNonExclusive = inConfigMaxNonExclusive;
-//                }
-//                
-//                if (maxNonExclusive > 0) {
-//                    lockType = LockType.SHARED;
-//                }
-//                
-//
-//                DBItemInventoryLock l = dbLayer.getLock(config.getId());
-//                if (l == null) {
-//                    l = new DBItemInventoryLock();
-//                    l.setCid(config.getId());
-//                    l.setType(lockType);
-//                    l.setMaxNonExclusive(maxNonExclusive);
-//                    session.save(l);
-//                } else {
-//                    l.setType(lockType);
-//                    l.setMaxNonExclusive(maxNonExclusive);
-//                    session.update(l);
-//                }
-//                break;
-//            case JUNCTION:
-//                Junction junction = (Junction) in.getConfiguration();
-//                Integer lifeTime = 0;
-//                Integer inConfigLifeTime = junction.getLifetime();
-//                if (inConfigLifeTime != null) {
-//                    lifeTime = inConfigLifeTime;
-//                }
-//
-//                DBItemInventoryJunction j = dbLayer.getJunction(config.getId());
-//                if (j == null) {
-//                    j = new DBItemInventoryJunction();
-//                    j.setCid(config.getId());
-//                    j.setLifetime(lifeTime + "");
-//                    session.save(j);
-//                } else {
-//                    j.setLifetime(lifeTime + "");
-//                    session.update(j);
-//                }
-//                break;
+            // case WORKFLOW:
+            // // Workflow w = (Workflow) in.getConfiguration();
+            // break;
+            // case JOBCLASS:
+            // JobClass jobClass = (JobClass) in.getConfiguration();
+            // Integer maxProcesses = jobClass.getMaxProcesses();
+            // if (maxProcesses == null) {
+            // maxProcesses = 30;
+            // }
+            // DBItemInventoryJobClass jc = dbLayer.getJobClass(config.getId());
+            // if (jc == null) {
+            // jc = new DBItemInventoryJobClass();
+            // jc.setCid(config.getId());
+            // jc.setMaxProcesses(maxProcesses);
+            // session.save(jc);
+            // } else if (jc.getMaxProcesses() != maxProcesses) {
+            // jc.setMaxProcesses(maxProcesses);
+            // session.update(jc);
+            // }
+            // break;
+            // case AGENTCLUSTER:
+            // DBItemInventoryAgentCluster ac = dbLayer.getAgentCluster(config.getId());
+            // if (ac == null) {
+            // ac = new DBItemInventoryAgentCluster();
+            // ac.setCid(config.getId());
+            // ac.setNumberOfAgents(1L); // TODO
+            // ac.setSchedulingType(AgentClusterSchedulingType.FIXED_PRIORITY); // TODO
+            // session.save(ac);
+            // } else {
+            // // ac.setNumberOfAgents(1L); // TODO
+            // // ac.setSchedulingType(AgentClusterSchedulingType.FIXED_PRIORITY); // TODO
+            // // session.update(ac);
+            // }
+            // break;
+            // case LOCK:
+            // Lock lock = (Lock) in.getConfiguration();
+            // LockType lockType = LockType.EXCLUSIVE; // TODO a lock is not exclusive but it could be used exclusive by a job
+            // Integer maxNonExclusive = 0;
+            //
+            // Integer inConfigMaxNonExclusive = lock.getMaxNonExclusive();
+            // if (inConfigMaxNonExclusive != null) {
+            // maxNonExclusive = inConfigMaxNonExclusive;
+            // }
+            //
+            // if (maxNonExclusive > 0) {
+            // lockType = LockType.SHARED;
+            // }
+            //
+            //
+            // DBItemInventoryLock l = dbLayer.getLock(config.getId());
+            // if (l == null) {
+            // l = new DBItemInventoryLock();
+            // l.setCid(config.getId());
+            // l.setType(lockType);
+            // l.setMaxNonExclusive(maxNonExclusive);
+            // session.save(l);
+            // } else {
+            // l.setType(lockType);
+            // l.setMaxNonExclusive(maxNonExclusive);
+            // session.update(l);
+            // }
+            // break;
+            // case JUNCTION:
+            // Junction junction = (Junction) in.getConfiguration();
+            // Integer lifeTime = 0;
+            // Integer inConfigLifeTime = junction.getLifetime();
+            // if (inConfigLifeTime != null) {
+            // lifeTime = inConfigLifeTime;
+            // }
+            //
+            // DBItemInventoryJunction j = dbLayer.getJunction(config.getId());
+            // if (j == null) {
+            // j = new DBItemInventoryJunction();
+            // j.setCid(config.getId());
+            // j.setLifetime(lifeTime + "");
+            // session.save(j);
+            // } else {
+            // j.setLifetime(lifeTime + "");
+            // session.update(j);
+            // }
+            // break;
             case ORDER:
-                OrderTemplate orderTemplate = (OrderTemplate) in.getConfiguration();
-                if (orderTemplate.getWorkflowPath() != null && !orderTemplate.getWorkflowPath().isEmpty()) {
-                    Long workflowId = dbLayer.getConfigurationProperty(orderTemplate.getWorkflowPath(), ConfigurationType.WORKFLOW.intValue(), "id");
-                    if (workflowId != null) {
-                        DBItemInventoryWorkflowOrder wo = dbLayer.getWorkflowOrder(config.getId());
-                        if (wo == null) {
-                            wo = new DBItemInventoryWorkflowOrder();
-                            wo.setCid(config.getId());
-                            wo.setCidWorkflow(workflowId);
-                            // bad data model; we have more than one Calendar
-                            wo.setCidCalendar(0L);
-                            wo.setCidNwCalendar(0L);
-
-                            session.save(wo);
-                        } else if (wo.getCidWorkflow() != workflowId) {
-                            wo.setCidWorkflow(workflowId);
-                            session.update(wo);
-                        }
-                    }
-                }
                 break;
-//            case WORKINGDAYSCALENDAR:
-//            case NONWORKINGDAYSCALENDAR:
-//                // Nothing to do
-//                break;
+            // case WORKINGDAYSCALENDAR:
+            // case NONWORKINGDAYSCALENDAR:
+            // // Nothing to do
+            // break;
             default:
                 break;
             }
-//            session.commit();
+            // session.commit();
 
             ConfigurationObject item = new ConfigurationObject();
             item.setId(config.getId());
@@ -276,22 +249,22 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             item.setDocumentationId(0L);
             item.setTitle(null);
         }
-        
+
         if (JocInventory.isCalendar(in.getObjectType())) {
             item.setType(in.getObjectType().intValue());
         }
-        
+
         if (!ConfigurationType.FOLDER.equals(in.getObjectType())) {
             if (in.getConfiguration() == null) {
                 item.setContent(null);
                 item.setValid(false);
             } else {
                 item.setValid(in.getValid() == null ? true : in.getValid());
-                
+
                 IConfigurationObject obj = in.getConfiguration();
                 item.setTitle(obj.getTitle());
-                
-                //"path" is required in schemas except for JOB and FOLDER
+
+                // "path" is required in schemas except for JOB and FOLDER
                 if (!ConfigurationType.JOB.equals(in.getObjectType())) {
                     obj.setPath(item.getPath());
                 }
@@ -304,7 +277,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             item.setTitle(null);
             item.setValid(true);
         }
-        
+
         item.setDeployed(false);
         item.setReleased(false);
         item.setModified(Date.from(Instant.now()));
@@ -320,7 +293,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         } catch (Throwable e) {
             item.setValid(false);
             in.setInvalidMsg(e.getMessage());
-            //LOGGER.warn(String.format("[invalid][client valid=%s][%s] %s", in.getValid(), in.getConfiguration().toString(), e.toString()));
+            // LOGGER.warn(String.format("[invalid][client valid=%s][%s] %s", in.getValid(), in.getConfiguration().toString(), e.toString()));
         }
     }
 

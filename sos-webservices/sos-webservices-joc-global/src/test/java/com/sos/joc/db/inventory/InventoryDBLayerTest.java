@@ -16,10 +16,7 @@ import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
-import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
-import com.sos.joc.model.inventory.common.ArgumentType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class InventoryDBLayerTest {
@@ -37,7 +34,8 @@ public class InventoryDBLayerTest {
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             session.beginTransaction();
 
-            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder("/", false, Arrays.asList(ConfigurationType.WORKFLOW.intValue()), false);
+            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder("/", false, Arrays.asList(ConfigurationType.WORKFLOW.intValue()),
+                    false);
             for (InventoryTreeFolderItem item : items) {
                 LOGGER.info(SOSString.toString(item));
             }
@@ -54,35 +52,35 @@ public class InventoryDBLayerTest {
         }
     }
 
-//    @Ignore
-//    @Test
-//    public void testDeployablesTreeFolder() throws Exception {
-//        SOSHibernateSession session = null;
-//        try {
-//            session = factory.openStatelessSession();
-//            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-//            session.beginTransaction();
-//
-//            List<InventoryDeployablesTreeFolderItem> deployables = dbLayer.getConfigurationsWithMaxDeployment("/", true);
-//            for (InventoryDeployablesTreeFolderItem item : deployables) {
-//                LOGGER.info(SOSString.toString(item));
-//            }
-//
-//            InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(1L);
-//            LOGGER.info("lastDeployment:" + SOSString.toString(lastDeployment));
-//
-//            session.commit();
-//        } catch (Exception e) {
-//            if (session != null && session.isTransactionOpened()) {
-//                session.rollback();
-//            }
-//            throw e;
-//        } finally {
-//            if (session != null) {
-//                session.close();
-//            }
-//        }
-//    }
+    // @Ignore
+    // @Test
+    // public void testDeployablesTreeFolder() throws Exception {
+    // SOSHibernateSession session = null;
+    // try {
+    // session = factory.openStatelessSession();
+    // InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+    // session.beginTransaction();
+    //
+    // List<InventoryDeployablesTreeFolderItem> deployables = dbLayer.getConfigurationsWithMaxDeployment("/", true);
+    // for (InventoryDeployablesTreeFolderItem item : deployables) {
+    // LOGGER.info(SOSString.toString(item));
+    // }
+    //
+    // InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(1L);
+    // LOGGER.info("lastDeployment:" + SOSString.toString(lastDeployment));
+    //
+    // session.commit();
+    // } catch (Exception e) {
+    // if (session != null && session.isTransactionOpened()) {
+    // session.rollback();
+    // }
+    // throw e;
+    // } finally {
+    // if (session != null) {
+    // session.close();
+    // }
+    // }
+    // }
 
     @Ignore
     @Test
@@ -115,67 +113,34 @@ public class InventoryDBLayerTest {
         }
     }
 
-//    @Ignore
-//    @Test
-//    public void testGetConfigurationsWithMaxDeployment() throws Exception {
-//        SOSHibernateSession session = null;
-//        try {
-//            session = factory.openStatelessSession();
-//            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-//            session.beginTransaction();
-//
-//            List<InventoryDeployablesTreeFolderItem> items = dbLayer.getConfigurationsWithMaxDeployment("/", true);
-//            if (items != null) {
-//                for (InventoryDeployablesTreeFolderItem item : items) {
-//                    LOGGER.info(SOSString.toString(item));
-//                }
-//            }
-//
-//            session.commit();
-//        } catch (Exception e) {
-//            if (session != null && session.isTransactionOpened()) {
-//                session.rollback();
-//            }
-//            throw e;
-//        } finally {
-//            if (session != null) {
-//                session.close();
-//            }
-//        }
-//    }
-
-    @Ignore
-    @Test
-    public void testSave() throws Exception {
-        SOSHibernateSession session = null;
-        try {
-            session = factory.openStatelessSession();
-            session.beginTransaction();
-
-            DBItemInventoryWorkflowOrderVariable v = new DBItemInventoryWorkflowOrderVariable();
-            v.setCidWorkflowOrder(10000000L);
-            v.setName("test");
-            v.setType(ArgumentType.STRING);
-            v.setValue("val");
-            session.save(v);
-
-            int result = session.executeUpdate("delete from " + DBLayer.DBITEM_INV_WORKFLOW_ORDER_VARIABLES + " where cidWorkflowOrder=" + v
-                    .getCidWorkflowOrder());
-
-            LOGGER.info("deleted: " + result);
-
-            session.commit();
-        } catch (Exception e) {
-            if (session != null && session.isTransactionOpened()) {
-                session.rollback();
-            }
-            throw e;
-        } finally {
-            if (session != null) {
-                session.close();
-            }
-        }
-    }
+    // @Ignore
+    // @Test
+    // public void testGetConfigurationsWithMaxDeployment() throws Exception {
+    // SOSHibernateSession session = null;
+    // try {
+    // session = factory.openStatelessSession();
+    // InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+    // session.beginTransaction();
+    //
+    // List<InventoryDeployablesTreeFolderItem> items = dbLayer.getConfigurationsWithMaxDeployment("/", true);
+    // if (items != null) {
+    // for (InventoryDeployablesTreeFolderItem item : items) {
+    // LOGGER.info(SOSString.toString(item));
+    // }
+    // }
+    //
+    // session.commit();
+    // } catch (Exception e) {
+    // if (session != null && session.isTransactionOpened()) {
+    // session.rollback();
+    // }
+    // throw e;
+    // } finally {
+    // if (session != null) {
+    // session.close();
+    // }
+    // }
+    // }
 
     @Before
     public void setUp() throws Exception {

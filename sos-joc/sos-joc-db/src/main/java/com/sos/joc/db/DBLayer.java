@@ -4,44 +4,32 @@ import java.io.Serializable;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSClassList;
+import com.sos.joc.db.deployment.DBItemDepCommitIds;
+import com.sos.joc.db.deployment.DBItemDepConfiguration;
+import com.sos.joc.db.deployment.DBItemDepKeys;
+import com.sos.joc.db.deployment.DBItemDepSignatures;
+import com.sos.joc.db.deployment.DBItemDepVersions;
+import com.sos.joc.db.deployment.DBItemDeploymentHistory;
+import com.sos.joc.db.deployment.DBItemDeploymentSubmission;
+import com.sos.joc.db.history.DBItemHistoryAgent;
+import com.sos.joc.db.history.DBItemHistoryController;
+import com.sos.joc.db.history.DBItemHistoryLog;
+import com.sos.joc.db.history.DBItemHistoryOrder;
+import com.sos.joc.db.history.DBItemHistoryOrderStep;
+import com.sos.joc.db.history.DBItemHistoryTempLog;
+import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
+import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
+import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.joc.DBItemJocCluster;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.db.joc.DBItemJocLock;
-import com.sos.joc.db.deployment.DBItemDepCommitIds;
-import com.sos.joc.db.deployment.DBItemDepConfiguration;
-import com.sos.joc.db.deployment.DBItemDepKeys;
-import com.sos.joc.db.deployment.DBItemDeploymentHistory;
-import com.sos.joc.db.deployment.DBItemDeploymentSubmission;
-import com.sos.joc.db.deployment.DBItemDepSignatures;
-import com.sos.joc.db.deployment.DBItemDepVersions;
 import com.sos.joc.db.joc.DBItemJocVariable;
-import com.sos.joc.db.history.DBItemHistoryAgent;
-import com.sos.joc.db.history.DBItemHistoryLog;
-import com.sos.joc.db.history.DBItemHistoryController;
-import com.sos.joc.db.history.DBItemHistoryOrder;
-import com.sos.joc.db.history.DBItemHistoryOrderStep;
-import com.sos.joc.db.history.DBItemHistoryTempLog;
-import com.sos.joc.db.inventory.DBItemInventoryAgentCluster;
-import com.sos.joc.db.inventory.DBItemInventoryAgentClusterMember;
-import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
-import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
-import com.sos.joc.db.inventory.DBItemInventoryJobClass;
-import com.sos.joc.db.inventory.DBItemInventoryJunction;
-import com.sos.joc.db.inventory.DBItemInventoryLock;
-import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
-import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
-import com.sos.joc.db.inventory.DBItemInventoryWorkflowJob;
-import com.sos.joc.db.inventory.DBItemInventoryWorkflowJobArgument;
-import com.sos.joc.db.inventory.DBItemInventoryWorkflowJobNode;
-import com.sos.joc.db.inventory.DBItemInventoryWorkflowJobNodeArgument;
-import com.sos.joc.db.inventory.DBItemInventoryWorkflowJunction;
-import com.sos.joc.db.inventory.DBItemInventoryWorkflowOrder;
-import com.sos.joc.db.inventory.DBItemInventoryWorkflowOrderVariable;
+import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.db.orders.DBItemDailyPlanSubmissionHistory;
 import com.sos.joc.db.orders.DBItemDailyPlanVariables;
-import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 
 public class DBLayer implements Serializable {
@@ -125,44 +113,6 @@ public class DBLayer implements Serializable {
     public static final String TABLE_INV_RELEASED_CONFIGURATIONS = "INV_RELEASED_CONFIGURATIONS";
     public static final String TABLE_INV_RELEASED_CONFIGURATIONS_SEQUENCE = "SEQ_INV_RC";
 
-    public static final String DBITEM_INV_AGENT_CLUSTERS = DBItemInventoryAgentCluster.class.getSimpleName();
-    public static final String TABLE_INV_AGENT_CLUSTERS = "INV_AGENT_CLUSTERS";
-
-    public static final String DBITEM_INV_AGENT_CLUSTER_MEMBERS = DBItemInventoryAgentClusterMember.class.getSimpleName();
-    public static final String TABLE_INV_AGENT_CLUSTER_MEMBERS = "INV_AGENT_CLUSTER_MEMBERS";
-
-    public static final String DBITEM_INV_JOB_CLASSES = DBItemInventoryJobClass.class.getSimpleName();
-    public static final String TABLE_INV_JOB_CLASSES = "INV_JOB_CLASSES";
-
-    public static final String DBITEM_INV_JUNCTIONS = DBItemInventoryJunction.class.getSimpleName();
-    public static final String TABLE_INV_JUNCTIONS = "INV_JUNCTIONS";
-
-    public static final String DBITEM_INV_LOCKS = DBItemInventoryLock.class.getSimpleName();
-    public static final String TABLE_INV_LOCKS = "INV_LOCKS";
-
-    public static final String DBITEM_INV_WORKFLOW_JOBS = DBItemInventoryWorkflowJob.class.getSimpleName();
-    public static final String TABLE_INV_WORKFLOW_JOBS = "INV_WORKFLOW_JOBS";
-    public static final String TABLE_INV_WORKFLOW_JOBS_SEQUENCE = "SEQ_INV_WJOB";
-
-    public static final String DBITEM_INV_WORKFLOW_JOB_ARGUMENTS = DBItemInventoryWorkflowJobArgument.class.getSimpleName();
-    public static final String TABLE_INV_WORKFLOW_JOB_ARGUMENTS = "INV_WORKFLOW_JOB_ARGS";
-
-    public static final String DBITEM_INV_WORKFLOW_JOB_NODES = DBItemInventoryWorkflowJobNode.class.getSimpleName();
-    public static final String TABLE_INV_WORKFLOW_JOB_NODES = "INV_WORKFLOW_JOB_NODES";
-    public static final String TABLE_INV_WORKFLOW_JOB_NODES_SEQUENCE = "SEQ_INV_WJN";
-
-    public static final String DBITEM_INV_WORKFLOW_JOB_NODE_ARGUMENTS = DBItemInventoryWorkflowJobNodeArgument.class.getSimpleName();
-    public static final String TABLE_INV_WORKFLOW_JOB_NODE_ARGUMENTS = "INV_WORKFLOW_JOB_NODE_ARGS";
-
-    public static final String DBITEM_INV_WORKFLOW_JUNCTIONS = DBItemInventoryWorkflowJunction.class.getSimpleName();
-    public static final String TABLE_INV_WORKFLOW_JUNCTIONS = "INV_WORKFLOW_JUNCTIONS";
-
-    public static final String DBITEM_INV_WORKFLOW_ORDERS = DBItemInventoryWorkflowOrder.class.getSimpleName();
-    public static final String TABLE_INV_WORKFLOW_ORDERS = "INV_WORKFLOW_ORDERS";
-
-    public static final String DBITEM_INV_WORKFLOW_ORDER_VARIABLES = DBItemInventoryWorkflowOrderVariable.class.getSimpleName();
-    public static final String TABLE_INV_WORKFLOW_ORDER_VARIABLES = "INV_WORKFLOW_ORDER_VARS";
-
     public static final String DBITEM_DOCUMENTATION = com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentation.class.getSimpleName();
     public static final String TABLE_DOCUMENTATION = "INV_DOCUMENTATIONS";
     public static final String TABLE_DOCUMENTATION_SEQUENCE = "SEQ_INV_D";
@@ -201,10 +151,10 @@ public class DBLayer implements Serializable {
     public static final String DBITEM_DEP_KEYS = DBItemDepKeys.class.getSimpleName();
     public static final String TABLE_DEP_KEYS = "DEP_KEYS";
     public static final String TABLE_DEP_KEYS_SEQUENCE = "SEQ_DEP_K";
-    
+
     public static final String DBITEM_DEP_CONFIGURATIONS = DBItemDepConfiguration.class.getSimpleName();
     public static final String TABLE_DEP_CONFIGURATIONS = "DEP_CONFIGURATIONS";
-    
+
     /** XMLEDITOR Tables */
     public static final String DBITEM_XML_EDITOR_CONFIGURATIONS = DBItemXmlEditorConfiguration.class.getSimpleName();
     public static final String TABLE_XML_EDITOR_CONFIGURATIONS = "XMLEDITOR_CONFIGURATIONS";
@@ -257,18 +207,6 @@ public class DBLayer implements Serializable {
         cl.add(DBItemInventoryJSInstance.class);
         cl.add(DBItemInventoryConfiguration.class);
         cl.add(DBItemInventoryReleasedConfiguration.class);
-        cl.add(DBItemInventoryAgentCluster.class);
-        cl.add(DBItemInventoryAgentClusterMember.class);
-        cl.add(DBItemInventoryJobClass.class);
-        cl.add(DBItemInventoryJunction.class);
-        cl.add(DBItemInventoryLock.class);
-        cl.add(DBItemInventoryWorkflowJob.class);
-        cl.add(DBItemInventoryWorkflowJobArgument.class);
-        cl.add(DBItemInventoryWorkflowJobNode.class);
-        cl.add(DBItemInventoryWorkflowJobNodeArgument.class);
-        cl.add(DBItemInventoryWorkflowJunction.class);
-        cl.add(DBItemInventoryWorkflowOrder.class);
-        cl.add(DBItemInventoryWorkflowOrderVariable.class);
         cl.add(com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentation.class);
         cl.add(com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentationImage.class);
         cl.add(com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentationUsage.class);

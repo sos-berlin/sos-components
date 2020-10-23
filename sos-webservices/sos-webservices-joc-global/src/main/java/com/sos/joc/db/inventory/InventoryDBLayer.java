@@ -97,7 +97,7 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("configId", configId);
         return getSession().getSingleResult(query);
     }
-    
+
     public Integer deleteReleasedConfigurations(Collection<Long> configIds) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
         hql.append(" where cid in (:configIds)");
@@ -114,7 +114,7 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("configId", configId);
         return getSession().getResultList(query);
     }
-    
+
     public DBItemInventoryReleasedConfiguration getReleasedConfiguration(Long id) throws SOSHibernateException {
         return getSession().get(DBItemInventoryReleasedConfiguration.class, id);
     }
@@ -137,7 +137,7 @@ public class InventoryDBLayer extends DBLayer {
         }
         return getSession().getSingleResult(query);
     }
-    
+
     public List<String> getDeletedFolders() throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select path from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where deleted = 1");
@@ -147,31 +147,31 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-//    public Set<DBItemInventoryConfiguration> getDeletedConfigurationsWithDeletedFolderContent(Collection<Integer> types, Collection<String> deletedFolders)
-//            throws SOSHibernateException {
-//        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-//        hql.append(" where deleted = 1");
-//        if (types != null && !types.isEmpty()) {
-//            hql.append(" and type in (:types) ");
-//        }
-//        if (deletedFolders != null && !deletedFolders.isEmpty()) {
-//            List<String> clause = new ArrayList<>();
-//            for (String folder : deletedFolders) {
-//                clause.add("(folder = '" + folder + "' or folder like '"+ folder + "/%')");
-//            }
-//            hql.append(clause.stream().collect(Collectors.joining(" or ", " or (", ")")));
-//        }
-//        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-//        if (types != null && !types.isEmpty()) {
-//            query.setParameterList("types", types);
-//        }
-//        List<DBItemInventoryConfiguration> result = getSession().getResultList(query);
-//        if (result != null) {
-//            return result.stream().collect(Collectors.toSet()); 
-//        }
-//        return Collections.emptySet();
-//    }
-    
+    // public Set<DBItemInventoryConfiguration> getDeletedConfigurationsWithDeletedFolderContent(Collection<Integer> types, Collection<String> deletedFolders)
+    // throws SOSHibernateException {
+    // StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+    // hql.append(" where deleted = 1");
+    // if (types != null && !types.isEmpty()) {
+    // hql.append(" and type in (:types) ");
+    // }
+    // if (deletedFolders != null && !deletedFolders.isEmpty()) {
+    // List<String> clause = new ArrayList<>();
+    // for (String folder : deletedFolders) {
+    // clause.add("(folder = '" + folder + "' or folder like '"+ folder + "/%')");
+    // }
+    // hql.append(clause.stream().collect(Collectors.joining(" or ", " or (", ")")));
+    // }
+    // Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+    // if (types != null && !types.isEmpty()) {
+    // query.setParameterList("types", types);
+    // }
+    // List<DBItemInventoryConfiguration> result = getSession().getResultList(query);
+    // if (result != null) {
+    // return result.stream().collect(Collectors.toSet());
+    // }
+    // return Collections.emptySet();
+    // }
+
     public List<DBItemInventoryConfiguration> getDeletedConfigurations(Collection<Integer> types, String folder, boolean recursive,
             Collection<String> deletedFolders) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
@@ -251,8 +251,7 @@ public class InventoryDBLayer extends DBLayer {
     public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive, Collection<Integer> configTypes,
             Boolean onlyValidObjects) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryTreeFolderItem.class.getName());
-        hql.append("(ic, count(dh.id), count(irc.id)) from ").append(
-                DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
+        hql.append("(ic, count(dh.id), count(irc.id)) from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
         hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
         hql.append("on ic.id=dh.inventoryConfigurationId ");
         hql.append("left join ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" irc ");
@@ -325,7 +324,8 @@ public class InventoryDBLayer extends DBLayer {
             hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
             hql.append("on ic.id=dh.inventoryConfigurationId ");
             hql.append("and dh.id=(");
-            hql.append("select max(dhsub.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dhsub where ic.id=dhsub.inventoryConfigurationId and state=" + JSDeploymentState.DEPLOYED.value());
+            hql.append("select max(dhsub.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(
+                    " dhsub where ic.id=dhsub.inventoryConfigurationId and state=" + JSDeploymentState.DEPLOYED.value());
             hql.append(") ");
             hql.append("where ic.id in (:configIds) ");
 
@@ -352,7 +352,7 @@ public class InventoryDBLayer extends DBLayer {
             hql.append("on ic.id=dh.inventoryConfigurationId ");
             hql.append("where ic.id in (:configIds) ");
             hql.append("and dh.state = :state ");
-            
+
             Query<InventoryDeployablesTreeFolderItem> query = getSession().createQuery(hql.toString());
             query.setParameterList("configIds", configIds);
             query.setParameter("state", JSDeploymentState.DEPLOYED.value());
@@ -366,7 +366,7 @@ public class InventoryDBLayer extends DBLayer {
         }
         return Collections.emptyMap();
     }
-    
+
     public List<InventoryReleasablesTreeFolderItem> getConfigurationsWithMaxRelease(Collection<Long> configIds) throws SOSHibernateException {
         if (configIds != null && !configIds.isEmpty()) {
             StringBuilder hql = new StringBuilder("select new ").append(InventoryReleasablesTreeFolderItem.class.getName());
@@ -405,8 +405,7 @@ public class InventoryDBLayer extends DBLayer {
             }
             List<InventoryReleasablesTreeFolderItem> result = getSession().getResultList(query);
             if (result != null && !result.isEmpty()) {
-                Comparator<InventoryReleaseItem> comp = Comparator.nullsFirst(Comparator.comparing(InventoryReleaseItem::getReleaseDate)
-                        .reversed());
+                Comparator<InventoryReleaseItem> comp = Comparator.nullsFirst(Comparator.comparing(InventoryReleaseItem::getReleaseDate).reversed());
                 return result.stream().collect(Collectors.groupingBy(InventoryReleasablesTreeFolderItem::getConfiguration, Collectors.mapping(
                         InventoryReleasablesTreeFolderItem::getRelease, Collectors.toCollection(() -> new TreeSet<>(comp)))));
             }
@@ -514,7 +513,8 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public List<DBItemInventoryConfiguration> getFolderContent(String folder, boolean recursive, Collection<Integer> types) throws SOSHibernateException {
+    public List<DBItemInventoryConfiguration> getFolderContent(String folder, boolean recursive, Collection<Integer> types)
+            throws SOSHibernateException {
         if (folder == null) {
             folder = "/";
         }
@@ -546,70 +546,6 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public DBItemInventoryWorkflowJob getWorkflowJob(Long configId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_WORKFLOW_JOBS);
-        hql.append(" where cid=:configId");
-        Query<DBItemInventoryWorkflowJob> query = getSession().createQuery(hql.toString());
-        query.setParameter("configId", configId);
-        return getSession().getSingleResult(query);
-    }
-
-    public List<DBItemInventoryWorkflowJob> getWorkflowJobs(Long workflowConfigId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_WORKFLOW_JOBS);
-        hql.append(" where cidWorkflow=:workflowConfigId");
-        Query<DBItemInventoryWorkflowJob> query = getSession().createQuery(hql.toString());
-        query.setParameter("workflowConfigId", workflowConfigId);
-        return getSession().getResultList(query);
-    }
-
-    public DBItemInventoryJobClass getJobClass(Long configId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_JOB_CLASSES);
-        hql.append(" where cid=:configId");
-        Query<DBItemInventoryJobClass> query = getSession().createQuery(hql.toString());
-        query.setParameter("configId", configId);
-        return getSession().getSingleResult(query);
-    }
-
-    public DBItemInventoryAgentCluster getAgentCluster(Long configId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_AGENT_CLUSTERS);
-        hql.append(" where cid=:configId");
-        Query<DBItemInventoryAgentCluster> query = getSession().createQuery(hql.toString());
-        query.setParameter("configId", configId);
-        return getSession().getSingleResult(query);
-    }
-
-    public List<DBItemInventoryAgentClusterMember> getAgentClusterMembers(Long agentClusterId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_AGENT_CLUSTER_MEMBERS);
-        hql.append(" where cidAgentCluster=:agentClusterId");
-        Query<DBItemInventoryAgentClusterMember> query = getSession().createQuery(hql.toString());
-        query.setParameter("agentClusterId", agentClusterId);
-        return getSession().getResultList(query);
-    }
-
-    public DBItemInventoryLock getLock(Long configId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_LOCKS);
-        hql.append(" where cid=:configId");
-        Query<DBItemInventoryLock> query = getSession().createQuery(hql.toString());
-        query.setParameter("configId", configId);
-        return getSession().getSingleResult(query);
-    }
-
-    public DBItemInventoryJunction getJunction(Long configId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_JUNCTIONS);
-        hql.append(" where cid=:configId");
-        Query<DBItemInventoryJunction> query = getSession().createQuery(hql.toString());
-        query.setParameter("configId", configId);
-        return getSession().getSingleResult(query);
-    }
-
-    public DBItemInventoryWorkflowOrder getWorkflowOrder(Long configId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_WORKFLOW_ORDERS);
-        hql.append(" where cid=:configId");
-        Query<DBItemInventoryWorkflowOrder> query = getSession().createQuery(hql.toString());
-        query.setParameter("configId", configId);
-        return getSession().getSingleResult(query);
-    }
-
     public List<DBItemJocLock> getJocLocks() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_JOC_LOCKS);
@@ -624,130 +560,6 @@ public class InventoryDBLayer extends DBLayer {
         }
     }
 
-    public InventoryDeleteResult deleteWorkflow(Long configId) throws SOSHibernateException {
-        InventoryDeleteResult result = new InventoryDeleteResult();
-
-        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_WORKFLOW_JOB_NODE_ARGUMENTS).append(" ");
-        hql.append("where workflowJobNodeId in (");
-        hql.append("   select id from ").append(DBLayer.DBITEM_INV_WORKFLOW_JOB_NODES);
-        hql.append("   where workflowJobId in (");
-        hql.append("       select id from ").append(DBLayer.DBITEM_INV_WORKFLOW_JOBS).append(" where cidWorkflow=:configId");
-        hql.append("   )");
-        hql.append(")");
-        Query<?> query = getSession().createQuery(hql.toString());
-        query.setParameter("configId", configId);
-        getSession().executeUpdate(query);
-
-        hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_WORKFLOW_JOB_NODES).append(" ");
-        hql.append("where workflowJobId in (");
-        hql.append("  select id from ").append(DBLayer.DBITEM_INV_WORKFLOW_JOBS).append(" where cidWorkflow=:configId");
-        hql.append(")");
-        query = getSession().createQuery(hql.toString());
-        query.setParameter("configId", configId);
-        getSession().executeUpdate(query);
-
-        hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_WORKFLOW_JOB_ARGUMENTS).append(" ");
-        hql.append("where workflowJobId in (");
-        hql.append("  select id from ").append(DBLayer.DBITEM_INV_WORKFLOW_JOBS).append(" where cidWorkflow=:configId");
-        hql.append(")");
-        query = getSession().createQuery(hql.toString());
-        query.setParameter("configId", configId);
-        getSession().executeUpdate(query);
-        result.setWorkflowJobs(executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JOBS, configId, "cidWorkflow"));
-
-        // TODO delete from Job2Lock
-
-        hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_WORKFLOW_ORDER_VARIABLES).append(" ");
-        hql.append("where cidWorkflowOrder in (");
-        hql.append("  select cid from ").append(DBLayer.DBITEM_INV_WORKFLOW_ORDERS).append(" where cidWorkflow=:configId");
-        hql.append(")");
-        query = getSession().createQuery(hql.toString());
-        query.setParameter("configId", configId);
-        getSession().executeUpdate(query);
-
-        result.setWorkflowOrders(executeDelete(DBLayer.DBITEM_INV_WORKFLOW_ORDERS, configId, "cidWorkflow"));
-
-        result.setWorkflowJunctions(executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JUNCTIONS, configId, "cidWorkflow"));
-        result.setConfigurations(executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, configId, "id"));
-
-        return result;
-    }
-
-    public InventoryDeleteResult deleteWorkflowJob(Long configId) throws SOSHibernateException {
-        InventoryDeleteResult result = new InventoryDeleteResult();
-
-        return result;
-    }
-
-    public InventoryDeleteResult deleteJobClass(Long configId) throws SOSHibernateException {
-        InventoryDeleteResult result = new InventoryDeleteResult();
-
-        result.setJobClasses(executeDelete(DBLayer.DBITEM_INV_JOB_CLASSES, configId));
-
-        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_WORKFLOW_JOBS);
-        hql.append(" set cidJobClass=:newConfigId");
-        hql.append(" where cidJobClass=:configId");
-        Query<DBItemInventoryWorkflowJob> query = getSession().createQuery(hql.toString());
-        query.setParameter("newConfigId", 0L);
-        query.setParameter("configId", configId);
-        result.setWorkflowJobs(getSession().executeUpdate(query));
-
-        result.setConfigurations(executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, configId, "id"));
-
-        return result;
-    }
-
-    public InventoryDeleteResult deleteAgentCluster(Long configId) throws SOSHibernateException {
-        InventoryDeleteResult result = new InventoryDeleteResult();
-
-        result.setAgentClusterMembers(executeDelete(DBLayer.DBITEM_INV_AGENT_CLUSTER_MEMBERS, configId, "cidAgentCluster"));
-        result.setAgentClusters(executeDelete(DBLayer.DBITEM_INV_AGENT_CLUSTERS, configId));
-
-        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_WORKFLOW_JOBS);
-        hql.append(" set cidAgentCluster=:newConfigId");
-        hql.append(" where cidAgentCluster=:configId");
-        Query<DBItemInventoryWorkflowJob> query = getSession().createQuery(hql.toString());
-        query.setParameter("newConfigId", 0L);
-        query.setParameter("configId", configId);
-        result.setWorkflowJobs(getSession().executeUpdate(query));
-
-        result.setConfigurations(executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, configId, "id"));
-
-        return result;
-    }
-
-    public InventoryDeleteResult deleteLock(Long configId) throws SOSHibernateException {
-        InventoryDeleteResult result = new InventoryDeleteResult();
-
-        result.setLocks(executeDelete(DBLayer.DBITEM_INV_LOCKS, configId));
-        // TODO delete from Job2Lock
-        result.setConfigurations(executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, configId, "id"));
-
-        return result;
-    }
-
-    public InventoryDeleteResult deleteJunction(Long configId) throws SOSHibernateException {
-        InventoryDeleteResult result = new InventoryDeleteResult();
-
-        result.setJunctions(executeDelete(DBLayer.DBITEM_INV_JUNCTIONS, configId));
-        result.setWorkflowJunctions(executeDelete(DBLayer.DBITEM_INV_WORKFLOW_JUNCTIONS, configId, "cidJunction"));
-        // TODO delete from workflow ??
-        result.setConfigurations(executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, configId, "id"));
-
-        return result;
-    }
-
-    public InventoryDeleteResult deleteWorkflowOrder(Long configId) throws SOSHibernateException {
-        InventoryDeleteResult result = new InventoryDeleteResult();
-
-        executeDelete(DBLayer.DBITEM_INV_WORKFLOW_ORDER_VARIABLES, configId, "cidWorkflowOrder");
-        result.setWorkflowOrders(executeDelete(DBLayer.DBITEM_INV_WORKFLOW_ORDERS, configId));
-
-        // TODO delete from xxxx ??
-        result.setConfigurations(executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, configId, "id"));
-        return result;
-    }
-
     public InventoryDeleteResult deleteConfiguration(Long configId) throws SOSHibernateException {
         InventoryDeleteResult result = new InventoryDeleteResult();
         result.setConfigurations(executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, configId, "id"));
@@ -757,10 +569,6 @@ public class InventoryDBLayer extends DBLayer {
 
     public void deleteConfigurations(Set<Long> ids) throws SOSHibernateException {
         executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, ids, "id");
-    }
-
-    private int executeDelete(String dbItem, Long configId) throws SOSHibernateException {
-        return executeDelete(dbItem, configId, null);
     }
 
     private int executeDelete(final String dbItem, final Long configId, String entity) throws SOSHibernateException {
@@ -821,21 +629,9 @@ public class InventoryDBLayer extends DBLayer {
 
     public void deleteAll() throws SOSHibernateException {
         // TODO all inventory tables
-        getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_AGENT_CLUSTER_MEMBERS);
-        getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_AGENT_CLUSTERS);
         getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_CONFIGURATIONS);
-        getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_JOB_CLASSES);
-        getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_JUNCTIONS);
-        getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_LOCKS);
-        getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_WORKFLOW_JOB_ARGUMENTS);
-        getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_WORKFLOW_JOB_NODE_ARGUMENTS);
-        getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_WORKFLOW_JOB_NODES);
-        getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_WORKFLOW_JOBS);
-        getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_WORKFLOW_JUNCTIONS);
-        getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_WORKFLOW_ORDERS);
-        getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_WORKFLOW_ORDER_VARIABLES);
     }
-    
+
     public Set<Tree> getFoldersByFolderAndTypeForViews(Collection<String> controllerIds, String folder, Set<Integer> inventoryTypes)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
@@ -894,7 +690,8 @@ public class InventoryDBLayer extends DBLayer {
         }
     }
 
-    public Set<Tree> getFoldersByFolderAndTypeForInventory(String folder, Set<Integer> inventoryTypes, Boolean onlyValidObjects) throws DBConnectionRefusedException, DBInvalidDataException {
+    public Set<Tree> getFoldersByFolderAndTypeForInventory(String folder, Set<Integer> inventoryTypes, Boolean onlyValidObjects)
+            throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             List<String> whereClause = new ArrayList<String>();
             StringBuilder sql = new StringBuilder();
