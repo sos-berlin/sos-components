@@ -116,7 +116,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             // session.update(config);
             // }
 
-            switch (in.getObjectType()) {
+            // switch (in.getObjectType()) {
             // case WORKFLOW:
             // // Workflow w = (Workflow) in.getConfiguration();
             // break;
@@ -198,15 +198,15 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             // session.update(j);
             // }
             // break;
-            case ORDER:
-                break;
+            // case ORDER:
+            // break;
             // case WORKINGDAYSCALENDAR:
             // case NONWORKINGDAYSCALENDAR:
             // // Nothing to do
             // break;
-            default:
-                break;
-            }
+            // default:
+            // break;
+            // }
             // session.commit();
 
             ConfigurationObject item = new ConfigurationObject();

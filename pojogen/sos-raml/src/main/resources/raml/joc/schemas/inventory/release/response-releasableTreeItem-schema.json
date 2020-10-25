@@ -27,9 +27,6 @@
 		},
 		"released": {
 			"type": "boolean"
-		},
-		"releaseId": {
-			"$ref": "../../common/nonNegativeLong-schema.json"
 		}
 	}
 }

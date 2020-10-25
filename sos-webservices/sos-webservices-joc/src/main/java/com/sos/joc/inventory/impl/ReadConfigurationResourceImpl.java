@@ -129,7 +129,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                 
                 item.setDeployed(false);
                 
-                List<Date> releasedModifieds = dbLayer.getReleasedConfigurationProperty(config.getId(), "modified");
+                List<Date> releasedModifieds = dbLayer.getReleasedItemPropertyByConfigurationId(config.getId(), "modified");
                 Date releasedLastModified = null;
                 if (releasedModifieds != null && !releasedModifieds.isEmpty()) {
                     releasedLastModified = releasedModifieds.get(0);

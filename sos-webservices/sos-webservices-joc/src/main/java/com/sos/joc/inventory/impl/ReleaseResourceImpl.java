@@ -20,7 +20,6 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.db.inventory.items.InventoryReleaseItem;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -144,12 +143,12 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     private static void updateReleasedObject(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer)
             throws SOSHibernateException {
         Date now = Date.from(Instant.now());
-        List<InventoryReleaseItem> releases = dbLayer.getReleasedConfigurations(conf.getId());
-        if (releases == null || releases.isEmpty()) {
+        DBItemInventoryReleasedConfiguration releaseItem = dbLayer.getReleasedItemByConfigurationId(conf.getId());
+        if (releaseItem == null) {
             DBItemInventoryReleasedConfiguration release = setReleaseItem(null, conf, now);
             dbLayer.getSession().save(release);
         } else {
-            DBItemInventoryReleasedConfiguration release = setReleaseItem(releases.get(0).getId(), conf, now);
+            DBItemInventoryReleasedConfiguration release = setReleaseItem(releaseItem.getId(), conf, now);
             dbLayer.getSession().update(release);
         }
         conf.setReleased(true);
@@ -184,7 +183,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             // delete in INV_RELEASED_CONFIGURATION
             Globals.beginTransaction(dbLayer.getSession());
             try {
-                dbLayer.deleteReleasedConfigurations(folderContent.stream().map(DBItemInventoryConfiguration::getId).collect(Collectors.toSet()));
+                dbLayer.deleteReleasedItemsByConfigurationIds(folderContent.stream().map(DBItemInventoryConfiguration::getId).collect(Collectors.toSet()));
                 Globals.commit(dbLayer.getSession());
             } catch (Exception e) {
                 Globals.rollback(dbLayer.getSession());
@@ -204,7 +203,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     private static void deleteReleasedObject(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer) throws SOSHibernateException {
         Globals.beginTransaction(dbLayer.getSession());
         try {
-            dbLayer.deleteReleasedConfigurations(Arrays.asList(conf.getId()));
+            dbLayer.deleteReleasedItemsByConfigurationIds(Arrays.asList(conf.getId()));
             Globals.commit(dbLayer.getSession());
         } catch (Exception e) {
             Globals.rollback(dbLayer.getSession());

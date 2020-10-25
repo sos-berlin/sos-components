@@ -67,7 +67,7 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
 
             if (calendarsFilter.getCalendarIds() != null && !calendarsFilter.getCalendarIds().isEmpty()) {
                 calendarsFilter.setRegex(null);
-                dbCalendars = dbLayer.getConfigurations(calendarsFilter.getCalendarIds());
+                dbCalendars = dbLayer.getReleasedConfigurations(calendarsFilter.getCalendarIds());
 
             } else if (calendarsFilter.getCalendars() != null && !calendarsFilter.getCalendars().isEmpty()) {
                 calendarsFilter.setRegex(null);
