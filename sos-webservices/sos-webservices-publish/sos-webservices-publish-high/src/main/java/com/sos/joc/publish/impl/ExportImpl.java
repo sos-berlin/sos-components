@@ -3,6 +3,7 @@ package com.sos.joc.publish.impl;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -50,7 +51,27 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
     private static final String SIGNATURE_EXTENSION = ".asc";
     private ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
     
-	@Override
+    @Override
+    public JOCDefaultResponse getExportConfiguration(String xAccessToken, String accessToken, String filename, String configurations,
+            String deployments) throws Exception {
+        ExportFilter filter = new ExportFilter();
+        List<Long> configs = new ArrayList<Long>();
+        String[] configsAsString = configurations.split(",");
+        for (int i=0; i < configsAsString.length; i++) {
+            configs.add(Long.valueOf(configsAsString[i]));
+        }
+        filter.setConfigurations(configs);
+        List<Long> deploys = new ArrayList<Long>();
+        String[] deploysAsString = deployments.split(",");
+        for (int i=0; i < deploysAsString.length; i++) {
+            deploys.add(Long.valueOf(deploysAsString[i]));
+        }
+        filter.setDeployments(deploys);
+        byte[] filterBytes = Globals.objectMapper.writeValueAsBytes(filter);
+        return postExportConfiguration(getAccessToken(xAccessToken, accessToken), filterBytes);
+    }
+        
+    @Override
 	public JOCDefaultResponse postExportConfiguration(String xAccessToken, byte[] exportFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
@@ -225,5 +246,5 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
         jsObject.setAccount(jobschedulerUser.getSosShiroCurrentUser().getUsername());
         return jsObject;
     }
-    
+
 }
