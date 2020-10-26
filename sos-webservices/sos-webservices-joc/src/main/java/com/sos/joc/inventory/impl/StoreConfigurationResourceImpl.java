@@ -283,12 +283,13 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         item.setModified(Date.from(Instant.now()));
         return item;
     }
-
+    
     private static void validate(DBItemInventoryConfiguration item, ConfigurationObject in, IConfigurationObject obj) {
+        
         try {
             byte[] objBytes = Globals.objectMapper.writeValueAsBytes(obj);
+            ValidateResourceImpl.validate(in.getObjectType(), objBytes);
             item.setContent(new String(objBytes, StandardCharsets.UTF_8));
-            JsonValidator.validate(objBytes, URI.create(JocInventory.SCHEMA_LOCATION.get(in.getObjectType())));
             item.setValid(true);
         } catch (Throwable e) {
             item.setValid(false);

@@ -1,11 +1,21 @@
 package com.sos.joc.inventory.impl;
 
+import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Date;
 
 import javax.ws.rs.Path;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.sos.jobscheduler.model.instruction.ForkJoin;
+import com.sos.jobscheduler.model.instruction.IfElse;
+import com.sos.jobscheduler.model.instruction.Instruction;
+import com.sos.jobscheduler.model.instruction.TryCatch;
+import com.sos.jobscheduler.model.workflow.Branch;
+import com.sos.jobscheduler.model.workflow.Workflow;
+import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -15,9 +25,12 @@ import com.sos.joc.inventory.resource.IValidateResource;
 import com.sos.joc.model.inventory.Validate;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.schema.JsonValidator;
+import com.sos.schema.exception.SOSJsonSchemaException;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class ValidateResourceImpl extends JOCResourceImpl implements IValidateResource {
+    
+//    private static final Logger LOGGER = LoggerFactory.getLogger(ValidateResourceImpl.class);
 
     @Override
     public JOCDefaultResponse validate(final String accessToken, String objectType, final byte[] inBytes) {
@@ -34,7 +47,7 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
                 if (ConfigurationType.FOLDER.equals(type)) {
                     throw new JobSchedulerInvalidResponseDataException("Unsupprted objectType:" + objectType);
                 }
-                entity = validate(type, inBytes);
+                entity = getValidate(type, inBytes);
             } catch (Exception e) {
                 throw new JobSchedulerInvalidResponseDataException("Unsupprted objectType:" + objectType);
             }
@@ -47,17 +60,81 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
     }
+    
+    public static void validate(ConfigurationType objectType, byte[] inBytes) throws SOSJsonSchemaException, IOException {
+        JsonValidator.validate(inBytes, URI.create(JocInventory.SCHEMA_LOCATION.get(objectType)));
+        if (ConfigurationType.WORKFLOW.equals(objectType)) {
+            JsonValidator.validateStrict(inBytes, URI.create("classpath:/raml/jobscheduler/schemas/workflow/workflowJobs-schema.json"));
+            Workflow workflow = (Workflow) Globals.objectMapper.readValue(inBytes, JocInventory.CLASS_MAPPING.get(objectType));
+            validateInstructions(workflow.getInstructions(), "instructions");
+        } else {
+            Globals.objectMapper.readValue(inBytes, JocInventory.CLASS_MAPPING.get(objectType));
+            //IConfigurationObject confObj = (IConfigurationObject) Globals.objectMapper.readValue(inBytes, JocInventory.CLASS_MAPPING.get(objectType));
+            //LOGGER.debug(Globals.objectMapper.writeValueAsString(confObj));
+        }
+    }
 
-    private static Validate validate(ConfigurationType objectType, byte[] inBytes) {
+    private static Validate getValidate(ConfigurationType objectType, byte[] inBytes) {
         Validate v = new Validate();
         try {
-            JsonValidator.validate(inBytes, URI.create(JocInventory.SCHEMA_LOCATION.get(objectType)));
+            validate(objectType, inBytes);
             v.setValid(true);
         } catch (Throwable e) {
             v.setValid(false);
             v.setInvalidMsg(e.getMessage());
         }
         return v;
+    }
+    
+    private static void validateInstructions(Collection<Instruction> instructions, String position) throws SOSJsonSchemaException, JsonProcessingException,
+            IOException {
+        if (instructions != null) {
+            int index = 0;
+            for (Instruction inst : instructions) {
+                String instPosition = position + "[" + index + "].";
+                try {
+                    JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(inst), URI.create(JocInventory.INSTRUCTION_SCHEMA_LOCATION.get(
+                            inst.getTYPE())));
+                } catch (SOSJsonSchemaException e) {
+                    String msg = e.getMessage().replaceFirst("(\\$\\.)", "$1" + instPosition);
+                    throw new SOSJsonSchemaException(msg);
+                }
+                switch (inst.getTYPE()) {
+                case AWAIT:
+                case EXECUTE_NAMED:
+                case FAIL:
+                case FINISH:
+                case PUBLISH:
+                case RETRY:
+                    break;
+                case FORK:
+                    ForkJoin fj = inst.cast();
+                    int branchIndex = 0;
+                    String branchPosition = instPosition + "branches";
+                    for (Branch branch : fj.getBranches()) {
+                        String branchInstPosition = branchPosition + "[" + branchIndex + "].";
+                        validateInstructions(branch.getWorkflow().getInstructions(), branchInstPosition + "instructions");
+                        branchIndex++;
+                    }
+                    break;
+                case IF:
+                    IfElse ifElse = inst.cast();
+                    validateInstructions(ifElse.getThen().getInstructions(), instPosition + "then.instructions");
+                    if (ifElse.getElse() != null) {
+                        validateInstructions(ifElse.getElse().getInstructions(), instPosition + "else.instructions");
+                    }
+                    break;
+                case TRY:
+                    TryCatch tryCatch = inst.cast();
+                    validateInstructions(tryCatch.getTry().getInstructions(), instPosition + "try.instructions");
+                    if (tryCatch.getCatch() != null) {
+                        validateInstructions(tryCatch.getCatch().getInstructions(), instPosition + "catch.instructions");
+                    }
+                    break;
+                }
+                index++;
+            }
+        }
     }
 
 }

@@ -47,12 +47,7 @@
       "$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
     },
     "jobs": {
-      "type": "object",
-      "javaType": "com.sos.jobscheduler.model.workflow.Jobs",
-      "additionalProperties": {
-        "type": "object",
-        "javaType": "com.sos.jobscheduler.model.job.Job"
-      }
+      "$ref": "jobs-schema.json"
     }
   },
   "additionalProperties": false

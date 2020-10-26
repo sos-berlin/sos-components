@@ -33,8 +33,13 @@ public class JsonValidator {
     private static final List<NonValidationKeyword> NON_VALIDATION_KEYS = Arrays.asList(new NonValidationKeyword("javaType"),
             new NonValidationKeyword("javaInterfaces"), new NonValidationKeyword("javaEnumNames"), new NonValidationKeyword("extends"),
             new NonValidationKeyword("additionalProperties"), new NonValidationKeyword("propertyOrder"));
+    private static final List<NonValidationKeyword> NON_VALIDATION_KEYS_STRICT = Arrays.asList(new NonValidationKeyword("javaType"),
+            new NonValidationKeyword("javaInterfaces"), new NonValidationKeyword("javaEnumNames"), new NonValidationKeyword("extends"),
+            new NonValidationKeyword("propertyOrder"));
     private static final JsonSchemaFactory FACTORY_V4 = JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(JSONDRAFT)).addMetaSchema(
             JsonMetaSchema.builder(JsonMetaSchema.getV4().getUri(), JsonMetaSchema.getV4()).addKeywords(NON_VALIDATION_KEYS).build()).build();
+    private static final JsonSchemaFactory FACTORY_V4_STRICT = JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(JSONDRAFT)).addMetaSchema(
+            JsonMetaSchema.builder(JsonMetaSchema.getV4().getUri(), JsonMetaSchema.getV4()).addKeywords(NON_VALIDATION_KEYS_STRICT).build()).build();
 
     private static final Map<String, String> CLASS_URI_MAPPING = Collections.unmodifiableMap(new HashMap<String, String>() {
 
@@ -116,7 +121,7 @@ public class JsonValidator {
      * @throws SOSJsonSchemaException */
     public static void validate(byte[] json, String schemaPath) throws IOException, SOSJsonSchemaException {
         if (schemaPath != null) {
-            validate(json, URI.create("classpath:/raml/joc/schemas/" + schemaPath), false);
+            validate(json, URI.create("classpath:/raml/joc/schemas/" + schemaPath), false, false);
         }
     }
 
@@ -138,7 +143,7 @@ public class JsonValidator {
      * @throws SOSJsonSchemaException */
     public static void validate(byte[] json, URI schemaUri) throws IOException, SOSJsonSchemaException {
         if (schemaUri != null) {
-            validate(json, schemaUri, false);
+            validate(json, schemaUri, false, false);
         }
     }
 
@@ -150,7 +155,7 @@ public class JsonValidator {
      * @throws SOSJsonSchemaException */
     public static void validateFailFast(byte[] json, String schemaPath) throws IOException, SOSJsonSchemaException {
         if (schemaPath != null) {
-            validate(json, URI.create("classpath:/raml/joc/schemas/" + schemaPath), true);
+            validate(json, URI.create("classpath:/raml/joc/schemas/" + schemaPath), true, false);
         }
     }
 
@@ -172,7 +177,23 @@ public class JsonValidator {
      * @throws SOSJsonSchemaException */
     public static void validateFailFast(byte[] json, URI schemaUri) throws IOException, SOSJsonSchemaException {
         if (schemaUri != null) {
-            validate(json, schemaUri, true);
+            validate(json, schemaUri, true, false);
+        }
+    }
+    
+    public static void validateStrict(byte[] json, String schemaPath) throws IOException, SOSJsonSchemaException {
+        if (schemaPath != null) {
+            validate(json, URI.create("classpath:/raml/joc/schemas/" + schemaPath), false, true);
+        }
+    }
+    
+    public static void validateStrict(byte[] json, Class<?> clazz) throws IOException, SOSJsonSchemaException {
+        validateStrict(json, getSchemaPath(clazz));
+    }
+    
+    public static void validateStrict(byte[] json, URI schemaUri) throws IOException, SOSJsonSchemaException {
+        if (schemaUri != null) {
+            validate(json, schemaUri, false, true);
         }
     }
 
@@ -182,13 +203,17 @@ public class JsonValidator {
     }
 
     // protected for testing
-    protected static JsonSchema getSchema(URI schemaUri, boolean failFast) {
+    protected static JsonSchema getSchema(URI schemaUri, boolean failFast, boolean strict) {
         SchemaValidatorsConfig config = new SchemaValidatorsConfig();
         config.setTypeLoose(true);
         if (failFast) {
             config.setFailFast(true);
         }
-        return FACTORY_V4.getSchema(schemaUri, config);
+        if (strict) {
+            return FACTORY_V4_STRICT.getSchema(schemaUri, config);
+        } else {
+            return FACTORY_V4.getSchema(schemaUri, config);
+        }
     }
 
     private static String getSchemaPath(Class<?> clazz) {
@@ -204,8 +229,8 @@ public class JsonValidator {
         }
     }
 
-    private static void validate(byte[] json, URI schemaUri, boolean failFast) throws IOException, SOSJsonSchemaException {
-        JsonSchema schema = getSchema(schemaUri, failFast);
+    private static void validate(byte[] json, URI schemaUri, boolean failFast, boolean strict) throws IOException, SOSJsonSchemaException {
+        JsonSchema schema = getSchema(schemaUri, failFast, strict);
         Set<ValidationMessage> errors;
         try {
             errors = schema.validate(MAPPER.readTree(json));

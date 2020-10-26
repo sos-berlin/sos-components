@@ -10,12 +10,14 @@
   "properties": {
     "success": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "type": "integer"
       }
     },
     "failure": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "type": "integer"
       }

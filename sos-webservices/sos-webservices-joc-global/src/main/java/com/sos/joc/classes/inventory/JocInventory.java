@@ -22,6 +22,7 @@ import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.model.agent.AgentRef;
+import com.sos.jobscheduler.model.instruction.InstructionType;
 import com.sos.jobscheduler.model.job.Job;
 import com.sos.jobscheduler.model.jobclass.JobClass;
 import com.sos.jobscheduler.model.junction.Junction;
@@ -61,6 +62,23 @@ public class JocInventory {
             put(ConfigurationType.ORDER, "classpath:/raml/orderManagement/schemas/orders/orderTemplate-schema.json");
             put(ConfigurationType.WORKFLOW, "classpath:/raml/jobscheduler/schemas/workflow/workflow-schema.json");
             put(ConfigurationType.FOLDER, "classpath:/raml/jobscheduler/schemas/inventory/folder/folder-schema.json");
+        }
+    });
+    
+    public static final Map<InstructionType, String> INSTRUCTION_SCHEMA_LOCATION = Collections.unmodifiableMap(new HashMap<InstructionType, String>() {
+
+        private static final long serialVersionUID = 1L;
+
+        {
+            // TODO put(InstructionType.AWAIT, "classpath:/raml/jobscheduler/schemas/instruction/await-schema.json");
+            put(InstructionType.EXECUTE_NAMED, "classpath:/raml/jobscheduler/schemas/instruction/namedJob-schema.json");
+            put(InstructionType.FAIL, "classpath:/raml/jobscheduler/schemas/instruction/fail-schema.json");
+            put(InstructionType.FINISH, "classpath:/raml/jobscheduler/schemas/instruction/finish-schema.json");
+            put(InstructionType.FORK, "classpath:/raml/jobscheduler/schemas/instruction/forkJoin-schema.json");
+            put(InstructionType.IF, "classpath:/raml/jobscheduler/schemas/instruction/ifelse-schema.json");
+            // TODO put(InstructionType.PUBLISH, "classpath:/raml/jobscheduler/schemas/instruction/publish-schema.json");
+            put(InstructionType.RETRY, "classpath:/raml/jobscheduler/schemas/instruction/retryInCatch-schema.json");
+            put(InstructionType.TRY, "classpath:/raml/jobscheduler/schemas/instruction/retryschema.json");
         }
     });
     
