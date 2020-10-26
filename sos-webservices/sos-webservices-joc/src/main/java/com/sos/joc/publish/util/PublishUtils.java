@@ -1,9 +1,11 @@
 package com.sos.joc.publish.util;
 
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -16,6 +18,8 @@ import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Base64.Encoder;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,11 +31,18 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
+import javax.ws.rs.core.StreamingOutput;
+
+import org.apache.commons.codec.Charsets;
 import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.bouncycastle.openpgp.PGPException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -984,6 +995,140 @@ public abstract class PublishUtils {
         return signaturePaths;
     }
 
+    public static StreamingOutput writeZipFile (Set<JSObject> jsObjects, String versionId) {
+        StreamingOutput streamingOutput = new StreamingOutput() {
+            @Override
+            public void write(OutputStream output) throws IOException {
+                ZipOutputStream zipOut = null;
+                try {
+                    zipOut = new ZipOutputStream(new BufferedOutputStream(output), Charsets.UTF_8);
+                    String content = null;
+                    for (JSObject jsObject : jsObjects) {
+                        String extension = null;
+                        switch(jsObject.getObjectType()) {
+                        case WORKFLOW : 
+                            extension = JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
+                            Workflow workflow = (Workflow)jsObject.getContent();
+                            workflow.setVersionId(versionId);
+                            content = om.writeValueAsString(workflow);
+                            break;
+                        case AGENTREF :
+                            extension = JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.toString();
+                            AgentRef agentRef = (AgentRef)jsObject.getContent();
+                            agentRef.setVersionId(versionId);
+                            content = om.writeValueAsString(agentRef);
+                            break;
+                        case LOCK :
+                            extension = JSObjectFileExtension.LOCK_FILE_EXTENSION.toString();
+                            // TODO:
+//                            content = om.writeValueAsString((Lock)jsObject.getContent());
+                            break;
+                        case JUNCTION :
+                            extension = JSObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
+                            // TODO:
+//                            content = om.writeValueAsString((Junction)jsObject.getContent());
+                            break;
+                        default:
+                            extension = JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
+                        }
+                        String zipEntryName = jsObject.getPath().substring(1).concat(extension); 
+                        ZipEntry entry = new ZipEntry(zipEntryName);
+                        zipOut.putNextEntry(entry);
+                        zipOut.write(content.getBytes());
+                        zipOut.closeEntry();
+                        if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {
+                            String signatureZipEntryName = zipEntryName.concat("sig");
+                            ZipEntry signatureEntry = new ZipEntry(signatureZipEntryName);
+                            zipOut.putNextEntry(signatureEntry);
+                            zipOut.write(jsObject.getSignedContent().getBytes());
+                            zipOut.closeEntry();
+                        }
+                    }
+                    zipOut.flush();
+                } finally {
+                    if (zipOut != null) {
+                        try {
+                            zipOut.close();
+                        } catch (Exception e) {}
+                    }
+                }
+            }
+        };
+        return streamingOutput;
+    }
+    
+    public static StreamingOutput writeTarGzipFile (Set<JSObject> jsObjects, String versionId) {
+        StreamingOutput streamingOutput = new StreamingOutput() {
+            @Override
+            public void write(OutputStream output) throws IOException {
+                GZIPOutputStream gzipOut = null;
+                TarArchiveOutputStream tarOut = null;
+                BufferedOutputStream bOut = null;
+                try {
+                    bOut = new BufferedOutputStream(output);
+                    gzipOut = new GZIPOutputStream(bOut);
+                    tarOut = new TarArchiveOutputStream(gzipOut);
+                    String content = null;
+                    for (JSObject jsObject : jsObjects) {
+                        String extension = null;
+                        switch(jsObject.getObjectType()) {
+                        case WORKFLOW : 
+                            extension = JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
+                            Workflow workflow = (Workflow)jsObject.getContent();
+                            workflow.setVersionId(versionId);
+                            content = om.writeValueAsString(workflow);
+                            break;
+                        case AGENTREF :
+                            extension = JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.toString();
+                            AgentRef agentRef = (AgentRef)jsObject.getContent();
+                            agentRef.setVersionId(versionId);
+                            content = om.writeValueAsString(agentRef);
+                            break;
+                        case LOCK :
+                            extension = JSObjectFileExtension.LOCK_FILE_EXTENSION.toString();
+                            // TODO:
+//                            content = om.writeValueAsString((Lock)jsObject.getContent());
+                            break;
+                        case JUNCTION :
+                            extension = JSObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
+                            // TODO:
+//                            content = om.writeValueAsString((Junction)jsObject.getContent());
+                            break;
+                        default:
+                            extension = JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
+                        }
+                        String zipEntryName = jsObject.getPath().substring(1).concat(extension); 
+                        TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
+                        byte[] contentBytes = content.getBytes();
+                        entry.setSize(contentBytes.length);
+                        tarOut.putArchiveEntry(entry);
+                        tarOut.write(contentBytes);
+                        tarOut.closeArchiveEntry();
+                        if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {
+                            String signatureZipEntryName = zipEntryName.concat("sig");
+                            TarArchiveEntry signatureEntry = new TarArchiveEntry(signatureZipEntryName);
+                            tarOut.putArchiveEntry(signatureEntry);
+                            tarOut.write(jsObject.getSignedContent().getBytes());
+                            tarOut.closeArchiveEntry();
+                        }
+                    }
+                    tarOut.flush();
+                } finally {
+                    if (tarOut != null) {
+                        try {
+                            tarOut.finish();
+                            tarOut.close();
+                            gzipOut.close();
+                            bOut.close();
+                        } catch (Exception e) {}
+                    }
+                }
+                
+            }
+        };
+        return streamingOutput;
+    }
+    
     public static Signature verifyWorkflows(SOSHibernateSession hibernateSession, Set<SignaturePath> signaturePaths, Workflow workflow,
             String account) throws JocSignatureVerificationException, SOSHibernateException {
         SignaturePath signaturePath = signaturePaths.stream().filter(signaturePathFromStream -> signaturePathFromStream.getObjectPath()

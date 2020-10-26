@@ -1,20 +1,13 @@
 package com.sos.joc.publish.impl;
 
-import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import javax.ws.rs.Path;
-import javax.ws.rs.core.StreamingOutput;
-
-import org.apache.commons.codec.Charsets;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -37,7 +30,6 @@ import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.JSObject;
-import com.sos.joc.publish.common.JSObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.resource.IExportResource;
@@ -48,7 +40,6 @@ import com.sos.schema.JsonValidator;
 public class ExportImpl extends JOCResourceImpl implements IExportResource {
 
     private static final String API_CALL = "./publish/export";
-    private static final String SIGNATURE_EXTENSION = ".asc";
     private ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
     
     @Override
@@ -68,11 +59,11 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
         }
         filter.setDeployments(deploys);
         byte[] filterBytes = Globals.objectMapper.writeValueAsBytes(filter);
-        return postExportConfiguration(getAccessToken(xAccessToken, accessToken), filterBytes);
+        return postExportConfiguration(getAccessToken(xAccessToken, accessToken), filename, filterBytes);
     }
         
     @Override
-	public JOCDefaultResponse postExportConfiguration(String xAccessToken, byte[] exportFilter) throws Exception {
+	public JOCDefaultResponse postExportConfiguration(String xAccessToken, String filename, byte[] exportFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, exportFilter, xAccessToken);
@@ -86,69 +77,11 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             String versionId = UUID.randomUUID().toString();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             final Set<JSObject> jsObjects = getObjectsFromDB(filter, hibernateSession, versionId);
-            String targetFilename = "bundle_js_objects.zip";
-            StreamingOutput streamingOutput = new StreamingOutput() {
-
-                @Override
-                public void write(OutputStream output) throws IOException {
-                    ZipOutputStream zipOut = null;
-                    try {
-                        zipOut = new ZipOutputStream(new BufferedOutputStream(output), Charsets.UTF_8);
-                        String content = null;
-                        for (JSObject jsObject : jsObjects) {
-                        	String extension = null;
-                        	switch(jsObject.getObjectType()) {
-                        	case WORKFLOW : 
-                        		extension = JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
-                        		Workflow workflow = (Workflow)jsObject.getContent();
-                        		workflow.setVersionId(versionId);
-                        		content = om.writeValueAsString(workflow);
-                        		break;
-                            case AGENTREF :
-                                extension = JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.toString();
-                                AgentRef agentRef = (AgentRef)jsObject.getContent();
-                                agentRef.setVersionId(versionId);
-                                content = om.writeValueAsString(agentRef);
-                                break;
-                            case LOCK :
-                                extension = JSObjectFileExtension.LOCK_FILE_EXTENSION.toString();
-                                // TODO:
-//                                content = om.writeValueAsString((Lock)jsObject.getContent());
-                                break;
-                            case JUNCTION :
-                                extension = JSObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
-                                // TODO:
-//                                content = om.writeValueAsString((Junction)jsObject.getContent());
-                                break;
-                    		default:
-                    			extension = JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
-                        	}
-                        	String zipEntryName = jsObject.getPath().substring(1).concat(extension); 
-                            ZipEntry entry = new ZipEntry(zipEntryName);
-                            zipOut.putNextEntry(entry);
-                            zipOut.write(content.getBytes());
-                            zipOut.closeEntry();
-                            
-                            if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {
-                                String signatureZipEntryName = zipEntryName.concat(SIGNATURE_EXTENSION);
-                                ZipEntry signatureEntry = new ZipEntry(signatureZipEntryName);
-                                zipOut.putNextEntry(signatureEntry);
-                                zipOut.write(jsObject.getSignedContent().getBytes());
-                                zipOut.closeEntry();
-                            }
-                        }
-                        zipOut.flush();
-                    } finally {
-                        if (zipOut != null) {
-                            try {
-                                zipOut.close();
-                            } catch (Exception e) {
-                            }
-                        }
-                    }
-                }
-            };
-            return JOCDefaultResponse.responseOctetStreamDownloadStatus200(streamingOutput, targetFilename);
+            if (filename.endsWith("tar.gz") || filename.endsWith("gzip")) {
+                return JOCDefaultResponse.responseOctetStreamDownloadStatus200(PublishUtils.writeTarGzipFile(jsObjects, versionId), filename);
+            } else {
+                return JOCDefaultResponse.responseOctetStreamDownloadStatus200(PublishUtils.writeZipFile(jsObjects, versionId), filename);
+            }
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);

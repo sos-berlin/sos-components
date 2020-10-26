@@ -15,8 +15,8 @@ public interface IExportResource {
     @Path("export")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public JOCDefaultResponse postExportConfiguration(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filter)
-            throws Exception;
+    public JOCDefaultResponse postExportConfiguration(@HeaderParam("X-Access-Token") String xAccessToken, @HeaderParam("filename") 
+            String filename, byte[] filter) throws Exception;
 
     @Path("export")
     @GET
