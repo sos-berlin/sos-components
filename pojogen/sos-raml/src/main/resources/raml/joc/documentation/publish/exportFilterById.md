@@ -12,3 +12,10 @@
 <td> [12, 14]</td>
 <td></td>
 </tr>
+<tr>
+<td>``filename``</td>
+<td>optional, string</td>
+<td>Name of the file to be downloaded.</td>
+<td> joc-config-bundle.zip</td>
+<td></td>
+</tr>
