@@ -18,8 +18,6 @@ import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Base64.Encoder;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -38,7 +36,6 @@ import java.util.zip.ZipOutputStream;
 
 import javax.ws.rs.core.StreamingOutput;
 
-import org.apache.commons.codec.Charsets;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -1001,7 +998,7 @@ public abstract class PublishUtils {
             public void write(OutputStream output) throws IOException {
                 ZipOutputStream zipOut = null;
                 try {
-                    zipOut = new ZipOutputStream(new BufferedOutputStream(output), Charsets.UTF_8);
+                    zipOut = new ZipOutputStream(new BufferedOutputStream(output), StandardCharsets.UTF_8);
                     String content = null;
                     for (JSObject jsObject : jsObjects) {
                         String extension = null;

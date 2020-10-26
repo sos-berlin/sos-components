@@ -9,6 +9,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
@@ -29,7 +30,6 @@ import java.util.zip.ZipOutputStream;
 
 import javax.ws.rs.core.UriBuilderException;
 
-import org.apache.commons.codec.Charsets;
 import org.apache.commons.io.IOUtils;
 import org.bouncycastle.crypto.CryptoException;
 import org.bouncycastle.crypto.DataLengthException;
@@ -450,7 +450,7 @@ public class DeploymentTest {
             LOGGER.info("subfolder \"created_test_files\" created in target folder.");
         }
         out = Files.newOutputStream(Paths.get("target").resolve("created_test_files").resolve(TARGET_FILENAME));
-        zipOut = new ZipOutputStream(new BufferedOutputStream(out), Charsets.UTF_8);
+        zipOut = new ZipOutputStream(new BufferedOutputStream(out), StandardCharsets.UTF_8);
         for (JSObject jsObjectToExport : jsObjectsToExport) {
             Workflow workflow = (Workflow) jsObjectToExport.getContent();
             String signature = jsObjectToExport.getSignedContent();
@@ -484,7 +484,7 @@ public class DeploymentTest {
             LOGGER.info("subfolder \"created_test_files\" created in target folder.");
         }
         out = Files.newOutputStream(Paths.get("target").resolve("created_test_files").resolve(TARGET_FILENAME_SINGLE));
-        zipOut = new ZipOutputStream(new BufferedOutputStream(out), Charsets.UTF_8);
+        zipOut = new ZipOutputStream(new BufferedOutputStream(out), StandardCharsets.UTF_8);
         for (JSObject jsObjectToExport : jsObjectsToExport) {
             Workflow workflow = (Workflow) jsObjectToExport.getContent();
             String signature = jsObjectToExport.getSignedContent();
