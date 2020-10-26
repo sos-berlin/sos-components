@@ -1,4 +1,43 @@
 type: error
+get?:
+  is: [ accessToken ]
+    
+  description: |
+    <h2><<description>></h2>
+    ___
+  queryParameters:
+    filename:
+      type: string
+      description: |
+        Name of the file to download.
+      example: joc-configuration-bundle.zip
+      required: true
+    configurations:
+      type: string
+      description: |
+        ids of configuration objects, comma separated
+      example: 3,4,5
+      required: false
+    deployments:
+      type: string
+      description: |
+        ids of already deployed objects, comma separated
+      example: 1,2,3
+      required: false
+  responses:
+    200:
+      description: Content for download
+      headers:
+        Content-Disposition:
+          type: string
+          required: true
+          example: attachment;filename=xxx
+        Content-Type:
+          type: string
+          required: true
+          default: application/octet-stream
+      body:
+        application/octet-stream:
 post:
   description: |
     <h2><<description>></h2>

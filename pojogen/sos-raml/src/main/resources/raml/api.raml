@@ -1809,9 +1809,10 @@ traits:
   description: This is not an API call. Use child urls instead!
 
   /export:
+    get:
     type:
       postForDownloadUnsigned:
-        description: provides archive file (zip, tar.gz, gz) to download unsigned JSON files of 
+        description: provides archive file (zip, tar.gz, gz) to download unsigned JSON files
         description1: !include joc/documentation/publish/exportFilterById.md
         schema: !include joc/schemas/publish/exportFilter-schema.json
         example: !include joc/examples/publish/publishExport-example.json
