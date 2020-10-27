@@ -12,7 +12,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.deployment.DBItemDepVersions;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.publish.ConfigurationVersion;
 import com.sos.joc.model.publish.DeploymentVersion;
 import com.sos.joc.model.publish.SetVersionsFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
@@ -31,8 +30,8 @@ public class SetVersionsImpl extends JOCResourceImpl implements ISetVersions {
             initLogging(API_CALL, setVersionsFilter, xAccessToken);
             JsonValidator.validateFailFast(setVersionsFilter, SetVersionsFilter.class);
             SetVersionsFilter filter = Globals.objectMapper.readValue(setVersionsFilter, SetVersionsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations()
-                    .getPublish().isSetVersion());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, 
+                    getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isSetVersion());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
