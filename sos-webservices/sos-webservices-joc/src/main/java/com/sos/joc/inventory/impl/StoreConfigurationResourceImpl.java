@@ -288,8 +288,8 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         
         try {
             byte[] objBytes = Globals.objectMapper.writeValueAsBytes(obj);
-            ValidateResourceImpl.validate(in.getObjectType(), objBytes);
             item.setContent(new String(objBytes, StandardCharsets.UTF_8));
+            ValidateResourceImpl.validate(in.getObjectType(), objBytes);
             item.setValid(true);
         } catch (Throwable e) {
             item.setValid(false);
