@@ -140,11 +140,6 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemInventoryConfiguration> getFilteredConfigurationsForSetVersion(SetVersionFilter filter)
-            throws DBConnectionRefusedException, DBInvalidDataException {
-        return getFilteredConfigurations(filter.getConfigurations());
-    }
-
     public List<DBItemDeploymentHistory> getFilteredDeploymentsForSetVersion(SetVersionFilter filter)
             throws DBConnectionRefusedException, DBInvalidDataException {
         return getFilteredDeployments(filter.getDeployments());
