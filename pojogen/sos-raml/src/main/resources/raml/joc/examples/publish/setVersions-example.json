@@ -1,15 +1,4 @@
 {
-  "configurations": [{
-      "version" : "myNewVersionX",
-      "configurationId" : 1
-    }, {
-      "version" : "myNewVersionY",
-      "configurationId" : 3
-    }, {
-      "version" : "myNewVersionZ",
-      "configurationId" : 5
-    }
-  ],
   "deployments": [{
       "version" : "myNewVersionA",
       "deploymentId" : 4

@@ -10,12 +10,6 @@
     "version": {
       "$ref": "../common/string255-schema.json"
     },
-    "configurations": {
-      "type": "array",
-      "items": {
-        "$ref": "../common/nonNegativeLong-schema.json"
-      }
-    }, 
     "deployments": {
       "type": "array",
       "items": {

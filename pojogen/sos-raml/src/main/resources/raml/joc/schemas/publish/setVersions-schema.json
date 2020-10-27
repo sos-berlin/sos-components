@@ -3,13 +3,10 @@
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.joc.model.publish.SetVersionsFilter",
 	"type": "object",
+  "required": [
+    "deployments"
+  ],
 	"properties": {
-		"configurations": {
-			"type": "array",
-			"items": {
-          "$ref": "configurationVersion-schema.json"
-			}
-		},
 		"deployments": {
       "type": "array",
       "items": {

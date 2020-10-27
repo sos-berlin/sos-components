@@ -1,5 +1,4 @@
 {
   "version" : "myNewVersion",
-  "configurations": [1, 4, 6],
   "deployments": [5, 7]
 }
