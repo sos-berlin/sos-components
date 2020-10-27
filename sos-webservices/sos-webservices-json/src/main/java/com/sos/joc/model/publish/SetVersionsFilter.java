@@ -19,31 +19,33 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "configurations",
     "deployments"
 })
 public class SetVersionsFilter {
 
-    @JsonProperty("configurations")
-    private List<ConfigurationVersion> configurations = new ArrayList<ConfigurationVersion>();
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("deployments")
     private List<DeploymentVersion> deployments = new ArrayList<DeploymentVersion>();
 
-    @JsonProperty("configurations")
-    public List<ConfigurationVersion> getConfigurations() {
-        return configurations;
-    }
-
-    @JsonProperty("configurations")
-    public void setConfigurations(List<ConfigurationVersion> configurations) {
-        this.configurations = configurations;
-    }
-
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("deployments")
     public List<DeploymentVersion> getDeployments() {
         return deployments;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("deployments")
     public void setDeployments(List<DeploymentVersion> deployments) {
         this.deployments = deployments;
@@ -51,12 +53,12 @@ public class SetVersionsFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("configurations", configurations).append("deployments", deployments).toString();
+        return new ToStringBuilder(this).append("deployments", deployments).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(configurations).append(deployments).toHashCode();
+        return new HashCodeBuilder().append(deployments).toHashCode();
     }
 
     @Override
@@ -68,7 +70,7 @@ public class SetVersionsFilter {
             return false;
         }
         SetVersionsFilter rhs = ((SetVersionsFilter) other);
-        return new EqualsBuilder().append(configurations, rhs.configurations).append(deployments, rhs.deployments).isEquals();
+        return new EqualsBuilder().append(deployments, rhs.deployments).isEquals();
     }
 
 }

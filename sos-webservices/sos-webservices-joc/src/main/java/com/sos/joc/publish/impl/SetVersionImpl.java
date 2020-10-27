@@ -29,8 +29,8 @@ public class SetVersionImpl extends JOCResourceImpl implements ISetVersion {
             initLogging(API_CALL, setVersionFilter, xAccessToken);
             JsonValidator.validateFailFast(setVersionFilter, SetVersionFilter.class);
             SetVersionFilter filter = Globals.objectMapper.readValue(setVersionFilter, SetVersionFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations()
-                    .getPublish().isSetVersion());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, 
+                    getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isSetVersion());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -49,13 +49,6 @@ public class SetVersionImpl extends JOCResourceImpl implements ISetVersion {
     }
 
     private void updateVersions(SetVersionFilter filter, DBLayerDeploy dbLayer) throws SOSHibernateException {
-        for (Long configurationId : filter.getConfigurations()) {
-            DBItemDepVersions newVersion = new DBItemDepVersions();
-            newVersion.setInvConfigurationId(configurationId);
-            newVersion.setVersion(filter.getVersion());
-            newVersion.setModified(Date.from(Instant.now()));
-            dbLayer.getSession().save(newVersion);
-        }
         for (Long deploymentId : filter.getDeployments()) {
             DBItemDepVersions newVersion = new DBItemDepVersions();
             newVersion.setInvConfigurationId(deploymentId);

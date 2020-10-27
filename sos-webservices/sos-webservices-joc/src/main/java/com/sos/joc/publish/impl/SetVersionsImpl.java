@@ -51,13 +51,6 @@ public class SetVersionsImpl extends JOCResourceImpl implements ISetVersions {
     }
 
     private void updateVersions(SetVersionsFilter filter, DBLayerDeploy dbLayer) throws SOSHibernateException {
-        for (ConfigurationVersion configurationWithVersion : filter.getConfigurations()) {
-            DBItemDepVersions newVersion = new DBItemDepVersions();
-            newVersion.setInvConfigurationId(configurationWithVersion.getConfigurationId());
-            newVersion.setVersion(configurationWithVersion.getVersion());
-            newVersion.setModified(Date.from(Instant.now()));
-            dbLayer.getSession().save(newVersion);
-        }
         for (DeploymentVersion deploymentWithVersion : filter.getDeployments()) {
             DBItemDepVersions newVersion = new DBItemDepVersions();
             newVersion.setInvConfigurationId(deploymentWithVersion.getDeploymentId());
