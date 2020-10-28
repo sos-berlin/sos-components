@@ -8,6 +8,6 @@
   <artifactId>sos-commons-tools</artifactId>
   <packaging>pom</packaging>
   <modules>
-  	<module>sos-commons-password-hasher</module>
+  	<module>sos-commons-hash</module>
   </modules>
 </project>
