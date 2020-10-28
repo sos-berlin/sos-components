@@ -41,7 +41,7 @@ public class StringHasher {
 
     private static void printUsage(){
         System.out.println();
-        System.out.println("Creates a SHA-512 hash of a string with a prefix \"sha512:\". Leading spaces are not supported!");
+        System.out.println("Creates a SHA-512 hash of a string with a prefix \"sha512:\". Strings with leading spaces have to be quoted.");
         System.out.println();
         System.out.println("sos-commons-hash-[VERSION] [String]");
         System.out.println();
