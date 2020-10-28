@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
@@ -103,8 +104,14 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     List<OrderId> oIds = result.get(true).stream().map(Either::get).map(o -> o.id()).collect(Collectors.toList());
                     Stream<JFreshOrder> freshOrders = result.get(true).stream().map(Either::get);
                     final JControllerApi controllerApi = ControllerApi.of(startOrders.getJobschedulerId());
-                    Either<Problem, Void> response = controllerApi.addOrders(Flux.fromStream(freshOrders)).thenApply(
-                            e -> controllerApi.removeOrdersWhenTerminated(oIds)).get().get(Globals.httpSocketTimeout, TimeUnit.MILLISECONDS);
+                    Either<Problem, Void> response = controllerApi.addOrders(Flux.fromStream(freshOrders)).thenApply(e -> {
+                        if (e.isRight()) {
+                            return controllerApi.removeOrdersWhenTerminated(oIds);
+                        } else {
+                            Either<Problem, Void> either = Either.left(e.getLeft());
+                            return CompletableFuture.completedFuture(either);
+                        }
+                    }).get().get(Globals.httpSocketTimeout, TimeUnit.MILLISECONDS);
 
                     ProblemHelper.throwProblemIfExist(response);
                 } catch (TimeoutException e) {
