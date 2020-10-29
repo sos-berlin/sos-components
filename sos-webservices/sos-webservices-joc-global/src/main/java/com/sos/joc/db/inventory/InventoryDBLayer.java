@@ -28,6 +28,8 @@ import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
 import com.sos.joc.db.joc.DBItemJocLock;
+import com.sos.joc.db.search.DBItemSearchWorkflow;
+import com.sos.joc.db.search.DBItemSearchWorkflow2DeploymentHistory;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -324,7 +326,7 @@ public class InventoryDBLayer extends DBLayer {
         }
         return Collections.emptyMap();
     }
-    
+
     public List<DBItemInventoryConfiguration> getConfigurations(Collection<Long> ids) throws SOSHibernateException {
         if (ids != null && !ids.isEmpty()) {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
@@ -485,34 +487,103 @@ public class InventoryDBLayer extends DBLayer {
         }
     }
 
-    public InventoryDeleteResult deleteConfiguration(Long configId) throws SOSHibernateException {
-        InventoryDeleteResult result = new InventoryDeleteResult();
-        result.setConfigurations(executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, configId, "id"));
-
-        return result;
-    }
-
-    public void deleteConfigurations(Set<Long> ids) throws SOSHibernateException {
-        executeDelete(DBLayer.DBITEM_INV_CONFIGURATIONS, ids, "id");
-    }
-
-    private int executeDelete(final String dbItem, final Long configId, String entity) throws SOSHibernateException {
-        if (SOSString.isEmpty(entity)) {
-            entity = "cid";
+    public DBItemSearchWorkflow getSearchWorkflow(Long inventoryId, String hash) throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS);
+            hql.append(" where inventoryConfigurationId=:inventoryId");
+            if (SOSString.isEmpty(hash)) {// draft
+                hql.append(" and deployed=false");
+            } else {
+                hql.append(" and deployed=true");
+                hql.append(" and contentHash=:hash");
+            }
+            Query<DBItemSearchWorkflow> query = getSession().createQuery(hql.toString());
+            query.setParameter("inventoryId", inventoryId);
+            if (!SOSString.isEmpty(hash)) {
+                query.setParameter("hash", hash);
+            }
+            return getSession().getSingleResult(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
         }
-        StringBuilder hql = new StringBuilder("delete from ").append(dbItem);
-        hql.append(" where ").append(entity).append("=:configId");
+    }
+
+    public void searchWorkflow2DeploymentHistory(Long searchWorkflowId, List<Long> deploymentIds, boolean delete) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        try {
+            if (delete) {
+                deleteSearchWorkflow2DeploymentHistory(searchWorkflowId, deploymentIds);
+                Long count = getCountSearchWorkflow2DeploymentHistory(searchWorkflowId);
+                if (count == null || count.equals(0L)) {
+                    deleteSearchWorkflow(searchWorkflowId, true);
+                }
+            } else {
+                for (Long deploymentId : deploymentIds) {
+                    DBItemSearchWorkflow2DeploymentHistory item = new DBItemSearchWorkflow2DeploymentHistory();
+                    item.setSearchWorkflowId(searchWorkflowId);
+                    item.setDeploymentHistoryId(deploymentId);
+                    getSession().save(item);
+                }
+            }
+
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    private int deleteSearchWorkflow2DeploymentHistory(Long searchWorkflowId, List<Long> deploymentIds) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS_DEPLOYMENT_HISTORY);
+        hql.append(" where searchWorkflowId=:searchWorkflowId");
+        if (deploymentIds.size() == 1) {
+            hql.append(" and deploymentHistoryId=:deploymentId");
+        } else {
+            hql.append(" and deploymentHistoryId in (:deploymentIds)");
+        }
+        Query<?> query = getSession().createQuery(hql.toString());
+        if (deploymentIds.size() == 1) {
+            query.setParameter("deploymentId", deploymentIds.get(0));
+
+        } else {
+            query.setParameterList("deploymentIds", deploymentIds);
+        }
+        return getSession().executeUpdate(query);
+    }
+
+    private int deleteSearchWorkflow(Long id, boolean deployed) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS);
+        hql.append(" where id=:id");
+        hql.append(" and deployed=:deployed");
+
+        Query<?> query = getSession().createQuery(hql.toString());
+        query.setParameter("id", id);
+        query.setParameter("deployed", deployed);
+        return getSession().executeUpdate(query);
+    }
+
+    private Long getCountSearchWorkflow2DeploymentHistory(Long searchWorkflowId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select count(deploymentHistoryId) from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS_DEPLOYMENT_HISTORY);
+        hql.append(" where searchWorkflowId=:searchWorkflowId");
+
+        Query<Long> query = getSession().createQuery(hql.toString());
+        query.setParameter("searchWorkflowId", searchWorkflowId);
+        return getSession().getSingleValue(query);
+    }
+
+    public int deleteConfiguration(Long configId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where id=:configId");
         Query<?> query = getSession().createQuery(hql.toString());
         query.setParameter("configId", configId);
         return getSession().executeUpdate(query);
     }
 
-    private int executeDelete(final String dbItem, final Set<Long> ids, String entity) throws SOSHibernateException {
-        if (SOSString.isEmpty(entity)) {
-            entity = "cid";
-        }
-        StringBuilder hql = new StringBuilder("delete from ").append(dbItem);
-        hql.append(" where ").append(entity).append(" in (:ids)");
+    public int deleteConfigurations(Set<Long> ids) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where id in (:ids)");
         Query<?> query = getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
         return getSession().executeUpdate(query);
@@ -552,13 +623,8 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().executeUpdate(query);
     }
 
-    public void deleteAll() throws SOSHibernateException {
-        // TODO all inventory tables
-        getSession().getSQLExecutor().execute("TRUNCATE TABLE " + DBLayer.TABLE_INV_CONFIGURATIONS);
-    }
-
-    public Set<Tree> getFoldersByFolderAndTypeForViews(String folder, Set<Integer> inventoryTypes)
-            throws DBConnectionRefusedException, DBInvalidDataException {
+    public Set<Tree> getFoldersByFolderAndTypeForViews(String folder, Set<Integer> inventoryTypes) throws DBConnectionRefusedException,
+            DBInvalidDataException {
         try {
             List<String> whereClause = new ArrayList<String>();
             StringBuilder sql = new StringBuilder();
@@ -690,113 +756,4 @@ public class InventoryDBLayer extends DBLayer {
         }
         return new HashSet<>();
     }
-
-    public class InventoryDeleteResult {
-
-        private int configurations;
-        private int workflows;
-        private int workflowJunctions;
-        private int workflowJobs;
-        private int workflowOrders;
-        private int jobClasses;
-        private int agentClusters;
-        private int agentClusterMembers;
-        private int locks;
-        private int junctions;
-        private int calendars;
-
-        public boolean deleted() {
-            return configurations > 0 || workflows > 0 || workflowJunctions > 0 || workflowJobs > 0 || workflowOrders > 0 || jobClasses > 0
-                    || agentClusters > 0 || agentClusterMembers > 0 || locks > 0 || junctions > 0 || calendars > 0;
-        }
-
-        public int getConfigurations() {
-            return configurations;
-        }
-
-        public void setConfigurations(int val) {
-            configurations = val;
-        }
-
-        public int getWorkflows() {
-            return workflows;
-        }
-
-        public void setWorkflows(int val) {
-            workflows = val;
-        }
-
-        public int getWorkflowJunctions() {
-            return workflowJunctions;
-        }
-
-        public void setWorkflowJunctions(int val) {
-            workflowJunctions = val;
-        }
-
-        public int getWorkflowJobs() {
-            return workflowJobs;
-        }
-
-        public void setWorkflowJobs(int val) {
-            workflowJobs = val;
-        }
-
-        public int getJobClasses() {
-            return jobClasses;
-        }
-
-        public void setJobClasses(int val) {
-            jobClasses = val;
-        }
-
-        public int getAgentClusters() {
-            return agentClusters;
-        }
-
-        public void setAgentClusters(int val) {
-            agentClusters = val;
-        }
-
-        public int getAgentClusterMembers() {
-            return agentClusterMembers;
-        }
-
-        public void setAgentClusterMembers(int val) {
-            agentClusterMembers = val;
-        }
-
-        public int getLocks() {
-            return locks;
-        }
-
-        public void setLocks(int val) {
-            locks = val;
-        }
-
-        public int getJunctions() {
-            return junctions;
-        }
-
-        public void setJunctions(int val) {
-            junctions = val;
-        }
-
-        public int getCalendars() {
-            return calendars;
-        }
-
-        public void setCalendars(int calendars) {
-            this.calendars = calendars;
-        }
-
-        public int getWorkflowOrders() {
-            return workflowOrders;
-        }
-
-        public void setWorkflowOrders(int workflowOrders) {
-            this.workflowOrders = workflowOrders;
-        }
-    }
-
 }
