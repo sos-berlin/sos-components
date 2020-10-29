@@ -79,4 +79,10 @@ public class ModifyJobSchedulerClusterAudit extends UrlParameter implements IAud
     public String getCalendar() {
         return null;
     }
+
+    @Override
+    @JsonIgnore
+    public Long getDepHistoryId() {
+        return null;
+    }
 }

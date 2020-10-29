@@ -88,4 +88,10 @@ public class AssignmentLockDocuAudit extends LockDocuFilter implements IAuditLog
         return null;
     }
 
+    @Override
+    @JsonIgnore
+    public Long getDepHistoryId() {
+        return null;
+    }
+
 }

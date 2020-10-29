@@ -129,4 +129,10 @@ public class InventoryAudit implements IAuditLog {
         return path;
     }
 
+    @Override
+    @JsonIgnore
+    public Long getDepHistoryId() {
+        return null;
+    }
+
 }

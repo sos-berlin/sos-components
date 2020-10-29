@@ -73,4 +73,10 @@ public class ImportAudit extends ImportFilter implements IAuditLog {
 		return null;
 	}
 
+    @Override
+    @JsonIgnore
+    public Long getDepHistoryId() {
+        return null;
+    }
+
 }

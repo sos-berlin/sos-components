@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,6 +26,7 @@ import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.agent.AgentRefPublish;
+import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.jobscheduler.model.workflow.WorkflowPublish;
 import com.sos.joc.Globals;
@@ -77,17 +79,17 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
 			String ticketLink,
 			String comment,
 			String importDeployFilter) throws Exception {
-        AuditParams auditLog = new AuditParams();
-        auditLog.setComment(comment);
-        auditLog.setTicketLink(ticketLink);
+        AuditParams auditParams = new AuditParams();
+        auditParams.setComment(comment);
+        auditParams.setTicketLink(ticketLink);
         try {
-            auditLog.setTimeSpent(Integer.valueOf(timeSpent));
+            auditParams.setTimeSpent(Integer.valueOf(timeSpent));
         } catch (Exception e) {}
-		return postImportDeploy(xAccessToken, body, auditLog, importDeployFilter);
+		return postImportDeploy(xAccessToken, body, auditParams, importDeployFilter);
 	}
 
 	private JOCDefaultResponse postImportDeploy(String xAccessToken, FormDataBodyPart body,
-			AuditParams auditLog, String importDeployFilter) throws Exception {
+			AuditParams auditParams, String importDeployFilter) throws Exception {
         InputStream stream = null;
         String uploadFileName = null;
         SOSHibernateSession hibernateSession = null;
@@ -95,7 +97,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             initLogging(API_CALL, importDeployFilter.getBytes(StandardCharsets.UTF_8), xAccessToken);
             JsonValidator.validateFailFast(importDeployFilter.getBytes(StandardCharsets.UTF_8), ImportDeployFilter.class);
             ImportDeployFilter filter = Globals.objectMapper.readValue(importDeployFilter, ImportDeployFilter.class);
-            filter.setAuditLog(auditLog);
+            filter.setAuditLog(auditParams);
             // copy&paste Permission, has to be changed to the correct permission for upload 
             JOCDefaultResponse jocDefaultResponse = initPermissions("",
                    getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isImport() &&
@@ -113,6 +115,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             final String mediaSubType = body.getMediaType().getSubtype().replaceFirst("^x-", "");
             ImportDeployAudit importAudit = new ImportDeployAudit(filter);
             logAuditMessage(importAudit);
+            DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(importAudit);
             // process uploaded archive
             if (mediaSubType.contains("zip") && !mediaSubType.contains("gzip")) {
                 PublishUtils.readZipFileContent(stream, workflows, agentRefs);
@@ -124,7 +127,6 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             }
             // process signature verification and save or update objects
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(importAudit);
             dbLayer = new DBLayerDeploy(hibernateSession);
             Map<DBItemInventoryConfiguration, DBItemDepSignatures> importedObjects = 
                     new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
@@ -179,7 +181,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                         // call updateRepo command via Proxy of given controllers
                         PublishUtils.updateRepoDelete(versionIdForDeleteRenamed, toDelete, controller.getController(), dbLayer, 
                                 keyPair.getKeyAlgorithm()).thenAccept(either -> {
-                                processAfterDelete(either, toDelete, controller.getController(), account, versionIdForDeleteRenamed);
+                                processAfterDelete(either, toDelete, controller.getController(), account, versionIdForDeleteRenamed, null);
                         }).get();
                 }
             }
@@ -193,7 +195,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                             versionIdForUpdate, importedObjects, null, controller.getController(), dbLayer, keyPair.getKeyAlgorithm())
                         .thenAccept(either -> {
                             processAfterAdd(either, importedObjects, null, account, versionIdForUpdate, controller.getController(),
-                                    deploymentDate);
+                                    deploymentDate, filter);
                     }).get();
                     break;
                 case SOSKeyConstants.RSA_ALGORITHM_NAME:
@@ -204,7 +206,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                             SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN)
                         .thenAccept(either -> {
                             processAfterAdd(either, importedObjects, null, account, versionIdForUpdate, controller.getController(),
-                                    deploymentDate);
+                                    deploymentDate, filter);
                     }).get();
                     break;
                 case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
@@ -215,7 +217,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                             SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN)
                         .thenAccept(either -> {
                             processAfterAdd(either, importedObjects, null, account, versionIdForUpdate, controller.getController(),
-                                    deploymentDate);
+                                    deploymentDate, filter);
                     }).get();
                     break;
                 }
@@ -252,13 +254,15 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             String account,
             String versionIdForUpdate,
             String controllerId,
-            Date deploymentDate) {
+            Date deploymentDate, 
+            ImportDeployFilter filter) {
         if (either.isRight()) {
             // no error occurred
             Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(
                     verifiedConfigurations, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate);
             deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(
                     verifiedReDeployables, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
+            createAuditLogFor(deployedObjects, filter, controllerId);
             PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), dbLayer.getSession());
             LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
         } else if (either.isLeft()) {
@@ -269,9 +273,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             // updateRepo command is atomic, therefore all items are rejected
             List<DBItemDeploymentHistory> failedDeployUpdateItems = dbLayer.updateFailedDeploymentForUpdate(
                     verifiedConfigurations, verifiedReDeployables, controllerId, account, versionIdForUpdate, either.getLeft().message());
+            createAuditLogFor(failedDeployUpdateItems, filter, controllerId);
             // if not successful the objects and the related controllerId have to be stored 
             // in a submissions table for reprocessing
-            dbLayer.cloneFailedDeployment(failedDeployUpdateItems);
+            dbLayer.createSubmissionForFailedDeployments(failedDeployUpdateItems);
             hasErrors = true;
             if (either.getLeft().codeOrNull() != null) {
                 listOfErrors.add(
@@ -287,19 +292,26 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete, 
             String controller, 
             String account, 
-            String versionIdForDelete) {
+            String versionIdForDelete,
+            ImportDeployFilter filter) {
         if (either.isRight()) {
             Set<DBItemDeploymentHistory> deletedDeployItems = 
                     PublishUtils.updateDeletedDepHistory(depHistoryDBItemsToDeployDelete, dbLayer);
+            if (filter != null) {
+                createAuditLogFor(deletedDeployItems, filter, controller);
+            }
         } else if (either.isLeft()) {
             String message = String.format("Response from Controller \"%1$s:\": %2$s", controller, either.getLeft().message());
             LOGGER.warn(message);
             // updateRepo command is atomic, therefore all items are rejected
             List<DBItemDeploymentHistory> failedDeployDeleteItems = dbLayer.updateFailedDeploymentForDelete(
                     depHistoryDBItemsToDeployDelete, controller, account, versionIdForDelete, either.getLeft().message());
+            if (filter != null) {
+                createAuditLogFor(failedDeployDeleteItems, filter, controller);
+            }
             // if not successful the objects and the related controllerId have to be stored 
             // in a submissions table for reprocessing
-            dbLayer.cloneFailedDeployment(failedDeployDeleteItems);
+            dbLayer.createSubmissionForFailedDeployments(failedDeployDeleteItems);
             hasErrors = true;
             if (either.getLeft().codeOrNull() != null) {
                 listOfErrors.add(
@@ -308,6 +320,30 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 listOfErrors.add(
                         new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), 
                                 either.getLeft().message()), "/"));
+            }
+        }
+    }
+    
+    private void createAuditLogFor(Collection<DBItemDeploymentHistory> depHistoryEntries, ImportDeployFilter filter, String controllerId) {
+        for (DBItemDeploymentHistory deployedItem : depHistoryEntries) {
+            switch(DeployType.fromValue(deployedItem.getType())) {
+            case WORKFLOW:
+                ImportDeployAudit audit = new ImportDeployAudit(filter, controllerId, deployedItem.getPath(), deployedItem.getId());
+                logAuditMessage(audit);
+                storeAuditLogEntry(audit);
+                break;
+            case AGENTREF:
+                // TODO: when object can be deployed, or remove if otherwise
+                break;
+            case JOBCLASS:
+                // TODO: when object can be deployed, or remove if otherwise
+                break;
+            case JUNCTION:
+                // TODO: when object can be deployed, or remove if otherwise
+                break;
+            case LOCK:
+                // TODO: when object can be deployed, or remove if otherwise
+                break;
             }
         }
     }

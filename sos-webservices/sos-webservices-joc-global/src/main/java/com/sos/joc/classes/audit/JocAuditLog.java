@@ -87,6 +87,7 @@ public class JocAuditLog {
 			auditLogToDb.setTimeSpent(body.getTimeSpent());
 			auditLogToDb.setCalendar(body.getCalendar());
 			auditLogToDb.setCreated(Date.from(Instant.now()));
+			auditLogToDb.setDepHistoryId(body.getDepHistoryId());
 			SOSHibernateSession connection = null;
 			try {
 				connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntry");

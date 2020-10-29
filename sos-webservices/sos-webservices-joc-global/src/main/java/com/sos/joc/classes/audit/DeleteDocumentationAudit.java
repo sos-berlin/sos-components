@@ -87,5 +87,11 @@ public class DeleteDocumentationAudit extends DocumentationsFilter implements IA
     public String getCalendar() {
         return null;
     }
+
+    @Override
+    @JsonIgnore
+    public Long getDepHistoryId() {
+        return null;
+    }
     
 }

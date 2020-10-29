@@ -3,6 +3,7 @@ package com.sos.joc.publish.impl;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,9 +23,11 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
+import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.audit.DeployAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -65,6 +68,11 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             initLogging(API_CALL, filter, xAccessToken);
             JsonValidator.validateFailFast(filter, DeployFilter.class);
             DeployFilter deployFilter = Globals.objectMapper.readValue(filter, DeployFilter.class);
+            // this has to be moved to the processing of the items for each one
+//            DeployAudit deployAudit = new DeployAudit(deployFilter);
+//            logAuditMessage(deployAudit);
+//            storeAuditLogEntry(deployAudit);
+            
             JOCDefaultResponse jocDefaultResponse = initPermissions("", 
                     getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isDeploy());
             if (jocDefaultResponse != null) {
@@ -79,6 +87,12 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             // process filter
             Set<String> controllerIds = getControllerIdsFromFilter(deployFilter);
             Set<Long> configurationIdsToDeploy = getConfigurationIdsToUpdateFromFilter(deployFilter);
+            /* TODO: 
+             * - check for configurationIds with -marked-for-delete- set
+             * - get all deployments from history related to the given configurationId
+             * - get all controllers from those deployments
+             * - delete all those existing deployments from all determined controllers
+            **/
             Set<Long> deploymentIdsToReDeploy = getDeploymentIdsToUpdateFromFilter(deployFilter);
             Set<Long> deploymentIdsToDeleteFromConfigIds = getDeploymentIdsToDeleteByConfigurationIdsFromFilter(deployFilter, allControllers);
             Set<Long> configurationIdsToDelete = getConfigurationIdsToDeleteFromFilter(deployFilter);
@@ -128,7 +142,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         // call updateRepo command via Proxy of given controllers
                         PublishUtils.updateRepoDelete(versionIdForDeleteRenamed, toDelete, controller, dbLayer, 
                                 keyPair.getKeyAlgorithm()).thenAccept(either -> {
-                                processAfterDelete(either, toDelete, controller, account, versionIdForDeleteRenamed);
+                                processAfterDelete(either, toDelete, controller, account, versionIdForDeleteRenamed, null);
                         }).get();
                         JocInventory.deleteConfigurations(configurationIdsToDelete);
                 }
@@ -143,7 +157,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                             versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId, dbLayer, keyPair.getKeyAlgorithm())
                         .thenAccept(either -> {
                             processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, versionIdForUpdate, controllerId,
-                                    deploymentDate);
+                                    deploymentDate, deployFilter);
                     }).get();
                     break;
                 case SOSKeyConstants.RSA_ALGORITHM_NAME:
@@ -154,7 +168,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                             SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN)
                         .thenAccept(either -> {
                             processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, versionIdForUpdate, controllerId,
-                                    deploymentDate);
+                                    deploymentDate, deployFilter);
                     }).get();
                     break;
                 case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
@@ -165,7 +179,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                             SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN)
                         .thenAccept(either -> {
                             processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, versionIdForUpdate, controllerId,
-                                    deploymentDate);
+                                    deploymentDate, deployFilter);
                     }).get();
                     break;
                 }
@@ -177,7 +191,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     // call updateRepo command via Proxy of given controllers
                     PublishUtils.updateRepoDelete(versionIdForDelete, depHistoryDBItemsToDeployDelete, controller, dbLayer, 
                             keyPair.getKeyAlgorithm()).thenAccept(either -> {
-                            processAfterDelete(either, depHistoryDBItemsToDeployDelete, controller, account, versionIdForDelete);
+                            processAfterDelete(either, depHistoryDBItemsToDeployDelete, controller, account, versionIdForDelete, deployFilter);
                     }).get();
                     JocInventory.deleteConfigurations(configurationIdsToDelete);
                 }
@@ -241,7 +255,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             String account,
             String versionIdForUpdate,
             String controllerId,
-            Date deploymentDate) {
+            Date deploymentDate,
+            DeployFilter deployFilter) {
         if (either.isRight()) {
             // no error occurred
             Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(
@@ -250,6 +265,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     verifiedReDeployables, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
             PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), dbLayer.getSession());
             LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
+            createAuditLogFor(deployedObjects, deployFilter, controllerId);
         } else if (either.isLeft()) {
             // an error occurred
             String message = String.format(
@@ -258,9 +274,11 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             // updateRepo command is atomic, therefore all items are rejected
             List<DBItemDeploymentHistory> failedDeployUpdateItems = dbLayer.updateFailedDeploymentForUpdate(
                     verifiedConfigurations, verifiedReDeployables, controllerId, account, versionIdForUpdate, either.getLeft().message());
+            createAuditLogFor(failedDeployUpdateItems, deployFilter, controllerId);
+
             // if not successful the objects and the related controllerId have to be stored 
             // in a submissions table for reprocessing
-            dbLayer.cloneFailedDeployment(failedDeployUpdateItems);
+            dbLayer.createSubmissionForFailedDeployments(failedDeployUpdateItems);
             hasErrors = true;
             if (either.getLeft().codeOrNull() != null) {
                 listOfErrors.add(
@@ -276,10 +294,14 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete, 
             String controller, 
             String account, 
-            String versionIdForDelete) {
+            String versionIdForDelete,
+            DeployFilter deployFilter) {
         if (either.isRight()) {
             Set<DBItemDeploymentHistory> deletedDeployItems = 
                     PublishUtils.updateDeletedDepHistory(depHistoryDBItemsToDeployDelete, dbLayer);
+            if (deployFilter != null) {
+                createAuditLogFor(deletedDeployItems, deployFilter, controller);
+            }
         } else if (either.isLeft()) {
             String message = String.format("Response from Controller \"%1$s:\": %2$s", controller, either.getLeft().message());
             LOGGER.warn(message);
@@ -288,7 +310,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     depHistoryDBItemsToDeployDelete, controller, account, versionIdForDelete, either.getLeft().message());
             // if not successful the objects and the related controllerId have to be stored 
             // in a submissions table for reprocessing
-            dbLayer.cloneFailedDeployment(failedDeployDeleteItems);
+            if (deployFilter != null) {
+                createAuditLogFor(failedDeployDeleteItems, deployFilter, controller);
+            }
+            dbLayer.createSubmissionForFailedDeployments(failedDeployDeleteItems);
             hasErrors = true;
             if (either.getLeft().codeOrNull() != null) {
                 listOfErrors.add(
@@ -297,6 +322,30 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 listOfErrors.add(
                         new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), 
                                 either.getLeft().message()), "/"));
+            }
+        }
+    }
+    
+    private void createAuditLogFor(Collection<DBItemDeploymentHistory> depHistoryEntries, DeployFilter deployFilter, String controllerId) {
+        for (DBItemDeploymentHistory deployedItem : depHistoryEntries) {
+            switch(DeployType.fromValue(deployedItem.getType())) {
+            case WORKFLOW:
+                DeployAudit deployAudit = new DeployAudit(deployFilter, controllerId, deployedItem.getPath(), deployedItem.getId());
+                logAuditMessage(deployAudit);
+                storeAuditLogEntry(deployAudit);
+                break;
+            case AGENTREF:
+                // TODO: when object can be deployed, or remove if otherwise
+                break;
+            case JOBCLASS:
+                // TODO: when object can be deployed, or remove if otherwise
+                break;
+            case JUNCTION:
+                // TODO: when object can be deployed, or remove if otherwise
+                break;
+            case LOCK:
+                // TODO: when object can be deployed, or remove if otherwise
+                break;
             }
         }
     }

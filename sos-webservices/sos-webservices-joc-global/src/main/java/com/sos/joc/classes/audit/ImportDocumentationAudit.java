@@ -73,4 +73,10 @@ public class ImportDocumentationAudit extends DocumentationImport implements IAu
     public String getCalendar() {
         return null;
     }
+
+    @Override
+    @JsonIgnore
+    public Long getDepHistoryId() {
+        return null;
+    }
 }

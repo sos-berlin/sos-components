@@ -90,4 +90,10 @@ public class ModifyJobSchedulerAudit extends UrlParameter implements IAuditLog {
     public String getCalendar() {
         return null;
     }
+
+    @Override
+    @JsonIgnore
+    public Long getDepHistoryId() {
+        return null;
+    }
 }

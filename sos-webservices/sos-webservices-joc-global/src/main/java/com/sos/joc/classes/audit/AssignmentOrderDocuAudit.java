@@ -80,4 +80,10 @@ public class AssignmentOrderDocuAudit extends OrderDocuFilter implements IAuditL
         return null;
     }
 
+    @Override
+    @JsonIgnore
+    public Long getDepHistoryId() {
+        return null;
+    }
+
 }

@@ -88,4 +88,10 @@ public class AssignmentProcessClassDocuAudit extends ProcessClassDocuFilter impl
         return null;
     }
 
+    @Override
+    @JsonIgnore
+    public Long getDepHistoryId() {
+        return null;
+    }
+
 }

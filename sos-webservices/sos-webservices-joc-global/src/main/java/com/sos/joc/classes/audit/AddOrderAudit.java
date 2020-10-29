@@ -13,7 +13,6 @@ public class AddOrderAudit extends StartOrder implements IAuditLog {
     @JsonIgnore
     private String folder;
 
-    @JsonIgnore
     private String workflow;
 
     @JsonIgnore
@@ -85,7 +84,6 @@ public class AddOrderAudit extends StartOrder implements IAuditLog {
     }
 
     @Override
-    @JsonIgnore
     public String getWorkflow() {
         return workflow;
     }
@@ -101,4 +99,11 @@ public class AddOrderAudit extends StartOrder implements IAuditLog {
     public String getJobschedulerId() {
         return jobschedulerId;
     }
+
+    @Override
+    @JsonIgnore
+    public Long getDepHistoryId() {
+        return null;
+    }
+
 }

@@ -67,6 +67,9 @@ public class DBItemJocAuditLog extends DBItem {
     @Column(name = "[TIME_SPENT]", nullable = true)
     private Integer timeSpent;
 
+    @Column(name = "[DEP_HISTORY_ID]", nullable = false)
+    private Long depHistoryId;
+
     public Long getId() {
         return this.id;
     }
@@ -177,6 +180,14 @@ public class DBItemJocAuditLog extends DBItem {
 
     public void setTimeSpent(Integer val) {
         this.timeSpent = val;
+    }
+
+    public Long getDepHistoryId() {
+        return depHistoryId;
+    }
+    
+    public void setDepHistoryId(Long depHistoryId) {
+        this.depHistoryId = depHistoryId;
     }
 
 }

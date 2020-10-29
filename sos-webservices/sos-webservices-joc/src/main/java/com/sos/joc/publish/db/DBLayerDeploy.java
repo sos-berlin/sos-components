@@ -696,7 +696,7 @@ public class DBLayerDeploy {
         }
     }
     
-    public void cloneFailedDeployment(List<DBItemDeploymentHistory> failedDeployments) {
+    public void createSubmissionForFailedDeployments(List<DBItemDeploymentHistory> failedDeployments) {
         try {
             for (DBItemDeploymentHistory failedDeploy : failedDeployments) {
                 DBItemDeploymentSubmission submission = new DBItemDeploymentSubmission();

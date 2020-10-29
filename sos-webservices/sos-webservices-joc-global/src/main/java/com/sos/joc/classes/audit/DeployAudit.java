@@ -4,9 +4,9 @@ import java.nio.file.Paths;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.publish.ImportDeployFilter;
+import com.sos.joc.model.publish.DeployFilter;
 
-public class ImportDeployAudit extends ImportDeployFilter implements IAuditLog {
+public class DeployAudit extends DeployFilter implements IAuditLog {
 
     @JsonIgnore
     private String comment;
@@ -26,12 +26,13 @@ public class ImportDeployAudit extends ImportDeployFilter implements IAuditLog {
     private String controllerId;
     
     private String workflowPath;
-
-    public ImportDeployAudit(ImportDeployFilter filter) {
+    
+    
+    public DeployAudit(DeployFilter filter) {
         setAuditParams(filter.getAuditLog());
     }
 
-    public ImportDeployAudit(ImportDeployFilter filter, String controllerId, String workflowPath, Long depHistoryId) {
+    public DeployAudit(DeployFilter filter, String controllerId, String workflowPath, Long depHistoryId) {
         setAuditParams(filter.getAuditLog());
         this.controllerId = controllerId;
         this.workflowPath = workflowPath;
@@ -67,7 +68,7 @@ public class ImportDeployAudit extends ImportDeployFilter implements IAuditLog {
         return depHistoryId;
     }
 
-	@Override
+    @Override
 	public String getComment() {
 		return comment;
 	}

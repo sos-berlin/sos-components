@@ -137,7 +137,12 @@ public class XmlEditorAudit implements IAuditLog {
 
     @Override
     public String getWorkflow() {
-        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    @JsonIgnore
+    public Long getDepHistoryId() {
         return null;
     }
 

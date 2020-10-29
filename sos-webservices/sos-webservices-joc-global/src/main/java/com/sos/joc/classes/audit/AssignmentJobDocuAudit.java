@@ -82,4 +82,10 @@ public class AssignmentJobDocuAudit extends JobDocuFilter implements IAuditLog {
         return null;
     }
 
+    @Override
+    @JsonIgnore
+    public Long getDepHistoryId() {
+        return null;
+    }
+
 }

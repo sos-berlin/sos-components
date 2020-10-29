@@ -20,4 +20,5 @@ public interface IAuditLog {
     
     public String getCalendar();
     
+    public Long getDepHistoryId();
 }

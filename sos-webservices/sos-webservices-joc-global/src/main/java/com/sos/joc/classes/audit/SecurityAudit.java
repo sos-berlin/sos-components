@@ -69,4 +69,10 @@ public class SecurityAudit implements IAuditLog {
     public String getCalendar() {
         return null;
     }
+
+    @Override
+    @JsonIgnore
+    public Long getDepHistoryId() {
+        return null;
+    }
 }
