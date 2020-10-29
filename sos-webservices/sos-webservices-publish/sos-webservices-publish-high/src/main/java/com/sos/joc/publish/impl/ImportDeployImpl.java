@@ -262,7 +262,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     verifiedConfigurations, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate);
             deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(
                     verifiedReDeployables, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
-            createAuditLogFor(deployedObjects, filter, controllerId);
+            createAuditLogFor(deployedObjects, filter, controllerId, true);
             PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), dbLayer.getSession());
             LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
         } else if (either.isLeft()) {
@@ -273,7 +273,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             // updateRepo command is atomic, therefore all items are rejected
             List<DBItemDeploymentHistory> failedDeployUpdateItems = dbLayer.updateFailedDeploymentForUpdate(
                     verifiedConfigurations, verifiedReDeployables, controllerId, account, versionIdForUpdate, either.getLeft().message());
-            createAuditLogFor(failedDeployUpdateItems, filter, controllerId);
+            createAuditLogFor(failedDeployUpdateItems, filter, controllerId, true);
             // if not successful the objects and the related controllerId have to be stored 
             // in a submissions table for reprocessing
             dbLayer.createSubmissionForFailedDeployments(failedDeployUpdateItems);
@@ -298,7 +298,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             Set<DBItemDeploymentHistory> deletedDeployItems = 
                     PublishUtils.updateDeletedDepHistory(depHistoryDBItemsToDeployDelete, dbLayer);
             if (filter != null) {
-                createAuditLogFor(deletedDeployItems, filter, controller);
+                createAuditLogFor(deletedDeployItems, filter, controller, false);
             }
         } else if (either.isLeft()) {
             String message = String.format("Response from Controller \"%1$s:\": %2$s", controller, either.getLeft().message());
@@ -307,7 +307,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             List<DBItemDeploymentHistory> failedDeployDeleteItems = dbLayer.updateFailedDeploymentForDelete(
                     depHistoryDBItemsToDeployDelete, controller, account, versionIdForDelete, either.getLeft().message());
             if (filter != null) {
-                createAuditLogFor(failedDeployDeleteItems, filter, controller);
+                createAuditLogFor(failedDeployDeleteItems, filter, controller, false);
             }
             // if not successful the objects and the related controllerId have to be stored 
             // in a submissions table for reprocessing
@@ -324,11 +324,12 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
         }
     }
     
-    private void createAuditLogFor(Collection<DBItemDeploymentHistory> depHistoryEntries, ImportDeployFilter filter, String controllerId) {
+    private void createAuditLogFor(Collection<DBItemDeploymentHistory> depHistoryEntries, ImportDeployFilter filter, String controllerId,
+            boolean update) {
         for (DBItemDeploymentHistory deployedItem : depHistoryEntries) {
             switch(DeployType.fromValue(deployedItem.getType())) {
             case WORKFLOW:
-                ImportDeployAudit audit = new ImportDeployAudit(filter, controllerId, deployedItem.getPath(), deployedItem.getId());
+                ImportDeployAudit audit = new ImportDeployAudit(filter, controllerId, deployedItem.getPath(), deployedItem.getId(), update);
                 logAuditMessage(audit);
                 storeAuditLogEntry(audit);
                 break;

@@ -3,11 +3,28 @@ package com.sos.joc.classes.audit;
 import java.nio.file.Paths;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.publish.ImportDeployFilter;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({
+    "controllerId",
+    "workflow",
+    "update",
+    "delete"
+})
 public class ImportDeployAudit extends ImportDeployFilter implements IAuditLog {
 
+    private String controllerId;
+    
+    private String workflowPath;
+
+    private Boolean update;
+    
+    private Boolean delete;
+    
     @JsonIgnore
     private String comment;
 
@@ -23,20 +40,23 @@ public class ImportDeployAudit extends ImportDeployFilter implements IAuditLog {
     @JsonIgnore
     private String folder;
 
-    private String controllerId;
-    
-    private String workflowPath;
-
     public ImportDeployAudit(ImportDeployFilter filter) {
         setAuditParams(filter.getAuditLog());
     }
 
-    public ImportDeployAudit(ImportDeployFilter filter, String controllerId, String workflowPath, Long depHistoryId) {
+    public ImportDeployAudit(ImportDeployFilter filter, String controllerId, String workflowPath, Long depHistoryId, boolean update) {
         setAuditParams(filter.getAuditLog());
         this.controllerId = controllerId;
         this.workflowPath = workflowPath;
         this.folder = Paths.get(workflowPath).getParent().toString().replace('\\', '/');
         this.depHistoryId = depHistoryId;
+        if (update) {
+            this.update = true;
+            this.delete = null;
+        } else {
+            this.update = null;
+            this.delete = true;
+        }
     }
 
     private void setAuditParams(AuditParams auditParams) {
@@ -96,5 +116,13 @@ public class ImportDeployAudit extends ImportDeployFilter implements IAuditLog {
 	public String getCalendar() {
 		return null;
 	}
+
+    public Boolean getUpdate() {
+        return update;
+    }
+
+    public Boolean getDelete() {
+        return delete;
+    }
 
 }

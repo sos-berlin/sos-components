@@ -3,11 +3,28 @@ package com.sos.joc.classes.audit;
 import java.nio.file.Paths;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.publish.DeployFilter;
 
-public class DeployAudit extends DeployFilter implements IAuditLog {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({
+    "controllerId",
+    "workflow",
+    "update",
+    "delete"
+})
+public class DeployAudit implements IAuditLog {
 
+    private String controllerId;
+    
+    private String workflowPath;
+    
+    private Boolean update;
+    
+    private Boolean delete;
+    
     @JsonIgnore
     private String comment;
 
@@ -23,24 +40,23 @@ public class DeployAudit extends DeployFilter implements IAuditLog {
     @JsonIgnore
     private String folder;
 
-    private String controllerId;
-    
-    private String workflowPath;
-    
-    
     public DeployAudit(DeployFilter filter) {
         setAuditParams(filter.getAuditLog());
     }
 
-    public DeployAudit(DeployFilter filter, String controllerId, String workflowPath, Long depHistoryId) {
+    public DeployAudit(DeployFilter filter, String controllerId, String workflowPath, Long depHistoryId, boolean update) {
         setAuditParams(filter.getAuditLog());
-        this.setControllers(null);
-        this.setUpdate(null);
-        this.setDelete(null);
         this.controllerId = controllerId;
         this.workflowPath = workflowPath;
         this.folder = Paths.get(workflowPath).getParent().toString().replace('\\', '/');
         this.depHistoryId = depHistoryId;
+        if (update) {
+            this.update = true;
+            this.delete = null;
+        } else {
+            this.update = null;
+            this.delete = true;
+        }
     }
 
     private void setAuditParams(AuditParams auditParams) {
@@ -101,4 +117,12 @@ public class DeployAudit extends DeployFilter implements IAuditLog {
 		return null;
 	}
 
+    public Boolean getUpdate() {
+        return update;
+    }
+
+    public Boolean getDelete() {
+        return delete;
+    }
+	
 }
