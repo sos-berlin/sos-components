@@ -15,11 +15,11 @@ public class DBItemSearchWorkflow2DeploymentHistory extends DBItem {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @Column(name = "[SEARCH_WID]", nullable = false)
+    @Column(name = "[SEARCH_WID]", nullable = false) /* SEARCH_WORKFLOWS.ID */
     private Long searchWorkflowId;
 
     @Id
-    @Column(name = "[DEP_HID]", nullable = false)
+    @Column(name = "[DEP_HID]", nullable = false) /* DEP_HISTORY.ID */
     private Long deploymentHistoryId;
 
     public Long getSearchWorkflowId() {

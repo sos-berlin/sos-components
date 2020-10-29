@@ -22,6 +22,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IValidateResource;
+import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.Validate;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.schema.JsonValidator;
@@ -29,8 +30,8 @@ import com.sos.schema.exception.SOSJsonSchemaException;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class ValidateResourceImpl extends JOCResourceImpl implements IValidateResource {
-    
-//    private static final Logger LOGGER = LoggerFactory.getLogger(ValidateResourceImpl.class);
+
+    // private static final Logger LOGGER = LoggerFactory.getLogger(ValidateResourceImpl.class);
 
     @Override
     public JOCDefaultResponse validate(final String accessToken, String objectType, final byte[] inBytes) {
@@ -60,17 +61,20 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
     }
-    
-    public static void validate(ConfigurationType objectType, byte[] inBytes) throws SOSJsonSchemaException, IOException {
-        JsonValidator.validate(inBytes, URI.create(JocInventory.SCHEMA_LOCATION.get(objectType)));
-        if (ConfigurationType.WORKFLOW.equals(objectType)) {
-            JsonValidator.validateStrict(inBytes, URI.create("classpath:/raml/jobscheduler/schemas/workflow/workflowJobs-schema.json"));
-            Workflow workflow = (Workflow) Globals.objectMapper.readValue(inBytes, JocInventory.CLASS_MAPPING.get(objectType));
-            validateInstructions(workflow.getInstructions(), "instructions");
-        } else {
-            Globals.objectMapper.readValue(inBytes, JocInventory.CLASS_MAPPING.get(objectType));
-            //IConfigurationObject confObj = (IConfigurationObject) Globals.objectMapper.readValue(inBytes, JocInventory.CLASS_MAPPING.get(objectType));
-            //LOGGER.debug(Globals.objectMapper.writeValueAsString(confObj));
+
+    public static void validate(ConfigurationType type, byte[] configBytes) throws SOSJsonSchemaException, IOException {
+        validate(type, configBytes, (IConfigurationObject) Globals.objectMapper.readValue(configBytes, JocInventory.CLASS_MAPPING.get(type)));
+    }
+
+    public static void validate(ConfigurationType type, IConfigurationObject config) throws SOSJsonSchemaException, IOException {
+        validate(type, Globals.objectMapper.writeValueAsBytes(config), config);
+    }
+
+    private static void validate(ConfigurationType type, byte[] configBytes, IConfigurationObject config) throws SOSJsonSchemaException, IOException {
+        JsonValidator.validate(configBytes, URI.create(JocInventory.SCHEMA_LOCATION.get(type)));
+        if (ConfigurationType.WORKFLOW.equals(type)) {
+            JsonValidator.validateStrict(configBytes, URI.create("classpath:/raml/jobscheduler/schemas/workflow/workflowJobs-schema.json"));
+            validateInstructions(((Workflow) config).getInstructions(), "instructions");
         }
     }
 
@@ -85,16 +89,16 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
         }
         return v;
     }
-    
-    private static void validateInstructions(Collection<Instruction> instructions, String position) throws SOSJsonSchemaException, JsonProcessingException,
-            IOException {
+
+    private static void validateInstructions(Collection<Instruction> instructions, String position) throws SOSJsonSchemaException,
+            JsonProcessingException, IOException {
         if (instructions != null) {
             int index = 0;
             for (Instruction inst : instructions) {
                 String instPosition = position + "[" + index + "].";
                 try {
-                    JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(inst), URI.create(JocInventory.INSTRUCTION_SCHEMA_LOCATION.get(
-                            inst.getTYPE())));
+                    JsonValidator.validateFailFast(Globals.objectMapper.writeValueAsBytes(inst), URI.create(JocInventory.INSTRUCTION_SCHEMA_LOCATION
+                            .get(inst.getTYPE())));
                 } catch (SOSJsonSchemaException e) {
                     String msg = e.getMessage().replaceFirst("(\\$\\.)", "$1" + instPosition);
                     throw new SOSJsonSchemaException(msg);

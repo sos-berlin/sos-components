@@ -1,5 +1,7 @@
 package com.sos.joc.db.search;
 
+import java.util.Date;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -7,6 +9,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
@@ -32,7 +36,7 @@ public class DBItemSearchWorkflow extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    @Column(name = "[INV_CID]", nullable = false)
+    @Column(name = "[INV_CID]", nullable = false) /* INV_CONFIGURATIONS.ID */
     private Long inventoryConfigurationId;
 
     @Column(name = "[DEPLOYED]", nullable = false)
@@ -64,6 +68,14 @@ public class DBItemSearchWorkflow extends DBItem {
     @Column(name = "[INSTRUCTIONS_ARGS]", nullable = false)
     @Type(type = SOSHibernateJsonType.TYPE_NAME)
     private String instructionsArgs;
+
+    @Column(name = "[CREATED]", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date created;
+
+    @Column(name = "[MODIFIED]", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date modified;
 
     public Long getId() {
         return id;
@@ -158,5 +170,21 @@ public class DBItemSearchWorkflow extends DBItem {
             val = DEFAULT_JSON_VALUE;
         }
         instructionsArgs = val;
+    }
+
+    public Date getCreated() {
+        return created;
+    }
+
+    public void setCreated(Date val) {
+        created = val;
+    }
+
+    public Date getModified() {
+        return modified;
+    }
+
+    public void setModified(Date val) {
+        modified = val;
     }
 }

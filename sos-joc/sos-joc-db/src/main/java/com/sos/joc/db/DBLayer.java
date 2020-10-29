@@ -217,6 +217,8 @@ public class DBLayer implements Serializable {
         cl.add(DBItemInventoryJSInstance.class);
         cl.add(DBItemInventoryConfiguration.class);
         cl.add(DBItemInventoryReleasedConfiguration.class);
+        cl.add(DBItemSearchWorkflow.class);
+        cl.add(DBItemSearchWorkflow2DeploymentHistory.class);
         cl.add(com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentation.class);
         cl.add(com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentationImage.class);
         cl.add(com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentationUsage.class);

@@ -12,11 +12,30 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.inventory.JocInventory;
 
 public class WorkflowConverterTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowConverterTest.class);
     private static final Path WORKFLOW_FILE = Paths.get("src/test/resources/workflow.json");
+
+    @Ignore
+    @Test
+    public void testHashCode() throws Exception {
+        int hashCodeCase = 1;
+
+        Workflow w = (Workflow) Globals.objectMapper.readValue(getFileContent(WORKFLOW_FILE), Workflow.class);
+        if (hashCodeCase == 1) {
+            LOGGER.info("HASHCODE=" + w.hashCode()); // OUTPUT: -409785335
+        }
+        LOGGER.info("HASH=" + JocInventory.hash(w));
+        LOGGER.info("---START");
+
+        if (hashCodeCase != 1) {
+            LOGGER.info("HASHCODE=" + w.hashCode()); // OUTPUT : 239951249 ???
+        }
+        LOGGER.info("HASH=" + JocInventory.hash(w));
+    }
 
     @Ignore
     @Test

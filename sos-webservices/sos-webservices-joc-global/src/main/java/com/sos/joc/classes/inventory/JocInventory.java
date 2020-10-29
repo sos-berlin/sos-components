@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,9 +18,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.instruction.InstructionType;
@@ -30,8 +33,10 @@ import com.sos.jobscheduler.model.lock.Lock;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.CheckJavaVariableName;
+import com.sos.joc.classes.inventory.search.WorkflowConverter;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.model.calendar.Calendar;
@@ -46,7 +51,7 @@ public class JocInventory {
     private static final Logger LOGGER = LoggerFactory.getLogger(JocInventory.class);
     public static final String APPLICATION_PATH = "inventory";
     public static final String ROOT_FOLDER = "/";
-    
+
     public static final Map<ConfigurationType, String> SCHEMA_LOCATION = Collections.unmodifiableMap(new HashMap<ConfigurationType, String>() {
 
         private static final long serialVersionUID = 1L;
@@ -64,24 +69,25 @@ public class JocInventory {
             put(ConfigurationType.FOLDER, "classpath:/raml/jobscheduler/schemas/inventory/folder/folder-schema.json");
         }
     });
-    
-    public static final Map<InstructionType, String> INSTRUCTION_SCHEMA_LOCATION = Collections.unmodifiableMap(new HashMap<InstructionType, String>() {
 
-        private static final long serialVersionUID = 1L;
+    public static final Map<InstructionType, String> INSTRUCTION_SCHEMA_LOCATION = Collections.unmodifiableMap(
+            new HashMap<InstructionType, String>() {
 
-        {
-            // TODO put(InstructionType.AWAIT, "classpath:/raml/jobscheduler/schemas/instruction/await-schema.json");
-            put(InstructionType.EXECUTE_NAMED, "classpath:/raml/jobscheduler/schemas/instruction/namedJob-schema.json");
-            put(InstructionType.FAIL, "classpath:/raml/jobscheduler/schemas/instruction/fail-schema.json");
-            put(InstructionType.FINISH, "classpath:/raml/jobscheduler/schemas/instruction/finish-schema.json");
-            put(InstructionType.FORK, "classpath:/raml/jobscheduler/schemas/instruction/forkJoin-schema.json");
-            put(InstructionType.IF, "classpath:/raml/jobscheduler/schemas/instruction/ifelse-schema.json");
-            // TODO put(InstructionType.PUBLISH, "classpath:/raml/jobscheduler/schemas/instruction/publish-schema.json");
-            put(InstructionType.RETRY, "classpath:/raml/jobscheduler/schemas/instruction/retryInCatch-schema.json");
-            put(InstructionType.TRY, "classpath:/raml/jobscheduler/schemas/instruction/retryschema.json");
-        }
-    });
-    
+                private static final long serialVersionUID = 1L;
+
+                {
+                    // TODO put(InstructionType.AWAIT, "classpath:/raml/jobscheduler/schemas/instruction/await-schema.json");
+                    put(InstructionType.EXECUTE_NAMED, "classpath:/raml/jobscheduler/schemas/instruction/namedJob-schema.json");
+                    put(InstructionType.FAIL, "classpath:/raml/jobscheduler/schemas/instruction/fail-schema.json");
+                    put(InstructionType.FINISH, "classpath:/raml/jobscheduler/schemas/instruction/finish-schema.json");
+                    put(InstructionType.FORK, "classpath:/raml/jobscheduler/schemas/instruction/forkJoin-schema.json");
+                    put(InstructionType.IF, "classpath:/raml/jobscheduler/schemas/instruction/ifelse-schema.json");
+                    // TODO put(InstructionType.PUBLISH, "classpath:/raml/jobscheduler/schemas/instruction/publish-schema.json");
+                    put(InstructionType.RETRY, "classpath:/raml/jobscheduler/schemas/instruction/retryInCatch-schema.json");
+                    put(InstructionType.TRY, "classpath:/raml/jobscheduler/schemas/instruction/retryschema.json");
+                }
+            });
+
     public static final Map<ConfigurationType, Class<?>> CLASS_MAPPING = Collections.unmodifiableMap(new HashMap<ConfigurationType, Class<?>>() {
 
         private static final long serialVersionUID = 1L;
@@ -99,14 +105,14 @@ public class JocInventory {
             put(ConfigurationType.FOLDER, Folder.class);
         }
     });
-    
+
     public static final Set<ConfigurationType> DEPLOYABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
             ConfigurationType.AGENTCLUSTER, ConfigurationType.JOB, ConfigurationType.JOBCLASS, ConfigurationType.JUNCTION, ConfigurationType.LOCK,
             ConfigurationType.WORKFLOW)));
 
     public static final Set<ConfigurationType> RELEASABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(ConfigurationType.ORDER,
             ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR)));
-    
+
     public static String getResourceImplPath(final String path) {
         return String.format("./%s/%s", APPLICATION_PATH, path);
     }
@@ -157,55 +163,55 @@ public class JocInventory {
         }
         return result;
     }
-    
+
     public static boolean isCalendar(ConfigurationType type) {
         return ConfigurationType.WORKINGDAYSCALENDAR.equals(type) || ConfigurationType.NONWORKINGDAYSCALENDAR.equals(type);
     }
-    
+
     public static boolean isCalendar(Integer type) {
         return Arrays.asList(ConfigurationType.WORKINGDAYSCALENDAR.intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue()).contains(type);
     }
-    
+
     public static List<Integer> getCalendarTypes() {
         return Arrays.asList(ConfigurationType.WORKINGDAYSCALENDAR.intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue());
     }
-    
+
     public static Set<Integer> getDeployableTypes() {
         return DEPLOYABLE_OBJECTS.stream().map(ConfigurationType::intValue).collect(Collectors.toSet());
     }
-    
+
     public static Set<Integer> getReleasableTypes() {
         return RELEASABLE_OBJECTS.stream().map(ConfigurationType::intValue).collect(Collectors.toSet());
     }
-    
+
     public static boolean isDeployable(ConfigurationType type) {
         return DEPLOYABLE_OBJECTS.contains(type);
     }
-    
+
     public static boolean isReleasable(ConfigurationType type) {
         return RELEASABLE_OBJECTS.contains(type);
     }
-    
+
     public static Set<Integer> getDeployableTypes(Collection<ConfigurationType> objectTypes) {
         if (objectTypes == null || objectTypes.isEmpty()) {
             return getDeployableTypes();
         }
         return objectTypes.stream().filter(type -> isDeployable(type)).map(ConfigurationType::intValue).collect(Collectors.toSet());
     }
-    
+
     public static Set<Integer> getDeployableTypesWithFolder(Collection<ConfigurationType> objectTypes) {
         Set<Integer> deployables = getDeployableTypes(objectTypes);
         deployables.add(ConfigurationType.FOLDER.intValue());
         return deployables;
     }
-    
+
     public static Set<Integer> getReleasableTypes(Collection<ConfigurationType> objectTypes) {
         if (objectTypes == null || objectTypes.isEmpty()) {
             return getReleasableTypes();
         }
         return objectTypes.stream().filter(type -> isReleasable(type)).map(ConfigurationType::intValue).collect(Collectors.toSet());
     }
-    
+
     public static Set<Integer> getReleasableTypesWithFolder(Collection<ConfigurationType> objectTypes) {
         Set<Integer> releasables = getReleasableTypes(objectTypes);
         releasables.add(ConfigurationType.FOLDER.intValue());
@@ -265,14 +271,14 @@ public class JocInventory {
             return SOSString.isEmpty(s) ? ROOT_FOLDER : s;
         }
     }
-    
+
     public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, RequestFilter in,
             SOSShiroFolderPermissions folderPermissions) throws Exception {
         return getConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), folderPermissions);
     }
-    
-    public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, Long id,
-            String path, ConfigurationType type, SOSShiroFolderPermissions folderPermissions) throws Exception {
+
+    public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, Long id, String path, ConfigurationType type,
+            SOSShiroFolderPermissions folderPermissions) throws Exception {
         DBItemInventoryConfiguration config = null;
         if (id != null) {
             config = dbLayer.getConfiguration(id);
@@ -306,6 +312,66 @@ public class JocInventory {
             }
         }
         return config;
+    }
+
+    public static String toString(IConfigurationObject config) throws JsonProcessingException {
+        return Globals.objectMapper.writeValueAsString(config);
+    }
+
+    public static String hash(IConfigurationObject config) throws JsonProcessingException {
+        return SOSString.hash(toString(config));
+    }
+
+    public static void handleWorkflowSearch(InventoryDBLayer dbLayer, SOSHibernateSession session, Workflow workflow, Long inventoryId)
+            throws JsonProcessingException, SOSHibernateException {
+        handleWorkflowSearch(dbLayer, session, workflow, inventoryId, null, false);
+    }
+
+    public static void handleWorkflowSearch(InventoryDBLayer dbLayer, SOSHibernateSession session, Workflow workflow, Long inventoryId,
+            List<Long> deploymentIds, boolean deleteDeployments) throws JsonProcessingException, SOSHibernateException {
+
+        String hash = hash(workflow);
+        boolean deployed = deploymentIds != null;
+
+        DBItemSearchWorkflow item = dbLayer.getSearchWorkflow(inventoryId, deployed ? hash : null);
+        if (item == null) {
+            item = new DBItemSearchWorkflow();
+            item.setInventoryConfigurationId(inventoryId);
+            item.setDeployed(deployed);
+            item.setContentHash(hash);
+            item.setCreated(new Date());
+            item.setModified(item.getCreated());
+
+            item = convert(item, workflow);
+            session.save(item);
+
+            if (deployed) {
+                dbLayer.searchWorkflow2DeploymentHistory(item.getId(), deploymentIds, false);
+            }
+        } else {
+            if (deployed) {// same hash
+                dbLayer.searchWorkflow2DeploymentHistory(item.getId(), deploymentIds, deleteDeployments);
+            } else {
+                if (!hash.equals(item.getContentHash())) {
+                    item.setContentHash(hash);
+                    item.setModified(new Date());
+                    item = convert(item, workflow);
+                    session.update(item);
+                }
+            }
+        }
+    }
+
+    private static DBItemSearchWorkflow convert(DBItemSearchWorkflow item, Workflow workflow) {
+        WorkflowConverter converter = new WorkflowConverter();
+        converter.process(workflow);
+        item.setJobsCount(converter.getJobs().getNames().size());
+        item.setJobs(converter.getJobs().getMainInfo().toString());
+        item.setJobsArgs(converter.getJobs().getArgInfo().toString());
+        item.setJobsScripts(converter.getJobs().getScriptInfo().toString());
+        item.setInstructions(converter.getInstructions().getMainInfo().toString());
+        item.setInstructionsArgs(converter.getInstructions().getArgInfo().toString());
+        return item;
     }
 
 }
