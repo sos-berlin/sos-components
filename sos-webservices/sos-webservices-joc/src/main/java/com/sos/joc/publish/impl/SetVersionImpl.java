@@ -11,6 +11,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.deployment.DBItemDepVersions;
+import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
@@ -50,8 +51,12 @@ public class SetVersionImpl extends JOCResourceImpl implements ISetVersion {
 
     private void updateVersions(SetVersionFilter filter, DBLayerDeploy dbLayer) throws SOSHibernateException {
         for (Long deploymentId : filter.getDeployments()) {
+            DBItemDeploymentHistory depHistoryItem = dbLayer.getSession().get(DBItemDeploymentHistory.class, deploymentId);
             DBItemDepVersions newVersion = new DBItemDepVersions();
-            newVersion.setInvConfigurationId(deploymentId);
+            if (depHistoryItem != null) {
+                newVersion.setInvConfigurationId(depHistoryItem.getInventoryConfigurationId());
+            }
+            newVersion.setDepHistoryId(deploymentId);
             newVersion.setVersion(filter.getVersion());
             newVersion.setModified(Date.from(Instant.now()));
             dbLayer.getSession().save(newVersion);
