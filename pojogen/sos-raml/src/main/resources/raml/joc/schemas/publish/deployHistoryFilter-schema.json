@@ -1,0 +1,20 @@
+{
+  "title": "deployment history filter",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.joc.model.publish.DeploymentHistoryFilter",
+  "type": "object",
+  "properties": {
+    "controllerId": {
+      "type": "string"
+    },
+    "version" : {
+      "type": "string"
+    },
+    "versionId": {
+      "type": "string"
+    },
+    "deploymentDate": {
+      "$ref": "../common/timestamp-schema.json"
+    }
+  }
+}

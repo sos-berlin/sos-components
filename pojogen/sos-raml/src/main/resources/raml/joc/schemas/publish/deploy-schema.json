@@ -48,6 +48,9 @@
           }
         }
       }
+    },
+    "auditLog": {
+      "$ref": "../audit/auditParams-schema.json"
     }
   }
 }

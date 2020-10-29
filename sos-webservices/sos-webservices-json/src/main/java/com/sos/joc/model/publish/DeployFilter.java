@@ -6,6 +6,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -21,7 +22,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllers",
     "update",
-    "delete"
+    "delete",
+    "auditLog"
 })
 public class DeployFilter {
 
@@ -36,6 +38,14 @@ public class DeployFilter {
     private List<DeployUpdate> update = new ArrayList<DeployUpdate>();
     @JsonProperty("delete")
     private List<DeployDelete> delete = new ArrayList<DeployDelete>();
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    private AuditParams auditLog;
 
     /**
      * 
@@ -77,14 +87,36 @@ public class DeployFilter {
         this.delete = delete;
     }
 
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public AuditParams getAuditLog() {
+        return auditLog;
+    }
+
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public void setAuditLog(AuditParams auditLog) {
+        this.auditLog = auditLog;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllers", controllers).append("update", update).append("delete", delete).toString();
+        return new ToStringBuilder(this).append("controllers", controllers).append("update", update).append("delete", delete).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllers).append(update).append(delete).toHashCode();
+        return new HashCodeBuilder().append(controllers).append(update).append(auditLog).append(delete).toHashCode();
     }
 
     @Override
@@ -96,7 +128,7 @@ public class DeployFilter {
             return false;
         }
         DeployFilter rhs = ((DeployFilter) other);
-        return new EqualsBuilder().append(controllers, rhs.controllers).append(update, rhs.update).append(delete, rhs.delete).isEquals();
+        return new EqualsBuilder().append(controllers, rhs.controllers).append(update, rhs.update).append(auditLog, rhs.auditLog).append(delete, rhs.delete).isEquals();
     }
 
 }
