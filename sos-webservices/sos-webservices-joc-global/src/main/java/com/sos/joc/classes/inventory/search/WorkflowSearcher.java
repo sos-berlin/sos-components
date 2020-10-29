@@ -250,8 +250,6 @@ public class WorkflowSearcher {
                 result.add(in.cast());
             }
             switch (it) {
-            case EXECUTE_NAMED:
-                break;
             case IF:
                 IfElse ie = in.cast();
                 if (ie.getThen() != null) {
@@ -269,7 +267,6 @@ public class WorkflowSearcher {
                 if (tc.getCatch() != null) {
                     handleInstructions(result, tc.getCatch().getInstructions(), types);
                 }
-
                 break;
             case FORK:
                 ForkJoin fj = in.cast();
@@ -281,16 +278,6 @@ public class WorkflowSearcher {
                     }
                 }
                 break;
-            case PUBLISH:
-                // TODO
-                break;
-            case AWAIT:
-                // TODO
-                break;
-            case FINISH:
-            case RETRY:
-                // RetryCatch rc = in.cast(); // hat keine jobs
-                // RetryInCatch ric = in.cast(); // hat keine jobs
             default:
                 break;
             }
