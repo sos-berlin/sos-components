@@ -24,9 +24,12 @@ public class AssignmentOrderDocuAudit extends OrderDocuFilter implements IAuditL
     @JsonIgnore
     private String folder;
     
+    private String controllerId;
+
     public AssignmentOrderDocuAudit(OrderDocuFilter orderDocuFilter) {
         setAuditParams(orderDocuFilter.getAuditLog());
-        setJobschedulerId(orderDocuFilter.getJobschedulerId());
+        this.controllerId = orderDocuFilter.getJobschedulerId();
+        setJobschedulerId(null);
         setDocumentation(orderDocuFilter.getDocumentation());
         setWorkflow(orderDocuFilter.getWorkflow());
         setOrderId(orderDocuFilter.getOrderId());
@@ -84,6 +87,11 @@ public class AssignmentOrderDocuAudit extends OrderDocuFilter implements IAuditL
     @JsonIgnore
     public Long getDepHistoryId() {
         return null;
+    }
+
+    @Override
+    public String getControllerId() {
+        return controllerId;
     }
 
 }

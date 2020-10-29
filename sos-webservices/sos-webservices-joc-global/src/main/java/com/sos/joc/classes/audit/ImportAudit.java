@@ -68,7 +68,7 @@ public class ImportAudit extends ImportFilter implements IAuditLog {
 	}
 
 	@Override
-	public String getJobschedulerId() {
+	public String getControllerId() {
 		// TODO Auto-generated method stub
 		return null;
 	}

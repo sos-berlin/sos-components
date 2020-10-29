@@ -55,7 +55,7 @@ public class SecurityAudit implements IAuditLog {
 
     @Override
     @JsonIgnore
-    public String getJobschedulerId() {
+    public String getControllerId() {
         return "-";
     }
 

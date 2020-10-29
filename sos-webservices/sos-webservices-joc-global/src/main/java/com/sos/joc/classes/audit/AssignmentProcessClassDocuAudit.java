@@ -21,9 +21,12 @@ public class AssignmentProcessClassDocuAudit extends ProcessClassDocuFilter impl
     @JsonIgnore
     private String folder;
     
+    private String controllerId;
+
     public AssignmentProcessClassDocuAudit(ProcessClassDocuFilter processClassDocuFilter) {
         setAuditParams(processClassDocuFilter.getAuditLog());
-        setJobschedulerId(processClassDocuFilter.getJobschedulerId());
+        this.controllerId = processClassDocuFilter.getJobschedulerId();
+        setJobschedulerId(null);
         setDocumentation(processClassDocuFilter.getDocumentation());
         setProcessClass(processClassDocuFilter.getProcessClass());
         if (processClassDocuFilter.getProcessClass() != null) {
@@ -92,6 +95,11 @@ public class AssignmentProcessClassDocuAudit extends ProcessClassDocuFilter impl
     @JsonIgnore
     public Long getDepHistoryId() {
         return null;
+    }
+
+    @Override
+    public String getControllerId() {
+        return controllerId;
     }
 
 }

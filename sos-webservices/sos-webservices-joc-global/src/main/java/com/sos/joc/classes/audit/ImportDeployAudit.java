@@ -58,7 +58,7 @@ public class ImportDeployAudit extends ImportDeployFilter implements IAuditLog {
     }
 
     @Override
-    public String getJobschedulerId() {
+    public String getControllerId() {
         return controllerId;
     }
     

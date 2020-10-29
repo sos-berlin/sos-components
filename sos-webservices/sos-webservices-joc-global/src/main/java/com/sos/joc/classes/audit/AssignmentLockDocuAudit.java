@@ -21,9 +21,12 @@ public class AssignmentLockDocuAudit extends LockDocuFilter implements IAuditLog
     @JsonIgnore
     private String folder;
     
+    private String controllerId;
+
     public AssignmentLockDocuAudit(LockDocuFilter lockDocuFilter) {
         setAuditParams(lockDocuFilter.getAuditLog());
-        setJobschedulerId(lockDocuFilter.getJobschedulerId());
+        this.controllerId = lockDocuFilter.getJobschedulerId();
+        setJobschedulerId(null);
         setDocumentation(lockDocuFilter.getDocumentation());
         setLock(lockDocuFilter.getLock());
         if (lockDocuFilter.getLock() != null) {
@@ -92,6 +95,11 @@ public class AssignmentLockDocuAudit extends LockDocuFilter implements IAuditLog
     @JsonIgnore
     public Long getDepHistoryId() {
         return null;
+    }
+
+    @Override
+    public String getControllerId() {
+        return controllerId;
     }
 
 }

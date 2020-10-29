@@ -22,10 +22,12 @@ public class DeleteDocumentationAudit extends DocumentationsFilter implements IA
     @JsonIgnore
     private String folder;
     
+    private String controllerId;
     
     public DeleteDocumentationAudit(DocumentationsFilter documentationsFilter, String path, String folder) {
         setAuditParams(documentationsFilter.getAuditLog());
-        setJobschedulerId(documentationsFilter.getJobschedulerId());
+        this.controllerId = documentationsFilter.getJobschedulerId();
+        setJobschedulerId(null);
         List<String> documentations = new ArrayList<String>();
         documentations.add(path);
         setDocumentations(documentations);
@@ -92,6 +94,11 @@ public class DeleteDocumentationAudit extends DocumentationsFilter implements IA
     @JsonIgnore
     public Long getDepHistoryId() {
         return null;
+    }
+
+    @Override
+    public String getControllerId() {
+        return controllerId;
     }
     
 }

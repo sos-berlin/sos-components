@@ -34,6 +34,9 @@ public class DeployAudit extends DeployFilter implements IAuditLog {
 
     public DeployAudit(DeployFilter filter, String controllerId, String workflowPath, Long depHistoryId) {
         setAuditParams(filter.getAuditLog());
+        this.setControllers(null);
+        this.setUpdate(null);
+        this.setDelete(null);
         this.controllerId = controllerId;
         this.workflowPath = workflowPath;
         this.folder = Paths.get(workflowPath).getParent().toString().replace('\\', '/');
@@ -59,7 +62,7 @@ public class DeployAudit extends DeployFilter implements IAuditLog {
     }
 
     @Override
-    public String getJobschedulerId() {
+    public String getControllerId() {
         return controllerId;
     }
     

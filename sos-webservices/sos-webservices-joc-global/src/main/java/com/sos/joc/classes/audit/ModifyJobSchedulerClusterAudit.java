@@ -16,11 +16,14 @@ public class ModifyJobSchedulerClusterAudit extends UrlParameter implements IAud
     @JsonIgnore
     private String ticketLink;
     
+    private String controllerId;
+
     public ModifyJobSchedulerClusterAudit(UrlParameter urlParameter) {
         if (urlParameter != null) {
             setAuditParams(urlParameter.getAuditLog());
             setWithFailover(urlParameter.getWithFailover());
-            setJobschedulerId(urlParameter.getJobschedulerId()); 
+            this.controllerId = urlParameter.getJobschedulerId();
+            setJobschedulerId(null); 
         }
     }
 
@@ -84,5 +87,10 @@ public class ModifyJobSchedulerClusterAudit extends UrlParameter implements IAud
     @JsonIgnore
     public Long getDepHistoryId() {
         return null;
+    }
+
+    @Override
+    public String getControllerId() {
+        return controllerId;
     }
 }

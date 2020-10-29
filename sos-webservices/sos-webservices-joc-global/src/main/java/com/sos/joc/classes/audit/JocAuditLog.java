@@ -69,7 +69,7 @@ public class JocAuditLog {
 
 	public synchronized DBItemJocAuditLog storeAuditLogEntry(IAuditLog body) {
 		if (body != null) {
-			String jobSchedulerId = body.getJobschedulerId();
+			String jobSchedulerId = body.getControllerId();
 			if (jobSchedulerId == null || jobSchedulerId.isEmpty()) {
 				jobSchedulerId = "-";
 			}

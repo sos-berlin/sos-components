@@ -110,7 +110,7 @@ public class InventoryAudit implements IAuditLog {
     }
 
     @Override
-    public String getJobschedulerId() {
+    public String getControllerId() {
         return "-";
     }
 

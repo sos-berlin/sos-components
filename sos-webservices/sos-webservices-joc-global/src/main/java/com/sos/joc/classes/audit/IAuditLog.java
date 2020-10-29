@@ -12,7 +12,7 @@ public interface IAuditLog {
     
     public String getOrderId();
     
-    public String getJobschedulerId();
+    public String getControllerId();
     
     public Integer getTimeSpent();
     

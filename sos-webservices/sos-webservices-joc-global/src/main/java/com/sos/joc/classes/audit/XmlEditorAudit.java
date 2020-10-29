@@ -127,7 +127,7 @@ public class XmlEditorAudit implements IAuditLog {
     }
 
     @Override
-    public String getJobschedulerId() {
+    public String getControllerId() {
         return jobschedulerId;
     }
 
