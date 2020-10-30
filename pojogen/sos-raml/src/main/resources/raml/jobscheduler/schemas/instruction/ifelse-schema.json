@@ -14,7 +14,8 @@
   "description": "instruction with fixed property 'TYPE':'If'",
   "properties": {
   	"predicate": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1
     },
     "then": {
       "$ref": "instructions-schema.json"

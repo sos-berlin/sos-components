@@ -5,8 +5,7 @@
   "type": "object",
   "required": [
   	"try",
-  	"catch",
-  	"maxTries"
+  	"catch"
   ],
   "extends" : {
     "$ref": "instruction-schema.json"

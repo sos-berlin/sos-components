@@ -25,7 +25,8 @@
         "properties": {
           "id": {
           	"type": "string",
-          	"maxLength": 10
+          	"maxLength": 10,
+      		"minLength": 1
           },
           "workflow": {
             "$ref": "instructions-schema.json"
