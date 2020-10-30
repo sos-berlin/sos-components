@@ -2,10 +2,12 @@ package com.sos.joc.publish.impl;
 
 import java.io.InputStream;
 import java.net.URLDecoder;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
@@ -36,10 +38,6 @@ import com.sos.joc.publish.util.PublishUtils;
 public class ImportImpl extends JOCResourceImpl implements IImportResource {
 
     private static final String API_CALL = "./publish/import";
-    private SOSHibernateSession connection = null;
-    private Set<Workflow> workflows = new HashSet<Workflow>();
-    private Set<AgentRef> agentRefs = new HashSet<AgentRef>();
-    private Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
 
     @Override
 	public JOCDefaultResponse postImportConfiguration(String xAccessToken, 
@@ -82,6 +80,13 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             final String mediaSubType = body.getMediaType().getSubtype().replaceFirst("^x-", "");
             ImportAudit importAudit = new ImportAudit(filter);
             logAuditMessage(importAudit);
+            DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(importAudit);
+
+//            Set<Lock> locks = new HashSet<Lock>();
+            
+            Set<Workflow> workflows = new HashSet<Workflow>();
+            Set<AgentRef> agentRefs = new HashSet<AgentRef>();
+            Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
             
             // process uploaded archive
             if (mediaSubType.contains("zip") && !mediaSubType.contains("gzip")) {
@@ -94,8 +99,9 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             }
             // process signature verification and save or update objects
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(importAudit);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
+            Set<java.nio.file.Path> folders = new HashSet<java.nio.file.Path>();
+            folders = workflows.stream().map(wf -> wf.getPath()).map(path -> Paths.get(path).getParent()).collect(Collectors.toSet());
             for (Workflow workflow : workflows) {
                 WorkflowPublish wfEdit = new WorkflowPublish();
                 wfEdit.setContent(workflow);
@@ -107,6 +113,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 }
                 dbLayer.saveOrUpdateInventoryConfiguration(workflow.getPath(), wfEdit, workflow.getTYPE(), account, dbItemAuditLog.getId());
             }
+            folders.addAll(agentRefs.stream().map(aRef -> aRef.getPath()).map(path -> Paths.get(path)).collect(Collectors.toSet()));
             for (AgentRef agentRef : agentRefs) {
                 AgentRefPublish arEdit = new AgentRefPublish();
                 arEdit.setContent(agentRef);
@@ -118,7 +125,8 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 }
                 dbLayer.saveOrUpdateInventoryConfiguration(agentRef.getPath(), arEdit, agentRef.getTYPE(), account, dbItemAuditLog.getId());
             }
-            storeAuditLogEntry(importAudit);
+            dbLayer.createInvConfigurationsDBItemsForFoldersIfNotExists(
+                    PublishUtils.updateSetOfPathsWithParents(folders), dbItemAuditLog.getId());
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -126,7 +134,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
-            Globals.disconnect(connection);
+            Globals.disconnect(hibernateSession);
             try {
                 if (stream != null) {
                     stream.close();

@@ -3,6 +3,7 @@ package com.sos.joc.publish.impl;
 import java.io.InputStream;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
@@ -64,10 +66,6 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImportDeployImpl.class);
     private static final String API_CALL = "./publish/import";
-    private SOSHibernateSession connection = null;
-    private Set<Workflow> workflows = new HashSet<Workflow>();
-    private Set<AgentRef> agentRefs = new HashSet<AgentRef>();
-    private Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
     private DBLayerDeploy dbLayer = null;
     private boolean hasErrors = false;
     private List<Err419> listOfErrors = new ArrayList<Err419>();
@@ -116,6 +114,12 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             ImportDeployAudit importAudit = new ImportDeployAudit(filter);
             logAuditMessage(importAudit);
             DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(importAudit);
+
+            Set<Workflow> workflows = new HashSet<Workflow>();
+            Set<AgentRef> agentRefs = new HashSet<AgentRef>();
+            Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
+            
+            
             // process uploaded archive
             if (mediaSubType.contains("zip") && !mediaSubType.contains("gzip")) {
                 PublishUtils.readZipFileContent(stream, workflows, agentRefs);
@@ -134,6 +138,8 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             if (workflows != null && !workflows.isEmpty()) {
                 versionId = workflows.stream().findFirst().get().getVersionId();
             }
+            Set<java.nio.file.Path> folders = new HashSet<java.nio.file.Path>();
+            folders = workflows.stream().map(wf -> wf.getPath()).map(path -> Paths.get(path).getParent()).collect(Collectors.toSet());
             for (Workflow workflow : workflows) {
                 WorkflowPublish wfEdit = new WorkflowPublish();
                 wfEdit.setContent(workflow);
@@ -148,6 +154,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 DBItemDepSignatures dbItemSignature = dbLayer.saveOrUpdateSignature(dbItem.getId(), wfEdit, account, workflow.getTYPE());
                 importedObjects.put(dbItem, dbItemSignature);
             }
+            folders.addAll(agentRefs.stream().map(aRef -> aRef.getPath()).map(path -> Paths.get(path)).collect(Collectors.toSet()));
             for (AgentRef agentRef : agentRefs) {
                 AgentRefPublish arEdit = new AgentRefPublish();
                 arEdit.setContent(agentRef);
@@ -162,6 +169,8 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 DBItemDepSignatures dbItemSignature = dbLayer.saveOrUpdateSignature(dbItem.getId(), arEdit, account, agentRef.getTYPE());
                 importedObjects.put(dbItem, dbItemSignature);
             }
+            dbLayer.createInvConfigurationsDBItemsForFoldersIfNotExists(
+                    PublishUtils.updateSetOfPathsWithParents(folders), dbItemAuditLog.getId());
             // Deploy
             final Date deploymentDate = Date.from(Instant.now());
             // call UpdateRepo for all provided Controllers
@@ -191,8 +200,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 X509Certificate cert = null;
                 switch(keyPair.getKeyAlgorithm()) {
                 case SOSKeyConstants.PGP_ALGORITHM_NAME:
-                    PublishUtils.updateRepoAddOrUpdatePGP(
-                            versionIdForUpdate, importedObjects, null, controller.getController(), dbLayer, keyPair.getKeyAlgorithm())
+                    PublishUtils.updateRepoAddOrUpdatePGP(versionIdForUpdate, importedObjects, null, controller.getController(), dbLayer)
                         .thenAccept(either -> {
                             processAfterAdd(either, importedObjects, null, account, versionIdForUpdate, controller.getController(),
                                     deploymentDate, filter);
@@ -201,22 +209,18 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 case SOSKeyConstants.RSA_ALGORITHM_NAME:
                     cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                     signerDN = cert.getSubjectDN().getName();
-                    PublishUtils.updateRepoAddOrUpdateWithX509(
-                            versionIdForUpdate, importedObjects, null, controller.getController(), dbLayer, keyPair.getKeyAlgorithm(),
-                            SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN)
-                        .thenAccept(either -> {
-                            processAfterAdd(either, importedObjects, null, account, versionIdForUpdate, controller.getController(),
+                    PublishUtils.updateRepoAddOrUpdateWithX509(versionIdForUpdate, importedObjects, null, controller.getController(), dbLayer,
+                            SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
+                                processAfterAdd(either, importedObjects, null, account, versionIdForUpdate, controller.getController(),
                                     deploymentDate, filter);
                     }).get();
                     break;
                 case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
                     cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                     signerDN = cert.getSubjectDN().getName();
-                    PublishUtils.updateRepoAddOrUpdateWithX509(
-                            versionIdForUpdate, importedObjects, null, controller.getController(), dbLayer, keyPair.getKeyAlgorithm(),
-                            SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN)
-                        .thenAccept(either -> {
-                            processAfterAdd(either, importedObjects, null, account, versionIdForUpdate, controller.getController(),
+                    PublishUtils.updateRepoAddOrUpdateWithX509(versionIdForUpdate, importedObjects, null, controller.getController(), dbLayer,
+                            SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
+                                processAfterAdd(either, importedObjects, null, account, versionIdForUpdate, controller.getController(),
                                     deploymentDate, filter);
                     }).get();
                     break;
@@ -238,7 +242,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
-            Globals.disconnect(connection);
+            Globals.disconnect(hibernateSession);
             try {
                 if (stream != null) {
                     stream.close();

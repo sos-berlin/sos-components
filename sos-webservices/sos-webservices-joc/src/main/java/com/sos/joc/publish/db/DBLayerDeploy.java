@@ -6,21 +6,30 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.Column;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+
+import org.hibernate.annotations.Type;
 import org.hibernate.query.Query;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit.AuditLog;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.jobscheduler.model.agent.AgentRefPublish;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.WorkflowPublish;
+import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDepCommitIds;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
@@ -29,16 +38,19 @@ import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.deployment.DBItemDeploymentSubmission;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
+import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.exceptions.JocSosHibernateException;
+import com.sos.joc.model.audit.AuditLogItem;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.JSDeploymentState;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.SetVersionFilter;
+import com.sos.joc.model.tree.TreeType;
 import com.sos.joc.publish.common.JSObjectFileExtension;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.util.PublishUtils;
@@ -837,4 +849,39 @@ public class DBLayerDeploy {
         }
     }
     
+    public void createInvConfigurationsDBItemsForFoldersIfNotExists(Set<Path> paths, Long auditLogId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select path from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where type = :type");
+        Query<String> query = session.createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.FOLDER.intValue());
+        List<String> allExistingFolderNames = session.getResultList(query);
+        Set<Path> existingFolderPaths = allExistingFolderNames.stream().map(folder -> Paths.get(folder)).collect(Collectors.toSet());
+        Set<Path> pathsWithParents = PublishUtils.updateSetOfPathsWithParents(paths);
+        pathsWithParents.removeAll(existingFolderPaths);
+        Set<DBItemInventoryConfiguration> newFolders = 
+                paths.stream().map(folder -> createFolderConfiguration(folder, auditLogId)).collect(Collectors.toSet());
+        for (DBItemInventoryConfiguration folder : newFolders) {
+            session.save(folder);
+        }
+    }
+    
+    private DBItemInventoryConfiguration createFolderConfiguration (Path path, Long auditLogId) {
+        DBItemInventoryConfiguration folder = new DBItemInventoryConfiguration();
+        folder.setType(ConfigurationType.FOLDER.intValue());
+        folder.setPath(path.toString().replace('\\', '/'));
+        folder.setName(path.getFileName().toString());
+        folder.setFolder(path.toString().replace('\\', '/'));
+        folder.setTitle(null);
+        folder.setContent(null);
+        folder.setValid(true);
+        folder.setDeleted(false);
+        folder.setDeleted(false);
+        folder.setReleased(false);
+        folder.setAuditLogId(auditLogId);
+        folder.setDocumentationId(0L);
+        Instant now = Instant.now();
+        folder.setCreated(Date.from(now));
+        folder.setModified(Date.from(now));
+        return folder;
+    }
 }

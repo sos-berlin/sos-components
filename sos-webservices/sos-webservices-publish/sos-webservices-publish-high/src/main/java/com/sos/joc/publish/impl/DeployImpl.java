@@ -163,7 +163,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 switch (keyPair.getKeyAlgorithm()) {
                 case SOSKeyConstants.PGP_ALGORITHM_NAME:
                     PublishUtils.updateRepoAddOrUpdatePGP(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId, 
-                            dbLayer, keyPair.getKeyAlgorithm()).thenAccept(either -> {
+                            dbLayer).thenAccept(either -> {
                                 processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, versionIdForUpdate, controllerId,
                                         deploymentDate, deployFilter);
                             }).get();
@@ -172,7 +172,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                     signerDN = cert.getSubjectDN().getName();
                     PublishUtils.updateRepoAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
-                            dbLayer, keyPair.getKeyAlgorithm(), SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
+                            dbLayer, SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
                                 processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, versionIdForUpdate, controllerId,
                                         deploymentDate, deployFilter);
                             }).get();
@@ -181,7 +181,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                     signerDN = cert.getSubjectDN().getName();
                     PublishUtils.updateRepoAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
-                            dbLayer, keyPair.getKeyAlgorithm(), SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
+                            dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
                                 processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, versionIdForUpdate, controllerId,
                                         deploymentDate, deployFilter);
                             }).get();

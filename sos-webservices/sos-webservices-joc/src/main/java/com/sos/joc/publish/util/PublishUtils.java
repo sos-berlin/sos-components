@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -21,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,6 +31,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
@@ -499,26 +503,22 @@ public abstract class PublishUtils {
 
     public static CompletableFuture<Either<Problem, Void>> updateRepoAddOrUpdatePGP(
             String versionId,  Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, 
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer, String keyAlgorithm) 
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer) 
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
-        String keyType = keyAlgorithm;
         Set<JUpdateRepoOperation> updateRepoOperations = new HashSet<JUpdateRepoOperation>();
         if (drafts != null) {
             for (DBItemInventoryConfiguration draft : drafts.keySet()) {
                 if (draft != null) {
-                    SignedString signedString = SignedString.of(draft.getContent(), keyType, drafts.get(draft).getSignature());
-                    JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
-                    updateRepoOperations.add(operation);
+                    updateRepoOperations.add(JUpdateRepoOperation.addOrReplace(SignedString.of(
+                            draft.getContent(), SOSKeyConstants.PGP_ALGORITHM_NAME, drafts.get(draft).getSignature())));
                 }
             }
         }
         if (alreadyDeployed != null) {
             for (DBItemDeploymentHistory reDeploy : alreadyDeployed.keySet()) {
                 if (reDeploy != null) {
-                    SignedString signedString = 
-                            SignedString.of(reDeploy.getContent(), keyAlgorithm, alreadyDeployed.get(reDeploy).getSignature());
-                    JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
-                    updateRepoOperations.add(operation);
+                    updateRepoOperations.add(JUpdateRepoOperation.addOrReplace(SignedString.of(
+                            reDeploy.getContent(), SOSKeyConstants.PGP_ALGORITHM_NAME, alreadyDeployed.get(reDeploy).getSignature())));
                 }
             }
         }
@@ -527,31 +527,23 @@ public abstract class PublishUtils {
 
     public static CompletableFuture<Either<Problem, Void>> updateRepoAddOrUpdateWithX509(
             String versionId,  Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, 
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer, String keyAlgorithm,
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer,
             String signatureAlgorithm, String signerDN) 
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
-        String keyType = null;
-        if ("RSA".equals(keyAlgorithm) || "ECDSA".equals(keyAlgorithm)) {
-            keyType = "X509";
-        }
         Set<JUpdateRepoOperation> updateRepoOperations = new HashSet<JUpdateRepoOperation>();
         if (drafts != null) {
             for (DBItemInventoryConfiguration draft : drafts.keySet()) {
                 if (draft != null) {
-                    SignedString signedString = SignedString.x509WithSignedId(
-                            draft.getContent(), drafts.get(draft).getSignature(), signatureAlgorithm, SignerId.of(signerDN));
-                    JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
-                    updateRepoOperations.add(operation);
+                    updateRepoOperations.add(JUpdateRepoOperation.addOrReplace(SignedString.x509WithSignedId(
+                            draft.getContent(), drafts.get(draft).getSignature(), signatureAlgorithm, SignerId.of(signerDN))));
                 }
             }
         }
         if (alreadyDeployed != null) {
             for (DBItemDeploymentHistory reDeploy : alreadyDeployed.keySet()) {
                 if (reDeploy != null) {
-                    SignedString signedString = SignedString.x509WithSignedId(
-                            reDeploy.getContent(), alreadyDeployed.get(reDeploy).getSignature(), signatureAlgorithm, SignerId.of(signerDN));
-                    JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
-                    updateRepoOperations.add(operation);
+                    updateRepoOperations.add(JUpdateRepoOperation.addOrReplace(SignedString.x509WithSignedId(
+                            reDeploy.getContent(), alreadyDeployed.get(reDeploy).getSignature(), signatureAlgorithm, SignerId.of(signerDN))));
                 }
             }
         }
@@ -559,10 +551,10 @@ public abstract class PublishUtils {
     }
 
     public static CompletableFuture<Either<Problem, Void>> updateRepoDelete(String versionId,
-            List<DBItemDeploymentHistory> alreadyDeployedtoDelete, String controllerId, DBLayerDeploy dbLayer, String keyAlgorythm) 
+            List<DBItemDeploymentHistory> alreadyDeployedtoDelete, String controllerId, DBLayerDeploy dbLayer, String keyAlgorithm) 
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
-        if ("RSA".equals(keyAlgorythm) || "ECDSA".equals(keyAlgorythm)) {
-            keyAlgorythm = "X509";
+        if ("RSA".equals(keyAlgorithm) || "ECDSA".equals(keyAlgorithm)) {
+            keyAlgorithm = "X509";
         }
         Set<JUpdateRepoOperation> updateRepoOperations = new HashSet<JUpdateRepoOperation>();
         if (alreadyDeployedtoDelete != null) {
@@ -592,28 +584,25 @@ public abstract class PublishUtils {
     public static CompletableFuture<Either<Problem, Void>> updateRepoAddUpdateDeleteDelete(
             String versionId, Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, 
             Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, List<DBItemDeploymentHistory> alreadyDeployedtoDelete, 
-            String controllerId, DBLayerDeploy dbLayer, String keyAlgorythm) 
+            String controllerId, DBLayerDeploy dbLayer, String keyAlgorithm) 
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
-        if ("RSA".equals(keyAlgorythm) || "ECDSA".equals(keyAlgorythm)) {
-            keyAlgorythm = "X509";
+        if ("RSA".equals(keyAlgorithm) || "ECDSA".equals(keyAlgorithm)) {
+            keyAlgorithm = "X509";
         }
         Set<JUpdateRepoOperation> updateRepoOperations = new HashSet<JUpdateRepoOperation>();
         if (drafts != null) {
             for (DBItemInventoryConfiguration draft : drafts.keySet()) {
                 if (draft != null) {
-                    SignedString signedString = SignedString.of(draft.getContent(), keyAlgorythm, drafts.get(draft).getSignature());
-                    JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
-                    updateRepoOperations.add(operation);
+                    updateRepoOperations.add(JUpdateRepoOperation.addOrReplace(SignedString.of(
+                            draft.getContent(), keyAlgorithm, drafts.get(draft).getSignature())));
                 }
             }
         }
         if (alreadyDeployed != null) {
             for (DBItemDeploymentHistory reDeploy : alreadyDeployed.keySet()) {
                 if (reDeploy != null) {
-                    SignedString signedString = 
-                            SignedString.of(reDeploy.getContent(), keyAlgorythm, alreadyDeployed.get(reDeploy).getSignature());
-                    JUpdateRepoOperation operation = JUpdateRepoOperation.addOrReplace(signedString);
-                    updateRepoOperations.add(operation);
+                    updateRepoOperations.add(JUpdateRepoOperation.addOrReplace(SignedString.of(
+                            reDeploy.getContent(), keyAlgorithm, alreadyDeployed.get(reDeploy).getSignature())));
                 }
             }
         }
@@ -1002,31 +991,37 @@ public abstract class PublishUtils {
                     String content = null;
                     for (JSObject jsObject : jsObjects) {
                         String extension = null;
+                        String signatureExtension = null;
                         switch(jsObject.getObjectType()) {
                         case WORKFLOW : 
                             extension = JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
+                            signatureExtension = JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.toString();
                             Workflow workflow = (Workflow)jsObject.getContent();
                             workflow.setVersionId(versionId);
                             content = om.writeValueAsString(workflow);
                             break;
                         case AGENTREF :
                             extension = JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.toString();
+                            signatureExtension = JSObjectFileExtension.AGENT_REF_SIGNATURE_FILE_EXTENSION.toString();
                             AgentRef agentRef = (AgentRef)jsObject.getContent();
                             agentRef.setVersionId(versionId);
                             content = om.writeValueAsString(agentRef);
                             break;
                         case LOCK :
                             extension = JSObjectFileExtension.LOCK_FILE_EXTENSION.toString();
+                            signatureExtension = JSObjectFileExtension.LOCK_SIGNATURE_FILE_EXTENSION.toString();
                             // TODO:
 //                            content = om.writeValueAsString((Lock)jsObject.getContent());
                             break;
                         case JUNCTION :
                             extension = JSObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
+                            signatureExtension = JSObjectFileExtension.JUNCTION_SIGNATURE_FILE_EXTENSION.toString();
                             // TODO:
 //                            content = om.writeValueAsString((Junction)jsObject.getContent());
                             break;
                         default:
                             extension = JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
+                            signatureExtension = JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.toString();
                         }
                         String zipEntryName = jsObject.getPath().substring(1).concat(extension); 
                         ZipEntry entry = new ZipEntry(zipEntryName);
@@ -1034,7 +1029,7 @@ public abstract class PublishUtils {
                         zipOut.write(content.getBytes());
                         zipOut.closeEntry();
                         if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {
-                            String signatureZipEntryName = zipEntryName.concat("sig");
+                            String signatureZipEntryName = jsObject.getPath().substring(1).concat(signatureExtension);
                             ZipEntry signatureEntry = new ZipEntry(signatureZipEntryName);
                             zipOut.putNextEntry(signatureEntry);
                             zipOut.write(jsObject.getSignedContent().getBytes());
@@ -1068,31 +1063,37 @@ public abstract class PublishUtils {
                     String content = null;
                     for (JSObject jsObject : jsObjects) {
                         String extension = null;
+                        String signatureExtension = null;
                         switch(jsObject.getObjectType()) {
                         case WORKFLOW : 
                             extension = JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
+                            signatureExtension = JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.toString();
                             Workflow workflow = (Workflow)jsObject.getContent();
                             workflow.setVersionId(versionId);
                             content = om.writeValueAsString(workflow);
                             break;
                         case AGENTREF :
                             extension = JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.toString();
+                            signatureExtension = JSObjectFileExtension.AGENT_REF_SIGNATURE_FILE_EXTENSION.toString();
                             AgentRef agentRef = (AgentRef)jsObject.getContent();
                             agentRef.setVersionId(versionId);
                             content = om.writeValueAsString(agentRef);
                             break;
                         case LOCK :
                             extension = JSObjectFileExtension.LOCK_FILE_EXTENSION.toString();
+                            signatureExtension = JSObjectFileExtension.LOCK_SIGNATURE_FILE_EXTENSION.toString();
                             // TODO:
 //                            content = om.writeValueAsString((Lock)jsObject.getContent());
                             break;
                         case JUNCTION :
                             extension = JSObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
+                            signatureExtension = JSObjectFileExtension.JUNCTION_SIGNATURE_FILE_EXTENSION.toString();
                             // TODO:
 //                            content = om.writeValueAsString((Junction)jsObject.getContent());
                             break;
                         default:
                             extension = JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
+                            signatureExtension = JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.toString();
                         }
                         String zipEntryName = jsObject.getPath().substring(1).concat(extension); 
                         TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
@@ -1102,7 +1103,7 @@ public abstract class PublishUtils {
                         tarOut.write(contentBytes);
                         tarOut.closeArchiveEntry();
                         if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {
-                            String signatureZipEntryName = zipEntryName.concat("sig");
+                            String signatureZipEntryName = jsObject.getPath().substring(1).concat(signatureExtension);
                             TarArchiveEntry signatureEntry = new TarArchiveEntry(signatureZipEntryName);
                             tarOut.putArchiveEntry(signatureEntry);
                             tarOut.write(jsObject.getSignedContent().getBytes());
@@ -1115,10 +1116,21 @@ public abstract class PublishUtils {
                         try {
                             tarOut.finish();
                             tarOut.close();
+                        } catch (Exception e) {}
+                    }
+                    if (gzipOut != null) {
+                        try {
+                            gzipOut.flush();
                             gzipOut.close();
+                        } catch (Exception e) {}
+                    }
+                    if (bOut != null) {
+                        try {
+                            bOut.flush();
                             bOut.close();
                         } catch (Exception e) {}
                     }
+
                 }
                 
             }
@@ -1218,4 +1230,27 @@ public abstract class PublishUtils {
         }
         return checkNotEmpty;
     }
+    
+    public static Set<Path> updateSetOfPathsWithParents(Set<Path> paths) {
+        final Set<Path> pathWithParents = new HashSet<Path>();
+        pathWithParents.addAll(paths.stream().flatMap(path -> getPathWithParents(path).stream()).collect(Collectors.toSet()));
+        return pathWithParents;
+    }
+    
+    private static Set<Path> getPathWithParents (Path path) {
+        Set<Path> pathsWithParents = new HashSet<Path>();
+        pathsWithParents.add(path);
+        Iterator<Path> pathsIter = path.iterator();
+        String folder = null;
+        while (pathsIter.hasNext()) {
+            if (folder == null) {
+                folder = "/" + pathsIter.next().toString();
+            } else {
+                folder += "/" + pathsIter.next().toString();
+            }
+            pathsWithParents.add(Paths.get(folder));
+        }
+        return pathsWithParents; 
+    }
+    
 }
