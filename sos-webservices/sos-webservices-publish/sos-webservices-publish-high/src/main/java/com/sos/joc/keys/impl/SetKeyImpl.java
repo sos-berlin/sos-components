@@ -10,6 +10,8 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.audit.GenerateKeyAudit;
+import com.sos.joc.classes.audit.SetKeyAudit;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocKeyNotValidException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
@@ -41,14 +43,17 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
                 return jocDefaultResponse;
             }
             JocKeyPair keyPair = setKeyFilter.getKeys();
+            String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
+            String comment = null;
             if (PublishUtils.jocKeyPairNotEmpty(keyPair)) {
                 if (KeyUtil.isKeyPairValid(keyPair)) {
                     hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-                    String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
                     if (keyPair.getPublicKey() != null && !keyPair.getPublicKey().isEmpty()) {
                         PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.HIGH);
+                        comment = String.format("autom. comment: new Public Key stored for profile - %1$s -", account);
                     } else if (keyPair.getCertificate() != null && !keyPair.getCertificate().isEmpty()) {
                         PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.HIGH);
+                        comment = String.format("autom. comment: new X.509 Certificate stored for profile - %1$s -", account);
                     } else if (keyPair.getPrivateKey() != null && !keyPair.getPrivateKey().isEmpty()) {
                         throw new JocUnsupportedKeyTypeException("Wrong key type. expected: public or certificate | received: private");
                     }
@@ -58,6 +63,9 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
             } else {
               throw new JocMissingRequiredParameterException("No key was provided");
             }
+            SetKeyAudit audit = new SetKeyAudit(comment);
+            logAuditMessage(audit);
+            storeAuditLogEntry(audit);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

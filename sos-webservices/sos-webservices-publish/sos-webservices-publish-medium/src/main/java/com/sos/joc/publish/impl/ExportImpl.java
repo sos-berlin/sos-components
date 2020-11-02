@@ -6,8 +6,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
+import javax.ws.rs.core.StreamingOutput;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -20,6 +22,7 @@ import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.audit.ExportAudit;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -79,12 +82,24 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                 return jocDefaultResponse;
             }
             String versionId = UUID.randomUUID().toString();
+            String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             final Set<JSObject> jsObjects = getObjectsFromDB(filter, hibernateSession, versionId);
+            Set<ExportAudit> audits = jsObjects.stream().map(item ->  new ExportAudit(
+                    String.format("autom. comment: Object with path: %1$s exported to file %2$s with profile %3$s", 
+                            item.getPath(), filename, account)))
+                    .collect(Collectors.toSet());
+            StreamingOutput stream = null;
             if (filename.endsWith("tar.gz") || filename.endsWith("gzip")) {
-                return JOCDefaultResponse.responseOctetStreamDownloadStatus200(PublishUtils.writeTarGzipFile(jsObjects, versionId), filename);
+                stream = PublishUtils.writeTarGzipFile(jsObjects, versionId);
+                audits.stream().forEach(audit -> logAuditMessage(audit));
+                audits.stream().forEach(audit -> storeAuditLogEntry(audit));
+                return JOCDefaultResponse.responseOctetStreamDownloadStatus200(stream, filename);
             } else {
-                return JOCDefaultResponse.responseOctetStreamDownloadStatus200(PublishUtils.writeZipFile(jsObjects, versionId), filename);
+                stream = PublishUtils.writeZipFile(jsObjects, versionId);
+                audits.stream().forEach(audit -> logAuditMessage(audit));
+                audits.stream().forEach(audit -> storeAuditLogEntry(audit));
+                return JOCDefaultResponse.responseOctetStreamDownloadStatus200(stream, filename);
             }
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

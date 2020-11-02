@@ -10,6 +10,7 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.audit.SetKeyAudit;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocKeyNotValidException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
@@ -41,14 +42,17 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
                 return jocDefaultResponse;
             }
             JocKeyPair keyPair = setKeyFilter.getKeys();
+            String account = Globals.defaultProfileAccount;
+            String comment = null;
             if (PublishUtils.jocKeyPairNotEmpty(keyPair)) {
                 if (KeyUtil.isKeyPairValid(keyPair)) {
                     hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-                    String account = Globals.defaultProfileAccount;
                     if (keyPair.getPrivateKey() != null && !keyPair.getPrivateKey().isEmpty()) {
                         PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.LOW);
+                        comment = String.format("autom. comment: new Private Key stored for profile - %1$s -", account);
                     } else if (keyPair.getCertificate() != null && !keyPair.getCertificate().isEmpty()) {
                         PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.LOW);
+                        comment = String.format("autom. comment: new X.509 Certificate stored for profile - %1$s -", account);
                     } else if (keyPair.getPublicKey() != null && !keyPair.getPublicKey().isEmpty()) {
                         throw new JocUnsupportedKeyTypeException("Wrong key type. expected: private or certificate | received: public");
                     } 
@@ -58,6 +62,9 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
             } else {
               throw new JocMissingRequiredParameterException("No key was provided");
             }
+            SetKeyAudit audit = new SetKeyAudit(comment);
+            logAuditMessage(audit);
+            storeAuditLogEntry(audit);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

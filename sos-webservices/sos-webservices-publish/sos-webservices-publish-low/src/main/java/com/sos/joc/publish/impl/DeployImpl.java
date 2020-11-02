@@ -37,6 +37,7 @@ import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
+import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.pgp.JocKeyPair;
@@ -323,26 +324,22 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     
     private void createAuditLogFor(Collection<DBItemDeploymentHistory> depHistoryEntries, DeployFilter deployFilter, String controllerId,
             boolean update) {
+        if(deployFilter.getAuditLog()== null) {
+            deployFilter.setAuditLog(new AuditParams());   
+        }
         for (DBItemDeploymentHistory deployedItem : depHistoryEntries) {
-            switch(DeployType.fromValue(deployedItem.getType())) {
-            case WORKFLOW:
-                DeployAudit deployAudit = new DeployAudit(deployFilter, controllerId, deployedItem.getPath(), deployedItem.getId(), update);
-                logAuditMessage(deployAudit);
-                storeAuditLogEntry(deployAudit);
-                break;
-            case AGENTREF:
-                // TODO: when object can be deployed, or remove if otherwise
-                break;
-            case JOBCLASS:
-                // TODO: when object can be deployed, or remove if otherwise
-                break;
-            case JUNCTION:
-                // TODO: when object can be deployed, or remove if otherwise
-                break;
-            case LOCK:
-                // TODO: when object can be deployed, or remove if otherwise
-                break;
+            if (deployFilter.getAuditLog().getComment() == null || deployFilter.getAuditLog().getComment().isEmpty()) {
+                if (update) {
+                    deployFilter.getAuditLog().setComment(
+                            String.format("autom. comment: object %1$s updated on controller %2$s", deployedItem.getPath(), controllerId));
+                } else {
+                    deployFilter.getAuditLog().setComment(
+                            String.format("autom. comment: object %1$s removed from controller %2$s", deployedItem.getPath(), controllerId));
+                }
             }
+            DeployAudit deployAudit = new DeployAudit(deployFilter, controllerId, deployedItem.getPath(), deployedItem.getId(), update);
+            logAuditMessage(deployAudit);
+            storeAuditLogEntry(deployAudit);
         }
     }
     

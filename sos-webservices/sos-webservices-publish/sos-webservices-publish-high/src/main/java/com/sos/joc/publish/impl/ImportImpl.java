@@ -78,12 +78,8 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             stream = body.getEntityAs(InputStream.class);
             final String mediaSubType = body.getMediaType().getSubtype().replaceFirst("^x-", "");
-            ImportAudit importAudit = new ImportAudit(filter);
-            logAuditMessage(importAudit);
-            DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(importAudit);
 
 //            Set<Lock> locks = new HashSet<Lock>();
-            
             Set<Workflow> workflows = new HashSet<Workflow>();
             Set<AgentRef> agentRefs = new HashSet<AgentRef>();
             Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
@@ -100,6 +96,17 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             // process signature verification and save or update objects
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
+            ImportAudit importAudit = new ImportAudit(filter);
+            if(importAudit.getComment() == null || importAudit.getComment().isEmpty()) {
+                importAudit.setComment(
+                        String.format("autom. comment: %1$d workflow(s) and %2$d agentRef(s) imported with profile %3$s", 
+                                workflows.size(),
+                                agentRefs.size(),
+                                account));
+            }
+            logAuditMessage(importAudit);
+            DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(importAudit);
+
             Set<java.nio.file.Path> folders = new HashSet<java.nio.file.Path>();
             folders = workflows.stream().map(wf -> wf.getPath()).map(path -> Paths.get(path).getParent()).collect(Collectors.toSet());
             for (Workflow workflow : workflows) {

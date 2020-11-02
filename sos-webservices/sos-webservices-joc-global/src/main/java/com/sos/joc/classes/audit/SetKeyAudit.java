@@ -2,9 +2,8 @@ package com.sos.joc.classes.audit;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.publish.ImportFilter;
 
-public class ImportAudit extends ImportFilter implements IAuditLog {
+public class SetKeyAudit implements IAuditLog {
 
     @JsonIgnore
     private String comment;
@@ -15,8 +14,13 @@ public class ImportAudit extends ImportFilter implements IAuditLog {
     @JsonIgnore
     private String ticketLink;
     
-    public ImportAudit(ImportFilter filter) {
-        setAuditParams(filter.getAuditLog());
+    public SetKeyAudit() {
+        setAuditParams(new AuditParams());
+    }
+
+    public SetKeyAudit(String comment) {
+        setAuditParams(new AuditParams());
+        this.comment = comment;
     }
 
     private void setAuditParams(AuditParams auditParams) {
@@ -28,13 +32,9 @@ public class ImportAudit extends ImportFilter implements IAuditLog {
     }
 
 	@Override
-    public String getComment() {
-        return comment;
-    }
-
-    public void setComment(String comment) {
-        this.comment = comment;
-    }
+	public String getComment() {
+		return comment;
+	}
 
 	@Override
 	public Integer getTimeSpent() {
