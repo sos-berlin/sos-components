@@ -15,7 +15,10 @@ import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
+import org.hibernate.annotations.TypeDefs;
 
+import com.sos.commons.hibernate.type.SOSHibernateJsonType;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -23,6 +26,7 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 @Entity
 @Table(name = DBLayer.TABLE_INV_CONFIGURATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[TYPE]", "[PATH]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_INV_CONFIGURATIONS_SEQUENCE, sequenceName = DBLayer.TABLE_INV_CONFIGURATIONS_SEQUENCE, allocationSize = 1)
+@TypeDefs({ @TypeDef(name = SOSHibernateJsonType.TYPE_NAME, typeClass = SOSHibernateJsonType.class) })
 public class DBItemInventoryConfiguration extends DBItem {
 
     private static final long serialVersionUID = 1L;
@@ -48,6 +52,7 @@ public class DBItemInventoryConfiguration extends DBItem {
     private String title;
 
     @Column(name = "[CONTENT]", nullable = true)
+    @Type(type = SOSHibernateJsonType.TYPE_NAME)
     private String content;
 
     @Column(name = "[VALID]", nullable = false)
