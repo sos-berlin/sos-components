@@ -47,17 +47,21 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             String deployments) throws Exception {
         ExportFilter filter = new ExportFilter();
         List<Long> configs = new ArrayList<Long>();
-        String[] configsAsString = configurations.split(",");
-        for (int i=0; i < configsAsString.length; i++) {
-            configs.add(Long.valueOf(configsAsString[i]));
+        if (configurations != null) {
+            String[] configsAsString = configurations.split(",");
+            for (int i=0; i < configsAsString.length; i++) {
+                configs.add(Long.valueOf(configsAsString[i]));
+            }
+            filter.setConfigurations(configs);
         }
-        filter.setConfigurations(configs);
         List<Long> deploys = new ArrayList<Long>();
-        String[] deploysAsString = deployments.split(",");
-        for (int i=0; i < deploysAsString.length; i++) {
-            deploys.add(Long.valueOf(deploysAsString[i]));
+        if (deployments != null) {
+            String[] deploysAsString = deployments.split(",");
+            for (int i=0; i < deploysAsString.length; i++) {
+                deploys.add(Long.valueOf(deploysAsString[i]));
+            }
+            filter.setDeployments(deploys);
         }
-        filter.setDeployments(deploys);
         byte[] filterBytes = Globals.objectMapper.writeValueAsBytes(filter);
         return postExportConfiguration(getAccessToken(xAccessToken, accessToken), filename, filterBytes);
     }
