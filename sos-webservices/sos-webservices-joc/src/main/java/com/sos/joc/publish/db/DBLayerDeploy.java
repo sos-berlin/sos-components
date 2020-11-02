@@ -859,7 +859,7 @@ public class DBLayerDeploy {
         Set<Path> pathsWithParents = PublishUtils.updateSetOfPathsWithParents(paths);
         pathsWithParents.removeAll(existingFolderPaths);
         Set<DBItemInventoryConfiguration> newFolders = 
-                paths.stream().map(folder -> createFolderConfiguration(folder, auditLogId)).collect(Collectors.toSet());
+                pathsWithParents.stream().map(folder -> createFolderConfiguration(folder, auditLogId)).collect(Collectors.toSet());
         for (DBItemInventoryConfiguration folder : newFolders) {
             session.save(folder);
         }
