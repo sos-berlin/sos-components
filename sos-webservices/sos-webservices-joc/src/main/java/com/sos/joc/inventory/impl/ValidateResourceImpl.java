@@ -5,6 +5,8 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.ws.rs.Path;
 
@@ -12,6 +14,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.jobscheduler.model.instruction.ForkJoin;
 import com.sos.jobscheduler.model.instruction.IfElse;
 import com.sos.jobscheduler.model.instruction.Instruction;
+import com.sos.jobscheduler.model.instruction.NamedJob;
 import com.sos.jobscheduler.model.instruction.TryCatch;
 import com.sos.jobscheduler.model.workflow.Branch;
 import com.sos.jobscheduler.model.workflow.Workflow;
@@ -74,7 +77,7 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
         JsonValidator.validate(configBytes, URI.create(JocInventory.SCHEMA_LOCATION.get(type)));
         if (ConfigurationType.WORKFLOW.equals(type)) {
             JsonValidator.validateStrict(configBytes, URI.create("classpath:/raml/jobscheduler/schemas/workflow/workflowJobs-schema.json"));
-            validateInstructions(((Workflow) config).getInstructions(), "instructions");
+            validateInstructions(((Workflow) config).getInstructions(), "instructions", new HashMap<String, String>());
         }
     }
 
@@ -90,7 +93,7 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
         return v;
     }
 
-    private static void validateInstructions(Collection<Instruction> instructions, String position) throws SOSJsonSchemaException,
+    private static void validateInstructions(Collection<Instruction> instructions, String position, Map<String, String> labels) throws SOSJsonSchemaException,
             JsonProcessingException, IOException {
         if (instructions != null) {
             int index = 0;
@@ -105,11 +108,18 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
                 }
                 switch (inst.getTYPE()) {
                 case AWAIT:
-                case EXECUTE_NAMED:
                 case FAIL:
                 case FINISH:
                 case PUBLISH:
                 case RETRY:
+                    break;
+                case EXECUTE_NAMED:
+                    NamedJob nj = inst.cast();
+                    if (labels.containsKey(nj.getLabel())) {
+                        throw new SOSJsonSchemaException("$." + instPosition + "label: duplicate label with " + labels.get(nj.getLabel()));
+                    } else {
+                        labels.put(nj.getLabel(), "$." + instPosition + "label");
+                    }
                     break;
                 case FORK:
                     ForkJoin fj = inst.cast();
@@ -117,22 +127,22 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
                     String branchPosition = instPosition + "branches";
                     for (Branch branch : fj.getBranches()) {
                         String branchInstPosition = branchPosition + "[" + branchIndex + "].";
-                        validateInstructions(branch.getWorkflow().getInstructions(), branchInstPosition + "instructions");
+                        validateInstructions(branch.getWorkflow().getInstructions(), branchInstPosition + "instructions", labels);
                         branchIndex++;
                     }
                     break;
                 case IF:
                     IfElse ifElse = inst.cast();
-                    validateInstructions(ifElse.getThen().getInstructions(), instPosition + "then.instructions");
+                    validateInstructions(ifElse.getThen().getInstructions(), instPosition + "then.instructions", labels);
                     if (ifElse.getElse() != null) {
-                        validateInstructions(ifElse.getElse().getInstructions(), instPosition + "else.instructions");
+                        validateInstructions(ifElse.getElse().getInstructions(), instPosition + "else.instructions", labels);
                     }
                     break;
                 case TRY:
                     TryCatch tryCatch = inst.cast();
-                    validateInstructions(tryCatch.getTry().getInstructions(), instPosition + "try.instructions");
+                    validateInstructions(tryCatch.getTry().getInstructions(), instPosition + "try.instructions", labels);
                     if (tryCatch.getCatch() != null) {
-                        validateInstructions(tryCatch.getCatch().getInstructions(), instPosition + "catch.instructions");
+                        validateInstructions(tryCatch.getCatch().getInstructions(), instPosition + "catch.instructions", labels);
                     }
                     break;
                 }
