@@ -69,7 +69,7 @@ public class CATests {
         String rootSubjectDN = CAUtils.createRootSubjectDN("SOS root CA", "www.sos-berlin.com", "SOS GmbH", "DE");
         LOGGER.info("issuerDN: " + rootSubjectDN);
         // create a root certificate for the root CA
-        Certificate rootCertificate = CAUtils.createSelfSignedCertificate(SOSKeyConstants.RSA_SIGNER_ALGORITHM, rootKeyPair, rootSubjectDN, true, false);
+        Certificate rootCertificate = CAUtils.createSelfSignedRootCertificate(SOSKeyConstants.RSA_SIGNER_ALGORITHM, rootKeyPair, rootSubjectDN, true, false);
         assertNotNull(rootCertificate);
         String rootCert = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(rootCertificate.getEncoded()), 
                 SOSKeyConstants.CERTIFICATE_HEADER, SOSKeyConstants.CERTIFICATE_FOOTER);
@@ -199,7 +199,7 @@ public class CATests {
         LOGGER.info("************************************  Root SubjectDN  *************************************************");
         LOGGER.info("issuerDN: " + rootSubjectDN);
         // create a root certificate for the root CA
-        Certificate rootCertificate = CAUtils.createSelfSignedCertificate(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, rootKeyPair, rootSubjectDN, true, false);
+        Certificate rootCertificate = CAUtils.createSelfSignedRootCertificate(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, rootKeyPair, rootSubjectDN, true, false);
         assertNotNull(rootCertificate);
         String rootCert = KeyUtil.formatEncodedDataString(DatatypeConverter.printBase64Binary(rootCertificate.getEncoded()), 
                 SOSKeyConstants.CERTIFICATE_HEADER, SOSKeyConstants.CERTIFICATE_FOOTER);

@@ -41,7 +41,7 @@ import com.sos.commons.sign.keys.SOSKeyConstants;
 
 public abstract class CAUtils {
     
-    public static Certificate createSelfSignedCertificate(String algorythm, KeyPair keyPair, String subjectDN, boolean operatesAsCA, boolean critical)
+    public static Certificate createSelfSignedRootCertificate(String algorithm, KeyPair keyPair, String subjectDN, boolean operatesAsCA, boolean critical)
             throws OperatorCreationException, CertificateException, IOException {
         Provider bcProvider = new BouncyCastleProvider();
         Security.addProvider(bcProvider);
@@ -55,7 +55,7 @@ public abstract class CAUtils {
         calendar.add(Calendar.YEAR, 5);
         Date endDate = calendar.getTime();
         // Use appropriate signature algorithm based on your keyPair algorithm.
-        ContentSigner contentSigner = new JcaContentSignerBuilder(algorythm)
+        ContentSigner contentSigner = new JcaContentSignerBuilder(algorithm)
                 .setProvider(BouncyCastleProvider.PROVIDER_NAME).build(keyPair.getPrivate());
         X509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(subjectDNX500Name, certSerialNumber, startDate, endDate,
                 subjectDNX500Name, keyPair.getPublic());
@@ -70,10 +70,10 @@ public abstract class CAUtils {
         return new JcaX509CertificateConverter().setProvider(bcProvider).getCertificate(certBuilder.build(contentSigner));
     }
 
-    public static PKCS10CertificationRequest createCSR(String algorythm, KeyPair keyPair, String userDN) throws CertException {
+    public static PKCS10CertificationRequest createCSR(String algorithm, KeyPair keyPair, String userDN) throws CertException {
         try {
             PKCS10CertificationRequestBuilder builder = new JcaPKCS10CertificationRequestBuilder(new X500Name(userDN), keyPair.getPublic());
-            JcaContentSignerBuilder jcaBuilder = new JcaContentSignerBuilder(algorythm);
+            JcaContentSignerBuilder jcaBuilder = new JcaContentSignerBuilder(algorithm);
             jcaBuilder.setProvider(BouncyCastleProvider.PROVIDER_NAME);
             ContentSigner contentSigner = jcaBuilder.build(keyPair.getPrivate());
             PKCS10CertificationRequest certificationRequest = builder.build(contentSigner);
@@ -83,9 +83,9 @@ public abstract class CAUtils {
         } 
     }
     
-    public static X509Certificate signCSR(String algorythm, PrivateKey privateKey, PKCS10CertificationRequest csr, X509Certificate rootCa,
+    public static X509Certificate signCSR(String algorithm, PrivateKey privateKey, PKCS10CertificationRequest csr, X509Certificate rootCa,
             String subjectAlternativeName) throws OperatorCreationException, IOException, CertificateException {
-      AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find(algorythm);
+      AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find(algorithm);
       AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
       X500Name issuer = X500Name.getInstance(rootCa.getSubjectX500Principal().getEncoded());
       Date startDate = Date.from(Instant.now());
@@ -104,7 +104,7 @@ public abstract class CAUtils {
       GeneralNames san = new GeneralNames(altName);
       certgen.addExtension(new ASN1ObjectIdentifier("2.5.29.17"), false, san);
       ContentSigner signer = null;
-      if (algorythm.equals(SOSKeyConstants.RSA_SIGNER_ALGORITHM)) {
+      if (algorithm.equals(SOSKeyConstants.RSA_SIGNER_ALGORITHM)) {
           signer = new BcRSAContentSignerBuilder(sigAlgId, digAlgId).build(PrivateKeyFactory.createKey( privateKey.getEncoded()));
       } else {
           signer = new BcECContentSignerBuilder(sigAlgId, digAlgId).build(PrivateKeyFactory.createKey( privateKey.getEncoded()));
@@ -113,31 +113,6 @@ public abstract class CAUtils {
       return new JcaX509CertificateConverter().setProvider(BouncyCastleProvider.PROVIDER_NAME).getCertificate(holder);
     }
     
-//    public static X509Certificate signECDSACSR(String algorythm, PrivateKey privateKey, PKCS10CertificationRequest csr, X509Certificate rootCa,
-//            String subjectAlternativeName) throws OperatorCreationException, IOException, CertificateException {
-//      AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find(algorythm);
-//      AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
-//      X500Name issuer = X500Name.getInstance(rootCa.getSubjectX500Principal().getEncoded());
-//      Date startDate = Date.from(Instant.now());
-//      // Using the current timestamp as the certificate serial number
-//      BigInteger certSerialNumber = new BigInteger(Long.toString(startDate.getTime()));
-//      Calendar calendar = Calendar.getInstance();
-//      calendar.setTime(startDate);
-//      // 1 Year validity
-//      calendar.add(Calendar.YEAR, 2);
-//      Date endDate = calendar.getTime();
-//      X509v3CertificateBuilder certgen = 
-//              new X509v3CertificateBuilder(issuer, certSerialNumber, startDate, endDate, csr.getSubject(), csr.getSubjectPublicKeyInfo());
-//      // 2.5.29.17 is the oid value for Subject Alternative Name [SAN] 
-//      // new ASN1ObjectIdentifier("2.5.29.17")
-//      GeneralName altName = new GeneralName(GeneralName.dNSName, subjectAlternativeName);
-//      GeneralNames san = new GeneralNames(altName);
-//      certgen.addExtension(new ASN1ObjectIdentifier("2.5.29.17"), false, san);
-//      ContentSigner signer = new BcECContentSignerBuilder(sigAlgId, digAlgId).build(PrivateKeyFactory.createKey( privateKey.getEncoded()));
-//      X509CertificateHolder holder = certgen.build(signer);
-//      return new JcaX509CertificateConverter().setProvider(BouncyCastleProvider.PROVIDER_NAME).getCertificate(holder);
-//    }
-//    
     public static String createRootSubjectDN (String commonName, String organizationUnit, String organization, String countryCode) {
         final String separator = ",";
         StringBuilder rootSubjectDN = new StringBuilder();
@@ -145,7 +120,7 @@ public abstract class CAUtils {
         rootSubjectDN.append("OU=").append(organizationUnit).append(separator);
         rootSubjectDN.append("O=").append(organization).append(separator);
         rootSubjectDN.append("C=").append(countryCode);
-        // ST: STATE hinzufügen
+        // TODO: clarify if add ST: STATE
         return rootSubjectDN.toString();
     }
     

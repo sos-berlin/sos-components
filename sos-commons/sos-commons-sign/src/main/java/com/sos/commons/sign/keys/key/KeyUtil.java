@@ -35,7 +35,6 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.ECPublicKeySpec;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.KeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -800,9 +799,9 @@ public abstract class KeyUtil {
             throw new IllegalArgumentException("Key file does not contain a private key but a " + privKeyAsPemObject.getType());
         }
         PrivateKey privKey = getPemPrivateKeyFromRSAString(privateKey);
-        byte[] privateKeyData = privKeyAsPemObject.getContent();
-        KeyFactory keyFact = KeyFactory.getInstance(SOSKeyConstants.RSA_ALGORITHM_NAME);
-        KeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyData);
+//        byte[] privateKeyData = privKeyAsPemObject.getContent();
+//        KeyFactory keyFact = KeyFactory.getInstance(SOSKeyConstants.RSA_ALGORITHM_NAME);
+//        KeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyData);
         if (!(privKey instanceof RSAPrivateKey)) {
             throw new IllegalArgumentException("Key file does not contain an RSA private key");
         }

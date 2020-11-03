@@ -134,18 +134,4 @@ public class SignObject {
         return java.util.Base64.getMimeEncoder().encodeToString(signature);
 	}
 	
-    public static final String signX509Old(String privateKey, String original) 
-            throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, DataLengthException, CryptoException {
-        PEMKeyPair keyPair = KeyUtil.getPemKeyPairFromRSAPrivatKeyString(privateKey);
-        PrivateKeyInfo pki = keyPair.getPrivateKeyInfo();
-        AsymmetricKeyParameter akpPrivateKey = PrivateKeyFactory.createKey(pki);
-        RSADigestSigner signer = new RSADigestSigner(new SHA256Digest());
-        signer.init(true, akpPrivateKey);
-        signer.update(original.getBytes(), 0, original.getBytes().length);
-        byte[] signature = signer.generateSignature();
-      return KeyUtil.formatEncodedDataString(
-              new String(Base64.encode(signature), StandardCharsets.UTF_8), 
-              SOSKeyConstants.SIGNATURE_HEADER, 
-              SOSKeyConstants.SIGNATURE_FOOTER);
-    }
 }
