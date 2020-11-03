@@ -19,3 +19,24 @@
 <td> joc-config-bundle.zip</td>
 <td></td>
 </tr>
+<tr>
+<td>``comment``</td>
+<td>optional, string</td>
+<td>for auditLog</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>``timeSpent``</td>
+<td>optional, string</td>
+<td>for auditLog</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>``ticketLink``</td>
+<td>optional, string</td>
+<td>for auditLog</td>
+<td></td>
+<td></td>
+</tr>
