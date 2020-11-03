@@ -44,16 +44,16 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
             }
             JocKeyPair keyPair = setKeyFilter.getKeys();
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
-            String comment = null;
+            String reason = null;
             if (PublishUtils.jocKeyPairNotEmpty(keyPair)) {
                 if (KeyUtil.isKeyPairValid(keyPair)) {
                     hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
                     if (keyPair.getPublicKey() != null && !keyPair.getPublicKey().isEmpty()) {
                         PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.HIGH);
-                        comment = String.format("autom. comment: new Public Key stored for profile - %1$s -", account);
+                        reason = String.format("new Public Key stored for profile - %1$s -", account);
                     } else if (keyPair.getCertificate() != null && !keyPair.getCertificate().isEmpty()) {
                         PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.HIGH);
-                        comment = String.format("autom. comment: new X.509 Certificate stored for profile - %1$s -", account);
+                        reason = String.format("new X.509 Certificate stored for profile - %1$s -", account);
                     } else if (keyPair.getPrivateKey() != null && !keyPair.getPrivateKey().isEmpty()) {
                         throw new JocUnsupportedKeyTypeException("Wrong key type. expected: public or certificate | received: private");
                     }
@@ -63,7 +63,7 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
             } else {
               throw new JocMissingRequiredParameterException("No key was provided");
             }
-            SetKeyAudit audit = new SetKeyAudit(comment);
+            SetKeyAudit audit = new SetKeyAudit(setKeyFilter, reason);
             logAuditMessage(audit);
             storeAuditLogEntry(audit);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

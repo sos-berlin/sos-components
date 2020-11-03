@@ -2,8 +2,9 @@ package com.sos.joc.classes.audit;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.joc.model.audit.AuditParams;
+import com.sos.joc.model.publish.ExportFilter;
 
-public class ExportAudit implements IAuditLog {
+public class ExportAudit extends ExportFilter implements IAuditLog {
 
     @JsonIgnore
     private String comment;
@@ -14,9 +15,11 @@ public class ExportAudit implements IAuditLog {
     @JsonIgnore
     private String ticketLink;
     
-    public ExportAudit(String comment) {
-        setAuditParams(new AuditParams());
-        this.comment = comment;
+    private String reason;
+    
+    public ExportAudit(ExportFilter filter, String reason) {
+        setAuditParams(filter.getAuditLog());
+        this.reason = reason;
     }
 
     private void setAuditParams(AuditParams auditParams) {
@@ -25,6 +28,10 @@ public class ExportAudit implements IAuditLog {
             this.timeSpent = auditParams.getTimeSpent();
             this.ticketLink = auditParams.getTicketLink(); 
         }
+    }
+
+    public String getReason() {
+        return reason;
     }
 
 	@Override
@@ -42,11 +49,13 @@ public class ExportAudit implements IAuditLog {
 		return ticketLink;
 	}
 
+	@JsonIgnore
 	@Override
 	public String getFolder() {
 		return null;
 	}
 
+    @JsonIgnore
 	@Override
 	public String getJob() {
 		return null;
@@ -57,16 +66,19 @@ public class ExportAudit implements IAuditLog {
 		return null;
 	}
 
+    @JsonIgnore
 	@Override
 	public String getOrderId() {
 		return null;
 	}
 
+    @JsonIgnore
 	@Override
 	public String getCalendar() {
 		return null;
 	}
 
+    @JsonIgnore
 	@Override
 	public String getControllerId() {
 		return null;

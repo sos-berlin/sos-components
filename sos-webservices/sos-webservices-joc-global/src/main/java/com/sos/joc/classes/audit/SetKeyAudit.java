@@ -2,8 +2,9 @@ package com.sos.joc.classes.audit;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.joc.model.audit.AuditParams;
+import com.sos.joc.model.publish.SetKeyFilter;
 
-public class SetKeyAudit implements IAuditLog {
+public class SetKeyAudit extends SetKeyFilter implements IAuditLog {
 
     @JsonIgnore
     private String comment;
@@ -14,13 +15,11 @@ public class SetKeyAudit implements IAuditLog {
     @JsonIgnore
     private String ticketLink;
     
-    public SetKeyAudit() {
-        setAuditParams(new AuditParams());
-    }
-
-    public SetKeyAudit(String comment) {
-        setAuditParams(new AuditParams());
-        this.comment = comment;
+    private String reason;
+    
+    public SetKeyAudit(SetKeyFilter filter, String reason) {
+        setAuditParams(filter.getAuditLog());
+        this.reason = reason;
     }
 
     private void setAuditParams(AuditParams auditParams) {
@@ -45,32 +44,42 @@ public class SetKeyAudit implements IAuditLog {
 	public String getTicketLink() {
 		return ticketLink;
 	}
+	
+	public String getReason() {
+	    return reason;
+	}
 
+    @JsonIgnore
 	@Override
 	public String getFolder() {
 		return null;
 	}
 
+    @JsonIgnore
 	@Override
 	public String getJob() {
 		return null;
 	}
 
+    @JsonIgnore
 	@Override
 	public String getWorkflow() {
 		return null;
 	}
 
+    @JsonIgnore
 	@Override
 	public String getOrderId() {
 		return null;
 	}
 
+    @JsonIgnore
 	@Override
 	public String getCalendar() {
 		return null;
 	}
 
+    @JsonIgnore
 	@Override
 	public String getControllerId() {
 		return null;

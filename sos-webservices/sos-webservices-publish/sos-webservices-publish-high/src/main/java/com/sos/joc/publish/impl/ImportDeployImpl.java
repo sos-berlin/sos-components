@@ -28,7 +28,6 @@ import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.agent.AgentRefPublish;
-import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.jobscheduler.model.workflow.WorkflowPublish;
 import com.sos.joc.Globals;
@@ -111,14 +110,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             stream = body.getEntityAs(InputStream.class);
             final String mediaSubType = body.getMediaType().getSubtype().replaceFirst("^x-", "");
-            ImportDeployAudit importAudit = new ImportDeployAudit(filter);
-            logAuditMessage(importAudit);
-            DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(importAudit);
 
             Set<Workflow> workflows = new HashSet<Workflow>();
             Set<AgentRef> agentRefs = new HashSet<AgentRef>();
             Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
-            
             
             // process uploaded archive
             if (mediaSubType.contains("zip") && !mediaSubType.contains("gzip")) {
@@ -138,6 +133,11 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             if (workflows != null && !workflows.isEmpty()) {
                 versionId = workflows.stream().findFirst().get().getVersionId();
             }
+            ImportDeployAudit mainAudit = new ImportDeployAudit(filter,
+                    String.format("%1$d workflow(s) and %2$d agentRef(s) imported with profile %3$s", workflows.size(), agentRefs.size(),
+                            account));
+            logAuditMessage(mainAudit);
+            DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(mainAudit);
             Set<java.nio.file.Path> folders = new HashSet<java.nio.file.Path>();
             folders = workflows.stream().map(wf -> wf.getPath()).map(path -> Paths.get(path).getParent()).collect(Collectors.toSet());
             for (Workflow workflow : workflows) {
@@ -226,7 +226,6 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     break;
                 }
             }
-            storeAuditLogEntry(importAudit);
             if (hasErrors) {
                 return JOCDefaultResponse.responseStatus419(listOfErrors);
             } else {
@@ -277,7 +276,6 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             // updateRepo command is atomic, therefore all items are rejected
             List<DBItemDeploymentHistory> failedDeployUpdateItems = dbLayer.updateFailedDeploymentForUpdate(
                     verifiedConfigurations, verifiedReDeployables, controllerId, account, versionIdForUpdate, either.getLeft().message());
-            createAuditLogFor(failedDeployUpdateItems, filter, controllerId, true);
             // if not successful the objects and the related controllerId have to be stored 
             // in a submissions table for reprocessing
             dbLayer.createSubmissionForFailedDeployments(failedDeployUpdateItems);
@@ -310,9 +308,6 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             // updateRepo command is atomic, therefore all items are rejected
             List<DBItemDeploymentHistory> failedDeployDeleteItems = dbLayer.updateFailedDeploymentForDelete(
                     depHistoryDBItemsToDeployDelete, controller, account, versionIdForDelete, either.getLeft().message());
-            if (filter != null) {
-                createAuditLogFor(failedDeployDeleteItems, filter, controller, false);
-            }
             // if not successful the objects and the related controllerId have to be stored 
             // in a submissions table for reprocessing
             dbLayer.createSubmissionForFailedDeployments(failedDeployDeleteItems);
@@ -330,27 +325,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
     
     private void createAuditLogFor(Collection<DBItemDeploymentHistory> depHistoryEntries, ImportDeployFilter filter, String controllerId,
             boolean update) {
-        for (DBItemDeploymentHistory deployedItem : depHistoryEntries) {
-            switch(DeployType.fromValue(deployedItem.getType())) {
-            case WORKFLOW:
-                ImportDeployAudit audit = new ImportDeployAudit(filter, controllerId, deployedItem.getPath(), deployedItem.getId(), update);
-                logAuditMessage(audit);
-                storeAuditLogEntry(audit);
-                break;
-            case AGENTREF:
-                // TODO: when object can be deployed, or remove if otherwise
-                break;
-            case JOBCLASS:
-                // TODO: when object can be deployed, or remove if otherwise
-                break;
-            case JUNCTION:
-                // TODO: when object can be deployed, or remove if otherwise
-                break;
-            case LOCK:
-                // TODO: when object can be deployed, or remove if otherwise
-                break;
-            }
-        }
+        Set<ImportDeployAudit> audits = depHistoryEntries.stream().map(item -> new ImportDeployAudit(filter, controllerId, item.getPath(), item
+                .getId(), update, String.format("object %1$s updated on controller %2$s", item.getPath(), controllerId))).collect(Collectors.toSet());
+        audits.stream().forEach(audit -> logAuditMessage(audit));
+        audits.stream().forEach(audit -> storeAuditLogEntry(audit));
     }
     
 }

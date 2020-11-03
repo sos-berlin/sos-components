@@ -76,14 +76,13 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             }
             SOSHibernateSession hibernateSession = null;
             stream = body.getEntityAs(InputStream.class);
-            ImportAudit importAudit = new ImportAudit(filter);
 
             JocKeyPair keyPair = new JocKeyPair();
             String keyFromFile = readFileContent(stream, filter);
             keyPair.setPrivateKey(null);
             keyPair.setKeyAlgorithm(filter.getKeyAlgorithm());
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
-            String comment = null;
+            String reason = null;
             if (keyFromFile != null) {
                 if (keyFromFile.startsWith(SOSKeyConstants.PRIVATE_PGP_KEY_HEADER) 
                         || keyFromFile.startsWith(SOSKeyConstants.PRIVATE_RSA_KEY_HEADER)
@@ -96,7 +95,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                         PGPPublicKey pubKey = KeyUtil.getPGPPublicKeyFromString(keyFromFile);
                         if (pubKey != null) {
                             keyPair.setPublicKey(keyFromFile);
-                            comment = String.format("autom. comment: new Public Key imported for profile - %1$s -", account);
+                            reason = String.format("new Public Key imported for profile - %1$s -", account);
                         }
                     } catch (Exception e) {
                         throw new JocKeyNotValidException("The provided file does not contain a valid public PGP key!");
@@ -107,7 +106,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                         PublicKey pubKey = KeyUtil.getRSAPublicKeyFromString(keyFromFile);
                         if (pubKey != null) {
                             keyPair.setPublicKey(keyFromFile);
-                            comment = String.format("autom. comment: new Public Key imported for profile - %1$s -", account);
+                            reason = String.format("new Public Key imported for profile - %1$s -", account);
                         }
                     } catch (Exception e) {
                         throw new JocKeyNotValidException("The provided file does not contain a valid public RSA key!");
@@ -118,7 +117,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                         PublicKey pubKey = KeyUtil.getECDSAPublicKeyFromString(keyFromFile);
                         if (pubKey != null) {
                             keyPair.setPublicKey(keyFromFile);
-                            comment = String.format("autom. comment: new Public Key imported for profile - %1$s -", account);
+                            reason = String.format("new Public Key imported for profile - %1$s -", account);
                         }
                     } catch (Exception e) {
                         throw new JocKeyNotValidException("The provided file does not contain a valid public ECDSA key!");
@@ -128,7 +127,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                         X509Certificate cert = KeyUtil.getX509Certificate(keyFromFile);
                         if (cert != null) {
                             keyPair.setCertificate(keyFromFile);
-                            comment = String.format("autom. comment: new X.509 Certificate imported for profile - %1$s -", account);
+                            reason = String.format("new X.509 Certificate imported for profile - %1$s -", account);
                             PublicKey pub = cert.getPublicKey();
                             if (pub instanceof RSAPublicKey) {
                                 keyPair.setKeyAlgorithm(JocKeyAlgorithm.RSA.name());
@@ -146,15 +145,9 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.HIGH);
-            if(importAudit.getAuditLog() == null) {
-                importAudit.setAuditLog(new AuditParams());
-            }
-            if (importAudit.getAuditLog().getComment() == null || importAudit.getAuditLog().getComment().isEmpty()) {
-                importAudit.getAuditLog().setComment(comment);
-            }
+            ImportAudit importAudit = new ImportAudit(filter, reason);
             logAuditMessage(importAudit);
             storeAuditLogEntry(importAudit);
-            
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

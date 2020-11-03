@@ -62,9 +62,8 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
             dbLayerKeys.saveOrUpdateGeneratedKey(keyPair, 
                     jobschedulerUser.getSosShiroCurrentUser().getUsername(),
                     JocSecurityLevel.MEDIUM);
-            GenerateKeyAudit audit = new GenerateKeyAudit(
-                    String.format("autom. comment: new Private Key generated for profile - %1$s -", 
-                            jobschedulerUser.getSosShiroCurrentUser().getUsername()));
+            GenerateKeyAudit audit = new GenerateKeyAudit(filter, 
+                    String.format("new Private Key generated for profile - %1$s -", jobschedulerUser.getSosShiroCurrentUser().getUsername()));
             logAuditMessage(audit);
             storeAuditLogEntry(audit);
             return JOCDefaultResponse.responseStatus200(keyPair);

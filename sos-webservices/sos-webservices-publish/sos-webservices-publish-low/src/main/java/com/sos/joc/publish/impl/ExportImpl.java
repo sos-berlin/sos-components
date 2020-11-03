@@ -85,9 +85,8 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             String account = Globals.getDefaultProfileUserAccount();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             final Set<JSObject> jsObjects = getObjectsFromDB(filter, hibernateSession, versionId);
-            Set<ExportAudit> audits = jsObjects.stream().map(item ->  new ExportAudit(
-                    String.format("autom. comment: Object with path: %1$s exported to file %2$s with profile %3$s", 
-                            item.getPath(), filename, account)))
+            Set<ExportAudit> audits = jsObjects.stream().map(item ->  new ExportAudit(filter, 
+                    String.format("Object with path: %1$s exported to file %2$s with profile %3$s", item.getPath(), filename, account)))
                     .collect(Collectors.toSet());
             StreamingOutput stream = null;
             if (filename.endsWith("tar.gz") || filename.endsWith("gzip")) {

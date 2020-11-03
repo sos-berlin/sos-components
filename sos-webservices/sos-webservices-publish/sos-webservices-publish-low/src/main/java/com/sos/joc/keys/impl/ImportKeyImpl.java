@@ -71,20 +71,19 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             }
             SOSHibernateSession hibernateSession = null;
             stream = body.getEntityAs(InputStream.class);
-            ImportAudit importAudit = new ImportAudit(filter);
             JocKeyPair keyPair = new JocKeyPair();
             String keyFromFile = readFileContent(stream, filter);
             keyPair.setKeyAlgorithm(filter.getKeyAlgorithm());
             String account = Globals.defaultProfileAccount;
             String publicKey = null;
-            String comment = null;
+            String reason = null;
             if (keyFromFile != null) {
                 if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
                     try {
                         publicKey = KeyUtil.extractPublicKey(keyFromFile);
                         if (publicKey != null) {
                             keyPair.setPrivateKey(keyFromFile);
-                            comment = String.format("autom. comment: new Private Key imported for profile - %1$s -", account);
+                            reason = String.format("new Private Key imported for profile - %1$s -", account);
                         }
                     } catch (Exception e) {
                         throw new JocKeyNotValidException("The provided file does not contain a valid private PGP key!");
@@ -95,14 +94,14 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                         KeyPair kp = KeyUtil.getKeyPairFromPrivatKeyString(keyFromFile);
                         if (kp != null) {
                             keyPair.setPrivateKey(keyFromFile);
-                            comment = String.format("autom. comment: new Private Key imported for profile - %1$s -", account);
+                            reason = String.format("new Private Key imported for profile - %1$s -", account);
                         }
                     } catch (ClassCastException e) {
                         try {
                             KeyPair kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(keyFromFile);
                             if (kp != null) {
                                 keyPair.setPrivateKey(keyFromFile);
-                                comment = String.format("autom. comment: new Private Key imported for profile - %1$s -", account);
+                                reason = String.format("new Private Key imported for profile - %1$s -", account);
                             }
                         } catch (Exception e1) {
                             throw new JocKeyNotValidException("The provided file does not contain a valid private RSA key!");
@@ -114,7 +113,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                         KeyPair kp = KeyUtil.getKeyPairFromECDSAPrivatKeyString(keyFromFile);
                         if (kp != null) {
                             keyPair.setPrivateKey(keyFromFile);
-                            comment = String.format("autom. comment: new Private Key imported for profile - %1$s -", account);
+                            reason = String.format("new Private Key imported for profile - %1$s -", account);
                         }
                     } catch (Exception e) {
                         throw new JocKeyNotValidException("The provided file does not contain a valid private ECDSA key!");
@@ -124,7 +123,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                         X509Certificate cert = KeyUtil.getX509Certificate(keyFromFile);
                         if (cert != null) {
                             keyPair.setCertificate(keyFromFile);
-                            comment = String.format("autom. comment: new X.509 Certificate imported for profile - %1$s -", account);
+                            reason = String.format("new X.509 Certificate imported for profile - %1$s -", account);
                         }
                     } catch (Exception e) {
                         throw new JocKeyNotValidException("The provided file does not contain a valid X.509 certificate!");
@@ -142,12 +141,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.LOW);
-            if(importAudit.getAuditLog() == null) {
-                importAudit.setAuditLog(new AuditParams());
-            }
-            if (importAudit.getAuditLog().getComment() == null || importAudit.getAuditLog().getComment().isEmpty()) {
-                importAudit.getAuditLog().setComment(comment);
-            }
+            ImportAudit importAudit = new ImportAudit(filter, reason);
             logAuditMessage(importAudit);
             storeAuditLogEntry(importAudit);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

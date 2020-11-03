@@ -270,8 +270,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             // updateRepo command is atomic, therefore all items are rejected
             List<DBItemDeploymentHistory> failedDeployUpdateItems = dbLayer.updateFailedDeploymentForUpdate(
                     verifiedConfigurations, verifiedReDeployables, controllerId, account, versionIdForUpdate, either.getLeft().message());
-            createAuditLogFor(failedDeployUpdateItems, deployFilter, controllerId, true);
-
             // if not successful the objects and the related controllerId have to be stored 
             // in a submissions table for reprocessing
             dbLayer.createSubmissionForFailedDeployments(failedDeployUpdateItems);
@@ -306,9 +304,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     depHistoryDBItemsToDeployDelete, controller, account, versionIdForDelete, either.getLeft().message());
             // if not successful the objects and the related controllerId have to be stored 
             // in a submissions table for reprocessing
-            if (deployFilter != null) {
-                createAuditLogFor(failedDeployDeleteItems, deployFilter, controller, false);
-            }
             dbLayer.createSubmissionForFailedDeployments(failedDeployDeleteItems);
             hasErrors = true;
             if (either.getLeft().codeOrNull() != null) {
@@ -324,23 +319,11 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     
     private void createAuditLogFor(Collection<DBItemDeploymentHistory> depHistoryEntries, DeployFilter deployFilter, String controllerId,
             boolean update) {
-        if(deployFilter.getAuditLog()== null) {
-            deployFilter.setAuditLog(new AuditParams());   
-        }
-        for (DBItemDeploymentHistory deployedItem : depHistoryEntries) {
-            if (deployFilter.getAuditLog().getComment() == null || deployFilter.getAuditLog().getComment().isEmpty()) {
-                if (update) {
-                    deployFilter.getAuditLog().setComment(
-                            String.format("autom. comment: object %1$s updated on controller %2$s", deployedItem.getPath(), controllerId));
-                } else {
-                    deployFilter.getAuditLog().setComment(
-                            String.format("autom. comment: object %1$s removed from controller %2$s", deployedItem.getPath(), controllerId));
-                }
-            }
-            DeployAudit deployAudit = new DeployAudit(deployFilter, controllerId, deployedItem.getPath(), deployedItem.getId(), update);
-            logAuditMessage(deployAudit);
-            storeAuditLogEntry(deployAudit);
-        }
+        Set<DeployAudit> audits = depHistoryEntries.stream().map(item -> new DeployAudit(deployFilter, controllerId, item.getPath(), 
+                item.getId(), update, String.format("object %1$s updated on controller %2$s", item.getPath(), controllerId)))
+                .collect(Collectors.toSet());
+        audits.stream().forEach(audit -> logAuditMessage(audit));
+        audits.stream().forEach(audit -> storeAuditLogEntry(audit));
     }
     
 }

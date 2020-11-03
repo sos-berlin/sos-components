@@ -25,6 +25,8 @@ public class DeployAudit implements IAuditLog {
     
     private Boolean delete;
     
+    private String reason;
+    
     @JsonIgnore
     private String comment;
 
@@ -40,16 +42,18 @@ public class DeployAudit implements IAuditLog {
     @JsonIgnore
     private String folder;
 
-    public DeployAudit(DeployFilter filter) {
+    public DeployAudit(DeployFilter filter, String reason) {
         setAuditParams(filter.getAuditLog());
+        this.reason = reason;
     }
 
-    public DeployAudit(DeployFilter filter, String controllerId, String workflowPath, Long depHistoryId, boolean update) {
+    public DeployAudit(DeployFilter filter, String controllerId, String workflowPath, Long depHistoryId, boolean update, String reason) {
         setAuditParams(filter.getAuditLog());
         this.controllerId = controllerId;
         this.workflowPath = workflowPath;
         this.folder = Paths.get(workflowPath).getParent().toString().replace('\\', '/');
         this.depHistoryId = depHistoryId;
+        this.reason = reason;
         if (update) {
             this.update = true;
             this.delete = null;
@@ -125,4 +129,8 @@ public class DeployAudit implements IAuditLog {
         return delete;
     }
 	
+    public String getReason() {
+        return reason;
+    }
+
 }

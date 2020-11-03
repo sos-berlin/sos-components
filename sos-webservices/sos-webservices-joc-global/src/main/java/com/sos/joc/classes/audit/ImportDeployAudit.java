@@ -13,7 +13,8 @@ import com.sos.joc.model.publish.ImportDeployFilter;
     "controllerId",
     "workflow",
     "update",
-    "delete"
+    "delete",
+    "reason"
 })
 public class ImportDeployAudit extends ImportDeployFilter implements IAuditLog {
 
@@ -24,6 +25,8 @@ public class ImportDeployAudit extends ImportDeployFilter implements IAuditLog {
     private Boolean update;
     
     private Boolean delete;
+    
+    private String reason;
     
     @JsonIgnore
     private String comment;
@@ -40,16 +43,18 @@ public class ImportDeployAudit extends ImportDeployFilter implements IAuditLog {
     @JsonIgnore
     private String folder;
 
-    public ImportDeployAudit(ImportDeployFilter filter) {
+    public ImportDeployAudit(ImportDeployFilter filter, String reason) {
         setAuditParams(filter.getAuditLog());
+        this.reason = reason;
     }
 
-    public ImportDeployAudit(ImportDeployFilter filter, String controllerId, String workflowPath, Long depHistoryId, boolean update) {
+    public ImportDeployAudit(ImportDeployFilter filter, String controllerId, String workflowPath, Long depHistoryId, boolean update, String reason) {
         setAuditParams(filter.getAuditLog());
         this.controllerId = controllerId;
         this.workflowPath = workflowPath;
         this.folder = Paths.get(workflowPath).getParent().toString().replace('\\', '/');
         this.depHistoryId = depHistoryId;
+        this.reason = reason;
         if (update) {
             this.update = true;
             this.delete = null;
@@ -102,6 +107,10 @@ public class ImportDeployAudit extends ImportDeployFilter implements IAuditLog {
 		return ticketLink;
 	}
 
+    public String getReason() {
+        return reason;
+    }
+    
 	@Override
 	public String getJob() {
 		return null;

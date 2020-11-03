@@ -15,8 +15,11 @@ public class ImportAudit extends ImportFilter implements IAuditLog {
     @JsonIgnore
     private String ticketLink;
     
-    public ImportAudit(ImportFilter filter) {
+    private String reason;
+    
+    public ImportAudit(ImportFilter filter, String reason) {
         setAuditParams(filter.getAuditLog());
+        this.reason = reason;
     }
 
     private void setAuditParams(AuditParams auditParams) {
@@ -32,8 +35,8 @@ public class ImportAudit extends ImportFilter implements IAuditLog {
         return comment;
     }
 
-    public void setComment(String comment) {
-        this.comment = comment;
+    public String getReason() {
+        return reason;
     }
 
 	@Override

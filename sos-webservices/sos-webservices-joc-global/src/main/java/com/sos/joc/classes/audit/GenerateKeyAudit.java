@@ -2,8 +2,9 @@ package com.sos.joc.classes.audit;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.joc.model.audit.AuditParams;
+import com.sos.joc.model.publish.GenerateKeyFilter;
 
-public class GenerateKeyAudit implements IAuditLog {
+public class GenerateKeyAudit extends GenerateKeyFilter implements IAuditLog {
 
     @JsonIgnore
     private String comment;
@@ -14,13 +15,11 @@ public class GenerateKeyAudit implements IAuditLog {
     @JsonIgnore
     private String ticketLink;
     
-    public GenerateKeyAudit() {
-        setAuditParams(new AuditParams());
-    }
-
-    public GenerateKeyAudit(String comment) {
-        setAuditParams(new AuditParams());
-        this.comment = comment;
+    private String reason;
+    
+    public GenerateKeyAudit(GenerateKeyFilter filter, String reason) {
+        setAuditParams(filter.getAuditLog());
+        this.reason = reason;
     }
 
     private void setAuditParams(AuditParams auditParams) {
@@ -46,38 +45,48 @@ public class GenerateKeyAudit implements IAuditLog {
 		return ticketLink;
 	}
 
-	@Override
+    public String getReason() {
+        return reason;
+    }
+
+    @JsonIgnore
+    @Override
 	public String getFolder() {
 		return null;
 	}
 
+    @JsonIgnore
 	@Override
 	public String getJob() {
 		return null;
 	}
 
+    @JsonIgnore
 	@Override
 	public String getWorkflow() {
 		return null;
 	}
 
+    @JsonIgnore
 	@Override
 	public String getOrderId() {
 		return null;
 	}
 
+    @JsonIgnore
 	@Override
 	public String getCalendar() {
 		return null;
 	}
 
+    @JsonIgnore
 	@Override
 	public String getControllerId() {
 		return null;
 	}
 
-    @Override
     @JsonIgnore
+    @Override
     public Long getDepHistoryId() {
         return null;
     }

@@ -96,14 +96,9 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             // process signature verification and save or update objects
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
-            ImportAudit importAudit = new ImportAudit(filter);
-            if(importAudit.getComment() == null || importAudit.getComment().isEmpty()) {
-                importAudit.setComment(
-                        String.format("autom. comment: %1$d workflow(s) and %2$d agentRef(s) imported with profile %3$s", 
-                                workflows.size(),
-                                agentRefs.size(),
-                                account));
-            }
+            ImportAudit importAudit = new ImportAudit(filter, 
+                    String.format("%1$d workflow(s) and %2$d agentRef(s) imported with profile %3$s", workflows.size(), agentRefs.size(),
+                            account));
             logAuditMessage(importAudit);
             DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(importAudit);
 
