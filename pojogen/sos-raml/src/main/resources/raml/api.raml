@@ -52,6 +52,7 @@ resourceTypes:
   - postForDownload: !include joc/resourceTypes/common/postForDownload.raml
   - postForUpload: !include joc/resourceTypes/common/postForUpload.raml
   - postForImportDeploy: !include joc/resourceTypes/publish/postForImportDeploy.raml
+  - postForGenerateKey: !include joc/resourceTypes/publish/postForGenerateKey.raml
   - postLog: !include joc/resourceTypes/common/postLog.raml
   - postDocu: !include joc/resourceTypes/docu/postDocu.raml
   - getDocu: !include joc/resourceTypes/docu/getDocu.raml
@@ -1830,18 +1831,10 @@ traits:
         example: !include joc/examples/publish/deploy-example.json
   /generate_key:
     type:
-      postJSONWithoutJSId:
+      postForGenerateKey:
         description: generates a new private key (ASCII format only)
         description1: !include joc/documentation/publish/generateKeyValidUntil.md
         description2: !include joc/documentation/publish/keyAlgorithm.md
-        description3: " "
-        description4: " "
-        description5: " "
-        description6: " "
-        description7: " "
-        description8: " "
-        description9: " "
-        description10: " "
         description200: " "
         schema200: !include joc/schemas/pgp/jocKeyPair-schema.json
         example200: !include joc/examples/publish/showKey-example.json
@@ -1874,6 +1867,7 @@ traits:
         description3: !include joc/documentation/publish/setPublicKey.md
         description4: !include joc/documentation/publish/setCertificate.md
         description5: !include joc/documentation/publish/setKeyAlgorithm.md
+        audit: !include joc/documentation/audit/auditLog.md
         schema: !include joc/schemas/publish/setKey-schema.json
         example: !include joc/examples/publish/setKey-example.json
   /set_version:
@@ -1885,6 +1879,7 @@ traits:
         description3: " "
         description4: " "
         description5: " "
+        audit: !include joc/documentation/audit/auditLog.md
         schema: !include joc/schemas/publish/setVersion-schema.json
         example: !include joc/examples/publish/setVersion-example.json
   /set_versions:
@@ -1896,6 +1891,7 @@ traits:
         description3: " "
         description4: " "
         description5: " "
+        audit: !include joc/documentation/audit/auditLog.md
         schema: !include joc/schemas/publish/setVersions-schema.json
         example: !include joc/examples/publish/setVersions-example.json
   /show_key:
