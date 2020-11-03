@@ -2,6 +2,8 @@ package com.sos.joc.publish.impl;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.ws.rs.Path;
 
@@ -10,6 +12,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.audit.SetVersionAudit;
 import com.sos.joc.db.deployment.DBItemDepVersions;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.exceptions.JocException;
@@ -50,17 +53,22 @@ public class SetVersionImpl extends JOCResourceImpl implements ISetVersion {
     }
 
     private void updateVersions(SetVersionFilter filter, DBLayerDeploy dbLayer) throws SOSHibernateException {
+        Set<String> paths = new HashSet<String>();
         for (Long deploymentId : filter.getDeployments()) {
             DBItemDeploymentHistory depHistoryItem = dbLayer.getSession().get(DBItemDeploymentHistory.class, deploymentId);
             DBItemDepVersions newVersion = new DBItemDepVersions();
             if (depHistoryItem != null) {
                 newVersion.setInvConfigurationId(depHistoryItem.getInventoryConfigurationId());
+                paths.add(depHistoryItem.getPath());
             }
             newVersion.setDepHistoryId(deploymentId);
             newVersion.setVersion(filter.getVersion());
             newVersion.setModified(Date.from(Instant.now()));
             dbLayer.getSession().save(newVersion);
         }
+        SetVersionAudit audit = new SetVersionAudit(filter, paths, "version updated.");
+        logAuditMessage(audit);
+        storeAuditLogEntry(audit);
     }
     
 }
