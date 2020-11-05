@@ -19,6 +19,8 @@ public class DeployAudit implements IAuditLog {
 
     private String controllerId;
     
+    private String commitId;
+
     private String workflowPath;
     
     private Boolean update;
@@ -47,13 +49,14 @@ public class DeployAudit implements IAuditLog {
         this.reason = reason;
     }
 
-    public DeployAudit(DeployFilter filter, String controllerId, String workflowPath, Long depHistoryId, boolean update, String reason) {
+    public DeployAudit(DeployFilter filter, boolean update, String controllerId, String commitId, Long depHistoryId, String path, String reason) {
         setAuditParams(filter.getAuditLog());
-        this.controllerId = controllerId;
-        this.workflowPath = workflowPath;
-        this.folder = Paths.get(workflowPath).getParent().toString().replace('\\', '/');
-        this.depHistoryId = depHistoryId;
         this.reason = reason;
+        this.commitId = commitId;
+        this.controllerId = controllerId;
+        this.depHistoryId = depHistoryId;
+        this.workflowPath = path;
+        this.folder = Paths.get(workflowPath).getParent().toString().replace('\\', '/');
         if (update) {
             this.update = true;
             this.delete = null;
@@ -131,6 +134,10 @@ public class DeployAudit implements IAuditLog {
 	
     public String getReason() {
         return reason;
+    }
+
+    public String getCommitId() {
+        return commitId;
     }
 
 }

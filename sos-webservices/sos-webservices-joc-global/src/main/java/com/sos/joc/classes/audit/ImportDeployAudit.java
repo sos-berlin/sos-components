@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.AuditParams;
+import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.ImportDeployFilter;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -28,6 +29,8 @@ public class ImportDeployAudit extends ImportDeployFilter implements IAuditLog {
     
     private String reason;
     
+    private String commitId;
+    
     @JsonIgnore
     private String comment;
 
@@ -48,13 +51,14 @@ public class ImportDeployAudit extends ImportDeployFilter implements IAuditLog {
         this.reason = reason;
     }
 
-    public ImportDeployAudit(ImportDeployFilter filter, String controllerId, String workflowPath, Long depHistoryId, boolean update, String reason) {
+    public ImportDeployAudit(ImportDeployFilter filter, boolean update, String controllerId, String commitId, Long depHistoryId, String path, String reason) {
         setAuditParams(filter.getAuditLog());
-        this.controllerId = controllerId;
-        this.workflowPath = workflowPath;
-        this.folder = Paths.get(workflowPath).getParent().toString().replace('\\', '/');
-        this.depHistoryId = depHistoryId;
         this.reason = reason;
+        this.commitId = commitId;
+        this.controllerId = controllerId;
+        this.depHistoryId = depHistoryId;
+        this.workflowPath = path;
+        this.folder = Paths.get(workflowPath).getParent().toString().replace('\\', '/');
         if (update) {
             this.update = true;
             this.delete = null;
@@ -132,6 +136,10 @@ public class ImportDeployAudit extends ImportDeployFilter implements IAuditLog {
 
     public Boolean getDelete() {
         return delete;
+    }
+
+    public String getCommitId() {
+        return commitId;
     }
 
 }

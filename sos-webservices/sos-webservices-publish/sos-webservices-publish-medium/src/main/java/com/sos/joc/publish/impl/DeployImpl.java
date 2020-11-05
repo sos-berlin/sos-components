@@ -250,7 +250,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(
                     verifiedReDeployables, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
             PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), dbLayer.getSession());
-            createAuditLogFor(deployedObjects, deployFilter, controllerId, true);
+            createAuditLogFor(deployedObjects, deployFilter, controllerId, true, versionIdForUpdate);
             LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
         } else if (either.isLeft()) {
             // an error occurred
@@ -284,7 +284,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             Set<DBItemDeploymentHistory> deletedDeployItems = 
                     PublishUtils.updateDeletedDepHistory(depHistoryDBItemsToDeployDelete, dbLayer);
             if (deployFilter != null) {
-                createAuditLogFor(deletedDeployItems, deployFilter, controller, false);
+                createAuditLogFor(deletedDeployItems, deployFilter, controller, false, versionIdForDelete);
             }
         } else if (either.isLeft()) {
             String message = String.format("Response from Controller \"%1$s:\": %2$s", controller, either.getLeft().message());
@@ -308,10 +308,16 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     }
     
     private void createAuditLogFor(Collection<DBItemDeploymentHistory> depHistoryEntries, DeployFilter deployFilter, String controllerId,
-            boolean update) {
-        Set<DeployAudit> audits = depHistoryEntries.stream().map(item -> new DeployAudit(deployFilter, controllerId, item.getPath(), 
-                item.getId(), update, String.format("object %1$s updated on controller %2$s", item.getPath(), controllerId)))
-                .collect(Collectors.toSet());
+            boolean update, String commitId) {
+        Set<DeployAudit> audits = depHistoryEntries.stream().map(item -> { 
+        if (update) {
+            return new DeployAudit(deployFilter, update, controllerId, commitId, item.getId(),
+                    item.getPath(), String.format("object %1$s updated on controller %2$s", item.getPath(), controllerId));
+        } else {
+            return new DeployAudit(deployFilter, update, controllerId, commitId, item.getId(),
+                    item.getPath(), String.format("object %1$s deleted from controller %2$s", item.getPath(), controllerId));
+        }
+    }).collect(Collectors.toSet());
         audits.stream().forEach(audit -> logAuditMessage(audit));
         audits.stream().forEach(audit -> storeAuditLogEntry(audit));
     }

@@ -33,6 +33,7 @@ import com.sos.jobscheduler.model.workflow.WorkflowPublish;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.audit.DeployAudit;
 import com.sos.joc.classes.audit.ImportDeployAudit;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -265,7 +266,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     verifiedConfigurations, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate);
             deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(
                     verifiedReDeployables, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
-            createAuditLogFor(deployedObjects, filter, controllerId, true);
+            createAuditLogFor(deployedObjects, filter, controllerId, true, versionIdForUpdate);
             PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), dbLayer.getSession());
             LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
         } else if (either.isLeft()) {
@@ -300,7 +301,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             Set<DBItemDeploymentHistory> deletedDeployItems = 
                     PublishUtils.updateDeletedDepHistory(depHistoryDBItemsToDeployDelete, dbLayer);
             if (filter != null) {
-                createAuditLogFor(deletedDeployItems, filter, controller, false);
+                createAuditLogFor(deletedDeployItems, filter, controller, false, versionIdForDelete);
             }
         } else if (either.isLeft()) {
             String message = String.format("Response from Controller \"%1$s:\": %2$s", controller, either.getLeft().message());
@@ -324,9 +325,16 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
     }
     
     private void createAuditLogFor(Collection<DBItemDeploymentHistory> depHistoryEntries, ImportDeployFilter filter, String controllerId,
-            boolean update) {
-        Set<ImportDeployAudit> audits = depHistoryEntries.stream().map(item -> new ImportDeployAudit(filter, controllerId, item.getPath(), item
-                .getId(), update, String.format("object %1$s updated on controller %2$s", item.getPath(), controllerId))).collect(Collectors.toSet());
+            boolean update, String commitId) {
+        Set<ImportDeployAudit> audits = depHistoryEntries.stream().map(item -> { 
+            if (update) {
+                return new ImportDeployAudit(filter, update, controllerId, commitId, item.getId(),
+                        item.getPath(), String.format("object %1$s updated on controller %2$s", item.getPath(), controllerId));
+            } else {
+                return new ImportDeployAudit(filter, update, controllerId, commitId, item.getId(),
+                        item.getPath(), String.format("object %1$s deleted from controller %2$s", item.getPath(), controllerId));
+            }
+        }).collect(Collectors.toSet());
         audits.stream().forEach(audit -> logAuditMessage(audit));
         audits.stream().forEach(audit -> storeAuditLogEntry(audit));
     }
