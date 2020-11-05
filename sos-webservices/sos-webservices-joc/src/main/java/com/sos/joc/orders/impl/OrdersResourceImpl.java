@@ -4,6 +4,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -76,7 +77,16 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             }
 
             List<OrderStateText> states = ordersFilter.getStates();
-            if (states != null && !states.isEmpty()) {
+            // BLOCKED is not a Controller state. It needs a special handling. These are PENDING with scheduledFor in the past
+            final boolean withStatesFilter = states != null && !states.isEmpty();
+            final boolean lookingForBlocked = withStatesFilter && states.contains(OrderStateText.BLOCKED);
+            final boolean lookingForPending = withStatesFilter && states.contains(OrderStateText.PENDING);
+            
+            if (withStatesFilter) {
+                // special BLOCKED handling 
+                if(lookingForBlocked && !lookingForPending) {
+                    states.add(OrderStateText.PENDING);
+                }
                 orderStream = orderStream.filter(o -> states.contains(OrdersHelper.getGroupedState(o.asScala().state().getClass())));
             }
 
@@ -92,14 +102,23 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             Stream<Either<Exception, OrderV>> ordersV = orderStream.map(o -> {
                 Either<Exception, OrderV> either = null;
                 try {
-                    either = Either.right(OrdersHelper.mapJOrderToOrderV(o, ordersFilter.getCompact(), surveyDateMillis, false));
+                    OrderV order = OrdersHelper.mapJOrderToOrderV(o, ordersFilter.getCompact(), surveyDateMillis, false);
+                    // special BLOCKED handling
+                    if (withStatesFilter) {
+                       if (lookingForBlocked && !lookingForPending && OrderStateText.PENDING.equals(order.getState().get_text())) {
+                           order = null;
+                       } else if (lookingForPending && !lookingForBlocked && OrderStateText.BLOCKED.equals(order.getState().get_text())) {
+                           order = null;
+                       }
+                    }
+                    either = Either.right(order);
                 } catch (Exception e) {
                     either = Either.left(e);
                 }
                 return either;
             });
             // TODO consider Either::isLeft, maybe at least LOGGER usage
-            entity.setOrders(ordersV.filter(Either::isRight).map(Either::get).collect(Collectors.toList()));
+            entity.setOrders(ordersV.filter(Either::isRight).map(Either::get).filter(Objects::nonNull).collect(Collectors.toList()));
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
