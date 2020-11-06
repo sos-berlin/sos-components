@@ -282,6 +282,7 @@ public class PredicateParser {
 
         if (tokenizer.ttype == '"' || tokenizer.ttype == '\'') {
             // variable name without key=
+            emptySingleQuoteStringException(tokenizer, parentStr, position);
             position += tokenizer.sval.length() + 2;
         } else if (tokenizer.ttype == StreamTokenizer.TT_WORD) {
             // key=, label=, default=
@@ -315,6 +316,7 @@ public class PredicateParser {
                     }
                 } else if (isArgument || (!isArgument && !"label".equals(keyword))) {
                     if (tokenizer.ttype == '"' || tokenizer.ttype == '\'') {
+                        emptySingleQuoteStringException(tokenizer, parentStr, position);
                         position += tokenizer.sval.length() + 2;
                     } else {
                         throwUnexpectedCharErrMsg(tokenizer, parentStr, position);
@@ -372,6 +374,7 @@ public class PredicateParser {
                         }
                     } else if (isArgument || (!isArgument && !"label".equals(keyword))) {
                         if (tokenizer.ttype == '"' || tokenizer.ttype == '\'') {
+                            emptySingleQuoteStringException(tokenizer, parentStr, position);
                             position += tokenizer.sval.length() + 2;
                         } else {
                             throwUnexpectedCharErrMsg(tokenizer, parentStr, position);
@@ -585,6 +588,52 @@ public class PredicateParser {
         }
         return position;
     }
+    
+    private static int parseString(String str, int pos, String parentStr) throws IOException, IllegalArgumentException {
+        StreamTokenizer tokenizer = new StreamTokenizer(new StringReader(str));
+        tokenizer.resetSyntax();
+        tokenizer.quoteChar('"');
+        tokenizer.quoteChar('\'');
+        tokenizer.slashSlashComments(false);
+        tokenizer.slashStarComments(false);
+        tokenizer.wordChars(32, 33);
+        tokenizer.wordChars(35, 38);
+        tokenizer.wordChars(40, 126);
+        tokenizer.wordChars(160, 255); // 2. part latin1
+
+        int position = pos;
+        if (parentStr == null || parentStr.isEmpty()) {
+            parentStr = str; 
+        }
+
+        int currentToken = tokenizer.nextToken();
+        if (currentToken == StreamTokenizer.TT_EOF) {
+            throw new IllegalArgumentException("unexpected empty expression at position " + position);
+        }
+        
+        if (tokenizer.ttype == '"' || tokenizer.ttype == '\'') {
+            emptySingleQuoteStringException(tokenizer, parentStr, position);
+            position += tokenizer.sval.length() + 2;
+        } else {
+            throwUnexpectedCharErrMsg(tokenizer, parentStr, position);
+        }
+        
+        currentToken = tokenizer.nextToken();
+        if (currentToken == StreamTokenizer.TT_EOF) {
+            return position;
+        } else {
+            throwUnexpectedCharErrMsg(tokenizer, parentStr, position);
+        }
+        
+        return position;
+    }
+    
+    private static void emptySingleQuoteStringException(StreamTokenizer tokenizer, String str, int position) {
+        if (tokenizer.ttype == '\'' && tokenizer.sval.isEmpty()) {
+            throw new IllegalArgumentException("wrong syntax near '" + str + "': an empty string with single quotes '' was found at position "
+                    + position + ". Empty strings need double quotes \"\".");
+        }
+    }
 
     private static void throwUnexpectedCharErrMsg(StreamTokenizer tokenizer, String str, int position) {
         if (tokenizer.ttype == StreamTokenizer.TT_WORD) {
@@ -648,6 +697,7 @@ public class PredicateParser {
                 throw new IllegalArgumentException(extendedErrMessage + "[" + tokens[2]
                         + "] is not a string. Expects a ' or \"  enclosed expression.");
             } else if (isString(tokens[0]) || isStringVariable(tokens[0])) {
+                checkString(tokens[0], 0, str);
                 if (isStringVariable(tokens[0])) {
                     checkVariableSyntax(tokens[0], 0, str);
                 }
@@ -670,9 +720,11 @@ public class PredicateParser {
                     checkVariableSyntax(tokens[2], startPos2, str);
                 }
             } else if ((isString(tokens[0]) || isStringVariable(tokens[0])) && (isString(tokens[2]) || isStringVariable(tokens[2]))) {
+                checkString(tokens[0], 0, str);
                 if (isStringVariable(tokens[0])) {
                     checkVariableSyntax(tokens[0], 0, str);
                 }
+                checkString(tokens[2], startPos2, str);
                 if (isStringVariable(tokens[2])) {
                     checkVariableSyntax(tokens[2], startPos2, str);
                 }
@@ -750,6 +802,12 @@ public class PredicateParser {
 
     private static boolean isString(String str) {
         return (str.startsWith("\"") && str.endsWith("\"")) || (str.startsWith("'") && str.endsWith("'"));
+    }
+    
+    private static void checkString(String str, int pos, String parentStr) throws IllegalArgumentException, IOException {
+        if (isString(str)) {
+            parseString(str, pos, parentStr);
+        }
     }
 
     private static boolean isBoolean(String str) {

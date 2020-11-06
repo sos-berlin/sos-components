@@ -89,6 +89,10 @@ public class PredicateValidatorTest {
         parseTester("hallo", false);
         parseTester("${こんにちは}.toBoolean", true);
         parseTester("${こんにちは}.toNumber", false);
+        parseTester("${こんにちは} != '''a'", false);
+        parseTester("variable('abc', default='') != 'a'", false);
+        parseTester("variable('abc', default=\"\") != 'a'", true);
+        parseTester("variable('', default='*') != 'a'", false);
     }
     
     private void parseTester(String str, boolean expect) {
