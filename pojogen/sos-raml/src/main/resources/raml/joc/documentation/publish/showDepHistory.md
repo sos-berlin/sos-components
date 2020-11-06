@@ -65,12 +65,12 @@
 <td></td>
 </tr>
 <tr>
-<td>``type``</td>
+<td>``deployType``</td>
 <td>optional, string</td>
 <td>Type of the deployed object. Available types are WORKFLOW, JOBCLASS, AGENTREF, LOCK, JUNCTION.</td>
 <td>
   <div>{</div>
-  <div style="padding-left:10px;">"type": "WORKFLOW"</div>
+  <div style="padding-left:10px;">"deployType": "WORKFLOW"</div>
   <div>}</div>
 </td>
 <td></td>
@@ -119,25 +119,46 @@
 </td>
 <td></td>
 </tr>
-<tr>
-<td>``from``</td>
-<td>optional, Date</td>
-<td>Start date for a range of dates.</td>
-<td>
-  <div>{</div>
-  <div style="padding-left:10px;">"from": "2020-06-01"</div>
-  <div>}</div>
-</td>
-<td></td>
+<tr><td>``from``</td><td>optional, string</td><td>The value has multiple formats
+<ul>
+<li>format for a date in ISO 8601 format where the <i>time offset</i> and milliseconds are optional, e.g.
+  <ul>
+    <li>YYYY-MM-DDThh:mm:ss[.s][Z (Z means +00)]</li>
+    <li>YYYY-MM-DDThh:mm:ss[.s][+01:00]</li>
+    <li>YYYY-MM-DDThh:mm:ss[.s][+0100]</li>
+    <li>YYYY-MM-DDThh:mm:ss[.s][+01]</li>
+  </ul>
+</li>
+<li>a format for a time period in relative to the current time, e.g. 6h, 12h, 1d, 1w can specify in addition with a time offset 0 or digits followed by a letter are expected where the letter has to be:
+  <ul>
+    <li>s (seconds)</li>
+    <li>m (minutes)</li>
+    <li>h (hours)</li>
+    <li>d (days)</li>
+    <li>w (weeks)</li>
+    <li>M (months)</li>
+    <li>y (years)</li>
+  </ul>
+</li>
+<li>a time offset is optional (e.g. 2d+02:00)
+  <ul>
+    <li>it can be also specify with the parameter ``timeZone``</li>
+    <li>if ``timeZone`` undefined then UTC is used</li>
+  </ul>
+</li>
+<li>the value 0 means the current time</li>
+<li>start date of a range of dates</li>
+</ul>
+</td><td>1d</td><td></td>
 </tr>
 <tr>
 <td>``to``</td>
-<td>optional, Date</td>
-<td>End date for a range of dates.</td>
-<td>
-  <div>{</div>
-  <div style="padding-left:10px;">"to": "2020-2-31"</div>
-  <div>}</div>
+<td>optional, string</td>
+<td>The value has multiple formats like the ``from`` parameter
+  <ul>
+    <li>end date of a range of dates</li>
+  </ul>
 </td>
+<td>0</td>
 <td></td>
 </tr>

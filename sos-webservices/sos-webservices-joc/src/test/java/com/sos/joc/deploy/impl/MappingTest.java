@@ -20,7 +20,10 @@ import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.instruction.IfElse;
 import com.sos.jobscheduler.model.instruction.NamedJob;
 import com.sos.jobscheduler.model.workflow.Workflow;
+import com.sos.joc.model.publish.ExcludeConfiguration;
 import com.sos.joc.model.publish.JSObject;
+import com.sos.joc.model.publish.ReDeployFilter;
+import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -129,4 +132,21 @@ public class MappingTest {
         }
     }
 
+    @Test
+    public void test5MapDepHistoryFilter () throws JsonProcessingException {
+        ShowDepHistoryFilter filter = DeploymentTestUtils.createDefaultShowDepHistoryFilter();
+        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
+        LOGGER.info("\n" + om.writeValueAsString(filter));
+    }
+
+    @Test
+    public void test6MapReDeployFilter () throws JsonProcessingException {
+        ReDeployFilter filter = DeploymentTestUtils.createDefaultReDeployFilter();
+        ExcludeConfiguration exclude = new ExcludeConfiguration();
+        exclude.setPath("/myWorkflows/myIfElseWorkflows/workflow_02");
+        exclude.setInvConfigurationId(75L);
+        filter.getExcludes().add(exclude);
+        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
+        LOGGER.info("\n" + om.writeValueAsString(filter));
+    }
 }

@@ -1,0 +1,15 @@
+{
+  "account" : "root",
+  "path" : "/myWorkflows/myIfElseWorkflows/workflow_01",
+  "folder" : "/myWorkflows/myIfElseWorkflows",
+  "controllerId" : "testsuite",
+  "commitId" : "4cbb095d-b998-4091-92f2-4fb8efb58805",
+  "version" : "0.0.1",
+  "deployType" : "WORKFLOW",
+  "operation" : "UPDATE",
+  "state" : "DEPLOYED",
+  "deploymentDate" : "2020-11-04T11:12:54",
+  "deleteDate" : "2020-11-04",
+  "from" : "10d",
+  "to" : "5d"
+}

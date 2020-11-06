@@ -1,11 +1,15 @@
 package com.sos.joc.deploy.impl;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import com.sos.jobscheduler.model.deploy.DeployType;
@@ -19,7 +23,13 @@ import com.sos.jobscheduler.model.job.Job;
 import com.sos.jobscheduler.model.workflow.Branch;
 import com.sos.jobscheduler.model.workflow.Jobs;
 import com.sos.jobscheduler.model.workflow.Workflow;
+import com.sos.joc.model.publish.DepHistory;
+import com.sos.joc.model.publish.DeploymentState;
+import com.sos.joc.model.publish.ExcludeConfiguration;
 import com.sos.joc.model.publish.JSObject;
+import com.sos.joc.model.publish.OperationType;
+import com.sos.joc.model.publish.ReDeployFilter;
+import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.model.publish.Signature;
 
 public class DeploymentTestUtils {
@@ -178,5 +188,45 @@ public class DeploymentTestUtils {
         executableScript.setScript(script);
         job.setExecutable(executableScript);
         return job;
+    }
+
+    public static ShowDepHistoryFilter createDefaultShowDepHistoryFilter() {
+        ShowDepHistoryFilter filter = new ShowDepHistoryFilter();
+        filter.setAccount("root");
+        filter.setCommitId("4cbb095d-b998-4091-92f2-4fb8efb58805");
+        filter.setControllerId("testsuite");
+        Instant depDate = Instant.parse("2020-11-06T06:48:21.00Z");
+        filter.setDeploymentDate(Date.from(depDate));
+        filter.setDeleteDate(Date.from(depDate));
+        filter.setDeployType(DeployType.WORKFLOW.name());
+        filter.setFolder("/myWorkflows/myIfElseWorkflows");
+        Calendar from = new GregorianCalendar(TimeZone.getTimeZone(ZoneId.of("UTC")));
+        from.set(2020, 0, 1, 11, 0, 0);
+        filter.setOperation(OperationType.UPDATE.name());
+        filter.setPath("/myWorkflows/myIfElseWorkflows/workflow_01");
+        filter.setState(DeploymentState.DEPLOYED.name());
+        filter.setFrom(Date.from(Instant.ofEpochMilli(from.getTimeInMillis())));
+        Calendar to = new GregorianCalendar(TimeZone.getTimeZone(ZoneId.of("UTC")));
+        to.set(2020, 11, 31, 23, 59, 59);
+        filter.setTo(Date.from(Instant.ofEpochMilli(to.getTimeInMillis())));
+        filter.setVersion("0.0.1");
+        return filter;
+    }
+    
+    public static ReDeployFilter createDefaultReDeployFilter() {
+        ReDeployFilter filter = new ReDeployFilter();
+        filter.setControllerId("testsuite");
+        filter.setFolder("/myWorkflows/myIfElseWorkflows");
+        ExcludeConfiguration exclude = new ExcludeConfiguration();
+        exclude.setPath("/myWorkflows/myIfElseWorkflows/workflow_01");
+        exclude.setInvConfigurationId(28L);
+        filter.getExcludes().add(exclude);
+        return filter;
+    }
+    
+    public static DepHistory createDepHistory() {
+        DepHistory depHistory = new DepHistory();
+        
+        return depHistory;
     }
 }
