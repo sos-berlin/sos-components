@@ -51,8 +51,6 @@ resourceTypes:
   - postJSONWithoutExample: !include joc/resourceTypes/common/postJSONWithoutExample.raml
   - postForDownload: !include joc/resourceTypes/common/postForDownload.raml
   - postForUpload: !include joc/resourceTypes/common/postForUpload.raml
-  - postForImportDeploy: !include joc/resourceTypes/publish/postForImportDeploy.raml
-  - postForGenerateKey: !include joc/resourceTypes/publish/postForGenerateKey.raml
   - postLog: !include joc/resourceTypes/common/postLog.raml
   - postDocu: !include joc/resourceTypes/docu/postDocu.raml
   - getDocu: !include joc/resourceTypes/docu/getDocu.raml
@@ -68,6 +66,9 @@ resourceTypes:
   - postForDownloadUnsigned: !include joc/resourceTypes/common/postForDownloadUnsigned.raml
   - postForUploadSigned: !include joc/resourceTypes/common/postForUploadSigned.raml
   - postForUploadUnsigned: !include joc/resourceTypes/common/postForUploadUnsigned.raml
+  - postForGenerateKey: !include joc/resourceTypes/publish/postForGenerateKey.raml
+  - postForImportDeploy: !include joc/resourceTypes/publish/postForImportDeploy.raml
+  - postForShowDepHistory: !include joc/resourceTypes/publish/postForShowDepHistory.raml
   
 
 traits:
@@ -1853,6 +1854,7 @@ traits:
         description: generates a new private key (ASCII format only)
         description1: !include joc/documentation/publish/generateKeyValidUntil.md
         description2: !include joc/documentation/publish/keyAlgorithm.md
+        audit: !include joc/documentation/audit/auditLog.md
         description200: " "
         schema200: !include joc/schemas/pgp/jocKeyPair-schema.json
         example200: !include joc/examples/publish/showKey-example.json
@@ -1922,6 +1924,15 @@ traits:
         schema200: !include joc/schemas/pgp/jocKeyPair-schema.json
         example: !include joc/examples/publish/emptyBody-example.json
         example200: !include joc/examples/publish/showKey-example.json
+  /show_dep_history:
+    type:
+      postForShowDepHistory:
+        description: shows the deployment history according to the provided filters 
+        description1: !include joc/documentation/publish/showDepHistory.md
+        schema: !include joc/schemas/publish/showDepHistoryFilter-schema.json
+        schema200: !include joc/schemas/publish/depHistory-schema.json
+        example: " "
+        example200: " "
 
 /security:
   description: This is not an API call. Use child urls instead!
