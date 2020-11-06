@@ -958,6 +958,24 @@ traits:
         description5: " "
         schema: !include joc/schemas/inventory/common/request-filter-schema.json
         example: TODO
+        
+  /validate/predicate:
+    type: error
+    post:
+      description: !include joc/documentation/inventory/validate.md
+      body:
+        text/plain:
+      responses:
+        200:
+          body:
+            application/json:
+              schema: !include joc/schemas/inventory/validate-schema.json
+        420:
+          body:
+            application/json:
+        440:
+          body:
+            application/json:
   
 /job:
   /documentation:

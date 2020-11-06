@@ -18,9 +18,9 @@ public class CheckJavaVariableName {
             "char", "final", "interface", "static", "void", "class", "finally", "long", "strictfp", "volatile", "const", "float", "native", "super",
             "while");
     private static final Predicate<String> controlChars = Pattern.compile("[\\x00-\\x1F\\x7F\\x80-\\x9F]").asPredicate();
-    // punction and symbol chars without _, $, ¢, £, ¤, ¥ and µ
+    // punction and symbol chars without _
     private static final Predicate<String> punctuationAndSymbolChars = Pattern.compile(
-            "[\\x20-\\x23\\x25-\\x2F\\x3A-\\x40\\x5B-\\x5E\\x60\\x7B-\\x7E\\xA0\\xA1\\xA6-\\xB4\\xB6-\\xBF\\xD7\\xF7]").asPredicate();
+            "[\\x20-\\x2F\\x3A-\\x40\\x5B-\\x5E\\x60\\x7B-\\x7E\\xA0-\\xBF\\xD7\\xF7]").asPredicate();
     private static final Predicate<String> digits = Pattern.compile("\\d").asPredicate();
 
     private enum Result {
@@ -34,7 +34,7 @@ public class CheckJavaVariableName {
 
         {
             put(Result.CONTROL, "Control characters are not allowed in '%s': '%s'");
-            put(Result.PUNCTUATION, "Punctuations (except '_') or symbols (except '$') are not allowed in '%s': '%s'");
+            put(Result.PUNCTUATION, "Punctuations (except '_') or symbols are not allowed in '%s': '%s'");
             put(Result.RESERVED, "'%s': '%s' is a reserved word and must not be used");
             put(Result.EMPTY, "'%s' must not be empty");
             put(Result.DIGIT, "'%s': '%s' must not begin with a number");

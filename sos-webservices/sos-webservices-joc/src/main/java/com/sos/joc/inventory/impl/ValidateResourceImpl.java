@@ -22,6 +22,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.inventory.PredicateParser;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IValidateResource;
@@ -73,7 +74,8 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
         validate(type, Globals.objectMapper.writeValueAsBytes(config), config);
     }
 
-    private static void validate(ConfigurationType type, byte[] configBytes, IConfigurationObject config) throws SOSJsonSchemaException, IOException {
+    private static void validate(ConfigurationType type, byte[] configBytes, IConfigurationObject config) throws SOSJsonSchemaException,
+            IOException {
         JsonValidator.validate(configBytes, URI.create(JocInventory.SCHEMA_LOCATION.get(type)));
         if (ConfigurationType.WORKFLOW.equals(type)) {
             JsonValidator.validateStrict(configBytes, URI.create("classpath:/raml/jobscheduler/schemas/workflow/workflowJobs-schema.json"));
@@ -133,6 +135,11 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
                     break;
                 case IF:
                     IfElse ifElse = inst.cast();
+                    try {
+                        PredicateParser.parse(ifElse.getPredicate());
+                    } catch (Exception e) {
+                        throw new SOSJsonSchemaException("$." + instPosition + "predicate:" + e.getMessage());
+                    }
                     validateInstructions(ifElse.getThen().getInstructions(), instPosition + "then.instructions", labels);
                     if (ifElse.getElse() != null) {
                         validateInstructions(ifElse.getElse().getInstructions(), instPosition + "else.instructions", labels);
@@ -150,5 +157,5 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
             }
         }
     }
-
+    
 }
