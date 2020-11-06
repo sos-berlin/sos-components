@@ -216,6 +216,12 @@ public class LogOrderContent {
         // TODO later part of Robert's history
         if (orderLog != null && orderLog.getLogEvents() != null) {
             orderLog.setLogEvents(orderLog.getLogEvents().stream().map(item -> getMappedLogItem(item)).collect(Collectors.toList()));
+            
+            // set complete true if Order only added -> no running log expected
+            if (orderLog.getLogEvents().size() == 1 && LogEvent.OrderAdded.equals(orderLog.getLogEvents().get(0).getLogEvent())) {
+                orderLog.setComplete(true);
+                orderLog.setEventId(null);
+            }
         }
 
         return orderLog;
