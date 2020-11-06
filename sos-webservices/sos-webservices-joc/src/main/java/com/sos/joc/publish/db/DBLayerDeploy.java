@@ -46,7 +46,7 @@ import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.audit.AuditLogItem;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.ExportFilter;
-import com.sos.joc.model.publish.JSDeploymentState;
+import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.SetVersionFilter;
@@ -569,7 +569,7 @@ public class DBLayerDeploy {
                 DeployType deployType = PublishUtils.mapInventoryMetaConfigurationType(ConfigurationType.fromValue(inventoryConfig.getType()));
                 newDepHistoryItem.setType(deployType.intValue());
                 newDepHistoryItem.setOperation(OperationType.UPDATE.value());
-                newDepHistoryItem.setState(JSDeploymentState.NOT_DEPLOYED.value());
+                newDepHistoryItem.setState(DeploymentState.NOT_DEPLOYED.value());
                 newDepHistoryItem.setPath(inventoryConfig.getPath());
                 newDepHistoryItem.setFolder(inventoryConfig.getFolder());
                 newDepHistoryItem.setSignedContent(verifiedConfigurations.get(inventoryConfig).getSignature());
@@ -598,7 +598,7 @@ public class DBLayerDeploy {
                 }
                 deploy.setControllerInstanceId(controllerInstanceId);
                 deploy.setControllerId(controllerId);
-                deploy.setState(JSDeploymentState.NOT_DEPLOYED.value());
+                deploy.setState(DeploymentState.NOT_DEPLOYED.value());
                 deploy.setDeploymentDate(Date.from(Instant.now()));
                 deploy.setErrorMessage(errorMessage);
                 // TODO: get Version to set here
@@ -639,7 +639,7 @@ public class DBLayerDeploy {
                         ConfigurationType.fromValue(inventoryConfig.getType()));
                 newDepHistoryItem.setType(deployType.intValue());
                 newDepHistoryItem.setOperation(OperationType.UPDATE.value());
-                newDepHistoryItem.setState(JSDeploymentState.NOT_DEPLOYED.value());
+                newDepHistoryItem.setState(DeploymentState.NOT_DEPLOYED.value());
                 newDepHistoryItem.setPath(inventoryConfig.getPath());
                 newDepHistoryItem.setFolder(inventoryConfig.getFolder());
                 newDepHistoryItem.setSignedContent(importedObjects.get(inventoryConfig).getSignedContent());
@@ -674,7 +674,7 @@ public class DBLayerDeploy {
                 deploy.setDeletedDate(Date.from(Instant.now()));
                 deploy.setDeploymentDate(Date.from(Instant.now()));
                 deploy.setOperation(OperationType.DELETE.value());
-                deploy.setState(JSDeploymentState.NOT_DEPLOYED.value());
+                deploy.setState(DeploymentState.NOT_DEPLOYED.value());
                 deploy.setErrorMessage(errorMessage);
                 // TODO: get Version to set here
                 session.save(deploy);

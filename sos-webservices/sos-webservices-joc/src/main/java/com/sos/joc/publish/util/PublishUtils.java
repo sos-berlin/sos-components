@@ -81,7 +81,7 @@ import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.pgp.JocKeyType;
-import com.sos.joc.model.publish.JSDeploymentState;
+import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.Signature;
@@ -705,7 +705,7 @@ public abstract class PublishUtils {
                 newDeployedObject.setControllerId(controllerId);
                 newDeployedObject.setInventoryConfigurationId(draft.getId());
                 newDeployedObject.setOperation(OperationType.UPDATE.value());
-                newDeployedObject.setState(JSDeploymentState.DEPLOYED.value());
+                newDeployedObject.setState(DeploymentState.DEPLOYED.value());
                 dbLayerDeploy.getSession().save(newDeployedObject);
                 deployedObjects.add(newDeployedObject);
             }
@@ -738,7 +738,7 @@ public abstract class PublishUtils {
                 newDeployedObject.setControllerId(controllerId);
                 newDeployedObject.setInventoryConfigurationId(draft.getId());
                 newDeployedObject.setOperation(OperationType.UPDATE.value());
-                newDeployedObject.setState(JSDeploymentState.DEPLOYED.value());
+                newDeployedObject.setState(DeploymentState.DEPLOYED.value());
                 dbLayerDeploy.getSession().save(newDeployedObject);
                 deployedObjects.add(newDeployedObject);
             }
@@ -766,7 +766,7 @@ public abstract class PublishUtils {
                 redeployed.setControllerInstanceId(controllerInstance.getId());
                 redeployed.setDeploymentDate(deploymentDate);
                 redeployed.setOperation(OperationType.UPDATE.value());
-                redeployed.setState(JSDeploymentState.DEPLOYED.value());
+                redeployed.setState(DeploymentState.DEPLOYED.value());
                 dbLayerDeploy.getSession().save(redeployed);
                 deployedObjects.add(redeployed);
             }
@@ -782,7 +782,7 @@ public abstract class PublishUtils {
             for (DBItemDeploymentHistory delete : toDelete) {
                 delete.setId(null);
                 delete.setOperation(OperationType.DELETE.value());
-                delete.setState(JSDeploymentState.DEPLOYED.value());
+                delete.setState(DeploymentState.DEPLOYED.value());
                 delete.setDeletedDate(Date.from(Instant.now()));
                 delete.setDeploymentDate(Date.from(Instant.now()));
                 dbLayer.getSession().save(delete);

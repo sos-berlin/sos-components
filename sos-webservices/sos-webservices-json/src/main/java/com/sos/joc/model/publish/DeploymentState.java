@@ -6,20 +6,20 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum JSDeploymentState {
+public enum DeploymentState {
 
     DEPLOYED(0),
     NOT_DEPLOYED(1);
     private final Integer value;
-    private final static Map<Integer, JSDeploymentState> CONSTANTS = new HashMap<Integer, JSDeploymentState>();
+    private final static Map<Integer, DeploymentState> CONSTANTS = new HashMap<Integer, DeploymentState>();
 
     static {
-        for (JSDeploymentState c: values()) {
+        for (DeploymentState c: values()) {
             CONSTANTS.put(c.value, c);
         }
     }
 
-    private JSDeploymentState(Integer value) {
+    private DeploymentState(Integer value) {
         this.value = value;
     }
 
@@ -29,8 +29,8 @@ public enum JSDeploymentState {
     }
 
     @JsonCreator
-    public static JSDeploymentState fromValue(Integer value) {
-        JSDeploymentState constant = CONSTANTS.get(value);
+    public static DeploymentState fromValue(Integer value) {
+        DeploymentState constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException((value +""));
         } else {

@@ -1,7 +1,7 @@
 {
   "title": "deployment state",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.model.publish.JSDeploymentState",
+  "javaType": "com.sos.joc.model.publish.DeploymentState",
   "type": "integer",
   "enum": [
     0,

@@ -33,7 +33,7 @@ import com.sos.joc.db.search.DBItemSearchWorkflow2DeploymentHistory;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.publish.JSDeploymentState;
+import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.tree.Tree;
 
 public class InventoryDBLayer extends DBLayer {
@@ -71,7 +71,7 @@ public class InventoryDBLayer extends DBLayer {
         hql.append(" order by id desc ");
         Query<InventoryDeploymentItem> query = getSession().createQuery(hql.toString());
         query.setParameter("configId", configId);
-        query.setParameter("state", JSDeploymentState.DEPLOYED.value());
+        query.setParameter("state", DeploymentState.DEPLOYED.value());
         return getSession().getResultList(query);
     }
 
@@ -285,7 +285,7 @@ public class InventoryDBLayer extends DBLayer {
             hql.append("on ic.id=dh.inventoryConfigurationId ");
             hql.append("and dh.id=(");
             hql.append("select max(dhsub.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(
-                    " dhsub where ic.id=dhsub.inventoryConfigurationId and state=" + JSDeploymentState.DEPLOYED.value());
+                    " dhsub where ic.id=dhsub.inventoryConfigurationId and state=" + DeploymentState.DEPLOYED.value());
             hql.append(") ");
             hql.append("where ic.id in (:configIds) ");
 
@@ -315,7 +315,7 @@ public class InventoryDBLayer extends DBLayer {
 
             Query<InventoryDeployablesTreeFolderItem> query = getSession().createQuery(hql.toString());
             query.setParameterList("configIds", configIds);
-            query.setParameter("state", JSDeploymentState.DEPLOYED.value());
+            query.setParameter("state", DeploymentState.DEPLOYED.value());
             List<InventoryDeployablesTreeFolderItem> result = getSession().getResultList(query);
             if (result != null && !result.isEmpty()) {
                 Comparator<InventoryDeploymentItem> comp = Comparator.nullsFirst(Comparator.comparing(InventoryDeploymentItem::getDeploymentDate)
