@@ -2,14 +2,14 @@
   "title": "instructions",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
-  "javaType": "com.sos.jobscheduler.model.instruction.Instructions",
+  "javaType": "com.sos.jobscheduler.model.instruction.OptionalInstructions",
+  "description": "only for the validation, not used as pojo",
   "required": [
     "instructions"
   ],
   "properties": {
     "instructions": {
       "type": "array",
-      "minItems": 1,
       "items": {
         "$ref": "instruction-schema.json"
       }
