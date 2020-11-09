@@ -206,6 +206,7 @@ public class DeploymentTestUtils {
         filter.setFrom("-10d");
         filter.setTo("-5d");
         filter.setVersion("0.0.1");
+        filter.setTimeZone("CET");
         return filter;
     }
     

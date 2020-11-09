@@ -13,7 +13,8 @@
       "deploymentDate" : "2020-11-09T08:41:14.099Z",
       "deleteDate" : "2020-11-09T08:41:14.099Z",
       "from" : "-10d",
-      "to" : "-5d"
+      "to" : "-5d",
+      "timeZone" : "Europe/Berlin"
     },
     {
       "account" : "root",
@@ -25,7 +26,8 @@
       "operation" : "UPDATE",
       "state" : "DEPLOYED",
       "from" : "-10d",
-      "to" : "-5d"
+      "to" : "-5d",
+      "timeZone" : "Europe/Berlin"
     },
     {
       "account" : "root",
