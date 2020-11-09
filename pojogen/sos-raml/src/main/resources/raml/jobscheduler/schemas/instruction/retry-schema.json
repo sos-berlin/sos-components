@@ -31,13 +31,10 @@
       }
     },
     "try": {
-      "required": [
-        "instructions"
-      ],
       "$ref": "instructions-schema.json"
     },
   	"catch": {
-  	  "$ref": "instructions-schema.json"
+  	  "$ref": "optionalInstructions-schema.json"
     }
   },
   "additionalProperties": false
