@@ -72,6 +72,8 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(hibernateSession);
         }
     }
 

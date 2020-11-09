@@ -72,6 +72,8 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(hibernateSession);
         }
     }
 

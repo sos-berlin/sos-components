@@ -155,6 +155,8 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(hibernateSession);
         }
     }
 

@@ -45,7 +45,6 @@ import com.sos.schema.JsonValidator;
 public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
 
     private static final String API_CALL = "./publish/import_key";
-    private SOSHibernateSession connection = null;
 
     @Override
     public JOCDefaultResponse postImportKey(
@@ -64,6 +63,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
     private JOCDefaultResponse postImportKey(String xAccessToken, FormDataBodyPart body, AuditParams auditLog, String importKeyFilter)
             throws Exception {
         InputStream stream = null;
+        SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, importKeyFilter.getBytes(), xAccessToken);
             JsonValidator.validateFailFast(importKeyFilter.getBytes(StandardCharsets.UTF_8), ImportFilter.class);
@@ -74,7 +74,6 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            SOSHibernateSession hibernateSession = null;
             stream = body.getEntityAs(InputStream.class);
 
             JocKeyPair keyPair = new JocKeyPair();
@@ -155,7 +154,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
-            Globals.disconnect(connection);
+            Globals.disconnect(hibernateSession);
             try {
                 if (stream != null) {
                     stream.close();
