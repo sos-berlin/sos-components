@@ -86,7 +86,7 @@ public class JocInventory {
                     put(InstructionType.IF, "classpath:/raml/jobscheduler/schemas/instruction/ifelse-schema.json");
                     // TODO put(InstructionType.PUBLISH, "classpath:/raml/jobscheduler/schemas/instruction/publish-schema.json");
                     put(InstructionType.RETRY, "classpath:/raml/jobscheduler/schemas/instruction/retryInCatch-schema.json");
-                    put(InstructionType.TRY, "classpath:/raml/jobscheduler/schemas/instruction/retryschema.json");
+                    put(InstructionType.TRY, "classpath:/raml/jobscheduler/schemas/instruction/retry-schema.json");
                 }
             });
 
