@@ -29,6 +29,9 @@
       		"minLength": 1
           },
           "workflow": {
+            "required": [
+              "instructions"
+            ],
             "$ref": "instructions-schema.json"
           }
         },

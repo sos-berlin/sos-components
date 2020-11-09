@@ -18,6 +18,9 @@
       "minLength": 1
     },
     "then": {
+      "required": [
+        "instructions"
+      ],
       "$ref": "instructions-schema.json"
     },
     "else": {

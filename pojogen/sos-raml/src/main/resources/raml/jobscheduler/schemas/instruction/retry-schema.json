@@ -31,6 +31,9 @@
       }
     },
     "try": {
+      "required": [
+        "instructions"
+      ],
       "$ref": "instructions-schema.json"
     },
   	"catch": {
