@@ -3,6 +3,7 @@ package com.sos.joc.classes.inventory;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,6 +35,7 @@ import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.inventory.search.WorkflowConverter;
+import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
@@ -315,26 +317,75 @@ public class JocInventory {
     }
 
     public static String toString(IConfigurationObject config) throws JsonProcessingException {
-        return Globals.objectMapper.writeValueAsString(config);
+        return config == null ? "null" : Globals.objectMapper.writeValueAsString(config);
     }
 
     public static String hash(IConfigurationObject config) throws JsonProcessingException {
         return SOSString.hash(toString(config));
     }
 
-    public static void handleWorkflowSearch(InventoryDBLayer dbLayer, SOSHibernateSession session, Workflow workflow, Long inventoryId)
-            throws JsonProcessingException, SOSHibernateException {
-        handleWorkflowSearch(dbLayer, session, workflow, inventoryId, null, false);
+    public static void handleWorkflowSearch(SOSHibernateSession session, Set<DBItemDeploymentHistory> deployments, boolean deleteDeployments) {
+        if (deployments == null || deployments.size() == 0) {
+            return;
+        }
+
+        Map<Long, List<DBItemDeploymentHistory>> groupedWorkflows = deployments.stream().filter(h -> h.getType().equals(ConfigurationType.WORKFLOW
+                .intValue())).collect(Collectors.groupingBy(DBItemDeploymentHistory::getInventoryConfigurationId));
+
+        groupedWorkflows.keySet().forEach(inventoryId -> {
+            List<DBItemDeploymentHistory> list = groupedWorkflows.get(inventoryId);
+            if (list.size() > 0) {
+                String content = list.get(0).getContent();
+                if (!SOSString.isEmpty(content)) {
+                    try {
+                        Workflow workflow = Globals.objectMapper.readValue(content, Workflow.class);
+                        workflow.setVersionId(null); // make same versionId for all deployments
+                        List<Long> deploymentIds = list.stream().map(DBItemDeploymentHistory::getId).collect(Collectors.toList());
+                        try {
+                            handleWorkflowSearch(new InventoryDBLayer(session), workflow, inventoryId, deploymentIds, deleteDeployments);
+                        } catch (SOSHibernateException e) {
+                            LOGGER.error(e.toString(), e);
+                        }
+                    } catch (JsonParseException e) {
+                        LOGGER.error(e.toString(), e);
+                    } catch (JsonMappingException e) {
+                        LOGGER.error(e.toString(), e);
+                    } catch (IOException e) {
+                        LOGGER.error(e.toString(), e);
+                    }
+                }
+            }
+
+        });
     }
 
-    public static void handleWorkflowSearch(InventoryDBLayer dbLayer, SOSHibernateSession session, Workflow workflow, Long inventoryId,
-            List<Long> deploymentIds, boolean deleteDeployments) throws JsonProcessingException, SOSHibernateException {
+    private static void handleWorkflowSearch(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item, IConfigurationObject config)
+            throws JsonParseException, JsonMappingException, IOException, SOSHibernateException {
+        if (ConfigurationType.WORKFLOW.intValue().equals(item.getType())) {
+            if (config == null && !SOSString.isEmpty(item.getContent())) {
+                config = Globals.objectMapper.readValue(item.getContent(), Workflow.class);
+            }
+            JocInventory.handleWorkflowSearch(dbLayer, (Workflow) config, item.getId());
+        }
+    }
+
+    public static void handleWorkflowSearch(InventoryDBLayer dbLayer, Workflow workflow, Long inventoryId) throws JsonProcessingException,
+            SOSHibernateException {
+        handleWorkflowSearch(dbLayer, workflow, inventoryId, null, false);
+    }
+
+    public static void handleWorkflowSearch(InventoryDBLayer dbLayer, Workflow workflow, Long inventoryId, List<Long> deploymentIds,
+            boolean deleteDeployments) throws JsonProcessingException, SOSHibernateException {
 
         String hash = hash(workflow);
         boolean deployed = deploymentIds != null;
 
         DBItemSearchWorkflow item = dbLayer.getSearchWorkflow(inventoryId, deployed ? hash : null);
         if (item == null) {
+            if (deleteDeployments) {
+                return;
+            }
+
             item = new DBItemSearchWorkflow();
             item.setInventoryConfigurationId(inventoryId);
             item.setDeployed(deployed);
@@ -343,7 +394,7 @@ public class JocInventory {
             item.setModified(item.getCreated());
 
             item = convert(item, workflow);
-            session.save(item);
+            dbLayer.getSession().save(item);
 
             if (deployed) {
                 dbLayer.searchWorkflow2DeploymentHistory(item.getId(), deploymentIds, false);
@@ -356,22 +407,77 @@ public class JocInventory {
                     item.setContentHash(hash);
                     item.setModified(new Date());
                     item = convert(item, workflow);
-                    session.update(item);
+                    dbLayer.getSession().update(item);
                 }
             }
         }
     }
 
     private static DBItemSearchWorkflow convert(DBItemSearchWorkflow item, Workflow workflow) {
-        WorkflowConverter converter = new WorkflowConverter();
-        converter.process(workflow);
-        item.setJobsCount(converter.getJobs().getNames().size());
-        item.setJobs(converter.getJobs().getMainInfo().toString());
-        item.setJobsArgs(converter.getJobs().getArgInfo().toString());
-        item.setJobsScripts(converter.getJobs().getScriptInfo().toString());
-        item.setInstructions(converter.getInstructions().getMainInfo().toString());
-        item.setInstructionsArgs(converter.getInstructions().getArgInfo().toString());
+        if (workflow == null) {
+            item.setJobsCount(0);
+            item.setJobs(null);
+            item.setJobsArgs(null);
+            item.setJobsScripts(null);
+            item.setInstructions(null);
+            item.setInstructionsArgs(null);
+        } else {
+            WorkflowConverter converter = new WorkflowConverter();
+            converter.process(workflow);
+
+            item.setJobsCount(converter.getJobs().getNames().size());
+            item.setJobs(converter.getJobs().getMainInfo().toString());
+            item.setJobsArgs(converter.getJobs().getArgInfo().toString());
+            item.setJobsScripts(converter.getJobs().getScriptInfo().toString());
+            item.setInstructions(converter.getInstructions().getMainInfo().toString());
+            item.setInstructionsArgs(converter.getInstructions().getArgInfo().toString());
+        }
         return item;
+    }
+
+    public static void deleteConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item) throws SOSHibernateException {
+        if (ConfigurationType.WORKFLOW.intValue().equals(item.getType())) {
+            dbLayer.deleteSearchWorkflowByInventoryId(item.getId(), false);
+        }
+        dbLayer.getSession().delete(item);
+    }
+
+    public static void updateConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item) throws JsonParseException,
+            JsonMappingException, SOSHibernateException, JsonProcessingException, IOException {
+        updateConfiguration(dbLayer, item, null);
+    }
+
+    public static void updateConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item, IConfigurationObject config)
+            throws SOSHibernateException, JsonParseException, JsonMappingException, JsonProcessingException, IOException {
+        dbLayer.getSession().update(item);
+
+        handleWorkflowSearch(dbLayer, item, config);
+    }
+
+    public static void insertConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item, IConfigurationObject config)
+            throws SOSHibernateException, JsonParseException, JsonMappingException, JsonProcessingException, IOException {
+        dbLayer.getSession().save(item);
+
+        handleWorkflowSearch(dbLayer, item, config);
+    }
+
+    public static void setConfigurationsDeployed(SOSHibernateSession session, Set<DBItemInventoryConfiguration> configs)
+            throws SOSHibernateException {
+        if (configs.size() > 0) {
+            for (DBItemInventoryConfiguration config : configs) {
+                config.setDeployed(true);
+                config.setModified(Date.from(Instant.now()));
+                session.update(config);
+            }
+
+            List<Long> workflows = configs.stream().filter(c -> c.getType().equals(ConfigurationType.WORKFLOW.intValue())).map(
+                    DBItemInventoryConfiguration::getId).collect(Collectors.toList());
+            if (workflows.size() > 0) {
+                InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+                //dbLayer.deleteSearchWorkflowByInventoryId(id, deployed)
+            }
+
+        }
     }
 
 }

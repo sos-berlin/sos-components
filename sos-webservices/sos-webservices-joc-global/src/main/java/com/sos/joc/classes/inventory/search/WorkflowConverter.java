@@ -28,8 +28,10 @@ public class WorkflowConverter {
 
     public void process(Workflow w) {
         searcher = new WorkflowSearcher(w);
-        jobs.process(w.getJobs());
-        instructions.process(w.getInstructions());
+        if (w != null) {
+            jobs.process(w.getJobs());
+            instructions.process(w.getInstructions());
+        }
     }
 
     public Jobs getJobs() {

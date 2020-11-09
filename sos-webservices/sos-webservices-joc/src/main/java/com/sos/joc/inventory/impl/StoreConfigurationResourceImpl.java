@@ -5,12 +5,7 @@ import java.util.Date;
 
 import javax.ws.rs.Path;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -24,7 +19,6 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IStoreConfigurationResource;
 import com.sos.joc.model.common.ICalendarObject;
-import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.CalendarType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -33,8 +27,6 @@ import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class StoreConfigurationResourceImpl extends JOCResourceImpl implements IStoreConfigurationResource {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(StoreConfigurationResourceImpl.class);
 
     @Override
     public JOCDefaultResponse store(final String accessToken, final byte[] inBytes) {
@@ -67,18 +59,16 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             try {
                 item = JocInventory.getConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), folderPermissions);
                 item = setProperties(in, item, false);
-                session.update(item);
+                JocInventory.updateConfiguration(dbLayer, item, in.getConfiguration());
             } catch (DBMissingDataException e) {
                 item = new DBItemInventoryConfiguration();
                 item.setType(in.getObjectType());
                 item = setProperties(in, item, true);
                 item.setCreated(Date.from(Instant.now()));
                 createAuditLog(item, in.getObjectType());
-                session.save(item);
+                JocInventory.insertConfiguration(dbLayer, item, in.getConfiguration());
             }
             session.commit();
-
-            handleWorkflowSearch(dbLayer, session, in.getObjectType(), in.getConfiguration(), item.getId());
 
             ConfigurationObject answer = new ConfigurationObject();
             answer.setId(item.getId());
@@ -162,23 +152,6 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             item.setValid(false);
             in.setInvalidMsg(e.getMessage());
             // LOGGER.warn(String.format("[invalid][client valid=%s][%s] %s", in.getValid(), in.getConfiguration().toString(), e.toString()));
-        }
-    }
-
-    private void handleWorkflowSearch(InventoryDBLayer dbLayer, SOSHibernateSession session, ConfigurationType configType,
-            IConfigurationObject config, Long inventoryId) {
-        try {
-            if (ConfigurationType.WORKFLOW.equals(configType)) {
-                session.beginTransaction();
-                JocInventory.handleWorkflowSearch(dbLayer, session, (Workflow) config, inventoryId);
-                session.commit();
-            }
-        } catch (Throwable e) {
-            LOGGER.error(e.toString(), e);
-            try {
-                session.rollback();
-            } catch (SOSHibernateException e1) {
-            }
         }
     }
 

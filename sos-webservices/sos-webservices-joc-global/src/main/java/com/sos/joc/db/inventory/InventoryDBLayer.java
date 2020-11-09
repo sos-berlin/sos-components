@@ -564,6 +564,17 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().executeUpdate(query);
     }
 
+    public int deleteSearchWorkflowByInventoryId(Long id, boolean deployed) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS);
+        hql.append(" where inventoryConfigurationId=:id");
+        hql.append(" and deployed=:deployed");
+
+        Query<?> query = getSession().createQuery(hql.toString());
+        query.setParameter("id", id);
+        query.setParameter("deployed", deployed);
+        return getSession().executeUpdate(query);
+    }
+
     private Long getCountSearchWorkflow2DeploymentHistory(Long searchWorkflowId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select count(deploymentHistoryId) from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS_DEPLOYMENT_HISTORY);
         hql.append(" where searchWorkflowId=:searchWorkflowId");
@@ -573,14 +584,7 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getSingleValue(query);
     }
 
-    public int deleteConfiguration(Long configId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-        hql.append(" where id=:configId");
-        Query<?> query = getSession().createQuery(hql.toString());
-        query.setParameter("configId", configId);
-        return getSession().executeUpdate(query);
-    }
-
+    // TODO check usage - used by DeployImpl
     public int deleteConfigurations(Set<Long> ids) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where id in (:ids)");

@@ -3,6 +3,7 @@ package com.sos.joc.inventory.impl;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -48,6 +49,8 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+            session.setAutoCommit(false);
+            
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, in, folderPermissions);
@@ -56,16 +59,17 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             if (config.getDeployed() || config.getReleased() || ConfigurationType.FOLDER.equals(type)) {
                 throw new DBMissingDataException(String.format("[%s] can't be deleted - no draft exists", config.getPath()));
             }
-            
+
             ResponseItem r = new ResponseItem();
             r.setDeleteFromTree(true);
-            
+
+            session.beginTransaction();
             if (JocInventory.isDeployable(type)) {
                 InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(config.getId());
                 if (lastDeployment == null || OperationType.DELETE.value() == lastDeployment.getOperation() || lastDeployment.getContent() == null) {
                     // never deployed before or deleted or without content
-                    dbLayer.getSession().delete(config);
-                } else { 
+                    JocInventory.deleteConfiguration(dbLayer, config);
+                } else {
                     // deployed
                     r.setDeleteFromTree(false);
                     config.setValid(true);
@@ -73,7 +77,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                     config.setDeployed(true);
                     config.setContent(lastDeployment.getContent());
                     config.setModified(lastDeployment.getDeploymentDate());
-                    dbLayer.getSession().update(config);
+                    JocInventory.updateConfiguration(dbLayer, config);
                 }
             } else if (JocInventory.isReleasable(type)) {
                 DBItemInventoryReleasedConfiguration releasedItem = dbLayer.getReleasedItemByConfigurationId(config.getId());
@@ -91,52 +95,19 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                     dbLayer.getSession().update(config);
                 }
             }
+            session.commit();
 
-            // TODO consider other Inventory tables 
+            // TODO consider other Inventory tables
             storeAuditLog(type, config.getPath(), config.getFolder());
 
             return JOCDefaultResponse.responseStatus200(r);
+        } catch (SOSHibernateException e) {
+            Globals.rollback(session);
+            throw e;
         } finally {
             Globals.disconnect(session);
         }
     }
-
-//    private InventoryDeleteResult deleteConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration config, ConfigurationType type)
-//            throws Exception {
-//        InventoryDeleteResult result = null;
-//        switch (type) {
-//        case WORKFLOW:
-//            result = dbLayer.deleteWorkflow(config.getId());
-//            break;
-//        // case JOB:
-//        // result = dbLayer.deleteWorkflowJob(config.getId());
-//        // break;
-//        case JOBCLASS:
-//            result = dbLayer.deleteJobClass(config.getId());
-//            break;
-//        case AGENTCLUSTER:
-//            result = dbLayer.deleteAgentCluster(config.getId());
-//            break;
-//        case LOCK:
-//            result = dbLayer.deleteLock(config.getId());
-//            break;
-//        case JUNCTION:
-//            result = dbLayer.deleteJunction(config.getId());
-//            break;
-//        case FOLDER:
-//            result = dbLayer.deleteConfiguration(config.getId());
-//            break;
-//        case ORDER:
-//            result = dbLayer.deleteWorkflowOrder(config.getId());
-//            break;
-//        case WORKINGDAYSCALENDAR:
-//        case NONWORKINGDAYSCALENDAR:
-//            break;
-//        default:
-//            break;
-//        }
-//        return result;
-//    }
 
     private void storeAuditLog(ConfigurationType objectType, String path, String folder) {
         InventoryAudit audit = new InventoryAudit(objectType, path, folder);
