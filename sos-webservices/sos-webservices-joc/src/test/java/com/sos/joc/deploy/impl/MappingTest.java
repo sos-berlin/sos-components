@@ -17,11 +17,13 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.jobscheduler.model.agent.AgentRef;
+import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.instruction.IfElse;
 import com.sos.jobscheduler.model.instruction.NamedJob;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.model.publish.ExcludeConfiguration;
 import com.sos.joc.model.publish.JSObject;
+import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.ReDeployFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
@@ -132,15 +134,47 @@ public class MappingTest {
         }
     }
 
-    @Test
-    public void test5MapDepHistoryFilter () throws JsonProcessingException {
+//    @Test
+    private void test5MapDepHistoryFilter () throws JsonProcessingException {
         ShowDepHistoryFilter filter = DeploymentTestUtils.createDefaultShowDepHistoryFilter();
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
-        LOGGER.info("\n" + om.writeValueAsString(filter));
+        LOGGER.info("ALL properties:\n" + om.writeValueAsString(filter));
+        filter.setCommitId(null);
+        filter.setDeleteDate(null);
+        filter.setDeploymentDate(null);
+        filter.setCommitId(null);
+        LOGGER.info("EXAMPLE 1:\n" + om.writeValueAsString(filter));
+        filter = DeploymentTestUtils.createDefaultShowDepHistoryFilter();
+        filter.setFrom(null);
+        filter.setTo(null);
+        filter.setDeleteDate(null);
+        filter.setCommitId(null);
+        LOGGER.info("EXAMPLE 2:\n" + om.writeValueAsString(filter));
+        filter = DeploymentTestUtils.createDefaultShowDepHistoryFilter();
+        filter.setFrom(null);
+        filter.setTo(null);
+        filter.setCommitId(null);
+        filter.setOperation(OperationType.DELETE.name());
+        filter.setDeploymentDate(null);
+        LOGGER.info("EXAMPLE 3:\n" + om.writeValueAsString(filter));
+        filter.setDeleteDate(null);
+        LOGGER.info("EXAMPLE 4:\n" + om.writeValueAsString(filter));
+        filter = DeploymentTestUtils.createDefaultShowDepHistoryFilter();
+        filter.setFrom(null);
+        filter.setTo(null);
+        filter.setDeploymentDate(null);
+        filter.setDeleteDate(null);
+        filter.setOperation(null);
+        filter.setDeployType(null);
+        filter.setState(null);
+        filter.setPath(null);
+        filter.setControllerId(null);
+        filter.setVersion(null);
+        LOGGER.info("EXAMPLE 5:\n" + om.writeValueAsString(filter));
     }
 
-    @Test
-    public void test6MapReDeployFilter () throws JsonProcessingException {
+//    @Test
+    private void test6MapReDeployFilter () throws JsonProcessingException {
         ReDeployFilter filter = DeploymentTestUtils.createDefaultReDeployFilter();
         ExcludeConfiguration exclude = new ExcludeConfiguration();
         exclude.setPath("/myWorkflows/myIfElseWorkflows/workflow_02");

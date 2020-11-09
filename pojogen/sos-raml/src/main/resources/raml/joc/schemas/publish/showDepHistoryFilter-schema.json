@@ -32,12 +32,10 @@
       "type": "string"
     },
     "deploymentDate": {
-      "type": "string",
-      "format": "date-time"
+      "$ref": "../common/timestamp-schema.json"
     },
     "deleteDate": {
-      "type": "string",
-      "format": "date-time"
+      "$ref": "../common/timestamp-schema.json"
     },
     "from": {
       "type": "string",
