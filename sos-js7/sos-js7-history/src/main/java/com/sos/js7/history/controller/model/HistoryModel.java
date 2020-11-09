@@ -40,6 +40,7 @@ import com.sos.js7.event.controller.EventMeta;
 import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 import com.sos.js7.history.controller.HistoryMain;
 import com.sos.js7.history.controller.configuration.HistoryConfiguration;
+import com.sos.js7.history.controller.proxy.HistoryEventType;
 import com.sos.js7.history.controller.proxy.fatevent.AFatEvent;
 import com.sos.js7.history.controller.proxy.fatevent.AFatEventOrderProcessed;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventAgentReady;
@@ -50,6 +51,7 @@ import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderJoined;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStepProcessed;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStepStarted;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStepStdWritten;
+import com.sos.js7.history.controller.proxy.fatevent.FatEventWithProblem;
 import com.sos.js7.history.controller.proxy.fatevent.FatForkedChild;
 import com.sos.js7.history.controller.proxy.fatevent.FatOutcome;
 import com.sos.js7.history.db.DBLayerHistory;
@@ -186,10 +188,20 @@ public class HistoryModel {
                     firstEventId = eventId;
                 }
                 if (storedEventId >= eventId) {
-                    if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][%s][%s][skip]stored eventId=%s > current eventId=%s %s", identifier, method, entry.getType(),
+                    if (entry.getType().equals(HistoryEventType.EventWithProblem)) { // EventWithProblem can sets eventId=-1L
+                        LOGGER.warn(String.format("[%s][%s][%s][skip]stored eventId=%s > current eventId=%s %s", identifier, method, entry.getType(),
                                 storedEventId, eventId, SOSString.toString(entry)));
+
+                        FatEventWithProblem ep = (FatEventWithProblem) entry;
+                        LOGGER.warn(String.format("[entry]%s", SOSString.toString(ep.getEntry())));
+                        LOGGER.error(ep.getError().toString(), ep.getError());
+                    } else {
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[%s][%s][%s][skip]stored eventId=%s > current eventId=%s %s", identifier, method, entry
+                                    .getType(), storedEventId, eventId, SOSString.toString(entry)));
+                        }
                     }
+
                     counterProcessed++;
                     counterSkipped++;
                     continue;
@@ -240,6 +252,11 @@ public class HistoryModel {
                     break;
                 case OrderFinished:
                     orderProcessed(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderFinished, endedOrderSteps);
+                    break;
+                case EventWithProblem:
+                    FatEventWithProblem ep = (FatEventWithProblem) entry;
+                    LOGGER.warn(String.format("[entry]%s", SOSString.toString(ep.getEntry())));
+                    LOGGER.error(ep.getError().toString(), ep.getError());
                     break;
                 }
                 counterProcessed++;

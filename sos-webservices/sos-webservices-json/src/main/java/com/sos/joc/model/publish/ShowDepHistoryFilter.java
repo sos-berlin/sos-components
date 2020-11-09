@@ -4,6 +4,7 @@ package com.sos.joc.model.publish;
 import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -11,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * SOS PGP Key Pair
+ * Filter For The Deployment History
  * <p>
  * 
  * 
@@ -52,14 +53,28 @@ public class ShowDepHistoryFilter {
     private String operation;
     @JsonProperty("state")
     private String state;
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
     @JsonProperty("deploymentDate")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deploymentDate;
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
     @JsonProperty("deleteDate")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deleteDate;
     @JsonProperty("from")
-    private Date from;
+    private String from;
     @JsonProperty("to")
-    private Date to;
+    private String to;
 
     @JsonProperty("account")
     public String getAccount() {
@@ -151,43 +166,67 @@ public class ShowDepHistoryFilter {
         this.state = state;
     }
 
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
     @JsonProperty("deploymentDate")
     public Date getDeploymentDate() {
         return deploymentDate;
     }
 
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
     @JsonProperty("deploymentDate")
     public void setDeploymentDate(Date deploymentDate) {
         this.deploymentDate = deploymentDate;
     }
 
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
     @JsonProperty("deleteDate")
     public Date getDeleteDate() {
         return deleteDate;
     }
 
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
     @JsonProperty("deleteDate")
     public void setDeleteDate(Date deleteDate) {
         this.deleteDate = deleteDate;
     }
 
     @JsonProperty("from")
-    public Date getFrom() {
+    public String getFrom() {
         return from;
     }
 
     @JsonProperty("from")
-    public void setFrom(Date from) {
+    public void setFrom(String from) {
         this.from = from;
     }
 
     @JsonProperty("to")
-    public Date getTo() {
+    public String getTo() {
         return to;
     }
 
     @JsonProperty("to")
-    public void setTo(Date to) {
+    public void setTo(String to) {
         this.to = to;
     }
 

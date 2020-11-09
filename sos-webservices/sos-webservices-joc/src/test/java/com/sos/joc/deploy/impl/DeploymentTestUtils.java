@@ -200,15 +200,11 @@ public class DeploymentTestUtils {
         filter.setDeleteDate(Date.from(depDate));
         filter.setDeployType(DeployType.WORKFLOW.name());
         filter.setFolder("/myWorkflows/myIfElseWorkflows");
-        Calendar from = new GregorianCalendar(TimeZone.getTimeZone(ZoneId.of("UTC")));
-        from.set(2020, 0, 1, 11, 0, 0);
         filter.setOperation(OperationType.UPDATE.name());
         filter.setPath("/myWorkflows/myIfElseWorkflows/workflow_01");
         filter.setState(DeploymentState.DEPLOYED.name());
-        filter.setFrom(Date.from(Instant.ofEpochMilli(from.getTimeInMillis())));
-        Calendar to = new GregorianCalendar(TimeZone.getTimeZone(ZoneId.of("UTC")));
-        to.set(2020, 11, 31, 23, 59, 59);
-        filter.setTo(Date.from(Instant.ofEpochMilli(to.getTimeInMillis())));
+        filter.setFrom("-10d");
+        filter.setTo("-5d");
         filter.setVersion("0.0.1");
         return filter;
     }

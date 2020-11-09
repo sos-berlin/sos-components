@@ -17,6 +17,8 @@ import js7.data.order.OrderEvent.OrderStdoutWritten;
 import js7.data.order.OrderEvent.OrderStderrWritten;
 
 public enum HistoryEventType {
+    EventWithProblem("EventWithProblem"),// special case for events with problems
+
     ControllerReady(ControllerReady.class.getSimpleName()),
 
     AgentReady(AgentReady.class.getSimpleName()),
