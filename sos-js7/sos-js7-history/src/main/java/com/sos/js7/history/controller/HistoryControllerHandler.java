@@ -47,6 +47,7 @@ import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStepProcessed;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStepStarted;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStepStdWritten;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStepStdWritten.StdType;
+import com.sos.js7.history.controller.proxy.fatevent.FatEventWithProblem;
 import com.sos.js7.history.controller.proxy.fatevent.FatForkedChild;
 import com.sos.js7.history.controller.proxy.fatevent.FatOutcome;
 
@@ -203,8 +204,9 @@ public class HistoryControllerHandler {
 
     private AFatEvent map2fat(JEventAndControllerState<Event> eventAndState) {
         AFatEvent event = null;
+        HistoryEventEntry entry = null;
         try {
-            HistoryEventEntry entry = new HistoryEventEntry(eventAndState);
+            entry = new HistoryEventEntry(eventAndState);
             HistoryOrder order;
             OutcomeInfo oi;
             List<FatForkedChild> childs;
@@ -335,14 +337,18 @@ public class HistoryControllerHandler {
                 event.set(order.getOrderId());
 
                 break;
-
             default:
+                event = new FatEventWithProblem(entry, new Exception("unknown type=" + entry.getEventType()));
                 break;
-
             }
 
         } catch (Throwable e) {
-            Flux.error(e);
+            // Flux.error(e);
+            if (entry == null) {
+                event = new FatEventWithProblem(entry, e);
+            } else {
+                event = new FatEventWithProblem(entry, e, entry.getEventId(), entry.getEventDate());
+            }
         }
         return event;
     }

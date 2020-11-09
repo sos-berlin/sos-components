@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.sos.js7.event.controller.EventMeta;
+import com.sos.js7.history.controller.exception.FatEventProblemException;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
@@ -49,9 +50,9 @@ public class HistoryEventEntry {
 
     public HistoryEventEntry(JEventAndControllerState<Event> es) {
         eventAndState = es;
-      
+
         Stamped<KeyedEvent<Event>> stampedEvent = eventAndState.stampedEvent();
-        
+
         keyedEvent = stampedEvent.value();
         event = keyedEvent.event();
         eventId = stampedEvent.eventId();
@@ -92,19 +93,19 @@ public class HistoryEventEntry {
         return new HistoryControllerReady();
     }
 
-    public HistoryAgentReady getAgentReady() {
+    public HistoryAgentReady getAgentReady() throws FatEventProblemException {
         return new HistoryAgentReady();
     }
 
-    public HistoryOrder getOrder() {
+    public HistoryOrder getOrder() throws FatEventProblemException {
         return new HistoryOrder();
     }
 
-    public HistoryOrder getCheckedOrder() {
+    public HistoryOrder getCheckedOrder() throws FatEventProblemException {
         return new HistoryOrder(eventAndState.state());
     }
 
-    public HistoryOrder getCheckedOrderFromPreviousState() {
+    public HistoryOrder getCheckedOrderFromPreviousState() throws FatEventProblemException {
         return new HistoryOrder(eventAndState.previousState());
     }
 
@@ -119,18 +120,16 @@ public class HistoryEventEntry {
         private OutcomeInfo outcomeInfo;
         private List<ForkedChild> forkedChilds;
 
-        private HistoryOrder() {
+        private HistoryOrder() throws FatEventProblemException {
             this(null);
         }
 
-        private HistoryOrder(JControllerState controllerState) {
+        private HistoryOrder(JControllerState controllerState) throws FatEventProblemException {
             orderId = (OrderId) keyedEvent.key();
             if (controllerState != null) {
                 state = controllerState;
-                Either<Problem, JOrder> o = state.idToCheckedOrder(orderId);
-                order = o.get();
-
-                handleProblem(o);
+                Either<Problem, JOrder> po = state.idToCheckedOrder(orderId);
+                order = getFromEither(po);
             }
         }
 
@@ -142,15 +141,12 @@ public class HistoryEventEntry {
             return order == null ? null : order.arguments();
         }
 
-        public Forked getForked() {
+        public Forked getForked() throws FatEventProblemException {
             if (order == null) {
                 return null;
             }
-            Either<Problem, Forked> f = order.checkedState(JOrder.forked());
-
-            handleProblem(f);
-
-            return f.get();
+            Either<Problem, Forked> pf = order.checkedState(JOrder.forked());
+            return getFromEither(pf);
         }
 
         public List<ForkedChild> getForkedChilds() {
@@ -279,12 +275,9 @@ public class HistoryEventEntry {
                         throw new Exception(String.format("[%s][%s]missing JOrder", eventId, orderId));
                     }
 
-                    Either<Problem, AgentRefPath> attached = order.attached();
-                    AgentRefPath arp = attached.get();
+                    Either<Problem, AgentRefPath> pa = order.attached();
+                    AgentRefPath arp = getFromEither(pa);
                     agentPath = arp.string();
-
-                    handleProblem(attached);
-
                 }
                 return agentPath;
             }
@@ -297,17 +290,13 @@ public class HistoryEventEntry {
                     if (workflowInfo == null) {
                         throw new Exception(String.format("[%s][%s]missing WorkflowInfo", eventId, orderId));
                     }
-                    Either<Problem, JWorkflow> ew = state.idToWorkflow(workflowInfo.getWorkflowId());
-                    JWorkflow workflow = ew.get();
 
-                    handleProblem(ew);
+                    Either<Problem, JWorkflow> pw = state.idToWorkflow(workflowInfo.getWorkflowId());
+                    JWorkflow workflow = getFromEither(pw);
 
-                    Either<Problem, Name> en = workflow.checkedJobName(workflowInfo.getPosition().getUnderlying());
-                    Name name = en.get();
+                    Either<Problem, Name> pn = workflow.checkedJobName(workflowInfo.getPosition().getUnderlying());
+                    Name name = getFromEither(pn);
                     jobName = name.toString();
-
-                    handleProblem(en);
-
                 }
                 return jobName;
             }
@@ -423,18 +412,19 @@ public class HistoryEventEntry {
 
         private final String timezone;
         private final String path;
-        private final String uri;
+        private String uri;
 
-        public HistoryAgentReady() {
+        public HistoryAgentReady() throws FatEventProblemException {
             timezone = ((AgentReady) event).timezone();
 
             AgentRefPath arp = (AgentRefPath) keyedEvent.key();
             path = arp.string();
 
-            Either<Problem, JAgentRef> ar = eventAndState.state().pathToAgentRef(arp);
-            uri = ar.get().uri().toString();
-            handleProblem(ar);
-
+            Either<Problem, JAgentRef> pa = eventAndState.state().pathToAgentRef(arp);
+            JAgentRef ar = getFromEither(pa);
+            if (ar != null) {
+                uri = ar.uri().toString();
+            }
         }
 
         public String getTimezone() {
@@ -450,10 +440,10 @@ public class HistoryEventEntry {
         }
     }
 
-    private void handleProblem(Either<Problem, ?> either) {
+    private <T> T getFromEither(Either<Problem, T> either) throws FatEventProblemException {
         if (either.isLeft()) {
-            Problem problem = either.getLeft();
-            System.out.println("----------------------PROBLEM----------------------------:" + problem);
+            throw new FatEventProblemException(either.getLeft());
         }
+        return either.get();
     }
 }
