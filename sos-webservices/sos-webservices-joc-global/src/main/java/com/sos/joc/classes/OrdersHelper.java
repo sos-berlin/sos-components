@@ -109,8 +109,11 @@ public class OrdersHelper {
         return groupedState;
     }
     
-    private static OrderState getState(String state) {
+    private static OrderState getState(String state, boolean isSuspended) {
         OrderState oState = new OrderState();
+        if (isSuspended) {
+            state = "Suspended";
+        }
         OrderStateText groupedState = getGroupedState(state);
         oState.set_text(groupedState);
         oState.setSeverity(severityByGroupedStates.get(groupedState));
@@ -134,9 +137,9 @@ public class OrdersHelper {
         o.setPosition(oItem.getWorkflowPosition().getPosition());
         Long scheduledFor = oItem.getState().getScheduledFor();
         if (scheduledFor != null && scheduledFor < surveyDateMillis) {
-            o.setState(getState("Blocked"));
+            o.setState(getState("Blocked", jOrder.asScala().isSuspended()));
         } else {
-            o.setState(getState(oItem.getState().getTYPE()));
+            o.setState(getState(oItem.getState().getTYPE(), jOrder.asScala().isSuspended()));
         }
         o.setScheduledFor(scheduledFor);
         o.setWorkflowId(oItem.getWorkflowPosition().getWorkflowId());

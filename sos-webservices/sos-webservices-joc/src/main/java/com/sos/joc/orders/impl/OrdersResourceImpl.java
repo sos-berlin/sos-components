@@ -87,7 +87,12 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 if(lookingForBlocked && !lookingForPending) {
                     states.add(OrderStateText.PENDING);
                 }
-                orderStream = orderStream.filter(o -> states.contains(OrdersHelper.getGroupedState(o.asScala().state().getClass())));
+                if (states.contains(OrderStateText.SUSPENDED)) {
+                    orderStream = orderStream.filter(o -> o.asScala().isSuspended() || states.contains(OrdersHelper.getGroupedState(o.asScala().state().getClass())));
+                } else {
+                    orderStream = orderStream.filter(o -> !o.asScala().isSuspended() && states.contains(OrdersHelper.getGroupedState(o.asScala().state().getClass())));
+                }
+                
             }
 
             if (ordersFilter.getRegex() != null && !ordersFilter.getRegex().isEmpty()) {
