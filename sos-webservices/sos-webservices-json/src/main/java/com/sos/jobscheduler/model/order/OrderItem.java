@@ -27,7 +27,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "workflowPosition",
     "state",
     "attachedState",
-    "historicOutcomes"
+    "historicOutcomes",
+    "isSuspended",
+    "removeWhenTerminated"
 })
 public class OrderItem {
 
@@ -68,6 +70,10 @@ public class OrderItem {
     private OrderAttachedState attachedState;
     @JsonProperty("historicOutcomes")
     private List<HistoricOutcome> historicOutcomes = null;
+    @JsonProperty("isSuspended")
+    private Boolean isSuspended;
+    @JsonProperty("removeWhenTerminated")
+    private Boolean removeWhenTerminated;
 
     /**
      * No args constructor for use in serialization
@@ -79,13 +85,15 @@ public class OrderItem {
     /**
      * 
      * @param attachedState
+     * @param isSuspended
      * @param historicOutcomes
      * @param workflowPosition
      * @param arguments
      * @param id
      * @param state
+     * @param removeWhenTerminated
      */
-    public OrderItem(String id, Variables arguments, WorkflowPosition workflowPosition, OrderState state, OrderAttachedState attachedState, List<HistoricOutcome> historicOutcomes) {
+    public OrderItem(String id, Variables arguments, WorkflowPosition workflowPosition, OrderState state, OrderAttachedState attachedState, List<HistoricOutcome> historicOutcomes, Boolean isSuspended, Boolean removeWhenTerminated) {
         super();
         this.id = id;
         this.arguments = arguments;
@@ -93,6 +101,8 @@ public class OrderItem {
         this.state = state;
         this.attachedState = attachedState;
         this.historicOutcomes = historicOutcomes;
+        this.isSuspended = isSuspended;
+        this.removeWhenTerminated = removeWhenTerminated;
     }
 
     @JsonProperty("id")
@@ -203,14 +213,34 @@ public class OrderItem {
         this.historicOutcomes = historicOutcomes;
     }
 
+    @JsonProperty("isSuspended")
+    public Boolean getIsSuspended() {
+        return isSuspended;
+    }
+
+    @JsonProperty("isSuspended")
+    public void setIsSuspended(Boolean isSuspended) {
+        this.isSuspended = isSuspended;
+    }
+
+    @JsonProperty("removeWhenTerminated")
+    public Boolean getRemoveWhenTerminated() {
+        return removeWhenTerminated;
+    }
+
+    @JsonProperty("removeWhenTerminated")
+    public void setRemoveWhenTerminated(Boolean removeWhenTerminated) {
+        this.removeWhenTerminated = removeWhenTerminated;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("arguments", arguments).append("workflowPosition", workflowPosition).append("state", state).append("attachedState", attachedState).append("historicOutcomes", historicOutcomes).toString();
+        return new ToStringBuilder(this).append("id", id).append("arguments", arguments).append("workflowPosition", workflowPosition).append("state", state).append("attachedState", attachedState).append("historicOutcomes", historicOutcomes).append("isSuspended", isSuspended).append("removeWhenTerminated", removeWhenTerminated).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(attachedState).append(historicOutcomes).append(workflowPosition).append(arguments).append(id).append(state).toHashCode();
+        return new HashCodeBuilder().append(attachedState).append(isSuspended).append(historicOutcomes).append(workflowPosition).append(arguments).append(id).append(state).append(removeWhenTerminated).toHashCode();
     }
 
     @Override
@@ -222,7 +252,7 @@ public class OrderItem {
             return false;
         }
         OrderItem rhs = ((OrderItem) other);
-        return new EqualsBuilder().append(attachedState, rhs.attachedState).append(historicOutcomes, rhs.historicOutcomes).append(workflowPosition, rhs.workflowPosition).append(arguments, rhs.arguments).append(id, rhs.id).append(state, rhs.state).isEquals();
+        return new EqualsBuilder().append(attachedState, rhs.attachedState).append(isSuspended, rhs.isSuspended).append(historicOutcomes, rhs.historicOutcomes).append(workflowPosition, rhs.workflowPosition).append(arguments, rhs.arguments).append(id, rhs.id).append(state, rhs.state).append(removeWhenTerminated, rhs.removeWhenTerminated).isEquals();
     }
 
 }

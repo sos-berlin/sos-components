@@ -24,6 +24,12 @@
   			"items": {
 				"$ref": "../workflow/historicOutcome-schema.json"
 			}
+		},
+		"isSuspended": {
+			"type": "boolean"
+		},
+        "removeWhenTerminated":  {
+			"type": "boolean"
 		}
 	},
   "additionalProperties": false
