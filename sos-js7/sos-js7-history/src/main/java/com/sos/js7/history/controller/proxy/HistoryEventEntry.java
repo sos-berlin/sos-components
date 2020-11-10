@@ -251,7 +251,6 @@ public class HistoryEventEntry {
                     keyValues = JavaConverters.asJava(c.keyValues());
                 } else if (outcome instanceof Disrupted) {
                     Disrupted c = (Disrupted) outcome;
-                    LOGGER.info("AAAAAAAAAAAAA:" + SOSString.toString(c));
                     isSucceeded = c.isSucceeded();
                     isFailed = c.isFailed();
                     type = OutcomeType.disrupted;
