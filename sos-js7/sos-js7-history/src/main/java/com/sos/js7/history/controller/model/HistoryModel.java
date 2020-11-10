@@ -620,13 +620,13 @@ public class HistoryModel {
                         setError = false;
                     }
                 if (setError) {
-                    le.setError(OrderStateText.FAILED.value(), outcome.getType().name(), outcome.getErrorMessage());
+                    le.setError(OrderStateText.FAILED.value(), outcome);
                 }
             }
         }
         if (!le.isError() && stepHasError) {
             le.setReturnCode(cos.getReturnCode());
-            le.setError(OrderStateText.FAILED.value(), null, cos.getError().getText());
+            le.setError(OrderStateText.FAILED.value(), cos);
         }
 
         switch (eventType) {
@@ -925,7 +925,7 @@ public class HistoryModel {
                 cos.setReturnCode(entry.getOutcome().getReturnCode());
                 le.setReturnCode(cos.getReturnCode());
                 if (entry.getOutcome().isFailed()) {
-                    le.setError(OrderStateText.FAILED.value(), entry.getOutcome().getType().name(), entry.getOutcome().getErrorMessage());
+                    le.setError(OrderStateText.FAILED.value(), entry.getOutcome());
                 }
             }
             dbLayer.setOrderStepEnd(cos.getId(), cos.getEndTime(), String.valueOf(entry.getEventId()), EventMeta.map2Json(entry.getOutcome()

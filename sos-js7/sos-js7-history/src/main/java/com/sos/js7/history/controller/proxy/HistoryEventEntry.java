@@ -217,12 +217,13 @@ public class HistoryEventEntry {
 
         public class OutcomeInfo {
 
-            private int returnCode;
+            private Integer returnCode;
             private boolean isSuccessReturnCode;
             private boolean isSucceeded;
             private boolean isFailed;
             private Map<String, String> keyValues;
             private OutcomeType type;
+            private String errorCode;
             private String errorMessage;
 
             private OutcomeInfo(Outcome outcome) {
@@ -258,10 +259,9 @@ public class HistoryEventEntry {
                         try {
                             Problem p = c.reason().problem();
                             if (p != null) {
-                                if (p.codeOrNull() == null) {
-                                    errorMessage = p.message();
-                                } else {
-                                    errorMessage = String.format("[%s]%s", p.codeOrNull(), p.messageWithCause());
+                                errorMessage = p.message();
+                                if (p.codeOrNull() != null) {
+                                    errorCode = p.codeOrNull().toString();
                                 }
                             }
                         } catch (Throwable e) {
@@ -278,7 +278,7 @@ public class HistoryEventEntry {
                 }
             }
 
-            public int getReturnCode() {
+            public Integer getReturnCode() {
                 return returnCode;
             }
 
@@ -296,6 +296,10 @@ public class HistoryEventEntry {
 
             public String getErrorMessage() {
                 return errorMessage;
+            }
+
+            public String getErrorCode() {
+                return errorCode;
             }
 
             public Map<String, String> getKeyValues() {

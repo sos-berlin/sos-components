@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.sos.jobscheduler.model.event.EventType;
+import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.history.controller.proxy.fatevent.FatForkedChild;
 import com.sos.js7.history.controller.proxy.fatevent.FatOutcome;
 
@@ -55,11 +56,20 @@ public class LogEntry {
         chunk = order.getOrderKey();
     }
 
-    public void setError(String state, String reason, String text) {
+    public void setError(String state, CachedOrderStep cos) {
         error = true;
         errorState = state == null ? null : state.toLowerCase();
-        errorReason = reason;
-        errorText = text;
+        errorReason = cos.getError().getReason();
+        errorCode = cos.getError().getCode();
+        errorText = cos.getError().getText();
+    }
+
+    public void setError(String state, FatOutcome outcome) {
+        error = true;
+        errorState = state == null ? null : state.toLowerCase();
+        errorReason = outcome.getType().name();
+        errorCode = outcome.getErrorCode();
+        errorText = outcome.getErrorMessage();
     }
 
     public void onOrderJoined(CachedOrder order, String workflowPosition, List<String> childs, FatOutcome outcome) {
@@ -71,7 +81,7 @@ public class LogEntry {
         if (outcome != null) {
             returnCode = outcome.getReturnCode();
             if (outcome.isFailed()) {
-                setError("failed", outcome.getType().name(), outcome.getErrorMessage());
+                setError(OrderStateText.FAILED.value(), outcome);
             }
         }
     }

@@ -262,7 +262,7 @@ public class HistoryControllerHandler {
                 outcome = null;
                 if (oi != null) {
                     outcome = new FatOutcome(oi.getType(), oi.getReturnCode(), oi.isSuccessReturnCode(), oi.isSucceeded(), oi.isFailed(), oi
-                            .getKeyValues(), oi.getErrorMessage());
+                            .getKeyValues(), oi.getErrorCode(), oi.getErrorMessage());
                 }
 
                 event = new FatEventOrderJoined(entry.getEventId(), entry.getEventDate());
@@ -302,7 +302,7 @@ public class HistoryControllerHandler {
                 outcome = null;
                 if (oi != null) {
                     outcome = new FatOutcome(oi.getType(), oi.getReturnCode(), oi.isSuccessReturnCode(), oi.isSucceeded(), oi.isFailed(), oi
-                            .getKeyValues(), oi.getErrorMessage());
+                            .getKeyValues(), oi.getErrorCode(), oi.getErrorMessage());
                 }
                 event = new FatEventOrderStepProcessed(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId(), outcome);
@@ -315,7 +315,7 @@ public class HistoryControllerHandler {
                 outcome = null;
                 if (oi != null) {
                     outcome = new FatOutcome(oi.getType(), oi.getReturnCode(), oi.isSuccessReturnCode(), oi.isSucceeded(), oi.isFailed(), oi
-                            .getKeyValues(), oi.getErrorMessage());
+                            .getKeyValues(), oi.getErrorCode(), oi.getErrorMessage());
                 }
                 event = new FatEventOrderFailed(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId(), outcome);

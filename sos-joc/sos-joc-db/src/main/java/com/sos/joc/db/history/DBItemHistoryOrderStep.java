@@ -385,6 +385,9 @@ public class DBItemHistoryOrderStep extends DBItem {
     }
 
     public void setErrorCode(String val) {
+        if (val != null && val.length() > 50) {
+            val = val.substring(0, 50);
+        }
         errorCode = val;
     }
 
