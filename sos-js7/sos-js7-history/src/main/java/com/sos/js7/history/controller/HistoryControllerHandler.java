@@ -75,6 +75,7 @@ public class HistoryControllerHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryControllerHandler.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
+    private static final String TORN_PROBLEM_CODE = "SnapshotForUnknownEventId";
 
     private final SOSHibernateFactory factory;
     private final Configuration config;
@@ -190,12 +191,20 @@ public class HistoryControllerHandler {
 
             flux.takeUntilOther(stopper.stopped()).map(this::map2fat).bufferTimeout(historyConfig.getBufferTimeoutMaxSize(), Duration.ofSeconds(
                     historyConfig.getBufferTimeoutMaxTime())).toIterable().forEach(list -> {
-                        try {
-                            eventId.set(model.process(list));
-                            releaseEvents(eventId.get());
-                        } catch (Throwable e) {
-                            LOGGER.error(e.toString(), e);
-                            stopper.stop();
+                        boolean run = true;
+                        while (run) {
+                            if (closed.get()) {
+                                run = false;
+                            } else {
+                                try {
+                                    eventId.set(model.process(list));
+                                    releaseEvents(eventId.get());
+                                    run = false;
+                                } catch (Throwable e) {
+                                    LOGGER.error(e.toString(), e);
+                                    wait(config.getHandler().getWaitIntervalOnError());
+                                }
+                            }
                         }
                     });
             return eventId;
@@ -373,7 +382,7 @@ public class HistoryControllerHandler {
             if (t instanceof ProblemException) {
                 Optional<ProblemCode> code = JProblem.apply(((ProblemException) t).problem()).maybeCode();
                 if (code.isPresent()) {
-                    if ("SnapshotForUnknownEventId".equals(code.get().string())) {
+                    if (TORN_PROBLEM_CODE.equalsIgnoreCase(code.get().string())) {
                         return true;
                     }
                 }
