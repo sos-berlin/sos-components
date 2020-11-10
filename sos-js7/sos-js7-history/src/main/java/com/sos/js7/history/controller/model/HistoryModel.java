@@ -92,14 +92,6 @@ public class HistoryModel {
         running, processed
     };
 
-    public static enum OrderErrorType {
-        failed, disrupted
-    }
-
-    public static enum OrderStepErrorType {
-        failed, disrupted
-    }
-
     private static enum CacheType {
         order, orderStep
     };
@@ -628,14 +620,7 @@ public class HistoryModel {
                         setError = false;
                     }
                 if (setError) {
-                    String errorReason = null;
-                    String errorText = outcome.getErrorMessage();
-                    // if (outcome.getReason() != null) {
-                    // errorReason = outcome.getReason().getType();
-                    // errorText = outcome.getReason().getProblem().getMessage();
-                    // }
-                    // TODO
-                    le.setError(OrderStateText.FAILED.value(), errorReason, errorText);
+                    le.setError(OrderStateText.FAILED.value(), outcome.getType().name(), outcome.getErrorMessage());
                 }
             }
         }
@@ -940,9 +925,7 @@ public class HistoryModel {
                 cos.setReturnCode(entry.getOutcome().getReturnCode());
                 le.setReturnCode(cos.getReturnCode());
                 if (entry.getOutcome().isFailed()) {
-                    String errorReason = null;// TODO???
-                    String errorText = entry.getOutcome().getErrorMessage();
-                    le.setError(OrderStateText.FAILED.value(), errorReason, errorText);
+                    le.setError(OrderStateText.FAILED.value(), entry.getOutcome().getType().name(), entry.getOutcome().getErrorMessage());
                 }
             }
             dbLayer.setOrderStepEnd(cos.getId(), cos.getEndTime(), String.valueOf(entry.getEventId()), EventMeta.map2Json(entry.getOutcome()

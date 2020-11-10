@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.model.event.EventType;
 import com.sos.js7.history.controller.proxy.fatevent.FatForkedChild;
 import com.sos.js7.history.controller.proxy.fatevent.FatOutcome;
@@ -72,17 +71,7 @@ public class LogEntry {
         if (outcome != null) {
             returnCode = outcome.getReturnCode();
             if (outcome.isFailed()) {
-                String errorReason = null;
-                String errorText = null;
-                // if (outcome.getReason() != null) {
-                // errorReason = outcome.getReason().getType();
-                // errorText = outcome.getReason().getProblem().getMessage();
-                // }
-                if (!SOSString.isEmpty(outcome.getErrorMessage())) {
-                    errorText = outcome.getErrorMessage();
-                }
-                // TODO
-                setError("failed", errorReason, errorText);
+                setError("failed", outcome.getType().name(), outcome.getErrorMessage());
             }
         }
     }

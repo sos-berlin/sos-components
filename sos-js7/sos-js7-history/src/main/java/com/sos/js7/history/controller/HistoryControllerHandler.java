@@ -261,8 +261,8 @@ public class HistoryControllerHandler {
                 oi = order.getOutcomeInfo(joj.outcome());
                 outcome = null;
                 if (oi != null) {
-                    outcome = new FatOutcome(oi.getReturnCode(), oi.isSuccessReturnCode(), oi.isSucceeded(), oi.isFailed(), oi.getKeyValues(), oi
-                            .getErrorMessage());
+                    outcome = new FatOutcome(oi.getType(), oi.getReturnCode(), oi.isSuccessReturnCode(), oi.isSucceeded(), oi.isFailed(), oi
+                            .getKeyValues(), oi.getErrorMessage());
                 }
 
                 event = new FatEventOrderJoined(entry.getEventId(), entry.getEventDate());
@@ -301,8 +301,8 @@ public class HistoryControllerHandler {
                 oi = order.getOutcomeInfo(op.outcome());
                 outcome = null;
                 if (oi != null) {
-                    outcome = new FatOutcome(oi.getReturnCode(), oi.isSuccessReturnCode(), oi.isSucceeded(), oi.isFailed(), oi.getKeyValues(), oi
-                            .getErrorMessage());
+                    outcome = new FatOutcome(oi.getType(), oi.getReturnCode(), oi.isSuccessReturnCode(), oi.isSucceeded(), oi.isFailed(), oi
+                            .getKeyValues(), oi.getErrorMessage());
                 }
                 event = new FatEventOrderStepProcessed(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId(), outcome);
@@ -314,8 +314,8 @@ public class HistoryControllerHandler {
                 oi = order.getOutcomeInfo(of.outcome());
                 outcome = null;
                 if (oi != null) {
-                    outcome = new FatOutcome(oi.getReturnCode(), oi.isSuccessReturnCode(), oi.isSucceeded(), oi.isFailed(), oi.getKeyValues(), oi
-                            .getErrorMessage());
+                    outcome = new FatOutcome(oi.getType(), oi.getReturnCode(), oi.isSuccessReturnCode(), oi.isSucceeded(), oi.isFailed(), oi
+                            .getKeyValues(), oi.getErrorMessage());
                 }
                 event = new FatEventOrderFailed(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId(), outcome);

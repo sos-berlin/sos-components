@@ -7,6 +7,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.sos.commons.util.SOSString;
 import com.sos.js7.event.controller.EventMeta;
 import com.sos.js7.history.controller.exception.FatEventProblemException;
 
@@ -23,6 +27,7 @@ import js7.data.order.OrderEvent;
 import js7.data.order.OrderId;
 import js7.data.order.Outcome;
 import js7.data.order.Outcome.Completed;
+import js7.data.order.Outcome.Disrupted;
 import js7.data.order.Outcome.Failed;
 import js7.data.workflow.instructions.executable.WorkflowJob.Name;
 import js7.proxy.javaapi.data.agent.JAgentRef;
@@ -40,6 +45,12 @@ import scala.collection.JavaConverters;
 import scala.jdk.javaapi.OptionConverters;
 
 public class HistoryEventEntry {
+
+    public static enum OutcomeType {
+        succeeded, failed, disrupted
+    }
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(HistoryEventEntry.class);
 
     private final JEventAndControllerState<Event> eventAndState;
     private final KeyedEvent<Event> keyedEvent;
@@ -206,30 +217,66 @@ public class HistoryEventEntry {
 
         public class OutcomeInfo {
 
-            private final int returnCode;
-            private final boolean isSuccessReturnCode;
-            private final boolean isSucceeded;
-            private final boolean isFailed;
+            private int returnCode;
+            private boolean isSuccessReturnCode;
+            private boolean isSucceeded;
+            private boolean isFailed;
             private Map<String, String> keyValues;
-
+            private OutcomeType type;
             private String errorMessage;
 
             private OutcomeInfo(Outcome outcome) {
-                Completed c = (Completed) outcome;
-                ReturnCode rc = c.returnCode();
+                if (outcome instanceof Completed) {
+                    Completed c = (Completed) outcome;
+                    ReturnCode rc = c.returnCode();
 
-                returnCode = rc.number();
-                isSuccessReturnCode = rc.isSuccess();
+                    returnCode = rc.number();
+                    isSuccessReturnCode = rc.isSuccess();
 
-                isSucceeded = c.isSucceeded();
-                isFailed = c.isFailed();
-                if (isFailed) {
-                    Optional<String> em = OptionConverters.toJava(((Failed) outcome).errorMessage());
-                    if (em.isPresent()) {
-                        errorMessage = em.get();
+                    isSucceeded = c.isSucceeded();
+                    isFailed = c.isFailed();
+                    if (isFailed) {
+                        type = OutcomeType.failed;
+                        if (outcome instanceof Failed) {
+                            Optional<String> em = OptionConverters.toJava(((Failed) outcome).errorMessage());
+                            if (em.isPresent()) {
+                                errorMessage = em.get();
+                            }
+                        } else {
+                            LOGGER.warn(String.format("[not handled failed type]%s", SOSString.toString(outcome)));
+                        }
+                    } else {
+                        type = OutcomeType.succeeded;
+                    }
+                    keyValues = JavaConverters.asJava(c.keyValues());
+                } else if (outcome instanceof Disrupted) {
+                    Disrupted c = (Disrupted) outcome;
+                    LOGGER.info("AAAAAAAAAAAAA:" + SOSString.toString(c));
+                    isSucceeded = c.isSucceeded();
+                    isFailed = c.isFailed();
+                    type = OutcomeType.disrupted;
+                    if (isFailed) {
+                        try {
+                            Problem p = c.reason().problem();
+                            if (p != null) {
+                                if (p.codeOrNull() == null) {
+                                    errorMessage = p.message();
+                                } else {
+                                    errorMessage = String.format("[%s]%s", p.codeOrNull(), p.messageWithCause());
+                                }
+                            }
+                        } catch (Throwable e) {
+                            LOGGER.warn(e.toString(), e);
+                        }
+
+                        if (SOSString.isEmpty(errorMessage) && outcome instanceof Failed) {
+                            Optional<String> em = OptionConverters.toJava(((Failed) outcome).errorMessage());
+                            if (em.isPresent()) {
+                                errorMessage = em.get();
+                            }
+                        }
                     }
                 }
-                keyValues = JavaConverters.asJava(c.keyValues());
             }
 
             public int getReturnCode() {
@@ -254,6 +301,10 @@ public class HistoryEventEntry {
 
             public Map<String, String> getKeyValues() {
                 return keyValues;
+            }
+
+            public OutcomeType getType() {
+                return type;
             }
         }
 
