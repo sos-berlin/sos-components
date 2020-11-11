@@ -28,6 +28,7 @@ import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.model.event.EventType;
+import com.sos.joc.Globals;
 import com.sos.joc.db.history.DBItemHistoryAgent;
 import com.sos.joc.db.history.DBItemHistoryController;
 import com.sos.joc.db.history.DBItemHistoryLog;
@@ -456,7 +457,7 @@ public class HistoryModel {
             Date planned = entry.getPlanned() == null ? entry.getEventDatetime() : entry.getPlanned();
             item.setStartTimePlanned(planned);
 
-            item.setStartTime(new Date(0));// 1970-01-01 01:00:00 TODO
+            item.setStartTime(Globals.HISTORY_DEFAULT_DATE);// 1970-01-01 01:00:00
             item.setStartWorkflowPosition(HistoryUtil.getPositionAsString(entry.getPosition()));
             item.setStartEventId(String.valueOf(entry.getEventId()));
             item.setStartParameters(entry.getArguments());
@@ -554,9 +555,15 @@ public class HistoryModel {
             if (le.isError() && SOSString.isEmpty(errorText)) {
                 errorText = cos.getStdErr();
             }
+            Date startTime = null;
+            if (EventType.OrderCancelled.equals(eventType)) {
+                if (SOSDate.equals(co.getStartTime(), Globals.HISTORY_DEFAULT_DATE)) {
+                    startTime = endTime;
+                }
+            }
 
             dbLayer.setOrderEnd(co.getId(), endTime, endWorkflowPosition, endOrderStepId, endEventId, le.getState(), eventDate, le.isError(), le
-                    .getErrorState(), le.getErrorReason(), le.getReturnCode(), le.getErrorCode(), errorText, new Date());
+                    .getErrorState(), le.getErrorReason(), le.getReturnCode(), le.getErrorCode(), errorText, startTime);
             le.onOrder(co, co.getWorkflowPosition());
             Path logFile = storeLog2File(le);
             if (completeOrder && co.getParentId().longValue() == 0L) {
@@ -676,22 +683,22 @@ public class HistoryModel {
             co.setState(OrderStateText.RUNNING.intValue());
         }
         co.setHasChildren(true);
+        co.setStartTime(entry.getEventDatetime());
         // addCachedOrder(co.getOrderKey(), co);
 
-        Date startTime = entry.getEventDatetime();
         String parentPosition = HistoryUtil.getPositionParentAsString(entry.getPosition());
         if (parentPosition != null && parentPosition.equals(co.getStartWorkflowPosition())) {
-            dbLayer.updateOrderOnFork(co.getId(), startTime, co.getState());
+            dbLayer.updateOrderOnFork(co.getId(), co.getStartTime(), co.getState());
         } else {
             dbLayer.updateOrderOnFork(co.getId(), co.getState());
         }
 
-        LogEntry le = new LogEntry(LogEntry.LogLevel.DETAIL, EventType.OrderForked, startTime, null);
+        LogEntry le = new LogEntry(LogEntry.LogLevel.DETAIL, EventType.OrderForked, co.getStartTime(), null);
         le.onOrder(co, parentPosition, entry.getChilds());
         storeLog2File(le);
 
         for (FatForkedChild fc : entry.getChilds()) {
-            orderForkedStarted(dbLayer, entry, co, fc, startTime);
+            orderForkedStarted(dbLayer, entry, co, fc, co.getStartTime());
         }
     }
 
@@ -816,10 +823,7 @@ public class HistoryModel {
 
             ca = getCachedAgent(dbLayer, entry.getAgentPath());
             co = getCachedOrder(dbLayer, entry.getOrderId());
-            // if (!ca.getUri().equals(entry.getAgentUri())) {// TODO
-            // ca.setUri(entry.getAgentUri());
-            // dbLayer.updateAgent(ca.getId(), ca.getUri());
-            // }
+
             Date agentStartTime = entry.getEventDatetime();
 
             item = new DBItemHistoryOrderStep();

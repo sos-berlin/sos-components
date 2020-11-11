@@ -271,7 +271,7 @@ public class DBLayerHistory {
     }
 
     public int setOrderEnd(Long id, Date endTime, String endWorkflowPosition, Long endOrderStepId, String endEventId, Integer state, Date stateTime,
-            boolean error, String errorState, String errorReason, Integer errorReturnCode, String errorCode, String errorText, Date modified)
+            boolean error, String errorState, String errorReason, Integer errorReturnCode, String errorCode, String errorText, Date startTime)
             throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ");
         hql.append(DBLayer.DBITEM_HISTORY_ORDER);
@@ -282,6 +282,9 @@ public class DBLayerHistory {
             hql.append(", endWorkflowPosition=:endWorkflowPosition ");
             hql.append(", endOrderStepId=:endOrderStepId ");
             hql.append(", endEventId=:endEventId ");
+        }
+        if (startTime != null) {
+            hql.append(", startTime=:startTime");
         }
         hql.append(", state=:state ");
         hql.append(", stateTime=:stateTime ");
@@ -294,12 +297,15 @@ public class DBLayerHistory {
         hql.append("where id=:id");
 
         Query<DBItemHistoryOrder> query = session.createQuery(hql.toString());
-        query.setParameter("modified", modified);
+        query.setParameter("modified", new Date());
         if (endTime != null) {
             query.setParameter("endTime", endTime);
             query.setParameter("endWorkflowPosition", endWorkflowPosition);
             query.setParameter("endOrderStepId", endOrderStepId);
             query.setParameter("endEventId", endEventId);
+        }
+        if (startTime != null) {
+            query.setParameter("startTime", startTime);
         }
         query.setParameter("state", state);
         query.setParameter("stateTime", stateTime);

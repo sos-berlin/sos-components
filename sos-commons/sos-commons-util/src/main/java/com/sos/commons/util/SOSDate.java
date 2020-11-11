@@ -412,6 +412,15 @@ public class SOSDate {
         return duration == null ? null : duration.toString().replace("PT", "").toLowerCase();
     }
 
+    public static boolean equals(Date val1, Date val2) {
+        if (val1 == null && val2 == null) {
+            return true;
+        } else if (val1 == null || val2 == null) {
+            return false;
+        }
+        return val1.getTime() == val2.getTime();
+    }
+
     public static void main(String[] args) {
         try {
             Date d = SOSDate.getCurrentDate();

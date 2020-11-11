@@ -16,6 +16,8 @@ import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
+import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -78,8 +80,8 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                     final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                     // TODO consider workflowId in groupingby???
                     historyFilter.setOrders(ordersFilter.getOrders().stream().filter(order -> order != null && canAdd(order.getWorkflowPath(),
-                            permittedFolders)).collect(Collectors.groupingBy(order -> normalizePath(order.getWorkflowPath()), Collectors
-                                    .mapping(OrderPath::getOrderId, Collectors.toSet()))));
+                            permittedFolders)).collect(Collectors.groupingBy(order -> normalizePath(order.getWorkflowPath()), Collectors.mapping(
+                                    OrderPath::getOrderId, Collectors.toSet()))));
                     ordersFilter.setRegex("");
                 } else {
 
@@ -114,7 +116,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                 connection = Globals.createSosHibernateStatelessConnection(API_CALL);
                 JobHistoryDBLayer jobHistoryDbLayer = new JobHistoryDBLayer(connection, historyFilter);
                 List<DBItemHistoryOrder> dbMainOrderItems = jobHistoryDbLayer.getMainOrders();
-                
+
                 if (dbMainOrderItems != null && !dbMainOrderItems.isEmpty()) {
 
                     Predicate<DBItemHistoryOrder> permissionFilter = i -> true;
@@ -130,14 +132,19 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
 
                     if (ordersFilter.getRegex() != null && !ordersFilter.getRegex().isEmpty()) {
                         Matcher regExMatcher = Pattern.compile(ordersFilter.getRegex()).matcher("");
-                        dbMainOrderItems = dbMainOrderItems.stream().filter(permissionFilter).filter(i -> regExMatcher.reset(i.getWorkflowPath() + ","
-                                + i.getOrderKey()).find()).collect(Collectors.toList());
+                        dbMainOrderItems = dbMainOrderItems.stream().filter(i -> !SOSDate.equals(i.getStartTime(), Globals.HISTORY_DEFAULT_DATE))
+                                .filter(permissionFilter).filter(i -> regExMatcher.reset(i.getWorkflowPath() + "," + i.getOrderKey()).find()).collect(
+                                        Collectors.toList());
                     } else if (ordersFilter.getJobschedulerId().isEmpty()) {
-                        dbMainOrderItems = dbMainOrderItems.stream().filter(permissionFilter).collect(Collectors.toList());
+                        dbMainOrderItems = dbMainOrderItems.stream().filter(i -> !SOSDate.equals(i.getStartTime(), Globals.HISTORY_DEFAULT_DATE))
+                                .filter(permissionFilter).collect(Collectors.toList());
+                    } else {
+                        dbMainOrderItems = dbMainOrderItems.stream().filter(i -> !SOSDate.equals(i.getStartTime(), Globals.HISTORY_DEFAULT_DATE))
+                                .collect(Collectors.toList());
                     }
 
-                    List<DBItemHistoryOrder> dbChildOrderItems = jobHistoryDbLayer.getChildOrders(dbMainOrderItems.stream().filter(DBItemHistoryOrder::getHasChildren)
-                            .collect(Collectors.mapping(DBItemHistoryOrder::getMainParentId, Collectors.toSet())));
+                    List<DBItemHistoryOrder> dbChildOrderItems = jobHistoryDbLayer.getChildOrders(dbMainOrderItems.stream().filter(
+                            DBItemHistoryOrder::getHasChildren).collect(Collectors.mapping(DBItemHistoryOrder::getMainParentId, Collectors.toSet())));
 
                     Map<Long, List<OrderHistoryItem>> historyChildren = new HashMap<Long, List<OrderHistoryItem>>();
                     for (DBItemHistoryOrder dbItemOrder : dbChildOrderItems) {
@@ -148,7 +155,6 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                         historyChildren.get(dbItemOrder.getParentId()).add(history);
                     }
                     for (DBItemHistoryOrder dbItemOrder : dbMainOrderItems) {
-
                         OrderHistoryItem history = getOrderHistoryItem(dbItemOrder);
                         history.setChildren(historyChildren.remove(dbItemOrder.getId()));
                         listHistory.add(history);
@@ -170,7 +176,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
             Globals.disconnect(connection);
         }
     }
-    
+
     private OrderHistoryItem getOrderHistoryItem(DBItemHistoryOrder dbItemOrder) {
         OrderHistoryItem history = new OrderHistoryItem();
         history.setJobschedulerId(dbItemOrder.getJobSchedulerId());

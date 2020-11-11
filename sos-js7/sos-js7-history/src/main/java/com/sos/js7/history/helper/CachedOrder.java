@@ -11,11 +11,13 @@ public class CachedOrder {
     private final Long parentId;
     private final String startWorkflowPosition;
     private final String workflowPosition;
+    private final Date endTime;
+    private final Date created;
+
     private Integer state;
     private boolean hasChildren;
     private Long currentOrderStepId;
-    private final Date endTime;
-    private final Date created;
+    private Date startTime;
 
     public CachedOrder(DBItemHistoryOrder item) {
         id = item.getId();
@@ -27,6 +29,7 @@ public class CachedOrder {
         state = item.getState();
         hasChildren = item.getHasChildren();
         currentOrderStepId = item.getCurrentOrderStepId();
+        startTime = item.getStartTime();
         endTime = item.getEndTime();
         created = new Date();
     }
@@ -77,6 +80,14 @@ public class CachedOrder {
 
     public void setCurrentOrderStepId(Long val) {
         currentOrderStepId = val;
+    }
+
+    public void setStartTime(Date val) {
+        startTime = val;
+    }
+
+    public Date getStartTime() {
+        return startTime;
     }
 
     public Date getEndTime() {

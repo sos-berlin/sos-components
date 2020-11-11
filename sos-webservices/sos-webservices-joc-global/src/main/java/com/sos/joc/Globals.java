@@ -5,6 +5,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -39,37 +40,40 @@ import com.sos.joc.model.common.JocSecurityLevel;
 
 public class Globals {
 
-    private static final String SHIRO_INI_FILENAME = "shiro.ini";
     public static final String DEFAULT_TIMEZONE_DAILY_PLAN = "UTC";
     public static final String DEFAULT_PERIOD_DAILY_PLAN = "00:00";
-    private static final String HIBERNATE_CONFIGURATION_FILE = "hibernate_configuration_file";
-    private static final Logger LOGGER = LoggerFactory.getLogger(Globals.class);
-    private static JocSecurityLevel jocSecurityLevel = null;
     public static final String SESSION_KEY_FOR_SEND_EVENTS_IMMEDIATLY = "send_events_immediatly";
     public static final String DEFAULT_SHIRO_INI_PATH = "classpath:shiro.ini";
     public static final String DEFAULT_SHIRO_INI_FILENAME = "shiro.ini";
+    public static final Date HISTORY_DEFAULT_DATE = new Date(0); // 1970-01-01 01:00:00
+
     public static SOSHibernateFactory sosHibernateFactory;
-    public static Map<String, SOSHibernateFactory> sosSchedulerHibernateFactories;
+    public static JocWebserviceDataContainer jocWebserviceDataContainer = JocWebserviceDataContainer.getInstance();
+    public static IniSecurityManagerFactory factory = null;
+    public static ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
+            SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     public static JocCockpitProperties sosCockpitProperties;
+    public static TimeZone jocTimeZone = TimeZone.getDefault();
+    public static Path servletContextRealPath = null;
+    public static URI servletBaseUri = null;
+    public static Map<String, SOSHibernateFactory> sosSchedulerHibernateFactories;
     public static Map<String, DBItemInventoryJSInstance> urlFromJobSchedulerId = new HashMap<String, DBItemInventoryJSInstance>();
     public static Map<String, Boolean> jobSchedulerIsRunning = new HashMap<String, Boolean>();
+    public static Map<String, String> schedulerVariables = null;
+    public static String servletContextContextPath = null; // /joc
+    public static String defaultProfileAccount = null;
+    public static String loginClientId = "";
+    public static long maxSizeOfLogsToDisplay = 1024 * 1024 * 10L; // 10MB
+    public static long timeoutToDeleteTempFiles = 1000 * 60 * 3L;
     public static int httpConnectionTimeout = 2000;
     public static int httpSocketTimeout = 5000;
     public static boolean withHostnameVerification = false;
     public static boolean auditLogCommentsAreRequired = false;
-    public static long maxSizeOfLogsToDisplay = 1024 * 1024 * 10L; // 10MB
-    public static JocWebserviceDataContainer jocWebserviceDataContainer = JocWebserviceDataContainer.getInstance();
-    public static IniSecurityManagerFactory factory = null;
-    public static long timeoutToDeleteTempFiles = 1000 * 60 * 3L;
-    public static TimeZone jocTimeZone = TimeZone.getDefault();
-    public static ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-    public static String servletContextContextPath = null; // /joc
-    public static Path servletContextRealPath = null;
-    public static URI servletBaseUri = null;
-    public static Map<String, String> schedulerVariables = null;
-    public static String defaultProfileAccount = null;
-    public static String loginClientId="";
-    
+
+    private static final String SHIRO_INI_FILENAME = "shiro.ini";
+    private static final String HIBERNATE_CONFIGURATION_FILE = "hibernate_configuration_file";
+    private static final Logger LOGGER = LoggerFactory.getLogger(Globals.class);
+    private static JocSecurityLevel jocSecurityLevel = null;
 
     public static synchronized SOSHibernateFactory getHibernateFactory() throws JocConfigurationException {
         if (sosHibernateFactory == null || sosHibernateFactory.getSessionFactory() == null) {
@@ -140,7 +144,7 @@ public class Globals {
         }
         return Paths.get(getIniFileForShiro(DEFAULT_SHIRO_INI_FILENAME));
     }
-    
+
     public static void readUnmodifiables() {
         readVersion();
         LOGGER.info("Security Level = " + Globals.getJocSecurityLevel().value());
@@ -209,8 +213,8 @@ public class Globals {
 
         confFile = sosCockpitProperties.getProperty(HIBERNATE_CONFIGURATION_FILE, "hibernate.cfg.xml");
         if (confFile.trim().isEmpty()) {
-            throw new JocConfigurationException(String.format("Property '%1$s' not found in %2$s", HIBERNATE_CONFIGURATION_FILE,
-                    sosCockpitProperties.getPropertiesFile()));
+            throw new JocConfigurationException(String.format("Property '%1$s' not found in %2$s", HIBERNATE_CONFIGURATION_FILE, sosCockpitProperties
+                    .getPropertiesFile()));
         }
 
         confFile = confFile.trim();
@@ -318,7 +322,7 @@ public class Globals {
     public static JocSecurityLevel getJocSecurityLevel() {
         // the JocSecurity classes should have a method getJocSecurityLevel which is callable static during an abstract class
         if (Globals.jocSecurityLevel == null) {
-            Globals.jocSecurityLevel = JocSecurityLevel.LOW; //default
+            Globals.jocSecurityLevel = JocSecurityLevel.LOW; // default
             try {
                 InputStream stream = Globals.class.getResourceAsStream("/joc-settings.properties");
                 if (stream != null) {
