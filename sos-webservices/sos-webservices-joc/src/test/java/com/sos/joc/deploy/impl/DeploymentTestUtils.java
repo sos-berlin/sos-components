@@ -206,7 +206,104 @@ public class DeploymentTestUtils {
         filter.setFrom("-10d");
         filter.setTo("-5d");
         filter.setVersion("0.0.1");
-        filter.setTimeZone("CET");
+        filter.setTimeZone("Europe/Berlin");
+        return filter;
+    }
+    
+    public static ShowDepHistoryFilter createShowDepHistoryFilterByFromToAndPath() {
+        ShowDepHistoryFilter filter = new ShowDepHistoryFilter();
+        filter.setAccount("root");
+        filter.setControllerId("testsuite");
+        filter.setDeployType(DeployType.WORKFLOW.name());
+        filter.setFolder("/myWorkflows/myIfElseWorkflows");
+        filter.setOperation(OperationType.UPDATE.name());
+        filter.setPath("/myWorkflows/myIfElseWorkflows/workflow_01");
+        filter.setState(DeploymentState.DEPLOYED.name());
+        filter.setFrom("-10d");
+        filter.setTo("-5d");
+        filter.setVersion("0.0.1");
+        filter.setTimeZone("Europe/Berlin");
+        filter.setCommitId(null);
+        filter.setDeploymentDate(null);
+        filter.setDeleteDate(null);
+        return filter;
+    }
+    
+    public static ShowDepHistoryFilter createShowDepHistoryFilterByDeploymentDateAndPath() {
+        ShowDepHistoryFilter filter = new ShowDepHistoryFilter();
+        filter.setAccount("root");
+        filter.setControllerId("testsuite");
+        Instant depDate = Instant.parse("2020-11-06T06:48:21.00Z");
+        filter.setDeploymentDate(Date.from(depDate));
+        filter.setDeployType(DeployType.WORKFLOW.name());
+        filter.setFolder("/myWorkflows/myIfElseWorkflows");
+        filter.setOperation(OperationType.UPDATE.name());
+        filter.setPath("/myWorkflows/myIfElseWorkflows/workflow_01");
+        filter.setState(DeploymentState.DEPLOYED.name());
+        filter.setVersion("0.0.1");
+        filter.setFrom(null);
+        filter.setTo(null);
+        filter.setTimeZone(null);
+        filter.setDeleteDate(null);
+        filter.setCommitId(null);
+        return filter;
+    }
+    
+    public static ShowDepHistoryFilter createShowDepHistoryFilterByDeleteDateAndPath() {
+        ShowDepHistoryFilter filter = new ShowDepHistoryFilter();
+        filter.setAccount("root");
+        filter.setControllerId("testsuite");
+        Instant depDate = Instant.parse("2020-11-06T06:48:21.00Z");
+        filter.setDeleteDate(Date.from(depDate));
+        filter.setDeployType(DeployType.WORKFLOW.name());
+        filter.setFolder("/myWorkflows/myIfElseWorkflows");
+        filter.setPath("/myWorkflows/myIfElseWorkflows/workflow_01");
+        filter.setState(DeploymentState.DEPLOYED.name());
+        filter.setVersion("0.0.1");
+        filter.setCommitId(null);
+        filter.setDeploymentDate(null);
+        filter.setOperation(OperationType.DELETE.name());
+        filter.setFrom(null);
+        filter.setTo(null);
+        filter.setTimeZone(null);
+        return filter;
+    }
+    
+    public static ShowDepHistoryFilter createShowDepHistoryFilterByDeleteOperationAndPath() {
+        ShowDepHistoryFilter filter = new ShowDepHistoryFilter();
+        filter.setAccount("root");
+        filter.setControllerId("testsuite");
+        filter.setDeployType(DeployType.WORKFLOW.name());
+        filter.setFolder("/myWorkflows/myIfElseWorkflows");
+        filter.setPath("/myWorkflows/myIfElseWorkflows/workflow_01");
+        filter.setState(DeploymentState.DEPLOYED.name());
+        filter.setVersion("0.0.1");
+        filter.setCommitId(null);
+        filter.setDeploymentDate(null);
+        filter.setDeleteDate(null);
+        filter.setOperation(OperationType.DELETE.name());
+        filter.setFrom(null);
+        filter.setTo(null);
+        filter.setTimeZone(null);
+        return filter;
+    }
+    
+    public static ShowDepHistoryFilter createShowDepHistoryFilterByCommitIdAndFolder() {
+        ShowDepHistoryFilter filter = new ShowDepHistoryFilter();
+        filter.setAccount("root");
+        filter.setCommitId("4cbb095d-b998-4091-92f2-4fb8efb58805");
+        filter.setFolder("/myWorkflows/myIfElseWorkflows");
+        filter.setFrom(null);
+        filter.setTo(null);
+        filter.setTimeZone(null);
+        filter.setDeploymentDate(null);
+        filter.setDeleteDate(null);
+        filter.setOperation(null);
+        filter.setDeployType(null);
+        filter.setState(null);
+        filter.setPath(null);
+        filter.setControllerId(null);
+        filter.setVersion(null);
         return filter;
     }
     

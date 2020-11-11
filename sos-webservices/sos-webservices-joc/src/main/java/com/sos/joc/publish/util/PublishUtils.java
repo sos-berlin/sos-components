@@ -84,6 +84,7 @@ import com.sos.joc.model.pgp.JocKeyType;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
+import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignaturePath;
 import com.sos.joc.publish.common.JSObjectFileExtension;
@@ -263,7 +264,8 @@ public abstract class PublishUtils {
                 if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                     sig = new DBItemDepSignatures();
                     sig.setAccount(account);
-                    sig.setInvConfigurationId(deployed.getId());
+                    sig.setDepHistoryId(deployed.getId());
+                    sig.setInvConfigurationId(deployed.getInventoryConfigurationId());
                     sig.setModified(Date.from(Instant.now()));
                     sig.setSignature(SignObject.signPGP(keyPair.getPrivateKey(), deployed.getContent(), null));
                     signedReDeployable.put(deployed, sig);
@@ -279,7 +281,8 @@ public abstract class PublishUtils {
                     }
                     sig = new DBItemDepSignatures();
                     sig.setAccount(account);
-                    sig.setInvConfigurationId(deployed.getId());
+                    sig.setDepHistoryId(deployed.getId());
+                    sig.setInvConfigurationId(deployed.getInventoryConfigurationId());
                     sig.setModified(Date.from(Instant.now()));
                     sig.setSignature(SignObject.signX509(signerAlgorithm, kp.getPrivate(), deployed.getContent()));
                     signedReDeployable.put(deployed, sig);
@@ -665,7 +668,6 @@ public abstract class PublishUtils {
             Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
             workflow.setVersionId(versionId);
             deployed.setContent(om.writeValueAsString(workflow));
-            deployed.setId(null);
             break;
         case AGENTREF:
             AgentRef agentRef = om.readValue(deployed.getContent(), AgentRef.class);
@@ -678,7 +680,6 @@ public abstract class PublishUtils {
         default:
             throw new JocNotImplementedException();
         }
-        deployed.setId(null);
     }
 
     public static Set<DBItemDeploymentHistory> cloneInvConfigurationsToDepHistoryItems(
@@ -1253,4 +1254,126 @@ public abstract class PublishUtils {
         return pathsWithParents; 
     }
     
+    public static Object getValueByFilterAttribute (ShowDepHistoryFilter filter, String attribute) {
+        switch(attribute) {
+            case "account":
+                return filter.getAccount();
+            case "path":
+                return filter.getPath();
+            case "folder":
+                return filter.getFolder();
+            case "type":
+                return filter.getDeployType();
+            case "controllerId":
+                return filter.getControllerId();
+            case "commitId":
+                return filter.getCommitId();
+            case "version":
+                return filter.getVersion();
+            case "operation":
+                return filter.getOperation();
+            case "state":
+                return filter.getState();
+            case "deploymentDate":
+                return filter.getDeploymentDate();
+            case "deleteDate":
+                return filter.getDeleteDate();
+            case "from":
+                return filter.getFrom();
+            case "to":
+                return filter.getTo();
+            case "timeZone":
+                return filter.getTimeZone();
+        }
+        return null;
+    }
+
+    public static Set<String> extractDefaultShowDepHistoryFilterAttributes (ShowDepHistoryFilter filter) {
+        Set<String> filterAttributes = new HashSet<String>();
+        if (filter.getAccount() != null) {
+            filterAttributes.add("account");
+        }
+        if (filter.getPath() != null) {
+            filterAttributes.add("path");
+        }
+        if (filter.getFolder() != null) {
+            filterAttributes.add("folder");
+        }
+        if (filter.getDeployType() != null) {
+            filterAttributes.add("type");
+        }
+        if (filter.getControllerId() != null) {
+            filterAttributes.add("controllerId");
+        }
+        if (filter.getCommitId() != null) {
+            filterAttributes.add("commitId");
+        }
+        if (filter.getVersion() != null) {
+            filterAttributes.add("version");
+        }
+        if (filter.getOperation() != null) {
+            filterAttributes.add("operation");
+        }
+        if (filter.getState() != null) {
+            filterAttributes.add("state");
+        }
+        if (filter.getDeploymentDate() != null) {
+            filterAttributes.add("deploymentDate");
+        }
+        if (filter.getDeleteDate() != null) {
+            filterAttributes.add("deletedDate");
+        }
+//        if (filter.getFrom() != null) {
+//            filterAttributes.add("from");
+//        }
+//        if (filter.getTo() != null) {
+//            filterAttributes.add("to");
+//        }
+//        if (filter.getTimeZone() != null) {
+//            filterAttributes.add("timezone");
+//        }
+        return filterAttributes;
+    }
+
+    public static Set<String> extractShowDepHistoryFilterAttributesWithFromTo (ShowDepHistoryFilter filter) {
+        Set<String> filterAttributes = new HashSet<String>();
+        if (filter.getAccount() != null) {
+            filterAttributes.add("account");
+        }
+        if (filter.getPath() != null) {
+            filterAttributes.add("path");
+        }
+        if (filter.getFolder() != null) {
+            filterAttributes.add("folder");
+        }
+        if (filter.getDeployType() != null) {
+            filterAttributes.add("type");
+        }
+        if (filter.getControllerId() != null) {
+            filterAttributes.add("controllerId");
+        }
+        if (filter.getCommitId() != null) {
+            filterAttributes.add("commitId");
+        }
+        if (filter.getVersion() != null) {
+            filterAttributes.add("version");
+        }
+        if (filter.getOperation() != null) {
+            filterAttributes.add("operation");
+        }
+        if (filter.getState() != null) {
+            filterAttributes.add("state");
+        }
+        if (filter.getFrom() != null) {
+            filterAttributes.add("from");
+        }
+        if (filter.getTo() != null) {
+            filterAttributes.add("to");
+        }
+        if (filter.getTimeZone() != null) {
+            filterAttributes.add("timezone");
+        }
+        return filterAttributes;
+    }
+
 }

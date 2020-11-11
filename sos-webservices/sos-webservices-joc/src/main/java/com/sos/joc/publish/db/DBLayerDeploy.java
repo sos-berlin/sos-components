@@ -7,29 +7,21 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.persistence.Column;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-
-import org.hibernate.annotations.Type;
 import org.hibernate.query.Query;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit.AuditLog;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.jobscheduler.model.agent.AgentRefPublish;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.WorkflowPublish;
-import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDepCommitIds;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
@@ -38,19 +30,17 @@ import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.deployment.DBItemDeploymentSubmission;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
-import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.exceptions.JocSosHibernateException;
-import com.sos.joc.model.audit.AuditLogItem;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.DeploymentState;
+import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.SetVersionFilter;
-import com.sos.joc.model.tree.TreeType;
+import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.publish.common.JSObjectFileExtension;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.util.PublishUtils;
@@ -90,11 +80,6 @@ public class DBLayerDeploy {
             DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder();
-//            hql.append("select sig from ").append(DBLayer.DBITEM_DEP_SIGNATURES).append(" as sig");
-//            hql.append(" where sig.invConfigurationId = (select max(signature.invConfigurationId) from ").append(DBLayer.DBITEM_DEP_SIGNATURES);
-//            hql.append(" as signature");
-//            hql.append(" where sig.invConfigurationId = :inventoryConfigurationId").append(")");
-//            
             hql.append("from ").append(DBLayer.DBITEM_DEP_SIGNATURES);
             hql.append(" where invConfigurationId = :inventoryConfigurationId order by id desc");
             Query<DBItemDepSignatures> query = session.createQuery(hql.toString());
@@ -884,4 +869,17 @@ public class DBLayerDeploy {
         folder.setModified(Date.from(now));
         return folder;
     }
+    public List<DBItemDeploymentHistory> getDeploymentHistory(ShowDepHistoryFilter filter) throws SOSHibernateException {
+        Set<String> presentFilterAttributes = PublishUtils.extractDefaultShowDepHistoryFilterAttributes(filter);
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+        hql.append(
+                presentFilterAttributes.stream()
+                .map(item -> new String (item + " = :" + item))
+                .collect(Collectors.toSet()).stream()
+                .collect(Collectors.joining(" and ", " where ", "")));
+        Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
+        presentFilterAttributes.stream().forEach(item -> query.setParameter(item, PublishUtils.getValueByFilterAttribute(filter, item)));
+        return getSession().getResultList(query);
+    }
+    
 }

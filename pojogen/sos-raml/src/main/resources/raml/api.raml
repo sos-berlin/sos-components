@@ -1931,8 +1931,20 @@ traits:
         description1: !include joc/documentation/publish/showDepHistory.md
         schema: !include joc/schemas/publish/showDepHistoryFilter-schema.json
         schema200: !include joc/schemas/publish/depHistory-schema.json
-        example: " "
+        example: !include joc/examples/publish/showDepHistory-example.json
         example200: " "
+  /re_deploy:
+    type:
+      postJSONWithOkWithoutJSId:
+        description: Deploys a signed JS Object to the current JobScheduler Controller
+        description1: !include joc/documentation/publish/re-deploy.md
+        description2: " "
+        description3: " "
+        description4: " "
+        description5: " "
+        audit: !include joc/documentation/audit/auditLog.md
+        schema: !include joc/schemas/publish/re-deploy-schema.json
+        example: !include joc/examples/publish/re-deploy-example.json
 
 /security:
   description: This is not an API call. Use child urls instead!
