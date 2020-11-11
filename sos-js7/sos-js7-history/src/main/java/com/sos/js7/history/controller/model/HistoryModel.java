@@ -549,8 +549,14 @@ public class HistoryModel {
                 endOrderStepId = (cos == null) ? co.getCurrentOrderStepId() : cos.getId();
                 endEventId = String.valueOf(eventId);
             }
+
+            String errorText = le.getErrorText();
+            if (le.isError() && SOSString.isEmpty(errorText)) {
+                errorText = cos.getStdErr();
+            }
+
             dbLayer.setOrderEnd(co.getId(), endTime, endWorkflowPosition, endOrderStepId, endEventId, le.getState(), eventDate, le.isError(), le
-                    .getErrorState(), le.getErrorReason(), le.getReturnCode(), le.getErrorCode(), le.getErrorText(), new Date());
+                    .getErrorState(), le.getErrorReason(), le.getReturnCode(), le.getErrorCode(), errorText, new Date());
             le.onOrder(co, co.getWorkflowPosition());
             Path logFile = storeLog2File(le);
             if (completeOrder && co.getParentId().longValue() == 0L) {
@@ -928,9 +934,13 @@ public class HistoryModel {
                     le.setError(OrderStateText.FAILED.value(), entry.getOutcome());
                 }
             }
+            String errorText = le.getErrorText();
+            if (le.isError() && SOSString.isEmpty(errorText)) {
+                errorText = cos.getStdErr();
+            }
             dbLayer.setOrderStepEnd(cos.getId(), cos.getEndTime(), String.valueOf(entry.getEventId()), EventMeta.map2Json(entry.getOutcome()
                     .getKeyValues()), le.getReturnCode(), OrderStepState.processed.name(), le.isError(), le.getErrorState(), le.getErrorReason(), le
-                            .getErrorCode(), le.getErrorText(), new Date());
+                            .getErrorCode(), errorText, new Date());
             le.onOrderStep(cos);
 
             Path log = storeLog2File(le);
@@ -955,6 +965,9 @@ public class HistoryModel {
 
     private void orderStepStd(DBLayerHistory dbLayer, FatEventOrderStepStdWritten entry, EventType eventType) throws Exception {
         CachedOrderStep cos = getCachedOrderStep(dbLayer, entry.getOrderId());
+        if (EventType.OrderStderrWritten.equals(eventType)) {
+            cos.setStdError(entry.getChunck());
+        }
         if (cos.getEndTime() == null) {
             LogEntry le = new LogEntry(LogEntry.LogLevel.INFO, eventType, HistoryUtil.getEventIdAsDate(entry.getEventId()), entry.getEventDatetime());
 

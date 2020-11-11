@@ -451,6 +451,9 @@ public class DBItemHistoryOrder extends DBItem {
     }
 
     public void setErrorText(String val) {
+        if (val != null && val.length() > 255) {
+            val = val.substring(0, 255);
+        }
         errorText = val;
     }
 

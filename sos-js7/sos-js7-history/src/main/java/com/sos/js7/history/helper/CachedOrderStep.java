@@ -1,5 +1,6 @@
 package com.sos.js7.history.helper;
 
+import com.sos.commons.util.SOSString;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import java.util.Date;
 
@@ -18,6 +19,7 @@ public class CachedOrderStep {
     private Date endTime;
     private CachedOrderStepError error;
     private Boolean lastStdEndsWithNewLine;
+    private StringBuilder stdError;
     private Date created;
 
     public CachedOrderStep(DBItemHistoryOrderStep item, String timezone) {
@@ -93,6 +95,19 @@ public class CachedOrderStep {
 
     public Boolean isLastStdEndsWithNewLine() {
         return lastStdEndsWithNewLine;
+    }
+
+    public void setStdError(String val) {
+        if (!SOSString.isEmpty(val)) {
+            if (stdError == null) {
+                stdError = new StringBuilder();
+            }
+            stdError.append(val);
+        }
+    }
+
+    public String getStdErr() {
+        return stdError == null ? null : stdError.toString().trim();
     }
 
     public Date getCreated() {
