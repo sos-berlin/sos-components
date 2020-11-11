@@ -28,7 +28,7 @@
 		"isSuspended": {
 			"type": "boolean"
 		},
-        "removeWhenTerminated":  {
+        "removeWhenTerminated": {
 			"type": "boolean"
 		}
 	},

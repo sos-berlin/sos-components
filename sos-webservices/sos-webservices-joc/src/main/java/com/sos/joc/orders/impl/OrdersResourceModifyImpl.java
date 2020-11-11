@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -130,34 +129,34 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     }
 
     public void postOrdersModify(Action action, ModifyOrders modifyOrders) throws Exception {
-        checkRequiredComment(modifyOrders.getAuditLog());
+//        try {
+            checkRequiredComment(modifyOrders.getAuditLog());
 
-        List<String> orders = modifyOrders.getOrderIds();
-        List<WorkflowId> workflowIds = modifyOrders.getWorkflowIds();
-        final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+            List<String> orders = modifyOrders.getOrderIds();
+            List<WorkflowId> workflowIds = modifyOrders.getWorkflowIds();
+            final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
 
-        JControllerState currentState = Proxy.of(modifyOrders.getJobschedulerId()).currentState();
-        Stream<OrderId> orderStream = null;
+            JControllerState currentState = Proxy.of(modifyOrders.getJobschedulerId()).currentState();
+            Stream<OrderId> orderStream = Stream.empty();
 
-        if (orders != null && !orders.isEmpty()) {
-            orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()) && orderIsPermitted(o, permittedFolders)).map(JOrder::id);
-        } else if (workflowIds != null && !workflowIds.isEmpty()) {
-            Set<ItemId<WorkflowPath>> workflowPaths = workflowIds.stream().map(w -> JWorkflowId.of(w.getPath(), w.getVersionId()).asScala()).collect(
-                    Collectors.toSet());
-            orderStream = currentState.ordersBy(o -> workflowPaths.contains(o.workflowId()) && orderIsPermitted(o, permittedFolders)).map(JOrder::id);
-        }
-            
-        Either<Problem, Void> either = callCommand(action, modifyOrders, orderStream.collect(Collectors.toSet())).get(Globals.httpSocketTimeout,
-                TimeUnit.MILLISECONDS);
-        ProblemHelper.throwProblemIfExist(either);
-//            .thenApply(either -> {
-//                if (either.isLeft()) {
-//                    return ProblemHelper.getExceptionOfProblem(either.getLeft());
-//                }
-//            });
-        
-        //TODO auditLog
-            
+            if (orders != null && !orders.isEmpty()) {
+                orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()) && orderIsPermitted(o, permittedFolders)).map(JOrder::id);
+            } else if (workflowIds != null && !workflowIds.isEmpty()) {
+                Set<ItemId<WorkflowPath>> workflowPaths = workflowIds.stream().map(w -> JWorkflowId.of(w.getPath(), w.getVersionId()).asScala()).collect(
+                        Collectors.toSet());
+                orderStream = currentState.ordersBy(o -> workflowPaths.contains(o.workflowId()) && orderIsPermitted(o, permittedFolders)).map(JOrder::id);
+            }
+                
+//            Either<Problem, Void> either = callCommand(action, modifyOrders, orderStream.collect(Collectors.toSet()))
+//                    .get(Globals.httpSocketTimeout, TimeUnit.MILLISECONDS);
+//            ProblemHelper.throwProblemIfExist(either);
+            callCommand(action, modifyOrders, orderStream.collect(Collectors.toSet()))
+                    .thenAccept(either -> ProblemHelper.postProblemEventIfExist(either, modifyOrders.getJobschedulerId()));
+            //ProblemHelper.throwProblemIfExist(either);
+            //TODO auditLog
+//        } catch (TimeoutException e) {
+//            // TODO
+//        }
     }
     
     private static CompletableFuture<Either<Problem, Void>> callCommand(Action action, ModifyOrders modifyOrders, Set<OrderId> oIds) {

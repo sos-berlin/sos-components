@@ -13,10 +13,10 @@ public class OrderStepFinished extends HistoryEvent {
 
     /**
      * @param key
-     * @param jobschedulerId
+     * @param controllerId
      * @param variables
      */
-    public OrderStepFinished(String key, String jobschedulerId, Map<String, String> variables) {
-        super(key, jobschedulerId, variables);
+    public OrderStepFinished(String key, String controllerId, Map<String, String> variables) {
+        super(key, controllerId, variables);
     }
 }

@@ -5,17 +5,12 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
@@ -28,7 +23,6 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.AddOrderAudit;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.exceptions.BulkError;
-import com.sos.joc.exceptions.JobSchedulerNoResponseException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Err419;
@@ -98,26 +92,17 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
 
             
             if (result.containsKey(true) && !result.get(true).isEmpty()) {
-//                ControllerApi.of(startOrders.getJobschedulerId()).addOrders(Flux.fromStream(result.get(true)
-//                        .stream().map(Either::get))).thenApplyAsync(either -> { return "....do something in database...."; });
-                try {
-                    List<OrderId> oIds = result.get(true).stream().map(Either::get).map(o -> o.id()).collect(Collectors.toList());
-                    Stream<JFreshOrder> freshOrders = result.get(true).stream().map(Either::get);
-                    final JControllerApi controllerApi = ControllerApi.of(startOrders.getJobschedulerId());
-                    Either<Problem, Void> response = controllerApi.addOrders(Flux.fromStream(freshOrders)).thenApply(e -> {
-                        if (e.isRight()) {
-                            return controllerApi.removeOrdersWhenTerminated(oIds);
-                        } else {
-                            Either<Problem, Void> either = Either.left(e.getLeft());
-                            return CompletableFuture.completedFuture(either);
-                        }
-                    }).get().get(Globals.httpSocketTimeout, TimeUnit.MILLISECONDS);
-
-                    ProblemHelper.throwProblemIfExist(response);
-                } catch (TimeoutException e) {
-                    throw new JobSchedulerNoResponseException(String.format("No response from controller '%s' after %ds", startOrders
-                            .getJobschedulerId(), Globals.httpSocketTimeout / 1000));
-                }
+                final Map<OrderId, JFreshOrder> freshOrders = result.get(true).stream().map(Either::get).collect(Collectors.toMap(JFreshOrder::id,
+                        Function.identity()));
+                final JControllerApi controllerApi = ControllerApi.of(startOrders.getJobschedulerId());
+                controllerApi.addOrders(Flux.fromIterable(freshOrders.values())).thenApply(e -> {
+                    if (e.isRight()) {
+                        return controllerApi.removeOrdersWhenTerminated(freshOrders.keySet()).join();
+                    } else {
+                        Either<Problem, Void> either = Either.left(e.getLeft());
+                        return either;
+                    }
+                }).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, startOrders.getJobschedulerId()));
             }
             
 //            if (result.containsKey(true) && !result.get(true).isEmpty()) {

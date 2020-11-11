@@ -12,10 +12,10 @@ public class ProxyRestarted extends ProxyEvent {
 
     /**
      * @param key
-     * @param jobschedulerId
+     * @param controllerId
      * @param variables
      */
-    public ProxyRestarted(String key, String jobschedulerId, Map<String, String> variables) {
-        super(key, jobschedulerId, variables);
+    public ProxyRestarted(String key, String controllerId, Map<String, String> variables) {
+        super(key, controllerId, variables);
     }
 }

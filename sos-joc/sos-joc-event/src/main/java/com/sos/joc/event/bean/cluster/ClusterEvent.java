@@ -22,11 +22,11 @@ public abstract class ClusterEvent extends JOCEvent {
 
     /**
      * @param key
-     * @param jobschedulerId
+     * @param controllerId
      * @param variables
      */
-    public ClusterEvent(String key, String jobschedulerId, Map<String, String> variables) {
-        super(key, jobschedulerId, variables);
+    public ClusterEvent(String key, String controllerId, Map<String, String> variables) {
+        super(key, controllerId, variables);
     }
 
 }

@@ -53,7 +53,7 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
                     throw new JobSchedulerInvalidResponseDataException("Unsupprted objectType:" + objectType);
                 }
                 entity = getValidate(type, inBytes);
-            } catch (Exception e) {
+            } catch (IllegalArgumentException e) {
                 throw new JobSchedulerInvalidResponseDataException("Unsupprted objectType:" + objectType);
             }
             entity.setDeliveryDate(Date.from(Instant.now()));
@@ -95,8 +95,8 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
         return v;
     }
 
-    private static void validateInstructions(Collection<Instruction> instructions, String position, Map<String, String> labels) throws SOSJsonSchemaException,
-            JsonProcessingException, IOException {
+    private static void validateInstructions(Collection<Instruction> instructions, String position, Map<String, String> labels)
+            throws SOSJsonSchemaException, JsonProcessingException, IOException {
         if (instructions != null) {
             int index = 0;
             for (Instruction inst : instructions) {
@@ -118,7 +118,8 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
                 case EXECUTE_NAMED:
                     NamedJob nj = inst.cast();
                     if (labels.containsKey(nj.getLabel())) {
-                        throw new SOSJsonSchemaException("$." + instPosition + "label: duplicate label with " + labels.get(nj.getLabel()));
+                        throw new SOSJsonSchemaException("$." + instPosition + "label: duplicate label '" + nj.getLabel() + "' with " + labels.get(nj
+                                .getLabel()));
                     } else {
                         labels.put(nj.getLabel(), "$." + instPosition + "label");
                     }
@@ -148,9 +149,7 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
                 case TRY:
                     TryCatch tryCatch = inst.cast();
                     validateInstructions(tryCatch.getTry().getInstructions(), instPosition + "try.instructions", labels);
-                    if (tryCatch.getCatch() != null) {
-                        validateInstructions(tryCatch.getCatch().getInstructions(), instPosition + "catch.instructions", labels);
-                    }
+                    validateInstructions(tryCatch.getCatch().getInstructions(), instPosition + "catch.instructions", labels);
                     break;
                 }
                 index++;

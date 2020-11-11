@@ -26,10 +26,10 @@ public abstract class ProxyEvent extends JOCEvent {
 
     /**
      * @param key
-     * @param jobschedulerId
+     * @param controllerId
      * @param variables
      */
-    public ProxyEvent(String key, String jobschedulerId, Map<String, String> variables) {
-        super(key, jobschedulerId, variables);
+    public ProxyEvent(String key, String controllerId, Map<String, String> variables) {
+        super(key, controllerId, variables);
     }
 }
