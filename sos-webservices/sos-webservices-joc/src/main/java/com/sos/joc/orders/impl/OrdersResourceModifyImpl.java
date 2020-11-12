@@ -36,6 +36,7 @@ import js7.data.order.Order;
 import js7.data.order.OrderId;
 import js7.data.workflow.WorkflowPath;
 import js7.proxy.javaapi.data.command.JCancelMode;
+import js7.proxy.javaapi.data.command.JSuspendMode;
 import js7.proxy.javaapi.data.controller.JControllerState;
 import js7.proxy.javaapi.data.order.JOrder;
 import js7.proxy.javaapi.data.workflow.JWorkflowId;
@@ -167,6 +168,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         
         switch (action) {
         case CANCEL:
+            // TODO a fresh order should cancelled by a dailyplan method!
             JCancelMode cancelMode = null;
             if (OrderModeType.FRESH_ONLY.equals(modifyOrders.getOrderType())) {
                 cancelMode = JCancelMode.freshOnly();
@@ -175,14 +177,20 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             } else {
                 cancelMode = JCancelMode.kill();
             }
-            // TODO position
+            // TODO position! Why JWorkflowPosition instead JPosition?
             return ControllerApi.of(modifyOrders.getJobschedulerId()).cancelOrders(oIds, cancelMode);
         case RESUME:
             //TODO missing parameter!
             return ControllerApi.of(modifyOrders.getJobschedulerId()).resumeOrders(oIds, position);
         case SUSPEND:
-            //TODO missing kill signal and position!
-            return ControllerApi.of(modifyOrders.getJobschedulerId()).suspendOrders(oIds);
+            //TODO position! Why JWorkflowPosition instead JPosition?
+            JSuspendMode suspendMode = null;
+            if (modifyOrders.getKill() == Boolean.TRUE) {
+                suspendMode = JSuspendMode.kill(true);
+            } else {
+                suspendMode = JSuspendMode.kill();
+            }
+            return ControllerApi.of(modifyOrders.getJobschedulerId()).suspendOrders(oIds, suspendMode);
         default: //case REMOVE_WHEN_TERMINATED
             return ControllerApi.of(modifyOrders.getJobschedulerId()).removeOrdersWhenTerminated(oIds);
         }
