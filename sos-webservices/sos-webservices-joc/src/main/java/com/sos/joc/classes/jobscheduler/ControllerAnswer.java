@@ -95,8 +95,7 @@ public class ControllerAnswer extends Controller {
 			        isActive = true;
 			        break;
                 default:
-                    String activeClusterUri = clusterStateJson.getSetting().getIdToUri().getAdditionalProperties().get(clusterStateJson.getSetting()
-                            .getActiveId());
+                    String activeClusterUri = clusterStateJson.getIdToUri().getAdditionalProperties().get(clusterStateJson.getActiveId());
                     isActive = activeClusterUri.equalsIgnoreCase(dbInstance.getClusterUri()) || activeClusterUri.equalsIgnoreCase(dbInstance
                             .getUri());
                     break;

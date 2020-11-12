@@ -98,7 +98,7 @@ public class States {
         case NODES_APPOINTED:
             clusterState.setSeverity(1);
             break;
-        case COUPLED_ACTIVE_SHUT_DOWN:
+        case ACTIVE_SHUT_DOWN:
         case PREPARED_TO_BE_COUPLED:
         case EMPTY:
             clusterState.setSeverity(2);
@@ -127,7 +127,7 @@ public class States {
             case EMPTY:
                 break;
             default:
-                final String activeClusterUri = clusterState.getSetting().getIdToUri().getAdditionalProperties().get(clusterState.getSetting().getActiveId());
+                final String activeClusterUri = clusterState.getIdToUri().getAdditionalProperties().get(clusterState.getActiveId());
                 Predicate<DBItemInventoryJSInstance> predicate = i -> activeClusterUri.equalsIgnoreCase(i.getClusterUri()) || activeClusterUri
                         .equalsIgnoreCase(i.getUri());
                 Optional<DBItemInventoryJSInstance> o = controllerInstances.stream().filter(predicate).findAny();

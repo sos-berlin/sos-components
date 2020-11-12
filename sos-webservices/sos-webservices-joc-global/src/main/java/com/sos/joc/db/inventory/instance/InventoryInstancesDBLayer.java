@@ -320,7 +320,7 @@ public class InventoryInstancesDBLayer {
                 case EMPTY:
                     return true;
                 default:
-                    String activeClusterUri = clusterState.getSetting().getIdToUri().getAdditionalProperties().get(clusterState.getSetting().getActiveId());
+                    String activeClusterUri = clusterState.getIdToUri().getAdditionalProperties().get(clusterState.getActiveId());
                     return activeClusterUri.equalsIgnoreCase(schedulerInstancesDBItem.getClusterUri()) || activeClusterUri.equalsIgnoreCase(
                             schedulerInstancesDBItem.getUri());
                 }

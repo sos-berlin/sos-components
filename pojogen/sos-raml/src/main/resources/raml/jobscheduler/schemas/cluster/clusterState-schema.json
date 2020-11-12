@@ -18,21 +18,14 @@
         "PassiveLost",
         "SwitchedOver",
         "FailedOver",
-        "CoupledActiveShutDown" 
+        "ActiveShutDown" 
       ]
     },
-    "setting": {
-      "type": "object",
-      "javaType": "com.sos.jobscheduler.model.cluster.ClusterSetting",
-      "properties": {
-        "idToUri": {
-          "$ref": "idToUri-schema.json"
-        },
-        "activeId": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
+    "idToUri": {
+    	"$ref": "idToUri-schema.json"
+    },
+    "activeId": {
+        "type": "string"
     }
   },
   "additionalProperties": false
