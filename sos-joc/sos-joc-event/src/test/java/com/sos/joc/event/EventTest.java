@@ -20,7 +20,7 @@ import com.sos.joc.event.bean.history.OrderStepStarted;
 public class EventTest {
     
     private static ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    private static String jsonTestTemplate = "{\"TYPE\":\"OrderStepStarted\",\"jobschedulerId\":\"myScheduler\",\"key\":\"job\",\"key1\":\"var1\",\"key2\":\"var2\"}";
+    private static String jsonTestTemplate = "{\"TYPE\":\"OrderStepStarted\",\"controllerId\":\"myScheduler\",\"key\":\"job\",\"key1\":\"var1\",\"key2\":\"var2\"}";
     private static final Map<String, String> testMap = Collections.unmodifiableMap(new HashMap<String, String>() {
 
         private static final long serialVersionUID = 1L;
