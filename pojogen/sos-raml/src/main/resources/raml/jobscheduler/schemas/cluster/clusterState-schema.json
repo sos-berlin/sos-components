@@ -21,11 +21,44 @@
         "ActiveShutDown" 
       ]
     },
-    "idToUri": {
-    	"$ref": "idToUri-schema.json"
-    },
-    "activeId": {
-        "type": "string"
+    "setting": {
+      "type": "object",
+      "javaType": "com.sos.jobscheduler.model.cluster.ClusterSetting",
+      "properties": {
+        "idToUri": {
+          "$ref": "idToUri-schema.json"
+        },
+        "activeId": {
+          "type": "string"
+        },
+        "clusterWatches": {
+          "type": "array",
+          "items": {
+        	"type": "object",
+      		"javaType": "com.sos.jobscheduler.model.cluster.ClusterWatcher",
+      		"properties": {
+      		  "uri": {
+      		    "type": "string"
+      		  }
+      		},
+      		"additionalProperties": false
+          }
+        },
+        "timing": {
+          "type": "object",
+      	  "javaType": "com.sos.jobscheduler.model.cluster.ClusterTiming",
+      	  "properties": {
+      	    "heartbeat": {
+      	      "$ref": "../../../joc/schemas/common/nonNegativeInteger-schema.json"
+      	    },
+      	    "heartbeatTimeout": {
+      	      "$ref": "../../../joc/schemas/common/nonNegativeInteger-schema.json"
+      	    }
+      	  },
+      	  "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false
