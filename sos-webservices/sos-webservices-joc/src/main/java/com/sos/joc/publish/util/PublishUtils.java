@@ -95,7 +95,7 @@ import io.vavr.control.Either;
 import js7.base.crypt.SignedString;
 import js7.base.crypt.SignerId;
 import js7.base.problem.Problem;
-import js7.data.agent.AgentRefPath;
+import js7.data.agent.AgentName;
 import js7.data.item.VersionId;
 import js7.data.workflow.WorkflowPath;
 import js7.proxy.javaapi.data.item.JUpdateRepoOperation;
@@ -567,7 +567,7 @@ public abstract class PublishUtils {
                     updateRepoOperations.add(JUpdateRepoOperation.delete(WorkflowPath.of(toDelete.getPath())));
                     break;
                 case AGENTREF:
-                    updateRepoOperations.add(JUpdateRepoOperation.delete(AgentRefPath.of(toDelete.getPath())));
+                    //updateRepoOperations.add(JUpdateRepoOperation.delete(AgentName.of(toDelete.getPath())));
                     break;
                 case JOBCLASS:
                     // TODO:
@@ -616,7 +616,7 @@ public abstract class PublishUtils {
                     updateRepoOperations.add(JUpdateRepoOperation.delete(WorkflowPath.of(toDelete.getPath())));
                     break;
                 case AGENTREF:
-                    updateRepoOperations.add(JUpdateRepoOperation.delete(AgentRefPath.of(toDelete.getPath())));
+                    //updateRepoOperations.add(JUpdateRepoOperation.delete(AgentName.of(toDelete.getPath())));
                     break;
                 case JOBCLASS:
                     // TODO:

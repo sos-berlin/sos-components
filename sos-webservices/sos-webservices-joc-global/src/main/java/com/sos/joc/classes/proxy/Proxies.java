@@ -447,7 +447,7 @@ public class Proxies {
         return false;
     }
     
-    private JControllerApi loadApi(ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
+    protected JControllerApi loadApi(ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
         if (!controllerApis.containsKey(credentials)) {
             controllerApis.put(credentials, ControllerApiContext.newControllerApi(proxyContext, credentials));
         }

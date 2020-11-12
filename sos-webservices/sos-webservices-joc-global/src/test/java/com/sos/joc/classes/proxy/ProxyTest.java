@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import org.junit.AfterClass;
@@ -24,7 +25,9 @@ import com.sos.joc.Globals;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerSSLCertificateException;
 
+import io.vavr.control.Either;
 import js7.base.generic.SecretString;
+import js7.base.problem.Problem;
 import js7.common.akkahttp.https.KeyStoreRef;
 import js7.common.akkahttp.https.TrustStoreRef;
 import js7.controller.data.events.ControllerEvent;
@@ -34,11 +37,14 @@ import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
 import js7.data.order.Order;
+import js7.data.order.OrderId;
+import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.data.cluster.JClusterState;
 import js7.proxy.javaapi.data.controller.JControllerState;
 import js7.proxy.javaapi.data.order.JOrder;
 import js7.proxy.javaapi.data.order.JOrderPredicates;
+import js7.proxy.javaapi.eventbus.JControllerEventBus;
 
 public class ProxyTest {
 
@@ -78,7 +84,7 @@ public class ProxyTest {
                     put(Order.Processing$.class, "running");
                     put(Order.Finished$.class, "finished");
                     put(Order.Cancelled$.class, "finished");
-                    put(Order.ProcessingCancelled$.class, "finished");
+                    put(Order.ProcessingKilled$.class, "finished");
                 }
             });
 
@@ -152,6 +158,32 @@ public class ProxyTest {
 //        }
         Assert.assertFalse("Connection to " + uri + " has handshake exception", handshake);
     }
+    
+    @Test
+    public void testConnection() {
+        String uri = "http://localhost:4711";
+        LOGGER.info("try to connect with " + uri);
+        boolean connectionRefused = false;
+        CompletableFuture<Either<Problem, Void>> future = null;
+        try {
+            JControllerApi controllerApi = Proxies.getInstance().loadApi(ProxyCredentialsBuilder.withJobSchedulerIdAndUrl("test", uri).build());
+            OrderId o = OrderId.of("test");
+            future = controllerApi.cancelOrders(Arrays.asList(o));
+            Either<Problem, Void> either = future.get(20, TimeUnit.SECONDS);
+            if (either.isLeft()) {
+                LOGGER.error(either.getLeft().messageWithCause());
+                connectionRefused = true;
+                future.cancel(true);
+            }
+        } catch (Exception e) {
+            LOGGER.error(e.toString());
+            connectionRefused = true;
+            if (future != null) {
+                future.cancel(true);
+            }
+        }
+        Assert.assertTrue("Connection to " + uri + " refused", connectionRefused);
+    }
 
     @Test
     public void testAggregatedOrders() {
@@ -210,14 +242,24 @@ public class ProxyTest {
             JControllerProxy controllerProxy = Proxy.of(credential);
             LOGGER.info(Instant.now().toString());
             boolean controllerReady = false;
+            
+            BiConsumer<Stamped<KeyedEvent<Event>>, JControllerState> callbackOfCurrentController = (stampedEvt, state) -> LOGGER.info(
+                    "###########1: " + orderEventToString(stampedEvt));
+            
+            BiConsumer<Stamped<KeyedEvent<Event>>, JControllerState> callbackOfCurrentController2 = (stampedEvt, state) -> LOGGER.info(
+                    "+++++++++++2: " + orderEventToString(stampedEvt));
 
-            controllerProxy.controllerEventBus().subscribe(Arrays.asList(ControllerEvent.class, ClusterEvent.class), (stampedEvent,
-                    state) -> LOGGER.info(orderEventToString(stampedEvent)));
+            JControllerEventBus evtBus = controllerProxy.controllerEventBus();
+            evtBus.subscribe(Arrays.asList(ControllerEvent.class, ClusterEvent.class), callbackOfCurrentController);
+            
+            controllerProxy.controllerEventBus().subscribe(Arrays.asList(ControllerEvent.class, ClusterEvent.class), callbackOfCurrentController2);;
 
             final String restartJson = Globals.objectMapper.writeValueAsString(new Terminate(true, null));
             LOGGER.info(restartJson);
             try {
+                //evtBus.close();
                 TimeUnit.SECONDS.sleep(5);
+                //evtBus.subscribe(Arrays.asList(ControllerEvent.class, ClusterEvent.class), callbackOfCurrentController);
                 controllerProxy.api().executeCommandJson(restartJson).get();
                 controllerReady = finished.get(40, TimeUnit.SECONDS);
             } catch (Exception e) {
