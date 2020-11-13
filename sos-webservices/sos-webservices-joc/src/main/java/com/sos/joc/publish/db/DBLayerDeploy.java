@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.TemporalType;
+
 import org.hibernate.query.Query;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -22,6 +24,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.jobscheduler.model.agent.AgentRefPublish;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.WorkflowPublish;
+import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDepCommitIds;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
@@ -49,6 +52,9 @@ public class DBLayerDeploy {
 
     private SOSHibernateSession session;
     private ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
+    private static final String FROM_DEP_DATE = "deploymentDate >= :fromDate"; 
+    private static final String TO_DEP_DATE = "deploymentDate < :toDate"; 
+
 
     public DBLayerDeploy(SOSHibernateSession connection) {
         session = connection;
@@ -548,7 +554,7 @@ public class DBLayerDeploy {
                 }
                 newDepHistoryItem.setControllerInstanceId(controllerInstanceId);
                 newDepHistoryItem.setControllerId(controllerId);
-                newDepHistoryItem.setDeletedDate(null);
+                newDepHistoryItem.setDeleteDate(null);
                 newDepHistoryItem.setDeploymentDate(Date.from(Instant.now()));
                 newDepHistoryItem.setInventoryConfigurationId(inventoryConfig.getId());
                 DeployType deployType = PublishUtils.mapInventoryMetaConfigurationType(ConfigurationType.fromValue(inventoryConfig.getType()));
@@ -617,7 +623,7 @@ public class DBLayerDeploy {
                 }
                 newDepHistoryItem.setControllerInstanceId(controllerInstanceId);
                 newDepHistoryItem.setControllerId(controllerId);
-                newDepHistoryItem.setDeletedDate(null);
+                newDepHistoryItem.setDeleteDate(null);
                 newDepHistoryItem.setDeploymentDate(Date.from(Instant.now()));
                 newDepHistoryItem.setInventoryConfigurationId(inventoryConfig.getId());
                 DeployType deployType = PublishUtils.mapInventoryMetaConfigurationType(
@@ -656,7 +662,7 @@ public class DBLayerDeploy {
                     continue;
                 }
                 deploy.setControllerInstanceId(controllerInstanceId);
-                deploy.setDeletedDate(Date.from(Instant.now()));
+                deploy.setDeleteDate(Date.from(Instant.now()));
                 deploy.setDeploymentDate(Date.from(Instant.now()));
                 deploy.setOperation(OperationType.DELETE.value());
                 deploy.setState(DeploymentState.NOT_DEPLOYED.value());
@@ -702,7 +708,7 @@ public class DBLayerDeploy {
                 submission.setContent(failedDeploy.getContent());
                 submission.setControllerId(failedDeploy.getControllerId());
                 submission.setControllerInstanceId(failedDeploy.getControllerInstanceId());
-                submission.setDeletedDate(failedDeploy.getDeletedDate());
+                submission.setDeletedDate(failedDeploy.getDeleteDate());
                 submission.setDepHistoryId(failedDeploy.getId());
                 submission.setFolder(failedDeploy.getFolder());
                 submission.setInventoryConfigurationId(failedDeploy.getInventoryConfigurationId());
@@ -870,16 +876,115 @@ public class DBLayerDeploy {
         return folder;
     }
     public List<DBItemDeploymentHistory> getDeploymentHistory(ShowDepHistoryFilter filter) throws SOSHibernateException {
-        Set<String> presentFilterAttributes = PublishUtils.extractDefaultShowDepHistoryFilterAttributes(filter);
+        Set<String> presentFilterAttributes = extractDefaultShowDepHistoryFilterAttributes(filter);
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
         hql.append(
                 presentFilterAttributes.stream()
-                .map(item -> new String (item + " = :" + item))
-                .collect(Collectors.toSet()).stream()
+                .map(item -> {
+                    if("from".equals(item)) {
+                        return FROM_DEP_DATE;
+                    } else if("to".equals(item)) {
+                        return TO_DEP_DATE;
+                    } else {
+                        return item + " = :" + item;
+                    }
+                })
                 .collect(Collectors.joining(" and ", " where ", "")));
         Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
-        presentFilterAttributes.stream().forEach(item -> query.setParameter(item, PublishUtils.getValueByFilterAttribute(filter, item)));
+        presentFilterAttributes.stream().forEach(item -> {
+            switch (item) {
+            case "from":
+            case "to":
+                query.setParameter(item + "Date", getValueByFilterAttribute(filter, item), TemporalType.TIMESTAMP);
+                break;
+            case "deploymentDate":
+            case "deleteDate":
+                query.setParameter(item, getValueByFilterAttribute(filter, item), TemporalType.TIMESTAMP);
+                break;
+            default:
+                query.setParameter(item, getValueByFilterAttribute(filter, item));
+                break;
+            }
+        });
         return getSession().getResultList(query);
     }
     
+    private Object getValueByFilterAttribute (ShowDepHistoryFilter filter, String attribute) {
+        switch(attribute) {
+            case "account":
+                return filter.getAccount();
+            case "path":
+                return filter.getPath();
+            case "folder":
+                return filter.getFolder();
+            case "type":
+                return DeployType.fromValue(filter.getDeployType()).intValue();
+            case "controllerId":
+                return filter.getControllerId();
+            case "commitId":
+                return filter.getCommitId();
+            case "version":
+                return filter.getVersion();
+            case "operation":
+                return OperationType.valueOf(filter.getOperation()).value();
+            case "state":
+                return DeploymentState.valueOf(filter.getState()).value();
+            case "deploymentDate":
+                return filter.getDeploymentDate();
+            case "deleteDate":
+                return filter.getDeleteDate();
+            case "from":
+                return JobSchedulerDate.getDateFrom(filter.getFrom(), filter.getTimeZone());
+            case "to":
+                return JobSchedulerDate.getDateTo(filter.getTo(), filter.getTimeZone());
+            case "timeZone":
+                return filter.getTimeZone();
+        }
+        return null;
+    }
+
+    private Set<String> extractDefaultShowDepHistoryFilterAttributes (ShowDepHistoryFilter filter) {
+        Set<String> filterAttributes = new HashSet<String>();
+        if (filter.getAccount() != null) {
+            filterAttributes.add("account");
+        }
+        if (filter.getPath() != null) {
+            filterAttributes.add("path");
+        }
+        if (filter.getFolder() != null) {
+            filterAttributes.add("folder");
+        }
+        if (filter.getDeployType() != null) {
+            filterAttributes.add("type");
+        }
+        if (filter.getControllerId() != null) {
+            filterAttributes.add("controllerId");
+        }
+        if (filter.getCommitId() != null) {
+            filterAttributes.add("commitId");
+        }
+        if (filter.getVersion() != null) {
+            filterAttributes.add("version");
+        }
+        if (filter.getOperation() != null) {
+            filterAttributes.add("operation");
+        }
+        if (filter.getState() != null) {
+            filterAttributes.add("state");
+        }
+        if (filter.getDeploymentDate() != null) {
+            filterAttributes.add("deploymentDate");
+        }
+        if (filter.getDeleteDate() != null) {
+            filterAttributes.add("deleteDate");
+        }
+        if (filter.getFrom() != null) {
+            filterAttributes.add("from");
+        }
+        if (filter.getTo() != null) {
+            filterAttributes.add("to");
+        }
+        return filterAttributes;
+    }
+
 }

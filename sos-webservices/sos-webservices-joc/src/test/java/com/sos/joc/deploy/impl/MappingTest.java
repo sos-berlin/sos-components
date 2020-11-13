@@ -3,7 +3,15 @@ package com.sos.joc.deploy.impl;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
+import java.nio.file.Paths;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import javax.persistence.TemporalType;
+
+import org.hibernate.query.Query;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -16,14 +24,17 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.sos.commons.hibernate.SOSHibernateFactory;
+import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.model.agent.AgentRef;
-import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.instruction.IfElse;
 import com.sos.jobscheduler.model.instruction.NamedJob;
 import com.sos.jobscheduler.model.workflow.Workflow;
+import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.model.publish.ExcludeConfiguration;
 import com.sos.joc.model.publish.JSObject;
-import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.ReDeployFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
@@ -45,6 +56,9 @@ public class MappingTest {
     private static final String AGENT_REF_JSON =
             "{\"TYPE\":\"AgentRef\",\"path\":\"/test/Agent\",\"versionId\":\"2.0.0-SNAPSHOT\",\"uri\":\"http://localhost:4223\"}";
     private static final Logger LOGGER = LoggerFactory.getLogger(MappingTest.class);
+    final String FROM_DEP_DATE = "deploymentDate >= :fromDate"; 
+    final String TO_DEP_DATE = "deploymentDate < :toDate"; 
+
 
     @Test
     public void test1WorkflowToJsonString() {
@@ -135,46 +149,26 @@ public class MappingTest {
     }
 
 //    @Test
-    private void test5MapDepHistoryFilter () throws JsonProcessingException {
+    public void test5MapDepHistoryFilter () throws JsonProcessingException {
         ShowDepHistoryFilter filter = DeploymentTestUtils.createDefaultShowDepHistoryFilter();
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
+        DateFormat df = new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:ss.SSS'Z'");
+        om.setDateFormat(df);
         LOGGER.info("ALL properties:\n" + om.writeValueAsString(filter));
-        filter.setCommitId(null);
-        filter.setDeleteDate(null);
-        filter.setDeploymentDate(null);
-        filter.setCommitId(null);
+        filter = DeploymentTestUtils.createShowDepHistoryFilterByFromToAndPath();
         LOGGER.info("EXAMPLE 1:\n" + om.writeValueAsString(filter));
-        filter = DeploymentTestUtils.createDefaultShowDepHistoryFilter();
-        filter.setFrom(null);
-        filter.setTo(null);
-        filter.setDeleteDate(null);
-        filter.setCommitId(null);
+        filter = DeploymentTestUtils.createShowDepHistoryFilterByDeploymentDateAndPath();
         LOGGER.info("EXAMPLE 2:\n" + om.writeValueAsString(filter));
-        filter = DeploymentTestUtils.createDefaultShowDepHistoryFilter();
-        filter.setFrom(null);
-        filter.setTo(null);
-        filter.setCommitId(null);
-        filter.setOperation(OperationType.DELETE.name());
-        filter.setDeploymentDate(null);
+        filter = DeploymentTestUtils.createShowDepHistoryFilterByDeleteDateAndPath();
         LOGGER.info("EXAMPLE 3:\n" + om.writeValueAsString(filter));
-        filter.setDeleteDate(null);
+        filter = DeploymentTestUtils.createShowDepHistoryFilterByDeleteOperationAndPath();
         LOGGER.info("EXAMPLE 4:\n" + om.writeValueAsString(filter));
-        filter = DeploymentTestUtils.createDefaultShowDepHistoryFilter();
-        filter.setFrom(null);
-        filter.setTo(null);
-        filter.setDeploymentDate(null);
-        filter.setDeleteDate(null);
-        filter.setOperation(null);
-        filter.setDeployType(null);
-        filter.setState(null);
-        filter.setPath(null);
-        filter.setControllerId(null);
-        filter.setVersion(null);
+        filter = DeploymentTestUtils.createShowDepHistoryFilterByCommitIdAndFolder();
         LOGGER.info("EXAMPLE 5:\n" + om.writeValueAsString(filter));
     }
 
 //    @Test
-    private void test6MapReDeployFilter () throws JsonProcessingException {
+    public void test6MapReDeployFilter () throws JsonProcessingException {
         ReDeployFilter filter = DeploymentTestUtils.createDefaultReDeployFilter();
         ExcludeConfiguration exclude = new ExcludeConfiguration();
         exclude.setPath("/myWorkflows/myIfElseWorkflows/workflow_02");
@@ -183,4 +177,113 @@ public class MappingTest {
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         LOGGER.info("\n" + om.writeValueAsString(filter));
     }
+    
+    /*
+     * No Unit test. DB connection needed to test query parameters
+     * */
+//    @Test
+    public void test7GetDeploymentHistoryDBLayerDeployTest () throws SOSHibernateException {
+        ShowDepHistoryFilter filter = DeploymentTestUtils.createShowDepHistoryFilterByDeploymentDateAndPath();
+
+        Set<String> presentFilterAttributes = DeploymentTestUtils.extractDefaultShowDepHistoryFilterAttributes(filter);
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+        hql.append(
+                presentFilterAttributes.stream()
+                .map(item -> new String (item + " = :" + item))
+                .collect(Collectors.joining(" and ", " where ", "")));
+ 
+        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/sp_hibernate.cfg.xml"));
+        factory.setAutoCommit(true);
+        factory.addClassMapping(DBLayer.getJocClassMapping());
+        factory.addClassMapping(DBLayer.getHistoryClassMapping());
+        factory.build();
+        SOSHibernateSession session = factory.openStatelessSession();
+         Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
+        presentFilterAttributes.stream().forEach(item -> query.setParameter(item, DeploymentTestUtils.getValueByFilterAttribute(filter, item)));
+
+        LOGGER.info("Create hql via StringBuilder using streams");
+        LOGGER.info(hql.toString());
+        LOGGER.info("Get property and value from query.getParameters().stream(): ");
+        query.getParameters().stream().forEach(item -> LOGGER.info(item.getName() + ": " + query.getParameterValue(item.getName()).toString()));
+        LOGGER.info("Replace hql in StringBuilder with property and value from query.getParameters().stream(): ");
+        query.getParameters().stream().forEach(item ->  
+        hql.replace(hql.indexOf(":" + item.getName()), hql.indexOf(":" + item.getName()) + item.getName().length() + 1, 
+                query.getParameterValue(item.getName()).toString()));
+        LOGGER.info("Replaced hql:\n" + hql.toString());
+        StringBuilder hql2 = new StringBuilder("where controllerId = :controllerId and account = :account");
+        LOGGER.info("Original : " + hql2.toString());
+        LOGGER.info("hql2.indexOf(\":controllerId\") : " + hql2.indexOf(":controllerId"));
+        LOGGER.info("hql2.lastIndexOf(\":controllerId\") : " + hql2.lastIndexOf(":controllerId"));
+        hql2.replace(hql2.indexOf(":controllerId"), hql2.indexOf(":controllerId") + ":controllerId".length(), "testsuite");
+        LOGGER.info("Replace 1: " + hql2.toString());
+        hql2 = hql2.replace(hql2.indexOf(":account"), hql2.lastIndexOf(":account") + ":account".length(), "ME!");
+        LOGGER.info("Replace 2: " + hql2.toString());
+        session.close();
+    }
+    
+    /*
+     * No Unit test. DB connection needed to test query parameters
+     * */
+//    @Test
+    public void test8GetDeploymentHistoryFromToDBLayerDeployTest () throws SOSHibernateException {
+       ShowDepHistoryFilter filter = DeploymentTestUtils.createShowDepHistoryFilterByFromToAndPath();
+
+        Set<String> presentFilterAttributes = DeploymentTestUtils.extractDefaultShowDepHistoryFilterAttributes(filter);
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+        hql.append(
+                presentFilterAttributes.stream()
+                .map(item -> {
+                    if("from".equals(item)) {
+                        return FROM_DEP_DATE;
+                    } else if("to".equals(item)) {
+                        return TO_DEP_DATE;
+                    } else {
+                        return item + " = :" + item;
+                    }
+                })
+                .collect(Collectors.joining(" and ", " where ", "")));
+        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/sp_hibernate.cfg.xml"));
+        factory.setAutoCommit(true);
+        factory.addClassMapping(DBLayer.getJocClassMapping());
+        factory.addClassMapping(DBLayer.getHistoryClassMapping());
+        factory.build();
+        SOSHibernateSession session = factory.openStatelessSession();
+        Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
+
+        presentFilterAttributes.stream().forEach(item -> {
+            switch (item) {
+            case "from":
+            case "to":
+                query.setParameter(item + "Date", DeploymentTestUtils.getValueByFilterAttribute(filter, item), TemporalType.TIMESTAMP);
+                break;
+            case "deploymentDate":
+            case "deleteDate":
+                query.setParameter(item, DeploymentTestUtils.getValueByFilterAttribute(filter, item), TemporalType.TIMESTAMP);
+                break;
+            default:
+                query.setParameter(item, DeploymentTestUtils.getValueByFilterAttribute(filter, item));
+                break;
+            }
+        });
+
+        LOGGER.info("Create hql via StringBuilder using streams");
+        LOGGER.info(hql.toString());
+        LOGGER.info("Get property and value from query.getParameters().stream(): ");
+        query.getParameters().stream().forEach(item -> LOGGER.info(item.getName() + ": " + query.getParameterValue(item.getName()).toString()));
+        LOGGER.info("Replace hql in StringBuilder with property and value from query.getParameters().stream(): ");
+        query.getParameters().stream().forEach(item ->  
+        hql.replace(hql.indexOf(":" + item.getName()), hql.indexOf(":" + item.getName()) + item.getName().length() + 1, 
+                "'" + query.getParameterValue(item.getName()).toString() + "'"));
+        LOGGER.info("Replaced hql:\n" + hql.toString());
+        StringBuilder hql2 = new StringBuilder("where controllerId = :controllerId and account = :account");
+        LOGGER.info("hql2.indexOf(\":controllerId\") : " + hql2.indexOf(":controllerId"));
+        LOGGER.info("hql2.lastIndexOf(\":controllerId\") : " + hql2.lastIndexOf(":controllerId"));
+        LOGGER.info("Original : " + hql2.toString());
+        hql2.replace(hql2.indexOf(":controllerId"), hql2.indexOf(":controllerId") + ":controllerId".length(), "testsuite");
+        LOGGER.info("Replace 1: " + hql2.toString());
+        hql2 = hql2.replace(hql2.indexOf(":account"), hql2.lastIndexOf(":account") + ":account".length(), "ME!");
+        LOGGER.info("Replace 2: " + hql2.toString());
+        session.close();
+    }
+    
 }

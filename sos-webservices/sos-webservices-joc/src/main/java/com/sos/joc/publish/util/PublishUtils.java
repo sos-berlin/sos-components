@@ -95,7 +95,6 @@ import io.vavr.control.Either;
 import js7.base.crypt.SignedString;
 import js7.base.crypt.SignerId;
 import js7.base.problem.Problem;
-import js7.data.agent.AgentName;
 import js7.data.item.VersionId;
 import js7.data.workflow.WorkflowPath;
 import js7.proxy.javaapi.data.item.JUpdateRepoOperation;
@@ -784,7 +783,7 @@ public abstract class PublishUtils {
                 delete.setId(null);
                 delete.setOperation(OperationType.DELETE.value());
                 delete.setState(DeploymentState.DEPLOYED.value());
-                delete.setDeletedDate(Date.from(Instant.now()));
+                delete.setDeleteDate(Date.from(Instant.now()));
                 delete.setDeploymentDate(Date.from(Instant.now()));
                 dbLayer.getSession().save(delete);
                 deletedObjects.add(delete);
@@ -1254,126 +1253,4 @@ public abstract class PublishUtils {
         return pathsWithParents; 
     }
     
-    public static Object getValueByFilterAttribute (ShowDepHistoryFilter filter, String attribute) {
-        switch(attribute) {
-            case "account":
-                return filter.getAccount();
-            case "path":
-                return filter.getPath();
-            case "folder":
-                return filter.getFolder();
-            case "type":
-                return filter.getDeployType();
-            case "controllerId":
-                return filter.getControllerId();
-            case "commitId":
-                return filter.getCommitId();
-            case "version":
-                return filter.getVersion();
-            case "operation":
-                return filter.getOperation();
-            case "state":
-                return filter.getState();
-            case "deploymentDate":
-                return filter.getDeploymentDate();
-            case "deleteDate":
-                return filter.getDeleteDate();
-            case "from":
-                return filter.getFrom();
-            case "to":
-                return filter.getTo();
-            case "timeZone":
-                return filter.getTimeZone();
-        }
-        return null;
-    }
-
-    public static Set<String> extractDefaultShowDepHistoryFilterAttributes (ShowDepHistoryFilter filter) {
-        Set<String> filterAttributes = new HashSet<String>();
-        if (filter.getAccount() != null) {
-            filterAttributes.add("account");
-        }
-        if (filter.getPath() != null) {
-            filterAttributes.add("path");
-        }
-        if (filter.getFolder() != null) {
-            filterAttributes.add("folder");
-        }
-        if (filter.getDeployType() != null) {
-            filterAttributes.add("type");
-        }
-        if (filter.getControllerId() != null) {
-            filterAttributes.add("controllerId");
-        }
-        if (filter.getCommitId() != null) {
-            filterAttributes.add("commitId");
-        }
-        if (filter.getVersion() != null) {
-            filterAttributes.add("version");
-        }
-        if (filter.getOperation() != null) {
-            filterAttributes.add("operation");
-        }
-        if (filter.getState() != null) {
-            filterAttributes.add("state");
-        }
-        if (filter.getDeploymentDate() != null) {
-            filterAttributes.add("deploymentDate");
-        }
-        if (filter.getDeleteDate() != null) {
-            filterAttributes.add("deletedDate");
-        }
-//        if (filter.getFrom() != null) {
-//            filterAttributes.add("from");
-//        }
-//        if (filter.getTo() != null) {
-//            filterAttributes.add("to");
-//        }
-//        if (filter.getTimeZone() != null) {
-//            filterAttributes.add("timezone");
-//        }
-        return filterAttributes;
-    }
-
-    public static Set<String> extractShowDepHistoryFilterAttributesWithFromTo (ShowDepHistoryFilter filter) {
-        Set<String> filterAttributes = new HashSet<String>();
-        if (filter.getAccount() != null) {
-            filterAttributes.add("account");
-        }
-        if (filter.getPath() != null) {
-            filterAttributes.add("path");
-        }
-        if (filter.getFolder() != null) {
-            filterAttributes.add("folder");
-        }
-        if (filter.getDeployType() != null) {
-            filterAttributes.add("type");
-        }
-        if (filter.getControllerId() != null) {
-            filterAttributes.add("controllerId");
-        }
-        if (filter.getCommitId() != null) {
-            filterAttributes.add("commitId");
-        }
-        if (filter.getVersion() != null) {
-            filterAttributes.add("version");
-        }
-        if (filter.getOperation() != null) {
-            filterAttributes.add("operation");
-        }
-        if (filter.getState() != null) {
-            filterAttributes.add("state");
-        }
-        if (filter.getFrom() != null) {
-            filterAttributes.add("from");
-        }
-        if (filter.getTo() != null) {
-            filterAttributes.add("to");
-        }
-        if (filter.getTimeZone() != null) {
-            filterAttributes.add("timezone");
-        }
-        return filterAttributes;
-    }
-
 }

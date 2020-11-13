@@ -1,15 +1,11 @@
 package com.sos.joc.deploy.impl;
 
 import java.time.Instant;
-import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.UUID;
 
 import com.sos.jobscheduler.model.deploy.DeployType;
@@ -23,6 +19,7 @@ import com.sos.jobscheduler.model.job.Job;
 import com.sos.jobscheduler.model.workflow.Branch;
 import com.sos.jobscheduler.model.workflow.Jobs;
 import com.sos.jobscheduler.model.workflow.Workflow;
+import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.model.publish.DepHistory;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.ExcludeConfiguration;
@@ -323,4 +320,83 @@ public class DeploymentTestUtils {
         
         return depHistory;
     }
+
+    public static Object getValueByFilterAttribute (ShowDepHistoryFilter filter, String attribute) {
+        switch(attribute) {
+            case "account":
+                return filter.getAccount();
+            case "path":
+                return filter.getPath();
+            case "folder":
+                return filter.getFolder();
+            case "type":
+                return DeployType.fromValue(filter.getDeployType()).intValue();
+            case "controllerId":
+                return filter.getControllerId();
+            case "commitId":
+                return filter.getCommitId();
+            case "version":
+                return filter.getVersion();
+            case "operation":
+                return OperationType.valueOf(filter.getOperation()).value();
+            case "state":
+                return DeploymentState.valueOf(filter.getState()).value();
+            case "deploymentDate":
+                return filter.getDeploymentDate();
+            case "deleteDate":
+                return filter.getDeleteDate();
+            case "from":
+                return JobSchedulerDate.getDateFrom(filter.getFrom(), filter.getTimeZone());
+            case "to":
+                return JobSchedulerDate.getDateTo(filter.getTo(), filter.getTimeZone());
+            case "timeZone":
+                return filter.getTimeZone();
+        }
+        return null;
+    }
+
+    public static Set<String> extractDefaultShowDepHistoryFilterAttributes (ShowDepHistoryFilter filter) {
+        Set<String> filterAttributes = new HashSet<String>();
+        if (filter.getAccount() != null) {
+            filterAttributes.add("account");
+        }
+        if (filter.getPath() != null) {
+            filterAttributes.add("path");
+        }
+        if (filter.getFolder() != null) {
+            filterAttributes.add("folder");
+        }
+        if (filter.getDeployType() != null) {
+            filterAttributes.add("type");
+        }
+        if (filter.getControllerId() != null) {
+            filterAttributes.add("controllerId");
+        }
+        if (filter.getCommitId() != null) {
+            filterAttributes.add("commitId");
+        }
+        if (filter.getVersion() != null) {
+            filterAttributes.add("version");
+        }
+        if (filter.getOperation() != null) {
+            filterAttributes.add("operation");
+        }
+        if (filter.getState() != null) {
+            filterAttributes.add("state");
+        }
+        if (filter.getDeploymentDate() != null) {
+            filterAttributes.add("deploymentDate");
+        }
+        if (filter.getDeleteDate() != null) {
+            filterAttributes.add("deleteDate");
+        }
+        if (filter.getFrom() != null) {
+            filterAttributes.add("from");
+        }
+        if (filter.getTo() != null) {
+            filterAttributes.add("to");
+        }
+        return filterAttributes;
+    }
+
 }
