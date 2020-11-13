@@ -36,7 +36,7 @@ import js7.data.order.Order;
 import js7.data.order.OrderId;
 import js7.data.workflow.WorkflowPath;
 import js7.proxy.javaapi.data.command.JCancelMode;
-import js7.proxy.javaapi.data.command.JSuspendMode;
+//import js7.proxy.javaapi.data.command.JSuspendMode;
 import js7.proxy.javaapi.data.controller.JControllerState;
 import js7.proxy.javaapi.data.order.JOrder;
 import js7.proxy.javaapi.data.workflow.JWorkflowId;
@@ -184,13 +184,14 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             return ControllerApi.of(modifyOrders.getJobschedulerId()).resumeOrders(oIds, position);
         case SUSPEND:
             //TODO position! Why JWorkflowPosition instead JPosition?
-            JSuspendMode suspendMode = null;
-            if (modifyOrders.getKill() == Boolean.TRUE) {
-                suspendMode = JSuspendMode.kill(true);
-            } else {
-                suspendMode = JSuspendMode.kill();
-            }
-            return ControllerApi.of(modifyOrders.getJobschedulerId()).suspendOrders(oIds, suspendMode);
+//            JSuspendMode suspendMode = null;
+//            if (modifyOrders.getKill() == Boolean.TRUE) {
+//                suspendMode = JSuspendMode.kill(true);
+//            } else {
+//                suspendMode = JSuspendMode.kill();
+//            }
+//            return ControllerApi.of(modifyOrders.getJobschedulerId()).suspendOrders(oIds, suspendMode);
+            return ControllerApi.of(modifyOrders.getJobschedulerId()).suspendOrders(oIds);
         default: //case REMOVE_WHEN_TERMINATED
             return ControllerApi.of(modifyOrders.getJobschedulerId()).removeOrdersWhenTerminated(oIds);
         }

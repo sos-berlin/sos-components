@@ -8,12 +8,12 @@
     "com.sos.joc.model.common.IDeployObject"
   ],
   "required": [
-    "name",
+    "path",
     "uri"
   ],
   "propertyOrder": [
     "TYPE",
-    "name",
+    "path",
     "uri"
   ],
   

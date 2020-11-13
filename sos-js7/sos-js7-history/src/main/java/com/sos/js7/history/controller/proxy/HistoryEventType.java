@@ -3,7 +3,7 @@ package com.sos.js7.history.controller.proxy;
 import java.util.HashMap;
 import java.util.Map;
 
-import js7.controller.data.events.AgentRefStateEvent.AgentReady;
+import js7.controller.data.events.ControllerAgentEvent.AgentReady;
 import js7.controller.data.events.ControllerEvent.ControllerReady;
 import js7.data.order.OrderEvent.OrderAdded;
 import js7.data.order.OrderEvent.OrderCancelled$;

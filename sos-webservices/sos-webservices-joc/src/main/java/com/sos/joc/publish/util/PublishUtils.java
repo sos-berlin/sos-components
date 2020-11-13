@@ -84,7 +84,6 @@ import com.sos.joc.model.pgp.JocKeyType;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
-import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignaturePath;
 import com.sos.joc.publish.common.JSObjectFileExtension;
@@ -95,6 +94,7 @@ import io.vavr.control.Either;
 import js7.base.crypt.SignedString;
 import js7.base.crypt.SignerId;
 import js7.base.problem.Problem;
+import js7.data.agent.AgentRefPath;
 import js7.data.item.VersionId;
 import js7.data.workflow.WorkflowPath;
 import js7.proxy.javaapi.data.item.JUpdateRepoOperation;
@@ -566,7 +566,7 @@ public abstract class PublishUtils {
                     updateRepoOperations.add(JUpdateRepoOperation.delete(WorkflowPath.of(toDelete.getPath())));
                     break;
                 case AGENTREF:
-                    //updateRepoOperations.add(JUpdateRepoOperation.delete(AgentName.of(toDelete.getPath())));
+                    updateRepoOperations.add(JUpdateRepoOperation.delete(AgentRefPath.of(toDelete.getPath())));
                     break;
                 case JOBCLASS:
                     // TODO:
@@ -615,7 +615,7 @@ public abstract class PublishUtils {
                     updateRepoOperations.add(JUpdateRepoOperation.delete(WorkflowPath.of(toDelete.getPath())));
                     break;
                 case AGENTREF:
-                    //updateRepoOperations.add(JUpdateRepoOperation.delete(AgentName.of(toDelete.getPath())));
+                    updateRepoOperations.add(JUpdateRepoOperation.delete(AgentRefPath.of(toDelete.getPath())));
                     break;
                 case JOBCLASS:
                     // TODO:
