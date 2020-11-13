@@ -67,10 +67,10 @@
 <tr>
 <td>``deployType``</td>
 <td>optional, string</td>
-<td>Type of the deployed object. Available types are WORKFLOW, JOBCLASS, AGENTREF, LOCK, JUNCTION.</td>
+<td>Type of the deployed object. Available types are Workflow, JobClass, AgentRef, Lock, Junction.</td>
 <td>
   <div>{</div>
-  <div style="padding-left:10px;">"deployType": "WORKFLOW"</div>
+  <div style="padding-left:10px;">"deployType": "Workflow"</div>
   <div>}</div>
 </td>
 <td></td>
