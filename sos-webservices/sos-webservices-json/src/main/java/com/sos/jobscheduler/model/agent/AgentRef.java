@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.common.IDeployObject;
-
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -23,12 +22,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
-    "path",
-    "versionId",
+    "name",
     "uri",
+    "path",
     "maxProcesses",
-    "documentationId",
-    "title"
+    "title",
+    "versionId"
 })
 public class AgentRef implements IConfigurationObject, IDeployObject
 {
@@ -45,7 +44,6 @@ public class AgentRef implements IConfigurationObject, IDeployObject
      * path
      * <p>
      * absolute path of a JobScheduler object.
-     * (Required)
      * 
      */
     @JsonProperty("path")
@@ -55,10 +53,11 @@ public class AgentRef implements IConfigurationObject, IDeployObject
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
-    @JsonProperty("versionId")
-    private String versionId;
+    @JsonProperty("name")
+    private String name;
     /**
      * string without < and >
      * <p>
@@ -76,22 +75,10 @@ public class AgentRef implements IConfigurationObject, IDeployObject
      */
     @JsonProperty("maxProcesses")
     private Integer maxProcesses;
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("documentationId")
-    private Long documentationId;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("title")
     private String title;
+    @JsonProperty("versionId")
+    private String versionId;
 
     /**
      * No args constructor for use in serialization
@@ -105,19 +92,19 @@ public class AgentRef implements IConfigurationObject, IDeployObject
      * @param maxProcesses
      * @param path
      * @param versionId
-     * @param documentationId
+     * @param name
      * 
      * @param title
      * @param uri
      */
-    public AgentRef(String path, String versionId, String uri, Integer maxProcesses, Long documentationId, String title) {
+    public AgentRef(String path, String name, String uri, Integer maxProcesses, String title, String versionId) {
         super();
         this.path = path;
-        this.versionId = versionId;
+        this.name = name;
         this.uri = uri;
         this.maxProcesses = maxProcesses;
-        this.documentationId = documentationId;
         this.title = title;
+        this.versionId = versionId;
     }
 
     /**
@@ -135,7 +122,6 @@ public class AgentRef implements IConfigurationObject, IDeployObject
      * path
      * <p>
      * absolute path of a JobScheduler object.
-     * (Required)
      * 
      */
     @JsonProperty("path")
@@ -147,7 +133,6 @@ public class AgentRef implements IConfigurationObject, IDeployObject
      * path
      * <p>
      * absolute path of a JobScheduler object.
-     * (Required)
      * 
      */
     @JsonProperty("path")
@@ -159,22 +144,24 @@ public class AgentRef implements IConfigurationObject, IDeployObject
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
-    @JsonProperty("versionId")
-    public String getVersionId() {
-        return versionId;
+    @JsonProperty("name")
+    public String getName() {
+        return name;
     }
 
     /**
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
-    @JsonProperty("versionId")
-    public void setVersionId(String versionId) {
-        this.versionId = versionId;
+    @JsonProperty("name")
+    public void setName(String name) {
+        this.name = name;
     }
 
     /**
@@ -223,58 +210,34 @@ public class AgentRef implements IConfigurationObject, IDeployObject
         this.maxProcesses = maxProcesses;
     }
 
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("documentationId")
-    public Long getDocumentationId() {
-        return documentationId;
-    }
-
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("documentationId")
-    public void setDocumentationId(Long documentationId) {
-        this.documentationId = documentationId;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("title")
     public String getTitle() {
         return title;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("title")
     public void setTitle(String title) {
         this.title = title;
     }
 
+    @JsonProperty("versionId")
+    public String getVersionId() {
+        return versionId;
+    }
+
+    @JsonProperty("versionId")
+    public void setVersionId(String versionId) {
+        this.versionId = versionId;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("versionId", versionId).append("uri", uri).append("maxProcesses", maxProcesses).append("documentationId", documentationId).append("title", title).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("name", name).append("uri", uri).append("maxProcesses", maxProcesses).append("title", title).append("versionId", versionId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(maxProcesses).append(path).append(versionId).append(documentationId).append(tYPE).append(title).append(uri).toHashCode();
+        return new HashCodeBuilder().append(maxProcesses).append(path).append(versionId).append(name).append(tYPE).append(title).append(uri).toHashCode();
     }
 
     @Override
@@ -286,7 +249,7 @@ public class AgentRef implements IConfigurationObject, IDeployObject
             return false;
         }
         AgentRef rhs = ((AgentRef) other);
-        return new EqualsBuilder().append(maxProcesses, rhs.maxProcesses).append(path, rhs.path).append(versionId, rhs.versionId).append(documentationId, rhs.documentationId).append(tYPE, rhs.tYPE).append(title, rhs.title).append(uri, rhs.uri).isEquals();
+        return new EqualsBuilder().append(maxProcesses, rhs.maxProcesses).append(path, rhs.path).append(versionId, rhs.versionId).append(name, rhs.name).append(tYPE, rhs.tYPE).append(title, rhs.title).append(uri, rhs.uri).isEquals();
     }
 
 }

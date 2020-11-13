@@ -10,6 +10,8 @@ import javax.ws.rs.Path;
 
 import com.sos.jobscheduler.model.cluster.ClusterState;
 import com.sos.jobscheduler.model.cluster.ClusterType;
+import com.sos.jobscheduler.model.cluster.IdToUri;
+import com.sos.jobscheduler.model.command.ClusterAppointNodes;
 import com.sos.jobscheduler.model.command.ClusterSwitchOver;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -28,16 +30,20 @@ import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
+import js7.base.web.Uri;
+import js7.data.cluster.ClusterSetting.Watch;
+import js7.data.node.NodeId;
 
 @Path("jobscheduler")
 public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResourceImpl implements IJobSchedulerResourceModifyJobSchedulerCluster {
 
-    private static String API_CALL = "./jobscheduler/cluster/switchover";
+    private static String API_CALL_SWITCHOVER = "./jobscheduler/cluster/switchover";
+    private static String API_CALL_APPOINT_NODES = "./jobscheduler/cluster/switchover";
 
     @Override
     public JOCDefaultResponse postJobschedulerSwitchOver(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            initLogging(API_CALL_SWITCHOVER, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter urlParameter = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
 
@@ -68,13 +74,62 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
             }
 
             // ask for active node is not necessary with ControllerApi
-            try {
-                Either<Problem, String> response = ControllerApi.of(urlParameter.getJobschedulerId()).executeCommandJson(Globals.objectMapper
-                        .writeValueAsString(new ClusterSwitchOver())).get(Globals.httpSocketTimeout, TimeUnit.MILLISECONDS);
-                ProblemHelper.throwProblemIfExist(response);
-            } catch (TimeoutException e) {
+//            try {
+//                Either<Problem, String> response = ControllerApi.of(urlParameter.getJobschedulerId()).executeCommandJson(Globals.objectMapper
+//                        .writeValueAsString(new ClusterSwitchOver())).get(Globals.httpSocketTimeout, TimeUnit.MILLISECONDS);
+//                ProblemHelper.throwProblemIfExist(response);
+//            } catch (TimeoutException e) {
+//            }
+            ControllerApi.of(urlParameter.getJobschedulerId()).executeCommandJson(Globals.objectMapper.writeValueAsString(new ClusterSwitchOver()))
+                    .thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, urlParameter.getJobschedulerId()));
+
+            storeAuditLogEntry(jobschedulerAudit);
+
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
+    
+    @Override
+    public JOCDefaultResponse postJobschedulerAppointNodes(String accessToken, byte[] filterBytes) {
+        try {
+            initLogging(API_CALL_APPOINT_NODES, filterBytes, accessToken);
+            JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
+            UrlParameter urlParameter = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
+            // TODO permissions
+            boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken).getJS7ControllerCluster().getExecute()
+                    .isSwitchOver();
+
+            JOCDefaultResponse jocDefaultResponse = initPermissions(urlParameter.getJobschedulerId(), permission);
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
             }
 
+            checkRequiredComment(urlParameter.getAuditLog());
+            ModifyJobSchedulerClusterAudit jobschedulerAudit = new ModifyJobSchedulerClusterAudit(urlParameter);
+            logAuditMessage(jobschedulerAudit);
+
+            // ask for cluster
+            List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(urlParameter.getJobschedulerId());
+            if (controllerInstances == null || controllerInstances.size() < 2) { // is not cluster
+                throw new JobSchedulerBadRequestException("There is no cluster configured with the Id: " + urlParameter.getJobschedulerId());
+            }
+
+            ClusterAppointNodes command = new ClusterAppointNodes();
+            command.setActiveId("Primary");
+            IdToUri idToUri = new IdToUri();
+            for (DBItemInventoryJSInstance inst : controllerInstances) {
+                idToUri.getAdditionalProperties().put(inst.getIsPrimary() ? "Primary" : "StandBy", inst.getClusterUri());
+            }
+            command.setIdToUri(idToUri);
+            command.setClusterWatches(null); // TODO Clusterwatcher from DB
+            //ControllerApi.of(urlParameter.getJobschedulerId()).clusterAppointNodes(idToUri, activeId, clusterWatches)
+            ControllerApi.of(urlParameter.getJobschedulerId()).executeCommandJson(Globals.objectMapper.writeValueAsString(command)).thenAccept(
+                    e -> ProblemHelper.postProblemEventIfExist(e, urlParameter.getJobschedulerId()));
             storeAuditLogEntry(jobschedulerAudit);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

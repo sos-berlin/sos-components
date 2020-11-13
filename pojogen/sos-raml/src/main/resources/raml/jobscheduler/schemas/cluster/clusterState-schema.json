@@ -34,14 +34,7 @@
         "clusterWatches": {
           "type": "array",
           "items": {
-        	"type": "object",
-      		"javaType": "com.sos.jobscheduler.model.cluster.ClusterWatcher",
-      		"properties": {
-      		  "uri": {
-      		    "type": "string"
-      		  }
-      		},
-      		"additionalProperties": false
+        	"$ref": "clusterWatcher-schema.json"
           }
         },
         "timing": {

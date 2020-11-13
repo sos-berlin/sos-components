@@ -1,0 +1,25 @@
+{
+  "title": "agent update params",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.joc.model.agent.UpdateParameter",
+  "type": "object",
+  "required": [
+  	"controllerId",
+  	"agentRefs"
+  ],
+  "properties": {
+    "controllerId": {
+      "$ref": "../common/filename100-schema.json"
+    },
+    "agentRefs": {
+    	"type": "array",
+    	"minItems": 1,
+    	"items": {
+    		"$ref": "../../../jobscheduler/schemas/agent/agentRef-schema.json"
+    	}
+    },
+    "auditLog": {
+      "$ref": "../audit/auditParams-schema.json"
+    }
+  }
+}

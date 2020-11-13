@@ -8,13 +8,12 @@
     "com.sos.joc.model.common.IDeployObject"
   ],
   "required": [
-    "path",
+    "name",
     "uri"
   ],
   "propertyOrder": [
     "TYPE",
-    "path",
-    "versionId",
+    "name",
     "uri"
   ],
   
@@ -27,7 +26,7 @@
     "path": {
       "$ref": "../../../joc/schemas/common/path-schema.json"
     },
-    "versionId": {
+    "name": {
       "$ref": "../../../joc/schemas/common/string255-schema.json"
     },
     "uri": {
@@ -36,10 +35,10 @@
     "maxProcesses": {
       "$ref": "../../../joc/schemas/common/nonNegativeInteger-schema.json"
     },
-    "documentationId": {
-      "$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
-    },
     "title": {
+      "type": "string"
+    },
+    "versionId": {
       "$ref": "../../../joc/schemas/common/string255-schema.json"
     }
   },

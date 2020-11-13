@@ -15,5 +15,11 @@ public interface IJobSchedulerResourceModifyJobSchedulerCluster {
     @Consumes("application/json")
     @Produces({ "application/json" })
     public JOCDefaultResponse postJobschedulerSwitchOver(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
+    @POST
+    @Path("cluster/appoint_nodes")
+    @Consumes("application/json")
+    @Produces({ "application/json" })
+    public JOCDefaultResponse postJobschedulerAppointNodes(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 
 }
