@@ -3,8 +3,6 @@ package com.sos.joc.jobscheduler.impl;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.ws.rs.Path;
 
@@ -28,17 +26,12 @@ import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceModifyJobScheduler
 import com.sos.joc.model.jobscheduler.UrlParameter;
 import com.sos.schema.JsonValidator;
 
-import io.vavr.control.Either;
-import js7.base.problem.Problem;
-import js7.base.web.Uri;
-import js7.data.cluster.ClusterSetting.Watch;
-import js7.data.node.NodeId;
 
 @Path("jobscheduler")
 public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResourceImpl implements IJobSchedulerResourceModifyJobSchedulerCluster {
 
     private static String API_CALL_SWITCHOVER = "./jobscheduler/cluster/switchover";
-    private static String API_CALL_APPOINT_NODES = "./jobscheduler/cluster/switchover";
+    private static String API_CALL_APPOINT_NODES = "./jobscheduler/cluster/appoint_nodes";
 
     @Override
     public JOCDefaultResponse postJobschedulerSwitchOver(String accessToken, byte[] filterBytes) {

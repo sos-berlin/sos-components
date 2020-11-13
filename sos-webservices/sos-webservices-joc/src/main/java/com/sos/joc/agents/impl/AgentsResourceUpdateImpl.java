@@ -18,7 +18,7 @@ import com.sos.joc.model.agent.UpdateParameter;
 import com.sos.schema.JsonValidator;
 
 import js7.base.web.Uri;
-import js7.data.agent.AgentName;
+//import js7.data.agent.AgentName;
 import js7.data.agent.AgentRef;
 import js7.proxy.javaapi.data.agent.JAgentRef;
 
@@ -46,10 +46,10 @@ public class AgentsResourceUpdateImpl extends JOCResourceImpl implements IAgents
             // ModifyJobSchedulerClusterAudit jobschedulerAudit = new ModifyJobSchedulerClusterAudit(urlParameter);
             // logAuditMessage(jobschedulerAudit);
 
-            List<JAgentRef> agentRefs = urlParameter.getAgentRefs().stream().map(a -> JAgentRef.apply(AgentRef.apply(AgentName.of(a.getName()), Uri
-                    .of(a.getUri())))).collect(Collectors.toList());
-            ControllerApi.of(urlParameter.getControllerId()).updateAgentRefs(agentRefs).thenAccept(e -> ProblemHelper
-                    .postProblemEventIfExist(e, urlParameter.getControllerId()));
+//            List<JAgentRef> agentRefs = urlParameter.getAgentRefs().stream().map(a -> JAgentRef.apply(AgentRef.apply(AgentName.of(a.getName()), Uri
+//                    .of(a.getUri())))).collect(Collectors.toList());
+//            ControllerApi.of(urlParameter.getControllerId()).updateAgentRefs(agentRefs).thenAccept(e -> ProblemHelper
+//                    .postProblemEventIfExist(e, urlParameter.getControllerId()));
 
             // storeAuditLogEntry(jobschedulerAudit);
 
