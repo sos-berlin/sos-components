@@ -24,7 +24,6 @@ import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.jobscheduler.model.agent.AgentRefPublish;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.WorkflowPublish;
-import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDepCommitIds;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
@@ -39,12 +38,15 @@ import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DeploymentState;
+import com.sos.joc.model.publish.ExcludeConfiguration;
 import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
+import com.sos.joc.model.publish.ReDeployFilter;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.publish.common.JSObjectFileExtension;
+import com.sos.joc.publish.mapper.FilterAttributesMapper;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.util.PublishUtils;
 
@@ -605,6 +607,35 @@ public class DBLayerDeploy {
         return depHistoryFailed;
     }
     
+    public List<DBItemDeploymentHistory> updateFailedDeploymentForUpdate(
+            List<DBItemDeploymentHistory> reDeployables, String controllerId, String account, String errorMessage) {
+        List<DBItemDeploymentHistory> depHistoryFailed = new ArrayList<DBItemDeploymentHistory>();
+        if (reDeployables != null) {
+            for (DBItemDeploymentHistory deploy : reDeployables) {
+                deploy.setId(null);
+                deploy.setAccount(account);
+                Long controllerInstanceId = 0L;
+                try {
+                    controllerInstanceId = getController(controllerId).getId();
+                } catch (SOSHibernateException e) {
+                    continue;
+                }
+                deploy.setControllerInstanceId(controllerInstanceId);
+                deploy.setControllerId(controllerId);
+                deploy.setState(DeploymentState.NOT_DEPLOYED.value());
+                deploy.setDeploymentDate(Date.from(Instant.now()));
+                deploy.setErrorMessage(errorMessage);
+                try {
+                    session.save(deploy);
+                } catch (SOSHibernateException e) {
+                    throw new JocSosHibernateException(e);
+                }
+                depHistoryFailed.add(deploy);
+            } 
+        }
+        return depHistoryFailed;
+    }
+    
     public List<DBItemDeploymentHistory> updateFailedDeploymentForUpdate(Map<DBItemInventoryConfiguration, JSObject> importedObjects,
             String controllerId, String account, String versionId, String errorMessage) {
         List<DBItemDeploymentHistory> depHistoryFailed;
@@ -876,7 +907,7 @@ public class DBLayerDeploy {
         return folder;
     }
     public List<DBItemDeploymentHistory> getDeploymentHistory(ShowDepHistoryFilter filter) throws SOSHibernateException {
-        Set<String> presentFilterAttributes = extractDefaultShowDepHistoryFilterAttributes(filter);
+        Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter);
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
         hql.append(
                 presentFilterAttributes.stream()
@@ -895,96 +926,53 @@ public class DBLayerDeploy {
             switch (item) {
             case "from":
             case "to":
-                query.setParameter(item + "Date", getValueByFilterAttribute(filter, item), TemporalType.TIMESTAMP);
+                query.setParameter(item + "Date", FilterAttributesMapper.getValueByFilterAttribute(filter, item), TemporalType.TIMESTAMP);
                 break;
             case "deploymentDate":
             case "deleteDate":
-                query.setParameter(item, getValueByFilterAttribute(filter, item), TemporalType.TIMESTAMP);
+                query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter, item), TemporalType.TIMESTAMP);
                 break;
             default:
-                query.setParameter(item, getValueByFilterAttribute(filter, item));
+                query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter, item));
                 break;
             }
         });
         return getSession().getResultList(query);
     }
     
-    private Object getValueByFilterAttribute (ShowDepHistoryFilter filter, String attribute) {
-        switch(attribute) {
-            case "account":
-                return filter.getAccount();
-            case "path":
-                return filter.getPath();
-            case "folder":
-                return filter.getFolder();
-            case "type":
-                return DeployType.fromValue(filter.getDeployType()).intValue();
-            case "controllerId":
-                return filter.getControllerId();
-            case "commitId":
-                return filter.getCommitId();
-            case "version":
-                return filter.getVersion();
-            case "operation":
-                return OperationType.valueOf(filter.getOperation()).value();
-            case "state":
-                return DeploymentState.valueOf(filter.getState()).value();
-            case "deploymentDate":
-                return filter.getDeploymentDate();
-            case "deleteDate":
-                return filter.getDeleteDate();
-            case "from":
-                return JobSchedulerDate.getDateFrom(filter.getFrom(), filter.getTimeZone());
-            case "to":
-                return JobSchedulerDate.getDateTo(filter.getTo(), filter.getTimeZone());
-            case "timeZone":
-                return filter.getTimeZone();
+    public List<DBItemDeploymentHistory> getDeploymentsToReDeploy(ReDeployFilter filter) throws SOSHibernateException {
+        Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter);
+        List<DBItemDeploymentHistory> dbItems = new ArrayList<DBItemDeploymentHistory>();
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+        hql.append(
+                presentFilterAttributes.stream()
+                .map(item -> {
+                    if("folder".equals(item)) {
+                        return item + " like :" + item;
+                    } else {
+                        return item + " = :" + item;
+                    }
+                })
+                .collect(Collectors.joining(" and ", " where ", "")));
+        Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
+        presentFilterAttributes.stream().forEach(item -> query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter, item)));
+        dbItems = query.getResultList();
+        Set<DBItemDeploymentHistory> excludes = new HashSet<DBItemDeploymentHistory>();
+        // remove excludes from result list
+        if (filter.getExcludes() != null && !filter.getExcludes().isEmpty()) {
+            for (ExcludeConfiguration exclude : filter.getExcludes()) {
+                excludes.addAll(
+                        dbItems.stream().map(item -> {
+                            if(item.getPath().equals(exclude.getPath()) && DeployType.fromValue(item.getType()).equals(exclude.getDeployType())) {
+                                return item;
+                            }
+                            return null;
+                        }).collect(Collectors.toSet())
+                );
+            }
         }
-        return null;
-    }
-
-    private Set<String> extractDefaultShowDepHistoryFilterAttributes (ShowDepHistoryFilter filter) {
-        Set<String> filterAttributes = new HashSet<String>();
-        if (filter.getAccount() != null) {
-            filterAttributes.add("account");
-        }
-        if (filter.getPath() != null) {
-            filterAttributes.add("path");
-        }
-        if (filter.getFolder() != null) {
-            filterAttributes.add("folder");
-        }
-        if (filter.getDeployType() != null) {
-            filterAttributes.add("type");
-        }
-        if (filter.getControllerId() != null) {
-            filterAttributes.add("controllerId");
-        }
-        if (filter.getCommitId() != null) {
-            filterAttributes.add("commitId");
-        }
-        if (filter.getVersion() != null) {
-            filterAttributes.add("version");
-        }
-        if (filter.getOperation() != null) {
-            filterAttributes.add("operation");
-        }
-        if (filter.getState() != null) {
-            filterAttributes.add("state");
-        }
-        if (filter.getDeploymentDate() != null) {
-            filterAttributes.add("deploymentDate");
-        }
-        if (filter.getDeleteDate() != null) {
-            filterAttributes.add("deleteDate");
-        }
-        if (filter.getFrom() != null) {
-            filterAttributes.add("from");
-        }
-        if (filter.getTo() != null) {
-            filterAttributes.add("to");
-        }
-        return filterAttributes;
+        dbItems.removeAll(excludes);
+        return dbItems;
     }
 
 }

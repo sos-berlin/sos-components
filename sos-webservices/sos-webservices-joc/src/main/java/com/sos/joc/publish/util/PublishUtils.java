@@ -94,7 +94,6 @@ import io.vavr.control.Either;
 import js7.base.crypt.SignedString;
 import js7.base.crypt.SignerId;
 import js7.base.problem.Problem;
-import js7.data.agent.AgentRefPath;
 import js7.data.item.VersionId;
 import js7.data.workflow.WorkflowPath;
 import js7.proxy.javaapi.data.item.JUpdateRepoOperation;
@@ -600,9 +599,6 @@ public abstract class PublishUtils {
                 case WORKFLOW:
                     updateRepoOperations.add(JUpdateRepoOperation.delete(WorkflowPath.of(toDelete.getPath())));
                     break;
-                case AGENTREF:
-                    updateRepoOperations.add(JUpdateRepoOperation.delete(AgentRefPath.of(toDelete.getPath())));
-                    break;
                 case JOBCLASS:
                     // TODO:
                 case LOCK:
@@ -648,9 +644,6 @@ public abstract class PublishUtils {
                 switch (DeployType.fromValue(toDelete.getType())) {
                 case WORKFLOW:
                     updateRepoOperations.add(JUpdateRepoOperation.delete(WorkflowPath.of(toDelete.getPath())));
-                    break;
-                case AGENTREF:
-                    updateRepoOperations.add(JUpdateRepoOperation.delete(AgentRefPath.of(toDelete.getPath())));
                     break;
                 case JOBCLASS:
                     // TODO:
@@ -797,6 +790,29 @@ public abstract class PublishUtils {
                 // TODO: get Version to set here
                 redeployed.setVersion(null);
                 redeployed.setCommitId(versionId);
+                redeployed.setControllerId(controllerId);
+                redeployed.setControllerInstanceId(controllerInstance.getId());
+                redeployed.setDeploymentDate(deploymentDate);
+                redeployed.setOperation(OperationType.UPDATE.value());
+                redeployed.setState(DeploymentState.DEPLOYED.value());
+                dbLayerDeploy.getSession().save(redeployed);
+                deployedObjects.add(redeployed);
+            }
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+        return deployedObjects;
+    }
+
+    public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToRedeployed(
+            List<DBItemDeploymentHistory> redeployedItems, String account, DBLayerDeploy dbLayerDeploy, String controllerId, Date deploymentDate) {
+        Set<DBItemDeploymentHistory> deployedObjects;
+        try {
+            DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
+            deployedObjects = new HashSet<DBItemDeploymentHistory>();
+            for (DBItemDeploymentHistory redeployed : redeployedItems) {
+                redeployed.setId(null);
+                redeployed.setAccount(account);
                 redeployed.setControllerId(controllerId);
                 redeployed.setControllerInstanceId(controllerInstance.getId());
                 redeployed.setDeploymentDate(deploymentDate);
