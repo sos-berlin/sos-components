@@ -33,6 +33,7 @@ import com.sos.joc.db.history.DBItemHistoryAgent;
 import com.sos.joc.db.history.DBItemHistoryController;
 import com.sos.joc.db.history.DBItemHistoryLog;
 import com.sos.joc.db.history.DBItemHistoryOrder;
+import com.sos.joc.db.history.DBItemHistoryOrderState;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.model.inventory.common.JobCriticality;
@@ -49,6 +50,7 @@ import com.sos.js7.history.controller.proxy.fatevent.FatEventControllerReady;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderAdded;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderForked;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderJoined;
+import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderResumed;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStepProcessed;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStepStarted;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStepStdWritten;
@@ -219,6 +221,9 @@ public class HistoryModel {
                 case OrderAdded:
                     orderAdded(dbLayer, (FatEventOrderAdded) entry);
                     break;
+                case OrderResumed:
+                    orderResumed(dbLayer, (FatEventOrderResumed) entry);
+                    break;
                 case OrderForked:
                     orderForked(dbLayer, (FatEventOrderForked) entry);
                     break;
@@ -238,7 +243,10 @@ public class HistoryModel {
                     orderStepProcessed(dbLayer, (FatEventOrderStepProcessed) entry, endedOrderSteps);
                     break;
                 case OrderFailed:
-                    orderFailed(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderFailed, endedOrderSteps);
+                    orderNotCompleted(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderFailed, endedOrderSteps);
+                    break;
+                case OrderSuspended:
+                    orderNotCompleted(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderSuspended, endedOrderSteps);
                     break;
                 case OrderCancelled:
                     orderProcessed(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderCancelled, endedOrderSteps);
@@ -471,6 +479,7 @@ public class HistoryModel {
             item.setState(OrderStateText.PENDING);
             item.setStateTime(entry.getEventDatetime());
             item.setStateText(null);// TODO
+            item.setHasStates(false);
 
             item.setError(false);
             item.setErrorState(null);
@@ -526,8 +535,8 @@ public class HistoryModel {
         orderUpdate(dbLayer, eventType, entry.getEventId(), entry.getOrderId(), entry.getEventDatetime(), entry.getOutcome(), endedOrderSteps, true);
     }
 
-    private void orderFailed(DBLayerHistory dbLayer, AFatEventOrderProcessed entry, EventType eventType, Map<String, CachedOrderStep> endedOrderSteps)
-            throws Exception {
+    private void orderNotCompleted(DBLayerHistory dbLayer, AFatEventOrderProcessed entry, EventType eventType,
+            Map<String, CachedOrderStep> endedOrderSteps) throws Exception {
         orderUpdate(dbLayer, eventType, entry.getEventId(), entry.getOrderId(), entry.getEventDatetime(), entry.getOutcome(), endedOrderSteps, false);
     }
 
@@ -556,14 +565,36 @@ public class HistoryModel {
                 errorText = cos.getStdErr();
             }
             Date startTime = null;
-            if (EventType.OrderCancelled.equals(eventType)) {
-                if (SOSDate.equals(co.getStartTime(), Globals.HISTORY_DEFAULT_DATE)) {
-                    startTime = endTime;
-                }
+            String startEventId = null;
+            switch (eventType) {
+            case OrderFailed:
+                co.setHasStates(true);
+                break;
+            case OrderCancelled:
+                co.setHasStates(true);
+                // if (SOSDate.equals(co.getStartTime(), Globals.HISTORY_DEFAULT_DATE)) {
+                // startTime = endTime;
+                // startEventId = endEventId;
+                // }
+                break;
+            case OrderSuspended:
+                co.setHasStates(true);
+                // if (SOSDate.equals(co.getStartTime(), Globals.HISTORY_DEFAULT_DATE)) {
+                // startTime = eventDate;
+                // startEventId = String.valueOf(eventId);
+                // }
+                break;
+            default:
+                break;
+            }
+            dbLayer.setOrderEnd(co.getId(), endTime, endWorkflowPosition, endOrderStepId, endEventId, le.getState(), eventDate, le.isError(), le
+                    .getErrorState(), le.getErrorReason(), le.getReturnCode(), le.getErrorCode(), errorText, startTime, startEventId);
+
+            // if (!EventType.OrderFinished.equals(eventType) && co.getHasStates()) {
+            if (co.getHasStates()) {
+                saveOrderState(dbLayer, co, le.getState(), eventDate, eventId, le.getErrorCode(), errorText);
             }
 
-            dbLayer.setOrderEnd(co.getId(), endTime, endWorkflowPosition, endOrderStepId, endEventId, le.getState(), eventDate, le.isError(), le
-                    .getErrorState(), le.getErrorReason(), le.getReturnCode(), le.getErrorCode(), errorText, startTime);
             le.onOrder(co, co.getWorkflowPosition());
             Path logFile = storeLog2File(le);
             if (completeOrder && co.getParentId().longValue() == 0L) {
@@ -649,9 +680,16 @@ public class HistoryModel {
             le.setLogLevel(LogLevel.ERROR);
             break;
         case OrderCancelled:
-        case OrderBroken:
             le.setState(OrderStateText.CANCELLED.intValue());
-            le.setLogLevel(LogLevel.ERROR);
+            le.setLogLevel(LogLevel.MAIN);
+            break;
+        case OrderSuspended:
+            le.setState(OrderStateText.SUSPENDED.intValue());
+            le.setLogLevel(LogLevel.MAIN);
+            break;
+        case OrderResumed:
+            le.setState(OrderStateText.RESUMED.intValue());
+            le.setLogLevel(LogLevel.MAIN);
             break;
         case OrderFinished:
             if (le.isError()) {// TODO ??? error on order_finished ???
@@ -659,7 +697,7 @@ public class HistoryModel {
                 le.setLogLevel(LogLevel.ERROR);
             } else {
                 le.setState(OrderStateText.FINISHED.intValue());
-                le.setLogLevel(LogLevel.INFO);
+                le.setLogLevel(LogLevel.MAIN);
             }
             break;
         default:
@@ -668,11 +706,29 @@ public class HistoryModel {
                 le.setLogLevel(LogLevel.ERROR);
             } else {
                 le.setState(OrderStateText.FINISHED.intValue());
+                le.setLogLevel(LogLevel.MAIN);
             }
             break;
         }
 
         return le;
+    }
+
+    private void orderResumed(DBLayerHistory dbLayer, FatEventOrderResumed entry) throws Exception {
+        checkControllerTimezone(dbLayer);
+
+        CachedOrder co = getCachedOrder(dbLayer, entry.getOrderId());
+        co.setState(OrderStateText.RESUMED.intValue());
+        co.setStartTime(entry.getEventDatetime());
+        co.setHasStates(true);
+        // addCachedOrder(co.getOrderKey(), co);
+
+        dbLayer.updateOrderOnResumed(co.getId(), co.getStartTime(), co.getState());
+        saveOrderState(dbLayer, co, co.getState(), co.getStartTime(), entry.getEventId(), null, null);
+
+        LogEntry le = new LogEntry(LogEntry.LogLevel.MAIN, EventType.OrderResumed, co.getStartTime(), null);
+        le.onOrder(co, null);
+        storeLog2File(le);
     }
 
     private void orderForked(DBLayerHistory dbLayer, FatEventOrderForked entry) throws Exception {
@@ -688,7 +744,7 @@ public class HistoryModel {
 
         String parentPosition = HistoryUtil.getPositionParentAsString(entry.getPosition());
         if (parentPosition != null && parentPosition.equals(co.getStartWorkflowPosition())) {
-            dbLayer.updateOrderOnFork(co.getId(), co.getStartTime(), co.getState());
+            dbLayer.updateOrderOnFork(co.getId(), co.getState(), co.getStartTime(), String.valueOf(entry.getEventId()));
         } else {
             dbLayer.updateOrderOnFork(co.getId(), co.getState());
         }
@@ -879,15 +935,20 @@ public class HistoryModel {
             if (item.getWorkflowPosition().equals(co.getStartWorkflowPosition())) {// + order.startTime != default
                 // ORDER START
                 co.setState(OrderStateText.RUNNING.intValue());
-                dbLayer.updateOrderOnOrderStep(co.getId(), item.getStartTime(), co.getState(), co.getCurrentOrderStepId(), new Date());
+                dbLayer.updateOrderOnOrderStep(co.getId(), item.getStartTime(), item.getStartEventId(), co.getState(), entry.getEventDatetime(), co
+                        .getCurrentOrderStepId());
 
-                LogEntry logEntry = new LogEntry(LogEntry.LogLevel.DETAIL, EventType.OrderStarted, HistoryUtil.getEventIdAsDate(entry.getEventId()),
+                if (co.getHasStates()) {
+                    saveOrderState(dbLayer, co, co.getState(), item.getStartTime(), entry.getEventId(), null, null);
+                }
+
+                LogEntry logEntry = new LogEntry(LogEntry.LogLevel.MAIN, EventType.OrderStarted, HistoryUtil.getEventIdAsDate(entry.getEventId()),
                         agentStartTime);
                 logEntry.onOrder(co, item.getWorkflowPosition());
                 logEntry.setAgentTimezone(ca.getTimezone());
                 storeLog2File(logEntry);
             } else {
-                dbLayer.updateOrderOnOrderStep(co.getId(), co.getCurrentOrderStepId(), new Date());
+                dbLayer.updateOrderOnOrderStep(co.getId(), co.getCurrentOrderStepId());
             }
             cos = new CachedOrderStep(item, ca.getTimezone());
             LogEntry le = new LogEntry(LogEntry.LogLevel.MAIN, EventType.OrderProcessingStarted, HistoryUtil.getEventIdAsDate(entry.getEventId()),
@@ -920,6 +981,21 @@ public class HistoryModel {
             }
             addCachedOrderStepByStartEventId(dbLayer, ca, entry.getOrderId(), String.valueOf(entry.getEventId()));
         }
+    }
+
+    private void saveOrderState(DBLayerHistory dbLayer, CachedOrder co, Integer state, Date stateDate, Long stateEventId, String stateCode,
+            String stateText) throws Exception {
+        DBItemHistoryOrderState item = new DBItemHistoryOrderState();
+        item.setMainParentId(co.getMainParentId());
+        item.setParentId(co.getParentId());
+        item.setOrderId(co.getId());
+        item.setState(state);
+        item.setStateTime(stateDate);
+        item.setStateEventId(String.valueOf(stateEventId));
+        item.setStateCode(stateCode);
+        item.setStateText(stateText);
+        item.setCreated(new Date());
+        dbLayer.getSession().save(item);
     }
 
     private void orderStepProcessed(DBLayerHistory dbLayer, FatEventOrderStepProcessed entry, Map<String, CachedOrderStep> endedOrderSteps)
@@ -1234,7 +1310,7 @@ public class HistoryModel {
         entry.setOrderId(logEntry.getOrderKey());
         entry.setLogLevel(logEntry.getLogLevel().name());
         entry.setLogEvent(logEntry.getEventType());
-        entry.setPosition(logEntry.getPosition());
+        entry.setPosition(SOSString.isEmpty(logEntry.getPosition()) ? null : logEntry.getPosition());
         entry.setReturnCode(logEntry.getReturnCode() == null ? null : logEntry.getReturnCode().longValue());// TODO change to Integer
         if (logEntry.isError()) {
             Error error = new Error();

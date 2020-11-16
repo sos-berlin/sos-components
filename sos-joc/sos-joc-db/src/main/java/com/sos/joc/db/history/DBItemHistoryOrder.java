@@ -14,6 +14,7 @@ import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.Type;
 
+import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.order.OrderStateText;
@@ -111,13 +112,17 @@ public class DBItemHistoryOrder extends DBItem {
     private Long endOrderStepId; // db. TABLE_HISTORY_ORDER_STEPS.ID
 
     @Column(name = "[STATE]", nullable = false)
-    private Integer state;// event. planned: planned, completed, cancelled, suspended...
+    private Integer state;
 
     @Column(name = "[STATE_TIME]", nullable = false)
     private Date stateTime;
 
     @Column(name = "[STATE_TEXT]", nullable = true)
-    private String stateText;// TODO
+    private String stateText;
+
+    @Column(name = "[HAS_STATES]", nullable = false)
+    @Type(type = "numeric_boolean")
+    private boolean hasStates;
 
     @Column(name = "[ERROR]", nullable = false)
     @Type(type = "numeric_boolean")
@@ -354,6 +359,9 @@ public class DBItemHistoryOrder extends DBItem {
     }
 
     public void setEndWorkflowPosition(String val) {
+        if (SOSString.isEmpty(val)) {
+            val = null;
+        }
         endWorkflowPosition = val;
     }
 
@@ -407,6 +415,14 @@ public class DBItemHistoryOrder extends DBItem {
         stateText = val;
     }
 
+    public void setHasStates(boolean val) {
+        hasStates = val;
+    }
+
+    public boolean getHasStates() {
+        return hasStates;
+    }
+
     public void setError(boolean val) {
         error = val;
     }
@@ -440,10 +456,7 @@ public class DBItemHistoryOrder extends DBItem {
     }
 
     public void setErrorCode(String val) {
-        if (val != null && val.length() > 50) {
-            val = val.substring(0, 50);
-        }
-        errorCode = val;
+        errorCode = normalizeValue(val, 50);
     }
 
     public String getErrorCode() {
@@ -451,10 +464,7 @@ public class DBItemHistoryOrder extends DBItem {
     }
 
     public void setErrorText(String val) {
-        if (val != null && val.length() > 255) {
-            val = val.substring(0, 255);
-        }
-        errorText = val;
+        errorText = normalizeValue(val, 255);
     }
 
     public String getErrorText() {

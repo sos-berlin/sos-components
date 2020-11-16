@@ -13,6 +13,7 @@ import js7.data.order.OrderEvent.OrderForked;
 import js7.data.order.OrderEvent.OrderJoined;
 import js7.data.order.OrderEvent.OrderProcessed;
 import js7.data.order.OrderEvent.OrderProcessingStarted$;
+import js7.data.order.OrderEvent.OrderResumed;
 import js7.data.order.OrderEvent.OrderStdoutWritten;
 import js7.data.order.OrderEvent.OrderStderrWritten;
 
@@ -32,6 +33,10 @@ public enum HistoryEventType {
     OrderCancelled(OrderCancelled$.class.getSimpleName()),
 
     OrderFailed(OrderFailed.class.getSimpleName()),
+
+    OrderSuspended("OrderSuspended$"), // TODO
+
+    OrderResumed(OrderResumed.class.getSimpleName()),
 
     OrderFinished(OrderFinished$.class.getSimpleName()),
 

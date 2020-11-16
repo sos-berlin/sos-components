@@ -15,6 +15,7 @@ import com.sos.joc.db.history.DBItemHistoryAgent;
 import com.sos.joc.db.history.DBItemHistoryController;
 import com.sos.joc.db.history.DBItemHistoryLog;
 import com.sos.joc.db.history.DBItemHistoryOrder;
+import com.sos.joc.db.history.DBItemHistoryOrderState;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.DBItemHistoryTempLog;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -74,9 +75,13 @@ public class DBLayer implements Serializable {
     public static final String TABLE_HISTORY_ORDERS = "HISTORY_ORDERS";
     public static final String TABLE_HISTORY_ORDERS_SEQUENCE = "SEQ_HISTORY_O";
 
+    public static final String DBITEM_HISTORY_ORDER_STATE = DBItemHistoryOrderState.class.getSimpleName();
+    public static final String TABLE_HISTORY_ORDER_STATES = "HISTORY_ORDER_STATES";
+    public static final String TABLE_HISTORY_ORDER_STATES_SEQUENCE = "SEQ_HISTORY_OSTATES";
+
     public static final String DBITEM_HISTORY_ORDER_STEP = DBItemHistoryOrderStep.class.getSimpleName();
     public static final String TABLE_HISTORY_ORDER_STEPS = "HISTORY_ORDER_STEPS";
-    public static final String TABLE_HISTORY_ORDER_STEPS_SEQUENCE = "SEQ_HISTORY_OS";
+    public static final String TABLE_HISTORY_ORDER_STEPS_SEQUENCE = "SEQ_HISTORY_OSTEPS";
 
     public static final String DBITEM_HISTORY_LOG = DBItemHistoryLog.class.getSimpleName();
     public static final String TABLE_HISTORY_LOGS = "HISTORY_LOGS";
@@ -193,6 +198,7 @@ public class DBLayer implements Serializable {
         SOSClassList cl = new SOSClassList();
         cl.add(DBItemJocVariable.class);
         cl.add(DBItemHistoryOrder.class);
+        cl.add(DBItemHistoryOrderState.class);
         cl.add(DBItemHistoryOrderStep.class);
         cl.add(DBItemHistoryLog.class);
         cl.add(DBItemHistoryTempLog.class);

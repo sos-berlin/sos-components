@@ -25,6 +25,7 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.common.HistoryStateText;
 import com.sos.joc.model.order.OrderHistoryFilter;
+import com.sos.joc.model.order.OrderStateText;
 
 public class JobHistoryDBLayer {
 
@@ -208,7 +209,7 @@ public class JobHistoryDBLayer {
         }
 
         if (orderLogs) {
-            where += and + " state != 'planned'";
+            where += and + " state > "+OrderStateText.PENDING.intValue();
             and = " and";
         }
 

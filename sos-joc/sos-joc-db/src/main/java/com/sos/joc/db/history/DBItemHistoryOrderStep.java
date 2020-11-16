@@ -385,10 +385,7 @@ public class DBItemHistoryOrderStep extends DBItem {
     }
 
     public void setErrorCode(String val) {
-        if (val != null && val.length() > 50) {
-            val = val.substring(0, 50);
-        }
-        errorCode = val;
+        errorCode = normalizeValue(val, 50);
     }
 
     public String getErrorCode() {
@@ -396,10 +393,7 @@ public class DBItemHistoryOrderStep extends DBItem {
     }
 
     public void setErrorText(String val) {
-        if (val != null && val.length() > 255) {
-            val = val.substring(0, 255);
-        }
-        errorText = val;
+        errorText = normalizeValue(val, 255);
     }
 
     public String getErrorText() {

@@ -1,5 +1,6 @@
 package com.sos.joc.db;
 
+import java.beans.Transient;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -62,6 +63,14 @@ public abstract class DBItem implements Serializable {
             }
         }
         return uniqueConstraintFieldNames;
+    }
+
+    @Transient
+    public String normalizeValue(String val, int maxLen) {
+        if (val != null && val.length() > maxLen) {
+            val = val.substring(0, maxLen);
+        }
+        return val;
     }
 
     @Override

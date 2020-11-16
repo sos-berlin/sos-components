@@ -43,10 +43,12 @@ import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderFailed;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderFinished;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderForked;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderJoined;
+import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderResumed;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStepProcessed;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStepStarted;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStepStdWritten;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStepStdWritten.StdType;
+import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderSuspended;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventWithProblem;
 import com.sos.js7.history.controller.proxy.fatevent.FatForkedChild;
 import com.sos.js7.history.controller.proxy.fatevent.FatOutcome;
@@ -330,7 +332,20 @@ public class HistoryControllerHandler {
                 event.set(order.getOrderId(), outcome);
 
                 break;
+            case OrderSuspended:
+                order = entry.getOrder();
 
+                event = new FatEventOrderSuspended(entry.getEventId(), entry.getEventDate());
+                event.set(order.getOrderId());
+
+                break;
+            case OrderResumed:
+                order = entry.getOrder();
+
+                event = new FatEventOrderResumed(entry.getEventId(), entry.getEventDate());
+                event.set(order.getOrderId());
+
+                break;
             case OrderFinished:
                 order = entry.getOrder();
 
