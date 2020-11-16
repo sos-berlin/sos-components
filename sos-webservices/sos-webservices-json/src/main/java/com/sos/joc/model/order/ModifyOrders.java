@@ -44,6 +44,11 @@ public class ModifyOrders {
      */
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("orderIds")
     private List<String> orderIds = new ArrayList<String>();
     @JsonProperty("workflowIds")
@@ -110,11 +115,21 @@ public class ModifyOrders {
         this.jobschedulerId = jobschedulerId;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("orderIds")
     public List<String> getOrderIds() {
         return orderIds;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("orderIds")
     public void setOrderIds(List<String> orderIds) {
         this.orderIds = orderIds;

@@ -10,7 +10,6 @@ public enum DeployType {
 
     WORKFLOW("Workflow", 1),
     JOBCLASS("JobClass", 2),
-    AGENTREF("AgentRef", 3),
     LOCK("Lock", 4),
     JUNCTION("Junction", 5);
     private final String value;

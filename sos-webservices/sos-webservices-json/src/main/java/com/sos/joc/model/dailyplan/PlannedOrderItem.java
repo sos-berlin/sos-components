@@ -45,6 +45,7 @@ public class PlannedOrderItem {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
      * 
      */
     @JsonProperty("surveyDate")
@@ -54,6 +55,7 @@ public class PlannedOrderItem {
      * path
      * <p>
      * absolute path of a JobScheduler object.
+     * (Required)
      * 
      */
     @JsonProperty("workflow")
@@ -68,12 +70,18 @@ public class PlannedOrderItem {
     @JsonProperty("orderTemplatePath")
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String orderTemplatePath;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("orderId")
     private String orderId;
     /**
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
      * 
      */
     @JsonProperty("plannedStartTime")
@@ -83,6 +91,7 @@ public class PlannedOrderItem {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
      * 
      */
     @JsonProperty("expectedEndTime")
@@ -133,6 +142,7 @@ public class PlannedOrderItem {
     private Err error;
     /**
      *  0=single_start, 1=start_start_repeat
+     * (Required)
      * 
      */
     @JsonProperty("startMode")
@@ -162,6 +172,7 @@ public class PlannedOrderItem {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
      * 
      */
     @JsonProperty("surveyDate")
@@ -173,6 +184,7 @@ public class PlannedOrderItem {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
      * 
      */
     @JsonProperty("surveyDate")
@@ -184,6 +196,7 @@ public class PlannedOrderItem {
      * path
      * <p>
      * absolute path of a JobScheduler object.
+     * (Required)
      * 
      */
     @JsonProperty("workflow")
@@ -195,6 +208,7 @@ public class PlannedOrderItem {
      * path
      * <p>
      * absolute path of a JobScheduler object.
+     * (Required)
      * 
      */
     @JsonProperty("workflow")
@@ -224,11 +238,21 @@ public class PlannedOrderItem {
         this.orderTemplatePath = orderTemplatePath;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("orderId")
     public String getOrderId() {
         return orderId;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("orderId")
     public void setOrderId(String orderId) {
         this.orderId = orderId;
@@ -238,6 +262,7 @@ public class PlannedOrderItem {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
      * 
      */
     @JsonProperty("plannedStartTime")
@@ -249,6 +274,7 @@ public class PlannedOrderItem {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
      * 
      */
     @JsonProperty("plannedStartTime")
@@ -260,6 +286,7 @@ public class PlannedOrderItem {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
      * 
      */
     @JsonProperty("expectedEndTime")
@@ -271,6 +298,7 @@ public class PlannedOrderItem {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
      * 
      */
     @JsonProperty("expectedEndTime")
@@ -396,6 +424,7 @@ public class PlannedOrderItem {
 
     /**
      *  0=single_start, 1=start_start_repeat
+     * (Required)
      * 
      */
     @JsonProperty("startMode")
@@ -405,6 +434,7 @@ public class PlannedOrderItem {
 
     /**
      *  0=single_start, 1=start_start_repeat
+     * (Required)
      * 
      */
     @JsonProperty("startMode")

@@ -13,14 +13,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * instructions
  * <p>
- * 
+ * only for the validation, not used as pojo
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "instructions"
 })
-public class Instructions {
+public class OptionalInstructions {
 
     /**
      * 
@@ -34,14 +34,14 @@ public class Instructions {
      * No args constructor for use in serialization
      * 
      */
-    public Instructions() {
+    public OptionalInstructions() {
     }
 
     /**
      * 
      * @param instructions
      */
-    public Instructions(List<Instruction> instructions) {
+    public OptionalInstructions(List<Instruction> instructions) {
         super();
         this.instructions = instructions;
     }
@@ -81,10 +81,10 @@ public class Instructions {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Instructions) == false) {
+        if ((other instanceof OptionalInstructions) == false) {
             return false;
         }
-        Instructions rhs = ((Instructions) other);
+        OptionalInstructions rhs = ((OptionalInstructions) other);
         return new EqualsBuilder().append(instructions, rhs.instructions).isEquals();
     }
 

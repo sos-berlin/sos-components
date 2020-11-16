@@ -4,11 +4,11 @@
   "javaType": "com.sos.joc.model.order.StartOrder",
   "type": "object",
   "required": [
-    "orderId",
+    "orderName",
     "workflowPath"
   ],
   "properties": {
-    "orderId": {
+    "orderName": {
       "$ref": "../common/javaString30-schema.json"
     },
     "workflowPath": {

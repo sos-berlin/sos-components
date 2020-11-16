@@ -35,13 +35,6 @@
 			},
 			"uniqueItems": true
 		},
-		"agentClusters": {
-			"type": "array",
-			"items": {
-				"$ref": "response-folderItem-schema.json"
-			},
-			"uniqueItems": true
-		},
 		"locks": {
 			"type": "array",
 			"items": {

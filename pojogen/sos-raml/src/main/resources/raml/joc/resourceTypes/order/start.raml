@@ -26,11 +26,11 @@ post:
     <td>Specified the orders which should be modified.</td>
     <td> [{
       <div style="padding-left:10px;">"workflowPath":"/myWorkflow",</div>
-      <div style="padding-left:10px;">"orderId":"daily"</div>
+      <div style="padding-left:10px;">"orderName":"daily"</div>
       <div style="padding-left:10px;">"scheduledFor":"now+10"</div>
       }]</td>
     <td></td></tr>
-    <tr><td style="padding-left:20px;">``orderId``</td><td>required, string (max. 30 characters)<br/>field of each ``orders`` item</td><td></td><td></td></tr>
+    <tr><td style="padding-left:20px;">``orderName``</td><td>required, string (max. 30 characters)<br/>field of each ``orders`` item</td><td>``orderName`` is only a part of the orderId in the form &quot;#&lt;date&gt;T#&lt;uniqueId&gt;-&lt;orderName&gt;&quot;</td><td></td></tr>
     <tr><td style="padding-left:20px;">``workflowPath``</td><td>required, string<br/>field of each ``orders`` item</td><td></td><td></td></tr>
     <tr><td style="padding-left:20px;">``scheduledFor``</td><td>optional, string<br/>field of each ``orders`` item</td>
     <td>start time in ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS</td>

@@ -8,8 +8,8 @@
 			"description": "Attaching, Attached, ...",
 			"type": "string"
 		},
-		"agentRefPath": {
-			"$ref": "../../../joc/schemas/common/path-schema.json"
+		"agentName": {
+			"type": "string"
 		}
 	},
 	"additionalProperties": false

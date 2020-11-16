@@ -27,6 +27,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class UrlParameter {
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("jobschedulerId")
     private String jobschedulerId;
     /**
@@ -49,11 +55,23 @@ public class UrlParameter {
     @JsonProperty("auditLog")
     private AuditParams auditLog;
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("jobschedulerId")
     public String getJobschedulerId() {
         return jobschedulerId;
     }
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("jobschedulerId")
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;

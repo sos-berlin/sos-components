@@ -1,12 +1,14 @@
 
 package com.sos.jobscheduler.model.instruction;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 /**
@@ -45,11 +47,12 @@ public class IfElse
     /**
      * instructions
      * <p>
-     * 
+     * only for the validation, not used as pojo
      * 
      */
     @JsonProperty("else")
-    private Instructions _else;
+    @JsonPropertyDescription("only for the validation, not used as pojo")
+    private OptionalInstructions _else;
 
     /**
      * No args constructor for use in serialization
@@ -65,7 +68,7 @@ public class IfElse
      * @param then
      * 
      */
-    public IfElse(String predicate, Instructions then, Instructions _else) {
+    public IfElse(String predicate, Instructions then, OptionalInstructions _else) {
         super();
         this.predicate = predicate;
         this.then = then;
@@ -119,22 +122,22 @@ public class IfElse
     /**
      * instructions
      * <p>
-     * 
+     * only for the validation, not used as pojo
      * 
      */
     @JsonProperty("else")
-    public Instructions getElse() {
+    public OptionalInstructions getElse() {
         return _else;
     }
 
     /**
      * instructions
      * <p>
-     * 
+     * only for the validation, not used as pojo
      * 
      */
     @JsonProperty("else")
-    public void setElse(Instructions _else) {
+    public void setElse(OptionalInstructions _else) {
         this._else = _else;
     }
 
