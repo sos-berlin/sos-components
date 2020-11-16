@@ -1933,18 +1933,18 @@ traits:
         schema200: !include joc/schemas/publish/depHistory-schema.json
         example: !include joc/examples/publish/showDepHistory-example.json
         example200: " "
-  /re_deploy:
+  /redeploy:
     type:
       postJSONWithOkWithoutJSId:
         description: Deploys a signed JS Object to the current JobScheduler Controller
-        description1: !include joc/documentation/publish/re-deploy.md
+        description1: !include joc/documentation/publish/redeploy.md
         description2: " "
         description3: " "
         description4: " "
         description5: " "
         audit: !include joc/documentation/audit/auditLog.md
-        schema: !include joc/schemas/publish/re-deploy-schema.json
-        example: !include joc/examples/publish/re-deploy-example.json
+        schema: !include joc/schemas/publish/redeploy-schema.json
+        example: !include joc/examples/publish/redeploy-example.json
 
 /security:
   description: This is not an API call. Use child urls instead!

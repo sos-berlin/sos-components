@@ -4,6 +4,7 @@ package com.sos.joc.model.publish;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.jobscheduler.model.deploy.DeployType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -11,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "path",
-    "invConfigurationId"
+    "deployType"
 })
 public class ExcludeConfiguration {
 
@@ -25,13 +26,14 @@ public class ExcludeConfiguration {
     @JsonProperty("path")
     private String path;
     /**
-     * non negative long
+     * deployType
      * <p>
      * 
+     * (Required)
      * 
      */
-    @JsonProperty("invConfigurationId")
-    private Long invConfigurationId;
+    @JsonProperty("deployType")
+    private DeployType deployType = DeployType.fromValue("Workflow");
 
     /**
      * string without < and >
@@ -58,35 +60,37 @@ public class ExcludeConfiguration {
     }
 
     /**
-     * non negative long
+     * deployType
      * <p>
      * 
+     * (Required)
      * 
      */
-    @JsonProperty("invConfigurationId")
-    public Long getInvConfigurationId() {
-        return invConfigurationId;
+    @JsonProperty("deployType")
+    public DeployType getDeployType() {
+        return deployType;
     }
 
     /**
-     * non negative long
+     * deployType
      * <p>
      * 
+     * (Required)
      * 
      */
-    @JsonProperty("invConfigurationId")
-    public void setInvConfigurationId(Long invConfigurationId) {
-        this.invConfigurationId = invConfigurationId;
+    @JsonProperty("deployType")
+    public void setDeployType(DeployType deployType) {
+        this.deployType = deployType;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("invConfigurationId", invConfigurationId).toString();
+        return new ToStringBuilder(this).append("path", path).append("deployType", deployType).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(invConfigurationId).append(path).toHashCode();
+        return new HashCodeBuilder().append(path).append(deployType).toHashCode();
     }
 
     @Override
@@ -98,7 +102,7 @@ public class ExcludeConfiguration {
             return false;
         }
         ExcludeConfiguration rhs = ((ExcludeConfiguration) other);
-        return new EqualsBuilder().append(invConfigurationId, rhs.invConfigurationId).append(path, rhs.path).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(deployType, rhs.deployType).isEquals();
     }
 
 }
