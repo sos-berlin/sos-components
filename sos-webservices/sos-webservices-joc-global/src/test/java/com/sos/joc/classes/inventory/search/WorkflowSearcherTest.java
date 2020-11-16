@@ -52,12 +52,12 @@ public class WorkflowSearcherTest {
             LOGGER.info("  JOB: " + j.getName());
         }
 
-        jobs = ws.getJobsByAgentRefPath("/agent-.*");
+        jobs = ws.getJobsByAgentName("/agent-.*");
         LOGGER.info(" ");
         LOGGER.info("[getJobsByAgentRefPath(/agent-.*)][size] " + jobs.size());
         for (WorkflowJob j : jobs) {
             LOGGER.info("  JOB: " + j.getName());
-            LOGGER.info("           " + j.getJob().getAgentRefPath());
+            LOGGER.info("           " + j.getJob().getAgentName());
         }
 
         jobs = ws.getJobsByJobClass("/job_class.*");
@@ -65,7 +65,7 @@ public class WorkflowSearcherTest {
         LOGGER.info("[getJobsByJobClass(/job_class.*)][size] " + jobs.size());
         for (WorkflowJob j : jobs) {
             LOGGER.info("  JOB: " + j.getName());
-            LOGGER.info("           " + j.getJob().getAgentRefPath());
+            LOGGER.info("           " + j.getJob().getAgentName());
         }
 
         jobs = ws.getJobsByScript("job_[0-9]? script.*");

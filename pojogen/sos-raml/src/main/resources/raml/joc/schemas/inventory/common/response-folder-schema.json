@@ -49,7 +49,7 @@
 			},
 			"uniqueItems": true
 		},
-		"orders": {
+		"orderTemplates": {
 			"type": "array",
 			"items": {
 				"$ref": "response-folderItem-schema.json"

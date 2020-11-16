@@ -34,7 +34,7 @@ public class BulkError extends Err419 {
     
     public Err419 get(Throwable e, JocError jocError, StartOrder startOrder) {
         setCodeAndMessage(e, jocError);
-        setPath(startOrder.getWorkflowPath() + "/" + startOrder.getOrderId());
+        setPath(startOrder.getWorkflowPath() + "/" + startOrder.getOrderName());
         return this;
     }
     

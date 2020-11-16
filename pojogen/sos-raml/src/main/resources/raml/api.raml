@@ -247,7 +247,7 @@ traits:
         description5: " "
         schema: !include joc/schemas/cluster/restart-schema.json
         example: " "
-  /switchMember:
+  /switch_member:
     type:
       postJSONWithOkWithoutJSId:
         description: Switches to an inactive JOC cluster member 
@@ -743,18 +743,6 @@ traits:
         schema200: !include joc/schemas/calendar/dates-schema.json
         example200: TODO
         
-  /delete:
-    type:
-      postJSONWithOkWithoutJSId:
-        description: Delete configuration of an inventory object
-        description1: !include joc/documentation/inventory/idOrPathAndType.md
-        description2: " "
-        description3: " "
-        description4: " "
-        description5: " "
-        schema: !include joc/schemas/inventory/common/request-filter-schema.json
-        example: TODO
-  
   /deletedraft:
     type:
       postJSONWithoutJSId:
@@ -916,6 +904,18 @@ traits:
         schema200: !include joc/schemas/inventory/release/response-releasables-schema.json
         example200: TODO
         
+  /remove:
+    type:
+      postJSONWithOkWithoutJSId:
+        description: Delete configuration of an inventory object
+        description1: !include joc/documentation/inventory/idOrPathAndType.md
+        description2: " "
+        description3: " "
+        description4: " "
+        description5: " "
+        schema: !include joc/schemas/inventory/common/request-filter-schema.json
+        example: TODO
+  
   /rename:
     type:
       postJSONWithOkWithoutJSId:
@@ -948,10 +948,10 @@ traits:
         schema200: !include joc/schemas/inventory/configurationObject-schema.json
         example200: !include joc/examples/inventory/store-response-example.json
   
-  /undelete:
+  /undo_remove:
     type:
       postJSONWithOkWithoutJSId:
-        description: Deletes configuration of an inventory object
+        description: Undo a remove of inventory objects
         description1: !include joc/documentation/inventory/idOrPathAndType.md
         description2: " "
         description3: " "

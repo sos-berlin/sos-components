@@ -69,7 +69,7 @@ public class OrderApi {
         for (StartOrder startOrder : startOrders.getOrders()) {
             PlannedOrder plannedOrder = new PlannedOrder();
             OrderTemplate orderTemplate = new OrderTemplate();
-            orderTemplate.setPath(startOrder.getOrderId());
+            orderTemplate.setPath(startOrder.getOrderName());
             orderTemplate.setVariables(new ArrayList<NameValuePair>());
             orderTemplate.setSubmitOrderToControllerWhenPlanned(true);
             orderTemplate.setWorkflowPath(startOrder.getWorkflowPath());
@@ -82,7 +82,7 @@ public class OrderApi {
 
             plannedOrder.setOrderTemplate(orderTemplate);
             FreshOrder freshOrder = new FreshOrder();
-            freshOrder.setId(startOrder.getOrderId());
+            freshOrder.setId(startOrder.getOrderName());
             Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(startOrder.getScheduledFor(), startOrder.getTimeZone());
             scheduledFor.ifPresent(instant -> freshOrder.setScheduledFor(instant.toEpochMilli()));
             freshOrder.setWorkflowPath(startOrder.getWorkflowPath());

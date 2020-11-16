@@ -26,14 +26,11 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
-import com.sos.jobscheduler.model.agent.AgentRef;
-import com.sos.jobscheduler.model.agent.AgentRefPublish;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.jobscheduler.model.workflow.WorkflowPublish;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.DeployAudit;
 import com.sos.joc.classes.audit.ImportDeployAudit;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -113,14 +110,13 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             final String mediaSubType = body.getMediaType().getSubtype().replaceFirst("^x-", "");
 
             Set<Workflow> workflows = new HashSet<Workflow>();
-            Set<AgentRef> agentRefs = new HashSet<AgentRef>();
             Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
             
             // process uploaded archive
             if (mediaSubType.contains("zip") && !mediaSubType.contains("gzip")) {
-                PublishUtils.readZipFileContent(stream, workflows, agentRefs);
+                PublishUtils.readZipFileContent(stream, workflows);
             } else if (mediaSubType.contains("tgz") || mediaSubType.contains("tar.gz") || mediaSubType.contains("gzip")) {
-                PublishUtils.readTarGzipFileContent(stream, workflows, agentRefs);
+                PublishUtils.readTarGzipFileContent(stream, workflows);
             } else {
             	throw new JocUnsupportedFileTypeException(
             	        String.format("The file %1$s to be uploaded must have the format zip!", uploadFileName)); 
@@ -135,8 +131,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 versionId = workflows.stream().findFirst().get().getVersionId();
             }
             ImportDeployAudit mainAudit = new ImportDeployAudit(filter,
-                    String.format("%1$d workflow(s) and %2$d agentRef(s) imported with profile %3$s", workflows.size(), agentRefs.size(),
-                            account));
+                    String.format("%1$d workflow(s) imported with profile %2$s", workflows.size(), account));
             logAuditMessage(mainAudit);
             DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(mainAudit);
             Set<java.nio.file.Path> folders = new HashSet<java.nio.file.Path>();
@@ -153,21 +148,6 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 DBItemInventoryConfiguration dbItem = dbLayer.saveOrUpdateInventoryConfiguration(
                         workflow.getPath(), wfEdit, workflow.getTYPE(), account, dbItemAuditLog.getId());
                 DBItemDepSignatures dbItemSignature = dbLayer.saveOrUpdateSignature(dbItem.getId(), wfEdit, account, workflow.getTYPE());
-                importedObjects.put(dbItem, dbItemSignature);
-            }
-            folders.addAll(agentRefs.stream().map(aRef -> aRef.getPath()).map(path -> Paths.get(path)).collect(Collectors.toSet()));
-            for (AgentRef agentRef : agentRefs) {
-                AgentRefPublish arEdit = new AgentRefPublish();
-                arEdit.setContent(agentRef);
-                if (!signaturePaths.isEmpty()) {
-                    Signature signature = PublishUtils.verifyAgentRefs(hibernateSession, signaturePaths, agentRef, account);
-                    if (signature != null) {
-                        arEdit.setSignedContent(signature.getSignatureString());
-                    } 
-                }
-                DBItemInventoryConfiguration dbItem = dbLayer.saveOrUpdateInventoryConfiguration(
-                        agentRef.getPath(), arEdit, agentRef.getTYPE(), account, dbItemAuditLog.getId());
-                DBItemDepSignatures dbItemSignature = dbLayer.saveOrUpdateSignature(dbItem.getId(), arEdit, account, agentRef.getTYPE());
                 importedObjects.put(dbItem, dbItemSignature);
             }
             dbLayer.createInvConfigurationsDBItemsForFoldersIfNotExists(

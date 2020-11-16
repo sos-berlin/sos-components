@@ -23,7 +23,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
 
     public static final String API_PATH = "cluster";
     public static final String IMPL_PATH_RESTART = "restart";
-    public static final String IMPL_PATH_SWITCH_MEMBER = "switchMember";
+    public static final String IMPL_PATH_SWITCH_MEMBER = "switch_member";
 
     private static final String API_CALL_RESTART = String.format("./%s/%s", API_PATH, IMPL_PATH_RESTART);
     private static final String API_CALL_SWITCH = String.format("./%s/%s", API_PATH, IMPL_PATH_SWITCH_MEMBER);

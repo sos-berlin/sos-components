@@ -44,7 +44,7 @@ import reactor.core.publisher.Flux;
 public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersResourceAdd {
 
     private static final String API_CALL = "./orders/add";
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd").withZone(ZoneId.systemDefault());
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault());
 
     @Override
     public JOCDefaultResponse postOrdersAdd(String accessToken, byte[] filterBytes) {
@@ -76,10 +76,11 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             Function<StartOrder, Either<Err419, JFreshOrder>> mapper = order -> {
                 Either<Err419, JFreshOrder> either = null;
                 try {
-                    CheckJavaVariableName.test("orderId", order.getOrderId());
-                    AddOrderAudit orderAudit = new AddOrderAudit(order, startOrders);
+                    CheckJavaVariableName.test("orderName", order.getOrderName());
+                    JFreshOrder o = mapToFreshOrder(order, yyyymmdd);
+                    AddOrderAudit orderAudit = new AddOrderAudit(order, startOrders, o.id().string());
                     logAuditMessage(orderAudit);
-                    either = Either.right(mapToFreshOrder(order, yyyymmdd));
+                    either = Either.right(o);
                     storeAuditLogEntry(orderAudit);
                 } catch (Exception ex) {
                     either = Either.left(new BulkError().get(ex, getJocError(), order));
@@ -124,7 +125,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
     private static JFreshOrder mapToFreshOrder(StartOrder order, String yyyymmdd) {
         //TODO uniqueId comes from dailyplan, here a fake
         String uniqueId = Long.valueOf(Instant.now().toEpochMilli()).toString().substring(4);
-        OrderId orderId = OrderId.of(String.format("%s#T%s-%s", yyyymmdd, uniqueId, order.getOrderId()));
+        OrderId orderId = OrderId.of(String.format("#%s#T%s-%s", yyyymmdd, uniqueId, order.getOrderName()));
         Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order.getTimeZone());
         Map<String, String> arguments = Collections.emptyMap();
         if (order.getArguments() != null) {

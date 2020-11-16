@@ -14,6 +14,9 @@ public class AddOrderAudit extends StartOrder implements IAuditLog {
     private String folder;
 
     private String workflow;
+    
+    @JsonIgnore
+    private String orderId;
 
     @JsonIgnore
     private String comment;
@@ -27,11 +30,12 @@ public class AddOrderAudit extends StartOrder implements IAuditLog {
     // @JsonIgnore
     private String jobschedulerId;
 
-    public AddOrderAudit(StartOrder startOrder, StartOrders startOrders) {
+    public AddOrderAudit(StartOrder startOrder, StartOrders startOrders, String orderId) {
         if (startOrder != null) {
             setScheduledFor(startOrder.getScheduledFor());
             this.workflow = startOrder.getWorkflowPath();
-            setOrderId(startOrder.getOrderId());
+            this.orderId = orderId;
+            setOrderName(startOrder.getOrderName());
             setArguments(startOrder.getArguments());
             setTimeZone(startOrder.getTimeZone());
             if (startOrder.getWorkflowPath() != null) {
@@ -104,6 +108,11 @@ public class AddOrderAudit extends StartOrder implements IAuditLog {
     @JsonIgnore
     public Long getDepHistoryId() {
         return null;
+    }
+
+    @Override
+    public String getOrderId() {
+        return orderId;
     }
 
 }

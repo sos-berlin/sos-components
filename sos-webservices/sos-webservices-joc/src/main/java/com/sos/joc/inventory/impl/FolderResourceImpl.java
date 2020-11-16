@@ -92,21 +92,18 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                         case JOBCLASS:
                             folder.getJobClasses().add(config);
                             break;
-                        case AGENTCLUSTER:
-                            folder.getAgentClusters().add(config);
-                            break;
                         case LOCK:
                             folder.getLocks().add(config);
                             break;
                         case JUNCTION:
                             folder.getJunctions().add(config);
                             break;
-                        case ORDER:
+                        case ORDERTEMPLATE:
                             if (config.getWorkflowPath() != null) {
                                 orders.putIfAbsent(config.getWorkflowPath(), new LinkedHashSet<ResponseFolderItem>());
                                 orders.get(config.getWorkflowPath()).add(config);
                             }
-                            folder.getOrders().add(config);
+                            folder.getOrderTemplates().add(config);
                             break;
                         case WORKINGDAYSCALENDAR:
                         case NONWORKINGDAYSCALENDAR:
@@ -127,10 +124,9 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                 folder.setWorkflows(sort(workflows));
                 folder.setJobs(sort(folder.getJobs()));
                 folder.setJobClasses(sort(folder.getJobClasses()));
-                folder.setAgentClusters(sort(folder.getAgentClusters()));
                 folder.setLocks(sort(folder.getLocks()));
                 folder.setJunctions(sort(folder.getJunctions()));
-                folder.setOrders(sort(folder.getOrders()));
+                folder.setOrderTemplates(sort(folder.getOrderTemplates()));
                 folder.setCalendars(sort(folder.getCalendars()));
             }
             return folder;

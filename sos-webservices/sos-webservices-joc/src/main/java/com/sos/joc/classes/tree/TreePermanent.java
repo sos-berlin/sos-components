@@ -53,10 +53,9 @@ public class TreePermanent {
                     types.add(TreeType.WORKFLOW);
                     types.add(TreeType.JOB);
                     types.add(TreeType.JOBCLASS);
-                    types.add(TreeType.AGENTCLUSTER);
                     types.add(TreeType.LOCK);
                     types.add(TreeType.JUNCTION);
-                    types.add(TreeType.ORDER);
+                    types.add(TreeType.ORDERTEMPLATE);
                     types.add(TreeType.WORKINGDAYSCALENDAR);
                     types.add(TreeType.NONWORKINGDAYSCALENDAR);
                 }
@@ -94,17 +93,6 @@ public class TreePermanent {
                     // }
                 }
                 break;
-            case AGENTCLUSTER:
-                if (treeForInventory) {
-                    if (sosPermission.getInventory().getConfigurations().isView()) {
-                        types.add(type);
-                    }
-                } else {
-                    if (sosPermission.getJS7UniversalAgent().getView().isStatus()) {
-                        types.add(type);
-                    }
-                }
-                break;
             case LOCK:
                 if (treeForInventory) {
                     if (sosPermission.getInventory().getConfigurations().isView()) {
@@ -127,7 +115,7 @@ public class TreePermanent {
                     // }
                 }
                 break;
-            case ORDER:
+            case ORDERTEMPLATE:
                 // OrderTemplate always inventory objects
                 if (sosPermission.getInventory().getConfigurations().isView()) {
                     types.add(type);
@@ -232,7 +220,7 @@ public class TreePermanent {
             throws JocException {
         
         boolean withDocus = false;
-        List<TreeType> possibleInventoryTypes = Arrays.asList(TreeType.ORDER, TreeType.WORKINGDAYSCALENDAR, TreeType.NONWORKINGDAYSCALENDAR);
+        List<TreeType> possibleInventoryTypes = Arrays.asList(TreeType.ORDERTEMPLATE, TreeType.WORKINGDAYSCALENDAR, TreeType.NONWORKINGDAYSCALENDAR);
         Set<Integer> possibleDeployIntTypes = Arrays.asList(DeployType.values()).stream().map(DeployType::intValue).collect(Collectors.toSet());
         Set<Integer> deployTypes = new HashSet<>();
         Set<Integer> inventoryTypes = new HashSet<>();

@@ -208,22 +208,22 @@ public class PerformanceTest {
         return new NamedJob(jobName, null, params);
     }
 
-    private Job createTestJob(String agentRefPath, String jobScript) {
+    private Job createTestJob(String agentName, String jobScript) {
         ExecutableScript executable = new ExecutableScript();
         executable.setScript(jobScript);
         Job job = new Job();
-        job.setAgentRefPath(agentRefPath);
+        job.setAgentName(agentName);
         job.setExecutable(executable);
         job.setTaskLimit(1); //required
         return job;
     }
 
-    private AgentRef createAgentRef(String agentRefPath, String agentUri) {
-        return new AgentRef(agentRefPath, null, agentUri, null, null, null);
+    private AgentRef createAgentRef(String agentName, String agentUri) {
+        return new AgentRef(agentName, agentUri, null, null);
     }
 
     private void deployAgentRef(AgentRef agentRef, Path deployPath) throws IOException, InterruptedException {
-        Path p = deployPath.resolve(agentRef.getPath().substring(1) + ".agentref.json");
+        Path p = deployPath.resolve(agentRef.getName().substring(1) + ".agentref.json");
         if (!Files.exists(p.getParent())) {
             Files.createDirectories(p.getParent());
         }
