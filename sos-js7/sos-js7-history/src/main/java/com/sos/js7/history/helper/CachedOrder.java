@@ -16,6 +16,7 @@ public class CachedOrder {
 
     private Integer state;
     private boolean hasChildren;
+    private boolean hasStates;
     private Long currentOrderStepId;
     private Date startTime;
 
@@ -28,6 +29,7 @@ public class CachedOrder {
         workflowPosition = item.getWorkflowPosition();
         state = item.getState();
         hasChildren = item.getHasChildren();
+        hasStates = item.getHasStates();
         currentOrderStepId = item.getCurrentOrderStepId();
         startTime = item.getStartTime();
         endTime = item.getEndTime();
@@ -72,6 +74,14 @@ public class CachedOrder {
 
     public void setHasChildren(boolean val) {
         hasChildren = val;
+    }
+
+    public boolean getHasStates() {
+        return hasStates;
+    }
+
+    public void setHasStates(boolean val) {
+        hasStates = val;
     }
 
     public Long getCurrentOrderStepId() {

@@ -17,13 +17,12 @@ import javax.ws.rs.Path;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.util.SOSDate;
-import com.sos.commons.util.SOSString;
-import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.WebserviceConstants;
+import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
 import com.sos.joc.exceptions.JocException;
@@ -132,15 +131,12 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
 
                     if (ordersFilter.getRegex() != null && !ordersFilter.getRegex().isEmpty()) {
                         Matcher regExMatcher = Pattern.compile(ordersFilter.getRegex()).matcher("");
-                        dbMainOrderItems = dbMainOrderItems.stream().filter(i -> !SOSDate.equals(i.getStartTime(), Globals.HISTORY_DEFAULT_DATE))
-                                .filter(permissionFilter).filter(i -> regExMatcher.reset(i.getWorkflowPath() + "," + i.getOrderKey()).find()).collect(
-                                        Collectors.toList());
+                        dbMainOrderItems = dbMainOrderItems.stream().filter(permissionFilter).filter(i -> regExMatcher.reset(i.getWorkflowPath() + ","
+                                + i.getOrderKey()).find()).map(this::mapOrderItem).collect(Collectors.toList());
                     } else if (ordersFilter.getJobschedulerId().isEmpty()) {
-                        dbMainOrderItems = dbMainOrderItems.stream().filter(i -> !SOSDate.equals(i.getStartTime(), Globals.HISTORY_DEFAULT_DATE))
-                                .filter(permissionFilter).collect(Collectors.toList());
+                        dbMainOrderItems = dbMainOrderItems.stream().filter(permissionFilter).map(this::mapOrderItem).collect(Collectors.toList());
                     } else {
-                        dbMainOrderItems = dbMainOrderItems.stream().filter(i -> !SOSDate.equals(i.getStartTime(), Globals.HISTORY_DEFAULT_DATE))
-                                .collect(Collectors.toList());
+                        dbMainOrderItems = dbMainOrderItems.stream().map(this::mapOrderItem).collect(Collectors.toList());
                     }
 
                     List<DBItemHistoryOrder> dbChildOrderItems = jobHistoryDbLayer.getChildOrders(dbMainOrderItems.stream().filter(
@@ -175,6 +171,14 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
         } finally {
             Globals.disconnect(connection);
         }
+    }
+
+    // TODO e.g Suspended,Cancelled without StartTime
+    private DBItemHistoryOrder mapOrderItem(DBItemHistoryOrder item) {
+        if (SOSDate.equals(item.getStartTime(), Globals.HISTORY_DEFAULT_DATE)) {
+            item.setStartTime(null);
+        }
+        return item;
     }
 
     private OrderHistoryItem getOrderHistoryItem(DBItemHistoryOrder dbItemOrder) {
