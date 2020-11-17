@@ -24,7 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "orders",
     "auditLog"
 })
-public class StartOrders {
+public class AddOrders {
 
     /**
      * filename
@@ -41,7 +41,7 @@ public class StartOrders {
      * 
      */
     @JsonProperty("orders")
-    private List<StartOrder> orders = new ArrayList<StartOrder>();
+    private List<AddOrder> orders = new ArrayList<AddOrder>();
     /**
      * auditParams
      * <p>
@@ -81,7 +81,7 @@ public class StartOrders {
      * 
      */
     @JsonProperty("orders")
-    public List<StartOrder> getOrders() {
+    public List<AddOrder> getOrders() {
         return orders;
     }
 
@@ -91,7 +91,7 @@ public class StartOrders {
      * 
      */
     @JsonProperty("orders")
-    public void setOrders(List<StartOrder> orders) {
+    public void setOrders(List<AddOrder> orders) {
         this.orders = orders;
     }
 
@@ -132,10 +132,10 @@ public class StartOrders {
         if (other == this) {
             return true;
         }
-        if ((other instanceof StartOrders) == false) {
+        if ((other instanceof AddOrders) == false) {
             return false;
         }
-        StartOrders rhs = ((StartOrders) other);
+        AddOrders rhs = ((AddOrders) other);
         return new EqualsBuilder().append(orders, rhs.orders).append(jobschedulerId, rhs.jobschedulerId).append(auditLog, rhs.auditLog).isEquals();
     }
 

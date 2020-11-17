@@ -1,7 +1,7 @@
 {
-  "title": "start order commands",
+  "title": "add order commands",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.model.order.StartOrders",
+  "javaType": "com.sos.joc.model.order.AddOrders",
   "type": "object",
   "required": [
     "jobschedulerId",
@@ -15,7 +15,7 @@
       "type": "array",
       "minLength": 1,
       "items": {
-        "$ref": "startOrder-schema.json"
+        "$ref": "addOrder-schema.json"
       }
     },
     "auditLog": {

@@ -34,8 +34,8 @@ import com.sos.joc.exceptions.JobSchedulerNoResponseException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.common.Err419;
-import com.sos.joc.model.order.StartOrder;
-import com.sos.joc.model.order.StartOrders;
+import com.sos.joc.model.order.AddOrder;
+import com.sos.joc.model.order.AddOrders;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
 import com.sos.js7.order.initiator.OrderListSynchronizer;
 import com.sos.webservices.order.initiator.model.NameValuePair;
@@ -53,7 +53,7 @@ import reactor.core.publisher.Flux;
 
 public class OrderApi {
 
-    public static void addOrders(StartOrders startOrders, String userAccount) throws JocConfigurationException, DBConnectionRefusedException,
+    public static void addOrders(AddOrders startOrders, String userAccount) throws JocConfigurationException, DBConnectionRefusedException,
             DBOpenSessionException, JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, DBMissingDataException,
             DBInvalidDataException, JsonProcessingException, SOSException, URISyntaxException, ParseException, InterruptedException,
             ExecutionException, TimeoutException {
@@ -66,7 +66,7 @@ public class OrderApi {
         
         OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer();
 
-        for (StartOrder startOrder : startOrders.getOrders()) {
+        for (AddOrder startOrder : startOrders.getOrders()) {
             PlannedOrder plannedOrder = new PlannedOrder();
             OrderTemplate orderTemplate = new OrderTemplate();
             orderTemplate.setPath(startOrder.getOrderName());

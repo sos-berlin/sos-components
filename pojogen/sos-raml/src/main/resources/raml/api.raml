@@ -21,7 +21,7 @@ schemas:
   - jsRegister: !include joc/schemas/jobscheduler/registerParam-schema.json
   - taskFilter: !include joc/schemas/job/taskFilter-schema.json
   - orderHistoryFilter: !include joc/schemas/order/orderHistoryFilter-schema.json
-  - startOrders: !include joc/schemas/order/startOrders-schema.json
+  - addOrders: !include joc/schemas/order/addOrders-schema.json
   - modifyOrders: !include joc/schemas/order/modifyOrders-schema.json
   - modifyCalendars: !include joc/schemas/calendar/calendarsFilter-schema.json
   - security: !include joc/schemas/user/security-schema.json
@@ -59,7 +59,7 @@ resourceTypes:
   - postEvent: !include joc/resourceTypes/common/postEvent.raml
   - postTaskLogWithPlainResponse: !include joc/resourceTypes/job/postWithPlainResponse.raml
   - modifyOrder: !include joc/resourceTypes/order/modify.raml
-  - startOrder: !include joc/resourceTypes/order/start.raml
+  - addOrder: !include joc/resourceTypes/order/add.raml
   - postOrderLogWithPlainResponse: !include joc/resourceTypes/order/postWithPlainResponse.raml
   - modifyCalendar: !include joc/resourceTypes/calendar/modify.raml
   - loginConfiguration: !include joc/resourceTypes/configuration/login.raml
@@ -1646,7 +1646,7 @@ traits:
       example200: TODO
   /add:
     type:
-      startOrder:
+      addOrder:
         audit: !include joc/documentation/audit/auditLog.md
   /cancel:
     type:

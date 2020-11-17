@@ -25,7 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "timeZone",
     "arguments"
 })
-public class StartOrder {
+public class AddOrder {
 
     /**
      * string according java variable names
@@ -203,10 +203,10 @@ public class StartOrder {
         if (other == this) {
             return true;
         }
-        if ((other instanceof StartOrder) == false) {
+        if ((other instanceof AddOrder) == false) {
             return false;
         }
-        StartOrder rhs = ((StartOrder) other);
+        AddOrder rhs = ((AddOrder) other);
         return new EqualsBuilder().append(timeZone, rhs.timeZone).append(arguments, rhs.arguments).append(workflowPath, rhs.workflowPath).append(orderName, rhs.orderName).append(scheduledFor, rhs.scheduledFor).isEquals();
     }
 

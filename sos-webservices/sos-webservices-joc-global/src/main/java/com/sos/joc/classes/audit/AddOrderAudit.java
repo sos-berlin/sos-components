@@ -5,10 +5,10 @@ import java.nio.file.Paths;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.order.StartOrder;
-import com.sos.joc.model.order.StartOrders;
+import com.sos.joc.model.order.AddOrder;
+import com.sos.joc.model.order.AddOrders;
 
-public class AddOrderAudit extends StartOrder implements IAuditLog {
+public class AddOrderAudit extends AddOrder implements IAuditLog {
 
     @JsonIgnore
     private String folder;
@@ -30,7 +30,7 @@ public class AddOrderAudit extends StartOrder implements IAuditLog {
     // @JsonIgnore
     private String jobschedulerId;
 
-    public AddOrderAudit(StartOrder startOrder, StartOrders startOrders, String orderId) {
+    public AddOrderAudit(AddOrder startOrder, AddOrders startOrders, String orderId) {
         if (startOrder != null) {
             setScheduledFor(startOrder.getScheduledFor());
             this.workflow = startOrder.getWorkflowPath();

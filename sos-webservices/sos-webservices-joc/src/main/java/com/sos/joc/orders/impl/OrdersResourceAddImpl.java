@@ -27,8 +27,8 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.order.StartOrder;
-import com.sos.joc.model.order.StartOrders;
+import com.sos.joc.model.order.AddOrder;
+import com.sos.joc.model.order.AddOrders;
 import com.sos.joc.orders.resource.IOrdersResourceAdd;
 import com.sos.schema.JsonValidator;
 
@@ -50,35 +50,33 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
     public JOCDefaultResponse postOrdersAdd(String accessToken, byte[] filterBytes) {
         try {
             initLogging(API_CALL, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, StartOrders.class);
-            StartOrders startOrders = Globals.objectMapper.readValue(filterBytes, StartOrders.class);
+            JsonValidator.validateFailFast(filterBytes, AddOrders.class);
+            AddOrders addOrders = Globals.objectMapper.readValue(filterBytes, AddOrders.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(startOrders.getJobschedulerId(), getPermissonsJocCockpit(startOrders
+            JOCDefaultResponse jocDefaultResponse = initPermissions(addOrders.getJobschedulerId(), getPermissonsJocCockpit(addOrders
                     .getJobschedulerId(), accessToken).getOrder().getExecute().isStart());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            checkRequiredComment(startOrders.getAuditLog());
-            if (startOrders.getOrders().size() == 0) {
+            checkRequiredComment(addOrders.getAuditLog());
+            if (addOrders.getOrders().size() == 0) {
                 throw new JocMissingRequiredParameterException("undefined 'orders'");
             }
 
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-            Predicate<StartOrder> permissions = order -> canAdd(order.getWorkflowPath(), permittedFolders);
+            Predicate<AddOrder> permissions = order -> canAdd(order.getWorkflowPath(), permittedFolders);
 
             // TODO Further predicate to check if workflow exists?
             
-            // To check whether orderId already exists
-            // final Set<OrderId> orderIds = Proxy.of(startOrders.getJobschedulerId()).currentState().orderIds();
             final String yyyymmdd = formatter.format(Instant.now());
 
-            Function<StartOrder, Either<Err419, JFreshOrder>> mapper = order -> {
+            Function<AddOrder, Either<Err419, JFreshOrder>> mapper = order -> {
                 Either<Err419, JFreshOrder> either = null;
                 try {
                     CheckJavaVariableName.test("orderName", order.getOrderName());
                     JFreshOrder o = mapToFreshOrder(order, yyyymmdd);
-                    AddOrderAudit orderAudit = new AddOrderAudit(order, startOrders, o.id().string());
+                    AddOrderAudit orderAudit = new AddOrderAudit(order, addOrders, o.id().string());
                     logAuditMessage(orderAudit);
                     either = Either.right(o);
                     storeAuditLogEntry(orderAudit);
@@ -88,14 +86,14 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                 return either;
             };
 
-            Map<Boolean, Set<Either<Err419, JFreshOrder>>> result = startOrders.getOrders().stream().filter(permissions).map(mapper).collect(
+            Map<Boolean, Set<Either<Err419, JFreshOrder>>> result = addOrders.getOrders().stream().filter(permissions).map(mapper).collect(
                     Collectors.groupingBy(Either::isRight, Collectors.toSet()));
 
             
             if (result.containsKey(true) && !result.get(true).isEmpty()) {
                 final Map<OrderId, JFreshOrder> freshOrders = result.get(true).stream().map(Either::get).collect(Collectors.toMap(JFreshOrder::id,
                         Function.identity()));
-                final JControllerApi controllerApi = ControllerApi.of(startOrders.getJobschedulerId());
+                final JControllerApi controllerApi = ControllerApi.of(addOrders.getJobschedulerId());
                 controllerApi.addOrders(Flux.fromIterable(freshOrders.values())).thenApply(e -> {
                     if (e.isRight()) {
                         return controllerApi.removeOrdersWhenTerminated(freshOrders.keySet()).join();
@@ -103,11 +101,11 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                         Either<Problem, Void> either = Either.left(e.getLeft());
                         return either;
                     }
-                }).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, startOrders.getJobschedulerId()));
+                }).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, addOrders.getJobschedulerId()));
             }
             
 //            if (result.containsKey(true) && !result.get(true).isEmpty()) {
-//                OrderApi.addOrders(startOrders, this.getAccount());
+//                OrderApi.addOrders(addOrders, this.getAccount());
 //            }
             
             if (result.containsKey(false) && !result.get(false).isEmpty()) {
@@ -122,7 +120,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
         }
     }
     
-    private static JFreshOrder mapToFreshOrder(StartOrder order, String yyyymmdd) {
+    private static JFreshOrder mapToFreshOrder(AddOrder order, String yyyymmdd) {
         //TODO uniqueId comes from dailyplan, here a fake
         String uniqueId = Long.valueOf(Instant.now().toEpochMilli()).toString().substring(4);
         OrderId orderId = OrderId.of(String.format("#%s#T%s-%s", yyyymmdd, uniqueId, order.getOrderName()));

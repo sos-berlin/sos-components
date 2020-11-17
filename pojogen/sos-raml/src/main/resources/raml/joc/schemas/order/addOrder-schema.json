@@ -1,7 +1,7 @@
 {
-  "title": "modify order command",
+  "title": "add order command",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.model.order.StartOrder",
+  "javaType": "com.sos.joc.model.order.AddOrder",
   "type": "object",
   "required": [
     "orderName",
