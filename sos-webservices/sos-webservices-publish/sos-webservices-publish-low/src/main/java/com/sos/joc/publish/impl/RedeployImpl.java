@@ -30,7 +30,7 @@ import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.pgp.JocKeyPair;
-import com.sos.joc.model.publish.ReDeployFilter;
+import com.sos.joc.model.publish.RedeployFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.IRedeploy;
 import com.sos.joc.publish.util.PublishUtils;
@@ -53,8 +53,8 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, filter, xAccessToken);
-            JsonValidator.validateFailFast(filter, ReDeployFilter.class);
-            ReDeployFilter reDeployFilter = Globals.objectMapper.readValue(filter, ReDeployFilter.class);
+            JsonValidator.validateFailFast(filter, RedeployFilter.class);
+            RedeployFilter redeployFilter = Globals.objectMapper.readValue(filter, RedeployFilter.class);
             
             JOCDefaultResponse jocDefaultResponse = initPermissions("", 
                     getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isDeploy());
@@ -66,9 +66,9 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
             dbLayer = new DBLayerDeploy(hibernateSession);
             // get all available controller instances
             // process filter
-            String controllerId = reDeployFilter.getControllerId();
+            String controllerId = redeployFilter.getControllerId();
             // read all objects provided in the filter from the database
-            List<DBItemDeploymentHistory> reDeployables = dbLayer.getDeploymentsToReDeploy(reDeployFilter);
+            List<DBItemDeploymentHistory> reDeployables = dbLayer.getDeploymentsToRedeploy(redeployFilter);
 
             final Date deploymentDate = Date.from(Instant.now());
             // all items will be signed or re-signed with current versionId
@@ -93,7 +93,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                                 .collect(Collectors.toList()),
                             controllerId)
                         .thenAccept(either -> {
-                            processAfterAdd(either, reDeployables, account, versionId, controllerId, deploymentDate, reDeployFilter);
+                            processAfterAdd(either, reDeployables, account, versionId, controllerId, deploymentDate, redeployFilter);
                         }).get();
                     break;
                 case SOSKeyConstants.RSA_ALGORITHM_NAME:
@@ -113,7 +113,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                             SOSKeyConstants.RSA_SIGNER_ALGORITHM, 
                             signerDN)
                         .thenAccept(either -> {
-                            processAfterAdd(either, reDeployables, account, versionId, controllerId, deploymentDate, reDeployFilter);
+                            processAfterAdd(either, reDeployables, account, versionId, controllerId, deploymentDate, redeployFilter);
                         }).get();
                     break;
                 case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
@@ -133,7 +133,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                             SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, 
                             signerDN)
                         .thenAccept(either -> {
-                            processAfterAdd(either, reDeployables, account, versionId, controllerId, deploymentDate, reDeployFilter);
+                            processAfterAdd(either, reDeployables, account, versionId, controllerId, deploymentDate, redeployFilter);
                         }).get();
                     break;
                 }
@@ -162,7 +162,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
             String versionId,
             String controllerId,
             Date deploymentDate,
-            ReDeployFilter filter) {
+            RedeployFilter filter) {
         if (either.isRight()) {
             // no error occurred
             Set<DBItemDeploymentHistory> deployedObjects = 
@@ -190,7 +190,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
         }
     }
     
-    private void createAuditLogForEach(Collection<DBItemDeploymentHistory> depHistoryEntries, ReDeployFilter filter, String controllerId,
+    private void createAuditLogForEach(Collection<DBItemDeploymentHistory> depHistoryEntries, RedeployFilter filter, String controllerId,
             String commitId) {
         Set<RedeployAudit> audits = depHistoryEntries.stream().map(item -> {
                 return new RedeployAudit(filter, 

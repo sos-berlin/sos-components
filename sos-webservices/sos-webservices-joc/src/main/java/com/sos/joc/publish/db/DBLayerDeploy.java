@@ -42,7 +42,7 @@ import com.sos.joc.model.publish.ExcludeConfiguration;
 import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
-import com.sos.joc.model.publish.ReDeployFilter;
+import com.sos.joc.model.publish.RedeployFilter;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.publish.common.JSObjectFileExtension;
@@ -940,7 +940,7 @@ public class DBLayerDeploy {
         return getSession().getResultList(query);
     }
     
-    public List<DBItemDeploymentHistory> getDeploymentsToReDeploy(ReDeployFilter filter) throws SOSHibernateException {
+    public List<DBItemDeploymentHistory> getDeploymentsToRedeploy(RedeployFilter filter) throws SOSHibernateException {
         Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter);
         List<DBItemDeploymentHistory> dbItems = new ArrayList<DBItemDeploymentHistory>();
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);

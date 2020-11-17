@@ -9,7 +9,7 @@ import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.OperationType;
-import com.sos.joc.model.publish.ReDeployFilter;
+import com.sos.joc.model.publish.RedeployFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
 
 public abstract class FilterAttributesMapper {
@@ -92,7 +92,7 @@ public abstract class FilterAttributesMapper {
         return null;
     }
 
-    public static Set<String> getDefaultAttributesFromFilter(ReDeployFilter filter) {
+    public static Set<String> getDefaultAttributesFromFilter(RedeployFilter filter) {
         Set<String> filterAttributes = new HashSet<String>();
         if (filter.getControllerId() != null) {
             filterAttributes.add("controllerId");
@@ -103,7 +103,7 @@ public abstract class FilterAttributesMapper {
         return filterAttributes;
     }
     
-    public static Object getValueByFilterAttribute (ReDeployFilter filter, String attribute) {
+    public static Object getValueByFilterAttribute (RedeployFilter filter, String attribute) {
         switch(attribute) {
         case "controllerId":
             return filter.getControllerId();
