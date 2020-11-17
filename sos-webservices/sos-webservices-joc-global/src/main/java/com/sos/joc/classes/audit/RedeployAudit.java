@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.publish.ReDeployFilter;
+import com.sos.joc.model.publish.RedeployFilter;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -40,12 +40,12 @@ public class RedeployAudit implements IAuditLog {
     @JsonIgnore
     private String folder;
 
-    public RedeployAudit(ReDeployFilter filter, String reason) {
+    public RedeployAudit(RedeployFilter filter, String reason) {
         setAuditParams(filter.getAuditLog());
         this.reason = reason;
     }
 
-    public RedeployAudit(ReDeployFilter filter, String controllerId, String commitId, Long depHistoryId, String path, String reason) {
+    public RedeployAudit(RedeployFilter filter, String controllerId, String commitId, Long depHistoryId, String path, String reason) {
         setAuditParams(filter.getAuditLog());
         this.reason = reason;
         this.commitId = commitId;
