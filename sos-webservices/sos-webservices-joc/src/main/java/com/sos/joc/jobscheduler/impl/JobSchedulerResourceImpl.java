@@ -25,10 +25,10 @@ import com.sos.joc.model.jobscheduler.JobScheduler200;
 import com.sos.joc.model.jobscheduler.UrlParameter;
 import com.sos.schema.JsonValidator;
 
-@Path("jobscheduler")
+@Path("controller")
 public class JobSchedulerResourceImpl extends JOCResourceImpl implements IJobSchedulerResource {
 
-    private static final String API_CALL = "./jobscheduler";
+    private static final String API_CALL = "./controller";
 
     @Override
     public JOCDefaultResponse postJobschedulerP(String accessToken, byte[] filterBytes) {

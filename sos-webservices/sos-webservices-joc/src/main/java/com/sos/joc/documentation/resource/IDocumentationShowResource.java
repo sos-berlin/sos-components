@@ -15,7 +15,7 @@ public interface IDocumentationShowResource {
     @GET
     @Path("show")
     public JOCDefaultResponse show(@HeaderParam("X-Access-Token") String xAccessToken, @QueryParam("accessToken") String accessToken,
-            @QueryParam("jobschedulerId") String jobschedulerId, @QueryParam("path") String path, @QueryParam("type") String type) throws Exception;
+            @QueryParam("controllerId") String jobschedulerId, @QueryParam("path") String path, @QueryParam("type") String type) throws Exception;
 
     @POST
     @Path("show")
@@ -25,7 +25,7 @@ public interface IDocumentationShowResource {
     @GET
     @Path("preview")
     public JOCDefaultResponse preview(@HeaderParam("X-Access-Token") String xAccessToken, @QueryParam("accessToken") String accessToken,
-            @QueryParam("jobschedulerId") String jobschedulerId, @QueryParam("documentation") String path) throws Exception;
+            @QueryParam("controllerId") String jobschedulerId, @QueryParam("documentation") String path) throws Exception;
     
     @POST
     @Path("preview")

@@ -29,7 +29,7 @@ public interface IOrderLogResource {
     @Path("log/download")
     @CompressedAlready
     public JOCDefaultResponse downloadOrderLog(@HeaderParam("X-Access-Token") String xAccessToken, @QueryParam("accessToken") String queryAccessToken,
-            @QueryParam("jobschedulerId") String jobschedulerId, @QueryParam("historyId") Long historyId);
+            @QueryParam("controllerId") String controllerId, @QueryParam("historyId") Long historyId);
 
     @POST
     @Path("log/download")

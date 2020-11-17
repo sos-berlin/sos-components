@@ -20,10 +20,10 @@ import com.sos.joc.jobscheduler.resource.IJobSchedulerLogResource;
 import com.sos.joc.model.jobscheduler.UrlParameter;
 import com.sos.schema.JsonValidator;
 
-@Path("jobscheduler")
+@Path("controller")
 public class JobSchedulerLogImpl extends JOCResourceImpl implements IJobSchedulerLogResource {
 
-    private static final String LOG_API_CALL = "./jobscheduler/log";
+    private static final String LOG_API_CALL = "./controller/log";
 
     public JOCDefaultResponse getLog(String accessToken, byte[] filterBytes) {
         try {
@@ -37,7 +37,7 @@ public class JobSchedulerLogImpl extends JOCResourceImpl implements IJobSchedule
                 return jocDefaultResponse;
             }
 
-            checkRequiredParameter("jobschedulerId", urlParamSchema.getControllerId());
+            checkRequiredParameter("controllerId", urlParamSchema.getControllerId());
             try {
                 checkRequiredParameter("url", urlParamSchema.getUrl());
             } catch (JocMissingRequiredParameterException e) {

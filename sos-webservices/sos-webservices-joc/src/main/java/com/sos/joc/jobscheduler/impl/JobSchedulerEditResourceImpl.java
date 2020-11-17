@@ -48,12 +48,12 @@ import com.sos.joc.model.jobscheduler.UrlParameter;
 import com.sos.joc.model.security.SecurityConfigurationMaster;
 import com.sos.schema.JsonValidator;
 
-@Path("jobscheduler")
+@Path("controller")
 public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJobSchedulerEditResource {
 
-    private static final String API_CALL_REGISTER = "./jobscheduler/register";
-    private static final String API_CALL_DELETE = "./jobscheduler/cleanup";
-    private static final String API_CALL_TEST = "./jobscheduler/test";
+    private static final String API_CALL_REGISTER = "./controller/register";
+    private static final String API_CALL_DELETE = "./controller/cleanup";
+    private static final String API_CALL_TEST = "./controller/test";
 
     @Override
     public JOCDefaultResponse storeJobscheduler(String accessToken, byte[] filterBytes) {

@@ -53,10 +53,10 @@ import com.sos.joc.model.joc.ControllerConnectionState;
 import com.sos.joc.model.joc.DB;
 import com.sos.schema.JsonValidator;
 
-@Path("jobscheduler")
+@Path("controller")
 public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implements IJobSchedulerResourceComponents {
 
-    private static final String API_CALL = "./jobscheduler/components";
+    private static final String API_CALL = "./controller/components";
     
     @Context UriInfo uriInfo;
     @Override
@@ -68,7 +68,7 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
             JsonValidator.validateFailFast(filterBytes, ControllerId.class);
             ControllerId jobSchedulerFilter = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
 
-            checkRequiredParameter("jobschedulerId", jobSchedulerFilter.getControllerId());
+            checkRequiredParameter("controller", jobSchedulerFilter.getControllerId());
 
             JOCDefaultResponse jocDefaultResponse = initPermissions(jobSchedulerFilter.getControllerId(), getPermissonsJocCockpit(jobSchedulerFilter
                     .getControllerId(), accessToken).getJS7Controller().getView().isStatus());

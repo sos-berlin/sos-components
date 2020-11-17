@@ -26,11 +26,11 @@ import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceModifyJobScheduler
 import com.sos.joc.model.jobscheduler.UrlParameter;
 import com.sos.schema.JsonValidator;
 
-@Path("jobscheduler")
+@Path("controller")
 public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResourceImpl implements IJobSchedulerResourceModifyJobSchedulerCluster {
 
-    private static String API_CALL_SWITCHOVER = "./jobscheduler/cluster/switchover";
-    private static String API_CALL_APPOINT_NODES = "./jobscheduler/cluster/switchover";
+    private static String API_CALL_SWITCHOVER = "./controller/cluster/switchover";
+    private static String API_CALL_APPOINT_NODES = "./controller/cluster/appoint_nodes";
 
     @Override
     public JOCDefaultResponse postJobschedulerSwitchOver(String accessToken, byte[] filterBytes) {

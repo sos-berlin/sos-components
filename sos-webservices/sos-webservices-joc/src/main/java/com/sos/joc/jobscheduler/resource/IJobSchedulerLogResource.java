@@ -17,10 +17,10 @@ public interface IJobSchedulerLogResource {
     //@CompressedAlready
     //@Produces({ MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON })
 //    public JOCDefaultResponse getDebugLog(@HeaderParam("X-Access-Token") String xAccessToken,
-//            @QueryParam("accessToken") String queryAccessToken, @QueryParam("jobschedulerId") String jobschedulerId, @QueryParam("url") String url,
+//            @QueryParam("accessToken") String queryAccessToken, @QueryParam("controllerId") String controllerId, @QueryParam("url") String url,
 //            @QueryParam("filename") String filename);
     public JOCDefaultResponse getDebugLog(@HeaderParam("X-Access-Token") String xAccessToken,
-            @QueryParam("accessToken") String queryAccessToken, @QueryParam("jobschedulerId") String jobschedulerId, @QueryParam("url") String url);
+            @QueryParam("accessToken") String queryAccessToken, @QueryParam("controllerId") String controllerId, @QueryParam("url") String url);
 
     @POST
     @Path("log")

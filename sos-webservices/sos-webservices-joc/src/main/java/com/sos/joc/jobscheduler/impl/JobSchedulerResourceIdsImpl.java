@@ -20,10 +20,10 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceIds;
 import com.sos.joc.model.jobscheduler.ControllerIds;
 
-@Path("jobscheduler")
+@Path("controller")
 public class JobSchedulerResourceIdsImpl extends JOCResourceImpl implements IJobSchedulerResourceIds {
 
-    private static final String API_CALL = "./jobscheduler/ids";
+    private static final String API_CALL = "./controller/ids";
 
     @Override
     public JOCDefaultResponse postJobschedulerIds(String accessToken) {

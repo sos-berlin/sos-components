@@ -17,10 +17,10 @@ import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceSwitch;
 import com.sos.joc.model.common.ControllerId;
 import com.sos.schema.JsonValidator;
 
-@Path("jobscheduler")
+@Path("controller")
 public class JobSchedulerResourceSwitchImpl extends JOCResourceImpl implements IJobSchedulerResourceSwitch {
 
-    private static final String API_CALL = "./jobscheduler/switch";
+    private static final String API_CALL = "./controller/switch";
     private static final String SESSION_KEY = "selectedInstance";
 
     @Override
