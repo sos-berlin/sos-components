@@ -14,13 +14,13 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.auth.rest.SOSShiroCurrentUser;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.joc.DBItemJocAuditLog;
-import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.db.audit.AuditLogDBFilter;
 import com.sos.joc.db.audit.AuditLogDBLayer;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.ForcedClosingHttpClientException;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
@@ -58,20 +58,20 @@ public class EventCallableOfCurrentJobScheduler extends EventCallable implements
 
     private Events updateSavedInventoryInstance() {
         Events events = new Events();
-        if (Globals.urlFromJobSchedulerId.containsKey(jobSchedulerEvent.getJobschedulerId())) {
-            DBItemInventoryJSInstance instance = Globals.urlFromJobSchedulerId.get(jobSchedulerEvent.getJobschedulerId());
+        if (Globals.urlFromJobSchedulerId.containsKey(jobSchedulerEvent.getControllerId())) {
+            DBItemInventoryJSInstance instance = Globals.urlFromJobSchedulerId.get(jobSchedulerEvent.getControllerId());
             if (instance != null && instance.getIsCluster()) {
 
                 try {
                     if (connection == null) {
-                        connection = Globals.createSosHibernateStatelessConnection("eventCallable-" + jobSchedulerEvent.getJobschedulerId());
+                        connection = Globals.createSosHibernateStatelessConnection("eventCallable-" + jobSchedulerEvent.getControllerId());
                     }
                     InventoryInstancesDBLayer dbLayer = new InventoryInstancesDBLayer(connection);
                     Globals.beginTransaction(connection);
-                    DBItemInventoryJSInstance inst = dbLayer.getInventoryInstanceByControllerId(jobSchedulerEvent.getJobschedulerId(), accessToken);
-                    shiroUser.addSchedulerInstanceDBItem(jobSchedulerEvent.getJobschedulerId(), inst);
+                    DBItemInventoryJSInstance inst = dbLayer.getInventoryInstanceByControllerId(jobSchedulerEvent.getControllerId(), accessToken);
+                    shiroUser.addSchedulerInstanceDBItem(jobSchedulerEvent.getControllerId(), inst);
                     Globals.rollback(connection);
-                    Globals.urlFromJobSchedulerId.put(jobSchedulerEvent.getJobschedulerId(), inst);
+                    Globals.urlFromJobSchedulerId.put(jobSchedulerEvent.getControllerId(), inst);
                     if (!instance.equals(inst)) {
                         EventSnapshot masterChangedEventSnapshot = new EventSnapshot();
                         masterChangedEventSnapshot.setEventType("CurrentJobSchedulerChanged");
@@ -412,7 +412,7 @@ public class EventCallableOfCurrentJobScheduler extends EventCallable implements
         Events eventSnapshots = new Events();
         try {
             if (connection == null) {
-                connection = Globals.createSosHibernateStatelessConnection("eventCallable-" + jobSchedulerEvent.getJobschedulerId());
+                connection = Globals.createSosHibernateStatelessConnection("eventCallable-" + jobSchedulerEvent.getControllerId());
             }
             
             Date from = new Date();
@@ -421,7 +421,7 @@ public class EventCallableOfCurrentJobScheduler extends EventCallable implements
             AuditLogDBLayer dbLayer = new AuditLogDBLayer(connection);
             Globals.beginTransaction(connection);
             AuditLogDBFilter auditLogDBFilter = new AuditLogDBFilter();
-            auditLogDBFilter.setSchedulerId(jobSchedulerEvent.getJobschedulerId());
+            auditLogDBFilter.setControllerId(jobSchedulerEvent.getControllerId());
             auditLogDBFilter.setCreatedFrom(from);
             List<DBItemJocAuditLog> auditLogs = dbLayer.getAuditLogs(auditLogDBFilter);
             Globals.rollback(connection);

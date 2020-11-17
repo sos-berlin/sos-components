@@ -1,6 +1,6 @@
 {
   "deliveryDate": "2016-05-05T20:34:51Z",
-  "jobschedulerIds": [
+  "controllerIds": [
     "scheduler",
     "scheduler.test"
   ],

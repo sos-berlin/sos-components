@@ -36,8 +36,8 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
             JsonValidator.validateFailFast(filterBytes, OrderHistoryFilter.class);
             OrderHistoryFilter orderHistoryFilter = Globals.objectMapper.readValue(filterBytes, OrderHistoryFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(orderHistoryFilter.getJobschedulerId(), getPermissonsJocCockpit(orderHistoryFilter
-                    .getJobschedulerId(), accessToken).getOrder().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(orderHistoryFilter.getControllerId(), getPermissonsJocCockpit(orderHistoryFilter
+                    .getControllerId(), accessToken).getOrder().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -52,7 +52,7 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
             if (dbOrderStepItems != null) {
                 entity.setHistory(dbOrderStepItems.stream().map(dbItemOrderStep -> {
                     TaskHistoryItem taskHistoryItem = new TaskHistoryItem();
-                    taskHistoryItem.setJobschedulerId(dbItemOrderStep.getJobSchedulerId());
+                    taskHistoryItem.setControllerId(dbItemOrderStep.getJobSchedulerId());
                     taskHistoryItem.setAgentUrl(dbItemOrderStep.getAgentUri());
                     taskHistoryItem.setStartTime(dbItemOrderStep.getStartTime());
                     taskHistoryItem.setEndTime(dbItemOrderStep.getEndTime());

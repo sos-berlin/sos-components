@@ -234,7 +234,7 @@ public class TreePermanent {
                 inventoryTypes.add(type.intValue());
             }
         }
-        if (!deployTypes.isEmpty() && (treeBody.getJobschedulerId() == null || treeBody.getJobschedulerId().isEmpty())) {
+        if (!deployTypes.isEmpty() && (treeBody.getControllerId() == null || treeBody.getControllerId().isEmpty())) {
             throw new JocMissingRequiredParameterException("undefined 'controllerId'");
         }
 
@@ -256,7 +256,7 @@ public class TreePermanent {
                 for (Folder folder : treeBody.getFolders()) {
                     String normalizedFolder = ("/" + folder.getFolder()).replaceAll("//+", "/");
                     if (!deployTypes.isEmpty()) {
-                        deployedResults = dbLayer.getFoldersByFolderAndType(treeBody.getJobschedulerId(), normalizedFolder, deployTypes);
+                        deployedResults = dbLayer.getFoldersByFolderAndType(treeBody.getControllerId(), normalizedFolder, deployTypes);
                         if (deployedResults != null && !deployedResults.isEmpty()) {
                             results.addAll(deployedResults);
                         }
@@ -286,7 +286,7 @@ public class TreePermanent {
                 }
             } else {
                 if (!deployTypes.isEmpty()) {
-                    deployedResults = dbLayer.getFoldersByFolderAndType(treeBody.getJobschedulerId(), "/", deployTypes);
+                    deployedResults = dbLayer.getFoldersByFolderAndType(treeBody.getControllerId(), "/", deployTypes);
                     if (deployedResults != null && !deployedResults.isEmpty()) {
                         results.addAll(deployedResults);
                     }

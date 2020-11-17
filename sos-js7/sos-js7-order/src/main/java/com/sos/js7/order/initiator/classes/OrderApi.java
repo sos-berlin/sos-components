@@ -62,7 +62,7 @@ public class OrderApi {
 
         orderInitiatorSettings.setTimeZone(Globals.sosCockpitProperties.getProperty("daily_plan_timezone", Globals.DEFAULT_TIMEZONE_DAILY_PLAN));
         orderInitiatorSettings.setPeriodBegin(Globals.sosCockpitProperties.getProperty("daily_plan_period_begin", Globals.DEFAULT_PERIOD_DAILY_PLAN));
-        orderInitiatorSettings.setControllerId(startOrders.getJobschedulerId());
+        orderInitiatorSettings.setControllerId(startOrders.getControllerId());
         
         OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer();
 

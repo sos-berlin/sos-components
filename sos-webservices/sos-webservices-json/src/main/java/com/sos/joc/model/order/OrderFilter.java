@@ -18,7 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "orderId",
     "compact",
     "suppressNotExistException"
@@ -32,8 +32,8 @@ public class OrderFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * string without < and >
      * <p>
@@ -69,9 +69,9 @@ public class OrderFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -81,9 +81,9 @@ public class OrderFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -156,12 +156,12 @@ public class OrderFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("orderId", orderId).append("compact", compact).append("suppressNotExistException", suppressNotExistException).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderId", orderId).append("compact", compact).append("suppressNotExistException", suppressNotExistException).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(compact).append(orderId).append(suppressNotExistException).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(compact).append(orderId).append(suppressNotExistException).toHashCode();
     }
 
     @Override
@@ -173,7 +173,7 @@ public class OrderFilter {
             return false;
         }
         OrderFilter rhs = ((OrderFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(compact, rhs.compact).append(orderId, rhs.orderId).append(suppressNotExistException, rhs.suppressNotExistException).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(orderId, rhs.orderId).append(suppressNotExistException, rhs.suppressNotExistException).isEquals();
     }
 
 }

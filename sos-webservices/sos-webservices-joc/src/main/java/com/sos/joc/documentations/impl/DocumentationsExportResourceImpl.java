@@ -63,13 +63,13 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
 
         SOSHibernateSession connection = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, filter.getJobschedulerId(), getPermissonsJocCockpit(filter
-                    .getJobschedulerId(), xAccessToken).getDocumentation().isExport());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, filter.getControllerId(), getPermissonsJocCockpit(filter
+                    .getControllerId(), xAccessToken).getDocumentation().isExport());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            checkRequiredParameter("jobschedulerId", filter.getJobschedulerId());
-            String targetFilename = "documentation_" + filter.getJobschedulerId() + ".zip";
+            checkRequiredParameter("jobschedulerId", filter.getControllerId());
+            String targetFilename = "documentation_" + filter.getControllerId() + ".zip";
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             final List<DocumentationContent> contents = mapToDocumentationContents(filter, connection);
@@ -177,12 +177,12 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
         SOSHibernateSession connection = null;
         ZipOutputStream zipOut = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL + "/info", filter, xAccessToken, filter.getJobschedulerId(),
-                    getPermissonsJocCockpit(filter.getJobschedulerId(), xAccessToken).getDocumentation().isExport());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL + "/info", filter, xAccessToken, filter.getControllerId(),
+                    getPermissonsJocCockpit(filter.getControllerId(), xAccessToken).getDocumentation().isExport());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            checkRequiredParameter("jobschedulerId", filter.getJobschedulerId());
+            checkRequiredParameter("jobschedulerId", filter.getControllerId());
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL + "/info");
             List<DocumentationContent> contents = mapToDocumentationContents(filter, connection);
@@ -227,7 +227,7 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
         DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
         List<DBItemDocumentation> docs = getDocsFromDb(dbLayer, filter);
         List<DocumentationContent> contents = new ArrayList<DocumentationContent>();
-        DocumentationContent usagesJson = getDeployUsageData(filter.getJobschedulerId(), dbLayer, docs.stream().collect(Collectors.mapping(
+        DocumentationContent usagesJson = getDeployUsageData(filter.getControllerId(), dbLayer, docs.stream().collect(Collectors.mapping(
                 DBItemDocumentation::getPath, Collectors.toSet())));
         if (usagesJson != null) {
             contents.add(usagesJson);
@@ -254,7 +254,7 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
             throws DBConnectionRefusedException, DBInvalidDataException, JsonProcessingException {
         try {
             DeployDocumentations docUsages = new DeployDocumentations();
-            docUsages.setJobschedulerId(jobschedulerId);
+            docUsages.setControllerId(jobschedulerId);
             List<DeployDocumentation> docUsageList = new ArrayList<DeployDocumentation>();
             Map<String, List<JobSchedulerObject>> docUsageMap = dbLayer.getDocumentationUsages(jobschedulerId, docPaths);
             for (Entry<String, List<JobSchedulerObject>> entry : docUsageMap.entrySet()) {
@@ -277,10 +277,10 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
             throws JocMissingRequiredParameterException, DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException {
         List<DBItemDocumentation> docs = new ArrayList<DBItemDocumentation>();
         if (filter.getDocumentations() != null && !filter.getDocumentations().isEmpty()) {
-            docs = dbLayer.getDocumentations(filter.getJobschedulerId(), filter.getDocumentations());
+            docs = dbLayer.getDocumentations(filter.getControllerId(), filter.getDocumentations());
         } else if (filter.getFolders() != null && !filter.getFolders().isEmpty()) {
             for (Folder folder : filter.getFolders()) {
-                docs.addAll(dbLayer.getDocumentations(filter.getJobschedulerId(), null, folder.getFolder(), folder.getRecursive()));
+                docs.addAll(dbLayer.getDocumentations(filter.getControllerId(), null, folder.getFolder(), folder.getRecursive()));
             }
         } else {
             throw new JocMissingRequiredParameterException("Neither 'documentations' nor 'folders' are specified!");

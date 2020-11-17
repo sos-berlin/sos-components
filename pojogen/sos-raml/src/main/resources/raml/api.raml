@@ -15,7 +15,7 @@ schemas:
   - error420: !include joc/schemas/common/error420-schema.json
   - ok: !include joc/schemas/common/ok-schema.json
   - orders: !include joc/schemas/order/orders_v-schema.json
-  - jsFilter: !include joc/schemas/common/jobSchedulerId-schema.json
+  - jsFilter: !include joc/schemas/common/controllerId-schema.json
   - jsFilterWithTimeout: !include joc/schemas/jobscheduler/urlParam-schema.json
   - jsFilterWithUrl: !include joc/schemas/jobscheduler/urlParam-schema.json
   - jsRegister: !include joc/schemas/jobscheduler/registerParam-schema.json
@@ -146,7 +146,7 @@ traits:
 /calendar/dates:
   type:
     postJSONWithoutJSId:
-      description: Sends dates of a calendar
+      description: Get dates of a calendar
       description1: !include joc/documentation/calendar/calendarIdPath.md
       description2: " "
       description3: !include joc/documentation/calendar/dateFrom.md
@@ -166,7 +166,7 @@ traits:
 /calendars:
   type:
     postJSONWithoutJSId:
-      description: Sends collection of calendar items
+      description: Get collection of calendar items
       description1: !include joc/documentation/common/compact.md
       description2: !include joc/documentation/common/regex.md
       description3: !include joc/documentation/common/folders.md
@@ -234,30 +234,6 @@ traits:
 #        schema200: !include joc/schemas/calendar/calendars-schema.json
 #        example: " "
 #        example200: " "
-
-/cluster:
-  /restart:
-    type:
-      postJSONWithOkWithoutJSId:
-        description: Restarts JOC services such as cluster, history, dailyplan 
-        description1: !include joc/documentation/cluster/restart.md
-        description2: " "
-        description3: " "
-        description4: " "
-        description5: " "
-        schema: !include joc/schemas/cluster/restart-schema.json
-        example: " "
-  /switch_member:
-    type:
-      postJSONWithOkWithoutJSId:
-        description: Switches to an inactive JOC cluster member 
-        description1: !include joc/documentation/cluster/switch.md
-        description2: " "
-        description3: " "
-        description4: " "
-        description5: " "
-        schema: !include joc/schemas/cluster/switch-schema.json
-        example: " "
         
 /configuration:
   type:
@@ -396,7 +372,7 @@ traits:
 /configurations:
   type:
      postJSON:
-       description: Sends collection of configuration items
+       description: Get collection of configuration items
        description1: !include joc/documentation/configuration/userParam.md
        description2: !include joc/documentation/configuration/configurationTypeParam.md
        description3: !include joc/documentation/configuration/objectTypeParam.md
@@ -437,7 +413,7 @@ traits:
   /orders:
     type:
       postJSON:
-        description: Sends a list of JobScheduler orders for a given daily plan 
+        description: Lists JobScheduler orders for a given daily plan 
         description1: !include joc/documentation/dailyplan/dailyPlanDate.md
         description2: !include joc/documentation/dailyplan/orderTemplates.md
         description3: !include joc/documentation/common/folders.md
@@ -494,7 +470,7 @@ traits:
   /submissions:
      type:
       postJSON:
-        description: Sends a list of submissions for daily plans 
+        description: Lists submissions for daily plans 
         description1: !include joc/documentation/dailyplan/dateFrom.md
         description2: !include joc/documentation/dailyplan/dateTo.md
         description3: !include joc/documentation/dailyplan/dailyplanSubmissionUser.md
@@ -515,7 +491,7 @@ traits:
   description: |
     This is not an API call. Use its children!!
   
-  /{jobschedulerId}/{accessToken}/{path}:
+  /{controllerId}/{accessToken}/{path}:
     type:
       getDocu:
         description: " "
@@ -525,7 +501,7 @@ traits:
   /used:
     type:
       postJSON:
-        description: Sends a list of JobScheduler objects which use the documentation
+        description: Lists Controller objects which use the documentation
         description1: !include joc/documentation/docu/docPath.md
         description2: " "
         description3: " "
@@ -557,7 +533,7 @@ traits:
     is: [ filteredByJSType ]
     type:
       postDocu:
-        description: Sends the documentation of a JobScheduler object
+        description: Get the documentation of a Controller object
         jsObjectParam: path
         jsObject: JobScheduler object
         #description1: !include joc/documentation/docu/jsObject.md
@@ -568,7 +544,7 @@ traits:
     post:
     type:
       postJSON:
-        description: Sends the URL of a documentation of a JobScheduler object
+        description: Get the URL of a documentation of a Controller object
         description1: !include joc/documentation/docu/jsObject.md
         description2: " "
         description3: " "
@@ -621,7 +597,7 @@ traits:
 /documentations:
   type:
     postJSON:
-      description: Sends collection of documentations
+      description: Get collection of documentations
       description1: !include joc/documentation/docu/filteredByPaths.md
       description2: " "
       description3: !include joc/documentation/common/regex.md
@@ -726,7 +702,7 @@ traits:
   /calendar/dates:
     type:
       postJSONWithoutJSId:
-        description: Sends dates of a calendar
+        description: Get dates of a calendar
         description1: !include joc/documentation/calendar/calendarIdPath.md
         description2: " "
         description3: !include joc/documentation/calendar/dateFrom.md
@@ -743,7 +719,7 @@ traits:
         schema200: !include joc/schemas/calendar/dates-schema.json
         example200: TODO
         
-  /deletedraft:
+  /delete_draft:
     type:
       postJSONWithoutJSId:
         description: Deletes configuration draft of an inventory object
@@ -766,7 +742,7 @@ traits:
   /deployable:
     type:
       postJSONWithoutJSId:
-        description: Sends deployable object
+        description: Get deployable object
         description1: !include joc/documentation/inventory/idOrPathAndDeployableType.md
         description2: !include joc/documentation/inventory/onlyValidObjects.md
         description3: !include joc/documentation/inventory/withVersions.md
@@ -786,7 +762,7 @@ traits:
   /deployables:
     type:
       postJSONWithoutJSId:
-        description: Sends deployable objects
+        description: Get deployable objects
         description1: !include joc/documentation/inventory/folder.md
         description2: !include joc/documentation/common/recursive.md
         description3: !include joc/documentation/inventory/deployableTypes.md
@@ -867,7 +843,7 @@ traits:
   /releasable:
     type:
       postJSONWithoutJSId:
-        description: Sends releasable objects
+        description: Get releasable objects
         description1: !include joc/documentation/inventory/idOrPathAndReleasableType.md
         description2: !include joc/documentation/inventory/onlyValidObjects.md
         description3: " "
@@ -887,7 +863,7 @@ traits:
   /releasables:
     type:
       postJSONWithoutJSId:
-        description: Sends releasable objects
+        description: Get releasable objects
         description1: !include joc/documentation/inventory/folder.md
         description2: !include joc/documentation/common/recursive.md
         description3: !include joc/documentation/inventory/releasableTypes.md
@@ -948,10 +924,10 @@ traits:
         schema200: !include joc/schemas/inventory/configurationObject-schema.json
         example200: !include joc/examples/inventory/store-response-example.json
   
-  /undo_remove:
+  /recover:
     type:
       postJSONWithOkWithoutJSId:
-        description: Undo a remove of inventory objects
+        description: Undo a removal of inventory objects
         description1: !include joc/documentation/inventory/idOrPathAndType.md
         description2: " "
         description3: " "
@@ -978,36 +954,36 @@ traits:
           body:
             application/json:
   
-/job:
-  /documentation:
-    get:
-    type:
-      postDocu:
-        description: Show documentation
-        jsObjectParam: job
-        jsObject: Job
-    /assign:
-      type:
-        postDocuWithOkResponse:
-          description: Assigns a Documentation to the Job
-          description1: !include joc/documentation/docu/docPath.md
-          description2: " "
-          description3: !include joc/documentation/job/jobRequired.md
-          description4: " "
-          schema: !include joc/schemas/job/jobDocuFilter-schema.json
-          example: TODO
-          audit: !include joc/documentation/audit/auditLog.md
-    /unassign:
-      type:
-        postDocuWithOkResponse:
-          description: Unassigns a Documentation of the Job
-          description1: " "
-          description2: " "
-          description3: !include joc/documentation/job/jobRequired.md
-          description4: " "
-          schema: !include joc/schemas/job/jobDocuFilter-schema.json
-          example: TODO
-          audit: !include joc/documentation/audit/auditLog.md
+#/job:
+#  /documentation:
+#    get:
+#    type:
+#      postDocu:
+#        description: Show documentation
+#        jsObjectParam: job
+#        jsObject: Job
+#    /assign:
+#      type:
+#        postDocuWithOkResponse:
+#          description: Assigns a Documentation to the Job
+#          description1: !include joc/documentation/docu/docPath.md
+#          description2: " "
+#          description3: !include joc/documentation/job/jobRequired.md
+#          description4: " "
+#          schema: !include joc/schemas/job/jobDocuFilter-schema.json
+#          example: TODO
+#          audit: !include joc/documentation/audit/auditLog.md
+#    /unassign:
+#      type:
+#        postDocuWithOkResponse:
+#          description: Unassigns a Documentation of the Job
+#          description1: " "
+#          description2: " "
+#          description3: !include joc/documentation/job/jobRequired.md
+#          description4: " "
+#          schema: !include joc/schemas/job/jobDocuFilter-schema.json
+#          example: TODO
+#          audit: !include joc/documentation/audit/auditLog.md
 
 #TODO
 #/jobclass:
@@ -1274,7 +1250,7 @@ traits:
             all following requests
           body:
             application/json:
-              schema: !include joc/schemas/jobscheduler/jobschedulerIds-schema.json
+              schema: !include joc/schemas/jobscheduler/controllerIds-schema.json
               example: !include joc/examples/jobscheduler/ids-example.json
   /log:
     type:
@@ -1329,6 +1305,63 @@ traits:
         description200: !include joc/documentation/jobscheduler/jobschedulerTest.md
         schema200: !include joc/schemas/jobscheduler/jobscheduler200_v-schema.json
         example200: !include joc/examples/jobscheduler/test-example.json
+
+/joc:
+  description: This is not an API call. Use its children!!
+  /cluster:
+    /restart:
+      type:
+        postJSONWithOkWithoutJSId:
+          description: Restarts JOC services such as cluster, history, dailyplan 
+          description1: !include joc/documentation/cluster/restart.md
+          description2: " "
+          description3: " "
+          description4: " "
+          description5: " "
+          schema: !include joc/schemas/cluster/restart-schema.json
+          example: " "
+    /switch_member:
+      type:
+        postJSONWithOkWithoutJSId:
+          description: Switches to an inactive JOC cluster member 
+          description1: !include joc/documentation/cluster/switch.md
+          description2: " "
+          description3: " "
+          description4: " "
+          description5: " "
+          schema: !include joc/schemas/cluster/switch-schema.json
+          example: " "
+  
+  /log:
+    type:
+      postWithPlainResponse:
+        description: Provides JOC Cockpit log ([date].stderrout.log) as download
+        description1: !include joc/documentation/joc/filename.md
+        description200: Content of JOC Cockpit log ([date].stderrout.log) for download
+        schema: !include joc/schemas/joc/filename-schema.json
+
+  /logs:
+    type: error
+    post:
+      description: <h2>Returns a list of JOC Cockpit logs ([date].stderrout.log)</h2>
+      responses:
+        200:
+          description: " "
+          body:
+            application/json:
+              schema: !include joc/schemas/joc/filenames-schema.json
+  
+  /properties:
+    type:
+      postOnlyAccessToken:
+        description: |
+          Response contains some settings from joc.properties file such as 
+          * pre-defined audit log comments
+          * flag to force audit log comments
+          * show/hide views 
+        description200: " "
+        schema200: !include joc/schemas/joc/properties-schema.json
+        example200: !include joc/examples/joc/properties-example.json
 
 #/lock:
 #  description: |
@@ -1419,25 +1452,6 @@ traits:
 #        schema200: !include joc/schemas/lock/locks_p-schema.json
 #        example: TODO
 #        example200: !include joc/examples/lock/locks_p-example.json
-
-/log:
-  type:
-    postWithPlainResponse:
-      description: Provides JOC Cockpit log ([date].stderrout.log) as download
-      description1: !include joc/documentation/joc/filename.md
-      description200: Content of JOC Cockpit log ([date].stderrout.log) for download
-      schema: !include joc/schemas/joc/filename-schema.json
-
-/logs:
-  type: error
-  post:
-    description: <h2>Returns a list of JOC Cockpit logs ([date].stderrout.log)</h2>
-    responses:
-      200:
-        description: " "
-        body:
-          application/json:
-            schema: !include joc/schemas/joc/filenames-schema.json
 
 /order:
   type:
@@ -1594,36 +1608,36 @@ traits:
 #        schema200: !include joc/schemas/calendar/calendars-schema.json
 #        example: !include joc/examples/order/filteredOrder-example.json
 #        example200: TODO
-  /documentation:
-    get:
-    is: [ filteredByOrderId ]
-    type:
-      postDocu:
-        description: Show documentation
-        jsObjectParam: workflow
-        jsObject: workflow
-    /assign:
-      type:
-        postDocuWithOkResponse:
-          description: Assigns a Documentation to the Order
-          description1: !include joc/documentation/docu/docPath.md
-          description2: !include joc/documentation/order/workflow.md
-          description3: !include joc/documentation/order/orderIdRequired.md
-          description4: " "
-          schema: !include joc/schemas/order/orderDocuFilter-schema.json
-          example: TODO
-          audit: !include joc/documentation/audit/auditLog.md
-    /unassign:
-      type:
-        postDocuWithOkResponse:
-          description: Unassigns a Documentation of the Order
-          description1: " "
-          description2: !include joc/documentation/order/workflow.md
-          description3: !include joc/documentation/order/orderIdRequired.md
-          description4: " "
-          schema: !include joc/schemas/order/orderDocuFilter-schema.json
-          example: TODO
-          audit: !include joc/documentation/audit/auditLog.md
+#  /documentation:
+#    get:
+#    is: [ filteredByOrderId ]
+#    type:
+#      postDocu:
+#        description: Show documentation
+#        jsObjectParam: workflow
+#        jsObject: workflow
+#    /assign:
+#      type:
+#        postDocuWithOkResponse:
+#          description: Assigns a Documentation to the Order
+#          description1: !include joc/documentation/docu/docPath.md
+#          description2: !include joc/documentation/order/workflow.md
+#          description3: !include joc/documentation/order/orderIdRequired.md
+#          description4: " "
+#          schema: !include joc/schemas/order/orderDocuFilter-schema.json
+#          example: TODO
+#          audit: !include joc/documentation/audit/auditLog.md
+#    /unassign:
+#      type:
+#        postDocuWithOkResponse:
+#          description: Unassigns a Documentation of the Order
+#          description1: " "
+#          description2: !include joc/documentation/order/workflow.md
+#          description3: !include joc/documentation/order/orderIdRequired.md
+#          description4: " "
+#          schema: !include joc/schemas/order/orderDocuFilter-schema.json
+#          example: TODO
+#          audit: !include joc/documentation/audit/auditLog.md
        
 /orders:
   type:
@@ -1796,7 +1810,7 @@ traits:
 /order_templates/list:
     type:
       postJSON:
-        description: Sends a list of order templates for a given controller 
+        description: Lists order templates for a given controller 
         description1: " "
         description2: " "
         description3: " "
@@ -1812,18 +1826,6 @@ traits:
         schema200: !include orderManagement/schemas/orders/orderTemplate-schema.json
         example: " "
         example200: " "
-
-/properties:
-  type:
-    postOnlyAccessToken:
-      description: |
-        Response contains some settings from joc.properties file such as 
-        * pre-defined audit log comments
-        * flag to force audit log comments
-        * show/hide views 
-      description200: " "
-      schema200: !include joc/schemas/joc/properties-schema.json
-      example200: !include joc/examples/joc/properties-example.json
 
 /publish:
   description: This is not an API call. Use child urls instead!
@@ -2261,7 +2263,7 @@ traits:
 #  /transfer/order:
 #    type:
 #      postJSON:
-#        description: sends parametrisized order information for "resume order" dialog
+#        description: Lists parametrisized order information for "resume order" dialog
 #        description1: !include joc/documentation/yade/transferId.md
 #        description2: " "
 #        description3: " "

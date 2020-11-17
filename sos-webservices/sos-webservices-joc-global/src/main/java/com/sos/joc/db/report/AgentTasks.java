@@ -4,9 +4,9 @@ import com.sos.joc.model.report.Agent;
 
 public class AgentTasks extends Agent {
 
-    public AgentTasks(Long numOfSuccessfulTasks, String jobschedulerId, String agent, String cause) {
+    public AgentTasks(Long numOfSuccessfulTasks, String controllerId, String agent, String cause) {
         setNumOfSuccessfulTasks(numOfSuccessfulTasks);
-        setJobschedulerId(jobschedulerId);
+        setControllerId(controllerId);
         setAgent(agent);
     }
 }

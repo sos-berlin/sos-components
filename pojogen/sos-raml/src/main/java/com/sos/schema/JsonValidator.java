@@ -57,7 +57,7 @@ public class JsonValidator {
             put("DocumentationsFilter", "docu/documentationsFilter-schema.json");
             put("DocumentationImport", "docu/documentationImport-schema.json");
 
-            put("JobSchedulerId", "common/jobSchedulerId-schema.json");
+            put("ControllerId", "common/controllerId-schema.json");
             put("UrlParameter", "jobscheduler/urlParam-schema.json");
             put("RegisterParameters", "jobscheduler/registerParam-schema.json");
 
@@ -68,7 +68,7 @@ public class JsonValidator {
             put("OrdersFilterV", "order/ordersFilterV-schema.json");
             put("OrderHistoryFilter", "order/orderHistoryFilter-schema.json");
             put("OrderRunningLogFilter", "order/orderRunningLogFilter-schema.json");
-            put("StartOrders", "order/startOrders-schema.json");
+            put("AddOrders", "order/addOrders-schema.json");
             put("ModifyOrders", "order/modifyOrders-schema.json");
             
             put("OrderTemplateDatesFilter", "orderManagement/orderTemplateDatesFilter-schema.json");

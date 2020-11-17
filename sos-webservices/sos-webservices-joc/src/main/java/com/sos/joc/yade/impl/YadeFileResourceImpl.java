@@ -21,8 +21,8 @@ public class YadeFileResourceImpl extends JOCResourceImpl implements IYadeFileRe
 	public JOCDefaultResponse postYadeFile(String accessToken, FileFilter filterBody) throws Exception {
 		try {
 			JOCDefaultResponse jocDefaultResponse = init(API_CALL, filterBody, accessToken,
-					filterBody.getJobschedulerId(),
-					getPermissonsJocCockpit(filterBody.getJobschedulerId(), accessToken).getYADE().getView().isFiles());
+					filterBody.getControllerId(),
+					getPermissonsJocCockpit(filterBody.getControllerId(), accessToken).getYADE().getView().isFiles());
 			if (jocDefaultResponse != null) {
 				return jocDefaultResponse;
 			}

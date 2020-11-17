@@ -24,7 +24,7 @@ public class XmlEditorAudit implements IAuditLog {
     @JsonProperty("schemaLocation")
     private String schemaLocation;
 
-    private String jobschedulerId;
+    private String controllerId;
 
     @JsonIgnore
     private String folder;
@@ -42,7 +42,7 @@ public class XmlEditorAudit implements IAuditLog {
     private Date startTime;
 
     public XmlEditorAudit(DeployConfiguration in) {
-        jobschedulerId = in.getJobschedulerId();
+        controllerId = in.getControllerId();
         objectType = in.getObjectType();
         name = JocXmlEditor.getConfigurationName(objectType);
         schemaLocation = JocXmlEditor.getStandardRelativeSchemaLocation(objectType);
@@ -51,14 +51,14 @@ public class XmlEditorAudit implements IAuditLog {
     }
 
     public XmlEditorAudit(ReadConfiguration in) {
-        jobschedulerId = in.getJobschedulerId();
+        controllerId = in.getControllerId();
         objectType = in.getObjectType();
         name = String.valueOf(in.getId());
         folder = JobSchedulerXmlEditor.getNormalizedLiveFolder(objectType);
     }
 
     public XmlEditorAudit(StoreConfiguration in, String schemaPath) {
-        jobschedulerId = in.getJobschedulerId();
+        controllerId = in.getControllerId();
         objectType = in.getObjectType();
         name = in.getName();
         schemaLocation = schemaPath;
@@ -66,7 +66,7 @@ public class XmlEditorAudit implements IAuditLog {
     }
 
     public XmlEditorAudit(ValidateConfiguration in, String schemaPath) {
-        jobschedulerId = in.getJobschedulerId();
+        controllerId = in.getControllerId();
         objectType = in.getObjectType();
         schemaLocation = schemaPath;
         folder = JobSchedulerXmlEditor.getNormalizedLiveFolder(objectType);
@@ -128,7 +128,7 @@ public class XmlEditorAudit implements IAuditLog {
 
     @Override
     public String getControllerId() {
-        return jobschedulerId;
+        return controllerId;
     }
 
     public ObjectType getObjectType() {

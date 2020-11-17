@@ -23,7 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "surveyDate",
-    "jobschedulerId",
+    "controllerId",
     "orderId",
     "workflow",
     "startTime",
@@ -46,8 +46,8 @@ public class OrderHistoryItem {
     @JsonProperty("surveyDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date surveyDate;
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * 
      * (Required)
@@ -146,14 +146,14 @@ public class OrderHistoryItem {
         this.surveyDate = surveyDate;
     }
 
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -350,12 +350,12 @@ public class OrderHistoryItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("jobschedulerId", jobschedulerId).append("orderId", orderId).append("workflow", workflow).append("startTime", startTime).append("plannedTime", plannedTime).append("endTime", endTime).append("position", position).append("state", state).append("historyId", historyId).append("children", children).toString();
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("controllerId", controllerId).append("orderId", orderId).append("workflow", workflow).append("startTime", startTime).append("plannedTime", plannedTime).append("endTime", endTime).append("position", position).append("state", state).append("historyId", historyId).append("children", children).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(surveyDate).append(workflow).append(orderId).append(children).append(historyId).append(plannedTime).append(startTime).append(endTime).append(position).append(state).append(jobschedulerId).toHashCode();
+        return new HashCodeBuilder().append(surveyDate).append(controllerId).append(workflow).append(orderId).append(children).append(historyId).append(plannedTime).append(startTime).append(endTime).append(position).append(state).toHashCode();
     }
 
     @Override
@@ -367,7 +367,7 @@ public class OrderHistoryItem {
             return false;
         }
         OrderHistoryItem rhs = ((OrderHistoryItem) other);
-        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(children, rhs.children).append(historyId, rhs.historyId).append(plannedTime, rhs.plannedTime).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(position, rhs.position).append(state, rhs.state).append(jobschedulerId, rhs.jobschedulerId).isEquals();
+        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(children, rhs.children).append(historyId, rhs.historyId).append(plannedTime, rhs.plannedTime).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(position, rhs.position).append(state, rhs.state).isEquals();
     }
 
 }

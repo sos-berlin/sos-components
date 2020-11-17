@@ -31,7 +31,7 @@ import com.sos.joc.joc.resource.ILogResource;
 import com.sos.joc.model.JOClog;
 import com.sos.joc.model.JOClogs;
 
-@javax.ws.rs.Path("")
+@javax.ws.rs.Path("joc")
 public class LogImpl extends JOCResourceImpl implements ILogResource {
 
     private static final String API_CALL = "./log";

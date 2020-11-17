@@ -72,22 +72,22 @@ public class ReadResourceImpl extends JOCResourceImpl implements IReadResource {
     }
 
     private void checkRequiredParameters(final ReadConfiguration in) throws Exception {
-        checkRequiredParameter("jobschedulerId", in.getJobschedulerId());
+        checkRequiredParameter("jobschedulerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final ReadConfiguration in) throws Exception {
-        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
+        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getControllerId(), accessToken);
         boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return initPermissions(in.getJobschedulerId(), permission);
+        return initPermissions(in.getControllerId(), permission);
     }
 
     private ReadStandardConfigurationAnswer handleStandardConfiguration(ReadConfiguration in) throws Exception {
-        DBItemXmlEditorConfiguration item = getItem(in.getJobschedulerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in
+        DBItemXmlEditorConfiguration item = getItem(in.getControllerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in
                 .getObjectType()));
 
         ReadConfigurationHandler handler = new ReadConfigurationHandler(this, in.getObjectType());
-        handler.readCurrent(item, in.getJobschedulerId(), (in.getForceLive() != null && in.getForceLive()));
+        handler.readCurrent(item, in.getControllerId(), (in.getForceLive() != null && in.getForceLive()));
         return handler.getAnswer();
     }
 
@@ -138,7 +138,7 @@ public class ReadResourceImpl extends JOCResourceImpl implements IReadResource {
             answer.setConfiguration(new AnswerConfiguration());
             if (item == null) {
                 throw new JocException(new JocError(JocXmlEditor.CODE_NO_CONFIGURATION_EXIST, String.format("[%s][%s][%s]no configuration found", in
-                        .getJobschedulerId(), in.getObjectType().name(), in.getId())));
+                        .getControllerId(), in.getObjectType().name(), in.getId())));
             }
             answer.getConfiguration().setId(item.getId().intValue());
             answer.getConfiguration().setName(item.getName());
@@ -223,7 +223,7 @@ public class ReadResourceImpl extends JOCResourceImpl implements IReadResource {
             DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
 
             session.beginTransaction();
-            List<Map<String, Object>> items = dbLayer.getObjectProperties(in.getJobschedulerId(), ObjectType.OTHER.name(), properties, orderBy);
+            List<Map<String, Object>> items = dbLayer.getObjectProperties(in.getControllerId(), ObjectType.OTHER.name(), properties, orderBy);
             session.commit();
             return items;
         } catch (Throwable e) {

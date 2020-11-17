@@ -14,17 +14,17 @@ import javax.ws.rs.Path;
 
 import com.sos.auth.rest.SOSShiroCurrentUser;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.jobscheduler.ControllerAnswer;
 import com.sos.joc.classes.jobscheduler.ControllerCallable;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceMasters;
-import com.sos.joc.model.common.JobSchedulerId;
+import com.sos.joc.model.common.ControllerId;
 import com.sos.joc.model.jobscheduler.Controller;
 import com.sos.joc.model.jobscheduler.Controllers;
 import com.sos.schema.JsonValidator;
@@ -53,10 +53,10 @@ public class JobSchedulerResourceMastersImpl extends JOCResourceImpl implements 
                 apiCall += "/p";
             }
             initLogging(apiCall, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, JobSchedulerId.class);
-            JobSchedulerId jobSchedulerFilter = Globals.objectMapper.readValue(filterBytes, JobSchedulerId.class);
+            JsonValidator.validateFailFast(filterBytes, ControllerId.class);
+            ControllerId jobSchedulerFilter = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
 
-            String jobSchedulerId = jobSchedulerFilter.getJobschedulerId();
+            String jobSchedulerId = jobSchedulerFilter.getControllerId();
             if (jobSchedulerId == null) {
                 jobSchedulerId = "";
             }

@@ -69,12 +69,12 @@ public class JocAuditLog {
 
 	public synchronized DBItemJocAuditLog storeAuditLogEntry(IAuditLog body) {
 		if (body != null) {
-			String jobSchedulerId = body.getControllerId();
-			if (jobSchedulerId == null || jobSchedulerId.isEmpty()) {
-				jobSchedulerId = "-";
+			String controllerId = body.getControllerId();
+			if (controllerId == null || controllerId.isEmpty()) {
+				controllerId = "-";
 			}
 			DBItemJocAuditLog auditLogToDb = new DBItemJocAuditLog();
-			auditLogToDb.setSchedulerId(jobSchedulerId);
+			auditLogToDb.setSchedulerId(controllerId);
 			auditLogToDb.setAccount(user);
 			auditLogToDb.setRequest(request);
 			auditLogToDb.setParameters(getJsonString(body));

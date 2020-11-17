@@ -4,7 +4,7 @@
 	"javaType": "com.sos.joc.model.tree.TreeFilter",
 	"type": "object",
 	"properties": {
-		"jobschedulerId": {
+		"controllerId": {
 			"$ref": "../common/filename100-schema.json"
 		},
 		"types": {

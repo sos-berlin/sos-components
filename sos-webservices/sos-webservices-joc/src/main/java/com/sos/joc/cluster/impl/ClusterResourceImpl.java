@@ -21,7 +21,7 @@ import com.sos.schema.JsonValidator;
 @Path(ClusterResourceImpl.API_PATH)
 public class ClusterResourceImpl extends JOCResourceImpl implements IClusterResource {
 
-    public static final String API_PATH = "cluster";
+    public static final String API_PATH = "joc/cluster";
     public static final String IMPL_PATH_RESTART = "restart";
     public static final String IMPL_PATH_SWITCH_MEMBER = "switch_member";
 

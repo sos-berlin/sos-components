@@ -21,7 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "locks",
     "regex",
     "folders"
@@ -33,8 +33,8 @@ public class LocksFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     @JsonProperty("locks")
     private List<LockPath> locks = new ArrayList<LockPath>();
     /**
@@ -60,9 +60,9 @@ public class LocksFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -70,9 +70,9 @@ public class LocksFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     @JsonProperty("locks")
@@ -131,12 +131,12 @@ public class LocksFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("locks", locks).append("regex", regex).append("folders", folders).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("locks", locks).append("regex", regex).append("folders", folders).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(regex).append(folders).append(jobschedulerId).append(locks).toHashCode();
+        return new HashCodeBuilder().append(regex).append(folders).append(controllerId).append(locks).toHashCode();
     }
 
     @Override
@@ -148,7 +148,7 @@ public class LocksFilter {
             return false;
         }
         LocksFilter rhs = ((LocksFilter) other);
-        return new EqualsBuilder().append(regex, rhs.regex).append(folders, rhs.folders).append(jobschedulerId, rhs.jobschedulerId).append(locks, rhs.locks).isEquals();
+        return new EqualsBuilder().append(regex, rhs.regex).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(locks, rhs.locks).isEquals();
     }
 
 }

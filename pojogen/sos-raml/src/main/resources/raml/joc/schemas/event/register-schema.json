@@ -4,10 +4,10 @@
   "javaType": "com.sos.joc.model.event.RegisterEvent",
   "type": "object",
   "required": [
-    "jobscheduler"
+    "controllers"
   ],
   "properties": {
-    "jobscheduler": {
+    "controllers": {
       "type": "array",
       "minItems": 1,
       "items": {

@@ -61,8 +61,8 @@ public class Proxies {
     }
     
     /**
-     * Returns a JControllerProxy according the credentials specified by jobschedulerId and account (and starts it if necessary)
-     * @param jobschedulerId
+     * Returns a JControllerProxy according the credentials specified by controllerId and account (and starts it if necessary)
+     * @param controllerId
      * @param account
      * @param connectionTimeout
      * @return JControllerProxy
@@ -77,17 +77,17 @@ public class Proxies {
      * @throws DBOpenSessionException 
      * @throws JocConfigurationException 
      */
-    protected JControllerProxy of(String jobschedulerId, ProxyUser account, long connectionTimeout) throws JobSchedulerConnectionResetException,
+    protected JControllerProxy of(String controllerId, ProxyUser account, long connectionTimeout) throws JobSchedulerConnectionResetException,
             JobSchedulerConnectionRefusedException, DBMissingDataException, ExecutionException, JocConfigurationException, DBOpenSessionException,
             DBInvalidDataException, DBConnectionRefusedException {
-        initControllerDbInstances(jobschedulerId);
-        return of(ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances.get(jobschedulerId)).withAccount(account).build(),
+        initControllerDbInstances(controllerId);
+        return of(ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances.get(controllerId)).withAccount(account).build(),
                 connectionTimeout);
     }
     
     /**
-     * Returns a ControllerApi according the credentials specified by jobschedulerId and account
-     * @param jobschedulerId
+     * Returns a ControllerApi according the credentials specified by controllerId and account
+     * @param controllerId
      * @param account
      * @param connectionTimeout
      * @return JControllerApi
@@ -98,16 +98,16 @@ public class Proxies {
      * @throws JocConfigurationException 
      * @throws JobSchedulerConnectionResetException 
      */
-    protected JControllerApi loadApi(String jobschedulerId, ProxyUser account, long connectionTimeout) throws DBMissingDataException,
+    protected JControllerApi loadApi(String controllerId, ProxyUser account, long connectionTimeout) throws DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
             JobSchedulerConnectionRefusedException {
-        initControllerDbInstances(jobschedulerId);
-        return loadApi(ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances.get(jobschedulerId)).withAccount(account).build());
+        initControllerDbInstances(controllerId);
+        return loadApi(ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances.get(controllerId)).withAccount(account).build());
     }
     
     /**
-     * Closes a started Proxy according the credentials specified by jobschedulerId and account
-     * @param jobschedulerId
+     * Closes a started Proxy according the credentials specified by controllerId and account
+     * @param controllerId
      * @param account
      * @return CompletableFuture&lt;Void&gt;
      * @throws DBMissingDataException
@@ -116,15 +116,15 @@ public class Proxies {
      * @throws DBOpenSessionException 
      * @throws JocConfigurationException 
      */
-    protected CompletableFuture<Void> close(String jobschedulerId, ProxyUser account) throws DBMissingDataException, JocConfigurationException,
+    protected CompletableFuture<Void> close(String controllerId, ProxyUser account) throws DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException {
-        initControllerDbInstances(jobschedulerId);
-        return close(ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances.get(jobschedulerId)).withAccount(account).build());
+        initControllerDbInstances(controllerId);
+        return close(ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances.get(controllerId)).withAccount(account).build());
     }
     
     /**
-     * Starts Proxy with according credentials specified by jobschedulerId and account
-     * @param jobschedulerId
+     * Starts Proxy with according credentials specified by controllerId and account
+     * @param controllerId
      * @param account
      * @return ProxyContext
      * @throws JobSchedulerConnectionRefusedException
@@ -134,25 +134,25 @@ public class Proxies {
      * @throws DBConnectionRefusedException 
      * @throws DBInvalidDataException 
      */
-    protected ProxyContext start(String jobschedulerId, ProxyUser account) throws JobSchedulerConnectionRefusedException, DBMissingDataException,
+    protected ProxyContext start(String controllerId, ProxyUser account) throws JobSchedulerConnectionRefusedException, DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException {
-        initControllerDbInstances(jobschedulerId);
-        return start(ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances.get(jobschedulerId)).withAccount(account).build());
+        initControllerDbInstances(controllerId);
+        return start(ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances.get(controllerId)).withAccount(account).build());
     }
     
     /**
-     * Closes all Proxies with specified 'jobschedulerId' inside its credentials
+     * Closes all Proxies with specified 'controllerId' inside its credentials
      * Should only called from provisioning dialogue 
-     * @param jobschedulerId
+     * @param controllerId
      */
-    protected void removeProxies(final String jobschedulerId) {
-        proxiesOfJobSchedulerId(jobschedulerId).forEach((key, proxy) -> {
+    protected void removeProxies(final String controllerId) {
+        proxiesOfControllerId(controllerId).forEach((key, proxy) -> {
             proxy.stop();
             controllerFutures.remove(key);
             controllerApis.remove(key);
-            EventBus.getInstance().post(new ProxyRemoved(key.getUser().name(), jobschedulerId, null));
+            EventBus.getInstance().post(new ProxyRemoved(key.getUser().name(), controllerId, null));
         });
-        controllerDbInstances.remove(jobschedulerId);
+        controllerDbInstances.remove(controllerId);
     }
     
     /**
@@ -165,9 +165,9 @@ public class Proxies {
     protected void updateProxies(final List<DBItemInventoryJSInstance> controllerDbInstances) throws DBMissingDataException,
             JobSchedulerConnectionRefusedException {
         if (controllerDbInstances != null && !controllerDbInstances.isEmpty()) {
-            String jobschedulerId = controllerDbInstances.get(0).getControllerId();
-            boolean isNew = !this.controllerDbInstances.containsKey(jobschedulerId);
-            this.controllerDbInstances.put(jobschedulerId, controllerDbInstances);
+            String controllerId = controllerDbInstances.get(0).getControllerId();
+            boolean isNew = !this.controllerDbInstances.containsKey(controllerId);
+            this.controllerDbInstances.put(controllerId, controllerDbInstances);
             for (ProxyUser account : ProxyUser.values()) {
                 ProxyCredentials newCredentials = ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances).withAccount(account).build();
                 // History needs only ControllerAPI (not Proxy)
@@ -177,10 +177,10 @@ public class Proxies {
                     } else if (account == ProxyUser.HISTORY) {
                         loadApi(newCredentials);
                     }
-                    EventBus.getInstance().post(new ProxyStarted(account.name(), jobschedulerId, null));
+                    EventBus.getInstance().post(new ProxyStarted(account.name(), controllerId, null));
                 } else {
                     if ((account == ProxyUser.JOC && restart(newCredentials)) || (account == ProxyUser.HISTORY && reloadApi(newCredentials))) {
-                        EventBus.getInstance().post(new ProxyRestarted(account.name(), jobschedulerId, null));
+                        EventBus.getInstance().post(new ProxyRestarted(account.name(), controllerId, null));
                     }
                 }
             }
@@ -188,7 +188,7 @@ public class Proxies {
     }
     
     /**
-     * Returns map of Controller database instances where the key is the JobSchedulerId and the
+     * Returns map of Controller database instances where the key is the controllerId and the
      * value is always a list. The list contains one or two members depending on stand-alone or cluster. 
      * @return Map&lt;String, List&lt;DBItemInventoryJSInstance&gt;&gt;
      */
@@ -369,18 +369,18 @@ public class Proxies {
         }
     }
     
-    private void initControllerDbInstances(String jobschedulerId) throws JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
+    private void initControllerDbInstances(String controllerId) throws JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, DBMissingDataException {
-        if (!controllerDbInstances.containsKey(jobschedulerId)) {
+        if (!controllerDbInstances.containsKey(controllerId)) {
             SOSHibernateSession sosHibernateSession = null;
             try {
                 sosHibernateSession = Globals.createSosHibernateStatelessConnection("Proxies");
                 List<DBItemInventoryJSInstance> instances = new InventoryInstancesDBLayer(sosHibernateSession).getInventoryInstancesByControllerId(
-                        jobschedulerId);
+                        controllerId);
                 if (instances != null && !instances.isEmpty()) {
-                    controllerDbInstances.put(jobschedulerId, instances);
+                    controllerDbInstances.put(controllerId, instances);
                 } else {
-                    throw new DBMissingDataException(String.format("unknown controller '%s'", jobschedulerId));
+                    throw new DBMissingDataException(String.format("unknown controller '%s'", controllerId));
                 }
             } finally {
                 Globals.disconnect(sosHibernateSession);
@@ -388,8 +388,8 @@ public class Proxies {
         }
     }
 
-    private Map<ProxyCredentials, ProxyContext> proxiesOfJobSchedulerId(final String jobschedulerId) {
-        return controllerFutures.entrySet().stream().filter(entry -> entry.getKey().getJobSchedulerId().equals(jobschedulerId)).collect(Collectors
+    private Map<ProxyCredentials, ProxyContext> proxiesOfControllerId(final String controllerId) {
+        return controllerFutures.entrySet().stream().filter(entry -> entry.getKey().getControllerId().equals(controllerId)).collect(Collectors
                 .toMap(Entry::getKey, Entry::getValue));
     }
     
@@ -412,7 +412,7 @@ public class Proxies {
             throw e;
         } catch (CancellationException e) {
             close(credentials);
-            throw new JobSchedulerConnectionResetException(credentials.getJobSchedulerId());
+            throw new JobSchedulerConnectionResetException(credentials.getControllerId());
         }
     }
     

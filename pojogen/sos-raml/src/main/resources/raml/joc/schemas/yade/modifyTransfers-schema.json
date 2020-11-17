@@ -4,11 +4,11 @@
   "javaType": "com.sos.joc.model.yade.ModifyTransfers",
   "type": "object",
   "required": [
-    "jobschedulerId",
+    "controllerId",
     "transfers"
   ],
   "properties": {
-    "jobschedulerId": {
+    "controllerId": {
       "type": "string"
     },
     "transfers": {

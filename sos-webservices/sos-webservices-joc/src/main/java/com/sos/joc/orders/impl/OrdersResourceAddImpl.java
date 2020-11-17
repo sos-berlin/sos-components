@@ -53,8 +53,8 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             JsonValidator.validateFailFast(filterBytes, AddOrders.class);
             AddOrders addOrders = Globals.objectMapper.readValue(filterBytes, AddOrders.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(addOrders.getJobschedulerId(), getPermissonsJocCockpit(addOrders
-                    .getJobschedulerId(), accessToken).getOrder().getExecute().isStart());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(addOrders.getControllerId(), getPermissonsJocCockpit(addOrders
+                    .getControllerId(), accessToken).getOrder().getExecute().isStart());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -93,7 +93,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             if (result.containsKey(true) && !result.get(true).isEmpty()) {
                 final Map<OrderId, JFreshOrder> freshOrders = result.get(true).stream().map(Either::get).collect(Collectors.toMap(JFreshOrder::id,
                         Function.identity()));
-                final JControllerApi controllerApi = ControllerApi.of(addOrders.getJobschedulerId());
+                final JControllerApi controllerApi = ControllerApi.of(addOrders.getControllerId());
                 controllerApi.addOrders(Flux.fromIterable(freshOrders.values())).thenApply(e -> {
                     if (e.isRight()) {
                         return controllerApi.removeOrdersWhenTerminated(freshOrders.keySet()).join();
@@ -101,7 +101,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                         Either<Problem, Void> either = Either.left(e.getLeft());
                         return either;
                     }
-                }).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, addOrders.getJobschedulerId()));
+                }).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, addOrders.getControllerId()));
             }
             
 //            if (result.containsKey(true) && !result.get(true).isEmpty()) {

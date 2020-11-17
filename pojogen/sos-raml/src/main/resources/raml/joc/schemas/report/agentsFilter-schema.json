@@ -4,12 +4,12 @@
   "javaType": "com.sos.joc.model.report.AgentsFilter",
   "type": "object",
   "required": [
-    "jobschedulerId",
+    "controllerId",
     "dateFrom",
     "dateTo"
   ],
   "properties": {
-    "jobschedulerId": {
+    "controllerId": {
       "type": "string"
     },
     "agents": {

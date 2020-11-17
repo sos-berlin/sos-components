@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "fileIds",
     "transferIds",
     "interventionTransferIds",
@@ -33,8 +33,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class FilesFilter {
 
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     @JsonProperty("fileIds")
     private List<Long> fileIds = new ArrayList<Long>();
     @JsonProperty("transferIds")
@@ -73,14 +73,14 @@ public class FilesFilter {
     @JsonPropertyDescription("only for db history urls to restrict the number of responsed records; -1=unlimited")
     private Integer limit = 10000;
 
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     @JsonProperty("fileIds")
@@ -207,12 +207,12 @@ public class FilesFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("fileIds", fileIds).append("transferIds", transferIds).append("interventionTransferIds", interventionTransferIds).append("compact", compact).append("regex", regex).append("states", states).append("sourceFiles", sourceFiles).append("targetFiles", targetFiles).append("limit", limit).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("fileIds", fileIds).append("transferIds", transferIds).append("interventionTransferIds", interventionTransferIds).append("compact", compact).append("regex", regex).append("states", states).append("sourceFiles", sourceFiles).append("targetFiles", targetFiles).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(regex).append(sourceFiles).append(compact).append(fileIds).append(limit).append(interventionTransferIds).append(jobschedulerId).append(targetFiles).append(transferIds).append(states).toHashCode();
+        return new HashCodeBuilder().append(regex).append(sourceFiles).append(controllerId).append(compact).append(fileIds).append(limit).append(interventionTransferIds).append(targetFiles).append(transferIds).append(states).toHashCode();
     }
 
     @Override
@@ -224,7 +224,7 @@ public class FilesFilter {
             return false;
         }
         FilesFilter rhs = ((FilesFilter) other);
-        return new EqualsBuilder().append(regex, rhs.regex).append(sourceFiles, rhs.sourceFiles).append(compact, rhs.compact).append(fileIds, rhs.fileIds).append(limit, rhs.limit).append(interventionTransferIds, rhs.interventionTransferIds).append(jobschedulerId, rhs.jobschedulerId).append(targetFiles, rhs.targetFiles).append(transferIds, rhs.transferIds).append(states, rhs.states).isEquals();
+        return new EqualsBuilder().append(regex, rhs.regex).append(sourceFiles, rhs.sourceFiles).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(fileIds, rhs.fileIds).append(limit, rhs.limit).append(interventionTransferIds, rhs.interventionTransferIds).append(targetFiles, rhs.targetFiles).append(transferIds, rhs.transferIds).append(states, rhs.states).isEquals();
     }
 
 }

@@ -24,17 +24,17 @@ public class DocumentationUsedResourceImpl extends JOCResourceImpl implements ID
     public JOCDefaultResponse postDocumentationsUsed(String xAccessToken, DocumentationFilter filter) throws Exception {
         SOSHibernateSession connection = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, filter.getJobschedulerId(), getPermissonsJocCockpit(filter
-                    .getJobschedulerId(), xAccessToken).getDocumentation().isView());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, filter.getControllerId(), getPermissonsJocCockpit(filter
+                    .getControllerId(), xAccessToken).getDocumentation().isView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            checkRequiredParameter("jobschedulerId", filter.getJobschedulerId());
+            checkRequiredParameter("jobschedulerId", filter.getControllerId());
             checkRequiredParameter("path", filter.getDocumentation());
             UsedBy usedBy = new UsedBy();
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
-            usedBy.setObjects(dbLayer.getDocumentationUsages(filter.getJobschedulerId(), normalizePath(filter.getDocumentation())));
+            usedBy.setObjects(dbLayer.getDocumentationUsages(filter.getControllerId(), normalizePath(filter.getDocumentation())));
             usedBy.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(usedBy);
         } catch (JocException e) {

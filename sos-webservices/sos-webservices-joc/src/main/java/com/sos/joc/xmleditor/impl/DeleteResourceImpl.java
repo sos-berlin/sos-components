@@ -63,22 +63,22 @@ public class DeleteResourceImpl extends JOCResourceImpl implements IDeleteResour
     }
 
     private void checkRequiredParameters(final DeleteDraft in) throws Exception {
-        checkRequiredParameter("jobschedulerId", in.getJobschedulerId());
+        checkRequiredParameter("jobschedulerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final DeleteDraft in) throws Exception {
-        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
+        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getControllerId(), accessToken);
         boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return initPermissions(in.getJobschedulerId(), permission);
+        return initPermissions(in.getControllerId(), permission);
     }
 
     private ReadStandardConfigurationAnswer handleStandardConfiguration(DeleteDraft in) throws Exception {
-        DBItemXmlEditorConfiguration item = updateItem(in.getJobschedulerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in
+        DBItemXmlEditorConfiguration item = updateItem(in.getControllerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in
                 .getObjectType()));
 
         ReadConfigurationHandler handler = new ReadConfigurationHandler(this, in.getObjectType());
-        handler.readLive(item, in.getJobschedulerId());
+        handler.readLive(item, in.getControllerId());
         return handler.getAnswer();
     }
 

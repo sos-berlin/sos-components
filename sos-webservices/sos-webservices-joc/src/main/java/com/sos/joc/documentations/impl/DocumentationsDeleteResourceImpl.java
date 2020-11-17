@@ -29,21 +29,21 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
         
         SOSHibernateSession connection = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, filter.getJobschedulerId(), getPermissonsJocCockpit(filter
-                    .getJobschedulerId(), xAccessToken).getDocumentation().isDelete());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, filter.getControllerId(), getPermissonsJocCockpit(filter
+                    .getControllerId(), xAccessToken).getDocumentation().isDelete());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            checkRequiredParameter("jobschedulerId", filter.getJobschedulerId());
+            checkRequiredParameter("jobschedulerId", filter.getControllerId());
             checkRequiredParameter("documentations", filter.getDocumentations());
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
-            List<DBItemDocumentation> docs = dbLayer.getDocumentations(filter.getJobschedulerId(), filter.getDocumentations());
+            List<DBItemDocumentation> docs = dbLayer.getDocumentations(filter.getControllerId(), filter.getDocumentations());
             for (DBItemDocumentation dbDoc : docs) {
                 DeleteDocumentationAudit deleteAudit = new DeleteDocumentationAudit(filter, dbDoc.getPath(), dbDoc.getDirectory());
                 logAuditMessage(deleteAudit);
-                List<DBItemDocumentationUsage> dbUsages = dbLayer.getDocumentationUsages(filter.getJobschedulerId(), dbDoc.getId());
+                List<DBItemDocumentationUsage> dbUsages = dbLayer.getDocumentationUsages(filter.getControllerId(), dbDoc.getId());
                 if (dbUsages != null && !dbUsages.isEmpty()) {
                     for (DBItemDocumentationUsage dbUsage : dbUsages) {
                         connection.delete(dbUsage);

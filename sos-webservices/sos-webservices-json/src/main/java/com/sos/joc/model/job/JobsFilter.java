@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "jobs",
     "excludeJobs",
     "orders",
@@ -46,8 +46,8 @@ public class JobsFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     @JsonProperty("jobs")
     private List<JobPath> jobs = new ArrayList<JobPath>();
     @JsonProperty("excludeJobs")
@@ -114,9 +114,9 @@ public class JobsFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -124,9 +124,9 @@ public class JobsFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     @JsonProperty("jobs")
@@ -333,12 +333,12 @@ public class JobsFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("jobs", jobs).append("excludeJobs", excludeJobs).append("orders", orders).append("compact", compact).append("compactView", compactView).append("regex", regex).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("folders", folders).append("limit", limit).append("historyStates", historyStates).append("criticalities", criticalities).append("taskIds", taskIds).append("historyIds", historyIds).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("jobs", jobs).append("excludeJobs", excludeJobs).append("orders", orders).append("compact", compact).append("compactView", compactView).append("regex", regex).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("folders", folders).append("limit", limit).append("historyStates", historyStates).append("criticalities", criticalities).append("taskIds", taskIds).append("historyIds", historyIds).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folders).append(compact).append(jobs).append(historyStates).append(timeZone).append(criticalities).append(dateFrom).append(taskIds).append(historyIds).append(compactView).append(regex).append(dateTo).append(limit).append(orders).append(jobschedulerId).append(excludeJobs).toHashCode();
+        return new HashCodeBuilder().append(folders).append(controllerId).append(compact).append(jobs).append(historyStates).append(timeZone).append(criticalities).append(dateFrom).append(taskIds).append(historyIds).append(compactView).append(regex).append(dateTo).append(limit).append(orders).append(excludeJobs).toHashCode();
     }
 
     @Override
@@ -350,7 +350,7 @@ public class JobsFilter {
             return false;
         }
         JobsFilter rhs = ((JobsFilter) other);
-        return new EqualsBuilder().append(folders, rhs.folders).append(compact, rhs.compact).append(jobs, rhs.jobs).append(historyStates, rhs.historyStates).append(timeZone, rhs.timeZone).append(criticalities, rhs.criticalities).append(dateFrom, rhs.dateFrom).append(taskIds, rhs.taskIds).append(historyIds, rhs.historyIds).append(compactView, rhs.compactView).append(regex, rhs.regex).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(orders, rhs.orders).append(jobschedulerId, rhs.jobschedulerId).append(excludeJobs, rhs.excludeJobs).isEquals();
+        return new EqualsBuilder().append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(jobs, rhs.jobs).append(historyStates, rhs.historyStates).append(timeZone, rhs.timeZone).append(criticalities, rhs.criticalities).append(dateFrom, rhs.dateFrom).append(taskIds, rhs.taskIds).append(historyIds, rhs.historyIds).append(compactView, rhs.compactView).append(regex, rhs.regex).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(orders, rhs.orders).append(excludeJobs, rhs.excludeJobs).isEquals();
     }
 
 }

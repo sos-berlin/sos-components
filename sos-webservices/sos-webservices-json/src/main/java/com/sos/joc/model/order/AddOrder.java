@@ -12,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * modify order command
+ * add order command
  * <p>
  * 
  * 

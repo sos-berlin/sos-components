@@ -17,14 +17,12 @@ public class ModifyJobSchedulerAudit extends UrlParameter implements IAuditLog {
     @JsonIgnore
     private String ticketLink;
     
-    private String controllerId;
-
     public ModifyJobSchedulerAudit(UrlParameter uriParamSchema) {
         if (uriParamSchema != null) {
             setAuditParams(uriParamSchema.getAuditLog());
             setUrl(uriParamSchema.getUrl());
             setWithFailover(uriParamSchema.getWithFailover());
-            setJobschedulerId(uriParamSchema.getJobschedulerId()); 
+            setControllerId(uriParamSchema.getControllerId()); 
         }
     }
     
@@ -33,8 +31,7 @@ public class ModifyJobSchedulerAudit extends UrlParameter implements IAuditLog {
             setAuditParams(uriParamSchema.getAuditLog());
             setUrl(null);
             setWithFailover(null);
-            this.controllerId = uriParamSchema.getJobschedulerId();
-            setJobschedulerId(null); 
+            setControllerId(uriParamSchema.getControllerId()); 
         }
     }
 
@@ -98,10 +95,5 @@ public class ModifyJobSchedulerAudit extends UrlParameter implements IAuditLog {
     @JsonIgnore
     public Long getDepHistoryId() {
         return null;
-    }
-
-    @Override
-    public String getControllerId() {
-        return controllerId;
     }
 }

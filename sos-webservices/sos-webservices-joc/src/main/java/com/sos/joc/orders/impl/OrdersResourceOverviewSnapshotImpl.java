@@ -50,7 +50,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             JsonValidator.validateFailFast(filterBytes, WorkflowsFilter.class);
             WorkflowsFilter body = Globals.objectMapper.readValue(filterBytes, WorkflowsFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(body.getJobschedulerId(), getPermissonsJocCockpit(body.getJobschedulerId(),
+            JOCDefaultResponse jocDefaultResponse = initPermissions(body.getControllerId(), getPermissonsJocCockpit(body.getControllerId(),
                     accessToken).getOrder().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -59,7 +59,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             boolean withWorkFlowFilter = body.getWorkflowIds() != null && !body.getWorkflowIds().isEmpty();
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             
-            return JOCDefaultResponse.responseStatus200(getSnapshot(Proxy.of(body.getJobschedulerId()).currentState(), checkFolderPermission(body
+            return JOCDefaultResponse.responseStatus200(getSnapshot(Proxy.of(body.getControllerId()).currentState(), checkFolderPermission(body
                     .getWorkflowIds(), permittedFolders), permittedFolders, withWorkFlowFilter));
 
         } catch (JobSchedulerConnectionResetException e) {

@@ -3,8 +3,6 @@ package com.sos.joc.jobscheduler.impl;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.ws.rs.Path;
 
@@ -28,12 +26,6 @@ import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceModifyJobScheduler
 import com.sos.joc.model.jobscheduler.UrlParameter;
 import com.sos.schema.JsonValidator;
 
-import io.vavr.control.Either;
-import js7.base.problem.Problem;
-import js7.base.web.Uri;
-import js7.data.cluster.ClusterSetting.Watch;
-import js7.data.node.NodeId;
-
 @Path("jobscheduler")
 public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResourceImpl implements IJobSchedulerResourceModifyJobSchedulerCluster {
 
@@ -47,10 +39,10 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter urlParameter = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
 
-            boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken).getJS7ControllerCluster().getExecute()
+            boolean permission = getPermissonsJocCockpit(urlParameter.getControllerId(), accessToken).getJS7ControllerCluster().getExecute()
                     .isSwitchOver();
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(urlParameter.getJobschedulerId(), permission);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(urlParameter.getControllerId(), permission);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -60,12 +52,12 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
             logAuditMessage(jobschedulerAudit);
 
             // ask for cluster
-            List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(urlParameter.getJobschedulerId());
+            List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(urlParameter.getControllerId());
             if (controllerInstances == null || controllerInstances.size() < 2) { // is not cluster
-                throw new JobSchedulerBadRequestException("There is no cluster with the Id: " + urlParameter.getJobschedulerId());
+                throw new JobSchedulerBadRequestException("There is no cluster with the Id: " + urlParameter.getControllerId());
             }
 
-            ClusterState clusterState = Globals.objectMapper.readValue(Proxy.of(urlParameter.getJobschedulerId()).currentState().clusterState()
+            ClusterState clusterState = Globals.objectMapper.readValue(Proxy.of(urlParameter.getControllerId()).currentState().clusterState()
                     .toJson(), ClusterState.class);
 
             // ask for coupled
@@ -80,8 +72,8 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
 //                ProblemHelper.throwProblemIfExist(response);
 //            } catch (TimeoutException e) {
 //            }
-            ControllerApi.of(urlParameter.getJobschedulerId()).executeCommandJson(Globals.objectMapper.writeValueAsString(new ClusterSwitchOver()))
-                    .thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, urlParameter.getJobschedulerId()));
+            ControllerApi.of(urlParameter.getControllerId()).executeCommandJson(Globals.objectMapper.writeValueAsString(new ClusterSwitchOver()))
+                    .thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, urlParameter.getControllerId()));
 
             storeAuditLogEntry(jobschedulerAudit);
 
@@ -101,10 +93,10 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter urlParameter = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             // TODO permissions
-            boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken).getJS7ControllerCluster().getExecute()
+            boolean permission = getPermissonsJocCockpit(urlParameter.getControllerId(), accessToken).getJS7ControllerCluster().getExecute()
                     .isSwitchOver();
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(urlParameter.getJobschedulerId(), permission);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(urlParameter.getControllerId(), permission);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -114,9 +106,9 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
             logAuditMessage(jobschedulerAudit);
 
             // ask for cluster
-            List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(urlParameter.getJobschedulerId());
+            List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(urlParameter.getControllerId());
             if (controllerInstances == null || controllerInstances.size() < 2) { // is not cluster
-                throw new JobSchedulerBadRequestException("There is no cluster configured with the Id: " + urlParameter.getJobschedulerId());
+                throw new JobSchedulerBadRequestException("There is no cluster configured with the Id: " + urlParameter.getControllerId());
             }
 
             ClusterAppointNodes command = new ClusterAppointNodes();
@@ -128,8 +120,8 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
             command.setIdToUri(idToUri);
             command.setClusterWatches(null); // TODO Clusterwatcher from DB
             //ControllerApi.of(urlParameter.getJobschedulerId()).clusterAppointNodes(idToUri, activeId, clusterWatches)
-            ControllerApi.of(urlParameter.getJobschedulerId()).executeCommandJson(Globals.objectMapper.writeValueAsString(command)).thenAccept(
-                    e -> ProblemHelper.postProblemEventIfExist(e, urlParameter.getJobschedulerId()));
+            ControllerApi.of(urlParameter.getControllerId()).executeCommandJson(Globals.objectMapper.writeValueAsString(command)).thenAccept(
+                    e -> ProblemHelper.postProblemEventIfExist(e, urlParameter.getControllerId()));
             storeAuditLogEntry(jobschedulerAudit);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

@@ -4,12 +4,12 @@
   "javaType": "com.sos.joc.model.processClass.ProcessClassDocuFilter",
   "type": "object",
   "required": [
-    "jobschedulerId",
+    "controllerId",
     "processClass",
     "documentation"
   ],
   "properties": {
-    "jobschedulerId": {
+    "controllerId": {
       "type": "string"
     },
     "processClass": {

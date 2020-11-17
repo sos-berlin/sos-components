@@ -31,17 +31,17 @@ public class JobSchedulerLogImpl extends JOCResourceImpl implements IJobSchedule
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter urlParamSchema = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(urlParamSchema.getJobschedulerId(), getPermissonsJocCockpit(urlParamSchema
-                    .getJobschedulerId(), accessToken).getJS7Controller().getView().isMainlog());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(urlParamSchema.getControllerId(), getPermissonsJocCockpit(urlParamSchema
+                    .getControllerId(), accessToken).getJS7Controller().getView().isMainlog());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            checkRequiredParameter("jobschedulerId", urlParamSchema.getJobschedulerId());
+            checkRequiredParameter("jobschedulerId", urlParamSchema.getControllerId());
             try {
                 checkRequiredParameter("url", urlParamSchema.getUrl());
             } catch (JocMissingRequiredParameterException e) {
-                List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(urlParamSchema.getJobschedulerId());
+                List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(urlParamSchema.getControllerId());
                 if (controllerInstances.size() > 1) { // is cluster
                     throw e;
                 } else {

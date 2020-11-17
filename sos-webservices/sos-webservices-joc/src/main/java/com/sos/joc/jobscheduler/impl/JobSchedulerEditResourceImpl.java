@@ -80,12 +80,12 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 }
                 
                 if (jobschedulerId == null) {
-                    jobschedulerId = jobScheduler.getJobschedulerId();
+                    jobschedulerId = jobScheduler.getControllerId();
                 }
-                if (index == 1 && !jobschedulerId.equals(jobScheduler.getJobschedulerId())) {
+                if (index == 1 && !jobschedulerId.equals(jobScheduler.getControllerId())) {
                     throw new JobSchedulerInvalidResponseDataException(String.format(
                             "The cluster members must have the same JobScheduler Id: %1$s -> %2$s, %3$s -> %4$s", jobSchedulerBody.getControllers().get(0)
-                                    .getUrl().toString(), jobschedulerId, controller.getUrl().toString(), jobScheduler.getJobschedulerId()));
+                                    .getUrl().toString(), jobschedulerId, controller.getUrl().toString(), jobScheduler.getControllerId()));
                 }
                 if (controller.getId() == null) {
                     controller.setId(0L); 
@@ -228,20 +228,20 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getPermissonsJocCockpit(jobSchedulerBody.getJobschedulerId(), accessToken)
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getPermissonsJocCockpit(jobSchedulerBody.getControllerId(), accessToken)
                     .getJS7Controller().getAdministration().isRemoveOldInstances());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            checkRequiredParameter("jobSchedulerId", jobSchedulerBody.getJobschedulerId());
+            checkRequiredParameter("jobSchedulerId", jobSchedulerBody.getControllerId());
             checkRequiredComment(jobSchedulerBody.getAuditLog());
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
             InventoryInstancesDBLayer instanceDBLayer = new InventoryInstancesDBLayer(connection);
             InventoryOperatingSystemsDBLayer osDBLayer = new InventoryOperatingSystemsDBLayer(connection);
             
-            List<DBItemInventoryJSInstance> instances = instanceDBLayer.getInventoryInstancesByControllerId(jobSchedulerBody.getJobschedulerId());
+            List<DBItemInventoryJSInstance> instances = instanceDBLayer.getInventoryInstancesByControllerId(jobSchedulerBody.getControllerId());
             if (instances != null) {
                for (DBItemInventoryJSInstance instance : instances) {
                    instanceDBLayer.deleteInstance(instance);
@@ -250,7 +250,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                    }
                    //TODO some other tables should maybe deleted !!!
                }
-               ProxiesEdit.remove(jobSchedulerBody.getJobschedulerId());
+               ProxiesEdit.remove(jobSchedulerBody.getControllerId());
             }
             
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -272,8 +272,8 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             UrlParameter jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             
             String jobschedulerId = "";
-            if (jobSchedulerBody.getJobschedulerId() != null) {
-                jobschedulerId = jobSchedulerBody.getJobschedulerId();
+            if (jobSchedulerBody.getControllerId() != null) {
+                jobschedulerId = jobSchedulerBody.getControllerId();
             }
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getPermissonsJocCockpit(jobschedulerId, accessToken).getJS7Controller()
                     .getView().isStatus());
@@ -286,7 +286,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             Controller jobScheduler = testConnection(jobSchedulerBody.getUrl());
             
             JobScheduler200 entity = new JobScheduler200();
-            entity.setJobscheduler(jobScheduler);
+            entity.setController(jobScheduler);
             entity.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(entity);
         } catch (JocException e) {
@@ -311,7 +311,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
         } catch (JocException e) {
         }
         if (answer != null) {
-            jobScheduler.setJobschedulerId(answer.getId());
+            jobScheduler.setControllerId(answer.getId());
             jobScheduler.setConnectionState(States.getConnectionState(ConnectionStateText.established));
         } else {
             jobScheduler.setConnectionState(States.getConnectionState(ConnectionStateText.unreachable));

@@ -18,7 +18,7 @@
     "surveyDate": {
       "$ref": "../common/timestamp-schema.json"
     },
-    "jobschedulerId": {
+    "controllerId": {
       "type": "string"
     },
     "job": {

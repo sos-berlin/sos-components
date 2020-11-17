@@ -15,7 +15,7 @@ post:
     <thead>
     <tr><th>Name</th><th>Type</th><th>Description</th><th>Example</th><th>Default</th>
     </thead><tbody>
-    <tr><td>``jobschedulerId``</td><td>required, string</td><td>JobScheduler Controller ID (can be empty)</td><td>scheduler</td><td></td></tr>
+    <tr><td>``controllerId``</td><td>required, string</td><td>JobScheduler Controller ID (can be empty)</td><td>scheduler</td><td></td></tr>
     <tr><td>``controllers``</td><td>required, array</td><td>Collection of JobScheduler Controllers of a cluster or one standalone Controller
     <br/>each Controller has the following fields</td><td></td><td></td></tr>
     <tr><td>``id``</td><td>optional, integer</td><td>If the ID is undefined or equals 0 then a new JobScheduler Controller will be registered</td><td></td><td></td></tr>
@@ -28,7 +28,7 @@ post:
       schema: jsRegister
       example: |
         {
-          "jobschedulerId": "scheduler",
+          "controllerId": "scheduler",
           "id": 3
         }
   responses:

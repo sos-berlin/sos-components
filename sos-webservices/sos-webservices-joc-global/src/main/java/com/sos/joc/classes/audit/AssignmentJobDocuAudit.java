@@ -21,12 +21,9 @@ public class AssignmentJobDocuAudit extends JobDocuFilter implements IAuditLog {
     @JsonIgnore
     private String folder;
     
-    private String controllerId;
-
     public AssignmentJobDocuAudit(JobDocuFilter jobDocuFilter) {
         setAuditParams(jobDocuFilter.getAuditLog());
-        this.controllerId = jobDocuFilter.getJobschedulerId();
-        setJobschedulerId(null);
+        setControllerId(jobDocuFilter.getControllerId());
         setDocumentation(jobDocuFilter.getDocumentation());
         setJob(jobDocuFilter.getJob());
         if (jobDocuFilter.getJob() != null) {
@@ -89,11 +86,6 @@ public class AssignmentJobDocuAudit extends JobDocuFilter implements IAuditLog {
     @JsonIgnore
     public Long getDepHistoryId() {
         return null;
-    }
-
-    @Override
-    public String getControllerId() {
-        return controllerId;
     }
 
 }

@@ -1,5 +1,5 @@
 {
-  "jobschedulerId":"scheduler",
+  "controllerId":"scheduler",
   "orders": [
     {
       "workflowPath": "/test/chain1",

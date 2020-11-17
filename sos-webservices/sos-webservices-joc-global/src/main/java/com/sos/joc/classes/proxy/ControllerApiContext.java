@@ -36,9 +36,9 @@ public class ControllerApiContext {
 
     private static String toString(ProxyCredentials credentials) {
         if (credentials.getBackupUrl() != null) {
-            return String.format("'%s' cluster (%s, %s)", credentials.getJobSchedulerId(), credentials.getUrl(), credentials.getBackupUrl());
+            return String.format("'%s' cluster (%s, %s)", credentials.getControllerId(), credentials.getUrl(), credentials.getBackupUrl());
         } else {
-            return String.format("'%s' (%s)", credentials.getJobSchedulerId(), credentials.getUrl());
+            return String.format("'%s' (%s)", credentials.getControllerId(), credentials.getUrl());
         }
     }
 

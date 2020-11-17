@@ -82,7 +82,7 @@ public class DeployedConfigurationDBLayer {
     
     public Workflow getDeployedInventory(WorkflowFilter workflowFilter) throws DBConnectionRefusedException, DBInvalidDataException,
             JsonParseException, JsonMappingException, IOException {
-        String content = getDeployedInventory(workflowFilter.getJobschedulerId(), DeployType.WORKFLOW.intValue(), workflowFilter.getWorkflowId()
+        String content = getDeployedInventory(workflowFilter.getControllerId(), DeployType.WORKFLOW.intValue(), workflowFilter.getWorkflowId()
                 .getPath(), workflowFilter.getWorkflowId().getVersionId());
         if (content != null && !content.isEmpty()) {
             return (Workflow) Globals.objectMapper.readValue(content, Workflow.class);

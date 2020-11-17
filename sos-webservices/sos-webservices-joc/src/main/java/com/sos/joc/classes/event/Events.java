@@ -1,17 +1,17 @@
 package com.sos.joc.classes.event;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.sos.joc.model.event.EventSnapshot;
 
 public class Events {
     
-    private Map<String,EventSnapshot> events = new HashMap<String,EventSnapshot>();
-    private List<EventSnapshot> notifications = new ArrayList<EventSnapshot>();
+    private volatile Map<String,EventSnapshot> events = new ConcurrentHashMap<String, EventSnapshot>();
+    private volatile List<EventSnapshot> notifications = new ArrayList<EventSnapshot>();
     
     public Events() {
     }

@@ -15,10 +15,10 @@ public class ProxiesEdit {
     
     /**
      * 
-     * @param jobschedulerId
+     * @param controllerId
      */
-    public static synchronized void remove(String jobschedulerId) {
-        Proxies.getInstance().removeProxies(jobschedulerId);
+    public static synchronized void remove(String controllerId) {
+        Proxies.getInstance().removeProxies(controllerId);
     }
     
     /**

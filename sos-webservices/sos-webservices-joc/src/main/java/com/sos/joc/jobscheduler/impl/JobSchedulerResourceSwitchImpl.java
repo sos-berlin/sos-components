@@ -14,7 +14,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceSwitch;
-import com.sos.joc.model.common.JobSchedulerId;
+import com.sos.joc.model.common.ControllerId;
 import com.sos.schema.JsonValidator;
 
 @Path("jobscheduler")
@@ -28,22 +28,22 @@ public class JobSchedulerResourceSwitchImpl extends JOCResourceImpl implements I
 
         try {
             initLogging(API_CALL, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, JobSchedulerId.class);
-            JobSchedulerId jobSchedulerId = Globals.objectMapper.readValue(filterBytes, JobSchedulerId.class);
+            JsonValidator.validateFailFast(filterBytes, ControllerId.class);
+            ControllerId controllerId = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(jobSchedulerId.getJobschedulerId(), getPermissonsJocCockpit(jobSchedulerId
-                    .getJobschedulerId(), accessToken).getJS7Controller().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId.getControllerId(), getPermissonsJocCockpit(controllerId
+                    .getControllerId(), accessToken).getJS7Controller().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
             SOSShiroCurrentUser shiroUser = jobschedulerUser.getSosShiroCurrentUser();
             JOCPreferences jocPreferences = new JOCPreferences(shiroUser.getUsername());
-            String selectedInstance = jobSchedulerId.getJobschedulerId();
+            String selectedInstance = controllerId.getControllerId();
             jocPreferences.put(WebserviceConstants.SELECTED_INSTANCE, selectedInstance);
             SOSShiroSession sosShiroSession = new SOSShiroSession(shiroUser);
             sosShiroSession.setAttribute(SESSION_KEY, selectedInstance);
 
-            shiroUser.removeSchedulerInstanceDBItem(jobSchedulerId.getJobschedulerId());
+            shiroUser.removeSchedulerInstanceDBItem(controllerId.getControllerId());
 
             try {
                 Globals.forceClosingHttpClients(shiroUser, accessToken);

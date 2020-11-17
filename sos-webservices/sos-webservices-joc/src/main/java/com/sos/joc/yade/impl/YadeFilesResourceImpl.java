@@ -20,12 +20,12 @@ public class YadeFilesResourceImpl extends JOCResourceImpl implements IYadeFiles
 	@Override
 	public JOCDefaultResponse postYadeFiles(String accessToken, FilesFilter filterBody) throws Exception {
 		try {
-			if (filterBody.getJobschedulerId() == null) {
-				filterBody.setJobschedulerId("");
+			if (filterBody.getControllerId() == null) {
+				filterBody.setControllerId("");
 			}
 			JOCDefaultResponse jocDefaultResponse = init(API_CALL, filterBody, accessToken,
-					filterBody.getJobschedulerId(),
-					getPermissonsJocCockpit(filterBody.getJobschedulerId(), accessToken).getYADE().getView().isFiles());
+					filterBody.getControllerId(),
+					getPermissonsJocCockpit(filterBody.getControllerId(), accessToken).getYADE().getView().isFiles());
 			if (jocDefaultResponse != null) {
 				return jocDefaultResponse;
 			}

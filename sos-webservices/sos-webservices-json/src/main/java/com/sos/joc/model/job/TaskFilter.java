@@ -17,7 +17,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "taskId"
 })
 public class TaskFilter {
@@ -27,8 +27,8 @@ public class TaskFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * 
      * (Required)
@@ -42,9 +42,9 @@ public class TaskFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -52,9 +52,9 @@ public class TaskFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -79,12 +79,12 @@ public class TaskFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("taskId", taskId).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("taskId", taskId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(taskId).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(taskId).toHashCode();
     }
 
     @Override
@@ -96,7 +96,7 @@ public class TaskFilter {
             return false;
         }
         TaskFilter rhs = ((TaskFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(taskId, rhs.taskId).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(taskId, rhs.taskId).isEquals();
     }
 
 }

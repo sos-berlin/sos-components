@@ -8,7 +8,7 @@ import javax.ws.rs.Path;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.common.JobSchedulerId;
+import com.sos.joc.model.common.ControllerId;
 import com.sos.joc.model.yade.TransfersSummary;
 import com.sos.joc.model.yade.YadeSnapshot;
 import com.sos.joc.yade.resource.IYadeOverviewSnapshotResource;
@@ -19,12 +19,12 @@ public class YadeOverviewSnapshotResourceImpl extends JOCResourceImpl implements
 	private static final String API_CALL = "./yade/overview/snapshot";
 
 	@Override
-	public JOCDefaultResponse postYadeOverviewSnapshot(String accessToken, JobSchedulerId jobschedulerId)
+	public JOCDefaultResponse postYadeOverviewSnapshot(String accessToken, ControllerId jobschedulerId)
 			throws Exception {
 		try {
 			JOCDefaultResponse jocDefaultResponse = init(API_CALL, jobschedulerId, accessToken,
-					jobschedulerId.getJobschedulerId(),
-					getPermissonsJocCockpit(jobschedulerId.getJobschedulerId(), accessToken).getYADE().getView()
+					jobschedulerId.getControllerId(),
+					getPermissonsJocCockpit(jobschedulerId.getControllerId(), accessToken).getYADE().getView()
 							.isStatus());
 			if (jocDefaultResponse != null) {
 				return jocDefaultResponse;

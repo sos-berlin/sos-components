@@ -62,6 +62,13 @@
 				"$ref": "response-folderItem-schema.json"
 			},
 			"uniqueItems": true
+		},
+		"folders": {
+			"type": "array",
+			"items": {
+				"$ref": "response-folderItem-schema.json"
+			},
+			"uniqueItems": true
 		}
 	}
 }

@@ -17,7 +17,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "historyId"
 })
 public class OrderHistoryFilter {
@@ -29,8 +29,8 @@ public class OrderHistoryFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * non negative long
      * <p>
@@ -48,9 +48,9 @@ public class OrderHistoryFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -60,9 +60,9 @@ public class OrderHistoryFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -91,12 +91,12 @@ public class OrderHistoryFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("historyId", historyId).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("historyId", historyId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(historyId).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(historyId).toHashCode();
     }
 
     @Override
@@ -108,7 +108,7 @@ public class OrderHistoryFilter {
             return false;
         }
         OrderHistoryFilter rhs = ((OrderHistoryFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(historyId, rhs.historyId).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(historyId, rhs.historyId).isEquals();
     }
 
 }

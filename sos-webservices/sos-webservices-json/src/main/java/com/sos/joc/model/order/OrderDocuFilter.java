@@ -19,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "workflow",
     "orderId",
     "documentation",
@@ -34,8 +34,8 @@ public class OrderDocuFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * path
      * <p>
@@ -79,9 +79,9 @@ public class OrderDocuFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -91,9 +91,9 @@ public class OrderDocuFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -188,12 +188,12 @@ public class OrderDocuFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("workflow", workflow).append("orderId", orderId).append("documentation", documentation).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("workflow", workflow).append("orderId", orderId).append("documentation", documentation).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(workflow).append(auditLog).append(orderId).append(documentation).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(workflow).append(auditLog).append(orderId).append(documentation).toHashCode();
     }
 
     @Override
@@ -205,7 +205,7 @@ public class OrderDocuFilter {
             return false;
         }
         OrderDocuFilter rhs = ((OrderDocuFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(workflow, rhs.workflow).append(auditLog, rhs.auditLog).append(orderId, rhs.orderId).append(documentation, rhs.documentation).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(workflow, rhs.workflow).append(auditLog, rhs.auditLog).append(orderId, rhs.orderId).append(documentation, rhs.documentation).isEquals();
     }
 
 }

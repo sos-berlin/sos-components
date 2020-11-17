@@ -40,7 +40,7 @@ post:
     <thead>
     <tr><th>Name</th><th>Type</th><th>Description</th><th>Example</th><th>Default</th>
     </thead><tbody>
-    <tr><td>``jobschedulerId``</td><td>required, string</td><td>JobScheduler Controller ID</td><td>scheduler</td><td></td></tr>
+    <tr><td>``controllerId``</td><td>required, string</td><td>JobScheduler Controller ID</td><td>scheduler</td><td></td></tr>
     <tr><td>``url``</td><td>optional, string</td><td>URL of the JobScheduler Controller<br/><b>This parameter is required for a specific JobScheduler in a cluster</b></td><td></td><td></td></tr>
     </tbody></table>
   body:
@@ -48,7 +48,7 @@ post:
       schema: jsFilterWithUrl
       example: |
         {
-          "jobschedulerId": "scheduler"
+          "controllerId": "scheduler"
         }
   responses:
     200:

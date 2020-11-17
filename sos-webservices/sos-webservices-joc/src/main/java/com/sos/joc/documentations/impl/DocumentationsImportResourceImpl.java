@@ -85,7 +85,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
         InputStream stream = null;
         try {
             DocumentationImport filter = new DocumentationImport();
-            filter.setJobschedulerId(jobschedulerId);
+            filter.setControllerId(jobschedulerId);
             if (directory == null || directory.isEmpty()) {
                 directory = "/";
             }
@@ -96,12 +96,12 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
             filter.setAuditLog(auditLog);
 
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, jobschedulerId, getPermissonsJocCockpit(filter
-                    .getJobschedulerId(), xAccessToken).getDocumentation().isImport());
+                    .getControllerId(), xAccessToken).getDocumentation().isImport());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            checkRequiredParameter("jobschedulerId", filter.getJobschedulerId());
+            checkRequiredParameter("jobschedulerId", filter.getControllerId());
             if (body == null) {
                 throw new JocMissingRequiredParameterException("undefined 'file'");
             }
@@ -307,7 +307,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
                     continue;
                 }
                 DBItemDocumentation documentation = new DBItemDocumentation();
-                documentation.setSchedulerId(filter.getJobschedulerId());
+                documentation.setSchedulerId(filter.getControllerId());
                 java.nio.file.Path targetFolder = Paths.get(filter.getFolder());
                 java.nio.file.Path complete = targetFolder.resolve(entryName.replaceFirst("^/", ""));
                 documentation.setPath(complete.toString().replace('\\', '/'));
@@ -364,7 +364,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
     private DBItemDocumentation setDBItemDocumentation(byte[] b, DocumentationImport filter, String mediaSubType) throws IOException,
             JocUnsupportedFileTypeException {
         DBItemDocumentation documentation = new DBItemDocumentation();
-        documentation.setSchedulerId(filter.getJobschedulerId());
+        documentation.setSchedulerId(filter.getControllerId());
         documentation.setDirectory(filter.getFolder());
         documentation.setName(filter.getFile());
         documentation.setPath((filter.getFolder() + "/" + filter.getFile()).replaceAll("//+", "/"));
@@ -379,7 +379,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
     private DBItemDocumentation setDBItemDocumentationImage(byte[] b, DocumentationImport filter, String mediaSubType) throws IOException,
             JocUnsupportedFileTypeException {
         DBItemDocumentation documentation = new DBItemDocumentation();
-        documentation.setSchedulerId(filter.getJobschedulerId());
+        documentation.setSchedulerId(filter.getControllerId());
         documentation.setDirectory(filter.getFolder());
         documentation.setName(filter.getFile());
         documentation.setPath((filter.getFolder() + "/" + filter.getFile()).replaceAll("//+", "/"));

@@ -13,14 +13,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * start order commands
+ * add order commands
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "orders",
     "auditLog"
 })
@@ -33,8 +33,8 @@ public class AddOrders {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * 
      * (Required)
@@ -58,9 +58,9 @@ public class AddOrders {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -70,9 +70,9 @@ public class AddOrders {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -119,12 +119,12 @@ public class AddOrders {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("orders", orders).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("orders", orders).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(orders).append(jobschedulerId).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(orders).append(controllerId).append(auditLog).toHashCode();
     }
 
     @Override
@@ -136,7 +136,7 @@ public class AddOrders {
             return false;
         }
         AddOrders rhs = ((AddOrders) other);
-        return new EqualsBuilder().append(orders, rhs.orders).append(jobschedulerId, rhs.jobschedulerId).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(orders, rhs.orders).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

@@ -43,11 +43,11 @@ public class DeleteAllResourceImpl extends JOCResourceImpl implements IDeleteAll
             if (response == null) {
                 ObjectType type = in.getObjectTypes().get(0);
                 if (type.equals(ObjectType.OTHER)) {
-                    deleteOtherItems(in.getJobschedulerId());
+                    deleteOtherItems(in.getControllerId());
                     response = JOCDefaultResponse.responseStatus200(getSuccess());
                 } else {
                     throw new JocException(new JocError(JocXmlEditor.ERROR_CODE_UNSUPPORTED_OBJECT_TYPE, String.format(
-                            "[%s][%s]unsupported object type(s) for delete all", in.getJobschedulerId(), Joiner.on(",").join(in.getObjectTypes()))));
+                            "[%s][%s]unsupported object type(s) for delete all", in.getControllerId(), Joiner.on(",").join(in.getObjectTypes()))));
                 }
 
             }
@@ -61,14 +61,14 @@ public class DeleteAllResourceImpl extends JOCResourceImpl implements IDeleteAll
     }
 
     private void checkRequiredParameters(final DeleteAll in) throws Exception {
-        checkRequiredParameter("jobschedulerId", in.getJobschedulerId());
+        checkRequiredParameter("jobschedulerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectTypes", in.getObjectTypes());
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final DeleteAll in) throws Exception {
-        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
+        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getControllerId(), accessToken);
         boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return initPermissions(in.getJobschedulerId(), permission);
+        return initPermissions(in.getControllerId(), permission);
     }
 
     private DeleteAllAnswer getSuccess() throws Exception {

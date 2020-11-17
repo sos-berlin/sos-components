@@ -28,24 +28,24 @@ public class AddOrderAudit extends AddOrder implements IAuditLog {
     private String ticketLink;
 
     // @JsonIgnore
-    private String jobschedulerId;
+    private String controllerId;
 
-    public AddOrderAudit(AddOrder startOrder, AddOrders startOrders, String orderId) {
-        if (startOrder != null) {
-            setScheduledFor(startOrder.getScheduledFor());
-            this.workflow = startOrder.getWorkflowPath();
+    public AddOrderAudit(AddOrder addOrder, AddOrders addOrders, String orderId) {
+        if (addOrder != null) {
+            setScheduledFor(addOrder.getScheduledFor());
+            this.workflow = addOrder.getWorkflowPath();
             this.orderId = orderId;
-            setOrderName(startOrder.getOrderName());
-            setArguments(startOrder.getArguments());
-            setTimeZone(startOrder.getTimeZone());
-            if (startOrder.getWorkflowPath() != null) {
-                Path p = Paths.get(startOrder.getWorkflowPath());
+            setOrderName(addOrder.getOrderName());
+            setArguments(addOrder.getArguments());
+            setTimeZone(addOrder.getTimeZone());
+            if (addOrder.getWorkflowPath() != null) {
+                Path p = Paths.get(addOrder.getWorkflowPath());
                 this.folder = p.getParent().toString().replace('\\', '/');
             }
         }
-        if (startOrders != null) {
-            setAuditParams(startOrders.getAuditLog());
-            this.jobschedulerId = startOrders.getJobschedulerId();
+        if (addOrders != null) {
+            setAuditParams(addOrders.getAuditLog());
+            this.controllerId = addOrders.getControllerId();
         }
     }
 
@@ -101,7 +101,7 @@ public class AddOrderAudit extends AddOrder implements IAuditLog {
     @Override
     // @JsonIgnore
     public String getControllerId() {
-        return jobschedulerId;
+        return controllerId;
     }
 
     @Override

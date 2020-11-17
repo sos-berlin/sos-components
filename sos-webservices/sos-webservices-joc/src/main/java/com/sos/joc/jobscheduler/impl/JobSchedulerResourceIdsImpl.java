@@ -18,7 +18,7 @@ import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceIds;
-import com.sos.joc.model.jobscheduler.JobSchedulerIds;
+import com.sos.joc.model.jobscheduler.ControllerIds;
 
 @Path("jobscheduler")
 public class JobSchedulerResourceIdsImpl extends JOCResourceImpl implements IJobSchedulerResourceIds {
@@ -73,8 +73,8 @@ public class JobSchedulerResourceIdsImpl extends JOCResourceImpl implements IJob
                 }
             }
 
-            JobSchedulerIds entity = new JobSchedulerIds();
-            entity.getJobschedulerIds().addAll(jobSchedulerIds);
+            ControllerIds entity = new ControllerIds();
+            entity.getControllerIds().addAll(jobSchedulerIds);
             entity.setSelected(selectedInstanceSchedulerId);
             entity.setDeliveryDate(Date.from(Instant.now()));
 

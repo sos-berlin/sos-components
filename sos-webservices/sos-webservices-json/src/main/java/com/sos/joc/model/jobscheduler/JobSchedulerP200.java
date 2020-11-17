@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
-    "jobscheduler"
+    "controller"
 })
 public class JobSchedulerP200 {
 
@@ -41,8 +41,8 @@ public class JobSchedulerP200 {
      * (Required)
      * 
      */
-    @JsonProperty("jobscheduler")
-    private JobSchedulerP jobscheduler;
+    @JsonProperty("controller")
+    private JobSchedulerP controller;
 
     /**
      * timestamp
@@ -75,9 +75,9 @@ public class JobSchedulerP200 {
      * (Required)
      * 
      */
-    @JsonProperty("jobscheduler")
-    public JobSchedulerP getJobscheduler() {
-        return jobscheduler;
+    @JsonProperty("controller")
+    public JobSchedulerP getController() {
+        return controller;
     }
 
     /**
@@ -87,19 +87,19 @@ public class JobSchedulerP200 {
      * (Required)
      * 
      */
-    @JsonProperty("jobscheduler")
-    public void setJobscheduler(JobSchedulerP jobscheduler) {
-        this.jobscheduler = jobscheduler;
+    @JsonProperty("controller")
+    public void setController(JobSchedulerP controller) {
+        this.controller = controller;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("jobscheduler", jobscheduler).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("controller", controller).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(jobscheduler).toHashCode();
+        return new HashCodeBuilder().append(deliveryDate).append(controller).toHashCode();
     }
 
     @Override
@@ -111,7 +111,7 @@ public class JobSchedulerP200 {
             return false;
         }
         JobSchedulerP200 rhs = ((JobSchedulerP200) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(jobscheduler, rhs.jobscheduler).isEquals();
+        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(controller, rhs.controller).isEquals();
     }
 
 }

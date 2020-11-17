@@ -23,7 +23,7 @@ public class Proxy {
     
     /**
      * Starts Proxy for user 'JOC'
-     * @see start(String jobschedulerId, ProxyUser user)
+     * @see start(String controllerId, ProxyUser user)
      * @param controllerId
      * @return ProxyContext
      * @throws JobSchedulerConnectionRefusedException 
@@ -57,7 +57,7 @@ public class Proxy {
     
     /**
      * Returns Proxy for user 'JOC' and starts it if necessary
-     * @see of(String jobschedulerId, ProxyUser user)
+     * @see of(String controllerId, ProxyUser user)
      * @param controllerId
      * @return JControllerProxy
      * @throws JobSchedulerConnectionResetException
@@ -111,7 +111,7 @@ public class Proxy {
     
     /**
      * Returns Proxy for user 'JOC' and starts it if necessary
-     * @see of(String jobschedulerId, ProxyUser user, long connectionTimeout)
+     * @see of(String controllerId, ProxyUser user, long connectionTimeout)
      * @param controllerId
      * @param connectionTimeout (in milliseconds)
      * @return JControllerProxy
@@ -153,7 +153,7 @@ public class Proxy {
     
     /**
      * Closes Proxy for user 'JOC'
-     * @see close(String jobschedulerId, ProxyUser user)
+     * @see close(String controllerId, ProxyUser user)
      * @param controllerId
      * @return CompletableFuture&lt;Void&gt; 
      * @throws DBMissingDataException 

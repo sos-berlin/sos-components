@@ -17,13 +17,12 @@ import javax.ws.rs.Path;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.util.SOSDate;
-import com.sos.commons.util.SOSString;
-import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.WebserviceConstants;
+import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
 import com.sos.joc.exceptions.JocException;
@@ -49,8 +48,8 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrdersFilter.class);
             OrdersFilter ordersFilter = Globals.objectMapper.readValue(filterBytes, OrdersFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(ordersFilter.getJobschedulerId(), getPermissonsJocCockpit(ordersFilter
-                    .getJobschedulerId(), accessToken).getHistory().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(ordersFilter.getControllerId(), getPermissonsJocCockpit(ordersFilter
+                    .getControllerId(), accessToken).getHistory().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -61,7 +60,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
             Set<Folder> folders = addPermittedFolder(ordersFilter.getFolders());
 
             HistoryFilter historyFilter = new HistoryFilter();
-            historyFilter.setSchedulerId(ordersFilter.getJobschedulerId());
+            historyFilter.setSchedulerId(ordersFilter.getControllerId());
             if (ordersFilter.getHistoryIds() != null && !ordersFilter.getHistoryIds().isEmpty()) {
                 historyFilter.setHistoryIds(ordersFilter.getHistoryIds());
             } else {
@@ -120,7 +119,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                 if (dbMainOrderItems != null && !dbMainOrderItems.isEmpty()) {
 
                     Predicate<DBItemHistoryOrder> permissionFilter = i -> true;
-                    if (ordersFilter.getJobschedulerId().isEmpty()) {
+                    if (ordersFilter.getControllerId().isEmpty()) {
                         permissionFilter = i -> {
                             try {
                                 return getPermissonsJocCockpit(i.getJobSchedulerId(), accessToken).getHistory().getView().isStatus();
@@ -135,7 +134,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                         dbMainOrderItems = dbMainOrderItems.stream().filter(i -> !SOSDate.equals(i.getStartTime(), Globals.HISTORY_DEFAULT_DATE))
                                 .filter(permissionFilter).filter(i -> regExMatcher.reset(i.getWorkflowPath() + "," + i.getOrderKey()).find()).collect(
                                         Collectors.toList());
-                    } else if (ordersFilter.getJobschedulerId().isEmpty()) {
+                    } else if (ordersFilter.getControllerId().isEmpty()) {
                         dbMainOrderItems = dbMainOrderItems.stream().filter(i -> !SOSDate.equals(i.getStartTime(), Globals.HISTORY_DEFAULT_DATE))
                                 .filter(permissionFilter).collect(Collectors.toList());
                     } else {
@@ -179,7 +178,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
 
     private OrderHistoryItem getOrderHistoryItem(DBItemHistoryOrder dbItemOrder) {
         OrderHistoryItem history = new OrderHistoryItem();
-        history.setJobschedulerId(dbItemOrder.getJobSchedulerId());
+        history.setControllerId(dbItemOrder.getJobSchedulerId());
         history.setEndTime(dbItemOrder.getEndTime());
         history.setHistoryId(dbItemOrder.getId());
         history.setOrderId(dbItemOrder.getOrderKey());

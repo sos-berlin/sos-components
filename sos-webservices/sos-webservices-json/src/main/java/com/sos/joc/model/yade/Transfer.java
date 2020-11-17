@@ -35,7 +35,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "jump",
     "numOfFiles",
     "hasIntervention",
-    "jobschedulerId",
+    "controllerId",
     "orderId",
     "jobChain",
     "jobChainNode",
@@ -155,8 +155,8 @@ public class Transfer {
     private Integer numOfFiles;
     @JsonProperty("hasIntervention")
     private Boolean hasIntervention = false;
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     @JsonProperty("orderId")
     private String orderId;
     /**
@@ -488,14 +488,14 @@ public class Transfer {
         this.hasIntervention = hasIntervention;
     }
 
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     @JsonProperty("orderId")
@@ -586,12 +586,12 @@ public class Transfer {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("id", id).append("parent_id", parent_id).append("profile", profile).append("mandator", mandator).append("state", state).append("_operation", _operation).append("start", start).append("end", end).append("error", error).append("source", source).append("target", target).append("jump", jump).append("numOfFiles", numOfFiles).append("hasIntervention", hasIntervention).append("jobschedulerId", jobschedulerId).append("orderId", orderId).append("jobChain", jobChain).append("jobChainNode", jobChainNode).append("job", job).append("taskId", taskId).toString();
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("id", id).append("parent_id", parent_id).append("profile", profile).append("mandator", mandator).append("state", state).append("_operation", _operation).append("start", start).append("end", end).append("error", error).append("source", source).append("target", target).append("jump", jump).append("numOfFiles", numOfFiles).append("hasIntervention", hasIntervention).append("controllerId", controllerId).append("orderId", orderId).append("jobChain", jobChain).append("jobChainNode", jobChainNode).append("job", job).append("taskId", taskId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(mandator).append(numOfFiles).append(surveyDate).append(orderId).append(profile).append(start).append(jobChain).append(source).append(error).append(hasIntervention).append(target).append(_operation).append(jobChainNode).append(parent_id).append(end).append(id).append(state).append(jobschedulerId).append(job).append(taskId).append(jump).toHashCode();
+        return new HashCodeBuilder().append(mandator).append(numOfFiles).append(surveyDate).append(controllerId).append(orderId).append(profile).append(start).append(jobChain).append(source).append(error).append(hasIntervention).append(target).append(_operation).append(jobChainNode).append(parent_id).append(end).append(id).append(state).append(job).append(taskId).append(jump).toHashCode();
     }
 
     @Override
@@ -603,7 +603,7 @@ public class Transfer {
             return false;
         }
         Transfer rhs = ((Transfer) other);
-        return new EqualsBuilder().append(mandator, rhs.mandator).append(numOfFiles, rhs.numOfFiles).append(surveyDate, rhs.surveyDate).append(orderId, rhs.orderId).append(profile, rhs.profile).append(start, rhs.start).append(jobChain, rhs.jobChain).append(source, rhs.source).append(error, rhs.error).append(hasIntervention, rhs.hasIntervention).append(target, rhs.target).append(_operation, rhs._operation).append(jobChainNode, rhs.jobChainNode).append(parent_id, rhs.parent_id).append(end, rhs.end).append(id, rhs.id).append(state, rhs.state).append(jobschedulerId, rhs.jobschedulerId).append(job, rhs.job).append(taskId, rhs.taskId).append(jump, rhs.jump).isEquals();
+        return new EqualsBuilder().append(mandator, rhs.mandator).append(numOfFiles, rhs.numOfFiles).append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(orderId, rhs.orderId).append(profile, rhs.profile).append(start, rhs.start).append(jobChain, rhs.jobChain).append(source, rhs.source).append(error, rhs.error).append(hasIntervention, rhs.hasIntervention).append(target, rhs.target).append(_operation, rhs._operation).append(jobChainNode, rhs.jobChainNode).append(parent_id, rhs.parent_id).append(end, rhs.end).append(id, rhs.id).append(state, rhs.state).append(job, rhs.job).append(taskId, rhs.taskId).append(jump, rhs.jump).isEquals();
     }
 
 }

@@ -109,6 +109,8 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                         case NONWORKINGDAYSCALENDAR:
                             folder.getCalendars().add(config);
                             break;
+                        case FOLDER:
+                            folder.getFolders().add(config);
                         default:
                             break;
                         }
@@ -128,6 +130,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                 folder.setJunctions(sort(folder.getJunctions()));
                 folder.setOrderTemplates(sort(folder.getOrderTemplates()));
                 folder.setCalendars(sort(folder.getCalendars()));
+                folder.setFolders(sort(folder.getFolders()));
             }
             return folder;
         } catch (Throwable e) {

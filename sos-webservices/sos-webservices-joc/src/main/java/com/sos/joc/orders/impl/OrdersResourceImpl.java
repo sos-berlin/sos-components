@@ -46,8 +46,8 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrdersFilterV.class);
             OrdersFilterV ordersFilter = Globals.objectMapper.readValue(filterBytes, OrdersFilterV.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(ordersFilter.getJobschedulerId(), getPermissonsJocCockpit(ordersFilter
-                    .getJobschedulerId(), accessToken).getOrder().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(ordersFilter.getControllerId(), getPermissonsJocCockpit(ordersFilter
+                    .getControllerId(), accessToken).getOrder().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -57,7 +57,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             boolean withFolderFilter = ordersFilter.getFolders() != null && !ordersFilter.getFolders().isEmpty();
             final Set<Folder> folders = addPermittedFolder(ordersFilter.getFolders());
             
-            JControllerState currentState = Proxy.of(ordersFilter.getJobschedulerId()).currentState();
+            JControllerState currentState = Proxy.of(ordersFilter.getControllerId()).currentState();
             Stream<JOrder> orderStream = null;
             if (orders != null && !orders.isEmpty()) {
                 ordersFilter.setRegex(null);

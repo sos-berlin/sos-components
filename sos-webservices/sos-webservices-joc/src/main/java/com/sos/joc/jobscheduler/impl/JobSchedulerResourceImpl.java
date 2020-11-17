@@ -52,8 +52,8 @@ public class JobSchedulerResourceImpl extends JOCResourceImpl implements IJobSch
             UrlParameter jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions(jobSchedulerBody.getJobschedulerId(), getPermissonsJocCockpit(jobSchedulerBody
-                    .getJobschedulerId(), accessToken).getJS7Controller().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(jobSchedulerBody.getControllerId(), getPermissonsJocCockpit(jobSchedulerBody
+                    .getControllerId(), accessToken).getJS7Controller().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -66,13 +66,13 @@ public class JobSchedulerResourceImpl extends JOCResourceImpl implements IJobSch
             
             
             if (jobSchedulerBody.getUrl() == null) {
-                List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(jobSchedulerBody.getJobschedulerId());
+                List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(jobSchedulerBody.getControllerId());
                 if (controllerInstances == null) {
                     // read db again?
                     throw new DBMissingDataException(String.format("No Controller found with id %s for security level %s", jobSchedulerBody
-                            .getJobschedulerId(), Globals.getJocSecurityLevel()));
+                            .getControllerId(), Globals.getJocSecurityLevel()));
                 }
-                schedulerInstance = States.getActiveControllerNode(controllerInstances, Proxy.of(jobSchedulerBody.getJobschedulerId()).currentState()
+                schedulerInstance = States.getActiveControllerNode(controllerInstances, Proxy.of(jobSchedulerBody.getControllerId()).currentState()
                         .clusterState());
 
             } else {
@@ -96,7 +96,7 @@ public class JobSchedulerResourceImpl extends JOCResourceImpl implements IJobSch
             }
 
             JobScheduler200 entity = new JobScheduler200();
-            entity.setJobscheduler(master);
+            entity.setController(master);
             entity.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(entity);
 

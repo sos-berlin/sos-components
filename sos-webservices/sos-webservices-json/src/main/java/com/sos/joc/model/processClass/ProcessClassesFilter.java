@@ -21,7 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "processClasses",
     "regex",
     "folders",
@@ -34,8 +34,8 @@ public class ProcessClassesFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     @JsonProperty("processClasses")
     private List<ProcessClassPath> processClasses = new ArrayList<ProcessClassPath>();
     /**
@@ -68,9 +68,9 @@ public class ProcessClassesFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -78,9 +78,9 @@ public class ProcessClassesFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     @JsonProperty("processClasses")
@@ -157,12 +157,12 @@ public class ProcessClassesFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("processClasses", processClasses).append("regex", regex).append("folders", folders).append("isAgentCluster", isAgentCluster).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("processClasses", processClasses).append("regex", regex).append("folders", folders).append("isAgentCluster", isAgentCluster).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(isAgentCluster).append(regex).append(folders).append(jobschedulerId).append(processClasses).toHashCode();
+        return new HashCodeBuilder().append(isAgentCluster).append(regex).append(folders).append(controllerId).append(processClasses).toHashCode();
     }
 
     @Override
@@ -174,7 +174,7 @@ public class ProcessClassesFilter {
             return false;
         }
         ProcessClassesFilter rhs = ((ProcessClassesFilter) other);
-        return new EqualsBuilder().append(isAgentCluster, rhs.isAgentCluster).append(regex, rhs.regex).append(folders, rhs.folders).append(jobschedulerId, rhs.jobschedulerId).append(processClasses, rhs.processClasses).isEquals();
+        return new EqualsBuilder().append(isAgentCluster, rhs.isAgentCluster).append(regex, rhs.regex).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(processClasses, rhs.processClasses).isEquals();
     }
 
 }

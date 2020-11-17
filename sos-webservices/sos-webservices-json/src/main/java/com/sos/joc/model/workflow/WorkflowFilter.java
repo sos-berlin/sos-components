@@ -19,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "workflowId",
     "compact"
 })
@@ -32,8 +32,8 @@ public class WorkflowFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * workflowId
      * <p>
@@ -60,9 +60,9 @@ public class WorkflowFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -72,9 +72,9 @@ public class WorkflowFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -125,12 +125,12 @@ public class WorkflowFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("workflowId", workflowId).append("compact", compact).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("workflowId", workflowId).append("compact", compact).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(compact).append(workflowId).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(compact).append(workflowId).toHashCode();
     }
 
     @Override
@@ -142,7 +142,7 @@ public class WorkflowFilter {
             return false;
         }
         WorkflowFilter rhs = ((WorkflowFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(compact, rhs.compact).append(workflowId, rhs.workflowId).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(workflowId, rhs.workflowId).isEquals();
     }
 
 }

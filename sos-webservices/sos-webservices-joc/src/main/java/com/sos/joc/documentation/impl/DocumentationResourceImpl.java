@@ -43,7 +43,7 @@ public class DocumentationResourceImpl extends JOCResourceImpl implements IDocum
                 return jocDefaultResponse;
             }
 
-            checkRequiredParameter("jobschedulerId", jobschedulerId);
+            checkRequiredParameter("controllerId", jobschedulerId);
             checkRequiredParameter("path", path);
 
             path = normalizePath(path);

@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "url",
     "withFailover",
     "auditLog"
@@ -33,8 +33,8 @@ public class UrlParameter {
      * 
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * uri
      * <p>
@@ -61,9 +61,9 @@ public class UrlParameter {
      * 
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -72,9 +72,9 @@ public class UrlParameter {
      * 
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -133,12 +133,12 @@ public class UrlParameter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("url", url).append("withFailover", withFailover).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("url", url).append("withFailover", withFailover).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(auditLog).append(url).append(withFailover).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(auditLog).append(url).append(withFailover).toHashCode();
     }
 
     @Override
@@ -150,7 +150,7 @@ public class UrlParameter {
             return false;
         }
         UrlParameter rhs = ((UrlParameter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(auditLog, rhs.auditLog).append(url, rhs.url).append(withFailover, rhs.withFailover).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(url, rhs.url).append(withFailover, rhs.withFailover).isEquals();
     }
 
 }

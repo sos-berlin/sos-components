@@ -7,7 +7,7 @@
     "id": {
       "$ref": "../common/nonNegativeLong-schema.json"
     },
-    "jobschedulerId": {
+    "controllerId": {
       "$ref": "../common/filename100-schema.json"
     },
     "path": {

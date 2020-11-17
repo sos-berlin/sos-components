@@ -36,12 +36,12 @@ public class ProcessClassResourceDocumentationImpl extends JOCResourceImpl imple
         SOSHibernateSession connection = null;
         try {
             DocumentationShowFilter documentationFilter = new DocumentationShowFilter();
-            documentationFilter.setJobschedulerId(jobschedulerId);
+            documentationFilter.setControllerId(jobschedulerId);
             documentationFilter.setPath(path);
             //documentationFilter.setType(JobSchedulerObjectType.PROCESSCLASS);
             documentationFilter.setType(JobSchedulerObjectType.JOBCLASS);
             
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, documentationFilter, xAccessToken, documentationFilter.getJobschedulerId(),
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, documentationFilter, xAccessToken, documentationFilter.getControllerId(),
                     getPermissonsJocCockpit(jobschedulerId, xAccessToken).getProcessClass().getView().isDocumentation());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -60,7 +60,7 @@ public class ProcessClassResourceDocumentationImpl extends JOCResourceImpl imple
 
             String entity = String.format(
                     "<!DOCTYPE html>%n<html>\n<head>%n  <meta http-equiv=\"refresh\" content=\"0;URL='../documentation/%s/%s%s'\" />%n</head>%n<body>%n</body>%n</html>",
-                    documentationFilter.getJobschedulerId(), xAccessToken, JOCJsonCommand.urlEncodedPath(docPath));
+                    documentationFilter.getControllerId(), xAccessToken, JOCJsonCommand.urlEncodedPath(docPath));
 
             return JOCDefaultResponse.responseHtmlStatus200(entity);
         } catch (JocException e) {
@@ -76,8 +76,8 @@ public class ProcessClassResourceDocumentationImpl extends JOCResourceImpl imple
     @Override
     public JOCDefaultResponse assignDocu(String xAccessToken, ProcessClassDocuFilter filter) throws Exception {
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_ASSIGN, filter, xAccessToken, filter.getJobschedulerId(), getPermissonsJocCockpit(
-                    filter.getJobschedulerId(), xAccessToken).getProcessClass().isAssignDocumentation());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL_ASSIGN, filter, xAccessToken, filter.getControllerId(), getPermissonsJocCockpit(
+                    filter.getControllerId(), xAccessToken).getProcessClass().isAssignDocumentation());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -85,7 +85,7 @@ public class ProcessClassResourceDocumentationImpl extends JOCResourceImpl imple
             logAuditMessage(assignAudit);
             //Documentation.assignDocu(filter.getJobschedulerId(), normalizePath(filter.getProcessClass()), filter.getDocumentation(),
             //        JobSchedulerObjectType.PROCESSCLASS, API_CALL_ASSIGN);
-            Documentation.assignDocu(filter.getJobschedulerId(), normalizePath(filter.getProcessClass()), filter.getDocumentation(),
+            Documentation.assignDocu(filter.getControllerId(), normalizePath(filter.getProcessClass()), filter.getDocumentation(),
                     JobSchedulerObjectType.JOBCLASS, API_CALL_ASSIGN);
             storeAuditLogEntry(assignAudit);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -101,8 +101,8 @@ public class ProcessClassResourceDocumentationImpl extends JOCResourceImpl imple
     @Override
     public JOCDefaultResponse unassignDocu(String xAccessToken, ProcessClassDocuFilter filter) throws Exception {
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_UNASSIGN, filter, xAccessToken, filter.getJobschedulerId(), getPermissonsJocCockpit(
-                    filter.getJobschedulerId(), xAccessToken).getProcessClass().isAssignDocumentation());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL_UNASSIGN, filter, xAccessToken, filter.getControllerId(), getPermissonsJocCockpit(
+                    filter.getControllerId(), xAccessToken).getProcessClass().isAssignDocumentation());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -110,7 +110,7 @@ public class ProcessClassResourceDocumentationImpl extends JOCResourceImpl imple
             logAuditMessage(unassignAudit);
            // Documentation.unassignDocu(filter.getJobschedulerId(), normalizePath(filter.getProcessClass()), JobSchedulerObjectType.PROCESSCLASS,
            //         API_CALL_UNASSIGN);
-            Documentation.unassignDocu(filter.getJobschedulerId(), normalizePath(filter.getProcessClass()), JobSchedulerObjectType.JOBCLASS,
+            Documentation.unassignDocu(filter.getControllerId(), normalizePath(filter.getProcessClass()), JobSchedulerObjectType.JOBCLASS,
                     API_CALL_UNASSIGN);
             storeAuditLogEntry(unassignAudit);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

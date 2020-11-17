@@ -684,7 +684,7 @@ public class InventoryDBLayer extends DBLayer {
         try {
             List<String> whereClause = new ArrayList<String>();
             StringBuilder sql = new StringBuilder();
-            sql.append("select folder from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            sql.append("select folder, type, path from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             if (folder != null && !folder.isEmpty() && !folder.equals(JocInventory.ROOT_FOLDER)) {
                 whereClause.add("(folder = :folder or folder like :likeFolder)");
             }
@@ -701,8 +701,7 @@ public class InventoryDBLayer extends DBLayer {
             if (!whereClause.isEmpty()) {
                 sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
             }
-            sql.append(" group by folder");
-            Query<String> query = getSession().createQuery(sql.toString());
+            Query<Object[]> query = getSession().createQuery(sql.toString());
             if (folder != null && !folder.isEmpty() && !folder.equals(JocInventory.ROOT_FOLDER)) {
                 query.setParameter("folder", folder);
                 query.setParameter("likeFolder", folder + "/%");
@@ -714,11 +713,19 @@ public class InventoryDBLayer extends DBLayer {
                     query.setParameterList("type", inventoryTypes);
                 }
             }
-
-            List<String> result = getSession().getResultList(query);
+            
+            List<Object[]> result = getSession().getResultList(query);
             if (result != null && !result.isEmpty()) {
+                Set<String> folders = result.stream().map(item -> {
+                    Integer type = (Integer) item[1];
+                    if (type.equals(ConfigurationType.FOLDER.intValue())) {
+                        return (String) item[2];
+                    }
+                    return (String) item[0]; 
+                }).collect(Collectors.toSet());
+                
                 Set<String> folderWithParents = new HashSet<>();
-                for (String f : result) {
+                for (String f : folders) {
                     Path p = Paths.get(f);
                     for (int i = 0; i < p.getNameCount(); i++) {
                         folderWithParents.add(("/" + p.subpath(0, i + 1)).replace('\\', '/'));

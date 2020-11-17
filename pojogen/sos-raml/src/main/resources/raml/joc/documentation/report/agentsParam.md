@@ -1,4 +1,4 @@
-<!--tr><td>``jobschedulerIds``</td><td>optional, array</td>
+<!--tr><td>``controllerIds``</td><td>optional, array</td>
 <td>Filters response by a collection of JobScheduler Ids</td>
 <td> [
   <div style="padding-left:10px;">"scheduler-prod"</div>

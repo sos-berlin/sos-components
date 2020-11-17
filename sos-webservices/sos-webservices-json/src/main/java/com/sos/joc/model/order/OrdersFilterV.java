@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "orderIds",
     "workflowIds",
     "compact",
@@ -39,8 +39,8 @@ public class OrdersFilterV {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     @JsonProperty("orderIds")
     private List<String> orderIds = new ArrayList<String>();
     @JsonProperty("workflowIds")
@@ -81,9 +81,9 @@ public class OrdersFilterV {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -93,9 +93,9 @@ public class OrdersFilterV {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     @JsonProperty("orderIds")
@@ -196,12 +196,12 @@ public class OrdersFilterV {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("compact", compact).append("regex", regex).append("states", states).append("folders", folders).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("compact", compact).append("regex", regex).append("states", states).append("folders", folders).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowIds).append(regex).append(folders).append(compact).append(orderIds).append(jobschedulerId).append(states).toHashCode();
+        return new HashCodeBuilder().append(workflowIds).append(regex).append(folders).append(controllerId).append(compact).append(orderIds).append(states).toHashCode();
     }
 
     @Override
@@ -213,7 +213,7 @@ public class OrdersFilterV {
             return false;
         }
         OrdersFilterV rhs = ((OrdersFilterV) other);
-        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(regex, rhs.regex).append(folders, rhs.folders).append(compact, rhs.compact).append(orderIds, rhs.orderIds).append(jobschedulerId, rhs.jobschedulerId).append(states, rhs.states).isEquals();
+        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(regex, rhs.regex).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(orderIds, rhs.orderIds).append(states, rhs.states).isEquals();
     }
 
 }

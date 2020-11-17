@@ -55,8 +55,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     public JOCDefaultResponse postOrdersSuspend(String accessToken, byte[] filterBytes) {
         try {
             ModifyOrders modifyOrders = initRequest(Action.SUSPEND, accessToken, filterBytes);
-            boolean perm = getPermissonsJocCockpit(modifyOrders.getJobschedulerId(), accessToken).getOrder().getExecute().isSuspend();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getJobschedulerId(), perm);
+            boolean perm = getPermissonsJocCockpit(modifyOrders.getControllerId(), accessToken).getOrder().getExecute().isSuspend();
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), perm);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -74,8 +74,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     public JOCDefaultResponse postOrdersResume(String accessToken, byte[] filterBytes) {
         try {
             ModifyOrders modifyOrders = initRequest(Action.RESUME, accessToken, filterBytes);
-            boolean perm = getPermissonsJocCockpit(modifyOrders.getJobschedulerId(), accessToken).getOrder().getExecute().isResume();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getJobschedulerId(), perm);
+            boolean perm = getPermissonsJocCockpit(modifyOrders.getControllerId(), accessToken).getOrder().getExecute().isResume();
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), perm);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -94,8 +94,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         try {
             ModifyOrders modifyOrders = initRequest(Action.CANCEL, accessToken, filterBytes);
             // TODO permissions
-            boolean perm = getPermissonsJocCockpit(modifyOrders.getJobschedulerId(), accessToken).getOrder().getExecute().isSuspend();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getJobschedulerId(), perm);
+            boolean perm = getPermissonsJocCockpit(modifyOrders.getControllerId(), accessToken).getOrder().getExecute().isSuspend();
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), perm);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -114,8 +114,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         try {
             ModifyOrders modifyOrders = initRequest(Action.REMOVE_WHEN_TERMINATED, accessToken, filterBytes);
             // TODO permissions
-            boolean perm = getPermissonsJocCockpit(modifyOrders.getJobschedulerId(), accessToken).getOrder().getExecute().isSuspend();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getJobschedulerId(), perm);
+            boolean perm = getPermissonsJocCockpit(modifyOrders.getControllerId(), accessToken).getOrder().getExecute().isSuspend();
+            JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), perm);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -137,7 +137,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             List<WorkflowId> workflowIds = modifyOrders.getWorkflowIds();
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
 
-            JControllerState currentState = Proxy.of(modifyOrders.getJobschedulerId()).currentState();
+            JControllerState currentState = Proxy.of(modifyOrders.getControllerId()).currentState();
             Stream<OrderId> orderStream = Stream.empty();
 
             if (orders != null && !orders.isEmpty()) {
@@ -152,7 +152,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 //                    .get(Globals.httpSocketTimeout, TimeUnit.MILLISECONDS);
 //            ProblemHelper.throwProblemIfExist(either);
             callCommand(action, modifyOrders, orderStream.collect(Collectors.toSet()))
-                    .thenAccept(either -> ProblemHelper.postProblemEventIfExist(either, modifyOrders.getJobschedulerId()));
+                    .thenAccept(either -> ProblemHelper.postProblemEventIfExist(either, modifyOrders.getControllerId()));
             //ProblemHelper.throwProblemIfExist(either);
             //TODO auditLog
 //        } catch (TimeoutException e) {
@@ -178,10 +178,10 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 cancelMode = JCancelMode.kill();
             }
             // TODO position! Why JWorkflowPosition instead JPosition?
-            return ControllerApi.of(modifyOrders.getJobschedulerId()).cancelOrders(oIds, cancelMode);
+            return ControllerApi.of(modifyOrders.getControllerId()).cancelOrders(oIds, cancelMode);
         case RESUME:
             //TODO missing parameter!
-            return ControllerApi.of(modifyOrders.getJobschedulerId()).resumeOrders(oIds, position);
+            return ControllerApi.of(modifyOrders.getControllerId()).resumeOrders(oIds, position);
         case SUSPEND:
             //TODO position! Why JWorkflowPosition instead JPosition?
             JSuspendMode suspendMode = null;
@@ -190,9 +190,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             } else {
                 suspendMode = JSuspendMode.kill();
             }
-            return ControllerApi.of(modifyOrders.getJobschedulerId()).suspendOrders(oIds, suspendMode);
+            return ControllerApi.of(modifyOrders.getControllerId()).suspendOrders(oIds, suspendMode);
         default: //case REMOVE_WHEN_TERMINATED
-            return ControllerApi.of(modifyOrders.getJobschedulerId()).removeOrdersWhenTerminated(oIds);
+            return ControllerApi.of(modifyOrders.getControllerId()).removeOrdersWhenTerminated(oIds);
         }
     }
     

@@ -15,7 +15,7 @@ post:
     <thead>
     <tr><th>Name</th><th>Type</th><th>Description</th><th>Example</th><th>Default</th>
     </thead><tbody>
-    <tr><td>``jobschedulerId``</td><td>required, string</td><td>JobScheduler Controller ID</td><td>scheduler</td><td></td></tr>
+    <tr><td>``controllerId``</td><td>required, string</td><td>JobScheduler Controller ID</td><td>scheduler</td><td></td></tr>
     <<urlparam>>
     </tbody></table>
   body:
@@ -23,7 +23,7 @@ post:
       schema: jsFilterWithUrl
       example: |
         {
-          "jobschedulerId": "scheduler",
+          "controllerId": "scheduler",
           "url": "http://jobSchedulerHost:40444"
         }
   responses:
