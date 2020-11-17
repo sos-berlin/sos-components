@@ -25,7 +25,7 @@ import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.ExcludeConfiguration;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
-import com.sos.joc.model.publish.ReDeployFilter;
+import com.sos.joc.model.publish.RedeployFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.model.publish.Signature;
 
@@ -304,13 +304,13 @@ public class DeploymentTestUtils {
         return filter;
     }
     
-    public static ReDeployFilter createDefaultReDeployFilter() {
-        ReDeployFilter filter = new ReDeployFilter();
+    public static RedeployFilter createDefaultReDeployFilter() {
+        RedeployFilter filter = new RedeployFilter();
         filter.setControllerId("testsuite");
         filter.setFolder("/myWorkflows/myIfElseWorkflows");
         ExcludeConfiguration exclude = new ExcludeConfiguration();
         exclude.setPath("/myWorkflows/myIfElseWorkflows/workflow_01");
-        exclude.setInvConfigurationId(28L);
+        exclude.setDeployType(DeployType.WORKFLOW);
         filter.getExcludes().add(exclude);
         return filter;
     }

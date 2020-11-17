@@ -28,6 +28,7 @@ import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.model.agent.AgentRef;
+import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.instruction.IfElse;
 import com.sos.jobscheduler.model.instruction.NamedJob;
 import com.sos.jobscheduler.model.workflow.Workflow;
@@ -35,8 +36,9 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.model.publish.ExcludeConfiguration;
 import com.sos.joc.model.publish.JSObject;
-import com.sos.joc.model.publish.ReDeployFilter;
+import com.sos.joc.model.publish.RedeployFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
+import com.sos.joc.publish.mapper.FilterAttributesMapper;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -169,10 +171,10 @@ public class MappingTest {
 
 //    @Test
     public void test6MapReDeployFilter () throws JsonProcessingException {
-        ReDeployFilter filter = DeploymentTestUtils.createDefaultReDeployFilter();
+        RedeployFilter filter = DeploymentTestUtils.createDefaultReDeployFilter();
         ExcludeConfiguration exclude = new ExcludeConfiguration();
         exclude.setPath("/myWorkflows/myIfElseWorkflows/workflow_02");
-        exclude.setInvConfigurationId(75L);
+        exclude.setDeployType(DeployType.WORKFLOW);
         filter.getExcludes().add(exclude);
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         LOGGER.info("\n" + om.writeValueAsString(filter));
@@ -228,7 +230,7 @@ public class MappingTest {
     public void test8GetDeploymentHistoryFromToDBLayerDeployTest () throws SOSHibernateException {
        ShowDepHistoryFilter filter = DeploymentTestUtils.createShowDepHistoryFilterByFromToAndPath();
 
-        Set<String> presentFilterAttributes = DeploymentTestUtils.extractDefaultShowDepHistoryFilterAttributes(filter);
+        Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter);
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
         hql.append(
                 presentFilterAttributes.stream()
@@ -254,14 +256,14 @@ public class MappingTest {
             switch (item) {
             case "from":
             case "to":
-                query.setParameter(item + "Date", DeploymentTestUtils.getValueByFilterAttribute(filter, item), TemporalType.TIMESTAMP);
+                query.setParameter(item + "Date", FilterAttributesMapper.getValueByFilterAttribute(filter, item), TemporalType.TIMESTAMP);
                 break;
             case "deploymentDate":
             case "deleteDate":
-                query.setParameter(item, DeploymentTestUtils.getValueByFilterAttribute(filter, item), TemporalType.TIMESTAMP);
+                query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter, item), TemporalType.TIMESTAMP);
                 break;
             default:
-                query.setParameter(item, DeploymentTestUtils.getValueByFilterAttribute(filter, item));
+                query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter, item));
                 break;
             }
         });
