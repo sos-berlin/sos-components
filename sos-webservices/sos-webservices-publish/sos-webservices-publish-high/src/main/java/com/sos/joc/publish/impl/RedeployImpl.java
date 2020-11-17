@@ -61,7 +61,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            String account = Globals.defaultProfileAccount;
+            String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             dbLayer = new DBLayerDeploy(hibernateSession);
             // get all available controller instances
