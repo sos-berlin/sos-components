@@ -4,5 +4,6 @@
   "description": "absolute path of a JobScheduler object.",
   "type": "string",
   "pattern": "^(/|(/[^/\\<>?:\"|*]+)+)$",
-  "maxLength": 255
+  "maxLength": 255,
+  "minLength": 1
 }

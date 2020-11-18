@@ -131,6 +131,10 @@ public class BusTest {
         HistoryEvent evt = new OrderStepStarted("myJob", "myScheduler", testMap);
         EventBus eventBus = EventBus.getInstance();
         eventBus.post(evt);
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+        }
         eventBus.post(evt);
         try {
             Thread.sleep(2000);
