@@ -84,7 +84,7 @@ public class ProxyTest {
                     put(Order.Processing$.class, "running");
                     put(Order.Finished$.class, "finished");
                     put(Order.Cancelled$.class, "finished");
-                    put(Order.ProcessingCancelled$.class, "finished");
+                    put(Order.ProcessingKilled$.class, "finished");
                 }
             });
 

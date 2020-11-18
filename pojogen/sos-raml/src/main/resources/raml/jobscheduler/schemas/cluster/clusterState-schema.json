@@ -18,7 +18,7 @@
         "PassiveLost",
         "SwitchedOver",
         "FailedOver",
-        "CoupledActiveShutDown" 
+        "ActiveShutDown" 
       ]
     },
     "setting": {
