@@ -73,7 +73,7 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
 //            } catch (TimeoutException e) {
 //            }
             ControllerApi.of(urlParameter.getControllerId()).executeCommandJson(Globals.objectMapper.writeValueAsString(new ClusterSwitchOver()))
-                    .thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, urlParameter.getControllerId()));
+                    .thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getJocError(), urlParameter.getControllerId()));
 
             storeAuditLogEntry(jobschedulerAudit);
 
@@ -121,7 +121,7 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
             command.setClusterWatches(null); // TODO Clusterwatcher from DB
             //ControllerApi.of(urlParameter.getJobschedulerId()).clusterAppointNodes(idToUri, activeId, clusterWatches)
             ControllerApi.of(urlParameter.getControllerId()).executeCommandJson(Globals.objectMapper.writeValueAsString(command)).thenAccept(
-                    e -> ProblemHelper.postProblemEventIfExist(e, urlParameter.getControllerId()));
+                    e -> ProblemHelper.postProblemEventIfExist(e, getJocError(), urlParameter.getControllerId()));
             storeAuditLogEntry(jobschedulerAudit);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

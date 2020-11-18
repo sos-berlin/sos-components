@@ -101,7 +101,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                         Either<Problem, Void> either = Either.left(e.getLeft());
                         return either;
                     }
-                }).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, addOrders.getControllerId()));
+                }).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getJocError(), addOrders.getControllerId()));
             }
             
 //            if (result.containsKey(true) && !result.get(true).isEmpty()) {

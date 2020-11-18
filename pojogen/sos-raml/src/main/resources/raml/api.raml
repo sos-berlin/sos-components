@@ -35,7 +35,7 @@ resourceTypes:
   - postDocuWithOkResponse: !include joc/resourceTypes/docu/postJSONWithOkResponse.raml
   - postTimeoutWithOkResponse: !include joc/resourceTypes/common/postTimeoutWithOkResponse.raml
   - postWithOkResponse: !include joc/resourceTypes/jobscheduler/postWithOkResponse.raml
-  - postIDWithOkResponse: !include joc/resourceTypes/jobscheduler/postIDWithOkResponse.raml
+  - registerControllerWithOkResponse: !include joc/resourceTypes/jobscheduler/registerControllerWithOkResponse.raml
   - postURLWithPlainResponse: !include joc/resourceTypes/jobscheduler/postWithPlainResponse.raml
   - postStateResponse: !include joc/resourceTypes/jobscheduler/postStateResponse.raml
   - postJSON: !include joc/resourceTypes/common/postJSON.raml
@@ -413,7 +413,7 @@ traits:
   type:
     postStateResponse:
       description: Controller information such as its status
-      urlparam: !include joc/documentation/jobscheduler/urlParam.md
+      urlparam: !include joc/documentation/jobscheduler/urlParamClusterRequired.md
       description200: !include joc/documentation/jobscheduler/master.md
       schema200: !include joc/schemas/jobscheduler/jobscheduler200_v-schema.json
       example200: " "
@@ -499,6 +499,14 @@ traits:
         failover: " "
         audit: !include joc/documentation/audit/auditLog.md
   
+  /cluster/appoint_nodes:
+    type:
+      postWithOkResponse:
+        description: Tells the Controller Cluster nodes the uri of the other node and the Agents that monitors the Cluster
+        urlparam: " "
+        failover: " "
+        audit: !include joc/documentation/audit/auditLog.md
+
   /cluster/switchover:
     type:
       postWithOkResponse:
@@ -541,15 +549,15 @@ traits:
     type:
       postStateResponse:
         description: General permanent Controller information
-        urlparam: !include joc/documentation/jobscheduler/urlParam.md
+        urlparam: !include joc/documentation/jobscheduler/urlParamClusterRequired.md
         description200: !include joc/documentation/jobscheduler/jobscheduler_p.md
         schema200: !include joc/schemas/jobscheduler/jobscheduler200_v-schema.json
         example200: " "
   
   /register:
     type: 
-      postIDWithOkResponse:
-        description: Registers a new Controller or update an existing Controller
+      registerControllerWithOkResponse:
+        description: Registers a new Controller (Cluster) or update an existing Controller (Cluster)
         audit: !include joc/documentation/audit/auditLog.md
 
   /restart:
@@ -578,12 +586,28 @@ traits:
   
   /test:
     type:
-      postStateResponse:
+      postJSONWithoutJSId:
         description: Test JobScheduler Controller connection
-        urlparam: !include joc/documentation/jobscheduler/urlParamRequired.md
+        description1: |
+          <tr><td>``controllerId``</td><td>required, string</td><td>JobScheduler Controller ID (can be empty if and only if a new Controller (Cluster) will be registered)</td><td>scheduler</td><td></td></tr>
+        description2: !include joc/documentation/jobscheduler/urlParamRequired.md
+        description3: " "
+        description4: " "
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
         description200: !include joc/documentation/jobscheduler/jobschedulerTest.md
         schema200: !include joc/schemas/jobscheduler/jobscheduler200_v-schema.json
         example200: !include joc/examples/jobscheduler/test-example.json
+        schema: jsFilterWithUrl
+        example: |
+          {
+            "controllerId": "scheduler",
+            "url": "http://jobSchedulerHost:40444"
+          }
 
 /controllers:
   type:
