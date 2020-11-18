@@ -366,7 +366,7 @@ public class HistoryModel {
             item.setUri(controllerConfiguration.getCurrent().getUri());
             item.setTimezone(entry.getTimezone());
             item.setStartTime(eventDate);
-            item.setPrimaryMaster(controllerConfiguration.getCurrent().isPrimary());
+            item.setIsPrimary(controllerConfiguration.getCurrent().isPrimary());// TODO
             item.setEventId(String.valueOf(entry.getEventId()));
             item.setCreated(new Date());
 

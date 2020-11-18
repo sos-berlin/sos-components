@@ -64,8 +64,8 @@ public class DBLayer implements Serializable {
 
     /** HISTORY Tables */
     public static final String DBITEM_HISTORY_CONTROLLER = DBItemHistoryController.class.getSimpleName();
-    public static final String TABLE_HISTORY_CONTROLLERS = "HISTORY_MASTERS";
-    public static final String TABLE_HISTORY_CONTROLLERS_SEQUENCE = "SEQ_HISTORY_M";
+    public static final String TABLE_HISTORY_CONTROLLERS = "HISTORY_CONTROLLERS";
+    public static final String TABLE_HISTORY_CONTROLLERS_SEQUENCE = "SEQ_HISTORY_C";
 
     public static final String DBITEM_HISTORY_AGENT = DBItemHistoryAgent.class.getSimpleName();
     public static final String TABLE_HISTORY_AGENTS = "HISTORY_AGENTS";

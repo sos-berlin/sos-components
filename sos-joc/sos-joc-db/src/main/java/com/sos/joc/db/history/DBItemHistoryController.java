@@ -40,9 +40,9 @@ public class DBItemHistoryController extends DBItem {
     @Column(name = "[START_TIME]", nullable = false)
     private Date startTime;
 
-    @Column(name = "[PRIMARY_MASTER]", nullable = false)
+    @Column(name = "[IS_PRIMARY]", nullable = false)
     @Type(type = "numeric_boolean")
-    private boolean primaryMaster;
+    private boolean isPrimary;
 
     @Column(name = "[EVENT_ID]", nullable = false)
     private String eventId;
@@ -93,12 +93,12 @@ public class DBItemHistoryController extends DBItem {
         startTime = val;
     }
 
-    public void setPrimaryMaster(boolean val) {
-        primaryMaster = val;
+    public void setIsPrimary(boolean val) {
+        isPrimary = val;
     }
 
-    public boolean getPrimaryMaster() {
-        return primaryMaster;
+    public boolean getIsPrimary() {
+        return isPrimary;
     }
 
     public String getEventId() {
