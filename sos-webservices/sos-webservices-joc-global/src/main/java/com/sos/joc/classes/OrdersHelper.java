@@ -42,7 +42,7 @@ public class OrdersHelper {
                     put(Order.Processing$.class, OrderStateText.RUNNING);
                     put(Order.Finished$.class, OrderStateText.FINISHED);
                     put(Order.Cancelled$.class, OrderStateText.CANCELLED);
-                    put(Order.ProcessingCancelled$.class, OrderStateText.CANCELLED);
+                    put(Order.ProcessingKilled$.class, OrderStateText.CANCELLED);
                 }
             });
 
