@@ -6,7 +6,6 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -14,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * agent update params
+ * store agents
  * <p>
  * 
  * 
@@ -22,10 +21,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "agentRefs",
+    "agents",
     "auditLog"
 })
-public class UpdateParameter {
+public class StoreAgents {
 
     /**
      * filename
@@ -41,8 +40,8 @@ public class UpdateParameter {
      * (Required)
      * 
      */
-    @JsonProperty("agentRefs")
-    private List<AgentRef> agentRefs = new ArrayList<AgentRef>();
+    @JsonProperty("agents")
+    private List<Agent> agents = new ArrayList<Agent>();
     /**
      * auditParams
      * <p>
@@ -81,9 +80,9 @@ public class UpdateParameter {
      * (Required)
      * 
      */
-    @JsonProperty("agentRefs")
-    public List<AgentRef> getAgentRefs() {
-        return agentRefs;
+    @JsonProperty("agents")
+    public List<Agent> getAgents() {
+        return agents;
     }
 
     /**
@@ -91,9 +90,9 @@ public class UpdateParameter {
      * (Required)
      * 
      */
-    @JsonProperty("agentRefs")
-    public void setAgentRefs(List<AgentRef> agentRefs) {
-        this.agentRefs = agentRefs;
+    @JsonProperty("agents")
+    public void setAgents(List<Agent> agents) {
+        this.agents = agents;
     }
 
     /**
@@ -120,12 +119,12 @@ public class UpdateParameter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentRefs", agentRefs).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agents", agents).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(auditLog).append(agentRefs).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(auditLog).append(agents).toHashCode();
     }
 
     @Override
@@ -133,11 +132,11 @@ public class UpdateParameter {
         if (other == this) {
             return true;
         }
-        if ((other instanceof UpdateParameter) == false) {
+        if ((other instanceof StoreAgents) == false) {
             return false;
         }
-        UpdateParameter rhs = ((UpdateParameter) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(agentRefs, rhs.agentRefs).isEquals();
+        StoreAgents rhs = ((StoreAgents) other);
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(agents, rhs.agents).isEquals();
     }
 
 }

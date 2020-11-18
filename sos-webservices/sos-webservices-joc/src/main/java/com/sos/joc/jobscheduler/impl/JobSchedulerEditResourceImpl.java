@@ -74,17 +74,14 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     throw new JobSchedulerBadRequestException("The cluster members must have the different URLs"); 
                 }
 
-                Controller jobScheduler = testConnection(controller.getUrl(), jobSchedulerBody.getControllerId());
+                URI otherUri = index == 1 ? null : jobSchedulerBody.getControllers().get(0).getUrl();
+                Controller jobScheduler = testConnection(controller.getUrl(), jobschedulerId, otherUri);
                 if (jobScheduler.getConnectionState().get_text() == ConnectionStateText.unreachable) {
                     throw new JobSchedulerConnectionRefusedException(controller.getUrl().toString());
                 }
                 
                 jobschedulerId = jobScheduler.getControllerId();
-                if (index == 1 && !jobschedulerId.equals(jobScheduler.getControllerId())) {
-                    throw new JobSchedulerInvalidResponseDataException(String.format(
-                            "The cluster members must have the same JobScheduler Id: %1$s -> %2$s, %3$s -> %4$s", jobSchedulerBody.getControllers().get(0)
-                                    .getUrl().toString(), jobschedulerId, controller.getUrl().toString(), jobScheduler.getControllerId()));
-                }
+                
                 if (controller.getId() == null) {
                     controller.setId(0L); 
                 }
@@ -279,7 +276,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
 
             checkRequiredParameter("url", jobSchedulerBody.getUrl());
             
-            Controller jobScheduler = testConnection(jobSchedulerBody.getUrl(), controllerId);
+            Controller jobScheduler = testConnection(jobSchedulerBody.getUrl(), controllerId, null);
             
             JobScheduler200 entity = new JobScheduler200();
             entity.setController(jobScheduler);
@@ -293,7 +290,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
         }
     }
     
-    private Controller testConnection(URI jobschedulerURI, String controllerId) throws JobSchedulerInvalidResponseDataException {
+    private Controller testConnection(URI jobschedulerURI, String controllerId, URI otherJobschedulerURI) throws JobSchedulerInvalidResponseDataException {
         Controller jobScheduler = new Controller();
         jobScheduler.setUrl(jobschedulerURI.toString());
         jobScheduler.setIsCoupled(null);
@@ -308,9 +305,15 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
         }
         if (answer != null) {
             if (!controllerId.isEmpty() && !controllerId.equals(answer.getId())) {
-                throw new JobSchedulerInvalidResponseDataException(String.format(
-                        "Connection was successful but controllerId '%s' of URL '%s' is not the expected controllerId '%s'", answer.getId(),
-                        jobScheduler.getUrl(), controllerId));
+                if (otherJobschedulerURI != null) {
+                    throw new JobSchedulerInvalidResponseDataException(String.format(
+                            "The cluster members must have the same Controller Id: %1$s -> %2$s, %3$s -> %4$s", otherJobschedulerURI.toString(),
+                            controllerId, jobschedulerURI, answer.getId()));
+                } else {
+                    throw new JobSchedulerInvalidResponseDataException(String.format(
+                            "Connection was successful but controllerId '%s' of URL '%s' is not the expected controllerId '%s'", answer.getId(),
+                            jobScheduler.getUrl(), controllerId));
+                }
             }
             jobScheduler.setControllerId(answer.getId());
             jobScheduler.setConnectionState(States.getConnectionState(ConnectionStateText.established));

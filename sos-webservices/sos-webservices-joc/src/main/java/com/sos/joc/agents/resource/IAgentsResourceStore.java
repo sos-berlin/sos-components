@@ -8,10 +8,10 @@ import javax.ws.rs.Produces;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-public interface IAgentsResourceUpdate {
+public interface IAgentsResourceStore {
 
     @POST
-    @Path("update")
+    @Path("store")
     @Consumes("application/json")
     @Produces({ "application/json" })
     public JOCDefaultResponse update(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);

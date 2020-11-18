@@ -60,6 +60,8 @@ public class JsonValidator {
             put("ControllerId", "common/controllerId-schema.json");
             put("UrlParameter", "jobscheduler/urlParam-schema.json");
             put("RegisterParameters", "jobscheduler/registerParam-schema.json");
+            put("StoreAgents", "agent/storeParam-schema.json");
+            put("ReadAgents", "agent/readAgents-schema.json");
 
             put("WorkflowsFilter", "workflow/workflowsFilter-schema.json");
 
