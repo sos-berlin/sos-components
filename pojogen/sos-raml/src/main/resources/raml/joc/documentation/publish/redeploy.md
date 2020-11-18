@@ -1,6 +1,6 @@
 <tr>
 <td>``controllerId``</td>
-<td>optional, string</td>
+<td>required, string</td>
 <td>Name of the controller to re-deploy to.</td>
 <td>
   <div>{</div>
@@ -11,7 +11,7 @@
 </tr>
 <tr>
 <td>``folder``</td>
-<td>optional, string</td>
+<td>required, string</td>
 <td>Path of a folder of multiple objects to re-deploy.</td>
 <td>
   <div>{</div>

@@ -4,7 +4,8 @@
 	"javaType": "com.sos.joc.model.publish.RedeployFilter",
 	"type": "object",
 	"required": [
-		"controllerId"
+		"controllerId",
+		"folder"
 	],
 	"properties": {
 		"controllerId": {

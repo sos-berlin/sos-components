@@ -9,6 +9,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -20,8 +21,12 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
@@ -45,6 +50,12 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.sos.commons.hibernate.SOSHibernateFactory;
+import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
+import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.sign.keys.sign.SignObject;
 import com.sos.commons.sign.keys.verify.VerifySignature;
@@ -52,12 +63,17 @@ import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.command.UpdateRepo;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.classes.JOCJsonCommand;
+import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.keys.db.DBLayerKeys;
+import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignaturePath;
 import com.sos.joc.model.publish.SignedObject;
 import com.sos.joc.publish.common.JSObjectFileExtension;
+import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -441,6 +457,37 @@ public class DeploymentTest {
         }
     }
     
+    @Test
+    @Ignore
+    /* This is NO Unit test!
+     * This is an integration Test with hibernate and a DB!
+     * to run this test, adjust path to your hibernate configuration file
+     * adjust account and security level of your keyPair
+     * Make sure your X509Certificate is known to your controller
+     * uncomment the Ignore annotation
+     **/
+    public void test10VerfiySignatureFromDBItem() throws SOSHibernateException, CertificateException, InvalidKeyException, NoSuchAlgorithmException, 
+            SignatureException, NoSuchProviderException, IOException {
+        LOGGER.info("******************************  VerfiySignatureFromDBItem Test  *********************");
+        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/sp_hibernate.cfg.xml"));
+        factory.setAutoCommit(true);
+        factory.addClassMapping(DBLayer.getJocClassMapping());
+        factory.addClassMapping(DBLayer.getHistoryClassMapping());
+        factory.build();
+        SOSHibernateSession session = factory.openStatelessSession();
+        DBLayerDeploy dbLayer = new DBLayerDeploy(session);
+        DBLayerKeys dbLayerKeys = new DBLayerKeys(session);
+        List<Long> depIds = new ArrayList<Long>();
+        depIds.add(116L);
+        List<DBItemDeploymentHistory> items = dbLayer.getFilteredDeployments(depIds);
+        DBItemDeploymentHistory historyItem = items.get(0);
+        X509Certificate certificate = KeyUtil.getX509Certificate(dbLayerKeys.getKeyPair("root", JocSecurityLevel.LOW).getCertificate());
+        Boolean verified = VerifySignature.verifyX509(certificate, historyItem.getContent(), historyItem.getSignedContent());
+        LOGGER.info("verified: " + verified);
+
+        LOGGER.info("*************************** VerfiySignatureFromDBItem Test finished *****************");
+    }
+
     private void exportWorkflows(Set<JSObject> jsObjectsToExport) throws IOException {
         ZipOutputStream zipOut = null;
         OutputStream out = null;

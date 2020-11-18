@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import javax.persistence.TemporalType;
 
+import org.hibernate.criterion.MatchMode;
 import org.hibernate.query.Query;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -941,22 +942,18 @@ public class DBLayerDeploy {
     }
     
     public List<DBItemDeploymentHistory> getDeploymentsToRedeploy(RedeployFilter filter) throws SOSHibernateException {
-        Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter);
-        List<DBItemDeploymentHistory> dbItems = new ArrayList<DBItemDeploymentHistory>();
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-        hql.append(
-                presentFilterAttributes.stream()
-                .map(item -> {
-                    if("folder".equals(item)) {
-                        return item + " like :" + item;
-                    } else {
-                        return item + " = :" + item;
-                    }
-                })
-                .collect(Collectors.joining(" and ", " where ", "")));
+        if (filter.getControllerId() != null) {
+            hql.append(" where controllerId = :controllerId");
+        }
+        if (filter.getFolder() != null) {
+            hql.append(" and (folder = :folder or folder like :likeFolder)");
+        }
         Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
-        presentFilterAttributes.stream().forEach(item -> query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter, item)));
-        dbItems = query.getResultList();
+        query.setParameter("controllerId", filter.getControllerId());
+        query.setParameter("folder", filter.getFolder());
+        query.setParameter("likeFolder", MatchMode.START.toMatchString(filter.getFolder()));
+        List<DBItemDeploymentHistory> dbItems = query.getResultList();
         Set<DBItemDeploymentHistory> excludes = new HashSet<DBItemDeploymentHistory>();
         // remove excludes from result list
         if (filter.getExcludes() != null && !filter.getExcludes().isEmpty()) {

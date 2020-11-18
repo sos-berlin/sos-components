@@ -169,9 +169,9 @@ public class MappingTest {
         LOGGER.info("EXAMPLE 5:\n" + om.writeValueAsString(filter));
     }
 
-//    @Test
-    public void test6MapReDeployFilter () throws JsonProcessingException {
-        RedeployFilter filter = DeploymentTestUtils.createDefaultReDeployFilter();
+//  @Test
+    public void test6MapRedeployFilter () throws JsonProcessingException {
+        RedeployFilter filter = DeploymentTestUtils.createDefaultRedeployFilter();
         ExcludeConfiguration exclude = new ExcludeConfiguration();
         exclude.setPath("/myWorkflows/myIfElseWorkflows/workflow_02");
         exclude.setDeployType(DeployType.WORKFLOW);
@@ -179,7 +179,7 @@ public class MappingTest {
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         LOGGER.info("\n" + om.writeValueAsString(filter));
     }
-    
+  
     /*
      * No Unit test. DB connection needed to test query parameters
      * */
@@ -288,4 +288,30 @@ public class MappingTest {
         session.close();
     }
     
+    @Test
+    public void test9MapRedeployFilter () throws JsonProcessingException {
+        RedeployFilter filter = DeploymentTestUtils.createDefaultRedeployFilter();
+//        ExcludeConfiguration exclude = new ExcludeConfiguration();
+//        exclude.setPath("/myWorkflows/myIfElseWorkflow/workflow_12");
+//        exclude.setDeployType(DeployType.WORKFLOW);
+//        filter.getExcludes().add(exclude);
+        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
+        LOGGER.info("\n" + om.writeValueAsString(filter));
+        
+        Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter);
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+        hql.append(
+                presentFilterAttributes.stream()
+                .map(item -> {
+                    if("folder".equals(item)) {
+                        return "folder = :folder or folder like :likeFolder";
+                    } else if ("likeFolder".equals(item)) {
+                        return "";
+                    } else {
+                        return item + " = :" + item;
+                    }
+                })
+                .collect(Collectors.joining(" and ", " where ", "")));
+        LOGGER.info(hql.toString());
+    }
 }

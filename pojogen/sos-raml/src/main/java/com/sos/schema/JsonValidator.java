@@ -108,6 +108,8 @@ public class JsonValidator {
             put("com.sos.joc.model.publish.ImportDeployFilter", "publish/importDeployFilter-schema.json");
             put("com.sos.joc.model.publish.SetVersionFilter", "publish/setVersion-schema.json");
             put("com.sos.joc.model.publish.SetVersionsFilter", "publish/setVersions-schema.json");
+            put("com.sos.joc.model.publish.ShowDepHistoryFilter", "publish/showDepHistoryFilter-schema.json");
+            put("com.sos.joc.model.publish.RedeployFilter", "publish/redeploy-schema.json");
 
             // TODO complete the map
         }

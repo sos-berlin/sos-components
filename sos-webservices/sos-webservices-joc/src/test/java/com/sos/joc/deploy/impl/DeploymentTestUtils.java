@@ -304,12 +304,12 @@ public class DeploymentTestUtils {
         return filter;
     }
     
-    public static RedeployFilter createDefaultReDeployFilter() {
+    public static RedeployFilter createDefaultRedeployFilter() {
         RedeployFilter filter = new RedeployFilter();
-        filter.setControllerId("testsuite");
-        filter.setFolder("/myWorkflows/myIfElseWorkflows");
+        filter.setControllerId("js7-cluster");
+        filter.setFolder("/myWorkflows/myIfElseWorkflow");
         ExcludeConfiguration exclude = new ExcludeConfiguration();
-        exclude.setPath("/myWorkflows/myIfElseWorkflows/workflow_01");
+        exclude.setPath("/myWorkflows/myIfElseWorkflows/workflow_12");
         exclude.setDeployType(DeployType.WORKFLOW);
         filter.getExcludes().add(exclude);
         return filter;

@@ -77,65 +77,64 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
             // call updateRepo command via ControllerApi for given controllerId
             String signerDN = null;
             X509Certificate cert = null;
-            Set<String> versionIds = reDeployables.stream().flatMap(item -> Stream.of(item.getCommitId())).collect(Collectors.toSet());
+            Set<String> versionIds = reDeployables.stream()
+                    .flatMap(item -> Stream.of(item.getCommitId()))
+                    .filter(item -> item != null)
+                    .collect(Collectors.toSet());
             for (String versionId : versionIds) {
-                switch(keyPair.getKeyAlgorithm()) {
-                case SOSKeyConstants.PGP_ALGORITHM_NAME:
-                    PublishUtils.updateRepoAddOrUpdatePGP(
-                            versionId,  
-                            reDeployables.stream()
-                                .map(item -> {
-                                    if(item.getCommitId().equals(versionId)) {
-                                        return item;
-                                    }
-                                    return null;
-                                })
-                                .collect(Collectors.toList()),
-                            controllerId)
-                        .thenAccept(either -> {
-                            processAfterAdd(either, reDeployables, account, versionId, controllerId, deploymentDate, redeployFilter);
-                        }).get();
-                    break;
-                case SOSKeyConstants.RSA_ALGORITHM_NAME:
-                    cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                    signerDN = cert.getSubjectDN().getName();
-                    PublishUtils.updateRepoAddOrUpdateWithX509(
-                            versionId,  
-                            reDeployables.stream()
-                                .map(item -> {
-                                    if(item.getCommitId().equals(versionId)) {
-                                        return item;
-                                    }
-                                    return null;
-                                })
-                                .collect(Collectors.toList()),
-                            controllerId, 
-                            SOSKeyConstants.RSA_SIGNER_ALGORITHM, 
-                            signerDN)
-                        .thenAccept(either -> {
-                            processAfterAdd(either, reDeployables, account, versionId, controllerId, deploymentDate, redeployFilter);
-                        }).get();
-                    break;
-                case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
-                    cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                    signerDN = cert.getSubjectDN().getName();
-                    PublishUtils.updateRepoAddOrUpdateWithX509(
-                            versionId,  
-                            reDeployables.stream()
-                                .map(item -> {
-                                    if(item.getCommitId().equals(versionId)) {
-                                        return item;
-                                    }
-                                    return null;
-                                })
-                                .collect(Collectors.toList()),
-                            controllerId, 
-                            SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, 
-                            signerDN)
-                        .thenAccept(either -> {
-                            processAfterAdd(either, reDeployables, account, versionId, controllerId, deploymentDate, redeployFilter);
-                        }).get();
-                    break;
+                if (versionId != null) {
+                    switch(keyPair.getKeyAlgorithm()) {
+                    case SOSKeyConstants.PGP_ALGORITHM_NAME:
+                        PublishUtils.updateRepoAddOrUpdatePGP(
+                                versionId,  
+                                reDeployables.stream()
+                                    .map(item -> {
+                                        if(item.getCommitId().equals(versionId)) {
+                                            return item;
+                                        }
+                                        return null;
+                                    })
+                                    .collect(Collectors.toList()),
+                                controllerId)
+                            .thenAccept(either -> {
+                                processAfterAdd(either, reDeployables, account, versionId, controllerId, deploymentDate, redeployFilter);
+                            }).get();
+                        break;
+                    case SOSKeyConstants.RSA_ALGORITHM_NAME:
+                        cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+                        signerDN = cert.getSubjectDN().getName();
+                        PublishUtils.updateRepoAddOrUpdateWithX509(
+                                versionId,  
+                                reDeployables.stream()
+                                    .map(item -> {
+                                        if(item.getCommitId().equals(versionId)) {
+                                            return item;
+                                        }
+                                        return null;
+                                    })
+                                    .collect(Collectors.toList()),
+                                controllerId, 
+                                SOSKeyConstants.RSA_SIGNER_ALGORITHM, 
+                                signerDN)
+                            .thenAccept(either -> {
+                                processAfterAdd(either, reDeployables, account, versionId, controllerId, deploymentDate, redeployFilter);
+                            }).get();
+                        break;
+                    case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
+                        cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+                        signerDN = cert.getSubjectDN().getName();
+                        PublishUtils.updateRepoAddOrUpdateWithX509(
+                                versionId,  
+                                reDeployables.stream().filter(item -> versionId.equals(item.getCommitId())).collect(Collectors.toList()),
+                                controllerId, 
+                                SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, 
+                                signerDN)
+                            .thenAccept(either -> {
+                                processAfterAdd(either, reDeployables, account, versionId, controllerId, deploymentDate, redeployFilter);
+                            }).get();
+                        break;
+                    }
+
                 }
             }
             versionIds.stream().peek(versionId -> {

@@ -60,6 +60,8 @@ import com.sos.commons.sign.keys.sign.SignObject;
 import com.sos.commons.sign.keys.verify.VerifySignature;
 import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.deploy.DeployType;
+import com.sos.jobscheduler.model.junction.Junction;
+import com.sos.jobscheduler.model.lock.Lock;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.db.DBItem;
@@ -572,18 +574,14 @@ public abstract class PublishUtils {
     public static CompletableFuture<Either<Problem, Void>> updateRepoAddOrUpdateWithX509(
             String versionId,  List<DBItemDeploymentHistory> alreadyDeployed, String controllerId, String signatureAlgorithm, String signerDN) 
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
-        return ControllerApi.of(controllerId).updateRepo(
-                VersionId.of(versionId), 
-                Flux.fromIterable(
-                        alreadyDeployed.stream().map(
-                                item -> JUpdateRepoOperation.addOrReplace(SignedString.x509WithSignedId(
-                                        item.getContent(), 
-                                        item.getSignedContent(), 
-                                        signatureAlgorithm, 
-                                        SignerId.of(signerDN)))
-                                ).collect(Collectors.toSet())
-                        )
-                );
+        Set<JUpdateRepoOperation> uro = alreadyDeployed.stream().map(
+                item -> JUpdateRepoOperation.addOrReplace(SignedString.x509WithSignedId(
+                        item.getContent(), 
+                        item.getSignedContent(), 
+                        signatureAlgorithm, 
+                        SignerId.of(signerDN)))
+                ).collect(Collectors.toSet());
+        return ControllerApi.of(controllerId).updateRepo(VersionId.of(versionId), Flux.fromIterable(uro));
     }
 
     public static CompletableFuture<Either<Problem, Void>> updateRepoDelete(String versionId,
@@ -1056,19 +1054,20 @@ public abstract class PublishUtils {
                             signatureExtension = JSObjectFileExtension.AGENT_REF_SIGNATURE_FILE_EXTENSION.toString();
                             AgentRef agentRef = (AgentRef)jsObject.getContent();
                             agentRef.setVersionId(versionId);
+                            // TODO: when table is ready replace AgentName with AgentId
                             content = om.writeValueAsString(agentRef);
                             break;
                         case LOCK :
                             extension = JSObjectFileExtension.LOCK_FILE_EXTENSION.toString();
                             signatureExtension = JSObjectFileExtension.LOCK_SIGNATURE_FILE_EXTENSION.toString();
                             // TODO:
-//                            content = om.writeValueAsString((Lock)jsObject.getContent());
+                            content = om.writeValueAsString((Lock)jsObject.getContent());
                             break;
                         case JUNCTION :
                             extension = JSObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
                             signatureExtension = JSObjectFileExtension.JUNCTION_SIGNATURE_FILE_EXTENSION.toString();
                             // TODO:
-//                            content = om.writeValueAsString((Junction)jsObject.getContent());
+                            content = om.writeValueAsString((Junction)jsObject.getContent());
                             break;
                         default:
                             extension = JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();

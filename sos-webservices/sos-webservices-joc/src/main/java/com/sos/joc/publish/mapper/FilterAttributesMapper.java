@@ -99,6 +99,7 @@ public abstract class FilterAttributesMapper {
         }
         if (filter.getFolder() != null) {
             filterAttributes.add("folder");
+            filterAttributes.add("likeFolder");
         }
         return filterAttributes;
     }
@@ -108,6 +109,8 @@ public abstract class FilterAttributesMapper {
         case "controllerId":
             return filter.getControllerId();
         case "folder":
+            return filter.getFolder();
+        case "likeFolder":
             return MatchMode.START.toMatchString(filter.getFolder());
         }
         return null;

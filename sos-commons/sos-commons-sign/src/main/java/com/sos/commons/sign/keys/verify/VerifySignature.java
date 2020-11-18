@@ -14,6 +14,8 @@ import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.ECPublicKey;
+import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 
 import org.apache.commons.io.IOUtils;
@@ -103,7 +105,12 @@ public class VerifySignature {
     
     public static Boolean verifyX509 (PublicKey publicKey, String original, String signature)
             throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        Signature sig = Signature.getInstance(SOSKeyConstants.RSA_SIGNER_ALGORITHM);
+        Signature sig = null;
+        if (publicKey instanceof ECPublicKey) {
+            sig = Signature.getInstance(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM);
+        } else if (publicKey instanceof RSAPublicKey) {
+            sig = Signature.getInstance(SOSKeyConstants.RSA_SIGNER_ALGORITHM);
+        }
         sig.initVerify(publicKey);
         sig.update(original.getBytes());
         return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));
@@ -119,7 +126,13 @@ public class VerifySignature {
     
     public static Boolean verifyX509(X509Certificate certificate, String original, String signature)
             throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException, NoSuchProviderException {
-        Signature sig = Signature.getInstance(SOSKeyConstants.RSA_SIGNER_ALGORITHM);
+        Signature sig = null;
+        PublicKey publicKey = certificate.getPublicKey();
+        if (publicKey instanceof ECPublicKey) {
+            sig = Signature.getInstance(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM);
+        } else if (publicKey instanceof RSAPublicKey) {
+            sig = Signature.getInstance(SOSKeyConstants.RSA_SIGNER_ALGORITHM);
+        }
         sig.initVerify(certificate);
         sig.update(original.getBytes());
         return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));
