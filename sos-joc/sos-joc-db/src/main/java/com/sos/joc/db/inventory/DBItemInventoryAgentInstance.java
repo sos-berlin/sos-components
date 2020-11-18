@@ -42,7 +42,7 @@ public class DBItemInventoryAgentInstance extends DBItem {
     @Column(name = "[URI]", nullable = false)
     private String uri;
 
-    @Column(name = "[AGENT_NAME]", nullable = true)
+    @Column(name = "[AGENT_NAME]", nullable = false)
     private String agentName;
 
     /* foreign key INVENTORY_OPERTATION_SYSTEM.ID */
