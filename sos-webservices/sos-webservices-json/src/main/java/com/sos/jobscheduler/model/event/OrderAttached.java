@@ -4,7 +4,6 @@ package com.sos.jobscheduler.model.event;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.jobscheduler.model.common.AgentId;
 import com.sos.jobscheduler.model.order.OrderPayload;
 import com.sos.jobscheduler.model.order.OrderState;
 import com.sos.jobscheduler.model.workflow.WorkflowPosition;
@@ -25,7 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "workflowPosition",
     "state",
     "parent",
-    "agentId",
+    "agentName",
     "payload"
 })
 public class OrderAttached
@@ -57,15 +56,8 @@ public class OrderAttached
      */
     @JsonProperty("parent")
     private String parent;
-    /**
-     * agentId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("agentId")
-    private AgentId agentId;
+    @JsonProperty("agentName")
+    private String agentName;
     /**
      * orderPayload
      * <p>
@@ -86,18 +78,18 @@ public class OrderAttached
      * 
      * @param parent
      * @param eventId
-     * @param agentId
      * @param payload
      * @param workflowPosition
+     * @param agentName
      * @param state
      * 
      */
-    public OrderAttached(WorkflowPosition workflowPosition, OrderState state, String parent, AgentId agentId, OrderPayload payload, Long eventId) {
+    public OrderAttached(WorkflowPosition workflowPosition, OrderState state, String parent, String agentName, OrderPayload payload, Long eventId) {
         super(eventId);
         this.workflowPosition = workflowPosition;
         this.state = state;
         this.parent = parent;
-        this.agentId = agentId;
+        this.agentName = agentName;
         this.payload = payload;
     }
 
@@ -169,28 +161,14 @@ public class OrderAttached
         this.parent = parent;
     }
 
-    /**
-     * agentId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("agentId")
-    public AgentId getAgentId() {
-        return agentId;
+    @JsonProperty("agentName")
+    public String getAgentName() {
+        return agentName;
     }
 
-    /**
-     * agentId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("agentId")
-    public void setAgentId(AgentId agentId) {
-        this.agentId = agentId;
+    @JsonProperty("agentName")
+    public void setAgentName(String agentName) {
+        this.agentName = agentName;
     }
 
     /**
@@ -217,12 +195,12 @@ public class OrderAttached
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("workflowPosition", workflowPosition).append("state", state).append("parent", parent).append("agentId", agentId).append("payload", payload).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("workflowPosition", workflowPosition).append("state", state).append("parent", parent).append("agentName", agentName).append("payload", payload).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(workflowPosition).append(parent).append(agentId).append(state).append(payload).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(workflowPosition).append(parent).append(agentName).append(state).append(payload).toHashCode();
     }
 
     @Override
@@ -234,7 +212,7 @@ public class OrderAttached
             return false;
         }
         OrderAttached rhs = ((OrderAttached) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(workflowPosition, rhs.workflowPosition).append(parent, rhs.parent).append(agentId, rhs.agentId).append(state, rhs.state).append(payload, rhs.payload).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(workflowPosition, rhs.workflowPosition).append(parent, rhs.parent).append(agentName, rhs.agentName).append(state, rhs.state).append(payload, rhs.payload).isEquals();
     }
 
 }

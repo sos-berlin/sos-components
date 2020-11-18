@@ -18,7 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "objectType",
     "id"
 })
@@ -31,8 +31,8 @@ public class DeleteDraft {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * xmleditor object type
      * <p>
@@ -52,9 +52,9 @@ public class DeleteDraft {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -64,9 +64,9 @@ public class DeleteDraft {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -105,12 +105,12 @@ public class DeleteDraft {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("objectType", objectType).append("id", id).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("objectType", objectType).append("id", id).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(id).append(jobschedulerId).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(id).append(controllerId).append(objectType).toHashCode();
     }
 
     @Override
@@ -122,7 +122,7 @@ public class DeleteDraft {
             return false;
         }
         DeleteDraft rhs = ((DeleteDraft) other);
-        return new EqualsBuilder().append(id, rhs.id).append(jobschedulerId, rhs.jobschedulerId).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(id, rhs.id).append(controllerId, rhs.controllerId).append(objectType, rhs.objectType).isEquals();
     }
 
 }

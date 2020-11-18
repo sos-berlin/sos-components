@@ -56,7 +56,7 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
                 }
 
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][%s][%s]validated", in.getJobschedulerId(), in.getObjectType().name(), validator.getSchema()));
+                    LOGGER.debug(String.format("[%s][%s][%s]validated", in.getControllerId(), in.getObjectType().name(), validator.getSchema()));
                 }
                 response = JOCDefaultResponse.responseStatus200(getSuccess());
             }
@@ -70,7 +70,7 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
     }
 
     private void checkRequiredParameters(final ValidateConfiguration in) throws Exception {
-        checkRequiredParameter("jobschedulerId", in.getJobschedulerId());
+        checkRequiredParameter("jobschedulerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         if (in.getObjectType().equals(ObjectType.OTHER)) {
             checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
@@ -80,9 +80,9 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final ValidateConfiguration in) throws Exception {
-        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
+        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getControllerId(), accessToken);
         boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return initPermissions(in.getJobschedulerId(), permission);
+        return initPermissions(in.getControllerId(), permission);
     }
 
     public static ValidateConfigurationAnswer getError(XsdValidatorException e) {

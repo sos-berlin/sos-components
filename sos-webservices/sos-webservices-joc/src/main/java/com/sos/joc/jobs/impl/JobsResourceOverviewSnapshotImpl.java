@@ -12,7 +12,7 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobs.resource.IJobsResourceOverviewSnapshot;
-import com.sos.joc.model.common.JobSchedulerId;
+import com.sos.joc.model.common.ControllerId;
 import com.sos.joc.model.job.JobsSnapshot;
 import com.sos.joc.model.job.JobsSummary;
 import com.sos.schema.JsonValidator;
@@ -30,11 +30,11 @@ public class JobsResourceOverviewSnapshotImpl extends JOCResourceImpl implements
     public JOCDefaultResponse postJobsOverviewSnapshot(String accessToken, byte[] filterBytes) {
         try {
             initLogging(API_CALL, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, JobSchedulerId.class);
-            JobSchedulerId jobScheduler = Globals.objectMapper.readValue(filterBytes, JobSchedulerId.class);
+            JsonValidator.validateFailFast(filterBytes, ControllerId.class);
+            ControllerId jobScheduler = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions(jobScheduler.getJobschedulerId(), getPermissonsJocCockpit(jobScheduler
-                    .getJobschedulerId(), accessToken).getJob().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(jobScheduler.getControllerId(), getPermissonsJocCockpit(jobScheduler
+                    .getControllerId(), accessToken).getJob().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -43,7 +43,7 @@ public class JobsResourceOverviewSnapshotImpl extends JOCResourceImpl implements
             jobs.setPending(0); // TODO setPending from database
             jobs.setRunning(0);
             
-            JControllerState controllerState = Proxy.of(jobScheduler.getJobschedulerId()).currentState();
+            JControllerState controllerState = Proxy.of(jobScheduler.getControllerId()).currentState();
             jobs.setRunning(controllerState.orderStateToCount(JOrderPredicates.byOrderState(Order.Processing$.class)).get(Order.Processing$.class));
             
             JobsSnapshot entity = new JobsSnapshot();

@@ -10,16 +10,16 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * JobScheduler id
+ * Controller id
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId"
+    "controllerId"
 })
-public class JobSchedulerId {
+public class ControllerId {
 
     /**
      * filename
@@ -28,8 +28,8 @@ public class JobSchedulerId {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
 
     /**
      * filename
@@ -38,9 +38,9 @@ public class JobSchedulerId {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -50,19 +50,19 @@ public class JobSchedulerId {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).toHashCode();
+        return new HashCodeBuilder().append(controllerId).toHashCode();
     }
 
     @Override
@@ -70,11 +70,11 @@ public class JobSchedulerId {
         if (other == this) {
             return true;
         }
-        if ((other instanceof JobSchedulerId) == false) {
+        if ((other instanceof ControllerId) == false) {
             return false;
         }
-        JobSchedulerId rhs = ((JobSchedulerId) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).isEquals();
+        ControllerId rhs = ((ControllerId) other);
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).isEquals();
     }
 
 }

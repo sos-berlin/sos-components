@@ -18,7 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "id",
     "account",
     "configurationType",
@@ -35,8 +35,8 @@ public class Configuration {
      * 
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * non negative long
      * <p>
@@ -94,9 +94,9 @@ public class Configuration {
      * 
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -105,9 +105,9 @@ public class Configuration {
      * 
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -252,12 +252,12 @@ public class Configuration {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("id", id).append("account", account).append("configurationType", configurationType).append("objectType", objectType).append("name", name).append("shared", shared).append("configurationItem", configurationItem).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("id", id).append("account", account).append("configurationType", configurationType).append("objectType", objectType).append("name", name).append("shared", shared).append("configurationItem", configurationItem).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(shared).append(name).append(id).append(jobschedulerId).append(configurationType).append(account).append(objectType).append(configurationItem).toHashCode();
+        return new HashCodeBuilder().append(shared).append(controllerId).append(name).append(id).append(configurationType).append(account).append(objectType).append(configurationItem).toHashCode();
     }
 
     @Override
@@ -269,7 +269,7 @@ public class Configuration {
             return false;
         }
         Configuration rhs = ((Configuration) other);
-        return new EqualsBuilder().append(shared, rhs.shared).append(name, rhs.name).append(id, rhs.id).append(jobschedulerId, rhs.jobschedulerId).append(configurationType, rhs.configurationType).append(account, rhs.account).append(objectType, rhs.objectType).append(configurationItem, rhs.configurationItem).isEquals();
+        return new EqualsBuilder().append(shared, rhs.shared).append(controllerId, rhs.controllerId).append(name, rhs.name).append(id, rhs.id).append(configurationType, rhs.configurationType).append(account, rhs.account).append(objectType, rhs.objectType).append(configurationItem, rhs.configurationItem).isEquals();
     }
 
 }

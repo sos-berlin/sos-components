@@ -4,10 +4,10 @@
   "javaType": "com.sos.joc.model.audit.AuditLogFilter",
   "type": "object",
   "required": [
-    "jobschedulerId"
+    "controllerId"
   ],
   "properties": {
-    "jobschedulerId": {
+    "controllerId": {
       "$ref": "../common/filename100-schema.json"
     },
     "jobs": {

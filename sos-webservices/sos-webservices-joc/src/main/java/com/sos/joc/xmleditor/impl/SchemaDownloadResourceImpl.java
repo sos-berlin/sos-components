@@ -66,7 +66,7 @@ public class SchemaDownloadResourceImpl extends JOCResourceImpl implements ISche
     }
 
     private void checkRequiredParameters(final SchemaDownloadConfiguration in) throws Exception {
-        checkRequiredParameter("jobschedulerId", in.getJobschedulerId());
+        checkRequiredParameter("jobschedulerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         if (in.getObjectType().equals(ObjectType.OTHER)) {
             checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
@@ -74,9 +74,9 @@ public class SchemaDownloadResourceImpl extends JOCResourceImpl implements ISche
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final SchemaDownloadConfiguration in) throws Exception {
-        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
+        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getControllerId(), accessToken);
         boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return initPermissions(in.getJobschedulerId(), permission);
+        return initPermissions(in.getControllerId(), permission);
     }
 
     private JOCDefaultResponse download(SchemaDownloadConfiguration in) throws Exception {

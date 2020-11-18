@@ -2,10 +2,9 @@
 <ul><li>"FOLDER"</li>
     <li>"WORKFLOW"</li>
     <li>"JOBCLASS"</li>
-    <li>"AGENTCLUSTER"</li>
     <li>"LOCK"</li>
     <li>"JUNCTION"</li>
     <li>"WORKINGDAYSCALENDAR"</li>
     <li>"NONWORKINGDAYSCALENDAR"</li>
-    <li>"ORDER"</li></ul>
+    <li>"ORDERTEMPLATE"</li></ul>
 </td><td>["WORKINGDAYSCALENDAR", "NONWORKINGDAYSCALENDAR"]</td><td></td></tr>

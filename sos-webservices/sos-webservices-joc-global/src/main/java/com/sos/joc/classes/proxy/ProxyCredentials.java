@@ -9,7 +9,7 @@ import js7.proxy.javaapi.data.auth.JHttpsConfig;
 
 public class ProxyCredentials {
 
-    private String jobschedulerId;
+    private String controllerId;
     private String url;
     private ProxyUser user = null;
     private JCredentials account = JCredentials.noCredentials();
@@ -17,7 +17,7 @@ public class ProxyCredentials {
     private JHttpsConfig httpsConfig = JHttpsConfig.empty();
 
     protected ProxyCredentials(String id, String url, ProxyUser user, JCredentials account, String backupUrl, JHttpsConfig httpsConfig) {
-        this.jobschedulerId = id;
+        this.controllerId = id;
         this.url = url;
         if (user != null) {
             this.user = user;
@@ -31,8 +31,8 @@ public class ProxyCredentials {
         }
     }
     
-    protected String getJobSchedulerId() {
-        return jobschedulerId;
+    protected String getControllerId() {
+        return controllerId;
     }
 
     protected String getUrl() {
@@ -62,7 +62,7 @@ public class ProxyCredentials {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(account).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(account).toHashCode();
     }
 
     @Override
@@ -74,7 +74,7 @@ public class ProxyCredentials {
             return false;
         }
         ProxyCredentials rhs = ((ProxyCredentials) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(account, rhs.account).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(account, rhs.account).isEquals();
     }
     
     public boolean identical(Object other) {
@@ -85,7 +85,7 @@ public class ProxyCredentials {
             return false;
         }
         ProxyCredentials rhs = ((ProxyCredentials) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(account, rhs.account).append(url, rhs.url).append(backupUrl, rhs.backupUrl).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(account, rhs.account).append(url, rhs.url).append(backupUrl, rhs.backupUrl).isEquals();
     }
 
 }

@@ -19,15 +19,15 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "fileId",
     "compact",
     "mime"
 })
 public class FileFilter {
 
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * non negative long
      * <p>
@@ -55,14 +55,14 @@ public class FileFilter {
     @JsonPropertyDescription("The log can have a HTML representation where the HTML gets a highlighting via CSS classes.")
     private LogMime mime = LogMime.fromValue("PLAIN");
 
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -133,12 +133,12 @@ public class FileFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("fileId", fileId).append("compact", compact).append("mime", mime).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("fileId", fileId).append("compact", compact).append("mime", mime).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(compact).append(fileId).append(mime).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(compact).append(fileId).append(mime).toHashCode();
     }
 
     @Override
@@ -150,7 +150,7 @@ public class FileFilter {
             return false;
         }
         FileFilter rhs = ((FileFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(compact, rhs.compact).append(fileId, rhs.fileId).append(mime, rhs.mime).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(fileId, rhs.fileId).append(mime, rhs.mime).isEquals();
     }
 
 }

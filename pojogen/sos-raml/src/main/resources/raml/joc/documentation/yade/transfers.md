@@ -7,7 +7,7 @@ It depends on the parameter ``compact``.
     * profile
     * mandator
     * state
-    * jobschedulerId
+    * controllerId
     * _operation
     * source
     	* host

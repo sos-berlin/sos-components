@@ -302,7 +302,7 @@ public class JOCResourceImpl {
             return accessDeniedResponse();
         }
         // if (schedulerId == null) {
-        // throw new JocMissingRequiredParameterException("undefined 'jobschedulerId'");
+        // throw new JocMissingRequiredParameterException("undefined 'controllerId'");
         // } else {
         folderPermissions = jobschedulerUser.getSosShiroCurrentUser().getSosShiroFolderPermissions();
         folderPermissions.setSchedulerId(schedulerId);

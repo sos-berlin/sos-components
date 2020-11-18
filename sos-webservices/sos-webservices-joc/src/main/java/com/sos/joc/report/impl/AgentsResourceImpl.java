@@ -54,12 +54,12 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
 //		SOSHibernateSession connection = null;
 
 		try {
-			if (agentsFilter.getJobschedulerId() == null) {
-				agentsFilter.setJobschedulerId("");
+			if (agentsFilter.getControllerId() == null) {
+				agentsFilter.setControllerId("");
 			}
 			JOCDefaultResponse jocDefaultResponse = init(API_CALL, agentsFilter, accessToken,
-					agentsFilter.getJobschedulerId(),
-					getPermissonsJocCockpit(agentsFilter.getJobschedulerId(), accessToken)
+					agentsFilter.getControllerId(),
+					getPermissonsJocCockpit(agentsFilter.getControllerId(), accessToken)
 							.getJS7UniversalAgent().getView().isStatus());
 			if (jocDefaultResponse != null) {
 				return jocDefaultResponse;

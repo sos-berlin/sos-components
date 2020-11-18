@@ -4,11 +4,11 @@
   "javaType": "com.sos.joc.model.processClass.ProcessClassConfigurationFilter",
   "type": "object",
   "required": [
-    "jobschedulerId",
+    "controllerId",
     "processClass"
   ],
   "properties": {
-    "jobschedulerId": {
+    "controllerId": {
       "type": "string"
     },
     "processClass": {

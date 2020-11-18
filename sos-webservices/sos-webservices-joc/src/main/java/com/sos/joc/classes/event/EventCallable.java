@@ -142,7 +142,7 @@ public class EventCallable implements Callable<JobSchedulerEvent> {
     protected void checkTimeout() throws ForcedClosingHttpClientException {
         Long curTime = Instant.now().getEpochSecond();
         if (curTime - startTime > 6 * 60) {  // general timeout 6min
-            String msg = command != null ? command.getSchemeAndAuthority() : jobSchedulerEvent.getJobschedulerId();
+            String msg = command != null ? command.getSchemeAndAuthority() : jobSchedulerEvent.getControllerId();
             throw new ForcedClosingHttpClientException(msg);
         }
     }

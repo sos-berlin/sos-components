@@ -70,11 +70,11 @@ public class WorkflowSearcher {
         return jobs.stream().filter(j -> !namedJobNames.contains(j.getName())).collect(Collectors.toList());
     }
 
-    public List<WorkflowJob> getJobsByAgentRefPath(String agentRefRegex) {
+    public List<WorkflowJob> getJobsByAgentName(String agentRefRegex) {
         if (agentRefRegex == null) {
             return getJobs();
         }
-        return toWorkflowJobList(getJobsStream().filter(e -> e.getValue().getAgentRefPath() != null && e.getValue().getAgentRefPath().matches(
+        return toWorkflowJobList(getJobsStream().filter(e -> e.getValue().getAgentName() != null && e.getValue().getAgentName().matches(
                 agentRefRegex)));
     }
 

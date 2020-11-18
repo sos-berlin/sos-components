@@ -19,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "tasks"
 })
 public class RunningTaskLogsFilter {
@@ -29,8 +29,8 @@ public class RunningTaskLogsFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * 
      * (Required)
@@ -44,9 +44,9 @@ public class RunningTaskLogsFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -54,9 +54,9 @@ public class RunningTaskLogsFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -81,12 +81,12 @@ public class RunningTaskLogsFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("tasks", tasks).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("tasks", tasks).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(tasks).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(tasks).toHashCode();
     }
 
     @Override
@@ -98,7 +98,7 @@ public class RunningTaskLogsFilter {
             return false;
         }
         RunningTaskLogsFilter rhs = ((RunningTaskLogsFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(tasks, rhs.tasks).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(tasks, rhs.tasks).isEquals();
     }
 
 }

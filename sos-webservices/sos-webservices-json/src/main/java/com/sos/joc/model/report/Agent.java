@@ -18,15 +18,15 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "agent",
     "numOfSuccessfulTasks",
     "numOfJobs"
 })
 public class Agent {
 
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * Url of an Agent
      * (Required)
@@ -54,14 +54,14 @@ public class Agent {
     @JsonProperty("numOfJobs")
     private Long numOfJobs;
 
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -134,12 +134,12 @@ public class Agent {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("agent", agent).append("numOfSuccessfulTasks", numOfSuccessfulTasks).append("numOfJobs", numOfJobs).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agent", agent).append("numOfSuccessfulTasks", numOfSuccessfulTasks).append("numOfJobs", numOfJobs).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(numOfSuccessfulTasks).append(agent).append(jobschedulerId).append(numOfJobs).toHashCode();
+        return new HashCodeBuilder().append(numOfSuccessfulTasks).append(agent).append(controllerId).append(numOfJobs).toHashCode();
     }
 
     @Override
@@ -151,7 +151,7 @@ public class Agent {
             return false;
         }
         Agent rhs = ((Agent) other);
-        return new EqualsBuilder().append(numOfSuccessfulTasks, rhs.numOfSuccessfulTasks).append(agent, rhs.agent).append(jobschedulerId, rhs.jobschedulerId).append(numOfJobs, rhs.numOfJobs).isEquals();
+        return new EqualsBuilder().append(numOfSuccessfulTasks, rhs.numOfSuccessfulTasks).append(agent, rhs.agent).append(controllerId, rhs.controllerId).append(numOfJobs, rhs.numOfJobs).isEquals();
     }
 
 }

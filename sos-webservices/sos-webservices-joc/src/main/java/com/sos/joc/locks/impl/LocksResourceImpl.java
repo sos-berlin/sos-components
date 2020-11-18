@@ -24,8 +24,8 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
 
     public JOCDefaultResponse postLocks(String accessToken, LocksFilter locksFilter) throws Exception {
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, locksFilter, accessToken, locksFilter.getJobschedulerId(), getPermissonsJocCockpit(
-                    locksFilter.getJobschedulerId(), accessToken).getLock().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, locksFilter, accessToken, locksFilter.getControllerId(), getPermissonsJocCockpit(
+                    locksFilter.getControllerId(), accessToken).getLock().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

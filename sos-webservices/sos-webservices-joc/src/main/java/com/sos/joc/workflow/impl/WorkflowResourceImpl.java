@@ -38,8 +38,8 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, WorkflowFilter.class);
             WorkflowFilter workflowFilter = Globals.objectMapper.readValue(filterBytes, WorkflowFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(workflowFilter.getJobschedulerId(), getPermissonsJocCockpit(workflowFilter
-                    .getJobschedulerId(), accessToken).getOrder().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(workflowFilter.getControllerId(), getPermissonsJocCockpit(workflowFilter
+                    .getControllerId(), accessToken).getOrder().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

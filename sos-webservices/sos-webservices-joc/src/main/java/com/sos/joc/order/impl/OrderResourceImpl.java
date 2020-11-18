@@ -33,13 +33,13 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrderFilter.class);
             OrderFilter orderFilter = Globals.objectMapper.readValue(filterBytes, OrderFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(orderFilter.getJobschedulerId(), getPermissonsJocCockpit(orderFilter
-                    .getJobschedulerId(), accessToken).getOrder().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(orderFilter.getControllerId(), getPermissonsJocCockpit(orderFilter
+                    .getControllerId(), accessToken).getOrder().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            JControllerState currentState = Proxy.of(orderFilter.getJobschedulerId()).currentState();
+            JControllerState currentState = Proxy.of(orderFilter.getControllerId()).currentState();
             Long surveyDateMillis = currentState.eventId() / 1000;
             Optional<JOrder> optional = currentState.idToOrder(OrderId.of(orderFilter.getOrderId()));
             

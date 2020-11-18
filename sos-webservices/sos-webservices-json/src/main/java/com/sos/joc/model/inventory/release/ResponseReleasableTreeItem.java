@@ -1,15 +1,14 @@
 
 package com.sos.joc.model.inventory.release;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
@@ -78,7 +77,7 @@ public class ResponseReleasableTreeItem {
     private Boolean deleted;
     @JsonProperty("released")
     private Boolean released;
-    
+
     /**
      * non negative long
      * <p>

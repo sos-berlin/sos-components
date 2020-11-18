@@ -3,7 +3,6 @@ package com.sos.joc.db.documentation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -157,7 +156,7 @@ public class DocumentationDBLayer {
     }
 
     public String getDocumentationPath(DocumentationShowFilter documentationFilter) throws DBConnectionRefusedException, DBInvalidDataException {
-        return getDocumentationPath(documentationFilter.getJobschedulerId(), documentationFilter.getType(), documentationFilter.getPath());
+        return getDocumentationPath(documentationFilter.getControllerId(), documentationFilter.getType(), documentationFilter.getPath());
     }
 
     public String getDocumentationPath(String schedulerId, JobSchedulerObjectType objectType, String path) throws DBConnectionRefusedException,

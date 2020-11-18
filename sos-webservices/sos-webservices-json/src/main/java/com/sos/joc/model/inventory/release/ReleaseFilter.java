@@ -2,13 +2,10 @@
 package com.sos.joc.model.inventory.release;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.inventory.common.RequestFilter;
 import org.apache.commons.lang.builder.EqualsBuilder;

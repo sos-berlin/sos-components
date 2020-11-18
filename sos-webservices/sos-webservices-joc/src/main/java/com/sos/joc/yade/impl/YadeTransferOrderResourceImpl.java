@@ -21,7 +21,7 @@ public class YadeTransferOrderResourceImpl extends JOCResourceImpl implements IY
 	public JOCDefaultResponse postYadeTransferOrder(String accessToken, ModifyTransfer filterBody) throws Exception {
 		try {
 			JOCDefaultResponse jocDefaultResponse = init(API_CALL, filterBody, accessToken,
-					filterBody.getJobschedulerId(), getPermissonsJocCockpit(filterBody.getJobschedulerId(), accessToken)
+					filterBody.getControllerId(), getPermissonsJocCockpit(filterBody.getControllerId(), accessToken)
 							.getYADE().getExecute().isTransferStart());
 			if (jocDefaultResponse != null) {
 				return jocDefaultResponse;

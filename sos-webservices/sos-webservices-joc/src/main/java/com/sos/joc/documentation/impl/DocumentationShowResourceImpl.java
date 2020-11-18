@@ -40,7 +40,7 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
     public JOCDefaultResponse show(String xAccessToken, String jobschedulerId, String path, String type) throws Exception {
         try {
             DocumentationShowFilter documentationFilter = new DocumentationShowFilter();
-            documentationFilter.setJobschedulerId(jobschedulerId);
+            documentationFilter.setControllerId(jobschedulerId);
             documentationFilter.setPath(path);
             documentationFilter.setType(JobSchedulerObjectType.fromValue(type));
             return show(xAccessToken, documentationFilter);
@@ -54,7 +54,7 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
         try {
             boolean perm = false;
             if (documentationFilter.getType() != null) {
-                SOSPermissionJocCockpit sosPermission = getPermissonsJocCockpit(documentationFilter.getJobschedulerId(), xAccessToken);
+                SOSPermissionJocCockpit sosPermission = getPermissonsJocCockpit(documentationFilter.getControllerId(), xAccessToken);
                 switch (documentationFilter.getType()) {
                 case JOB:
                     perm = sosPermission.getJob().getView().isDocumentation();
@@ -79,7 +79,7 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
                     break;
                 }
             }
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_SHOW, documentationFilter, xAccessToken, documentationFilter.getJobschedulerId(),
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL_SHOW, documentationFilter, xAccessToken, documentationFilter.getControllerId(),
                     perm);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -105,7 +105,7 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
 
     public JOCDefaultResponse preview(String xAccessToken, String jobschedulerId, String path) throws Exception {
         DocumentationShowFilter documentationFilter = new DocumentationShowFilter();
-        documentationFilter.setJobschedulerId(jobschedulerId);
+        documentationFilter.setControllerId(jobschedulerId);
         documentationFilter.setPath(path);
         return preview(xAccessToken, documentationFilter);
     }
@@ -113,8 +113,8 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
     @Override
     public JOCDefaultResponse preview(String xAccessToken, DocumentationShowFilter documentationFilter) throws Exception {
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_PREVIEW, documentationFilter, xAccessToken, documentationFilter.getJobschedulerId(),
-                    getPermissonsJocCockpit(documentationFilter.getJobschedulerId(), xAccessToken).getDocumentation().isView());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL_PREVIEW, documentationFilter, xAccessToken, documentationFilter.getControllerId(),
+                    getPermissonsJocCockpit(documentationFilter.getControllerId(), xAccessToken).getDocumentation().isView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -123,7 +123,7 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
 
             String entity = String.format(
                     "<!DOCTYPE html>%n<html>\n<head>%n  <meta http-equiv=\"refresh\" content=\"0;URL='%s/%s%s'\" />%n</head>%n<body>%n</body>%n</html>",
-                    documentationFilter.getJobschedulerId(), xAccessToken, JOCJsonCommand.urlEncodedPath(normalizePath(documentationFilter
+                    documentationFilter.getControllerId(), xAccessToken, JOCJsonCommand.urlEncodedPath(normalizePath(documentationFilter
                             .getPath())));
 
             return JOCDefaultResponse.responseHtmlStatus200(entity);
@@ -138,7 +138,7 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
     @Override
     public JOCDefaultResponse postUrl(String xAccessToken, DocumentationShowFilter documentationFilter) throws Exception {
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_URL, documentationFilter, xAccessToken, documentationFilter.getJobschedulerId(),
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL_URL, documentationFilter, xAccessToken, documentationFilter.getControllerId(),
                     true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -162,7 +162,7 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
             DBMissingDataException, UnsupportedEncodingException, DBOpenSessionException {
         SOSHibernateSession connection = null;
         try {
-            checkRequiredParameter("jobschedulerId", documentationFilter.getJobschedulerId());
+            checkRequiredParameter("jobschedulerId", documentationFilter.getControllerId());
             checkRequiredParameter("path", documentationFilter.getPath());
             checkRequiredParameter("objectType", documentationFilter.getType().name());
 
@@ -174,7 +174,7 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
                 throw new DBMissingDataException("The documentation couldn't determine");
             }
 
-            return documentationFilter.getJobschedulerId() + "/" + xAccessToken + JOCJsonCommand.urlEncodedPath(documentationFilter.getPath());
+            return documentationFilter.getControllerId() + "/" + xAccessToken + JOCJsonCommand.urlEncodedPath(documentationFilter.getPath());
         } finally {
             Globals.disconnect(connection);
         }

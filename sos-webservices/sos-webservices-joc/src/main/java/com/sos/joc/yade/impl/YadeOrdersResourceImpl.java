@@ -21,7 +21,7 @@ public class YadeOrdersResourceImpl extends JOCResourceImpl implements IYadeOrde
 	public JOCDefaultResponse postOrders(String accessToken, OrdersFilter ordersBody) throws Exception {
 		try {
 			JOCDefaultResponse jocDefaultResponse = init(API_CALL, ordersBody, accessToken,
-					ordersBody.getJobschedulerId(), getPermissonsJocCockpit(ordersBody.getJobschedulerId(), accessToken)
+					ordersBody.getControllerId(), getPermissonsJocCockpit(ordersBody.getControllerId(), accessToken)
 							.getOrder().getView().isStatus());
 			if (jocDefaultResponse != null) {
 				return jocDefaultResponse;

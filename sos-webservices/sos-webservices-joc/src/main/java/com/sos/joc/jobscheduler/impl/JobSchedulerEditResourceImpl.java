@@ -48,12 +48,12 @@ import com.sos.joc.model.jobscheduler.UrlParameter;
 import com.sos.joc.model.security.SecurityConfigurationMaster;
 import com.sos.schema.JsonValidator;
 
-@Path("jobscheduler")
+@Path("controller")
 public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJobSchedulerEditResource {
 
-    private static final String API_CALL_REGISTER = "./jobscheduler/register";
-    private static final String API_CALL_DELETE = "./jobscheduler/cleanup";
-    private static final String API_CALL_TEST = "./jobscheduler/test";
+    private static final String API_CALL_REGISTER = "./controller/register";
+    private static final String API_CALL_DELETE = "./controller/cleanup";
+    private static final String API_CALL_TEST = "./controller/test";
 
     @Override
     public JOCDefaultResponse storeJobscheduler(String accessToken, byte[] filterBytes) {
@@ -64,7 +64,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             RegisterParameters jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, RegisterParameters.class);
             
             checkRequiredComment(jobSchedulerBody.getAuditLog());
-            String jobschedulerId = null;
+            String jobschedulerId = jobSchedulerBody.getControllerId();
             int index = 0;
             Set<Long> ids = new HashSet<Long>();
             Set<URI> uris = new HashSet<URI>();
@@ -74,19 +74,14 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     throw new JobSchedulerBadRequestException("The cluster members must have the different URLs"); 
                 }
 
-                Controller jobScheduler = testConnection(controller.getUrl());
+                URI otherUri = index == 1 ? null : jobSchedulerBody.getControllers().get(0).getUrl();
+                Controller jobScheduler = testConnection(controller.getUrl(), jobschedulerId, otherUri);
                 if (jobScheduler.getConnectionState().get_text() == ConnectionStateText.unreachable) {
                     throw new JobSchedulerConnectionRefusedException(controller.getUrl().toString());
                 }
                 
-                if (jobschedulerId == null) {
-                    jobschedulerId = jobScheduler.getJobschedulerId();
-                }
-                if (index == 1 && !jobschedulerId.equals(jobScheduler.getJobschedulerId())) {
-                    throw new JobSchedulerInvalidResponseDataException(String.format(
-                            "The cluster members must have the same JobScheduler Id: %1$s -> %2$s, %3$s -> %4$s", jobSchedulerBody.getControllers().get(0)
-                                    .getUrl().toString(), jobschedulerId, controller.getUrl().toString(), jobScheduler.getJobschedulerId()));
-                }
+                jobschedulerId = jobScheduler.getControllerId();
+                
                 if (controller.getId() == null) {
                     controller.setId(0L); 
                 }
@@ -228,20 +223,20 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getPermissonsJocCockpit(jobSchedulerBody.getJobschedulerId(), accessToken)
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getPermissonsJocCockpit(jobSchedulerBody.getControllerId(), accessToken)
                     .getJS7Controller().getAdministration().isRemoveOldInstances());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            checkRequiredParameter("jobSchedulerId", jobSchedulerBody.getJobschedulerId());
+            checkRequiredParameter("controllerId", jobSchedulerBody.getControllerId());
             checkRequiredComment(jobSchedulerBody.getAuditLog());
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
             InventoryInstancesDBLayer instanceDBLayer = new InventoryInstancesDBLayer(connection);
             InventoryOperatingSystemsDBLayer osDBLayer = new InventoryOperatingSystemsDBLayer(connection);
             
-            List<DBItemInventoryJSInstance> instances = instanceDBLayer.getInventoryInstancesByControllerId(jobSchedulerBody.getJobschedulerId());
+            List<DBItemInventoryJSInstance> instances = instanceDBLayer.getInventoryInstancesByControllerId(jobSchedulerBody.getControllerId());
             if (instances != null) {
                for (DBItemInventoryJSInstance instance : instances) {
                    instanceDBLayer.deleteInstance(instance);
@@ -250,7 +245,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                    }
                    //TODO some other tables should maybe deleted !!!
                }
-               ProxiesEdit.remove(jobSchedulerBody.getJobschedulerId());
+               ProxiesEdit.remove(jobSchedulerBody.getControllerId());
             }
             
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -271,11 +266,9 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             
-            String jobschedulerId = "";
-            if (jobSchedulerBody.getJobschedulerId() != null) {
-                jobschedulerId = jobSchedulerBody.getJobschedulerId();
-            }
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getPermissonsJocCockpit(jobschedulerId, accessToken).getJS7Controller()
+            String controllerId = jobSchedulerBody.getControllerId();
+            
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getPermissonsJocCockpit(controllerId, accessToken).getJS7Controller()
                     .getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -283,10 +276,10 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
 
             checkRequiredParameter("url", jobSchedulerBody.getUrl());
             
-            Controller jobScheduler = testConnection(jobSchedulerBody.getUrl());
+            Controller jobScheduler = testConnection(jobSchedulerBody.getUrl(), controllerId, null);
             
             JobScheduler200 entity = new JobScheduler200();
-            entity.setJobscheduler(jobScheduler);
+            entity.setController(jobScheduler);
             entity.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(entity);
         } catch (JocException e) {
@@ -297,7 +290,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
         }
     }
     
-    private Controller testConnection(URI jobschedulerURI) throws JobSchedulerInvalidResponseDataException {
+    private Controller testConnection(URI jobschedulerURI, String controllerId, URI otherJobschedulerURI) throws JobSchedulerInvalidResponseDataException {
         Controller jobScheduler = new Controller();
         jobScheduler.setUrl(jobschedulerURI.toString());
         jobScheduler.setIsCoupled(null);
@@ -311,7 +304,18 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
         } catch (JocException e) {
         }
         if (answer != null) {
-            jobScheduler.setJobschedulerId(answer.getId());
+            if (!controllerId.isEmpty() && !controllerId.equals(answer.getId())) {
+                if (otherJobschedulerURI != null) {
+                    throw new JobSchedulerInvalidResponseDataException(String.format(
+                            "The cluster members must have the same Controller Id: %1$s -> %2$s, %3$s -> %4$s", otherJobschedulerURI.toString(),
+                            controllerId, jobschedulerURI, answer.getId()));
+                } else {
+                    throw new JobSchedulerInvalidResponseDataException(String.format(
+                            "Connection was successful but controllerId '%s' of URL '%s' is not the expected controllerId '%s'", answer.getId(),
+                            jobScheduler.getUrl(), controllerId));
+                }
+            }
+            jobScheduler.setControllerId(answer.getId());
             jobScheduler.setConnectionState(States.getConnectionState(ConnectionStateText.established));
         } else {
             jobScheduler.setConnectionState(States.getConnectionState(ConnectionStateText.unreachable));

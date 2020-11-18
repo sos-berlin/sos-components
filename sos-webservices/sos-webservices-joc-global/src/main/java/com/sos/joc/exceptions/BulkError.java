@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.model.common.Err419;
-import com.sos.joc.model.order.StartOrder;
+import com.sos.joc.model.order.AddOrder;
 
 
 public class BulkError extends Err419 {
@@ -32,9 +32,9 @@ public class BulkError extends Err419 {
         return this;
     }
     
-    public Err419 get(Throwable e, JocError jocError, StartOrder startOrder) {
+    public Err419 get(Throwable e, JocError jocError, AddOrder startOrder) {
         setCodeAndMessage(e, jocError);
-        setPath(startOrder.getWorkflowPath() + "/" + startOrder.getOrderId());
+        setPath(startOrder.getWorkflowPath() + "/" + startOrder.getOrderName());
         return this;
     }
     

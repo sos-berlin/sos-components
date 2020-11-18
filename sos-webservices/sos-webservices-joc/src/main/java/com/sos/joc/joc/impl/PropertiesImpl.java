@@ -17,7 +17,7 @@ import com.sos.joc.joc.resource.IPropertiesResource;
 import com.sos.joc.model.Properties;
 import com.sos.joc.model.ShowViewProperties;
 
-@javax.ws.rs.Path("")
+@javax.ws.rs.Path("joc")
 public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResource {
 
     private static final String API_CALL = "./properties";

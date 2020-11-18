@@ -26,7 +26,7 @@ public class AuditLogDBLayer {
 		String where = "";
 		String and = "";
 
-		if (filter.getSchedulerId() != null && !"".equals(filter.getSchedulerId())) {
+		if (filter.getControllerId() != null && !"".equals(filter.getControllerId())) {
 			where += and + " schedulerId = :schedulerId";
 			and = " and ";
 		} else {
@@ -109,8 +109,8 @@ public class AuditLogDBLayer {
 	}
 
 	private void bindParameters(Query<DBItemJocAuditLog> query, AuditLogDBFilter filter) {
-		if (filter.getSchedulerId() != null && !filter.getSchedulerId().isEmpty()) {
-			query.setParameter("schedulerId", filter.getSchedulerId());
+		if (filter.getControllerId() != null && !filter.getControllerId().isEmpty()) {
+			query.setParameter("schedulerId", filter.getControllerId());
 		}
 		if (filter.getCreatedFrom() != null) {
 			query.setParameter("from", filter.getCreatedFrom(), TemporalType.TIMESTAMP);

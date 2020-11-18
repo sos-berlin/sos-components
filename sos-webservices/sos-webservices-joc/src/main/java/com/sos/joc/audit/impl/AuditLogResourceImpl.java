@@ -30,11 +30,11 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
     public JOCDefaultResponse postAuditLog(String accessToken, AuditLogFilter auditLogFilter) throws Exception {
         SOSHibernateSession connection = null;
         try {
-            if (auditLogFilter.getJobschedulerId() == null) {
-                auditLogFilter.setJobschedulerId("");
+            if (auditLogFilter.getControllerId() == null) {
+                auditLogFilter.setControllerId("");
             }
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, auditLogFilter, accessToken, auditLogFilter.getJobschedulerId(),
-                    getPermissonsJocCockpit(auditLogFilter.getJobschedulerId(), accessToken).getAuditLog().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, auditLogFilter, accessToken, auditLogFilter.getControllerId(),
+                    getPermissonsJocCockpit(auditLogFilter.getControllerId(), accessToken).getAuditLog().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -54,7 +54,7 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
                 auditLogs = filterComment(auditLogs, filterRegex);
             }
             AuditLog entity = new AuditLog();
-            entity.setAuditLog(fillAuditLogItems(auditLogs, auditLogFilter.getJobschedulerId()));
+            entity.setAuditLog(fillAuditLogItems(auditLogs, auditLogFilter.getControllerId()));
             entity.setDeliveryDate(new Date());
 
             return JOCDefaultResponse.responseStatus200(entity);
@@ -92,7 +92,7 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
 							.getView().isStatus()) {
 						continue;
 					}
-					auditLogItem.setJobschedulerId(auditLogFromDb.getSchedulerId());
+					auditLogItem.setControllerId(auditLogFromDb.getSchedulerId());
 				}
 				auditLogItem.setAccount(auditLogFromDb.getAccount());
 				auditLogItem.setRequest(auditLogFromDb.getRequest());

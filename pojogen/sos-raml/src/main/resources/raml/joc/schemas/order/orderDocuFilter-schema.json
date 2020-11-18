@@ -4,13 +4,13 @@
   "javaType": "com.sos.joc.model.order.OrderDocuFilter",
   "type": "object",
   "required": [
-    "jobschedulerId",
+    "controllerId",
     "workflow",
     "orderId",
     "documentation"
   ],
   "properties": {
-    "jobschedulerId": {
+    "controllerId": {
       "$ref": "../common/filename100-schema.json"
     },
     "workflow": {

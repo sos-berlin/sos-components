@@ -5,11 +5,11 @@
 	"type": "object",
 	"description": "",
 	"required": [
-		"jobschedulerId",
+		"controllerId",
 		"objectType"
 	],
 	"properties": {
-		"jobschedulerId": {
+		"controllerId": {
 			"$ref": "../../common/filename100-schema.json"
 		},
 		"objectType": {

@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "types",
     "folders",
     "onlyValidObjects",
@@ -34,8 +34,8 @@ public class TreeFilter {
      * 
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     @JsonProperty("types")
     private List<TreeType> types = new ArrayList<TreeType>();
     /**
@@ -57,9 +57,9 @@ public class TreeFilter {
      * 
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -68,9 +68,9 @@ public class TreeFilter {
      * 
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     @JsonProperty("types")
@@ -127,12 +127,12 @@ public class TreeFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("types", types).append("folders", folders).append("onlyValidObjects", onlyValidObjects).append("forInventory", forInventory).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("types", types).append("folders", folders).append("onlyValidObjects", onlyValidObjects).append("forInventory", forInventory).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(types).append(folders).append(jobschedulerId).append(forInventory).append(onlyValidObjects).toHashCode();
+        return new HashCodeBuilder().append(types).append(folders).append(controllerId).append(forInventory).append(onlyValidObjects).toHashCode();
     }
 
     @Override
@@ -144,7 +144,7 @@ public class TreeFilter {
             return false;
         }
         TreeFilter rhs = ((TreeFilter) other);
-        return new EqualsBuilder().append(types, rhs.types).append(folders, rhs.folders).append(jobschedulerId, rhs.jobschedulerId).append(forInventory, rhs.forInventory).append(onlyValidObjects, rhs.onlyValidObjects).isEquals();
+        return new EqualsBuilder().append(types, rhs.types).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(forInventory, rhs.forInventory).append(onlyValidObjects, rhs.onlyValidObjects).isEquals();
     }
 
 }

@@ -17,7 +17,7 @@ public interface IDocumentationsExportResource {
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     public JOCDefaultResponse getExportDocumentations(@HeaderParam("X-Access-Token") String xAccessToken,
-            @QueryParam("accessToken") String accessToken, @QueryParam("jobschedulerId") String jobschedulerId,
+            @QueryParam("accessToken") String accessToken, @QueryParam("controllerId") String jobschedulerId,
             @QueryParam("filename") String filename) throws Exception;
 
     @Path("export")

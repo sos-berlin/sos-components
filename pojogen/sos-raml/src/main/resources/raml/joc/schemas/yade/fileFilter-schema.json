@@ -4,7 +4,7 @@
   "javaType": "com.sos.joc.model.yade.FileFilter",
   "type": "object",
   "properties": {
-    "jobschedulerId": {
+    "controllerId": {
       "type": "string"
     },
     "fileId": {

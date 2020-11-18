@@ -42,7 +42,7 @@ public class EventCallableOfCurrentCluster extends EventCallable implements Call
         this.accessToken = accessToken;
         this.tasksOfClusterMember = tasksOfClusterMember;
         this.jocJsonCommands = jocJsonCommands;
-        this.jobSchedulerId = jobSchedulerEvent.getJobschedulerId();
+        this.jobSchedulerId = jobSchedulerEvent.getControllerId();
         this.shiroUser = shiroUser;
         this.eventId = jobSchedulerEvent.getEventId();
         this.shiroSession = session;
@@ -54,10 +54,10 @@ public class EventCallableOfCurrentCluster extends EventCallable implements Call
         ExecutorService executorService = Executors.newFixedThreadPool(tasksOfClusterMember.size());
         try {
             JobSchedulerEvent evt = executorService.invokeAny(tasksOfClusterMember);
-            LOGGER.debug("EventOfCluster: " + evt.getJobschedulerId() + "," + evt.getEventId() );
-            if (evt.getJobschedulerId().startsWith("__instance__")) {
+            LOGGER.debug("EventOfCluster: " + evt.getControllerId() + "," + evt.getEventId() );
+            if (evt.getControllerId().startsWith("__instance__")) {
                 shiroSession.setAttribute(jobSchedulerId + "#eventIdOfClusterMembers", evt.getEventId());
-                evt.setJobschedulerId(jobSchedulerId);
+                evt.setControllerId(jobSchedulerId);
                 evt.setEventId(eventId);
                 evt.getEventSnapshots().addAll(updateSavedInventoryInstance());
             } else {

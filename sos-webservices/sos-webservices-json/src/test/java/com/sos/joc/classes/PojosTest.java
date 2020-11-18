@@ -122,7 +122,7 @@ public class PojosTest {
 	    Workflow workflow = (Workflow) request.getConfiguration();
 	    workflow.setPath(request.getPath());
 	    Job job = new Job();
-	    job.setAgentRefPath("/myAgent");
+	    job.setAgentName("myAgent");
 	    job.setExecutable(new ExecutableScript("echo hallo"));
 	    Jobs jobs = new Jobs();
 	    jobs.setAdditionalProperty("job1", job);

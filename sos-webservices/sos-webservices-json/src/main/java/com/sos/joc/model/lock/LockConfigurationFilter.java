@@ -18,7 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "lock"
 })
 public class LockConfigurationFilter {
@@ -28,8 +28,8 @@ public class LockConfigurationFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * path
      * <p>
@@ -46,9 +46,9 @@ public class LockConfigurationFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -56,9 +56,9 @@ public class LockConfigurationFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -87,12 +87,12 @@ public class LockConfigurationFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("lock", lock).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("lock", lock).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(lock).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(lock).toHashCode();
     }
 
     @Override
@@ -104,7 +104,7 @@ public class LockConfigurationFilter {
             return false;
         }
         LockConfigurationFilter rhs = ((LockConfigurationFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(lock, rhs.lock).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(lock, rhs.lock).isEquals();
     }
 
 }

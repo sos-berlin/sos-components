@@ -50,6 +50,11 @@ public class Repetition {
      */
     @JsonProperty("repetition")
     private RepetitionText repetition;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("step")
     private Integer step = 1;
 
@@ -117,11 +122,21 @@ public class Repetition {
         this.repetition = repetition;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("step")
     public Integer getStep() {
         return step;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("step")
     public void setStep(Integer step) {
         this.step = step;

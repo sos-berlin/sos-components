@@ -27,7 +27,7 @@ public class DBLayerOrderTemplates {
     }
 
     private String getWhere(FilterOrderTemplates filter) {
-        String where = " type = " + ConfigurationType.ORDER.intValue();
+        String where = " type = " + ConfigurationType.ORDERTEMPLATE.intValue();
         String and = " and ";
 
         if (filter.getControllerId() != null && !"".equals(filter.getControllerId())) {

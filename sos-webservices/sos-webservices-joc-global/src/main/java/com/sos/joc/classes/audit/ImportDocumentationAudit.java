@@ -16,14 +16,11 @@ public class ImportDocumentationAudit extends DocumentationImport implements IAu
     @JsonIgnore
     private String ticketLink;
     
-    private String controllerId;
-    
     public ImportDocumentationAudit(DocumentationImport documentationImport) {
         setFile(documentationImport.getFile());
         setFolder(documentationImport.getFolder());
         setAuditParams(documentationImport.getAuditLog());
-        this.controllerId = documentationImport.getJobschedulerId();
-        setJobschedulerId(null);
+        setControllerId(documentationImport.getControllerId());
     }
 
     private void setAuditParams(AuditParams auditParams) {
@@ -80,10 +77,5 @@ public class ImportDocumentationAudit extends DocumentationImport implements IAu
     @JsonIgnore
     public Long getDepHistoryId() {
         return null;
-    }
-
-    @Override
-    public String getControllerId() {
-        return controllerId;
     }
 }

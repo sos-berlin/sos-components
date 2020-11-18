@@ -4,11 +4,11 @@
   "javaType": "com.sos.joc.model.docu.DocumentationFilter",
   "type": "object",
   "required": [
-     "jobschedulerId",
+     "controllerId",
      "documentation"
   ],
   "properties": {
-    "jobschedulerId": {
+    "controllerId": {
       "$ref": "../common/filename100-schema.json"
     },
     "documentation": {

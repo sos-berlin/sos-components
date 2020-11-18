@@ -19,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobscheduler",
+    "controllers",
     "close"
 })
 public class RegisterEvent {
@@ -29,8 +29,8 @@ public class RegisterEvent {
      * (Required)
      * 
      */
-    @JsonProperty("jobscheduler")
-    private List<JobSchedulerObjects> jobscheduler = new ArrayList<JobSchedulerObjects>();
+    @JsonProperty("controllers")
+    private List<JobSchedulerObjects> controllers = new ArrayList<JobSchedulerObjects>();
     @JsonProperty("close")
     private Boolean close = false;
 
@@ -39,9 +39,9 @@ public class RegisterEvent {
      * (Required)
      * 
      */
-    @JsonProperty("jobscheduler")
-    public List<JobSchedulerObjects> getJobscheduler() {
-        return jobscheduler;
+    @JsonProperty("controllers")
+    public List<JobSchedulerObjects> getControllers() {
+        return controllers;
     }
 
     /**
@@ -49,9 +49,9 @@ public class RegisterEvent {
      * (Required)
      * 
      */
-    @JsonProperty("jobscheduler")
-    public void setJobscheduler(List<JobSchedulerObjects> jobscheduler) {
-        this.jobscheduler = jobscheduler;
+    @JsonProperty("controllers")
+    public void setControllers(List<JobSchedulerObjects> controllers) {
+        this.controllers = controllers;
     }
 
     @JsonProperty("close")
@@ -66,12 +66,12 @@ public class RegisterEvent {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobscheduler", jobscheduler).append("close", close).toString();
+        return new ToStringBuilder(this).append("controllers", controllers).append("close", close).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(close).append(jobscheduler).toHashCode();
+        return new HashCodeBuilder().append(controllers).append(close).toHashCode();
     }
 
     @Override
@@ -83,7 +83,7 @@ public class RegisterEvent {
             return false;
         }
         RegisterEvent rhs = ((RegisterEvent) other);
-        return new EqualsBuilder().append(close, rhs.close).append(jobscheduler, rhs.jobscheduler).isEquals();
+        return new EqualsBuilder().append(controllers, rhs.controllers).append(close, rhs.close).isEquals();
     }
 
 }

@@ -18,7 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "processClass"
 })
 public class ProcessClassConfigurationFilter {
@@ -28,8 +28,8 @@ public class ProcessClassConfigurationFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * path
      * <p>
@@ -46,9 +46,9 @@ public class ProcessClassConfigurationFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -56,9 +56,9 @@ public class ProcessClassConfigurationFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -87,12 +87,12 @@ public class ProcessClassConfigurationFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("processClass", processClass).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("processClass", processClass).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(processClass).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(processClass).toHashCode();
     }
 
     @Override
@@ -104,7 +104,7 @@ public class ProcessClassConfigurationFilter {
             return false;
         }
         ProcessClassConfigurationFilter rhs = ((ProcessClassConfigurationFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(processClass, rhs.processClass).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(processClass, rhs.processClass).isEquals();
     }
 
 }

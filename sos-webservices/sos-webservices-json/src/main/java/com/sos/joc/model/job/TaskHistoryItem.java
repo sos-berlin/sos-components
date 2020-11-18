@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "surveyDate",
-    "jobschedulerId",
+    "controllerId",
     "job",
     "workflow",
     "orderId",
@@ -48,8 +48,8 @@ public class TaskHistoryItem {
     @JsonProperty("surveyDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date surveyDate;
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * 
      * (Required)
@@ -165,14 +165,14 @@ public class TaskHistoryItem {
         this.surveyDate = surveyDate;
     }
 
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -425,12 +425,12 @@ public class TaskHistoryItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("jobschedulerId", jobschedulerId).append("job", job).append("workflow", workflow).append("orderId", orderId).append("startTime", startTime).append("endTime", endTime).append("position", position).append("state", state).append("criticality", criticality).append("taskId", taskId).append("agentUrl", agentUrl).append("exitCode", exitCode).append("error", error).toString();
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("controllerId", controllerId).append("job", job).append("workflow", workflow).append("orderId", orderId).append("startTime", startTime).append("endTime", endTime).append("position", position).append("state", state).append("criticality", criticality).append("taskId", taskId).append("agentUrl", agentUrl).append("exitCode", exitCode).append("error", error).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(surveyDate).append(workflow).append(orderId).append(criticality).append(error).append(exitCode).append(startTime).append(endTime).append(position).append(state).append(agentUrl).append(jobschedulerId).append(job).append(taskId).toHashCode();
+        return new HashCodeBuilder().append(surveyDate).append(controllerId).append(workflow).append(orderId).append(criticality).append(error).append(exitCode).append(startTime).append(endTime).append(position).append(state).append(agentUrl).append(job).append(taskId).toHashCode();
     }
 
     @Override
@@ -442,7 +442,7 @@ public class TaskHistoryItem {
             return false;
         }
         TaskHistoryItem rhs = ((TaskHistoryItem) other);
-        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(criticality, rhs.criticality).append(error, rhs.error).append(exitCode, rhs.exitCode).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(position, rhs.position).append(state, rhs.state).append(agentUrl, rhs.agentUrl).append(jobschedulerId, rhs.jobschedulerId).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
+        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(criticality, rhs.criticality).append(error, rhs.error).append(exitCode, rhs.exitCode).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(position, rhs.position).append(state, rhs.state).append(agentUrl, rhs.agentUrl).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
     }
 
 }

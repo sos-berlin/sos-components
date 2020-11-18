@@ -4,10 +4,10 @@
   "javaType": "com.sos.joc.model.job.JobsFilter",
   "type": "object",
   "required": [
-    "jobschedulerId"
+    "controllerId"
   ],
   "properties": {
-    "jobschedulerId": {
+    "controllerId": {
       "type": "string"
     },
     "jobs": {

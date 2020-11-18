@@ -10,7 +10,7 @@
     "numOfJobs"
   ],
   "properties": {
-    "jobschedulerId": {
+    "controllerId": {
       "type": "string"
     },
     "agent": {

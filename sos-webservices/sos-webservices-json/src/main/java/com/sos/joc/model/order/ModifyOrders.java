@@ -24,7 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "orderIds",
     "workflowIds",
     "orderType",
@@ -42,8 +42,13 @@ public class ModifyOrders {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("orderIds")
     private List<String> orderIds = new ArrayList<String>();
     @JsonProperty("workflowIds")
@@ -93,9 +98,9 @@ public class ModifyOrders {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -105,16 +110,26 @@ public class ModifyOrders {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("orderIds")
     public List<String> getOrderIds() {
         return orderIds;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("orderIds")
     public void setOrderIds(List<String> orderIds) {
         this.orderIds = orderIds;
@@ -230,12 +245,12 @@ public class ModifyOrders {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("orderType", orderType).append("kill", kill).append("position", position).append("arguments", arguments).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("orderType", orderType).append("kill", kill).append("position", position).append("arguments", arguments).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowIds).append(orderType).append(auditLog).append(arguments).append(orderIds).append(position).append(jobschedulerId).append(kill).toHashCode();
+        return new HashCodeBuilder().append(workflowIds).append(orderType).append(controllerId).append(auditLog).append(arguments).append(orderIds).append(position).append(kill).toHashCode();
     }
 
     @Override
@@ -247,7 +262,7 @@ public class ModifyOrders {
             return false;
         }
         ModifyOrders rhs = ((ModifyOrders) other);
-        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(orderType, rhs.orderType).append(auditLog, rhs.auditLog).append(arguments, rhs.arguments).append(orderIds, rhs.orderIds).append(position, rhs.position).append(jobschedulerId, rhs.jobschedulerId).append(kill, rhs.kill).isEquals();
+        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(orderType, rhs.orderType).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(arguments, rhs.arguments).append(orderIds, rhs.orderIds).append(position, rhs.position).append(kill, rhs.kill).isEquals();
     }
 
 }

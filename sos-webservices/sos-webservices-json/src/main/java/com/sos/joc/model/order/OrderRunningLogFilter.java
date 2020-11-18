@@ -17,7 +17,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "historyId",
     "eventId"
 })
@@ -30,8 +30,8 @@ public class OrderRunningLogFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * non negative long
      * <p>
@@ -58,9 +58,9 @@ public class OrderRunningLogFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -70,9 +70,9 @@ public class OrderRunningLogFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -125,12 +125,12 @@ public class OrderRunningLogFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("historyId", historyId).append("eventId", eventId).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("historyId", historyId).append("eventId", eventId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(eventId).append(jobschedulerId).append(historyId).toHashCode();
+        return new HashCodeBuilder().append(eventId).append(controllerId).append(historyId).toHashCode();
     }
 
     @Override
@@ -142,7 +142,7 @@ public class OrderRunningLogFilter {
             return false;
         }
         OrderRunningLogFilter rhs = ((OrderRunningLogFilter) other);
-        return new EqualsBuilder().append(eventId, rhs.eventId).append(jobschedulerId, rhs.jobschedulerId).append(historyId, rhs.historyId).isEquals();
+        return new EqualsBuilder().append(eventId, rhs.eventId).append(controllerId, rhs.controllerId).append(historyId, rhs.historyId).isEquals();
     }
 
 }

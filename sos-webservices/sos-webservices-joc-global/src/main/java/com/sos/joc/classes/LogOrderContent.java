@@ -106,6 +106,17 @@ public class LogOrderContent {
                 orderLog.setLogEvents(Arrays.asList(Globals.objectMapper.readValue(SOSPath.readFile(orderLogLines, Collectors.joining(",", "[", "]")),
                         OrderLogItem[].class)));
                 unCompressedLength = Files.size(orderLogLines);
+                // no running log if OrderFailed or OrderSuspended etc. (later with events)
+                int numOfLogEvents = orderLog.getLogEvents().size();
+                if (numOfLogEvents > 0) {
+                    List<LogEvent> evts = Arrays.asList(LogEvent.OrderCancelled, LogEvent.OrderBroken, LogEvent.OrderFailed,
+                            LogEvent.OrderFailedinFork, LogEvent.OrderFinished, LogEvent.OrderSuspended);
+                    LogEvent evt = orderLog.getLogEvents().get(numOfLogEvents - 1).getLogEvent();
+                    if (evts.contains(evt)) {
+                        orderLog.setComplete(true);
+                        orderLog.setEventId(null);
+                    }
+                }
                 return orderLog;
             } else {
                 // only for the rare moment that the file is deleted and now in the database
@@ -120,7 +131,7 @@ public class LogOrderContent {
         item.setOrderId(orderId);
         item.setControllerDatetime(ZonedDateTime.now().format(formatter));
         item.setLogEvent(LogEvent.OrderBroken);
-        item.setLogLevel("ERROR");
+        item.setLogLevel("INFO");
         item.setPosition("...");
         OrderLogItemError err = new OrderLogItemError();
         err.setErrorText("Snapshot log not found");

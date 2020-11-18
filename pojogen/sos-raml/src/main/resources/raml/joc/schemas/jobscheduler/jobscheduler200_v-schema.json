@@ -5,13 +5,13 @@
   "type": "object",
   "required": [
     "deliveryDate",
-    "jobscheduler"
+    "controller"
   ],
   "properties": {
     "deliveryDate": {
       "$ref": "../common/timestamp-schema.json"
     },
-    "jobscheduler": {
+    "controller": {
       "$ref": "master-schema.json"
     }
   }

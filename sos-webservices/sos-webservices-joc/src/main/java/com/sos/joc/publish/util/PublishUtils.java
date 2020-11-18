@@ -668,11 +668,6 @@ public abstract class PublishUtils {
             workflow.setVersionId(versionId);
             draft.setContent(om.writeValueAsString(workflow));
             break;
-        case AGENTCLUSTER:
-            AgentRef agentRef = om.readValue(draft.getContent(), AgentRef.class);
-            agentRef.setVersionId(versionId);
-            draft.setContent(om.writeValueAsString(agentRef));
-            break;
         case LOCK:
             // TODO: locks and other objects
         case WORKINGDAYSCALENDAR:
@@ -680,7 +675,7 @@ public abstract class PublishUtils {
         case FOLDER:
         case JOBCLASS:
         case JUNCTION:
-        case ORDER:
+        case ORDERTEMPLATE:
         default:
             throw new JocNotImplementedException();
         }
@@ -695,11 +690,6 @@ public abstract class PublishUtils {
             Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
             workflow.setVersionId(versionId);
             deployed.setContent(om.writeValueAsString(workflow));
-            break;
-        case AGENTREF:
-            AgentRef agentRef = om.readValue(deployed.getContent(), AgentRef.class);
-            agentRef.setVersionId(versionId);
-            deployed.setContent(om.writeValueAsString(agentRef));
             break;
         case LOCK:
             // TODO: locks and other objects
@@ -861,8 +851,6 @@ public abstract class PublishUtils {
         switch (inventoryType) {
         case WORKFLOW:
             return DeployType.WORKFLOW;
-        case AGENTCLUSTER:
-            return DeployType.AGENTREF;
         case LOCK:
             return DeployType.LOCK;
         case JUNCTION:
@@ -876,8 +864,6 @@ public abstract class PublishUtils {
         switch (deployType) {
         case WORKFLOW:
             return ConfigurationType.WORKFLOW;
-        case AGENTREF:
-            return ConfigurationType.AGENTCLUSTER;
         case LOCK:
             return ConfigurationType.LOCK;
         case JUNCTION:
@@ -917,7 +903,7 @@ public abstract class PublishUtils {
         return alreadyDeployedToDelete;
     }
 
-    public static Set<SignaturePath> readZipFileContent(InputStream inputStream, Set<Workflow> workflows, Set<AgentRef> agentRefs
+    public static Set<SignaturePath> readZipFileContent(InputStream inputStream, Set<Workflow> workflows
             /* , Set<Lock> locks */) throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException,
             IOException, JocUnsupportedFileTypeException, JocConfigurationException, DBOpenSessionException {
         Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
@@ -948,14 +934,6 @@ public abstract class PublishUtils {
                         signaturePath.setSignature(signature);
                         signaturePaths.add(signaturePath);
                     }
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.value())) {
-                    agentRefs.add(om.readValue(outBuffer.toString(), AgentRef.class));
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.AGENT_REF_SIGNATURE_FILE_EXTENSION.value())) {
-                    signaturePath.setObjectPath("/" + entryName.substring(0, entryName.indexOf(
-                            JSObjectFileExtension.AGENT_REF_SIGNATURE_FILE_EXTENSION.value())));
-                    signature.setSignatureString(outBuffer.toString());
-                    signaturePath.setSignature(signature);
-                    signaturePaths.add(signaturePath);
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
                     // TODO: add processing for Locks, when Locks are ready
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_SIGNATURE_FILE_EXTENSION.value())) {
@@ -972,7 +950,7 @@ public abstract class PublishUtils {
         return signaturePaths;
     }
 
-    public static Set<SignaturePath> readTarGzipFileContent(InputStream inputStream, Set<Workflow> workflows, Set<AgentRef> agentRefs
+    public static Set<SignaturePath> readTarGzipFileContent(InputStream inputStream, Set<Workflow> workflows
             /* , Set<Lock> locks */) throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException,
             IOException, JocUnsupportedFileTypeException, JocConfigurationException, DBOpenSessionException {
         Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
@@ -1005,14 +983,6 @@ public abstract class PublishUtils {
                         signaturePath.setSignature(signature);
                         signaturePaths.add(signaturePath);
                     }
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.value())) {
-                    agentRefs.add(om.readValue(outBuffer.toString(), AgentRef.class));
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.AGENT_REF_SIGNATURE_FILE_EXTENSION.value())) {
-                    signaturePath.setObjectPath("/" + entryName.substring(0, entryName.indexOf(
-                            JSObjectFileExtension.AGENT_REF_SIGNATURE_FILE_EXTENSION.value())));
-                    signature.setSignatureString(outBuffer.toString());
-                    signaturePath.setSignature(signature);
-                    signaturePaths.add(signaturePath);
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
                     // TODO: add processing for Locks, when Locks are ready
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_SIGNATURE_FILE_EXTENSION.value())) {
@@ -1050,13 +1020,6 @@ public abstract class PublishUtils {
                             Workflow workflow = (Workflow)jsObject.getContent();
                             workflow.setVersionId(versionId);
                             content = om.writeValueAsString(workflow);
-                            break;
-                        case AGENTREF :
-                            extension = JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.toString();
-                            signatureExtension = JSObjectFileExtension.AGENT_REF_SIGNATURE_FILE_EXTENSION.toString();
-                            AgentRef agentRef = (AgentRef)jsObject.getContent();
-                            agentRef.setVersionId(versionId);
-                            content = om.writeValueAsString(agentRef);
                             break;
                         case LOCK :
                             extension = JSObjectFileExtension.LOCK_FILE_EXTENSION.toString();
@@ -1122,13 +1085,6 @@ public abstract class PublishUtils {
                             Workflow workflow = (Workflow)jsObject.getContent();
                             workflow.setVersionId(versionId);
                             content = om.writeValueAsString(workflow);
-                            break;
-                        case AGENTREF :
-                            extension = JSObjectFileExtension.AGENT_REF_FILE_EXTENSION.toString();
-                            signatureExtension = JSObjectFileExtension.AGENT_REF_SIGNATURE_FILE_EXTENSION.toString();
-                            AgentRef agentRef = (AgentRef)jsObject.getContent();
-                            agentRef.setVersionId(versionId);
-                            content = om.writeValueAsString(agentRef);
                             break;
                         case LOCK :
                             extension = JSObjectFileExtension.LOCK_FILE_EXTENSION.toString();
@@ -1224,28 +1180,6 @@ public abstract class PublishUtils {
             }
         } catch (IOException | PGPException | NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException 
                 | SignatureException | CertificateException | NoSuchProviderException  e) {
-            throw new JocSignatureVerificationException(e);
-        }
-        return signaturePath.getSignature();
-    }
-
-    public static Signature verifyAgentRefs(SOSHibernateSession hibernateSession, Set<SignaturePath> signaturePaths, AgentRef agentRef,
-            String account) throws JocSignatureVerificationException, SOSHibernateException {
-        SignaturePath signaturePath = signaturePaths.stream().filter(signaturePathFromStream -> signaturePathFromStream.getObjectPath()
-                .equals(agentRef.getPath())).map(signaturePathFromStream -> signaturePathFromStream).findFirst().get();
-        DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
-        Boolean verified = null;
-        try {
-            if (signaturePath != null && signaturePath.getSignature() != null) {
-                JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.HIGH);
-                String publicKey = keyPair.getPublicKey();
-                verified = VerifySignature.verifyPGP(publicKey, om.writeValueAsString(agentRef), 
-                        signaturePath.getSignature().getSignatureString());
-                if (!verified) {
-                    LOGGER.debug(String.format("signature verification for agentRef %1$s was not successful!", agentRef.getPath()));
-                } 
-            }
-        } catch (IOException | PGPException  e) {
             throw new JocSignatureVerificationException(e);
         }
         return signaturePath.getSignature();

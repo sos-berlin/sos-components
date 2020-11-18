@@ -22,6 +22,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class Instructions {
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("instructions")
     private List<Instruction> instructions = null;
 
@@ -41,11 +46,21 @@ public class Instructions {
         this.instructions = instructions;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("instructions")
     public List<Instruction> getInstructions() {
         return instructions;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("instructions")
     public void setInstructions(List<Instruction> instructions) {
         this.instructions = instructions;

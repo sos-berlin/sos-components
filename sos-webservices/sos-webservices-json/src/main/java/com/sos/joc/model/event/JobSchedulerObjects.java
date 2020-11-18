@@ -17,7 +17,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "eventId"
 })
 public class JobSchedulerObjects {
@@ -29,8 +29,8 @@ public class JobSchedulerObjects {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * non negative long
      * <p>
@@ -48,9 +48,9 @@ public class JobSchedulerObjects {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -60,9 +60,9 @@ public class JobSchedulerObjects {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -91,12 +91,12 @@ public class JobSchedulerObjects {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("eventId", eventId).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("eventId", eventId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(eventId).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(eventId).toHashCode();
     }
 
     @Override
@@ -108,7 +108,7 @@ public class JobSchedulerObjects {
             return false;
         }
         JobSchedulerObjects rhs = ((JobSchedulerObjects) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(eventId, rhs.eventId).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(eventId, rhs.eventId).isEquals();
     }
 
 }

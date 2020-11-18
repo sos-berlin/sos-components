@@ -3,10 +3,7 @@ package com.sos.jobscheduler.model.agent;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.jobscheduler.model.deploy.DeleteType;
-import com.sos.joc.model.common.IDeleteObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -15,35 +12,24 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * delete agent
  * <p>
- * delete object with fixed property 'TYPE':'AgentRefPath'
+ * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "TYPE",
-    "path"
+    "name"
 })
-public class DeleteAgentRef implements IDeleteObject
-{
+public class DeleteAgentRef {
 
     /**
-     * deleteType
+     * string without < and >
      * <p>
      * 
-     * 
-     */
-    @JsonProperty("TYPE")
-    private DeleteType tYPE = DeleteType.AGENTREF;
-    /**
-     * path
-     * <p>
-     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
-    @JsonProperty("path")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
-    private String path;
+    @JsonProperty("name")
+    private String name;
 
     /**
      * No args constructor for use in serialization
@@ -54,57 +40,45 @@ public class DeleteAgentRef implements IDeleteObject
 
     /**
      * 
-     * @param path
-     * 
+     * @param name
      */
-    public DeleteAgentRef(String path) {
+    public DeleteAgentRef(String name) {
         super();
-        this.path = path;
+        this.name = name;
     }
 
     /**
-     * deleteType
+     * string without < and >
      * <p>
      * 
-     * 
-     */
-    @JsonProperty("TYPE")
-    public DeleteType getTYPE() {
-        return tYPE;
-    }
-
-    /**
-     * path
-     * <p>
-     * absolute path of a JobScheduler object.
      * (Required)
      * 
      */
-    @JsonProperty("path")
-    public String getPath() {
-        return path;
+    @JsonProperty("name")
+    public String getName() {
+        return name;
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of a JobScheduler object.
+     * 
      * (Required)
      * 
      */
-    @JsonProperty("path")
-    public void setPath(String path) {
-        this.path = path;
+    @JsonProperty("name")
+    public void setName(String name) {
+        this.name = name;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).toString();
+        return new ToStringBuilder(this).append("name", name).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(tYPE).append(path).toHashCode();
+        return new HashCodeBuilder().append(name).toHashCode();
     }
 
     @Override
@@ -116,7 +90,7 @@ public class DeleteAgentRef implements IDeleteObject
             return false;
         }
         DeleteAgentRef rhs = ((DeleteAgentRef) other);
-        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(path, rhs.path).isEquals();
+        return new EqualsBuilder().append(name, rhs.name).isEquals();
     }
 
 }

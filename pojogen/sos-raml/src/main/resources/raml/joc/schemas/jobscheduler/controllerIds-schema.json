@@ -1,25 +1,25 @@
 {
-  "title": "jobschedulerIds",
+  "title": "controllerIds",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.model.jobscheduler.JobSchedulerIds",
+  "javaType": "com.sos.joc.model.jobscheduler.ControllerIds",
   "type": "object",
   "required": [
     "deliveryDate",
-    "jobschedulerIds",
+    "controllerIds",
     "selected"
   ],
   "properties": {
     "deliveryDate": {
       "$ref": "../common/timestamp-schema.json"
     },
-    "jobschedulerIds": {
+    "controllerIds": {
       "type": "array",
       "items": {
         "type": "string"
       }
     },
     "selected": {
-      "description": "The Id from the 'jobschedulerIds' collection which is specified in the selected field will be used for all further calls",
+      "description": "The Id from the 'controllerIds' collection which is specified in the selected field will be used for all further calls",
       "type": "string"
     },
     "precedence": {

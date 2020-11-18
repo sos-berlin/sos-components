@@ -19,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "documentations"
 })
 public class DeployDocumentations {
@@ -30,8 +30,8 @@ public class DeployDocumentations {
      * 
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     @JsonProperty("documentations")
     private List<DeployDocumentation> documentations = new ArrayList<DeployDocumentation>();
 
@@ -41,9 +41,9 @@ public class DeployDocumentations {
      * 
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -52,9 +52,9 @@ public class DeployDocumentations {
      * 
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     @JsonProperty("documentations")
@@ -69,12 +69,12 @@ public class DeployDocumentations {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("documentations", documentations).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("documentations", documentations).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(documentations).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(documentations).toHashCode();
     }
 
     @Override
@@ -86,7 +86,7 @@ public class DeployDocumentations {
             return false;
         }
         DeployDocumentations rhs = ((DeployDocumentations) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(documentations, rhs.documentations).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(documentations, rhs.documentations).isEquals();
     }
 
 }

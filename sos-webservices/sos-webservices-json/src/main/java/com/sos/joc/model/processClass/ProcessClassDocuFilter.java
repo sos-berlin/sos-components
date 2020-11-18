@@ -19,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "processClass",
     "documentation",
     "auditLog"
@@ -31,8 +31,8 @@ public class ProcessClassDocuFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * path
      * <p>
@@ -67,9 +67,9 @@ public class ProcessClassDocuFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -77,9 +77,9 @@ public class ProcessClassDocuFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -154,12 +154,12 @@ public class ProcessClassDocuFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("processClass", processClass).append("documentation", documentation).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("processClass", processClass).append("documentation", documentation).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(processClass).append(jobschedulerId).append(auditLog).append(documentation).toHashCode();
+        return new HashCodeBuilder().append(processClass).append(controllerId).append(auditLog).append(documentation).toHashCode();
     }
 
     @Override
@@ -171,7 +171,7 @@ public class ProcessClassDocuFilter {
             return false;
         }
         ProcessClassDocuFilter rhs = ((ProcessClassDocuFilter) other);
-        return new EqualsBuilder().append(processClass, rhs.processClass).append(jobschedulerId, rhs.jobschedulerId).append(auditLog, rhs.auditLog).append(documentation, rhs.documentation).isEquals();
+        return new EqualsBuilder().append(processClass, rhs.processClass).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(documentation, rhs.documentation).isEquals();
     }
 
 }

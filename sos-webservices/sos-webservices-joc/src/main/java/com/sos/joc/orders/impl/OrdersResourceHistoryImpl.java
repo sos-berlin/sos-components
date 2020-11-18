@@ -48,8 +48,8 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrdersFilter.class);
             OrdersFilter ordersFilter = Globals.objectMapper.readValue(filterBytes, OrdersFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(ordersFilter.getJobschedulerId(), getPermissonsJocCockpit(ordersFilter
-                    .getJobschedulerId(), accessToken).getHistory().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(ordersFilter.getControllerId(), getPermissonsJocCockpit(ordersFilter
+                    .getControllerId(), accessToken).getHistory().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -60,7 +60,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
             Set<Folder> folders = addPermittedFolder(ordersFilter.getFolders());
 
             HistoryFilter historyFilter = new HistoryFilter();
-            historyFilter.setSchedulerId(ordersFilter.getJobschedulerId());
+            historyFilter.setSchedulerId(ordersFilter.getControllerId());
             if (ordersFilter.getHistoryIds() != null && !ordersFilter.getHistoryIds().isEmpty()) {
                 historyFilter.setHistoryIds(ordersFilter.getHistoryIds());
             } else {
@@ -119,7 +119,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                 if (dbMainOrderItems != null && !dbMainOrderItems.isEmpty()) {
 
                     Predicate<DBItemHistoryOrder> permissionFilter = i -> true;
-                    if (ordersFilter.getJobschedulerId().isEmpty()) {
+                    if (ordersFilter.getControllerId().isEmpty()) {
                         permissionFilter = i -> {
                             try {
                                 return getPermissonsJocCockpit(i.getJobSchedulerId(), accessToken).getHistory().getView().isStatus();
@@ -131,12 +131,15 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
 
                     if (ordersFilter.getRegex() != null && !ordersFilter.getRegex().isEmpty()) {
                         Matcher regExMatcher = Pattern.compile(ordersFilter.getRegex()).matcher("");
-                        dbMainOrderItems = dbMainOrderItems.stream().filter(permissionFilter).filter(i -> regExMatcher.reset(i.getWorkflowPath() + ","
-                                + i.getOrderKey()).find()).map(this::mapOrderItem).collect(Collectors.toList());
-                    } else if (ordersFilter.getJobschedulerId().isEmpty()) {
-                        dbMainOrderItems = dbMainOrderItems.stream().filter(permissionFilter).map(this::mapOrderItem).collect(Collectors.toList());
+                        dbMainOrderItems = dbMainOrderItems.stream().filter(i -> !SOSDate.equals(i.getStartTime(), Globals.HISTORY_DEFAULT_DATE))
+                                .filter(permissionFilter).filter(i -> regExMatcher.reset(i.getWorkflowPath() + "," + i.getOrderKey()).find()).collect(
+                                        Collectors.toList());
+                    } else if (ordersFilter.getControllerId().isEmpty()) {
+                        dbMainOrderItems = dbMainOrderItems.stream().filter(i -> !SOSDate.equals(i.getStartTime(), Globals.HISTORY_DEFAULT_DATE))
+                                .filter(permissionFilter).collect(Collectors.toList());
                     } else {
-                        dbMainOrderItems = dbMainOrderItems.stream().map(this::mapOrderItem).collect(Collectors.toList());
+                        dbMainOrderItems = dbMainOrderItems.stream().filter(i -> !SOSDate.equals(i.getStartTime(), Globals.HISTORY_DEFAULT_DATE))
+                                .collect(Collectors.toList());
                     }
 
                     List<DBItemHistoryOrder> dbChildOrderItems = jobHistoryDbLayer.getChildOrders(dbMainOrderItems.stream().filter(
@@ -173,17 +176,9 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
         }
     }
 
-    // TODO e.g Suspended,Cancelled without StartTime
-    private DBItemHistoryOrder mapOrderItem(DBItemHistoryOrder item) {
-        if (SOSDate.equals(item.getStartTime(), Globals.HISTORY_DEFAULT_DATE)) {
-            item.setStartTime(null);
-        }
-        return item;
-    }
-
     private OrderHistoryItem getOrderHistoryItem(DBItemHistoryOrder dbItemOrder) {
         OrderHistoryItem history = new OrderHistoryItem();
-        history.setJobschedulerId(dbItemOrder.getJobSchedulerId());
+        history.setControllerId(dbItemOrder.getJobSchedulerId());
         history.setEndTime(dbItemOrder.getEndTime());
         history.setHistoryId(dbItemOrder.getId());
         history.setOrderId(dbItemOrder.getOrderKey());

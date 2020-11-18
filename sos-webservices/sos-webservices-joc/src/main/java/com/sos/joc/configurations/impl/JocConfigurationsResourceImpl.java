@@ -49,11 +49,11 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
         SOSHibernateSession connection = null;
         try {
 
-            if (configurationsFilter.getJobschedulerId() == null){
-                configurationsFilter.setJobschedulerId("");
+            if (configurationsFilter.getControllerId() == null){
+                configurationsFilter.setControllerId("");
             }
 
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, configurationsFilter, accessToken, configurationsFilter.getJobschedulerId(), true);
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, configurationsFilter, accessToken, configurationsFilter.getControllerId(), true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -81,7 +81,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             JocConfigurationFilter filter = new JocConfigurationFilter();
 
             filter.setObjectType(objectType);
-            filter.setSchedulerId(configurationsFilter.getJobschedulerId());
+            filter.setSchedulerId(configurationsFilter.getControllerId());
             filter.setConfigurationType(configurationType);
             filter.setAccount(configurationsFilter.getAccount());
             filter.setShared(configurationsFilter.getShared());
@@ -114,13 +114,13 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             }
             
             if (listOfJocConfigurationDbItem != null && !listOfJocConfigurationDbItem.isEmpty()) {
-                boolean sharePerm = getPermissonsJocCockpit(configurationsFilter.getJobschedulerId(), accessToken).getJOCConfigurations().getShare()
+                boolean sharePerm = getPermissonsJocCockpit(configurationsFilter.getControllerId(), accessToken).getJOCConfigurations().getShare()
                         .getView().isStatus();
                 for (DBItemJocConfiguration jocConfigurationDbItem : listOfJocConfigurationDbItem) {
                     Configuration configuration = new Configuration();
                     configuration.setAccount(jocConfigurationDbItem.getAccount());
                     configuration.setConfigurationType(ConfigurationType.fromValue(jocConfigurationDbItem.getConfigurationType()));
-                    configuration.setJobschedulerId(configurationsFilter.getJobschedulerId());
+                    configuration.setControllerId(configurationsFilter.getControllerId());
                     configuration.setName(jocConfigurationDbItem.getName());
                     if (jocConfigurationDbItem.getObjectType() != null) {
                         configuration.setObjectType(ConfigurationObjectType.fromValue(jocConfigurationDbItem.getObjectType()));

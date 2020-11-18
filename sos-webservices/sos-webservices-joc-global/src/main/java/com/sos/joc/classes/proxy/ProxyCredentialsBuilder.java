@@ -17,7 +17,7 @@ import js7.proxy.javaapi.data.auth.JHttpsConfig;
 
 public class ProxyCredentialsBuilder {
 
-    private String jobschedulerId;
+    private String controllerId;
     private String url;
     private JCredentials account = null;
     private ProxyUser user = null;
@@ -25,16 +25,16 @@ public class ProxyCredentialsBuilder {
     private JHttpsConfig httpsConfig = null;
     private boolean withHttps = false;
 
-    private ProxyCredentialsBuilder(String jobschedulerId, String url) {
-        this.jobschedulerId = jobschedulerId;
+    private ProxyCredentialsBuilder(String controllerId, String url) {
+        this.controllerId = controllerId;
         this.url = url;
         if (url != null && url.startsWith("https://")) {
             withHttps = true;
         }
     }
 
-    public static ProxyCredentialsBuilder withJobSchedulerIdAndUrl(String jobschedulerId, String url) {
-        return new ProxyCredentialsBuilder(jobschedulerId, url);
+    public static ProxyCredentialsBuilder withControllerIdAndUrl(String controllerId, String url) {
+        return new ProxyCredentialsBuilder(controllerId, url);
     }
 
     public static ProxyCredentialsBuilder withDbInstancesOfCluster(Collection<DBItemInventoryJSInstance> dbItems) throws DBMissingDataException {
@@ -132,7 +132,7 @@ public class ProxyCredentialsBuilder {
             account = JCredentials.noCredentials();
             //account = ProxyCredentials.jocAccount;
         }
-        return new ProxyCredentials(jobschedulerId, url, user, account, backupUrl, httpsConfig);
+        return new ProxyCredentials(controllerId, url, user, account, backupUrl, httpsConfig);
     }
 
     private static ProxyCredentialsBuilder withPrimaryDbInstance(DBItemInventoryJSInstance dbItem) {

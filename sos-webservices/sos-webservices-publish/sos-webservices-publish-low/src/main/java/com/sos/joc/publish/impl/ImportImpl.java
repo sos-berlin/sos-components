@@ -14,8 +14,6 @@ import javax.ws.rs.Path;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.model.agent.AgentRef;
-import com.sos.jobscheduler.model.agent.AgentRefPublish;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.jobscheduler.model.workflow.WorkflowPublish;
 import com.sos.joc.Globals;
@@ -81,14 +79,13 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
 
 //            Set<Lock> locks = new HashSet<Lock>();
             Set<Workflow> workflows = new HashSet<Workflow>();
-            Set<AgentRef> agentRefs = new HashSet<AgentRef>();
             Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
             
             // process uploaded archive
             if (mediaSubType.contains("zip") && !mediaSubType.contains("gzip")) {
-                signaturePaths = PublishUtils.readZipFileContent(stream, workflows, agentRefs);
+                signaturePaths = PublishUtils.readZipFileContent(stream, workflows);
             } else if (mediaSubType.contains("tgz") || mediaSubType.contains("tar.gz") || mediaSubType.contains("gzip")) {
-                signaturePaths = PublishUtils.readTarGzipFileContent(stream, workflows, agentRefs);
+                signaturePaths = PublishUtils.readTarGzipFileContent(stream, workflows);
             } else {
             	throw new JocUnsupportedFileTypeException(
             	        String.format("The file %1$s to be uploaded must have one of the formats zip, tar.gz or tgz!", uploadFileName)); 
@@ -97,8 +94,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             ImportAudit importAudit = new ImportAudit(filter, 
-                    String.format("%1$d workflow(s) and %2$d agentRef(s) imported with profile %3$s", workflows.size(), agentRefs.size(),
-                            account));
+                    String.format("%1$d workflow(s) imported with profile %2$s", workflows.size(), account));
             logAuditMessage(importAudit);
             DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(importAudit);
 
@@ -114,18 +110,6 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                     } 
                 }
                 dbLayer.saveOrUpdateInventoryConfiguration(workflow.getPath(), wfEdit, workflow.getTYPE(), account, dbItemAuditLog.getId());
-            }
-            folders.addAll(agentRefs.stream().map(aRef -> aRef.getPath()).map(path -> Paths.get(path)).collect(Collectors.toSet()));
-            for (AgentRef agentRef : agentRefs) {
-                AgentRefPublish arEdit = new AgentRefPublish();
-                arEdit.setContent(agentRef);
-                if (!signaturePaths.isEmpty()) {
-                    Signature signature = PublishUtils.verifyAgentRefs(hibernateSession, signaturePaths, agentRef, account);
-                    if (signature != null) {
-                        arEdit.setSignedContent(signature.getSignatureString());
-                    } 
-                }
-                dbLayer.saveOrUpdateInventoryConfiguration(agentRef.getPath(), arEdit, agentRef.getTYPE(), account, dbItemAuditLog.getId());
             }
             dbLayer.createInvConfigurationsDBItemsForFoldersIfNotExists(
                     PublishUtils.updateSetOfPathsWithParents(folders), dbItemAuditLog.getId());

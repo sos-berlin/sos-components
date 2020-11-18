@@ -4,11 +4,11 @@
   "javaType": "com.sos.joc.model.order.OrderFilter",
   "type": "object",
   "required": [
-    "jobschedulerId",
+    "controllerId",
     "orderId"
   ],
   "properties": {
-    "jobschedulerId": {
+    "controllerId": {
       "$ref": "../common/filename100-schema.json"
     },
     "orderId": {

@@ -4,10 +4,10 @@
   "javaType": "com.sos.joc.model.configuration.ConfigurationsFilter",
   "type": "object",
   "required": [
-    "jobschedulerId"
+    "controllerId"
   ],
   "properties": {
-    "jobschedulerId": {
+    "controllerId": {
       "$ref": "../common/filename100-schema.json"
     },
     "account": {

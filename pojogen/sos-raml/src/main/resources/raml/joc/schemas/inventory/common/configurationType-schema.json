@@ -7,12 +7,11 @@
     "FOLDER",
     "WORKFLOW",
     "JOBCLASS",
-    "AGENTCLUSTER",
     "LOCK",
     "JUNCTION",
     "WORKINGDAYSCALENDAR", 
     "NONWORKINGDAYSCALENDAR",
-    "ORDER",
+    "ORDERTEMPLATE",
     "JOB"
   ]
 }

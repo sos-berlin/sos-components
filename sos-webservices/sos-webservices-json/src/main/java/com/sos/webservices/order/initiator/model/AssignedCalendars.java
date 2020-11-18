@@ -33,7 +33,7 @@ public class AssignedCalendars {
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String calendarPath;
     @JsonProperty("timeZone")
-    private String timeZone;
+    private String timeZone = "Etc/UTC";
     /**
      * frequencies
      * <p>
@@ -50,6 +50,11 @@ public class AssignedCalendars {
      */
     @JsonProperty("excludes")
     private Frequencies excludes;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("periods")
     private List<Period> periods = null;
 
@@ -131,11 +136,21 @@ public class AssignedCalendars {
         this.excludes = excludes;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("periods")
     public List<Period> getPeriods() {
         return periods;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("periods")
     public void setPeriods(List<Period> periods) {
         this.periods = periods;

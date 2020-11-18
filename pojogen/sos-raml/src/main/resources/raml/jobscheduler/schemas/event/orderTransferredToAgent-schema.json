@@ -10,8 +10,8 @@
     "$ref": "event-schema.json"
   },
   "properties": {
-    "agentId": {
-      "$ref": "../common/agentId-schema.json"
+    "agentName": {
+      "type": "string"
     }
   },
   "additionalProperties": false

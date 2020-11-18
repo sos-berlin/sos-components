@@ -13,7 +13,7 @@ public class InventoryTreeFolderItem extends ResponseFolderItem {
 
     public InventoryTreeFolderItem(DBItemInventoryConfiguration conf, Long countDeployments, Long countReleases) {
         if (conf != null) {
-            if (conf.getContent() != null && ConfigurationType.ORDER.intValue() == conf.getType()) {
+            if (conf.getContent() != null && ConfigurationType.ORDERTEMPLATE.intValue() == conf.getType()) {
                 try {
                     OrderTemplate ot = Globals.objectMapper.readValue(conf.getContent(), OrderTemplate.class);
                     workflowPath = ot.getWorkflowPath();

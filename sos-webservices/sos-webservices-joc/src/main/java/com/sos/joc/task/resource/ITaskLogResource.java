@@ -32,7 +32,7 @@ public interface ITaskLogResource {
     @CompressedAlready
     // @Produces({ MediaType.APPLICATION_OCTET_STREAM })
     public JOCDefaultResponse downloadTaskLog(@HeaderParam("X-Access-Token") String xAccessToken, @QueryParam("accessToken") String queryAccessToken,
-            @QueryParam("jobschedulerId") String jobschedulerId, @QueryParam("taskId") Long taskId);
+            @QueryParam("controllerId") String controllerId, @QueryParam("taskId") Long taskId);
 
     @POST
     @Path("log/download")

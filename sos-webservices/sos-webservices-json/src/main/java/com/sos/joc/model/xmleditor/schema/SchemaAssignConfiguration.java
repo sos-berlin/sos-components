@@ -18,7 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "objectType",
     "uri",
     "fileName",
@@ -33,8 +33,8 @@ public class SchemaAssignConfiguration {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * xmleditor object type
      * <p>
@@ -76,9 +76,9 @@ public class SchemaAssignConfiguration {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -88,9 +88,9 @@ public class SchemaAssignConfiguration {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -185,12 +185,12 @@ public class SchemaAssignConfiguration {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("objectType", objectType).append("uri", uri).append("fileName", fileName).append("fileContent", fileContent).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("objectType", objectType).append("uri", uri).append("fileName", fileName).append("fileContent", fileContent).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(fileName).append(jobschedulerId).append(uri).append(fileContent).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(fileName).append(controllerId).append(uri).append(fileContent).append(objectType).toHashCode();
     }
 
     @Override
@@ -202,7 +202,7 @@ public class SchemaAssignConfiguration {
             return false;
         }
         SchemaAssignConfiguration rhs = ((SchemaAssignConfiguration) other);
-        return new EqualsBuilder().append(fileName, rhs.fileName).append(jobschedulerId, rhs.jobschedulerId).append(uri, rhs.uri).append(fileContent, rhs.fileContent).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(fileName, rhs.fileName).append(controllerId, rhs.controllerId).append(uri, rhs.uri).append(fileContent, rhs.fileContent).append(objectType, rhs.objectType).isEquals();
     }
 
 }

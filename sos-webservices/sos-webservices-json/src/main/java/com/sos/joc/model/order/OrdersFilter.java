@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "orders",
     "excludeOrders",
     "compact",
@@ -45,8 +45,8 @@ public class OrdersFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     @JsonProperty("orders")
     private List<OrderPath> orders = new ArrayList<OrderPath>();
     @JsonProperty("excludeOrders")
@@ -109,9 +109,9 @@ public class OrdersFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -121,9 +121,9 @@ public class OrdersFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     @JsonProperty("orders")
@@ -300,12 +300,12 @@ public class OrdersFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("orders", orders).append("excludeOrders", excludeOrders).append("compact", compact).append("regex", regex).append("states", states).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("folders", folders).append("limit", limit).append("historyStates", historyStates).append("historyIds", historyIds).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("orders", orders).append("excludeOrders", excludeOrders).append("compact", compact).append("regex", regex).append("states", states).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("folders", folders).append("limit", limit).append("historyStates", historyStates).append("historyIds", historyIds).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folders).append(compact).append(excludeOrders).append(historyStates).append(timeZone).append(dateFrom).append(historyIds).append(states).append(regex).append(dateTo).append(limit).append(orders).append(jobschedulerId).toHashCode();
+        return new HashCodeBuilder().append(folders).append(controllerId).append(compact).append(excludeOrders).append(historyStates).append(timeZone).append(dateFrom).append(historyIds).append(states).append(regex).append(dateTo).append(limit).append(orders).toHashCode();
     }
 
     @Override
@@ -317,7 +317,7 @@ public class OrdersFilter {
             return false;
         }
         OrdersFilter rhs = ((OrdersFilter) other);
-        return new EqualsBuilder().append(folders, rhs.folders).append(compact, rhs.compact).append(excludeOrders, rhs.excludeOrders).append(historyStates, rhs.historyStates).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(historyIds, rhs.historyIds).append(states, rhs.states).append(regex, rhs.regex).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(orders, rhs.orders).append(jobschedulerId, rhs.jobschedulerId).isEquals();
+        return new EqualsBuilder().append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(excludeOrders, rhs.excludeOrders).append(historyStates, rhs.historyStates).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(historyIds, rhs.historyIds).append(states, rhs.states).append(regex, rhs.regex).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(orders, rhs.orders).isEquals();
     }
 
 }

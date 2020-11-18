@@ -4,11 +4,11 @@
   "javaType": "com.sos.joc.model.workflow.WorkflowFilter",
   "type": "object",
   "required": [
-    "jobschedulerId",
+    "controllerId",
     "workflowId"
   ],
   "properties": {
-    "jobschedulerId": {
+    "controllerId": {
       "$ref": "../common/filename100-schema.json"
     },
     "workflowId": {

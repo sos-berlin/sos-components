@@ -19,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "type",
     "path"
 })
@@ -32,8 +32,8 @@ public class DocumentationShowFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * JobScheduler object type
      * <p>
@@ -61,9 +61,9 @@ public class DocumentationShowFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -73,9 +73,9 @@ public class DocumentationShowFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -128,12 +128,12 @@ public class DocumentationShowFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("type", type).append("path", path).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("type", type).append("path", path).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(jobschedulerId).append(type).toHashCode();
+        return new HashCodeBuilder().append(path).append(controllerId).append(type).toHashCode();
     }
 
     @Override
@@ -145,7 +145,7 @@ public class DocumentationShowFilter {
             return false;
         }
         DocumentationShowFilter rhs = ((DocumentationShowFilter) other);
-        return new EqualsBuilder().append(path, rhs.path).append(jobschedulerId, rhs.jobschedulerId).append(type, rhs.type).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(controllerId, rhs.controllerId).append(type, rhs.type).isEquals();
     }
 
 }
