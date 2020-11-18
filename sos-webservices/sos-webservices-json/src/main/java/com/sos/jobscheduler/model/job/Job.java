@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "agentRefPath",
+    "agentName",
     "executable",
     "returnCodeMeaning",
     "taskLimit",
@@ -40,15 +40,14 @@ public class Job implements IConfigurationObject
 {
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of a JobScheduler object.
+     * 
      * (Required)
      * 
      */
-    @JsonProperty("agentRefPath")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
-    private String agentRefPath;
+    @JsonProperty("agentName")
+    private String agentName;
     /**
      * executable script
      * <p>
@@ -66,6 +65,11 @@ public class Job implements IConfigurationObject
      */
     @JsonProperty("returnCodeMeaning")
     private JobReturnCode returnCodeMeaning;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("taskLimit")
     private Integer taskLimit = 1;
     /**
@@ -156,7 +160,7 @@ public class Job implements IConfigurationObject
      * @param taskLimit
      * @param documentationId
      * @param criticality
-     * @param agentRefPath
+     * @param agentName
      * @param title
      * @param executable
      * @param timeout
@@ -167,9 +171,9 @@ public class Job implements IConfigurationObject
      * @param logLevel
      * @param jobClass
      */
-    public Job(String agentRefPath, ExecutableScript executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, String jobClass, Variables defaultArguments, String title, Long documentationId, JobLogLevel logLevel, JobCriticality criticality, String path) {
+    public Job(String agentName, ExecutableScript executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, String jobClass, Variables defaultArguments, String title, Long documentationId, JobLogLevel logLevel, JobCriticality criticality, String path) {
         super();
-        this.agentRefPath = agentRefPath;
+        this.agentName = agentName;
         this.executable = executable;
         this.returnCodeMeaning = returnCodeMeaning;
         this.taskLimit = taskLimit;
@@ -185,27 +189,27 @@ public class Job implements IConfigurationObject
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of a JobScheduler object.
+     * 
      * (Required)
      * 
      */
-    @JsonProperty("agentRefPath")
-    public String getAgentRefPath() {
-        return agentRefPath;
+    @JsonProperty("agentName")
+    public String getAgentName() {
+        return agentName;
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of a JobScheduler object.
+     * 
      * (Required)
      * 
      */
-    @JsonProperty("agentRefPath")
-    public void setAgentRefPath(String agentRefPath) {
-        this.agentRefPath = agentRefPath;
+    @JsonProperty("agentName")
+    public void setAgentName(String agentName) {
+        this.agentName = agentName;
     }
 
     /**
@@ -254,11 +258,21 @@ public class Job implements IConfigurationObject
         this.returnCodeMeaning = returnCodeMeaning;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("taskLimit")
     public Integer getTaskLimit() {
         return taskLimit;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("taskLimit")
     public void setTaskLimit(Integer taskLimit) {
         this.taskLimit = taskLimit;
@@ -464,12 +478,12 @@ public class Job implements IConfigurationObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentRefPath", agentRefPath).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("taskLimit", taskLimit).append("timeout", timeout).append("graceTimeout", graceTimeout).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("title", title).append("documentationId", documentationId).append("logLevel", logLevel).append("criticality", criticality).append("path", path).toString();
+        return new ToStringBuilder(this).append("agentName", agentName).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("taskLimit", taskLimit).append("timeout", timeout).append("graceTimeout", graceTimeout).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("title", title).append("documentationId", documentationId).append("logLevel", logLevel).append("criticality", criticality).append("path", path).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(taskLimit).append(documentationId).append(criticality).append(agentRefPath).append(title).append(executable).append(timeout).append(returnCodeMeaning).append(path).append(graceTimeout).append(defaultArguments).append(logLevel).append(jobClass).toHashCode();
+        return new HashCodeBuilder().append(taskLimit).append(documentationId).append(criticality).append(agentName).append(title).append(executable).append(timeout).append(returnCodeMeaning).append(path).append(graceTimeout).append(defaultArguments).append(logLevel).append(jobClass).toHashCode();
     }
 
     @Override
@@ -481,7 +495,7 @@ public class Job implements IConfigurationObject
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(taskLimit, rhs.taskLimit).append(documentationId, rhs.documentationId).append(criticality, rhs.criticality).append(agentRefPath, rhs.agentRefPath).append(title, rhs.title).append(executable, rhs.executable).append(timeout, rhs.timeout).append(returnCodeMeaning, rhs.returnCodeMeaning).append(path, rhs.path).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(logLevel, rhs.logLevel).append(jobClass, rhs.jobClass).isEquals();
+        return new EqualsBuilder().append(taskLimit, rhs.taskLimit).append(documentationId, rhs.documentationId).append(criticality, rhs.criticality).append(agentName, rhs.agentName).append(title, rhs.title).append(executable, rhs.executable).append(timeout, rhs.timeout).append(returnCodeMeaning, rhs.returnCodeMeaning).append(path, rhs.path).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(logLevel, rhs.logLevel).append(jobClass, rhs.jobClass).isEquals();
     }
 
 }

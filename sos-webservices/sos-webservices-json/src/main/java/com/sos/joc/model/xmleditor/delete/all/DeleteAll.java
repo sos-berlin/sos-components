@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "objectTypes"
 })
 public class DeleteAll {
@@ -32,8 +32,8 @@ public class DeleteAll {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * 
      * (Required)
@@ -49,9 +49,9 @@ public class DeleteAll {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -61,9 +61,9 @@ public class DeleteAll {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -88,12 +88,12 @@ public class DeleteAll {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("objectTypes", objectTypes).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("objectTypes", objectTypes).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(objectTypes).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(objectTypes).toHashCode();
     }
 
     @Override
@@ -105,7 +105,7 @@ public class DeleteAll {
             return false;
         }
         DeleteAll rhs = ((DeleteAll) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(objectTypes, rhs.objectTypes).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(objectTypes, rhs.objectTypes).isEquals();
     }
 
 }

@@ -14,7 +14,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * jobschedulerIds
+ * controllerIds
  * <p>
  * 
  * 
@@ -22,11 +22,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
-    "jobschedulerIds",
+    "controllerIds",
     "selected",
     "precedence"
 })
-public class JobSchedulerIds {
+public class ControllerIds {
 
     /**
      * timestamp
@@ -43,15 +43,15 @@ public class JobSchedulerIds {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerIds")
-    private List<String> jobschedulerIds = new ArrayList<String>();
+    @JsonProperty("controllerIds")
+    private List<String> controllerIds = new ArrayList<String>();
     /**
-     * The Id from the 'jobschedulerIds' collection which is specified in the selected field will be used for all further calls
+     * The Id from the 'controllerIds' collection which is specified in the selected field will be used for all further calls
      * (Required)
      * 
      */
     @JsonProperty("selected")
-    @JsonPropertyDescription("The Id from the 'jobschedulerIds' collection which is specified in the selected field will be used for all further calls")
+    @JsonPropertyDescription("The Id from the 'controllerIds' collection which is specified in the selected field will be used for all further calls")
     private String selected;
     /**
      * non negative integer
@@ -91,9 +91,9 @@ public class JobSchedulerIds {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerIds")
-    public List<String> getJobschedulerIds() {
-        return jobschedulerIds;
+    @JsonProperty("controllerIds")
+    public List<String> getControllerIds() {
+        return controllerIds;
     }
 
     /**
@@ -101,13 +101,13 @@ public class JobSchedulerIds {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerIds")
-    public void setJobschedulerIds(List<String> jobschedulerIds) {
-        this.jobschedulerIds = jobschedulerIds;
+    @JsonProperty("controllerIds")
+    public void setControllerIds(List<String> controllerIds) {
+        this.controllerIds = controllerIds;
     }
 
     /**
-     * The Id from the 'jobschedulerIds' collection which is specified in the selected field will be used for all further calls
+     * The Id from the 'controllerIds' collection which is specified in the selected field will be used for all further calls
      * (Required)
      * 
      */
@@ -117,7 +117,7 @@ public class JobSchedulerIds {
     }
 
     /**
-     * The Id from the 'jobschedulerIds' collection which is specified in the selected field will be used for all further calls
+     * The Id from the 'controllerIds' collection which is specified in the selected field will be used for all further calls
      * (Required)
      * 
      */
@@ -150,12 +150,12 @@ public class JobSchedulerIds {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("jobschedulerIds", jobschedulerIds).append("selected", selected).append("precedence", precedence).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("controllerIds", controllerIds).append("selected", selected).append("precedence", precedence).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(jobschedulerIds).append(selected).append(precedence).toHashCode();
+        return new HashCodeBuilder().append(deliveryDate).append(controllerIds).append(selected).append(precedence).toHashCode();
     }
 
     @Override
@@ -163,11 +163,11 @@ public class JobSchedulerIds {
         if (other == this) {
             return true;
         }
-        if ((other instanceof JobSchedulerIds) == false) {
+        if ((other instanceof ControllerIds) == false) {
             return false;
         }
-        JobSchedulerIds rhs = ((JobSchedulerIds) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(jobschedulerIds, rhs.jobschedulerIds).append(selected, rhs.selected).append(precedence, rhs.precedence).isEquals();
+        ControllerIds rhs = ((ControllerIds) other);
+        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(controllerIds, rhs.controllerIds).append(selected, rhs.selected).append(precedence, rhs.precedence).isEquals();
     }
 
 }

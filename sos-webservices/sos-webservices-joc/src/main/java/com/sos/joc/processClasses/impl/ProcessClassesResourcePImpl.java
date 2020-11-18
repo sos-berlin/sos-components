@@ -24,8 +24,8 @@ public class ProcessClassesResourcePImpl extends JOCResourceImpl implements IPro
 
     public JOCDefaultResponse postProcessClassesP(String accessToken, ProcessClassesFilter processClassFilter) throws Exception {
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, processClassFilter, accessToken, processClassFilter.getJobschedulerId(),
-                    getPermissonsJocCockpit(processClassFilter.getJobschedulerId(), accessToken).getLock().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, processClassFilter, accessToken, processClassFilter.getControllerId(),
+                    getPermissonsJocCockpit(processClassFilter.getControllerId(), accessToken).getLock().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

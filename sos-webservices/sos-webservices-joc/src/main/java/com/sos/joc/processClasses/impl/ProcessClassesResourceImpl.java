@@ -26,8 +26,8 @@ public class ProcessClassesResourceImpl extends JOCResourceImpl implements IProc
 
     public JOCDefaultResponse postProcessClasses(String accessToken, ProcessClassesFilter processClassFilter) throws Exception {
         try {
-            SOSPermissionJocCockpit perms = getPermissonsJocCockpit(processClassFilter.getJobschedulerId(), accessToken);
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, processClassFilter, accessToken, processClassFilter.getJobschedulerId(), perms
+            SOSPermissionJocCockpit perms = getPermissonsJocCockpit(processClassFilter.getControllerId(), accessToken);
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, processClassFilter, accessToken, processClassFilter.getControllerId(), perms
                     .getProcessClass().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

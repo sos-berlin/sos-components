@@ -4,7 +4,7 @@
   "javaType": "com.sos.joc.model.yade.TransferFilter",
   "type": "object",
   "properties": {
-    "jobschedulerId": {
+    "controllerId": {
       "type": "string"
     },
     "transferIds": {

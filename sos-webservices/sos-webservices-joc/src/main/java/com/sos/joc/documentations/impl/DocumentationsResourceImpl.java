@@ -37,12 +37,12 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
         
         SOSHibernateSession connection = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, filter.getJobschedulerId(), getPermissonsJocCockpit(filter
-                    .getJobschedulerId(), xAccessToken).getDocumentation().isView());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, filter.getControllerId(), getPermissonsJocCockpit(filter
+                    .getControllerId(), xAccessToken).getDocumentation().isView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            checkRequiredParameter("jobschedulerId", filter.getJobschedulerId());
+            checkRequiredParameter("jobschedulerId", filter.getControllerId());
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
             List<DBItemDocumentation> dbDocs = new ArrayList<DBItemDocumentation>();
@@ -55,17 +55,17 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
                 }
             }
             if (filter.getDocumentations() != null && !filter.getDocumentations().isEmpty()) {
-                dbDocs = dbLayer.getDocumentations(filter.getJobschedulerId(), filter.getDocumentations());
+                dbDocs = dbLayer.getDocumentations(filter.getControllerId(), filter.getDocumentations());
             } else {
                 if (filter.getFolders() != null && !filter.getFolders().isEmpty()) {
                     for (Folder folder : filter.getFolders()) {
-                        dbDocs.addAll(dbLayer.getDocumentations(filter.getJobschedulerId(), types, folder.getFolder(), folder
+                        dbDocs.addAll(dbLayer.getDocumentations(filter.getControllerId(), types, folder.getFolder(), folder
                                 .getRecursive()));
                     }
                 } else if (filter.getTypes() != null && !filter.getTypes().isEmpty()) {
-                    dbDocs = dbLayer.getDocumentations(filter.getJobschedulerId(), types, null, false);
+                    dbDocs = dbLayer.getDocumentations(filter.getControllerId(), types, null, false);
                 } else {
-                    dbDocs = dbLayer.getDocumentations(filter.getJobschedulerId(), (List<String>) null);
+                    dbDocs = dbLayer.getDocumentations(filter.getControllerId(), (List<String>) null);
                 }
                 if (filter.getRegex() != null && !filter.getRegex().isEmpty()) {
                     dbDocs = filterByRegex(dbDocs, filter.getRegex());
@@ -102,7 +102,7 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
         for(DBItemDocumentation dbDoc : dbDocs) {
             Documentation doc = new Documentation();
             doc.setId(dbDoc.getId());
-            doc.setJobschedulerId(dbDoc.getSchedulerId());
+            doc.setControllerId(dbDoc.getSchedulerId());
             doc.setName(dbDoc.getName());
             doc.setPath(dbDoc.getPath());
             doc.setType(dbDoc.getType());

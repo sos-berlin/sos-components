@@ -39,7 +39,7 @@ public class LogTaskContent {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LogTaskContent.class);
     private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd' 'HH:mm:ss.SSSZ");
-    // private String jobschedulerId;
+    // private String controllerId;
     private Long historyId;
     private Long orderId;
     private String jobName;
@@ -50,7 +50,7 @@ public class LogTaskContent {
 
     public LogTaskContent(TaskFilter taskFilter) {
         this.historyId = taskFilter.getTaskId();
-        // this.jobschedulerId = taskFilter.getJobschedulerId();
+        // this.controllerId = taskFilter.getControllerId();
     }
 
     public LogTaskContent(Long taskId) {

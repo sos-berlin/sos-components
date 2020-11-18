@@ -56,7 +56,7 @@ public class InventoryAudit implements IAuditLog {
         case FOLDER:
             this.path = folder;
             break;
-        case ORDER:
+        case ORDERTEMPLATE:
             this.orderId = path;
             break;
         case WORKFLOW:

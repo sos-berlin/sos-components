@@ -87,13 +87,13 @@ public class StoreResourceImpl extends JOCResourceImpl implements IStoreResource
     }
 
     private DBItemXmlEditorConfiguration getStandardObject(DbLayerXmlEditor dbLayer, StoreConfiguration in) throws Exception {
-        return dbLayer.getObject(in.getJobschedulerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in.getObjectType(), in
+        return dbLayer.getObject(in.getControllerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in.getObjectType(), in
                 .getName()));
     }
 
     private DBItemXmlEditorConfiguration create(SOSHibernateSession session, StoreConfiguration in, String name) throws Exception {
         DBItemXmlEditorConfiguration item = new DBItemXmlEditorConfiguration();
-        item.setSchedulerId(in.getJobschedulerId());
+        item.setSchedulerId(in.getControllerId());
         item.setObjectType(in.getObjectType().name());
         item.setName(name.trim());
         item.setConfigurationDraft(in.getConfiguration());
@@ -129,7 +129,7 @@ public class StoreResourceImpl extends JOCResourceImpl implements IStoreResource
     }
 
     private void checkRequiredParameters(final StoreConfiguration in) throws Exception {
-        checkRequiredParameter("jobschedulerId", in.getJobschedulerId());
+        checkRequiredParameter("jobschedulerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         checkRequiredParameter("configuration", in.getConfiguration());
         checkRequiredParameter("configurationJson", in.getConfigurationJson());
@@ -141,9 +141,9 @@ public class StoreResourceImpl extends JOCResourceImpl implements IStoreResource
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final StoreConfiguration in) throws Exception {
-        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
+        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getControllerId(), accessToken);
         boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return initPermissions(in.getJobschedulerId(), permission);
+        return initPermissions(in.getControllerId(), permission);
     }
 
     private StoreConfigurationAnswer getSuccess(ObjectType type, Long id, Date modified, Date deployed) {

@@ -43,7 +43,7 @@ public class DeployResourceImpl extends JOCResourceImpl implements IDeployResour
 
             if (in.getObjectType() != null && in.getObjectType().equals(ObjectType.OTHER)) {
                 throw new JocException(new JocError(JocXmlEditor.ERROR_CODE_UNSUPPORTED_OBJECT_TYPE, String.format(
-                        "[%s][%s]unsupported object type for deployment", in.getJobschedulerId(), in.getObjectType().name())));
+                        "[%s][%s]unsupported object type for deployment", in.getControllerId(), in.getObjectType().name())));
             }
             // TODO check folder permissions
             checkRequiredParameters(in);
@@ -105,25 +105,25 @@ public class DeployResourceImpl extends JOCResourceImpl implements IDeployResour
     }
 
     private void checkRequiredParameters(final DeployConfiguration in) throws Exception {
-        checkRequiredParameter("jobschedulerId", in.getJobschedulerId());
+        checkRequiredParameter("jobschedulerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         checkRequiredParameter("configuration", in.getConfiguration());
         checkRequiredParameter("configurationJson", in.getConfigurationJson());
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final DeployConfiguration in) throws Exception {
-        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
+        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getControllerId(), accessToken);
         boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return initPermissions(in.getJobschedulerId(), permission);
+        return initPermissions(in.getControllerId(), permission);
     }
 
     private DBItemXmlEditorConfiguration getItem(DbLayerXmlEditor dbLayer, DeployConfiguration in) throws Exception {
         dbLayer.getSession().beginTransaction();
-        DBItemXmlEditorConfiguration item = dbLayer.getObject(in.getJobschedulerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in
+        DBItemXmlEditorConfiguration item = dbLayer.getObject(in.getControllerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in
                 .getObjectType()));
         if (item == null) {
             item = new DBItemXmlEditorConfiguration();
-            item.setSchedulerId(in.getJobschedulerId());
+            item.setSchedulerId(in.getControllerId());
             item.setObjectType(in.getObjectType().name());
             item.setName(JocXmlEditor.getConfigurationName(in.getObjectType()));
             item.setConfigurationDraft(in.getConfiguration());

@@ -35,8 +35,8 @@ public class OrdersResourceOverviewSummaryImpl extends JOCResourceImpl implement
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrdersFilter.class);
             OrdersFilter ordersFilter = Globals.objectMapper.readValue(filterBytes, OrdersFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(ordersFilter.getJobschedulerId(), getPermissonsJocCockpit(ordersFilter
-                    .getJobschedulerId(), accessToken).getOrder().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(ordersFilter.getControllerId(), getPermissonsJocCockpit(ordersFilter
+                    .getControllerId(), accessToken).getOrder().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -47,7 +47,7 @@ public class OrdersResourceOverviewSummaryImpl extends JOCResourceImpl implement
             Set<Folder> folders = folderPermissions.getListOfFolders();
             
             HistoryFilter historyFilter = new HistoryFilter();
-            historyFilter.setSchedulerId(ordersFilter.getJobschedulerId());
+            historyFilter.setSchedulerId(ordersFilter.getControllerId());
             historyFilter.setMainOrder(true);
             
             if (ordersFilter.getDateFrom() != null) {

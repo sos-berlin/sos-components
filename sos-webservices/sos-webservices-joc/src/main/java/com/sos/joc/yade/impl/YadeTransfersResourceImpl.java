@@ -19,12 +19,12 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
 
 	@Override
 	public JOCDefaultResponse postYadeTransfers(String accessToken, TransferFilter filterBody) throws Exception {
-		if (filterBody.getJobschedulerId() == null) {
-			filterBody.setJobschedulerId("");
+		if (filterBody.getControllerId() == null) {
+			filterBody.setControllerId("");
 		}
 		try {
 			JOCDefaultResponse jocDefaultResponse = init(API_CALL, filterBody, accessToken,
-					filterBody.getJobschedulerId(), getPermissonsJocCockpit(filterBody.getJobschedulerId(), accessToken)
+					filterBody.getControllerId(), getPermissonsJocCockpit(filterBody.getControllerId(), accessToken)
 							.getYADE().getView().isStatus());
 			if (jocDefaultResponse != null) {
 				return jocDefaultResponse;

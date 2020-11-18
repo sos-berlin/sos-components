@@ -4,11 +4,11 @@
   "javaType": "com.sos.joc.model.event.JobSchedulerObjects",
   "type": "object",
   "required": [
-    "jobschedulerId",
+    "controllerId",
     "eventId"
   ],
   "properties": {
-    "jobschedulerId": {
+    "controllerId": {
       "$ref": "../common/filename100-schema.json"
     },
     "eventId": {

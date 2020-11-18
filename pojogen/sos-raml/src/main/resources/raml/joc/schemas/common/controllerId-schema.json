@@ -1,16 +1,14 @@
 {
-	"title": "Controller Id",
-	"$schema": "http://json-schema.org/draft-04/schema#",
-	"javaType": "com.sos.webservices.order.initiator.model.ControllId",
-	"type": "object",
-	"description": "Only Controller Id",
-	"required": [
-		"controllerId"
-	],
-	"properties": {
-		"controllerId": {
-			"$ref": "filename100-schema.json"
-		}
-	}
+  "title": "Controller id",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.joc.model.common.ControllerId",
+  "type": "object",
+  "required": [
+    "controllerId"
+  ],
+  "properties": {
+    "controllerId": {
+      "$ref": "filename100-schema.json"
+    }
+  }
 }
- 

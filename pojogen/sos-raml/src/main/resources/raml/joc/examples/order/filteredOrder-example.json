@@ -1,5 +1,5 @@
 {
-  "jobschedulerId":"scheduler",
+  "controllerId":"scheduler",
   "workflow": "/test/foo/bar1",
   "orderId": "order1"
 }

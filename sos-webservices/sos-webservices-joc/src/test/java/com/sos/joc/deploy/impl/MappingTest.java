@@ -27,7 +27,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.instruction.IfElse;
 import com.sos.jobscheduler.model.instruction.NamedJob;
@@ -55,8 +54,6 @@ public class MappingTest {
             + "{\"TYPE\":\"Execute.Named\",\"jobName\":\"jobBranch1\"}]}},{\"id\":\"BRANCH2\",\"workflow\":{\"instructions\":["
             + "{\"TYPE\":\"Execute.Named\",\"jobName\":\"jobBranch2\"}]}},{\"id\":\"BRANCH3\",\"workflow\":{\"instructions\":["
             + "{\"TYPE\":\"Execute.Named\",\"jobName\":\"jobBranch3\"}]}}]},{\"TYPE\":\"Execute.Named\",\"jobName\":\"jobAfterJoin\"}]}";
-    private static final String AGENT_REF_JSON =
-            "{\"TYPE\":\"AgentRef\",\"path\":\"/test/Agent\",\"versionId\":\"2.0.0-SNAPSHOT\",\"uri\":\"http://localhost:4223\"}";
     private static final Logger LOGGER = LoggerFactory.getLogger(MappingTest.class);
     final String FROM_DEP_DATE = "deploymentDate >= :fromDate"; 
     final String TO_DEP_DATE = "deploymentDate < :toDate"; 
@@ -98,23 +95,6 @@ public class MappingTest {
         jsObject.setContent(ifElseWorkflow);
         Assert.assertEquals("/test/IfElseWorkflow", ((Workflow) jsObject.getContent()).getPath());
         LOGGER.info("IfElse Workflow JSON mapped to java object successfully!");
-    }
-
-    @Test
-    public void test3AgentRefToJSObject() {
-        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
-        AgentRef agent = null;
-        try {
-            agent = om.readValue(AGENT_REF_JSON, AgentRef.class);
-        } catch (JsonParseException | JsonMappingException e) {
-            Assert.fail(e.toString());
-        } catch (IOException e) {
-            Assert.fail(e.toString());
-        }
-        JSObject jsObject = new JSObject();
-        jsObject.setContent(agent);
-        Assert.assertEquals("/test/Agent", ((AgentRef) jsObject.getContent()).getPath());
-        LOGGER.info("AgentRef JSON mapped to java object successfully!");
     }
 
     @Test

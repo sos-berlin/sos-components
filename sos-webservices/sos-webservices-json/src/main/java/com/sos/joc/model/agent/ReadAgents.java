@@ -1,5 +1,5 @@
 
-package com.sos.webservices.order.initiator.model;
+package com.sos.joc.model.agent;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -10,16 +10,17 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Controller Id
+ * read agents
  * <p>
- * Only Controller Id
+ * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId"
+    "controllerId",
+    "onlyEnabledAgents"
 })
-public class ControllId {
+public class ReadAgents {
 
     /**
      * filename
@@ -30,6 +31,8 @@ public class ControllId {
      */
     @JsonProperty("controllerId")
     private String controllerId;
+    @JsonProperty("onlyEnabledAgents")
+    private Boolean onlyEnabledAgents = false;
 
     /**
      * filename
@@ -55,14 +58,24 @@ public class ControllId {
         this.controllerId = controllerId;
     }
 
+    @JsonProperty("onlyEnabledAgents")
+    public Boolean getOnlyEnabledAgents() {
+        return onlyEnabledAgents;
+    }
+
+    @JsonProperty("onlyEnabledAgents")
+    public void setOnlyEnabledAgents(Boolean onlyEnabledAgents) {
+        this.onlyEnabledAgents = onlyEnabledAgents;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("onlyEnabledAgents", onlyEnabledAgents).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(onlyEnabledAgents).toHashCode();
     }
 
     @Override
@@ -70,11 +83,11 @@ public class ControllId {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ControllId) == false) {
+        if ((other instanceof ReadAgents) == false) {
             return false;
         }
-        ControllId rhs = ((ControllId) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).isEquals();
+        ReadAgents rhs = ((ReadAgents) other);
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(onlyEnabledAgents, rhs.onlyEnabledAgents).isEquals();
     }
 
 }

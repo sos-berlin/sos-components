@@ -48,14 +48,14 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, WorkflowsFilter.class);
             WorkflowsFilter workflowsFilter = Globals.objectMapper.readValue(filterBytes, WorkflowsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(workflowsFilter.getJobschedulerId(), getPermissonsJocCockpit(workflowsFilter
-                    .getJobschedulerId(), accessToken).getOrder().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(workflowsFilter.getControllerId(), getPermissonsJocCockpit(workflowsFilter
+                    .getControllerId(), accessToken).getOrder().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
             
             DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
-            dbFilter.setControllerId(workflowsFilter.getJobschedulerId());
+            dbFilter.setControllerId(workflowsFilter.getControllerId());
             dbFilter.setObjectTypes(Arrays.asList(DeployType.WORKFLOW.intValue()));
             
             List<WorkflowId> workflowIds = workflowsFilter.getWorkflowIds();

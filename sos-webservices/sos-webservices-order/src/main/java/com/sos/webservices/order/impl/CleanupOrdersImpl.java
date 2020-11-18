@@ -50,8 +50,8 @@ public class CleanupOrdersImpl extends JOCResourceImpl implements ICleanupOrderR
         LOGGER.debug("cleanup orders");
         SOSHibernateSession sosHibernateSession = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, "", xAccessToken, orderCleanup.getJobschedulerId(), getPermissonsJocCockpit(
-                    orderCleanup.getJobschedulerId(), xAccessToken).getWorkflow().getExecute().isAddOrder());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, "", xAccessToken, orderCleanup.getControllerId(), getPermissonsJocCockpit(
+                    orderCleanup.getControllerId(), xAccessToken).getWorkflow().getExecute().isAddOrder());
  
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -78,7 +78,7 @@ public class CleanupOrdersImpl extends JOCResourceImpl implements ICleanupOrderR
     }
 
     private void removeOrdersFromControllerNotInDB(SOSHibernateSession sosHibernateSession,  OrderFilter orderCleanup) throws JsonParseException, JsonMappingException, SOSException, IOException, JocConfigurationException, DBOpenSessionException, URISyntaxException, JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, DBMissingDataException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException, InterruptedException {
-        Set<JOrder> listOfOrderItems = OrderHelper.getListOfJOrdersFromController(orderCleanup.getJobschedulerId());
+        Set<JOrder> listOfOrderItems = OrderHelper.getListOfJOrdersFromController(orderCleanup.getControllerId());
         sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
         DBLayerDailyPlannedOrders dbLayerDailyPlan = new DBLayerDailyPlannedOrders(sosHibernateSession);
         FilterDailyPlannedOrders filterDailyPlan = new FilterDailyPlannedOrders();
@@ -94,7 +94,7 @@ public class CleanupOrdersImpl extends JOCResourceImpl implements ICleanupOrderR
 //                listOfPlannedOrders.add(dbItemDailyPlannedOrders);
 //            }
         }
-        OrderHelper.removeFromJobSchedulerController(orderCleanup.getJobschedulerId(), listOfPlannedOrders);
+        OrderHelper.removeFromJobSchedulerController(orderCleanup.getControllerId(), listOfPlannedOrders);
     }
     
    

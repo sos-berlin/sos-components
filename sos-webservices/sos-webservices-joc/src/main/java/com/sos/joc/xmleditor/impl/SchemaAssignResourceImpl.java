@@ -45,7 +45,7 @@ public class SchemaAssignResourceImpl extends JOCResourceImpl implements ISchema
     }
 
     private void checkRequiredParameters(final SchemaAssignConfiguration in) throws Exception {
-        checkRequiredParameter("jobschedulerId", in.getJobschedulerId());
+        checkRequiredParameter("jobschedulerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         if (in.getUri() == null) {
             if (in.getFileName() == null || in.getFileContent() == null) {
@@ -55,9 +55,9 @@ public class SchemaAssignResourceImpl extends JOCResourceImpl implements ISchema
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final SchemaAssignConfiguration in) throws Exception {
-        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
+        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getControllerId(), accessToken);
         boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return initPermissions(in.getJobschedulerId(), permission);
+        return initPermissions(in.getControllerId(), permission);
     }
 
     private SchemaAssignConfigurationAnswer getSuccess(final SchemaAssignConfiguration in) throws Exception {

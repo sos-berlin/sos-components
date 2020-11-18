@@ -55,7 +55,7 @@ public class JobHistoryDBLayer {
         try {
             Query<DBItemHistoryOrderStep> query = session.createQuery(new StringBuilder().append("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(
                     " where jobSchedulerId = :jobschedulerId and orderId = :historyId order by startEventId asc").toString());
-            query.setParameter("jobschedulerId", filter.getJobschedulerId());
+            query.setParameter("jobschedulerId", filter.getControllerId());
             query.setParameter("historyId", filter.getHistoryId());
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {

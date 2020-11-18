@@ -3,5 +3,5 @@
 <tr><td style="padding-left:20px;">``objectType``</td><td>string</td><td>Object type of the configuration item. Possibly value are 
 <ul><li>"WORKINGDAYSCALENDAR"</li>
     <li>"NONWORKINGDAYSCALENDAR"</li>
-    <li>"ORDER"</li></ul>
+    <li>"ORDERTEMPLATE"</li></ul>
 </td><td></td><td></td></tr>

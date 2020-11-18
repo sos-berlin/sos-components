@@ -10,7 +10,6 @@ public enum DeleteType {
 
     WORKFLOW("WorkflowPath", 1),
     JOBCLASS("JobClassPath", 2),
-    AGENTREF("AgentRefPath", 3),
     LOCK("LockPath", 4),
     JUNCTION("JunctionPath", 5);
     private final String value;

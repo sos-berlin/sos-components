@@ -5,6 +5,6 @@ The response contains
 * agents which is a collection where each agent has following fields<br/>
   * agent
   * cause
-  * jobschedulerId
+  * controllerId
   * numOfSuccessfulTasks
   * numOfJobs (number of distinct jobs per day)

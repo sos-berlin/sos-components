@@ -3,7 +3,7 @@
     "controllers": [
         {
             "id": 1,
-            "jobschedulerId": "scheduler.2.0.1.oh",
+            "controllerId": "scheduler.2.0.1.oh",
             "role": "STANDALONE",
             "surveyDate": "2020-03-16T19:14:13Z",
             "url": "http://xx:40421",
@@ -12,7 +12,7 @@
         {
             "clusterUrl": "http://controller-2-0-primary:4444",
             "id": 8,
-            "jobschedulerId": "testsuite",
+            "controllerId": "testsuite",
             "role": "PRIMARY",
             "surveyDate": "2020-03-19T23:53:12Z",
             "url": "http://xx:5444",
@@ -21,7 +21,7 @@
         {
             "clusterUrl": "http://controller-2-0-backup:4444",
             "id": 9,
-            "jobschedulerId": "testsuite",
+            "controllerId": "testsuite",
             "role": "BACKUP",
             "surveyDate": "2020-03-20T00:09:22Z",
             "url": "http://xx:5445",

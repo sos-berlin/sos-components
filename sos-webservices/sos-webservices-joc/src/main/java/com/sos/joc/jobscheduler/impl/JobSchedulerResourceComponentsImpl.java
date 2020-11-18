@@ -31,15 +31,15 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.jobscheduler.ControllerAnswer;
 import com.sos.joc.classes.jobscheduler.States;
 import com.sos.joc.db.cluster.JocInstancesDBLayer;
+import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.db.joc.DBItemJocCluster;
 import com.sos.joc.db.joc.DBItemJocInstance;
-import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceComponents;
-import com.sos.joc.model.common.JobSchedulerId;
+import com.sos.joc.model.common.ControllerId;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.jobscheduler.ClusterNodeStateText;
 import com.sos.joc.model.jobscheduler.ComponentStateText;
@@ -53,10 +53,10 @@ import com.sos.joc.model.joc.ControllerConnectionState;
 import com.sos.joc.model.joc.DB;
 import com.sos.schema.JsonValidator;
 
-@Path("jobscheduler")
+@Path("controller")
 public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implements IJobSchedulerResourceComponents {
 
-    private static final String API_CALL = "./jobscheduler/components";
+    private static final String API_CALL = "./controller/components";
     
     @Context UriInfo uriInfo;
     @Override
@@ -65,13 +65,13 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
 
         try {
             initLogging(API_CALL, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, JobSchedulerId.class);
-            JobSchedulerId jobSchedulerFilter = Globals.objectMapper.readValue(filterBytes, JobSchedulerId.class);
+            JsonValidator.validateFailFast(filterBytes, ControllerId.class);
+            ControllerId jobSchedulerFilter = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
 
-            checkRequiredParameter("jobschedulerId", jobSchedulerFilter.getJobschedulerId());
+            checkRequiredParameter("controller", jobSchedulerFilter.getControllerId());
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(jobSchedulerFilter.getJobschedulerId(), getPermissonsJocCockpit(jobSchedulerFilter
-                    .getJobschedulerId(), accessToken).getJS7Controller().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(jobSchedulerFilter.getControllerId(), getPermissonsJocCockpit(jobSchedulerFilter
+                    .getControllerId(), accessToken).getJS7Controller().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -80,7 +80,7 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
 
             Components entity = new Components();
 
-            List<ControllerAnswer> controllers = JobSchedulerResourceMastersImpl.getControllerAnswers(jobSchedulerFilter.getJobschedulerId(), accessToken,
+            List<ControllerAnswer> controllers = JobSchedulerResourceMastersImpl.getControllerAnswers(jobSchedulerFilter.getControllerId(), accessToken,
                     connection);
             //TODO controllerConnectionState from database, here a fake
             List<ControllerConnectionState> fakeControllerConnections = controllers.stream().map(c -> {

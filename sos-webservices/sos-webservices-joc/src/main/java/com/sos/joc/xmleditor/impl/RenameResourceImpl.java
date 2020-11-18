@@ -33,7 +33,7 @@ public class RenameResourceImpl extends JOCResourceImpl implements IRenameResour
 
             if (in.getObjectType() != null && !in.getObjectType().equals(ObjectType.OTHER)) {
                 throw new JocException(new JocError(JocXmlEditor.ERROR_CODE_UNSUPPORTED_OBJECT_TYPE, String.format(
-                        "[%s][%s]unsupported object type for rename", in.getJobschedulerId(), in.getObjectType().name())));
+                        "[%s][%s]unsupported object type for rename", in.getControllerId(), in.getObjectType().name())));
             }
             checkRequiredParameters(in);
 
@@ -82,7 +82,7 @@ public class RenameResourceImpl extends JOCResourceImpl implements IRenameResour
 
     private DBItemXmlEditorConfiguration create(SOSHibernateSession session, RenameConfiguration in, String name) throws Exception {
         DBItemXmlEditorConfiguration item = new DBItemXmlEditorConfiguration();
-        item.setSchedulerId(in.getJobschedulerId());
+        item.setSchedulerId(in.getControllerId());
         item.setObjectType(in.getObjectType().name());
         item.setName(name);
         item.setConfigurationDraft(null);
@@ -108,7 +108,7 @@ public class RenameResourceImpl extends JOCResourceImpl implements IRenameResour
     }
 
     private void checkRequiredParameters(final RenameConfiguration in) throws Exception {
-        checkRequiredParameter("jobschedulerId", in.getJobschedulerId());
+        checkRequiredParameter("jobschedulerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         if (in.getObjectType().equals(ObjectType.OTHER)) {
             checkRequiredParameter("id", in.getId());
@@ -118,9 +118,9 @@ public class RenameResourceImpl extends JOCResourceImpl implements IRenameResour
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final RenameConfiguration in) throws Exception {
-        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
+        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getControllerId(), accessToken);
         boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return initPermissions(in.getJobschedulerId(), permission);
+        return initPermissions(in.getControllerId(), permission);
     }
 
     private RenameConfigurationAnswer getSuccess(Long id, Date modified) {

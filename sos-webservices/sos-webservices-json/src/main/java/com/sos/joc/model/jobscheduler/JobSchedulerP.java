@@ -21,7 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "id",
     "surveyDate",
-    "jobschedulerId",
+    "controllerId",
     "title",
     "host",
     "url",
@@ -57,8 +57,8 @@ public class JobSchedulerP {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     @JsonProperty("title")
     private String title;
     @JsonProperty("host")
@@ -154,9 +154,9 @@ public class JobSchedulerP {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -164,9 +164,9 @@ public class JobSchedulerP {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     @JsonProperty("title")
@@ -309,12 +309,12 @@ public class JobSchedulerP {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("surveyDate", surveyDate).append("jobschedulerId", jobschedulerId).append("title", title).append("host", host).append("url", url).append("clusterUrl", clusterUrl).append("role", role).append("startedAt", startedAt).append("version", version).append("os", os).append("timeZone", timeZone).toString();
+        return new ToStringBuilder(this).append("id", id).append("surveyDate", surveyDate).append("controllerId", controllerId).append("title", title).append("host", host).append("url", url).append("clusterUrl", clusterUrl).append("role", role).append("startedAt", startedAt).append("version", version).append("os", os).append("timeZone", timeZone).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(role).append(surveyDate).append(os).append(clusterUrl).append(startedAt).append(timeZone).append(title).append(version).append(url).append(host).append(id).append(jobschedulerId).toHashCode();
+        return new HashCodeBuilder().append(role).append(surveyDate).append(controllerId).append(os).append(clusterUrl).append(startedAt).append(timeZone).append(title).append(version).append(url).append(host).append(id).toHashCode();
     }
 
     @Override
@@ -326,7 +326,7 @@ public class JobSchedulerP {
             return false;
         }
         JobSchedulerP rhs = ((JobSchedulerP) other);
-        return new EqualsBuilder().append(role, rhs.role).append(surveyDate, rhs.surveyDate).append(os, rhs.os).append(clusterUrl, rhs.clusterUrl).append(startedAt, rhs.startedAt).append(timeZone, rhs.timeZone).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(host, rhs.host).append(id, rhs.id).append(jobschedulerId, rhs.jobschedulerId).isEquals();
+        return new EqualsBuilder().append(role, rhs.role).append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(os, rhs.os).append(clusterUrl, rhs.clusterUrl).append(startedAt, rhs.startedAt).append(timeZone, rhs.timeZone).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(host, rhs.host).append(id, rhs.id).isEquals();
     }
 
 }

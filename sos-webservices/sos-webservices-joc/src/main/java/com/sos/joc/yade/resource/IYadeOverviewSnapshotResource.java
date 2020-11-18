@@ -7,7 +7,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.model.common.JobSchedulerId;
+import com.sos.joc.model.common.ControllerId;
 
 
 public interface IYadeOverviewSnapshotResource {
@@ -15,6 +15,6 @@ public interface IYadeOverviewSnapshotResource {
     @POST
     @Path("overview/snapshot")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postYadeOverviewSnapshot(@HeaderParam("X-Access-Token") String accessToken, JobSchedulerId jobschedulerId)
+    public JOCDefaultResponse postYadeOverviewSnapshot(@HeaderParam("X-Access-Token") String accessToken, ControllerId jobschedulerId)
             throws Exception;
 }

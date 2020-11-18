@@ -10,7 +10,6 @@ import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.instruction.Instruction;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.common.IDeployObject;
-
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -84,6 +83,13 @@ public class Workflow implements IConfigurationObject, IDeployObject
      */
     @JsonProperty("documentationId")
     private Long documentationId;
+    /**
+     * workflow jobs
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("jobs")
     private Jobs jobs;
 
@@ -235,11 +241,25 @@ public class Workflow implements IConfigurationObject, IDeployObject
         this.documentationId = documentationId;
     }
 
+    /**
+     * workflow jobs
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("jobs")
     public Jobs getJobs() {
         return jobs;
     }
 
+    /**
+     * workflow jobs
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("jobs")
     public void setJobs(Jobs jobs) {
         this.jobs = jobs;

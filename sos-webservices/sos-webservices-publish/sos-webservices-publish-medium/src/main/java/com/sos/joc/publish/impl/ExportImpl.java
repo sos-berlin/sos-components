@@ -16,7 +16,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
@@ -144,11 +143,6 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                 workflow.setVersionId(versionId);
                 jsObject.setContent(workflow);
                 break;
-            case AGENTREF:
-                AgentRef agentRef = om.readValue(item.getContent().getBytes(), AgentRef.class);
-                agentRef.setVersionId(versionId);
-                jsObject.setContent(agentRef);
-                break;
             case LOCK:
                 // TODO: 
                 break;
@@ -176,11 +170,6 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                 Workflow workflow = om.readValue(item.getContent().getBytes(), Workflow.class);
                 workflow.setVersionId(versionId);
                 jsObject.setContent(workflow);
-                break;
-            case AGENTREF:
-                AgentRef agentRef = om.readValue(item.getContent().getBytes(), AgentRef.class);
-                agentRef.setVersionId(versionId);
-                jsObject.setContent(agentRef);
                 break;
             case JOBCLASS:
                 // TODO: 

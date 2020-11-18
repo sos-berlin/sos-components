@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "agents",
     "dateFrom",
     "dateTo",
@@ -33,8 +33,8 @@ public class AgentsFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     @JsonProperty("agents")
     private List<String> agents = new ArrayList<String>();
     /**
@@ -64,9 +64,9 @@ public class AgentsFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -74,9 +74,9 @@ public class AgentsFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     @JsonProperty("agents")
@@ -149,12 +149,12 @@ public class AgentsFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("agents", agents).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agents", agents).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dateTo).append(timeZone).append(jobschedulerId).append(dateFrom).append(agents).toHashCode();
+        return new HashCodeBuilder().append(dateTo).append(timeZone).append(controllerId).append(dateFrom).append(agents).toHashCode();
     }
 
     @Override
@@ -166,7 +166,7 @@ public class AgentsFilter {
             return false;
         }
         AgentsFilter rhs = ((AgentsFilter) other);
-        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).append(jobschedulerId, rhs.jobschedulerId).append(dateFrom, rhs.dateFrom).append(agents, rhs.agents).isEquals();
+        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).append(controllerId, rhs.controllerId).append(dateFrom, rhs.dateFrom).append(agents, rhs.agents).isEquals();
     }
 
 }

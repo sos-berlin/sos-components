@@ -25,7 +25,6 @@ import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSString;
-import com.sos.jobscheduler.model.agent.AgentRef;
 import com.sos.jobscheduler.model.instruction.InstructionType;
 import com.sos.jobscheduler.model.job.Job;
 import com.sos.jobscheduler.model.jobclass.JobClass;
@@ -59,14 +58,13 @@ public class JocInventory {
         private static final long serialVersionUID = 1L;
 
         {
-            put(ConfigurationType.AGENTCLUSTER, "classpath:/raml/jobscheduler/schemas/agent/agentRef-schema.json");
             put(ConfigurationType.WORKINGDAYSCALENDAR, "classpath:/raml/joc/schemas/calendar/calendar-schema.json");
             put(ConfigurationType.NONWORKINGDAYSCALENDAR, "classpath:/raml/joc/schemas/calendar/calendar-schema.json");
             put(ConfigurationType.JOB, "classpath:/raml/jobscheduler/schemas/job/job-schema.json");
             put(ConfigurationType.JOBCLASS, "classpath:/raml/jobscheduler/schemas/jobClass/jobClass-schema.json");
             put(ConfigurationType.JUNCTION, "classpath:/raml/jobscheduler/schemas/junction/junction-schema.json");
             put(ConfigurationType.LOCK, "classpath:/raml/jobscheduler/schemas/lock/lock-schema.json");
-            put(ConfigurationType.ORDER, "classpath:/raml/orderManagement/schemas/orders/orderTemplate-schema.json");
+            put(ConfigurationType.ORDERTEMPLATE, "classpath:/raml/orderManagement/schemas/orders/orderTemplate-schema.json");
             put(ConfigurationType.WORKFLOW, "classpath:/raml/jobscheduler/schemas/workflow/workflow-schema.json");
             put(ConfigurationType.FOLDER, "classpath:/raml/jobscheduler/schemas/inventory/folder/folder-schema.json");
         }
@@ -95,25 +93,23 @@ public class JocInventory {
         private static final long serialVersionUID = 1L;
 
         {
-            put(ConfigurationType.AGENTCLUSTER, AgentRef.class);
             put(ConfigurationType.JOB, Job.class);
             put(ConfigurationType.JOBCLASS, JobClass.class);
             put(ConfigurationType.JUNCTION, Junction.class);
             put(ConfigurationType.LOCK, Lock.class);
             put(ConfigurationType.WORKINGDAYSCALENDAR, Calendar.class);
             put(ConfigurationType.NONWORKINGDAYSCALENDAR, Calendar.class);
-            put(ConfigurationType.ORDER, OrderTemplate.class);
+            put(ConfigurationType.ORDERTEMPLATE, OrderTemplate.class);
             put(ConfigurationType.WORKFLOW, Workflow.class);
             put(ConfigurationType.FOLDER, Folder.class);
         }
     });
 
-    public static final Set<ConfigurationType> DEPLOYABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-            ConfigurationType.AGENTCLUSTER, ConfigurationType.JOB, ConfigurationType.JOBCLASS, ConfigurationType.JUNCTION, ConfigurationType.LOCK,
-            ConfigurationType.WORKFLOW)));
+    public static final Set<ConfigurationType> DEPLOYABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(ConfigurationType.JOB,
+            ConfigurationType.JOBCLASS, ConfigurationType.JUNCTION, ConfigurationType.LOCK, ConfigurationType.WORKFLOW)));
 
-    public static final Set<ConfigurationType> RELEASABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(ConfigurationType.ORDER,
-            ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR)));
+    public static final Set<ConfigurationType> RELEASABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+            ConfigurationType.ORDERTEMPLATE, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR)));
 
     public static String getResourceImplPath(final String path) {
         return String.format("./%s/%s", APPLICATION_PATH, path);
@@ -139,9 +135,7 @@ public class JocInventory {
                 session.commit();
             } catch (Throwable e) {
                 LOGGER.error(e.toString(), e);
-                if (session != null && session.isTransactionOpened()) {
-                    Globals.rollback(session);
-                }
+                Globals.rollback(session);
             } finally {
                 Globals.disconnect(session);
             }
@@ -227,7 +221,7 @@ public class JocInventory {
             return null;
         }
         // temp. compatibility for whenHolidays enum
-        if (ConfigurationType.ORDER.equals(type)) {
+        if (ConfigurationType.ORDERTEMPLATE.equals(type)) {
             content = content.replaceAll("\"suppress\"", "\"SUPPRESS\"");
         }
         return (IConfigurationObject) Globals.objectMapper.readValue(content, CLASS_MAPPING.get(type));
@@ -290,7 +284,7 @@ public class JocInventory {
             if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
                 throw new JocFolderPermissionsException("Access denied for folder: " + config.getFolder());
             }
-            // temp. because of rename error on rot folder
+            // temp. because of rename error on root folder
             config.setPath(config.getPath().replace("//+", "/"));
         } else {
             if (!folderPermissions.isPermittedForFolder(path)) {

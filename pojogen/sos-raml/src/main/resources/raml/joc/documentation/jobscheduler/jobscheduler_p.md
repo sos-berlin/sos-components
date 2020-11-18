@@ -1,4 +1,4 @@
-* jobscheduler id
+* controller id
 * host
 * url
 * clusterUrl (if not STANDALONE)

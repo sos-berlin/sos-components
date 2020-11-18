@@ -4,12 +4,12 @@
   "javaType": "com.sos.joc.model.lock.LockDocuFilter",
   "type": "object",
   "required": [
-    "jobschedulerId",
+    "controllerId",
     "lock",
     "documentation"
   ],
   "properties": {
-    "jobschedulerId": {
+    "controllerId": {
       "type": "string"
     },
     "lock": {

@@ -121,7 +121,7 @@ public class WorkflowPosition {
     }
 
     @Override
-    public boolean equals(java.lang.Object other) {
+    public boolean equals(Object other) {
         if (other == this) {
             return true;
         }

@@ -19,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
-    "agentRefPath"
+    "agentName"
 })
 public class OrderAttachedState {
 
@@ -30,15 +30,8 @@ public class OrderAttachedState {
     @JsonProperty("TYPE")
     @JsonPropertyDescription("Attaching, Attached, ...")
     private String tYPE;
-    /**
-     * path
-     * <p>
-     * absolute path of a JobScheduler object.
-     * 
-     */
-    @JsonProperty("agentRefPath")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
-    private String agentRefPath;
+    @JsonProperty("agentName")
+    private String agentName;
 
     /**
      * No args constructor for use in serialization
@@ -49,13 +42,13 @@ public class OrderAttachedState {
 
     /**
      * 
-     * @param agentRefPath
+     * @param agentName
      * @param tYPE
      */
-    public OrderAttachedState(String tYPE, String agentRefPath) {
+    public OrderAttachedState(String tYPE, String agentName) {
         super();
         this.tYPE = tYPE;
-        this.agentRefPath = agentRefPath;
+        this.agentName = agentName;
     }
 
     /**
@@ -76,36 +69,24 @@ public class OrderAttachedState {
         this.tYPE = tYPE;
     }
 
-    /**
-     * path
-     * <p>
-     * absolute path of a JobScheduler object.
-     * 
-     */
-    @JsonProperty("agentRefPath")
-    public String getAgentRefPath() {
-        return agentRefPath;
+    @JsonProperty("agentName")
+    public String getAgentName() {
+        return agentName;
     }
 
-    /**
-     * path
-     * <p>
-     * absolute path of a JobScheduler object.
-     * 
-     */
-    @JsonProperty("agentRefPath")
-    public void setAgentRefPath(String agentRefPath) {
-        this.agentRefPath = agentRefPath;
+    @JsonProperty("agentName")
+    public void setAgentName(String agentName) {
+        this.agentName = agentName;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("agentRefPath", agentRefPath).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("agentName", agentName).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(tYPE).append(agentRefPath).toHashCode();
+        return new HashCodeBuilder().append(tYPE).append(agentName).toHashCode();
     }
 
     @Override
@@ -117,7 +98,7 @@ public class OrderAttachedState {
             return false;
         }
         OrderAttachedState rhs = ((OrderAttachedState) other);
-        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(agentRefPath, rhs.agentRefPath).isEquals();
+        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(agentName, rhs.agentName).isEquals();
     }
 
 }

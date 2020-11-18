@@ -19,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "file",
     "folder",
     "auditLog"
@@ -33,8 +33,8 @@ public class DocumentationImport {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * string without < and >
      * <p>
@@ -68,9 +68,9 @@ public class DocumentationImport {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -80,9 +80,9 @@ public class DocumentationImport {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -153,12 +153,12 @@ public class DocumentationImport {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("file", file).append("folder", folder).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("file", file).append("folder", folder).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(file).append(folder).append(jobschedulerId).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(file).append(folder).append(controllerId).append(auditLog).toHashCode();
     }
 
     @Override
@@ -170,7 +170,7 @@ public class DocumentationImport {
             return false;
         }
         DocumentationImport rhs = ((DocumentationImport) other);
-        return new EqualsBuilder().append(file, rhs.file).append(folder, rhs.folder).append(jobschedulerId, rhs.jobschedulerId).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(file, rhs.file).append(folder, rhs.folder).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

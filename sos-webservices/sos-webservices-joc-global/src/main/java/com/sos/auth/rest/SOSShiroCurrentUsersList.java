@@ -5,6 +5,8 @@ import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
+
 import org.apache.shiro.ShiroException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +32,10 @@ public class SOSShiroCurrentUsersList {
 
     public void removeUser(String accessToken) {
         currentUsers.remove(accessToken);
+    }
+    
+    public Set<String> getAccessTokens() {
+        return currentUsers.keySet();
     }
 
     public void removeTimedOutUser(String user) {

@@ -7,13 +7,13 @@
     "com.sos.joc.model.common.IConfigurationObject"
   ],
   "required": [
-    "agentRefPath",
+    "agentName",
     "executable",
     "taskLimit"
   ],
   "properties": {
-    "agentRefPath": {
-	  "$ref": "../../../joc/schemas/common/path-schema.json"
+    "agentName": {
+	  "$ref": "../../../joc/schemas/common/string255-schema.json"
 	},
 	"executable": {
 	  "$ref": "executableScript-schema.json"

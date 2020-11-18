@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "documentations",
     "compact",
     "regex",
@@ -39,8 +39,8 @@ public class DocumentationsFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     @JsonProperty("documentations")
     private List<String> documentations = new ArrayList<String>();
     /**
@@ -87,9 +87,9 @@ public class DocumentationsFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -99,9 +99,9 @@ public class DocumentationsFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     @JsonProperty("documentations")
@@ -214,12 +214,12 @@ public class DocumentationsFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("documentations", documentations).append("compact", compact).append("regex", regex).append("folders", folders).append("types", types).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("documentations", documentations).append("compact", compact).append("regex", regex).append("folders", folders).append("types", types).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(regex).append(types).append(folders).append(compact).append(auditLog).append(documentations).append(jobschedulerId).toHashCode();
+        return new HashCodeBuilder().append(regex).append(types).append(folders).append(controllerId).append(compact).append(auditLog).append(documentations).toHashCode();
     }
 
     @Override
@@ -231,7 +231,7 @@ public class DocumentationsFilter {
             return false;
         }
         DocumentationsFilter rhs = ((DocumentationsFilter) other);
-        return new EqualsBuilder().append(regex, rhs.regex).append(types, rhs.types).append(folders, rhs.folders).append(compact, rhs.compact).append(auditLog, rhs.auditLog).append(documentations, rhs.documentations).append(jobschedulerId, rhs.jobschedulerId).isEquals();
+        return new EqualsBuilder().append(regex, rhs.regex).append(types, rhs.types).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(auditLog, rhs.auditLog).append(documentations, rhs.documentations).isEquals();
     }
 
 }

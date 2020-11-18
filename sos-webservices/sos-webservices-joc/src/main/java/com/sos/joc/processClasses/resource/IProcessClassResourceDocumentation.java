@@ -15,7 +15,7 @@ public interface IProcessClassResourceDocumentation {
     @GET
     @Path("documentation")
     public JOCDefaultResponse postDocumentation(@HeaderParam("X-Access-Token") String xAccessToken, @QueryParam("accessToken") String accessToken,
-            @QueryParam("jobschedulerId") String jobschedulerId, @QueryParam("processClass") String processClass) throws Exception;
+            @QueryParam("controllerId") String controllerId, @QueryParam("processClass") String processClass) throws Exception;
 
     @POST
     @Path("documentation/assign")

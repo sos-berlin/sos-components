@@ -1,7 +1,7 @@
 {
   "title": "treeView",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "collections of JobScheduler objects besides folder tree structure.",
+  "description": "collections of Controller objects besides folder tree structure.",
   "javaType": "com.sos.joc.model.tree.TreeView",
   "type": "object",
   "required": [

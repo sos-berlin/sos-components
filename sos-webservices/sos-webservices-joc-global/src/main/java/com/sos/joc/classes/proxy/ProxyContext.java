@@ -107,9 +107,9 @@ public class ProxyContext {
     @Override
     public String toString() {
         if (credentials.getBackupUrl() != null) {
-            return String.format("'%s' cluster (%s, %s)", credentials.getJobSchedulerId(), credentials.getUrl(), credentials.getBackupUrl());
+            return String.format("'%s' cluster (%s, %s)", credentials.getControllerId(), credentials.getUrl(), credentials.getBackupUrl());
         } else {
-            return String.format("'%s' (%s)", credentials.getJobSchedulerId(), credentials.getUrl());
+            return String.format("'%s' (%s)", credentials.getControllerId(), credentials.getUrl());
         }
     }
 
@@ -129,7 +129,7 @@ public class ProxyContext {
 
     private void onProxyCouplingError(ProxyCouplingError proxyCouplingError) {
         if (isDebugEnabled) {
-            LOGGER.debug(this.credentials.getJobSchedulerId() + ": " + proxyCouplingError.toString());
+            LOGGER.debug(this.credentials.getControllerId() + ": " + proxyCouplingError.toString());
         }
         lastProblem = Optional.of(proxyCouplingError.problem());
         coupled = false;

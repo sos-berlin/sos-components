@@ -7,7 +7,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
-import com.sos.joc.exceptions.JobSchedulerBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.xml2json.Xml2JsonConfiguration;
@@ -52,7 +51,7 @@ public class Xml2JsonResourceImpl extends JOCResourceImpl implements IXml2JsonRe
     }
 
     private void checkRequiredParameters(final Xml2JsonConfiguration in) throws Exception {
-        checkRequiredParameter("jobschedulerId", in.getJobschedulerId());
+        checkRequiredParameter("jobschedulerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         checkRequiredParameter("configuration", in.getConfiguration());
         if (in.getObjectType().equals(ObjectType.OTHER)) {
@@ -61,9 +60,9 @@ public class Xml2JsonResourceImpl extends JOCResourceImpl implements IXml2JsonRe
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final Xml2JsonConfiguration in) throws Exception {
-        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
+        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getControllerId(), accessToken);
         boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return initPermissions(in.getJobschedulerId(), permission);
+        return initPermissions(in.getControllerId(), permission);
     }
 
     private Xml2JsonConfigurationAnswer getSuccess(String json) {

@@ -37,8 +37,8 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
             JsonValidator.validateFailFast(filterBytes, JobsFilter.class);
             JobsFilter jobsFilter = Globals.objectMapper.readValue(filterBytes, JobsFilter.class);
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions(jobsFilter.getJobschedulerId(), getPermissonsJocCockpit(jobsFilter
-                    .getJobschedulerId(), accessToken).getJob().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(jobsFilter.getControllerId(), getPermissonsJocCockpit(jobsFilter
+                    .getControllerId(), accessToken).getJob().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -46,7 +46,7 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
             JobsHistoricSummary jobsHistoricSummary = new JobsHistoricSummary();
             
             HistoryFilter historyFilter = new HistoryFilter();
-            historyFilter.setSchedulerId(jobsFilter.getJobschedulerId());
+            historyFilter.setSchedulerId(jobsFilter.getControllerId());
             
             boolean withFolderFilter = jobsFilter.getFolders() != null && !jobsFilter.getFolders().isEmpty();
             boolean hasPermission = true;

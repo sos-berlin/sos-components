@@ -20,14 +20,20 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "controllers",
     "auditLog"
 })
 public class RegisterParameters {
 
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * 
      * (Required)
@@ -44,14 +50,26 @@ public class RegisterParameters {
     @JsonProperty("auditLog")
     private AuditParams auditLog;
 
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -98,12 +116,12 @@ public class RegisterParameters {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("controllers", controllers).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("controllers", controllers).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllers).append(jobschedulerId).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(controllers).append(controllerId).append(auditLog).toHashCode();
     }
 
     @Override
@@ -115,7 +133,7 @@ public class RegisterParameters {
             return false;
         }
         RegisterParameters rhs = ((RegisterParameters) other);
-        return new EqualsBuilder().append(controllers, rhs.controllers).append(jobschedulerId, rhs.jobschedulerId).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(controllers, rhs.controllers).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

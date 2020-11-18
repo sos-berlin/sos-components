@@ -5,7 +5,7 @@
             "agent": "http://myHost41420",
             "endTime": "2019-09-09T20:04:33Z",
             "job": "test1",
-            "jobschedulerId": "scheduler.2.0.0",
+            "controllerId": "scheduler.2.0.0",
             "orderId": "ORDER-ID11",
             "returnCode": 0,
             "state": {
@@ -20,7 +20,7 @@
             "agent": "http://myHost41420",
             "endTime": "2019-09-09T20:03:33Z",
             "job": "Привет",
-            "jobschedulerId": "scheduler.2.0.0",
+            "controllerId": "scheduler.2.0.0",
             "orderId": "ORDER-ID11",
             "returnCode": 5,
             "state": {
@@ -35,7 +35,7 @@
             "agent": "http://myHost41420",
             "endTime": "2019-09-09T20:03:33Z",
             "job": "test1",
-            "jobschedulerId": "scheduler.2.0.0",
+            "controllerId": "scheduler.2.0.0",
             "orderId": "ORDER-ID11",
             "returnCode": 5,
             "state": {
@@ -50,7 +50,7 @@
             "agent": "http://myHost41420",
             "endTime": "2019-09-09T15:53:06Z",
             "job": "carrot",
-            "jobschedulerId": "scheduler.2.0.0",
+            "controllerId": "scheduler.2.0.0",
             "orderId": "ORDER-ID21/にんじん",
             "returnCode": 0,
             "state": {
@@ -65,7 +65,7 @@
             "agent": "http://myHost41420",
             "endTime": "2019-09-09T15:53:06Z",
             "job": "lemon",
-            "jobschedulerId": "scheduler.2.0.0",
+            "controllerId": "scheduler.2.0.0",
             "orderId": "ORDER-ID21/レモン",
             "returnCode": 5,
             "state": {
@@ -80,7 +80,7 @@
             "agent": "http://myHost41420",
             "endTime": "2019-09-09T14:16:18Z",
             "job": "test1",
-            "jobschedulerId": "scheduler.2.0.0",
+            "controllerId": "scheduler.2.0.0",
             "orderId": "ORDER-ID10",
             "returnCode": 5,
             "state": {
@@ -95,7 +95,7 @@
             "agent": "http://myHost41420",
             "endTime": "2019-09-09T14:16:18Z",
             "job": "Привет",
-            "jobschedulerId": "scheduler.2.0.0",
+            "controllerId": "scheduler.2.0.0",
             "orderId": "ORDER-ID10",
             "returnCode": 5,
             "state": {
@@ -110,7 +110,7 @@
             "agent": "http://myHost41420",
             "endTime": "2019-09-09T14:16:18Z",
             "job": "test1",
-            "jobschedulerId": "scheduler.2.0.0",
+            "controllerId": "scheduler.2.0.0",
             "orderId": "ORDER-ID10",
             "returnCode": 0,
             "state": {

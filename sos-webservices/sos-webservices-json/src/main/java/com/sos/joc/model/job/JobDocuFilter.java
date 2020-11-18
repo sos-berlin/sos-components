@@ -19,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "job",
     "documentation",
     "auditLog"
@@ -31,8 +31,8 @@ public class JobDocuFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * path
      * <p>
@@ -67,9 +67,9 @@ public class JobDocuFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -77,9 +77,9 @@ public class JobDocuFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -154,12 +154,12 @@ public class JobDocuFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("job", job).append("documentation", documentation).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("job", job).append("documentation", documentation).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(job).append(auditLog).append(documentation).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(job).append(auditLog).append(documentation).toHashCode();
     }
 
     @Override
@@ -171,7 +171,7 @@ public class JobDocuFilter {
             return false;
         }
         JobDocuFilter rhs = ((JobDocuFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(job, rhs.job).append(auditLog, rhs.auditLog).append(documentation, rhs.documentation).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(job, rhs.job).append(auditLog, rhs.auditLog).append(documentation, rhs.documentation).isEquals();
     }
 
 }

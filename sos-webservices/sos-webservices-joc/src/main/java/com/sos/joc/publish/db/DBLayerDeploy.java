@@ -22,7 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
-import com.sos.jobscheduler.model.agent.AgentRefPublish;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.WorkflowPublish;
 import com.sos.joc.db.DBLayer;
@@ -306,17 +305,8 @@ public class DBLayerDeploy {
             existingJsObject.setModified(Date.from(Instant.now()));
             switch (type) {
             case WORKFLOW:
+                // Why cast WorkflowPublish?
                 existingJsObject.setContent(om.writeValueAsString(((WorkflowPublish) jsObject).getContent()));
-                existingJsObject.setAuditLogId(auditLogId);
-                existingJsObject.setDocumentationId(0L);
-                existingJsObject.setDeployed(false);
-                // save or update signature in different Table
-                if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {
-                    saveOrUpdateSignature(existingJsObject.getId(), jsObject, account, type);
-                }
-                break;
-            case AGENTREF:
-                existingJsObject.setContent(om.writeValueAsString(((AgentRefPublish) jsObject).getContent()));
                 existingJsObject.setAuditLogId(auditLogId);
                 existingJsObject.setDocumentationId(0L);
                 existingJsObject.setDeployed(false);
@@ -343,6 +333,7 @@ public class DBLayerDeploy {
             newJsObject.setCreated(now);
             switch (type) {
             case WORKFLOW:
+                // Why cast WorkflowPublish?
                 newJsObject.setContent(om.writeValueAsString(((WorkflowPublish) jsObject).getContent()));
                 folderPath = Paths.get(((WorkflowPublish) jsObject).getContent().getPath() + JSObjectFileExtension.WORKFLOW_FILE_EXTENSION).getParent();
                 newJsObject.setFolder(folderPath.toString().replace('\\', '/'));
@@ -356,24 +347,6 @@ public class DBLayerDeploy {
                 newJsObject.setReleased(false);
                 session.save(newJsObject);
                 // save or update signature in different Table
-                if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {
-                    saveOrUpdateSignature(newJsObject.getId(), jsObject, account, type);
-                }
-                break;
-            case AGENTREF:
-                newJsObject.setContent(om.writeValueAsString(((AgentRefPublish) jsObject).getContent()));
-                folderPath = Paths.get(((AgentRefPublish) jsObject).getContent().getPath() + JSObjectFileExtension.AGENT_REF_FILE_EXTENSION).getParent();
-                newJsObject.setFolder(folderPath.toString().replace('\\', '/'));
-                newJsObject.setPath(((AgentRefPublish) jsObject).getContent().getPath());
-                name = Paths.get(((AgentRefPublish) jsObject).getContent().getPath()).getFileName().toString();
-                newJsObject.setName(name);
-                newJsObject.setType(ConfigurationType.AGENTCLUSTER);
-                newJsObject.setAuditLogId(auditLogId);
-                newJsObject.setDocumentationId(0L);
-                newJsObject.setDeployed(false);
-                newJsObject.setReleased(false);
-                session.save(newJsObject);
-                // save signature in different Table
                 if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {
                     saveOrUpdateSignature(newJsObject.getId(), jsObject, account, type);
                 }
@@ -396,10 +369,8 @@ public class DBLayerDeploy {
         String signature = null;
         switch (type) {
             case WORKFLOW:
+                // Why cast WorkflowPublish?
                 signature = ((WorkflowPublish) jsObject).getSignedContent();
-                break;
-            case AGENTREF:
-                signature = ((AgentRefPublish) jsObject).getSignedContent();
                 break;
             case JUNCTION:
             case LOCK:

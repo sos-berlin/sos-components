@@ -1,5 +1,6 @@
 package com.sos.joc.inventory.impl;
 
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Date;
 
@@ -60,6 +61,11 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
 
             if (!config.getName().equalsIgnoreCase(in.getName())) {
                 String newPath = (config.getFolder() + "/" + in.getName()).replaceAll("//+", "/");
+                if (config.getType() == ConfigurationType.FOLDER.intValue()) {
+                    // at the moment folder column of a folder is equal path. we should change it.
+                    newPath = Paths.get(config.getPath()).getParent().resolve(in.getName()).toString().replace('\\', '/');
+                    config.setFolder(newPath);
+                }
 
                 DBItemInventoryConfiguration configNewPath = dbLayer.getConfiguration(newPath, config.getType());
                 if (configNewPath != null) {
@@ -84,7 +90,8 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                             throw new JocNotImplementedException("renaming of a folder is not yet implemented!");
                             //break;
                         default:
-                            IConfigurationObject obj = (IConfigurationObject) Globals.objectMapper.readValue(config.getContent(), JocInventory.CLASS_MAPPING.get(type));
+                            IConfigurationObject obj = (IConfigurationObject) Globals.objectMapper.readValue(config.getContent(),
+                                    JocInventory.CLASS_MAPPING.get(type));
                             obj.setPath(config.getPath());
                             config.setContent(Globals.objectMapper.writeValueAsString(obj));
                             break;

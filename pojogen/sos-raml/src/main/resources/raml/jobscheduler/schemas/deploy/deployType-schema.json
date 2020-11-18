@@ -6,14 +6,12 @@
   "enum": [
     "Workflow",
     "JobClass",
-    "AgentRef",
     "Lock",
     "Junction"
   ],
   "javaEnumNames": [
     "Workflow",
     "JobClass",
-    "AgentRef",
     "Lock",
     "Junction"
   ],

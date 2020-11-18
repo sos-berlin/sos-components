@@ -4,11 +4,11 @@
   "javaType": "com.sos.joc.model.order.ModifyOrders",
   "type": "object",
   "required": [
-    "jobschedulerId",
+    "controllerId",
     "orderIds"
   ],
   "properties": {
-    "jobschedulerId": {
+    "controllerId": {
       "$ref": "../common/filename100-schema.json"
     },
     "orderIds": {

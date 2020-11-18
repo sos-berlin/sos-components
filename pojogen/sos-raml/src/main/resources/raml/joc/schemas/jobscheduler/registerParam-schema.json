@@ -7,8 +7,8 @@
     "controllers"
   ],
   "properties": {
-    "jobschedulerId": {
-      "type": "string"
+    "controllerId": {
+      "$ref": "../common/filename100-schema.json"
     },
     "controllers": {
       "type": "array",

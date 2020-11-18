@@ -1,14 +1,15 @@
 
 package com.sos.jobscheduler.model.instruction;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.jobscheduler.model.common.Variables;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
@@ -35,6 +36,11 @@ public class NamedJob
      */
     @JsonProperty("jobName")
     private String jobName;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("label")
     private String label;
     /**
@@ -64,6 +70,7 @@ public class NamedJob
      * @param jobName
      * @param defaultArguments
      * @param label
+     * @param position
      * 
      */
     public NamedJob(String jobName, String label, Variables defaultArguments) {
@@ -93,11 +100,21 @@ public class NamedJob
         this.jobName = jobName;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("label")
     public String getLabel() {
         return label;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("label")
     public void setLabel(String label) {
         this.label = label;

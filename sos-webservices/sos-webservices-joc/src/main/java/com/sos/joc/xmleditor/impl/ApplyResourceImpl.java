@@ -176,7 +176,7 @@ public class ApplyResourceImpl extends JOCResourceImpl implements IApplyResource
     }
 
     private void checkRequiredParameters(final ApplyConfiguration in) throws Exception {
-        checkRequiredParameter("jobschedulerId", in.getJobschedulerId());
+        checkRequiredParameter("jobschedulerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         if (in.getObjectType().equals(ObjectType.OTHER)) {
             checkRequiredParameter("id", in.getId());
@@ -189,9 +189,9 @@ public class ApplyResourceImpl extends JOCResourceImpl implements IApplyResource
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final ApplyConfiguration in) throws Exception {
-        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getJobschedulerId(), accessToken);
+        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getControllerId(), accessToken);
         boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return initPermissions(in.getJobschedulerId(), permission);
+        return initPermissions(in.getControllerId(), permission);
     }
 
     private DBItemXmlEditorConfiguration getOthersObject(DbLayerXmlEditor dbLayer, ApplyConfiguration in, String name) throws Exception {
@@ -207,13 +207,13 @@ public class ApplyResourceImpl extends JOCResourceImpl implements IApplyResource
     }
 
     private DBItemXmlEditorConfiguration getStandardObject(DbLayerXmlEditor dbLayer, ApplyConfiguration in) throws Exception {
-        return dbLayer.getObject(in.getJobschedulerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in.getObjectType(), in
+        return dbLayer.getObject(in.getControllerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in.getObjectType(), in
                 .getName()));
     }
 
     private DBItemXmlEditorConfiguration create(SOSHibernateSession session, ApplyConfiguration in, String name) throws Exception {
         DBItemXmlEditorConfiguration item = new DBItemXmlEditorConfiguration();
-        item.setSchedulerId(in.getJobschedulerId());
+        item.setSchedulerId(in.getControllerId());
         item.setObjectType(in.getObjectType().name());
         item.setName(name.trim());
         item.setConfigurationDraft(in.getConfiguration());

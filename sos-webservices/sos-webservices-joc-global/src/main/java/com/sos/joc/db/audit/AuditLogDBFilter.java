@@ -16,7 +16,7 @@ public class AuditLogDBFilter {
 
 	private Date createdFrom;
 	private Date createdTo;
-	private String schedulerId = "";
+	private String controllerId = "";
 	private List<String> listOfJobs;
 	private List<OrderPath> listOfOrders;
 	private List<Folder> listOfFolders;
@@ -30,7 +30,7 @@ public class AuditLogDBFilter {
 	}
 
 	public AuditLogDBFilter(AuditLogFilter auditLogFilter) throws JobSchedulerInvalidResponseDataException {
-		schedulerId = auditLogFilter.getJobschedulerId();
+	    controllerId = auditLogFilter.getControllerId();
 		listOfFolders = auditLogFilter.getFolders();
 		for (JobPath j: auditLogFilter.getJobs()) {
 			addJob(j.getJob());
@@ -128,12 +128,12 @@ public class AuditLogDBFilter {
 		}
 	}
 
-	public String getSchedulerId() {
-		return schedulerId;
+	public String getControllerId() {
+		return controllerId;
 	}
 
-	public void setSchedulerId(final String schedulerId) {
-		this.schedulerId = schedulerId;
+	public void setControllerId(final String controllerId) {
+		this.controllerId = controllerId;
 	}
 
 	public List<OrderPath>  getListOfOrders() {

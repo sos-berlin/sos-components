@@ -31,17 +31,17 @@ import com.sos.joc.model.jobscheduler.UrlParameter;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
-@Path("jobscheduler")
+@Path("controller")
 public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl implements IJobSchedulerResourceModifyJobScheduler {
 
-    private static String API_CALL = "./jobscheduler/";
+    private static String API_CALL = "./controller/";
 
     @Override
     public JOCDefaultResponse postJobschedulerTerminate(String accessToken, byte[] filterBytes) {
         try {
             UrlParameter urlParameter = getUrlParameter(filterBytes, accessToken, "terminate");
 
-            boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken).getJS7Controller().getExecute()
+            boolean permission = getPermissonsJocCockpit(urlParameter.getControllerId(), accessToken).getJS7Controller().getExecute()
                     .isTerminate();
             Terminate terminateCommand = new Terminate();
             if (urlParameter.getWithFailover() != null && urlParameter.getWithFailover()) {
@@ -61,7 +61,7 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl 
         try {
             UrlParameter urlParameter = getUrlParameter(filterBytes, accessToken, "restart");
 
-            boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken).getJS7Controller().getExecute()
+            boolean permission = getPermissonsJocCockpit(urlParameter.getControllerId(), accessToken).getJS7Controller().getExecute()
                     .getRestart().isTerminate();
             Terminate terminateCommand = new Terminate(true, null);
             if (urlParameter.getWithFailover() != null && urlParameter.getWithFailover()) {
@@ -81,7 +81,7 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl 
         try {
             UrlParameter urlParameter = getUrlParameter(filterBytes, accessToken, "abort");
 
-            boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken).getJS7Controller().getExecute()
+            boolean permission = getPermissonsJocCockpit(urlParameter.getControllerId(), accessToken).getJS7Controller().getExecute()
                     .isAbort();
             return executeModifyJobSchedulerCommand("abort", new Abort(), urlParameter, accessToken, permission);
         } catch (JocException e) {
@@ -97,7 +97,7 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl 
         try {
             UrlParameter urlParameter = getUrlParameter(filterBytes, accessToken, "abort_and_restart");
 
-            boolean permission = getPermissonsJocCockpit(urlParameter.getJobschedulerId(), accessToken).getJS7Controller().getExecute()
+            boolean permission = getPermissonsJocCockpit(urlParameter.getControllerId(), accessToken).getJS7Controller().getExecute()
                     .getRestart().isAbort();
             return executeModifyJobSchedulerCommand("abort_and_restart", new Abort(true), urlParameter, accessToken, permission);
         } catch (JocException e) {
@@ -116,7 +116,7 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl 
 
     private JOCDefaultResponse executeModifyJobSchedulerCommand(String request, Command cmd, UrlParameter urlParameter, String accessToken,
             boolean permission) throws JsonProcessingException, JocException {
-        JOCDefaultResponse jocDefaultResponse = initPermissions(urlParameter.getJobschedulerId(), permission);
+        JOCDefaultResponse jocDefaultResponse = initPermissions(urlParameter.getControllerId(), permission);
         if (jocDefaultResponse != null) {
             return jocDefaultResponse;
         }
@@ -124,7 +124,7 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl 
         try {
             checkRequiredParameter("url", urlParameter.getUrl());
         } catch (JocMissingRequiredParameterException e) {
-            List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(urlParameter.getJobschedulerId());
+            List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(urlParameter.getControllerId());
             if (controllerInstances == null || controllerInstances.size() > 1) { // is cluster
                 throw e;
             } else {

@@ -18,11 +18,11 @@ public class YadeOverviewSummaryResourceImpl extends JOCResourceImpl implements 
 	@Override
 	public JOCDefaultResponse postYadeOverviewSummary(String accessToken, TransferFilter filterBody) throws Exception {
 		try {
-			SOSPermissionJocCockpit sosPermission = getPermissonsJocCockpit(filterBody.getJobschedulerId(),
+			SOSPermissionJocCockpit sosPermission = getPermissonsJocCockpit(filterBody.getControllerId(),
 					accessToken);
 			// JobSchedulerId has to be "" to prevent exception to be thrown
 			JOCDefaultResponse jocDefaultResponse = init(API_CALL, filterBody, accessToken,
-					filterBody.getJobschedulerId(), sosPermission.getYADE().getView().isStatus());
+					filterBody.getControllerId(), sosPermission.getYADE().getView().isStatus());
 			if (jocDefaultResponse != null) {
 				return jocDefaultResponse;
 			}

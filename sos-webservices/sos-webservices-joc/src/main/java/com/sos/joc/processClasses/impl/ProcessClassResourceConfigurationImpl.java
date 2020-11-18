@@ -31,8 +31,8 @@ public class ProcessClassResourceConfigurationImpl extends JOCResourceImpl
 
 		try {
 			JOCDefaultResponse jocDefaultResponse = init(API_CALL, processClassConfigurationFilter, accessToken,
-					processClassConfigurationFilter.getJobschedulerId(),
-					getPermissonsJocCockpit(processClassConfigurationFilter.getJobschedulerId(), accessToken)
+					processClassConfigurationFilter.getControllerId(),
+					getPermissonsJocCockpit(processClassConfigurationFilter.getControllerId(), accessToken)
 							.getProcessClass().getView().isConfiguration());
 			if (jocDefaultResponse != null) {
 				return jocDefaultResponse;

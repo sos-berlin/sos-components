@@ -50,7 +50,6 @@ public class OrderTemplateDatesFilter {
      * date
      * <p>
      * ISO date YYYY-MM-DD
-     * (Required)
      * 
      */
     @JsonProperty("dateFrom")
@@ -60,7 +59,6 @@ public class OrderTemplateDatesFilter {
      * date
      * <p>
      * ISO date YYYY-MM-DD
-     * (Required)
      * 
      */
     @JsonProperty("dateTo")
@@ -125,7 +123,6 @@ public class OrderTemplateDatesFilter {
      * date
      * <p>
      * ISO date YYYY-MM-DD
-     * (Required)
      * 
      */
     @JsonProperty("dateFrom")
@@ -137,7 +134,6 @@ public class OrderTemplateDatesFilter {
      * date
      * <p>
      * ISO date YYYY-MM-DD
-     * (Required)
      * 
      */
     @JsonProperty("dateFrom")
@@ -149,7 +145,6 @@ public class OrderTemplateDatesFilter {
      * date
      * <p>
      * ISO date YYYY-MM-DD
-     * (Required)
      * 
      */
     @JsonProperty("dateTo")
@@ -161,7 +156,6 @@ public class OrderTemplateDatesFilter {
      * date
      * <p>
      * ISO date YYYY-MM-DD
-     * (Required)
      * 
      */
     @JsonProperty("dateTo")

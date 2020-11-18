@@ -23,7 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "jobs",
     "orders",
     "calendars",
@@ -45,8 +45,8 @@ public class AuditLogFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     @JsonProperty("jobs")
     private List<JobPath> jobs = new ArrayList<JobPath>();
     @JsonProperty("orders")
@@ -127,9 +127,9 @@ public class AuditLogFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -139,9 +139,9 @@ public class AuditLogFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     @JsonProperty("jobs")
@@ -348,12 +348,12 @@ public class AuditLogFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("jobs", jobs).append("orders", orders).append("calendars", calendars).append("folders", folders).append("account", account).append("regex", regex).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("limit", limit).append("ticketLink", ticketLink).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("jobs", jobs).append("orders", orders).append("calendars", calendars).append("folders", folders).append("account", account).append("regex", regex).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("limit", limit).append("ticketLink", ticketLink).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folders).append(jobs).append(timeZone).append(dateFrom).append(ticketLink).append(regex).append(calendars).append(dateTo).append(limit).append(orders).append(jobschedulerId).append(account).toHashCode();
+        return new HashCodeBuilder().append(folders).append(controllerId).append(jobs).append(timeZone).append(dateFrom).append(ticketLink).append(regex).append(calendars).append(dateTo).append(limit).append(orders).append(account).toHashCode();
     }
 
     @Override
@@ -365,7 +365,7 @@ public class AuditLogFilter {
             return false;
         }
         AuditLogFilter rhs = ((AuditLogFilter) other);
-        return new EqualsBuilder().append(folders, rhs.folders).append(jobs, rhs.jobs).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(ticketLink, rhs.ticketLink).append(regex, rhs.regex).append(calendars, rhs.calendars).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(orders, rhs.orders).append(jobschedulerId, rhs.jobschedulerId).append(account, rhs.account).isEquals();
+        return new EqualsBuilder().append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(jobs, rhs.jobs).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(ticketLink, rhs.ticketLink).append(regex, rhs.regex).append(calendars, rhs.calendars).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(orders, rhs.orders).append(account, rhs.account).isEquals();
     }
 
 }

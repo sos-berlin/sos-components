@@ -12,7 +12,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 
 public interface IDeleteDraftResource {
 
-    public static final String PATH = "deletedraft";
+    public static final String PATH = "delete_draft";
     public static final String IMPL_PATH = JocInventory.getResourceImplPath(PATH);
 
     @POST

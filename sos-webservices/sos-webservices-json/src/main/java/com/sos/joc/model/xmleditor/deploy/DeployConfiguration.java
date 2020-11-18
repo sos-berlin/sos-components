@@ -19,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "objectType",
     "configuration",
     "configurationJson",
@@ -34,8 +34,8 @@ public class DeployConfiguration {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * xmleditor object type
      * <p>
@@ -77,9 +77,9 @@ public class DeployConfiguration {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -89,9 +89,9 @@ public class DeployConfiguration {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -186,12 +186,12 @@ public class DeployConfiguration {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("objectType", objectType).append("configuration", configuration).append("configurationJson", configurationJson).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("objectType", objectType).append("configuration", configuration).append("configurationJson", configurationJson).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(configurationJson).append(jobschedulerId).append(auditLog).append(configuration).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(configurationJson).append(controllerId).append(auditLog).append(configuration).append(objectType).toHashCode();
     }
 
     @Override
@@ -203,7 +203,7 @@ public class DeployConfiguration {
             return false;
         }
         DeployConfiguration rhs = ((DeployConfiguration) other);
-        return new EqualsBuilder().append(configurationJson, rhs.configurationJson).append(jobschedulerId, rhs.jobschedulerId).append(auditLog, rhs.auditLog).append(configuration, rhs.configuration).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(configurationJson, rhs.configurationJson).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(configuration, rhs.configuration).append(objectType, rhs.objectType).isEquals();
     }
 
 }

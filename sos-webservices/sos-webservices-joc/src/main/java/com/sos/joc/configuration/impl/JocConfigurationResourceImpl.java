@@ -6,13 +6,13 @@ import java.util.Date;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.configuration.resource.IJocConfigurationResource;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
+import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.configuration.Configuration;
@@ -69,7 +69,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
         /** set general filter */
         filter = new JocConfigurationFilter();
         filter.setId(configuration.getId().longValue());
-        filter.setSchedulerId(configuration.getJobschedulerId());
+        filter.setSchedulerId(configuration.getControllerId());
 
 		/** check general required parameters */
 		checkRequiredParameter("id", configuration.getId());
@@ -79,7 +79,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 	public JOCDefaultResponse postSaveConfiguration(String accessToken, Configuration configuration) throws Exception {
 		try {
 			JOCDefaultResponse jocDefaultResponse = init(API_CALL_SAVE, configuration, accessToken,
-					configuration.getJobschedulerId(), true);
+					configuration.getControllerId(), true);
 			if (jocDefaultResponse != null) {
 				return jocDefaultResponse;
 			}
@@ -109,7 +109,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 				}
 			}
 			dbItem.setConfigurationType(configuration.getConfigurationType().name());
-			dbItem.setSchedulerId(configuration.getJobschedulerId());
+			dbItem.setSchedulerId(configuration.getControllerId());
 			// TODO why we need instanceid in Table
 			//dbItem.setInstanceId(dbItemInventoryInstance.getId());
 			dbItem.setInstanceId(0L);
@@ -131,16 +131,16 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 			boolean shareStatusMakePrivate = (dbItem != null && dbItem.getShared() && !configuration.getShared());
 			boolean shareStatusMakeShare = (dbItem != null && !dbItem.getShared() && configuration.getShared());
 			if (shareStatusMakePrivate
-					&& !getPermissonsJocCockpit(configuration.getJobschedulerId(), accessToken).getJOCConfigurations()
+					&& !getPermissonsJocCockpit(configuration.getControllerId(), accessToken).getJOCConfigurations()
 							.getShare().getChange().getSharedStatus().isMakePrivate()
-					|| (shareStatusMakeShare && !getPermissonsJocCockpit(configuration.getJobschedulerId(), accessToken)
+					|| (shareStatusMakeShare && !getPermissonsJocCockpit(configuration.getControllerId(), accessToken)
 							.getJOCConfigurations().getShare().getChange().getSharedStatus().isMakeShared())) {
 				return this.accessDeniedResponse();
 			}
 			Boolean owner = this.getJobschedulerUser().getSosShiroCurrentUser().getUsername()
 					.equals(dbItem.getAccount());
 			Boolean permission = owner || (dbItem != null && dbItem.getShared()
-					&& getPermissonsJocCockpit(configuration.getJobschedulerId(), accessToken).getJOCConfigurations()
+					&& getPermissonsJocCockpit(configuration.getControllerId(), accessToken).getJOCConfigurations()
 							.getShare().getChange().isEditContent());
 			if (!permission) {
 				return this.accessDeniedResponse();
@@ -179,7 +179,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 	public JOCDefaultResponse postReadConfiguration(String accessToken, Configuration configuration) throws Exception {
 		try {
 			JOCDefaultResponse jocDefaultResponse = init(API_CALL_READ, configuration, accessToken,
-					configuration.getJobschedulerId(), true);
+					configuration.getControllerId(), true);
 			if (jocDefaultResponse != null) {
 				return jocDefaultResponse;
 			}
@@ -193,13 +193,13 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 				throw new DBMissingDataException(
 						String.format("no entry found for configuration id: %d", configuration.getId()));
 			}
-			Configuration config = setConfigurationValues(dbItem, configuration.getJobschedulerId());
+			Configuration config = setConfigurationValues(dbItem, configuration.getControllerId());
 
 			/** check permissions */
 			Boolean owner = this.getJobschedulerUser().getSosShiroCurrentUser().getUsername()
 					.equals(dbItem.getAccount());
 			Boolean permission = owner
-					|| (dbItem.getShared() && getPermissonsJocCockpit(configuration.getJobschedulerId(), accessToken)
+					|| (dbItem.getShared() && getPermissonsJocCockpit(configuration.getControllerId(), accessToken)
 							.getJOCConfigurations().getShare().getView().isStatus());
 			if (!permission) {
 				return this.accessDeniedResponse();
@@ -225,7 +225,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 			throws Exception {
 		try {
 			JOCDefaultResponse jocDefaultResponse = init(API_CALL_DELETE, configuration, accessToken,
-					configuration.getJobschedulerId(), true);
+					configuration.getControllerId(), true);
 			if (jocDefaultResponse != null) {
 				return jocDefaultResponse;
 			}
@@ -244,7 +244,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 			Boolean owner = this.getJobschedulerUser().getSosShiroCurrentUser().getUsername()
 					.equals(dbItem.getAccount());
 			Boolean permission = owner
-					|| (dbItem.getShared() && getPermissonsJocCockpit(configuration.getJobschedulerId(), accessToken)
+					|| (dbItem.getShared() && getPermissonsJocCockpit(configuration.getControllerId(), accessToken)
 							.getJOCConfigurations().getShare().getChange().isDelete());
 			if (!permission) {
 				return this.accessDeniedResponse();
@@ -269,8 +269,8 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 	public JOCDefaultResponse postShareConfiguration(String accessToken, Configuration configuration) throws Exception {
 		try {
 			JOCDefaultResponse jocDefaultResponse = init(API_CALL_SHARE, configuration, accessToken,
-					configuration.getJobschedulerId(),
-					getPermissonsJocCockpit(configuration.getJobschedulerId(), accessToken).getJOCConfigurations()
+					configuration.getControllerId(),
+					getPermissonsJocCockpit(configuration.getControllerId(), accessToken).getJOCConfigurations()
 							.getShare().getChange().getSharedStatus().isMakeShared());
 			if (jocDefaultResponse != null) {
 				return jocDefaultResponse;
@@ -306,8 +306,8 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 	public JOCDefaultResponse postMakePrivate(String accessToken, Configuration configuration) throws Exception {
 		try {
 			JOCDefaultResponse jocDefaultResponse = init(API_CALL_PRIVATE, configuration, accessToken,
-					configuration.getJobschedulerId(),
-					getPermissonsJocCockpit(configuration.getJobschedulerId(), accessToken).getJOCConfigurations()
+					configuration.getControllerId(),
+					getPermissonsJocCockpit(configuration.getControllerId(), accessToken).getJOCConfigurations()
 							.getShare().getChange().getSharedStatus().isMakePrivate());
 
 			if (jocDefaultResponse != null) {
@@ -358,9 +358,9 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 		config.setShared(dbItem.getShared());
 		config.setName(dbItem.getName());
 		if (dbItem.getSchedulerId() != null && !dbItem.getSchedulerId().isEmpty()) {
-			config.setJobschedulerId(dbItem.getSchedulerId());
+			config.setControllerId(dbItem.getSchedulerId());
 		} else {
-			config.setJobschedulerId(controllerId);
+			config.setControllerId(controllerId);
 		}
 		return config;
 	}

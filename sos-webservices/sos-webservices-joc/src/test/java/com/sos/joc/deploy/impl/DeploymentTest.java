@@ -28,12 +28,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
-
-import javax.ws.rs.core.UriBuilderException;
 
 import org.apache.commons.io.IOUtils;
 import org.bouncycastle.crypto.CryptoException;
@@ -42,7 +39,6 @@ import org.bouncycastle.openpgp.PGPException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
@@ -60,18 +56,14 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.sign.keys.sign.SignObject;
 import com.sos.commons.sign.keys.verify.VerifySignature;
 import com.sos.jobscheduler.model.agent.AgentRef;
-import com.sos.jobscheduler.model.command.UpdateRepo;
 import com.sos.jobscheduler.model.workflow.Workflow;
-import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignaturePath;
-import com.sos.joc.model.publish.SignedObject;
 import com.sos.joc.publish.common.JSObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
@@ -411,52 +403,6 @@ public class DeploymentTest {
         LOGGER.info("");
     }
 
-    @SuppressWarnings("unused")
-    @Test
-    @Ignore
-    public void test09UpdateRepo() {
-        // This is NO Unit test!
-        // This is an integration Test!
-        // to run this test, adjust url to your test controller
-        // change Private Key resource to your private PGP key
-        // Make sure your public PGP key is known to your controller
-        // uncomment the Ignore annotation
-        LOGGER.info("******************************  UpdateRepo Test  ************************************");
-        SignedObject signedObject = new SignedObject();
-        String version = UUID.randomUUID().toString();
-        try {
-            ObjectMapper om = new ObjectMapper();
-            om.enable(SerializationFeature.INDENT_OUTPUT);
-            AgentRef agent = new AgentRef("/myAgents/agent1", version, "http://localhost:41420", null, null, null);
-            String agentJsonAsString = om.writeValueAsString(agent);
-            signedObject.setString(agentJsonAsString);
-            LOGGER.info("********************************  Agent JSON  ***************************************");
-            LOGGER.info(agentJsonAsString);
-            Signature signature = new Signature();
-            InputStream privateKeyInputStream = getClass().getResourceAsStream(PRIVATEKEY_RESOURCE_PATH);
-            InputStream originalInputStream = IOUtils.toInputStream(agentJsonAsString);
-            String passphrase = null;
-            signature.setSignatureString(SignObject.signPGP(privateKeyInputStream, originalInputStream, passphrase));
-            signedObject.setSignature(signature);
-            UpdateRepo updateRepo = new UpdateRepo();
-            updateRepo.setVersionId(version);
-            updateRepo.getChange().add(signedObject);
-            LOGGER.info("*******************************  Request Body  **************************************");
-            LOGGER.info(om.writeValueAsString(updateRepo));
-            JOCJsonCommand command = new JOCJsonCommand();
-            command.setUriBuilderForCommands("http://localhost:4200");
-            command.setAllowAllHostnameVerifier(false);
-            command.addHeader("Accept", "application/json");
-            command.addHeader("Content-Type", "application/json");
-            LOGGER.info("*********************************  Response  ****************************************");
-            String response = command.getJsonStringFromPost(om.writeValueAsString(updateRepo));
-        } catch (PGPException | IllegalArgumentException | UriBuilderException | JocException | IOException e) {
-            LOGGER.error(e.toString());
-        } finally {
-            LOGGER.info("*************************** UpdateRepo Test finished ********************************");
-        }
-    }
-    
     @Test
     @Ignore
     /* This is NO Unit test!

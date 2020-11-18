@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "transferIds",
     "compact",
     "regex",
@@ -43,8 +43,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class TransferFilter {
 
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     @JsonProperty("transferIds")
     private List<Long> transferIds = new ArrayList<Long>();
     /**
@@ -122,14 +122,14 @@ public class TransferFilter {
     @JsonProperty("targetFiles")
     private List<String> targetFiles = new ArrayList<String>();
 
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     @JsonProperty("transferIds")
@@ -388,12 +388,12 @@ public class TransferFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("transferIds", transferIds).append("compact", compact).append("regex", regex).append("profiles", profiles).append("mandator", mandator).append("states", states).append("operations", operations).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("limit", limit).append("hasIntervention", hasIntervention).append("isIntervention", isIntervention).append("sources", sources).append("targets", targets).append("sourceFilesRegex", sourceFilesRegex).append("targetFilesRegex", targetFilesRegex).append("sourceFiles", sourceFiles).append("targetFiles", targetFiles).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("transferIds", transferIds).append("compact", compact).append("regex", regex).append("profiles", profiles).append("mandator", mandator).append("states", states).append("operations", operations).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("limit", limit).append("hasIntervention", hasIntervention).append("isIntervention", isIntervention).append("sources", sources).append("targets", targets).append("sourceFilesRegex", sourceFilesRegex).append("targetFilesRegex", targetFilesRegex).append("sourceFiles", sourceFiles).append("targetFiles", targetFiles).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(mandator).append(compact).append(sources).append(profiles).append(timeZone).append(isIntervention).append(dateFrom).append(targets).append(transferIds).append(hasIntervention).append(states).append(regex).append(operations).append(sourceFilesRegex).append(sourceFiles).append(dateTo).append(limit).append(targetFilesRegex).append(jobschedulerId).append(targetFiles).toHashCode();
+        return new HashCodeBuilder().append(mandator).append(controllerId).append(compact).append(sources).append(profiles).append(timeZone).append(isIntervention).append(dateFrom).append(targets).append(transferIds).append(hasIntervention).append(states).append(regex).append(operations).append(sourceFilesRegex).append(sourceFiles).append(dateTo).append(limit).append(targetFilesRegex).append(targetFiles).toHashCode();
     }
 
     @Override
@@ -405,7 +405,7 @@ public class TransferFilter {
             return false;
         }
         TransferFilter rhs = ((TransferFilter) other);
-        return new EqualsBuilder().append(mandator, rhs.mandator).append(compact, rhs.compact).append(sources, rhs.sources).append(profiles, rhs.profiles).append(timeZone, rhs.timeZone).append(isIntervention, rhs.isIntervention).append(dateFrom, rhs.dateFrom).append(targets, rhs.targets).append(transferIds, rhs.transferIds).append(hasIntervention, rhs.hasIntervention).append(states, rhs.states).append(regex, rhs.regex).append(operations, rhs.operations).append(sourceFilesRegex, rhs.sourceFilesRegex).append(sourceFiles, rhs.sourceFiles).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(targetFilesRegex, rhs.targetFilesRegex).append(jobschedulerId, rhs.jobschedulerId).append(targetFiles, rhs.targetFiles).isEquals();
+        return new EqualsBuilder().append(mandator, rhs.mandator).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(sources, rhs.sources).append(profiles, rhs.profiles).append(timeZone, rhs.timeZone).append(isIntervention, rhs.isIntervention).append(dateFrom, rhs.dateFrom).append(targets, rhs.targets).append(transferIds, rhs.transferIds).append(hasIntervention, rhs.hasIntervention).append(states, rhs.states).append(regex, rhs.regex).append(operations, rhs.operations).append(sourceFilesRegex, rhs.sourceFilesRegex).append(sourceFiles, rhs.sourceFiles).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(targetFilesRegex, rhs.targetFilesRegex).append(targetFiles, rhs.targetFiles).isEquals();
     }
 
 }

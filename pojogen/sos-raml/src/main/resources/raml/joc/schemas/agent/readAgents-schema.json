@@ -1,0 +1,19 @@
+{
+  "title": "read agents",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.joc.model.agent.ReadAgents",
+  "type": "object",
+  "required": [
+  	"controllerId"
+  ],
+  "properties": {
+    "controllerId": {
+      "$ref": "../common/filename100-schema.json"
+    },
+    "onlyEnabledAgents": {
+    	"type": "boolean",
+    	"default": "false"
+    }
+  },
+  "additionalProperties": false
+}

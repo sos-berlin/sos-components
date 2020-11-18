@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "account",
     "request",
     "created",
-    "jobschedulerId",
+    "controllerId",
     "comment",
     "parameters",
     "job",
@@ -68,8 +68,8 @@ public class AuditLogItem {
      * 
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     @JsonProperty("comment")
     private String comment;
     /**
@@ -176,9 +176,9 @@ public class AuditLogItem {
      * 
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -187,9 +187,9 @@ public class AuditLogItem {
      * 
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     @JsonProperty("comment")
@@ -294,12 +294,12 @@ public class AuditLogItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("account", account).append("request", request).append("created", created).append("jobschedulerId", jobschedulerId).append("comment", comment).append("parameters", parameters).append("job", job).append("workflow", workflow).append("orderId", orderId).append("calendar", calendar).append("timeSpent", timeSpent).append("ticketLink", ticketLink).toString();
+        return new ToStringBuilder(this).append("account", account).append("request", request).append("created", created).append("controllerId", controllerId).append("comment", comment).append("parameters", parameters).append("job", job).append("workflow", workflow).append("orderId", orderId).append("calendar", calendar).append("timeSpent", timeSpent).append("ticketLink", ticketLink).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(calendar).append(request).append(workflow).append(orderId).append(timeSpent).append(created).append(ticketLink).append(comment).append(jobschedulerId).append(job).append(parameters).append(account).toHashCode();
+        return new HashCodeBuilder().append(calendar).append(request).append(controllerId).append(workflow).append(orderId).append(timeSpent).append(created).append(ticketLink).append(comment).append(job).append(parameters).append(account).toHashCode();
     }
 
     @Override
@@ -311,7 +311,7 @@ public class AuditLogItem {
             return false;
         }
         AuditLogItem rhs = ((AuditLogItem) other);
-        return new EqualsBuilder().append(calendar, rhs.calendar).append(request, rhs.request).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(timeSpent, rhs.timeSpent).append(created, rhs.created).append(ticketLink, rhs.ticketLink).append(comment, rhs.comment).append(jobschedulerId, rhs.jobschedulerId).append(job, rhs.job).append(parameters, rhs.parameters).append(account, rhs.account).isEquals();
+        return new EqualsBuilder().append(calendar, rhs.calendar).append(request, rhs.request).append(controllerId, rhs.controllerId).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(timeSpent, rhs.timeSpent).append(created, rhs.created).append(ticketLink, rhs.ticketLink).append(comment, rhs.comment).append(job, rhs.job).append(parameters, rhs.parameters).append(account, rhs.account).isEquals();
     }
 
 }

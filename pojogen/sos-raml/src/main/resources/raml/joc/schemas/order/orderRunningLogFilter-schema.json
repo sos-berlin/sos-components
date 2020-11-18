@@ -4,12 +4,12 @@
   "javaType": "com.sos.joc.model.order.OrderRunningLogFilter",
   "type": "object",
   "required": [
-    "jobschedulerId",
+    "controllerId",
     "historyId",
     "eventId"
   ],
   "properties": {
-    "jobschedulerId": {
+    "controllerId": {
       "$ref": "../common/filename100-schema.json"
     },
     "historyId": {

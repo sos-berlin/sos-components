@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.auth.rest.SOSShiroCurrentUser;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCJsonCommand;
@@ -31,6 +30,7 @@ import com.sos.joc.classes.event.EventCallable;
 import com.sos.joc.classes.event.EventCallableOfCurrentCluster;
 import com.sos.joc.classes.event.EventCallableOfCurrentJobScheduler;
 import com.sos.joc.classes.event.EventCallablePassiveJobSchedulerStateChanged;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.event.resource.IEventResource;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -58,10 +58,6 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
     public static final Integer EVENT_TIMEOUT = 60;
 
     @Override
-    public JOCDefaultResponse postEvent(String xAccessToken, String accessToken, RegisterEvent eventBody) throws Exception {
-        return postEvent(getAccessToken(xAccessToken, accessToken), eventBody);
-    }
-
     public JOCDefaultResponse postEvent(String accessToken, RegisterEvent eventBody) {
 
         JobSchedulerEvents entity = new JobSchedulerEvents();
@@ -115,7 +111,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
 //            entity.setEvents(evts);
             
 
-            if (eventBody.getJobscheduler() == null && eventBody.getJobscheduler().size() == 0) {
+            if (eventBody.getControllers() == null && eventBody.getControllers().size() == 0) {
                 throw new JocMissingRequiredParameterException("undefined 'jobscheduler'");
             }
 
@@ -126,9 +122,9 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             InventoryInstancesDBLayer instanceLayer = new InventoryInstancesDBLayer(connection);
 
             Boolean isCurrentJobScheduler = true;
-            for (JobSchedulerObjects jsObject : eventBody.getJobscheduler()) {
+            for (JobSchedulerObjects jsObject : eventBody.getControllers()) {
                 JobSchedulerEvent jsEvent = initEvent(jsObject, defaultEventId);
-                eventList.put(jsObject.getJobschedulerId(), jsEvent);
+                eventList.put(jsObject.getControllerId(), jsEvent);
                 DBItemInventoryJSInstance instance = getJobSchedulerInstance(jsObject, instanceLayer, accessToken);
                 JOCJsonCommand command = initJocJsonCommand(jsEvent, instance);
                 jocJsonCommands.add(command);
@@ -145,7 +141,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
                 List<DBItemInventoryJSInstance> jobSchedulerMembers = null;
                 
                 if (instance.getIsCluster()) {
-                    jobSchedulerMembers = instanceLayer.getInventoryInstancesByControllerId(jsObject.getJobschedulerId());
+                    jobSchedulerMembers = instanceLayer.getInventoryInstancesByControllerId(jsObject.getControllerId());
                     if (jobSchedulerMembers != null) {
                         for (DBItemInventoryJSInstance jobSchedulerMember : jobSchedulerMembers) {
                             if (jobSchedulerMember == null || jobSchedulerMember.equals(instance)) {
@@ -181,7 +177,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
                 ExecutorService executorService = Executors.newFixedThreadPool(tasks.size());
                 try {
                     JobSchedulerEvent evt = executorService.invokeAny(tasks);
-                    eventList.put(evt.getJobschedulerId(), evt);
+                    eventList.put(evt.getControllerId(), evt);
                 } catch (ExecutionException e) {
                     if (e.getCause() instanceof JocException) {
                         throw (JocException) e.getCause();
@@ -256,7 +252,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
 
     private JobSchedulerEvent initEvent(JobSchedulerObjects jsObject, Session session, Long instanceId, Long defaultEventId) {
         Long eventId = defaultEventId;
-        String jsId = jsObject.getJobschedulerId();
+        String jsId = jsObject.getControllerId();
 
         if (jsObject.getEventId() != null && jsObject.getEventId() > 0L) {
             eventId = jsObject.getEventId();
@@ -273,7 +269,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
         LOGGER.debug("EventId of " + jsId + ": " + eventId);
         JobSchedulerEvent jsEvent = new JobSchedulerEvent();
         jsEvent.setEventId(eventId);
-        jsEvent.setJobschedulerId(jsId);
+        jsEvent.setControllerId(jsId);
         jsEvent.setEventSnapshots(new ArrayList<EventSnapshot>());
         return jsEvent;
     }
@@ -299,10 +295,10 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
 
     private DBItemInventoryJSInstance getJobSchedulerInstance(JobSchedulerObjects jsObject, InventoryInstancesDBLayer instanceLayer, String accessToken)
             throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
-        DBItemInventoryJSInstance instance = Globals.urlFromJobSchedulerId.get(jsObject.getJobschedulerId());
+        DBItemInventoryJSInstance instance = Globals.urlFromJobSchedulerId.get(jsObject.getControllerId());
         if (instance == null) {
-            instance = instanceLayer.getInventoryInstanceByControllerId(jsObject.getJobschedulerId(), accessToken);
-            Globals.urlFromJobSchedulerId.put(jsObject.getJobschedulerId(), instance);
+            instance = instanceLayer.getInventoryInstanceByControllerId(jsObject.getControllerId(), accessToken);
+            Globals.urlFromJobSchedulerId.put(jsObject.getControllerId(), instance);
         }
         return instance;
     }

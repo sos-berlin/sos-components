@@ -5,7 +5,7 @@
   "type": "object",
   "required": [
         "id",
-        "jobschedulerId",
+        "controllerId",
         "title",
         "url",
     	"role",
@@ -18,7 +18,7 @@
     "surveyDate": {
       "$ref": "../common/timestamp-schema.json"
     },
-    "jobschedulerId": {
+    "controllerId": {
       "type": "string"
     },
     "title": {

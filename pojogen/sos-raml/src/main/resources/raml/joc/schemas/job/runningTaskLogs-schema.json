@@ -7,7 +7,7 @@
     "tasks"
   ],
   "properties": {
-    "jobschedulerId": {
+    "controllerId": {
       "type": "string"
     },
     "tasks": {

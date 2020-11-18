@@ -34,8 +34,8 @@ import com.sos.joc.exceptions.JobSchedulerNoResponseException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.common.Err419;
-import com.sos.joc.model.order.StartOrder;
-import com.sos.joc.model.order.StartOrders;
+import com.sos.joc.model.order.AddOrder;
+import com.sos.joc.model.order.AddOrders;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
 import com.sos.js7.order.initiator.OrderListSynchronizer;
 import com.sos.webservices.order.initiator.model.NameValuePair;
@@ -53,7 +53,7 @@ import reactor.core.publisher.Flux;
 
 public class OrderApi {
 
-    public static void addOrders(StartOrders startOrders, String userAccount) throws JocConfigurationException, DBConnectionRefusedException,
+    public static void addOrders(AddOrders startOrders, String userAccount) throws JocConfigurationException, DBConnectionRefusedException,
             DBOpenSessionException, JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, DBMissingDataException,
             DBInvalidDataException, JsonProcessingException, SOSException, URISyntaxException, ParseException, InterruptedException,
             ExecutionException, TimeoutException {
@@ -62,14 +62,14 @@ public class OrderApi {
 
         orderInitiatorSettings.setTimeZone(Globals.sosCockpitProperties.getProperty("daily_plan_timezone", Globals.DEFAULT_TIMEZONE_DAILY_PLAN));
         orderInitiatorSettings.setPeriodBegin(Globals.sosCockpitProperties.getProperty("daily_plan_period_begin", Globals.DEFAULT_PERIOD_DAILY_PLAN));
-        orderInitiatorSettings.setControllerId(startOrders.getJobschedulerId());
+        orderInitiatorSettings.setControllerId(startOrders.getControllerId());
         
         OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer();
 
-        for (StartOrder startOrder : startOrders.getOrders()) {
+        for (AddOrder startOrder : startOrders.getOrders()) {
             PlannedOrder plannedOrder = new PlannedOrder();
             OrderTemplate orderTemplate = new OrderTemplate();
-            orderTemplate.setPath(startOrder.getOrderId());
+            orderTemplate.setPath(startOrder.getOrderName());
             orderTemplate.setVariables(new ArrayList<NameValuePair>());
             orderTemplate.setSubmitOrderToControllerWhenPlanned(true);
             orderTemplate.setWorkflowPath(startOrder.getWorkflowPath());
@@ -82,7 +82,7 @@ public class OrderApi {
 
             plannedOrder.setOrderTemplate(orderTemplate);
             FreshOrder freshOrder = new FreshOrder();
-            freshOrder.setId(startOrder.getOrderId());
+            freshOrder.setId(startOrder.getOrderName());
             Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(startOrder.getScheduledFor(), startOrder.getTimeZone());
             scheduledFor.ifPresent(instant -> freshOrder.setScheduledFor(instant.toEpochMilli()));
             freshOrder.setWorkflowPath(startOrder.getWorkflowPath());

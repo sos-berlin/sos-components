@@ -4,7 +4,6 @@ package com.sos.jobscheduler.model.event;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.jobscheduler.model.common.AgentId;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -19,21 +18,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
-    "agentId"
+    "agentName"
 })
 public class OrderTransferredToAgent
     extends Event
 {
 
-    /**
-     * agentId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("agentId")
-    private AgentId agentId;
+    @JsonProperty("agentName")
+    private String agentName;
 
     /**
      * No args constructor for use in serialization
@@ -45,46 +37,32 @@ public class OrderTransferredToAgent
     /**
      * 
      * @param eventId
-     * @param agentId
+     * @param agentName
      * 
      */
-    public OrderTransferredToAgent(AgentId agentId, Long eventId) {
+    public OrderTransferredToAgent(String agentName, Long eventId) {
         super(eventId);
-        this.agentId = agentId;
+        this.agentName = agentName;
     }
 
-    /**
-     * agentId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("agentId")
-    public AgentId getAgentId() {
-        return agentId;
+    @JsonProperty("agentName")
+    public String getAgentName() {
+        return agentName;
     }
 
-    /**
-     * agentId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("agentId")
-    public void setAgentId(AgentId agentId) {
-        this.agentId = agentId;
+    @JsonProperty("agentName")
+    public void setAgentName(String agentName) {
+        this.agentName = agentName;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("agentId", agentId).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("agentName", agentName).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(agentId).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(agentName).toHashCode();
     }
 
     @Override
@@ -96,7 +74,7 @@ public class OrderTransferredToAgent
             return false;
         }
         OrderTransferredToAgent rhs = ((OrderTransferredToAgent) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(agentId, rhs.agentId).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(agentName, rhs.agentName).isEquals();
     }
 
 }

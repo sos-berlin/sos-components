@@ -18,7 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "documentation"
 })
 public class DocumentationFilter {
@@ -30,8 +30,8 @@ public class DocumentationFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * path
      * <p>
@@ -50,9 +50,9 @@ public class DocumentationFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -62,9 +62,9 @@ public class DocumentationFilter {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -93,12 +93,12 @@ public class DocumentationFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("documentation", documentation).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("documentation", documentation).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(documentation).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(documentation).toHashCode();
     }
 
     @Override
@@ -110,7 +110,7 @@ public class DocumentationFilter {
             return false;
         }
         DocumentationFilter rhs = ((DocumentationFilter) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(documentation, rhs.documentation).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(documentation, rhs.documentation).isEquals();
     }
 
 }

@@ -20,10 +20,10 @@ import com.sos.joc.jobscheduler.resource.IJobSchedulerLogResource;
 import com.sos.joc.model.jobscheduler.UrlParameter;
 import com.sos.schema.JsonValidator;
 
-@Path("jobscheduler")
+@Path("controller")
 public class JobSchedulerLogImpl extends JOCResourceImpl implements IJobSchedulerLogResource {
 
-    private static final String LOG_API_CALL = "./jobscheduler/log";
+    private static final String LOG_API_CALL = "./controller/log";
 
     public JOCDefaultResponse getLog(String accessToken, byte[] filterBytes) {
         try {
@@ -31,17 +31,17 @@ public class JobSchedulerLogImpl extends JOCResourceImpl implements IJobSchedule
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter urlParamSchema = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(urlParamSchema.getJobschedulerId(), getPermissonsJocCockpit(urlParamSchema
-                    .getJobschedulerId(), accessToken).getJS7Controller().getView().isMainlog());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(urlParamSchema.getControllerId(), getPermissonsJocCockpit(urlParamSchema
+                    .getControllerId(), accessToken).getJS7Controller().getView().isMainlog());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            checkRequiredParameter("jobschedulerId", urlParamSchema.getJobschedulerId());
+            checkRequiredParameter("controllerId", urlParamSchema.getControllerId());
             try {
                 checkRequiredParameter("url", urlParamSchema.getUrl());
             } catch (JocMissingRequiredParameterException e) {
-                List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(urlParamSchema.getJobschedulerId());
+                List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(urlParamSchema.getControllerId());
                 if (controllerInstances.size() > 1) { // is cluster
                     throw e;
                 } else {

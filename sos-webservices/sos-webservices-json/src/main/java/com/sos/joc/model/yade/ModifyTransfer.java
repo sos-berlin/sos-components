@@ -19,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "transferId",
     "fileIds"
 })
@@ -30,8 +30,8 @@ public class ModifyTransfer {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * non negative long
      * <p>
@@ -49,9 +49,9 @@ public class ModifyTransfer {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -59,9 +59,9 @@ public class ModifyTransfer {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -100,12 +100,12 @@ public class ModifyTransfer {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("transferId", transferId).append("fileIds", fileIds).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("transferId", transferId).append("fileIds", fileIds).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobschedulerId).append(transferId).append(fileIds).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(transferId).append(fileIds).toHashCode();
     }
 
     @Override
@@ -117,7 +117,7 @@ public class ModifyTransfer {
             return false;
         }
         ModifyTransfer rhs = ((ModifyTransfer) other);
-        return new EqualsBuilder().append(jobschedulerId, rhs.jobschedulerId).append(transferId, rhs.transferId).append(fileIds, rhs.fileIds).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(transferId, rhs.transferId).append(fileIds, rhs.fileIds).isEquals();
     }
 
 }

@@ -16,7 +16,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * treeView
  * <p>
- * collections of JobScheduler objects besides folder tree structure.
+ * collections of Controller objects besides folder tree structure.
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)

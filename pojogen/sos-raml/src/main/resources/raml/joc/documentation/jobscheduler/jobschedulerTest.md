@@ -1,4 +1,4 @@
-* jobscheduler id
+* controller id
 * url
 * connectionState - such as
 	* established

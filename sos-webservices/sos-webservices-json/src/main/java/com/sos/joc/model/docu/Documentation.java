@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "id",
-    "jobschedulerId",
+    "controllerId",
     "path",
     "name",
     "type",
@@ -42,8 +42,8 @@ public class Documentation {
      * 
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * path
      * <p>
@@ -107,9 +107,9 @@ public class Documentation {
      * 
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -118,9 +118,9 @@ public class Documentation {
      * 
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -213,12 +213,12 @@ public class Documentation {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("jobschedulerId", jobschedulerId).append("path", path).append("name", name).append("type", type).append("modified", modified).toString();
+        return new ToStringBuilder(this).append("id", id).append("controllerId", controllerId).append("path", path).append("name", name).append("type", type).append("modified", modified).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(name).append(modified).append(id).append(jobschedulerId).append(type).toHashCode();
+        return new HashCodeBuilder().append(path).append(controllerId).append(name).append(modified).append(id).append(type).toHashCode();
     }
 
     @Override
@@ -230,7 +230,7 @@ public class Documentation {
             return false;
         }
         Documentation rhs = ((Documentation) other);
-        return new EqualsBuilder().append(path, rhs.path).append(name, rhs.name).append(modified, rhs.modified).append(id, rhs.id).append(jobschedulerId, rhs.jobschedulerId).append(type, rhs.type).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(controllerId, rhs.controllerId).append(name, rhs.name).append(modified, rhs.modified).append(id, rhs.id).append(type, rhs.type).isEquals();
     }
 
 }

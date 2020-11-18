@@ -18,7 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "jobschedulerId",
+    "controllerId",
     "objectType",
     "show",
     "schemaIdentifier"
@@ -32,8 +32,8 @@ public class SchemaDownloadConfiguration {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    private String jobschedulerId;
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * xmleditor object type
      * <p>
@@ -61,9 +61,9 @@ public class SchemaDownloadConfiguration {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public String getJobschedulerId() {
-        return jobschedulerId;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
@@ -73,9 +73,9 @@ public class SchemaDownloadConfiguration {
      * (Required)
      * 
      */
-    @JsonProperty("jobschedulerId")
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -136,12 +136,12 @@ public class SchemaDownloadConfiguration {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jobschedulerId", jobschedulerId).append("objectType", objectType).append("show", show).append("schemaIdentifier", schemaIdentifier).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("objectType", objectType).append("show", show).append("schemaIdentifier", schemaIdentifier).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(show).append(schemaIdentifier).append(jobschedulerId).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(show).append(schemaIdentifier).append(controllerId).append(objectType).toHashCode();
     }
 
     @Override
@@ -153,7 +153,7 @@ public class SchemaDownloadConfiguration {
             return false;
         }
         SchemaDownloadConfiguration rhs = ((SchemaDownloadConfiguration) other);
-        return new EqualsBuilder().append(show, rhs.show).append(schemaIdentifier, rhs.schemaIdentifier).append(jobschedulerId, rhs.jobschedulerId).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(show, rhs.show).append(schemaIdentifier, rhs.schemaIdentifier).append(controllerId, rhs.controllerId).append(objectType, rhs.objectType).isEquals();
     }
 
 }

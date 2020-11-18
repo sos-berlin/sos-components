@@ -49,8 +49,8 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, JobsFilter.class);
             JobsFilter jobsFilter = Globals.objectMapper.readValue(filterBytes, JobsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(jobsFilter.getJobschedulerId(), getPermissonsJocCockpit(jobsFilter
-                    .getJobschedulerId(), accessToken).getHistory().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(jobsFilter.getControllerId(), getPermissonsJocCockpit(jobsFilter
+                    .getControllerId(), accessToken).getHistory().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -63,7 +63,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
             Set<Folder> folders = addPermittedFolder(jobsFilter.getFolders());
 
             HistoryFilter historyFilter = new HistoryFilter();
-            historyFilter.setSchedulerId(jobsFilter.getJobschedulerId());
+            historyFilter.setSchedulerId(jobsFilter.getControllerId());
 
             if (jobsFilter.getTaskIds() != null && !jobsFilter.getTaskIds().isEmpty()) {
                 historyFilter.setHistoryIds(jobsFilter.getTaskIds());
@@ -153,7 +153,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
 
                 if (dbOrderStepItems != null) {
                     for (DBItemHistoryOrderStep dbItemOrderStep : dbOrderStepItems) {
-                        if (jobsFilter.getJobschedulerId().isEmpty() && !getPermissonsJocCockpit(dbItemOrderStep.getJobSchedulerId(), accessToken)
+                        if (jobsFilter.getControllerId().isEmpty() && !getPermissonsJocCockpit(dbItemOrderStep.getJobSchedulerId(), accessToken)
                                 .getHistory().getView().isStatus()) {
                             continue;
                         }
@@ -162,7 +162,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                             continue;
                         }
                         TaskHistoryItem taskHistoryItem = new TaskHistoryItem();
-                        taskHistoryItem.setJobschedulerId(dbItemOrderStep.getJobSchedulerId());
+                        taskHistoryItem.setControllerId(dbItemOrderStep.getJobSchedulerId());
                         taskHistoryItem.setAgentUrl(dbItemOrderStep.getAgentUri());
                         taskHistoryItem.setStartTime(dbItemOrderStep.getStartTime());
                         taskHistoryItem.setEndTime(dbItemOrderStep.getEndTime());

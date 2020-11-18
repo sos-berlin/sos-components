@@ -5,7 +5,6 @@
   "type": "string",
   "enum": [
     "WorkflowPath",
-    "AgentRefPath",
     "LockPath",
     "JobClassPath"
   ],
