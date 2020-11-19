@@ -5,6 +5,7 @@
   "type": "object",
   "required": [
   	"agentId",
+  	"agentName",
   	"uri"
   ],
   "properties": {
@@ -13,6 +14,7 @@
     	"$ref": "../common/string255-schema.json"
     },
     "agentName": {
+    	"minLength": 1,
     	"$ref": "../common/string255-schema.json"
     },
     "url": {

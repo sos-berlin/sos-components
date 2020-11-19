@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.agent.Agent;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -22,7 +23,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
-    "controllers"
+    "controllers",
+    "agents"
 })
 public class Controllers {
 
@@ -43,6 +45,8 @@ public class Controllers {
      */
     @JsonProperty("controllers")
     private List<Controller> controllers = new ArrayList<Controller>();
+    @JsonProperty("agents")
+    private List<Agent> agents = new ArrayList<Agent>();
 
     /**
      * timestamp
@@ -88,14 +92,24 @@ public class Controllers {
         this.controllers = controllers;
     }
 
+    @JsonProperty("agents")
+    public List<Agent> getAgents() {
+        return agents;
+    }
+
+    @JsonProperty("agents")
+    public void setAgents(List<Agent> agents) {
+        this.agents = agents;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("controllers", controllers).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("controllers", controllers).append("agents", agents).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(controllers).toHashCode();
+        return new HashCodeBuilder().append(controllers).append(deliveryDate).append(agents).toHashCode();
     }
 
     @Override
@@ -107,7 +121,7 @@ public class Controllers {
             return false;
         }
         Controllers rhs = ((Controllers) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(controllers, rhs.controllers).isEquals();
+        return new EqualsBuilder().append(controllers, rhs.controllers).append(deliveryDate, rhs.deliveryDate).append(agents, rhs.agents).isEquals();
     }
 
 }

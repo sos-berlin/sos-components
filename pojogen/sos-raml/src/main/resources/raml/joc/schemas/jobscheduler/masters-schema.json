@@ -16,6 +16,12 @@
       "items": {
         "$ref": "master-schema.json"
       }
+    },
+    "agents": {
+    	"type": "array",
+    	"items": {
+    		"$ref": "../agent/agent-schema.json"
+    	}
     }
   }
 }
