@@ -14,7 +14,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 
 public interface IImportKey {
 
-    @Path("import_key")
+    @Path("import")
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON) 

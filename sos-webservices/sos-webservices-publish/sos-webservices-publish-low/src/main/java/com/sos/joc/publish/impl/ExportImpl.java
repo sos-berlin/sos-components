@@ -38,10 +38,10 @@ import com.sos.joc.publish.resource.IExportResource;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
 
-@Path("publish")
+@Path("inventory")
 public class ExportImpl extends JOCResourceImpl implements IExportResource {
 
-    private static final String API_CALL = "./publish/export";
+    private static final String API_CALL = "./inventory/export";
     private ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
     
     @Override

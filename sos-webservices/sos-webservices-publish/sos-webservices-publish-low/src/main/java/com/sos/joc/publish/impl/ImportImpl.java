@@ -32,10 +32,10 @@ import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.IImportResource;
 import com.sos.joc.publish.util.PublishUtils;
 
-@Path("publish")
+@Path("inventory")
 public class ImportImpl extends JOCResourceImpl implements IImportResource {
 
-    private static final String API_CALL = "./publish/import";
+    private static final String API_CALL = "./inventory/import";
 
     @Override
 	public JOCDefaultResponse postImportConfiguration(String xAccessToken, 

@@ -22,10 +22,10 @@ import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.ISetVersions;
 import com.sos.schema.JsonValidator;
 
-@Path("publish")
+@Path("inventory/deployment")
 public class SetVersionsImpl extends JOCResourceImpl implements ISetVersions {
 
-    private static final String API_CALL = "./publish/set_versions";
+    private static final String API_CALL = "./inventory/deployment/set_versions";
 
     @Override
     public JOCDefaultResponse postSetVersion(String xAccessToken, byte[] setVersionsFilter) throws Exception {

@@ -23,10 +23,10 @@ import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
 
 
-@Path("publish")
+@Path("profile/key")
 public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
 
-    private static final String API_CALL = "./publish/set_key";
+    private static final String API_CALL = "./profile/key/store";
 
     @Override
     public JOCDefaultResponse postSetKey(String xAccessToken, byte[] filter) throws Exception {

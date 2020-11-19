@@ -20,10 +20,10 @@ import com.sos.joc.model.publish.GenerateKeyFilter;
 import com.sos.schema.JsonValidator;
 
 
-@Path("publish")
+@Path("profile/key")
 public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
 
-    private static final String API_CALL = "./publish/generate_key";
+    private static final String API_CALL = "./profile/key/generate";
 
     @Override
     public JOCDefaultResponse postGenerateKey(String xAccessToken, byte[] generateKeyFilter) throws Exception {

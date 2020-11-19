@@ -10,7 +10,6 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.GenerateKeyAudit;
 import com.sos.joc.classes.audit.SetKeyAudit;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocKeyNotValidException;
@@ -24,10 +23,10 @@ import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
 
 
-@Path("publish")
+@Path("profile/key")
 public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
 
-    private static final String API_CALL = "./publish/set_key";
+    private static final String API_CALL = "./profile/key/store";
 
     @Override
     public JOCDefaultResponse postSetKey(String xAccessToken, byte[] filter) throws Exception {

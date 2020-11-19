@@ -11,7 +11,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 public interface ISetKey {
 
     @POST
-    @Path("set_key")
+    @Path("store")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postSetKey(@HeaderParam("X-Access-Token") String xAccessToken, byte[] setKeyFilter) throws Exception;
 }

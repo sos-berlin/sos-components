@@ -11,7 +11,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 public interface IShowKey {
 
     @POST
-    @Path("show_key")
+    @Path("key")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postShowKey(@HeaderParam("X-Access-Token") String xAccessToken) throws Exception;
 }

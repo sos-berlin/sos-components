@@ -39,10 +39,10 @@ import com.sos.schema.JsonValidator;
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 
-@Path("publish")
+@Path("inventory/deployment")
 public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
 
-    private static final String API_CALL = "./publish/redeploy";
+    private static final String API_CALL = "./inventory/deployment/redeploy";
     private static final Logger LOGGER = LoggerFactory.getLogger(RedeployImpl.class);
     private DBLayerDeploy dbLayer = null;
     private boolean hasErrors = false;

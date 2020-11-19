@@ -37,10 +37,10 @@ import com.sos.joc.model.publish.ImportFilter;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
 
-@Path("publish")
+@Path("profile/key")
 public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
 
-    private static final String API_CALL = "./publish/import_key";
+    private static final String API_CALL = "./profile/key/import";
 
     @Override
     public JOCDefaultResponse postImportKey(

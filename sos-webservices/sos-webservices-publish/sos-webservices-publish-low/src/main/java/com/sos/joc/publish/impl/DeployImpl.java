@@ -51,10 +51,10 @@ import com.sos.schema.JsonValidator;
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 
-@Path("publish")
+@Path("inventory/deployment")
 public class DeployImpl extends JOCResourceImpl implements IDeploy {
 
-    private static final String API_CALL = "./publish/deploy";
+    private static final String API_CALL = "./inventory/deployment/deploy";
     private static final Logger LOGGER = LoggerFactory.getLogger(DeployImpl.class);
     private DBLayerDeploy dbLayer = null;
     private boolean hasErrors = false;
