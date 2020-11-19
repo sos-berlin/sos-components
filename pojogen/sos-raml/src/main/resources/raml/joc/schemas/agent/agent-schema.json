@@ -6,7 +6,7 @@
   "required": [
   	"agentId",
   	"agentName",
-  	"uri"
+  	"url"
   ],
   "properties": {
     "agentId": {
