@@ -34,7 +34,7 @@ import com.sos.joc.model.pgp.JocKeyType;
 import com.sos.joc.publish.util.PublishUtils;
 
 
-@Path("profile")
+@Path("profile/key")
 public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
 
     private static final String API_CALL = "./profile/key";
