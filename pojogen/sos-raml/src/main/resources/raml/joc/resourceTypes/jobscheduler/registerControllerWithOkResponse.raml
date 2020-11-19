@@ -19,8 +19,10 @@ post:
     <tr><td>``controllers``</td><td>required, array</td><td>Collection of JobScheduler Controllers of a cluster or one standalone Controller
     <br/>each Controller has the following fields</td><td></td><td></td></tr>
     <!-- tr><td style="padding-left:20px;">``id``</td><td>optional, integer</td><td>If the ID is undefined or equals 0 then a new JobScheduler Controller will be registered</td><td></td><td></td></tr -->
-    <tr><td style="padding-left:20px;">``url``</td><td>required, string</td><td>URL of the JobScheduler Controller</td><td></td><td></td></tr>
+    <tr><td style="padding-left:20px;">``url``</td><td>required, string</td><td>URL of the JobScheduler Controller which is used by JOC for connections</td><td></td><td></td></tr>
+    <tr><td style="padding-left:20px;">``clusterUrl``</td><td>optional, string</td><td>Only for a Cluster: A URL which the Controllers use to connect each other</td><td></td><td>``url``</td></tr>
     <tr><td style="padding-left:20px;">``role``</td><td>required, string</td><td>Role (STANALONE, PRIMARY or BACKUP) of the JobScheduler Controller</td><td></td><td></td></tr>
+    <tr><td style="padding-left:20px;">``title``</td><td>optional, string</td><td>A title which is used when displaying the controller in JOC</td><td></td><td></td></tr>
     <tr><td>``agents``</td><td>required, array</td><td>Collection of Agents
     <br/>each Agent has the following fields</td><td></td><td></td></tr>
     <tr><td style="padding-left:20px;">``agentId``</td><td>required, integer</td><td>The ``agentId`` is the (technical) name which is used in the Controller to identify an Agent. This value is set once and cannot be overwritten</td><td></td><td></td></tr>
