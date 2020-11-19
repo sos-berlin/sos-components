@@ -11,7 +11,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 public interface IShowDeploymentHistory {
 
     @POST
-    @Path("show_dep_history")
+    @Path("history")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postShowDeploymentHistory(@HeaderParam("X-Access-Token") String xAccessToken, byte[] showDepHistoryFilter) throws Exception;
 }

@@ -23,10 +23,10 @@ import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.history.resource.IShowDeploymentHistory;
 import com.sos.schema.JsonValidator;
 
-@Path("publish")
+@Path("inventory/deployment")
 public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowDeploymentHistory {
 
-    private static final String API_CALL = "./publish/show_dep_history";
+    private static final String API_CALL = "./inventory/deployment/history";
 
     @Override
     public JOCDefaultResponse postShowDeploymentHistory(String xAccessToken, byte[] showDepHistoryFilter) throws Exception {
