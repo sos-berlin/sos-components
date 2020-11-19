@@ -995,6 +995,94 @@ traits:
         schema200: !include joc/schemas/inventory/deploy/response-deployables-schema.json
         example200: TODO
   
+  /deployment:
+    description: This is not an API call. Use child urls instead!
+
+    /deploy:
+      type:
+        postJSONWithOkWithoutJSId:
+          description: Deploys a signed JS Object to the current JobScheduler Controller
+          description1: !include joc/documentation/publish/schedulersFilteredById.md
+          description2: !include joc/documentation/publish/updateFilteredById.md
+          description3: !include joc/documentation/publish/deleteFilteredById.md
+          description4: " "
+          description5: " "
+          audit: !include joc/documentation/audit/auditLog.md
+          schema: !include joc/schemas/publish/deploy-schema.json
+          example: !include joc/examples/publish/deploy-example.json
+
+    /history:
+      type:
+        postForShowDepHistory:
+          description: shows the deployment history according to the provided filters 
+          description1: !include joc/documentation/publish/showDepHistory.md
+          schema: !include joc/schemas/publish/showDepHistoryFilter-schema.json
+          schema200: !include joc/schemas/publish/depHistory-schema.json
+          example: !include joc/examples/publish/showDepHistory-example.json
+          example200: " "
+
+    /import_deploy:
+      type:
+        postForImportDeploy:
+          description: uploads archive file (zip, tar.gz, gz) with signed and unsigned JSON files of JobScheduler Objects and deploys the objects to the given controllers
+          schema: !include joc/schemas/publish/importDeployFilter-schema.json
+          example: !include joc/examples/publish/publishImportDeploy-example.json
+
+    /redeploy:
+      type:
+        postJSONWithOkWithoutJSId:
+          description: Redeploys an already signed Object to the given Controller
+          description1: !include joc/documentation/publish/redeploy.md
+          description2: " "
+          description3: " "
+          description4: " "
+          description5: " "
+          audit: !include joc/documentation/audit/auditLog.md
+          schema: !include joc/schemas/publish/redeploy-schema.json
+          example: !include joc/examples/publish/redeploy-example.json
+
+    /set_version:
+      type:
+        postJSONWithOkWithoutJSId:
+          description: sets a new version to an array of JS Objects
+          description1: !include joc/documentation/publish/setVersionFilter.md
+          description2: " "
+          description3: " "
+          description4: " "
+          description5: " "
+          audit: !include joc/documentation/audit/auditLog.md
+          schema: !include joc/schemas/publish/setVersion-schema.json
+          example: !include joc/examples/publish/setVersion-example.json
+  
+    /set_versions:
+      type:
+        postJSONWithOkWithoutJSId:
+          description: sets a new version per item to an array of JS Objects
+          description1: !include joc/documentation/publish/setVersionsFilter.md
+          description2: " "
+          description3: " "
+          description4: " "
+          description5: " "
+          audit: !include joc/documentation/audit/auditLog.md
+          schema: !include joc/schemas/publish/setVersions-schema.json
+          example: !include joc/examples/publish/setVersions-example.json
+
+  /export:
+    get:
+    type:
+      postForDownloadUnsigned:
+        description: provides archive file (zip, tar.gz, gz) to download unsigned JSON files
+        description1: !include joc/documentation/publish/exportFilterById.md
+        schema: !include joc/schemas/publish/exportFilter-schema.json
+        example: !include joc/examples/publish/publishExport-example.json
+
+  /import:
+    type:
+      postForUploadUnsigned:
+        description: uploads archive file (zip, tar.gz, gz) with signed and unsigned JSON files of JobScheduler Objects  
+        schema: !include joc/schemas/publish/importFilter-schema.json
+        example: !include joc/examples/publish/publishImport-example.json
+
   /read/configuration:
     type:
       postJSONWithoutJSId:
@@ -1853,126 +1941,53 @@ traits:
         example: " "
         example200: " "
 
-/publish:
+/profile:
   description: This is not an API call. Use child urls instead!
 
-  /export:
-    get:
-    type:
-      postForDownloadUnsigned:
-        description: provides archive file (zip, tar.gz, gz) to download unsigned JSON files
-        description1: !include joc/documentation/publish/exportFilterById.md
-        schema: !include joc/schemas/publish/exportFilter-schema.json
-        example: !include joc/examples/publish/publishExport-example.json
-  /deploy:
-    type:
-      postJSONWithOkWithoutJSId:
-        description: Deploys a signed JS Object to the current JobScheduler Controller
-        description1: !include joc/documentation/publish/schedulersFilteredById.md
-        description2: !include joc/documentation/publish/updateFilteredById.md
-        description3: !include joc/documentation/publish/deleteFilteredById.md
-        description4: " "
-        description5: " "
-        audit: !include joc/documentation/audit/auditLog.md
-        schema: !include joc/schemas/publish/deploy-schema.json
-        example: !include joc/examples/publish/deploy-example.json
-  /generate_key:
-    type:
-      postForGenerateKey:
-        description: generates a new private key (ASCII format only)
-        description1: !include joc/documentation/publish/generateKeyValidUntil.md
-        description2: !include joc/documentation/publish/keyAlgorithm.md
-        audit: !include joc/documentation/audit/auditLog.md
-        description200: " "
-        schema200: !include joc/schemas/pgp/jocKeyPair-schema.json
-        example200: !include joc/examples/publish/showKey-example.json
-        schema: !include joc/schemas/publish/generateKey-schema.json
-        example: !include joc/examples/publish/generateKey-example.json
-  /import:
-    type:
-      postForUploadUnsigned:
-        description: uploads archive file (zip, tar.gz, gz) with signed and unsigned JSON files of JobScheduler Objects  
-        schema: !include joc/schemas/publish/importFilter-schema.json
-        example: !include joc/examples/publish/publishImport-example.json
-  /import_deploy:
-    type:
-      postForImportDeploy:
-        description: uploads archive file (zip, tar.gz, gz) with signed and unsigned JSON files of JobScheduler Objects and deploys the objects to the given controllers
-        schema: !include joc/schemas/publish/importDeployFilter-schema.json
-        example: !include joc/examples/publish/publishImportDeploy-example.json
-  /import_key:
-    type:
-      postForUploadSigned:
-        description: uploads a Private Key, a Public Key or a Certificate (ASCII format only, no binary files)  
-        schema: !include joc/schemas/publish/importFilter-schema.json
-        example: " "
-  /set_key:
-    type:
-      postJSONWithOkWithoutJSId:
-        description: sets a new Public Key, a Certificate or Private key (ASCII format only)
-        description1: !include joc/documentation/publish/setKey.md
-        description2: !include joc/documentation/publish/setPrivateKey.md
-        description3: !include joc/documentation/publish/setPublicKey.md
-        description4: !include joc/documentation/publish/setCertificate.md
-        description5: !include joc/documentation/publish/setKeyAlgorithm.md
-        audit: !include joc/documentation/audit/auditLog.md
-        schema: !include joc/schemas/publish/setKey-schema.json
-        example: !include joc/examples/publish/setKey-example.json
-  /set_version:
-    type:
-      postJSONWithOkWithoutJSId:
-        description: sets a new version to an array of JS Objects
-        description1: !include joc/documentation/publish/setVersionFilter.md
-        description2: " "
-        description3: " "
-        description4: " "
-        description5: " "
-        audit: !include joc/documentation/audit/auditLog.md
-        schema: !include joc/schemas/publish/setVersion-schema.json
-        example: !include joc/examples/publish/setVersion-example.json
-  /set_versions:
-    type:
-      postJSONWithOkWithoutJSId:
-        description: sets a new version per item to an array of JS Objects
-        description1: !include joc/documentation/publish/setVersionsFilter.md
-        description2: " "
-        description3: " "
-        description4: " "
-        description5: " "
-        audit: !include joc/documentation/audit/auditLog.md
-        schema: !include joc/schemas/publish/setVersions-schema.json
-        example: !include joc/examples/publish/setVersions-example.json
-  /show_key:
+  /key:
     type:
       postWithoutJSONandJSId:
-        description: shows the stored public key or certificate (SecurityLevel HIGH) or the public key/certificate and private key (SecurityLevel LOW and MEDIUM) (ASCII format only)
+        description: gets the stored public key or certificate (SecurityLevel HIGH) or the public key/certificate and private key (SecurityLevel LOW and MEDIUM)
         description1: " "
         description2: " "
         schema: !include joc/examples/publish/emptyBody-example.json
         schema200: !include joc/schemas/pgp/jocKeyPair-schema.json
         example: !include joc/examples/publish/emptyBody-example.json
         example200: !include joc/examples/publish/showKey-example.json
-  /show_dep_history:
-    type:
-      postForShowDepHistory:
-        description: shows the deployment history according to the provided filters 
-        description1: !include joc/documentation/publish/showDepHistory.md
-        schema: !include joc/schemas/publish/showDepHistoryFilter-schema.json
-        schema200: !include joc/schemas/publish/depHistory-schema.json
-        example: !include joc/examples/publish/showDepHistory-example.json
-        example200: " "
-  /redeploy:
-    type:
-      postJSONWithOkWithoutJSId:
-        description: Redeploys an already signed Object to the given Controller
-        description1: !include joc/documentation/publish/redeploy.md
-        description2: " "
-        description3: " "
-        description4: " "
-        description5: " "
-        audit: !include joc/documentation/audit/auditLog.md
-        schema: !include joc/schemas/publish/redeploy-schema.json
-        example: !include joc/examples/publish/redeploy-example.json
+
+    /generate:
+      type:
+        postForGenerateKey:
+          description: generates and stores a new private key (only for SecurityLevel LOW and MEDIUM)
+          description1: !include joc/documentation/publish/generateKeyValidUntil.md
+          description2: !include joc/documentation/publish/keyAlgorithm.md
+          audit: !include joc/documentation/audit/auditLog.md
+          description200: " "
+          schema200: !include joc/schemas/pgp/jocKeyPair-schema.json
+          example200: !include joc/examples/publish/showKey-example.json
+          schema: !include joc/schemas/publish/generateKey-schema.json
+          example: !include joc/examples/publish/generateKey-example.json
+  
+    /import:
+      type:
+        postForUploadSigned:
+          description: |
+            imports a Private Key, a Public Key or a Certificate file(ASCII format only, no binary files)
+            and stores the file content
+          schema: !include joc/schemas/publish/importFilter-schema.json
+          example: " "
+    /store:
+      type:
+        postJSONWithOkWithoutJSId:
+          description: stores a new Public Key, a Certificate or Private key (ASCII format only)
+          description1: !include joc/documentation/publish/setKey.md
+          description2: !include joc/documentation/publish/setPrivateKey.md
+          description3: !include joc/documentation/publish/setPublicKey.md
+          description4: !include joc/documentation/publish/setCertificate.md
+          description5: !include joc/documentation/publish/setKeyAlgorithm.md
+          audit: !include joc/documentation/audit/auditLog.md
+          schema: !include joc/schemas/publish/setKey-schema.json
+          example: !include joc/examples/publish/setKey-example.json
 
 /security:
   description: This is not an API call. Use child urls instead!
