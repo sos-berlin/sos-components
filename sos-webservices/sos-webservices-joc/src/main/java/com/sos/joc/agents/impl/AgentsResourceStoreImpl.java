@@ -29,7 +29,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
     private static String API_CALL = "./agents/store";
 
     @Override
-    public JOCDefaultResponse update(String accessToken, byte[] filterBytes) {
+    public JOCDefaultResponse store(String accessToken, byte[] filterBytes) {
         try {
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, StoreAgents.class);

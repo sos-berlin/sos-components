@@ -108,8 +108,8 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter urlParameter = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             // TODO permissions
-            boolean permission = getPermissonsJocCockpit(urlParameter.getControllerId(), accessToken).getJS7ControllerCluster().getExecute()
-                    .isSwitchOver();
+            boolean permission = true; //getPermissonsJocCockpit(urlParameter.getControllerId(), accessToken).getJS7ControllerCluster().getExecute()
+//                    .isSwitchOver();
 
             JOCDefaultResponse jocDefaultResponse = initPermissions(urlParameter.getControllerId(), permission);
             if (jocDefaultResponse != null) {
@@ -119,6 +119,7 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
             checkRequiredComment(urlParameter.getAuditLog());
             ModifyJobSchedulerClusterAudit jobschedulerAudit = new ModifyJobSchedulerClusterAudit(urlParameter);
             logAuditMessage(jobschedulerAudit);
+            connection = Globals.createSosHibernateStatelessConnection(API_CALL_APPOINT_NODES);
             appointNodes(urlParameter.getControllerId(), new InventoryAgentInstancesDBLayer(connection), getJocError());
             storeAuditLogEntry(jobschedulerAudit);
 
@@ -148,7 +149,7 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
             idToUri.getAdditionalProperties().put(inst.getIsPrimary() ? "Primary" : "Standby", inst.getClusterUri());
         }
         command.setIdToUri(idToUri);
-        List<DBItemInventoryAgentInstance> watchers = dbLayer.getClusterWatcherByControllerId(controllerId);
+        List<DBItemInventoryAgentInstance> watchers = dbLayer.getEnabledClusterWatcherByControllerId(controllerId);
         if (watchers == null || watchers.isEmpty()) {
             throw new JobSchedulerBadRequestException("There must exist at least one Agent Cluster Watcher");
         }

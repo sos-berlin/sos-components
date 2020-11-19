@@ -2,6 +2,8 @@ package com.sos.joc.db.inventory.instance;
 
 import java.sql.Date;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.query.Query;
@@ -39,31 +41,35 @@ public class InventoryAgentInstancesDBLayer {
         }
     }
     
-    public List<DBItemInventoryAgentInstance> getAgentsByControllerId(String controllerId) throws DBInvalidDataException, DBMissingDataException,
-            DBConnectionRefusedException {
-        return getAgentsByControllerId(controllerId, false, true);
-    }
-    
-    public List<DBItemInventoryAgentInstance> getClusterWatcherByControllerId(String controllerId) throws DBInvalidDataException,
+    public List<DBItemInventoryAgentInstance> getAgentsByControllerIds(Collection<String> controllerIds) throws DBInvalidDataException,
             DBMissingDataException, DBConnectionRefusedException {
-        return getAgentsByControllerId(controllerId, true, true);
+        return getAgentsByControllerIds(controllerIds, false, false);
     }
 
-    public List<DBItemInventoryAgentInstance> getAgentsByControllerId(String controllerId, boolean onlyWatcher, boolean onlyEnabledAgents) throws DBInvalidDataException,
+    public List<DBItemInventoryAgentInstance> getEnabledClusterWatcherByControllerId(String controllerId) throws DBInvalidDataException,
             DBMissingDataException, DBConnectionRefusedException {
+        return getAgentsByControllerIds(Arrays.asList(controllerId), true, true);
+    }
+
+    public List<DBItemInventoryAgentInstance> getAgentsByControllerIds(Collection<String> controllerIds, boolean onlyWatcher,
+            boolean onlyEnabledAgents) throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
-            sql.append(" where controllerId = :controllerId");
-            sql.append(" and securityLevel = :securityLevel");
+            sql.append(" where securityLevel = :securityLevel");
+            if (controllerIds != null && !controllerIds.isEmpty()) {
+                sql.append(" and controllerId in (:controllerIds)");
+            }
             if (onlyWatcher) {
-                sql.append(" and isWatcher = 1"); 
+                sql.append(" and isWatcher = 1");
             }
             if (onlyEnabledAgents) {
-                sql.append(" and disabled = 0"); 
+                sql.append(" and disabled = 0");
             }
             Query<DBItemInventoryAgentInstance> query = session.createQuery(sql.toString());
-            query.setParameter("controllerId", controllerId);
+            if (controllerIds != null && !controllerIds.isEmpty()) {
+                query.setParameterList("controllerId", controllerIds);
+            }
             query.setParameter("securityLevel", level.intValue());
             return session.getResultList(query);
         } catch (DBMissingDataException ex) {
@@ -75,6 +81,31 @@ public class InventoryAgentInstancesDBLayer {
         }
     }
     
+    public List<String> getEnabledAgentNames() throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
+        return getAgentNames(true);
+    }
+    
+    public List<String> getAgentNames(boolean onlyEnabledAgents) throws DBInvalidDataException, DBMissingDataException,
+            DBConnectionRefusedException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("select agentName from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
+            sql.append(" where securityLevel = :securityLevel");
+            if (onlyEnabledAgents) {
+                sql.append(" and disabled = 0");
+            }
+            Query<String> query = session.createQuery(sql.toString());
+            query.setParameter("securityLevel", level.intValue());
+            return session.getResultList(query);
+        } catch (DBMissingDataException ex) {
+            throw ex;
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
     public Long saveAgent(DBItemInventoryAgentInstance agent) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             agent.setModified(Date.from(Instant.now()));

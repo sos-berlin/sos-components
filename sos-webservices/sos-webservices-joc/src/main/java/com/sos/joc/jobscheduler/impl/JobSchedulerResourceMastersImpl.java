@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -19,11 +20,14 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.jobscheduler.ControllerAnswer;
 import com.sos.joc.classes.jobscheduler.ControllerCallable;
+import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
+import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceMasters;
+import com.sos.joc.model.agent.Agent;
 import com.sos.joc.model.common.ControllerId;
 import com.sos.joc.model.jobscheduler.Controller;
 import com.sos.joc.model.jobscheduler.Controllers;
@@ -54,29 +58,21 @@ public class JobSchedulerResourceMastersImpl extends JOCResourceImpl implements 
             }
             initLogging(apiCall, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ControllerId.class);
-            ControllerId jobSchedulerFilter = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
-
-            String jobSchedulerId = jobSchedulerFilter.getControllerId();
-            if (jobSchedulerId == null) {
-                jobSchedulerId = "";
-            }
-
-            initGetPermissions(accessToken);
-            SOSShiroCurrentUser user = jobschedulerUser.getSosShiroCurrentUser();
-            boolean isPermitted = true;
-            if (!jobSchedulerId.isEmpty()) {
-                isPermitted = user.getSosPermissionJocCockpit(jobSchedulerId).getJS7Controller().getView().isStatus();
-            }
-            JOCDefaultResponse jocDefaultResponse = initPermissions(jobSchedulerId, isPermitted);
+            ControllerId controllerId = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId.getControllerId(), getPermissonsJocCockpit(controllerId
+                    .getControllerId(), accessToken).getJS7Controller().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
             connection = Globals.createSosHibernateStatelessConnection(apiCall);
             Controllers entity = new Controllers();
-            entity.setControllers(getControllers(jobSchedulerId, accessToken, connection, onlyDb, user));
+            entity.setControllers(getControllers(controllerId.getControllerId(), accessToken, connection, onlyDb, jobschedulerUser.getSosShiroCurrentUser()));
+            if (onlyDb) {
+                entity.setAgents(getAgents(entity.getControllers().stream().map(Controller::getControllerId).collect(Collectors.toSet()), connection));
+            }
             entity.setDeliveryDate(Date.from(Instant.now()));
-
+            
             return JOCDefaultResponse.responseStatus200(entity);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -87,15 +83,33 @@ public class JobSchedulerResourceMastersImpl extends JOCResourceImpl implements 
             Globals.disconnect(connection);
         }
     }
-
-    private static List<Controller> getControllers(String jobSchedulerId, String accessToken, SOSHibernateSession connection, boolean onlyDb,
-            SOSShiroCurrentUser user) throws InterruptedException, JocException, Exception {
-        return getControllerAnswers(jobSchedulerId, accessToken, connection, onlyDb, user).stream().map(Controller.class::cast).collect(Collectors.toList());
+    
+    private static List<Agent> getAgents(Set<String> controllerIds, SOSHibernateSession connection) {
+        InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
+        List<DBItemInventoryAgentInstance> agents = agentDBLayer.getAgentsByControllerIds(controllerIds);
+        if (agents != null) {
+            return agents.stream().map(a -> {
+                Agent agent = new Agent();
+                agent.setAgentId(a.getAgentId());
+                agent.setAgentName(a.getAgentName());
+                agent.setDisabled(a.getDisabled());
+                agent.setIsClusterWatcher(a.getIsWatcher());
+                agent.setUrl(a.getUri());
+                return agent;
+            }).collect(Collectors.toList());
+        }
+        return null;
     }
 
-    public static List<ControllerAnswer> getControllerAnswers(String jobSchedulerId, String accessToken, SOSHibernateSession connection)
+    private static List<Controller> getControllers(String controllerId, String accessToken, SOSHibernateSession connection, boolean onlyDb,
+            SOSShiroCurrentUser user) throws InterruptedException, JocException, Exception {
+        return getControllerAnswers(controllerId, accessToken, connection, onlyDb, user).stream()
+                .map(Controller.class::cast).collect(Collectors.toList());
+    }
+
+    public static List<ControllerAnswer> getControllerAnswers(String controllerId, String accessToken, SOSHibernateSession connection)
             throws InterruptedException, JocException, Exception {
-        return getControllerAnswers(jobSchedulerId, accessToken, connection, false, null);
+        return getControllerAnswers(controllerId, accessToken, connection, false, null);
     }
 
     public static List<ControllerAnswer> getControllerAnswers(String jobSchedulerId, String accessToken, SOSHibernateSession connection, boolean onlyDb,

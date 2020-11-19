@@ -8,11 +8,11 @@ import javax.ws.rs.Produces;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-public interface IAgentsResourceStore {
+public interface IAgentsResource {
 
     @POST
-    @Path("store")
+    @Path("")
     @Consumes("application/json")
     @Produces({ "application/json" })
-    public JOCDefaultResponse store(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    public JOCDefaultResponse post(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 }
