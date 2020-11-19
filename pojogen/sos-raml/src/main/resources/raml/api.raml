@@ -116,7 +116,7 @@ traits:
         description10: " "
         description200: " "
         schema: !include joc/schemas/agent/storeParam-schema.json
-        example: " "
+        example: !include joc/examples/agent/store-example.json
         
 
 /audit_log:
@@ -609,7 +609,7 @@ traits:
   /switch:
     type:
       postOnlyId:
-        description: Get the Controller Id when the user switches the Controller in JOC
+        description: Switches the current Controller (Cluster) in JOC
         description200: " "
         example200: !include joc/examples/user/permissions-example.json
         schema200: !include joc/schemas/user/permissions-schema.json
