@@ -11,7 +11,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 public interface IAgentsResource {
 
     @POST
-    @Path("")
+    @Path("p")
     @Consumes("application/json")
     @Produces({ "application/json" })
     public JOCDefaultResponse post(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);

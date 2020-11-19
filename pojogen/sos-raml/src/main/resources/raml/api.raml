@@ -81,6 +81,37 @@ traits:
   - accessToken: !include joc/traits/accessToken.raml
   - filename: !include joc/traits/filename.raml
 
+/agents:
+  description: This is not an API call. Use its children!!
+  
+  /p:
+    type:
+      postOnlyOptionalId:
+        description: Get collection of Agents from database
+        description200: " "
+        schema200: !include joc/schemas/agent/agents-schema.json
+        example: " "
+        example200: " "
+        
+  /store:
+    type:
+      postJSONWithOkResponse:
+        description: Stores Agents
+        description1: !include joc/documentation/agent/agents.md
+        description2: !include joc/documentation/audit/auditLog.md
+        description3: " "
+        description4: " "
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: " "
+        schema: !include joc/schemas/agent/storeParam-schema.json
+        example: " "
+        
+
 /audit_log:
   type:
     postJSONWithOptionalJSId:

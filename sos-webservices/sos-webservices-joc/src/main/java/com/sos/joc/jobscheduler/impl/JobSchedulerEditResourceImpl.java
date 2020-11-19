@@ -204,7 +204,6 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             //jobSchedulerBody.getAgents().stream().sorted(Comparator.comparing(Agent::getAgentId));
             Map<String, Agent> agentMap = jobSchedulerBody.getAgents().stream().collect(Collectors.toMap(Agent::getAgentId, Function.identity()));
             List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(Arrays.asList(controllerId));
-            List<JAgentRef> agentRefs = new ArrayList<>();
             boolean watcherUpdateRequired = false;
             if (dbAgents != null && !dbAgents.isEmpty()) {
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
@@ -236,9 +235,6 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     if (dbUpdateRequired) {
                         agentDBLayer.updateAgent(dbAgent);
                     }
-                    if (controllerUpdateRequired) {
-                        agentRefs.add(JAgentRef.apply(AgentRef.apply(AgentName.of(agent.getAgentId()), Uri.of(agent.getUrl()))));
-                    }
                 }
             }
             
@@ -258,106 +254,19 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 dbAgent.setUri(agent.getUrl());
                 dbAgent.setVersion(null);
                 agentDBLayer.saveAgent(dbAgent);
-                agentRefs.add(JAgentRef.apply(AgentRef.apply(AgentName.of(agent.getAgentId()), Uri.of(agent.getUrl()))));
             }
             
             final String cId = controllerId;
-            ControllerApi.of(controllerId).updateAgentRefs(agentRefs).thenAccept(e -> ProblemHelper.postProblemEventIfExist(
-                    e, getJocError(), cId));
+            List<DBItemInventoryAgentInstance> dbAvailableAgents = agentDBLayer.getAgentsByControllerIds(Arrays.asList(controllerId), false, true);
+            if (dbAvailableAgents != null) {
+                List<JAgentRef> agentRefs = dbAvailableAgents.stream().map(a -> JAgentRef.apply(AgentRef.apply(AgentName.of(a.getAgentId()), Uri.of(a
+                        .getUri())))).collect(Collectors.toList());
+                ControllerApi.of(controllerId).updateAgentRefs(agentRefs).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getJocError(),
+                        cId));
+            }
             
             // expects Agents in DB
             //JobSchedulerResourceModifyJobSchedulerClusterImpl.appointNodes(controllerId, new InventoryAgentInstancesDBLayer(connection), getJocError());
-            
-
-
-            
-            
-            
-            
-//            if (jobSchedulerBody.getControllers().size() == 1) {  // standalone
-//                RegisterParameter controller = jobSchedulerBody.getControllers().get(0);
-//                
-//                if (controller.getId() == 0L) { // new
-//                    if (!instanceDBLayer.instanceAlreadyExists(uris, ids)) {
-//                        instance = storeNewInventoryInstance(instanceDBLayer, osDBLayer, controller, jobschedulerId);
-//                    }
-//                } else {
-//                    // update instance and delete possibly other instance with same (old) jobschedulerId
-//                    instance = instanceDBLayer.getInventoryInstance(controller.getId());
-//                    if (instance == null) {
-//                        throw new UnknownJobSchedulerControllerException(getUnknownJobSchedulerControllerMessage(controller.getId()));
-//                    }
-//                    DBItemInventoryJSInstance otherClusterMember = instanceDBLayer.getOtherClusterMember(instance.getControllerId(), instance.getId());
-//                    if (otherClusterMember != null ) {
-//                        ids.add(otherClusterMember.getId());
-//                    }
-//                    instanceDBLayer.instanceAlreadyExists(uris, ids);
-//                    instanceDBLayer.deleteInstance(otherClusterMember);
-//                    
-//                    instance = setInventoryInstance(instance, controller, jobschedulerId);
-//                    osSystem = osDBLayer.getInventoryOperatingSystem(instance.getOsId());
-//                    ControllerAnswer jobschedulerAnswer = new ControllerCallable(instance, osSystem, accessToken).call();
-//                    
-//                    Long osId = osDBLayer.saveOrUpdateOSItem(jobschedulerAnswer.getDbOs());
-//                    jobschedulerAnswer.setOsId(osId);
-//                    
-//                    instanceDBLayer.updateInstance(jobschedulerAnswer.getDbInstance());
-//                    
-//                    //delete (old) OS if unused
-//                    if (otherClusterMember != null && !instanceDBLayer.isOperatingSystemUsed(otherClusterMember.getOsId())) {
-//                        osDBLayer.deleteOSItem(osDBLayer.getInventoryOperatingSystem(otherClusterMember.getOsId()));
-//                    }
-//                }
-//                if (instance != null) {
-//                    ProxiesEdit.update(Arrays.asList(instance)); 
-//                }
-//            } else {
-//                instanceDBLayer.instanceAlreadyExists(uris, ids);
-//                //special case : Urls have changed vice versa inside a cluster; avoid constraint violation
-//                List<DBItemInventoryJSInstance> instances = new ArrayList<DBItemInventoryJSInstance>();
-//                List<DBItemInventoryJSInstance> controllerDbInstances = new ArrayList<DBItemInventoryJSInstance>();
-//                index = 0;
-//                boolean internalUrlChangeInCluster = false;
-//                for (RegisterParameter controller : jobSchedulerBody.getControllers()) {
-//                    if (controller.getId() == 0L) { //new (standalone -> cluster)
-//                        instances.add(null);
-//                        instance = storeNewInventoryInstance(instanceDBLayer, osDBLayer, controller, jobschedulerId);
-//                        controllerDbInstances.add(instance);
-//                    } else {
-//                        instance = instanceDBLayer.getInventoryInstance(controller.getId());
-//                        if (instance == null) {
-//                            throw new UnknownJobSchedulerControllerException(getUnknownJobSchedulerControllerMessage(controller.getId()));
-//                        }
-//                        instances.add(instance);
-//                        if (instance.getUri().equals(jobSchedulerBody.getControllers().get(index == 0 ? 1 : 0).getUrl().toString().toLowerCase())) {
-//                            internalUrlChangeInCluster = true; 
-//                        }
-//                    }
-//                    index++;
-//                }
-//                index = 0;
-//                for (DBItemInventoryJSInstance inst : instances) {
-//                    if (inst != null) {
-//                        RegisterParameter controller = jobSchedulerBody.getControllers().get(index); 
-//                        instance = setInventoryInstance(inst, controller, jobschedulerId);
-//                        controllerDbInstances.add(instance);
-//                        if (internalUrlChangeInCluster) {
-//                            instance.setId(jobSchedulerBody.getControllers().get(index == 0 ? 1 : 0).getId());
-//                        }
-//                        osSystem = osDBLayer.getInventoryOperatingSystem(instance.getOsId());
-//                        
-//                        ControllerAnswer jobschedulerAnswer = new ControllerCallable(instance, osSystem, accessToken).call();
-//                        
-//                        Long osId = osDBLayer.saveOrUpdateOSItem(jobschedulerAnswer.getDbOs());
-//                        jobschedulerAnswer.setOsId(osId);
-//                        
-//                        instanceDBLayer.updateInstance(jobschedulerAnswer.getDbInstance());
-//                    }
-//                    index++;
-//                }
-//                ProxiesEdit.update(controllerDbInstances);
-//            }
-            
             storeAuditLogEntry(jobSchedulerAudit);
             
             if (firstController) { //GUI needs permissions directly for the first controller(s)
@@ -402,6 +311,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
             InventoryInstancesDBLayer instanceDBLayer = new InventoryInstancesDBLayer(connection);
             InventoryOperatingSystemsDBLayer osDBLayer = new InventoryOperatingSystemsDBLayer(connection);
+            InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
             
             List<DBItemInventoryJSInstance> instances = instanceDBLayer.getInventoryInstancesByControllerId(jobSchedulerBody.getControllerId());
             if (instances != null) {
@@ -413,6 +323,12 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                    //TODO some other tables should maybe deleted !!!
                }
                ProxiesEdit.remove(jobSchedulerBody.getControllerId());
+            }
+            List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(Arrays.asList(jobSchedulerBody.getControllerId()));
+            if (dbAgents != null) {
+                for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
+                    agentDBLayer.deleteInstance(dbAgent);
+                }
             }
             
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -538,10 +454,5 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
         }
         return instance;
     }
-    
-//    private String getUnknownJobSchedulerControllerMessage(Long id) {
-//        return String.format("JobScheduler instance (id:%1$d) couldn't be found in table %2$s", id,
-//                DBLayer.TABLE_INV_JS_INSTANCES);
-//    }
 
 }

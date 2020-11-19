@@ -24,7 +24,7 @@ import com.sos.schema.JsonValidator;
 @Path("agents")
 public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResource {
 
-    private static String API_CALL = "./agents";
+    private static String API_CALL = "./agents/p";
 
     @Override
     public JOCDefaultResponse post(String accessToken, byte[] filterBytes) {
