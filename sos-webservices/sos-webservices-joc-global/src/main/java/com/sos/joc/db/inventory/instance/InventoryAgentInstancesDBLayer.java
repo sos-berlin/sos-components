@@ -68,7 +68,7 @@ public class InventoryAgentInstancesDBLayer {
             }
             Query<DBItemInventoryAgentInstance> query = session.createQuery(sql.toString());
             if (controllerIds != null && !controllerIds.isEmpty()) {
-                query.setParameterList("controllerId", controllerIds);
+                query.setParameterList("controllerIds", controllerIds);
             }
             query.setParameter("securityLevel", level.intValue());
             return session.getResultList(query);
