@@ -15,4 +15,10 @@ public interface IAgentsResource {
     @Consumes("application/json")
     @Produces({ "application/json" })
     public JOCDefaultResponse post(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
+    @POST
+    @Path("names")
+    @Consumes("application/json")
+    @Produces({ "application/json" })
+    public JOCDefaultResponse postNames(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 }

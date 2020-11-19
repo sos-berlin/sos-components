@@ -38,6 +38,7 @@ public class Agent {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("agentName")
@@ -46,6 +47,7 @@ public class Agent {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("url")
@@ -83,6 +85,7 @@ public class Agent {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("agentName")
@@ -94,6 +97,7 @@ public class Agent {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("agentName")
@@ -105,6 +109,7 @@ public class Agent {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("url")
@@ -116,6 +121,7 @@ public class Agent {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("url")

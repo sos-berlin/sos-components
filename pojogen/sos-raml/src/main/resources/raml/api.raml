@@ -84,6 +84,13 @@ traits:
 /agents:
   description: This is not an API call. Use its children!!
   
+  /names:
+    type:
+      postOnlyAccessToken:
+        description: Get collection of enabled Agent names
+        description200: " "
+        schema200: !include joc/schemas/agent/agentNames-schema.json
+        example200 : " "
   /p:
     type:
       postOnlyOptionalId:
