@@ -257,7 +257,7 @@ public class DBLayerHistory {
         return session.executeUpdate(query);
     }
 
-    public int setOrderStepEnd(Long id, Date endTime, String endEventId, String endParameters, Integer returnCode, String state, boolean error,
+    public int setOrderStepEnd(Long id, Date endTime, String endEventId, String endParameters, Integer returnCode, Integer state, boolean error,
             String errorState, String errorReason, String errorCode, String errorText, Date modified) throws SOSHibernateException {
 
         StringBuilder hql = new StringBuilder("update ");

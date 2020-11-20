@@ -15,6 +15,7 @@ import javax.persistence.UniqueConstraint;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.inventory.common.JobCriticality;
+import com.sos.joc.model.order.OrderStateText;
 
 @Entity
 @Table(name = DBLayer.TABLE_HISTORY_ORDER_STEPS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONSTRAINT_HASH]" }) })
@@ -102,7 +103,7 @@ public class DBItemHistoryOrderStep extends DBItem {
     private Integer returnCode;// event
 
     @Column(name = "[STATE]", nullable = false)
-    private String state;// event. planned: completed, stopped, skipped, setback ...
+    private Integer state;
 
     @Column(name = "[ERROR]", nullable = false)
     private boolean error;
@@ -352,12 +353,22 @@ public class DBItemHistoryOrderStep extends DBItem {
         returnCode = val;
     }
 
-    public String getState() {
+    public Integer getState() {
         return state;
     }
 
-    public void setState(String val) {
+    @Transient
+    public OrderStateText getStateAsEnum() {
+        return OrderStateText.fromValue(state);
+    }
+
+    public void setState(Integer val) {
         state = val;
+    }
+
+    @Transient
+    public void setState(OrderStateText val) {
+        setState(val == null ? null : val.intValue());
     }
 
     public void setError(boolean val) {

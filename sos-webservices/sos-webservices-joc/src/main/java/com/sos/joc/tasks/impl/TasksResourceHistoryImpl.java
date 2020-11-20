@@ -13,6 +13,8 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
+import org.hibernate.ScrollableResults;
+
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.joc.Globals;
@@ -127,57 +129,66 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                 }
 
                 historyFilter.setLimit(jobsFilter.getLimit());
-                List<DBItemHistoryOrderStep> dbOrderStepItems = new ArrayList<>();
 
                 connection = Globals.createSosHibernateStatelessConnection(API_CALL);
                 JobHistoryDBLayer jobHistoryDbLayer = new JobHistoryDBLayer(connection, historyFilter);
 
-                if (getTaskFromHistoryIdAndNode) {
-                    dbOrderStepItems = jobHistoryDbLayer.getJobsFromHistoryIdAndPosition(jobsFilter.getHistoryIds().stream().filter(Objects::nonNull)
-                            .filter(t -> t.getHistoryId() != null).collect(Collectors.groupingBy(TaskIdOfOrder::getHistoryId, Collectors.mapping(
-                                    TaskIdOfOrder::getPosition, Collectors.toSet()))));
-                } else if (getTaskFromOrderHistory) {
-                    final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-                    dbOrderStepItems = jobHistoryDbLayer.getJobsFromOrder(jobsFilter.getOrders().stream().filter(Objects::nonNull).filter(
-                            order -> canAdd(order.getWorkflowPath(), permittedFolders)).collect(Collectors.groupingBy(order -> normalizePath(order
-                                    .getWorkflowPath()), Collectors.groupingBy(o -> o.getOrderId() == null ? "" : o.getOrderId(), Collectors.mapping(
-                                            OrderPath::getPosition, Collectors.toSet())))));
-                } else {
-                    dbOrderStepItems = jobHistoryDbLayer.getJobs();
-                }
+                ScrollableResults sr = null;
+                try {
+                    if (getTaskFromHistoryIdAndNode) {
+                        sr = jobHistoryDbLayer.getJobsFromHistoryIdAndPosition(jobsFilter.getHistoryIds().stream().filter(Objects::nonNull).filter(
+                                t -> t.getHistoryId() != null).collect(Collectors.groupingBy(TaskIdOfOrder::getHistoryId, Collectors.mapping(
+                                        TaskIdOfOrder::getPosition, Collectors.toSet()))));
+                    } else if (getTaskFromOrderHistory) {
+                        final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+                        sr = jobHistoryDbLayer.getJobsFromOrder(jobsFilter.getOrders().stream().filter(Objects::nonNull).filter(order -> canAdd(order
+                                .getWorkflowPath(), permittedFolders)).collect(Collectors.groupingBy(order -> normalizePath(order.getWorkflowPath()),
+                                        Collectors.groupingBy(o -> o.getOrderId() == null ? "" : o.getOrderId(), Collectors.mapping(
+                                                OrderPath::getPosition, Collectors.toSet())))));
+                    } else {
+                        sr = jobHistoryDbLayer.getJobs();
+                    }
 
-                Matcher regExMatcher = null;
-                if (jobsFilter.getRegex() != null && !jobsFilter.getRegex().isEmpty()) {
-                    regExMatcher = Pattern.compile(jobsFilter.getRegex()).matcher("");
-                }
+                    Matcher regExMatcher = null;
+                    if (jobsFilter.getRegex() != null && !jobsFilter.getRegex().isEmpty()) {
+                        regExMatcher = Pattern.compile(jobsFilter.getRegex()).matcher("");
+                    }
 
-                if (dbOrderStepItems != null) {
-                    for (DBItemHistoryOrderStep dbItemOrderStep : dbOrderStepItems) {
-                        if (jobsFilter.getControllerId().isEmpty() && !getPermissonsJocCockpit(dbItemOrderStep.getJobSchedulerId(), accessToken)
-                                .getHistory().getView().isStatus()) {
-                            continue;
+                    if (sr != null) {
+                        while (sr.next()) {
+                            DBItemHistoryOrderStep step = (DBItemHistoryOrderStep) sr.get(0);
+
+                            if (jobsFilter.getControllerId().isEmpty() && !getPermissonsJocCockpit(step.getJobSchedulerId(), accessToken).getHistory()
+                                    .getView().isStatus()) {
+                                continue;
+                            }
+                            if (regExMatcher != null && !regExMatcher.reset(step.getWorkflowPath() + "," + step.getJobName()).find()) {
+                                continue;
+                            }
+                            TaskHistoryItem item = new TaskHistoryItem();
+                            item.setControllerId(step.getJobSchedulerId());
+                            item.setAgentUrl(step.getAgentUri());
+                            item.setStartTime(step.getStartTime());
+                            item.setEndTime(step.getEndTime());
+                            item.setError(setError(step));
+                            item.setJob(step.getJobName());
+                            item.setOrderId(step.getOrderKey());
+                            item.setExitCode(step.getReturnCode());
+                            item.setState(setState(step));
+                            item.setCriticality(step.getCriticalityAsEnum().value().toLowerCase());
+                            item.setSurveyDate(step.getModified());
+                            item.setTaskId(step.getId());
+                            item.setWorkflow(step.getWorkflowPath());
+                            item.setPosition(step.getWorkflowPosition());
+
+                            listOfHistory.add(item);
                         }
-                        if (regExMatcher != null && !regExMatcher.reset(dbItemOrderStep.getWorkflowPath() + "," + dbItemOrderStep.getJobName())
-                                .find()) {
-                            continue;
-                        }
-                        TaskHistoryItem taskHistoryItem = new TaskHistoryItem();
-                        taskHistoryItem.setControllerId(dbItemOrderStep.getJobSchedulerId());
-                        taskHistoryItem.setAgentUrl(dbItemOrderStep.getAgentUri());
-                        taskHistoryItem.setStartTime(dbItemOrderStep.getStartTime());
-                        taskHistoryItem.setEndTime(dbItemOrderStep.getEndTime());
-                        taskHistoryItem.setError(setError(dbItemOrderStep));
-                        taskHistoryItem.setJob(dbItemOrderStep.getJobName());
-                        taskHistoryItem.setOrderId(dbItemOrderStep.getOrderKey());
-                        taskHistoryItem.setExitCode(dbItemOrderStep.getReturnCode());
-                        taskHistoryItem.setState(setState(dbItemOrderStep));
-                        taskHistoryItem.setCriticality(dbItemOrderStep.getCriticalityAsEnum().value().toLowerCase());
-                        taskHistoryItem.setSurveyDate(dbItemOrderStep.getModified());
-                        taskHistoryItem.setTaskId(dbItemOrderStep.getId());
-                        taskHistoryItem.setWorkflow(dbItemOrderStep.getWorkflowPath());
-                        taskHistoryItem.setPosition(dbItemOrderStep.getWorkflowPosition());
-
-                        listOfHistory.add(taskHistoryItem);
+                    }
+                } catch (Exception e) {
+                    throw e;
+                } finally {
+                    if (sr != null) {
+                        sr.close();
                     }
                 }
             }
@@ -197,30 +208,30 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
         }
     }
 
-    private HistoryState setState(DBItemHistoryOrderStep dbItemOrderStep) {
+    private HistoryState setState(DBItemHistoryOrderStep step) {
         HistoryState state = new HistoryState();
-        if (dbItemOrderStep.isSuccessFul()) {
+        if (step.isSuccessFul()) {
             state.setSeverity(0);
             state.set_text(HistoryStateText.SUCCESSFUL);
-        } else if (dbItemOrderStep.isInComplete()) {
+        } else if (step.isInComplete()) {
             state.setSeverity(1);
             state.set_text(HistoryStateText.INCOMPLETE);
-        } else if (dbItemOrderStep.isFailed()) {
+        } else if (step.isFailed()) {
             state.setSeverity(2);
             state.set_text(HistoryStateText.FAILED);
         }
         return state;
     }
 
-    private Err setError(DBItemHistoryOrderStep dbItemOrderStep) {
-        if (dbItemOrderStep.getError()) {
+    private Err setError(DBItemHistoryOrderStep step) {
+        if (step.getError()) {
             Err error = new Err();
-            // TODO maybe use dbItemOrderStep.getErrorState()
-            error.setCode(dbItemOrderStep.getErrorCode());
-            if (dbItemOrderStep.getErrorText() != null && dbItemOrderStep.getErrorText().isEmpty()) {
-                error.setMessage(dbItemOrderStep.getErrorText());
+            // TODO maybe use step.getErrorState()
+            error.setCode(step.getErrorCode());
+            if (step.getErrorText() != null && step.getErrorText().isEmpty()) {
+                error.setMessage(step.getErrorText());
             } else {
-                error.setMessage(dbItemOrderStep.getErrorReason());
+                error.setMessage(step.getErrorReason());
             }
             return error;
         }

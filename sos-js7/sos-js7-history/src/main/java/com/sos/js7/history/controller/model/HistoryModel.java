@@ -91,10 +91,6 @@ public class HistoryModel {
     private Map<String, CachedOrderStep> cachedOrderSteps;
     private Map<String, CachedAgent> cachedAgents;
 
-    public static enum OrderStepState {
-        running, processed
-    };
-
     private static enum CacheType {
         order, orderStep
     };
@@ -914,7 +910,7 @@ public class HistoryModel {
             item.setEndEventId(null);
 
             item.setReturnCode(null);
-            item.setState(OrderStepState.running.name());
+            item.setState(OrderStateText.RUNNING);
 
             item.setError(false);
             item.setErrorCode(null);
@@ -1019,8 +1015,8 @@ public class HistoryModel {
                 errorText = cos.getStdErr();
             }
             dbLayer.setOrderStepEnd(cos.getId(), cos.getEndTime(), String.valueOf(entry.getEventId()), EventMeta.map2Json(entry.getOutcome()
-                    .getKeyValues()), le.getReturnCode(), OrderStepState.processed.name(), le.isError(), le.getErrorState(), le.getErrorReason(), le
-                            .getErrorCode(), errorText, new Date());
+                    .getKeyValues()), le.getReturnCode(), le.isError() ? OrderStateText.FAILED.intValue() : OrderStateText.FINISHED.intValue(), le
+                            .isError(), le.getErrorState(), le.getErrorReason(), le.getErrorCode(), errorText, new Date());
             le.onOrderStep(cos);
 
             Path log = storeLog2File(le);
