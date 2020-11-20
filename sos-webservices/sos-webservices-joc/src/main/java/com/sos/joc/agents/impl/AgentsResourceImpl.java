@@ -26,7 +26,7 @@ import com.sos.schema.JsonValidator;
 public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResource {
 
     private static String API_CALL_P = "./agents/p";
-    private static String API_CALL_NAMES = "./agents/p";
+    private static String API_CALL_NAMES = "./agents/names";
 
     @Override
     public JOCDefaultResponse post(String accessToken, byte[] filterBytes) {
@@ -44,8 +44,9 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
             }
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_P);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
-            List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIds(Arrays.asList(agentParameter.getControllerId()), false,
-                    agentParameter.getOnlyEnabledAgents());
+            List<String> controllerIds = agentParameter.getControllerId().isEmpty() ? null : Arrays.asList(agentParameter.getControllerId());
+            List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIds(controllerIds, false, agentParameter
+                    .getOnlyEnabledAgents());
             Agents agents = new Agents();
             if (dbAgents != null) {
                 agents.setAgents(dbAgents.stream().map(a -> {
@@ -55,10 +56,10 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
                     agent.setDisabled(a.getDisabled());
                     agent.setIsClusterWatcher(a.getIsWatcher());
                     agent.setUrl(a.getUri());
+                    agent.setControllerId(a.getControllerId());
                     return agent;
                 }).collect(Collectors.toList()));
             }
-            agents.setControllerId(agentParameter.getControllerId());
             agents.setDeliveryDate(Date.from(Instant.now()));
             
             return JOCDefaultResponse.responseStatus200(agents);

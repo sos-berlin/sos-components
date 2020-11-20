@@ -22,7 +22,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
-    "controllerId",
     "agents"
 })
 public class Agents {
@@ -37,15 +36,6 @@ public class Agents {
     @JsonProperty("deliveryDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
-    /**
-     * filename
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
     @JsonProperty("agents")
     private List<Agent> agents = new ArrayList<Agent>();
 
@@ -73,30 +63,6 @@ public class Agents {
         this.deliveryDate = deliveryDate;
     }
 
-    /**
-     * filename
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * filename
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
-
     @JsonProperty("agents")
     public List<Agent> getAgents() {
         return agents;
@@ -109,12 +75,12 @@ public class Agents {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("controllerId", controllerId).append("agents", agents).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("agents", agents).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(controllerId).append(agents).toHashCode();
+        return new HashCodeBuilder().append(deliveryDate).append(agents).toHashCode();
     }
 
     @Override
@@ -126,7 +92,7 @@ public class Agents {
             return false;
         }
         Agents rhs = ((Agents) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(controllerId, rhs.controllerId).append(agents, rhs.agents).isEquals();
+        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(agents, rhs.agents).isEquals();
     }
 
 }

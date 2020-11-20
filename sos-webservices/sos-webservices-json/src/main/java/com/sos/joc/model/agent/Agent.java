@@ -17,6 +17,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "controllerId",
     "agentId",
     "agentName",
     "url",
@@ -25,6 +26,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class Agent {
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * string without < and >
      * <p>
@@ -56,6 +65,28 @@ public class Agent {
     private Boolean isClusterWatcher = false;
     @JsonProperty("disabled")
     private Boolean disabled = false;
+
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
+    }
 
     /**
      * string without < and >
@@ -151,12 +182,12 @@ public class Agent {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentId", agentId).append("agentName", agentName).append("url", url).append("isClusterWatcher", isClusterWatcher).append("disabled", disabled).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("url", url).append("isClusterWatcher", isClusterWatcher).append("disabled", disabled).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentName).append(agentId).append(isClusterWatcher).append(disabled).append(url).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(controllerId).append(agentName).append(isClusterWatcher).append(disabled).append(url).toHashCode();
     }
 
     @Override
@@ -168,7 +199,7 @@ public class Agent {
             return false;
         }
         Agent rhs = ((Agent) other);
-        return new EqualsBuilder().append(agentName, rhs.agentName).append(agentId, rhs.agentId).append(isClusterWatcher, rhs.isClusterWatcher).append(disabled, rhs.disabled).append(url, rhs.url).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(agentName, rhs.agentName).append(isClusterWatcher, rhs.isClusterWatcher).append(disabled, rhs.disabled).append(url, rhs.url).isEquals();
     }
 
 }
