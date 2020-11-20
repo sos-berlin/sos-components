@@ -70,14 +70,15 @@ post:
         }
   responses:
     200:
-      description: It returns an _ok_. This reply code comes only for bulk operations if all commands were successful.
+      description: Returns the orderIds that are tried to add.
       body:
         application/json:
-          schema: ok
+          schema: orderIds
           example: |
             {
-              "deliveryDate":"2020-08-24T21:13:35Z",
-              "surveyDate":"2020-08-24T21:13:34Z",
-              "ok":true
+              "deliveryDate":"2020-11-20T21:13:35Z",
+              "orderIds": [
+                "#2020-11-20#T835857946-Test0000000055"
+              ]
             }
     419:

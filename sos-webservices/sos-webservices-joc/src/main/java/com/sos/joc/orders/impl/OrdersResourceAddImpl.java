@@ -29,6 +29,7 @@ import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.AddOrder;
 import com.sos.joc.model.order.AddOrders;
+import com.sos.joc.model.order.OrderIds;
 import com.sos.joc.orders.resource.IOrdersResourceAdd;
 import com.sos.schema.JsonValidator;
 
@@ -89,7 +90,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             Map<Boolean, Set<Either<Err419, JFreshOrder>>> result = addOrders.getOrders().stream().filter(permissions).map(mapper).collect(
                     Collectors.groupingBy(Either::isRight, Collectors.toSet()));
 
-            
+            OrderIds entity = new OrderIds();
             if (result.containsKey(true) && !result.get(true).isEmpty()) {
                 final Map<OrderId, JFreshOrder> freshOrders = result.get(true).stream().map(Either::get).collect(Collectors.toMap(JFreshOrder::id,
                         Function.identity()));
@@ -102,7 +103,10 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                         return either;
                     }
                 }).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getJocError(), addOrders.getControllerId()));
+                
+                entity.setOrderIds(freshOrders.keySet().stream().map(o -> o.string()).collect(Collectors.toList()));
             }
+            entity.setDeliveryDate(Date.from(Instant.now()));
             
 //            if (result.containsKey(true) && !result.get(true).isEmpty()) {
 //                OrderApi.addOrders(addOrders, this.getAccount());
@@ -111,7 +115,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             if (result.containsKey(false) && !result.get(false).isEmpty()) {
                 return JOCDefaultResponse.responseStatus419(result.get(false).stream().map(Either::getLeft).collect(Collectors.toList()));
             }
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return JOCDefaultResponse.responseStatus200(entity);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
