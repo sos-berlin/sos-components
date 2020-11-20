@@ -181,6 +181,7 @@ public class HistoryControllerHandler {
     }
 
     private AtomicLong process(AtomicLong eventId) throws Exception {
+
         try (JStandardEventBus<ProxyEvent> eventBus = new JStandardEventBus<>(ProxyEvent.class)) {
             Flux<JEventAndControllerState<Event>> flux = api.eventFlux(eventBus, OptionalLong.of(eventId.get()));
             flux = flux.filter(e -> HistoryEventType.fromValue(e.stampedEvent().value().event().getClass().getSimpleName()) != null);
@@ -383,13 +384,20 @@ public class HistoryControllerHandler {
     }
 
     private void fluxDoOnCancel() {
-        LOGGER.info("----------------[fluxDoOnCancel]----------------");
+        LOGGER.info("[fluxDoOnCancel]");
     }
 
     private Throwable fluxDoOnError(Throwable t) {
-        tornAfterEventId = null;
-        LOGGER.error("[fluxDoOnError]" + t.toString());
+        LOGGER.info("[fluxDoOnError]" + t.toString());
         return t;
+    }
+
+    private void fluxDoOnComplete() {
+        LOGGER.info("[fluxDoOnComplete]");
+    }
+
+    private void fluxDoFinally(SignalType type) {
+        LOGGER.info("[fluxDoFinally] - " + type);
     }
 
     private boolean isTornException(Throwable t) {
@@ -405,14 +413,6 @@ public class HistoryControllerHandler {
         } catch (Throwable e) {
         }
         return false;
-    }
-
-    private void fluxDoOnComplete() {
-        LOGGER.info("[fluxDoOnComplete]");
-    }
-
-    private void fluxDoFinally(SignalType type) {
-        LOGGER.info("[fluxDoFinally] - " + type);
     }
 
     public void wait(int interval) {
