@@ -161,34 +161,6 @@ public class DeploymentTest {
         LOGGER.info("");
     }
 
-//    @Test
-//    public void test03aImportSingleWorkflowFromSignAndUpdateArchiveFile() throws IOException, PGPException {
-//        LOGGER.info("*************************  import sign and update workflow from zip file Test *******");
-//        LOGGER.info("*************************       import single workflow ******************************");
-//        Set<Workflow> workflows = importSingleWorkflow();
-//        assertEquals(1, workflows.size());
-//        LOGGER.info(String.format("%1$d workflow successfully imported from archive!", workflows.size()));
-//        LOGGER.info("*************************       sign single Workflow ********************************");
-//        Set<JSObject> jsObjectsToExport = new HashSet<JSObject>();
-//        int counterSigned = 0;
-//        for (Workflow workflow : workflows) {
-//            Signature signature = signSingleWorkflowPGP(workflow);
-//            JSObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow, signature);
-//            assertNotNull(jsObject.getSignedContent());
-//            counterSigned++;
-//            jsObjectsToExport.add(jsObject);
-//        }
-//        assertEquals(1, counterSigned);
-//        LOGGER.info(String.format("%1$d workflows signed", counterSigned));
-//        LOGGER.info("*************************       export signature to zip file ************************");
-//        exportSingleWorkflow(jsObjectsToExport);
-//        assertTrue(Files.exists(Paths.get("target").resolve("created_test_files").resolve(TARGET_FILENAME_SINGLE)));
-//        LOGGER.info("Archive bundle_js_single_workflow.zip succefully created in ./target/created_test_files!");
-//        LOGGER.info("Archive contains the workflows and their signatures.");
-//        LOGGER.info("************************* End Test import workflows from zip file  ******************");
-//        LOGGER.info("");
-//    }
-
     @Test
     public void test04ImportWorkflowsandSignaturesFromArchiveFile() throws IOException, PGPException {
         Set<JSObject> jsObjects = new HashSet<JSObject>();

@@ -103,6 +103,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             // set new versionId for first round (update items)
             final String versionIdForUpdate = UUID.randomUUID().toString();
             final Date deploymentDate = Date.from(Instant.now());
+            // update agentName in Workflow jobs before signing agentName -> agentId
+            unsignedDrafts.stream().forEach(draft -> PublishUtils.updateAgentRefInWorkflowJobs(draft, dbLayer));
             // all items will be signed or re-signed with current versionId
             verifiedConfigurations.putAll(
                     PublishUtils.getDraftsWithSignature(versionIdForUpdate, account, unsignedDrafts, hibernateSession, JocSecurityLevel.MEDIUM));

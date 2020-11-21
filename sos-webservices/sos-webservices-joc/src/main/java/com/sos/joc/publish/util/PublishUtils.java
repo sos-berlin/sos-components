@@ -59,8 +59,10 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.sign.keys.sign.SignObject;
 import com.sos.commons.sign.keys.verify.VerifySignature;
 import com.sos.jobscheduler.model.deploy.DeployType;
+import com.sos.jobscheduler.model.job.Job;
 import com.sos.jobscheduler.model.junction.Junction;
 import com.sos.jobscheduler.model.lock.Lock;
+import com.sos.jobscheduler.model.workflow.Jobs;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.db.DBItem;
@@ -693,6 +695,21 @@ public abstract class PublishUtils {
         case JUNCTION:
         default:
             throw new JocNotImplementedException();
+        }
+    }
+    
+    public static void updateAgentRefInWorkflowJobs(DBItemInventoryConfiguration item, DBLayerDeploy dbLayer) {
+        try {
+            if (ConfigurationType.WORKFLOW.equals(ConfigurationType.fromValue(item.getType()))) {
+                Workflow workflow = om.readValue(item.getContent(), Workflow.class);
+                workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
+                    Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
+                    job.setAgentName(dbLayer.getAgentIdFromAgentName(job.getAgentName()));
+                });
+                item.setContent(om.writeValueAsString(workflow));
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage(), e);
         }
     }
 
