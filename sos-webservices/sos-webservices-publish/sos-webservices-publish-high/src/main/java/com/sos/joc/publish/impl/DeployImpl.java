@@ -95,6 +95,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
             Map<DBItemDeploymentHistory, DBItemDepSignatures> signedDeployments = new HashMap<DBItemDeploymentHistory, DBItemDepSignatures>();
 
+            // determine agent names to be replaced
             for (DBItemInventoryConfiguration update : configurationDBItemsToDeploy) {
                 DBItemDepSignatures signature = dbLayer.getSignature(update.getId());
                 if (signature != null) {
@@ -267,7 +268,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(
                     verifiedReDeployables, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
             createAuditLogFor(deployedObjects, deployFilter, controllerId, true, versionIdForUpdate);
-            PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), dbLayer.getSession());
+            PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), null, dbLayer.getSession());
             LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
         } else if (either.isLeft()) {
             // an error occurred

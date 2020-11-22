@@ -38,12 +38,14 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.JocSecurityLevel;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.publish.Controller;
 import com.sos.joc.model.publish.DeployDelete;
 import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.DeployUpdate;
 import com.sos.joc.publish.db.DBLayerDeploy;
+import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.joc.publish.resource.IDeploy;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
@@ -97,24 +99,30 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             Set<Long> configurationIdsToDelete = getConfigurationIdsToDeleteFromFilter(deployFilter);
 
             // read all objects provided in the filter from the database
-            List<DBItemInventoryConfiguration> configurationDBItemsToDeploy = dbLayer.getFilteredInventoryConfigurationsByIds(configurationIdsToDeploy);
+            final List<DBItemInventoryConfiguration> configurationDBItemsToDeploy = 
+                    dbLayer.getFilteredInventoryConfigurationsByIds(configurationIdsToDeploy);
             List<DBItemDeploymentHistory> depHistoryDBItemsToDeploy = dbLayer.getFilteredDeploymentHistory(deploymentIdsToReDeploy);
             List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete = dbLayer.getFilteredDeploymentHistory(deploymentIdsToDeleteFromConfigIds);
 
             // sign undeployed configurations
             Set<DBItemInventoryConfiguration> unsignedDrafts = new HashSet<DBItemInventoryConfiguration>(configurationDBItemsToDeploy);
             Set<DBItemDeploymentHistory> unsignedReDeployables = new HashSet<DBItemDeploymentHistory>(depHistoryDBItemsToDeploy);
+            
+            // determine agent names to be replaced
+            Set<UpdateableWorkflowJobAgentName> updateableAgentNames = new HashSet<UpdateableWorkflowJobAgentName>();
+            unsignedDrafts.stream()
+                .filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW))
+                .forEach(item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(item, dbLayer)));
             // sign deployed configurations with new versionId
-            Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations = new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
+            Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations =
+                    new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
             Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedReDeployables = new HashMap<DBItemDeploymentHistory, DBItemDepSignatures>();
             // set new versionId for first round (update items)
             final String versionIdForUpdate = UUID.randomUUID().toString();
             final Date deploymentDate = Date.from(Instant.now());
-            // update agentName in Workflow jobs before signing agentName -> agentId
-            unsignedDrafts.stream().forEach(draft -> PublishUtils.updateAgentRefInWorkflowJobs(draft, dbLayer));
             // all items will be signed or re-signed with current versionId
-            verifiedConfigurations.putAll(
-                    PublishUtils.getDraftsWithSignature(versionIdForUpdate, account, unsignedDrafts, hibernateSession, JocSecurityLevel.LOW));
+            verifiedConfigurations.putAll(PublishUtils.getDraftsWithSignature(
+                    versionIdForUpdate, account, unsignedDrafts, updateableAgentNames, hibernateSession, JocSecurityLevel.LOW));
             verifiedReDeployables.putAll(
                     PublishUtils.getDeploymentsWithSignature(versionIdForUpdate, account, unsignedReDeployables, hibernateSession, 
                             JocSecurityLevel.LOW));
@@ -154,8 +162,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 case SOSKeyConstants.PGP_ALGORITHM_NAME:
                     PublishUtils.updateRepoAddOrUpdatePGP(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId, 
                             dbLayer).thenAccept(either -> {
-                                processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, versionIdForUpdate, controllerId,
-                                    deploymentDate, deployFilter);
+                                processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account, 
+                                        versionIdForUpdate, controllerId, deploymentDate, deployFilter);
                     }).get();
                     break;
                 case SOSKeyConstants.RSA_ALGORITHM_NAME:
@@ -163,8 +171,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     signerDN = cert.getSubjectDN().getName();
                     PublishUtils.updateRepoAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
                             dbLayer,SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
-                                processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, versionIdForUpdate, controllerId,
-                                    deploymentDate, deployFilter);
+                                processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account, 
+                                        versionIdForUpdate, controllerId, deploymentDate, deployFilter);
                     }).get();
                     break;
                 case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
@@ -172,8 +180,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     signerDN = cert.getSubjectDN().getName();
                     PublishUtils.updateRepoAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
                             dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
-                                processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, versionIdForUpdate, controllerId,
-                                    deploymentDate, deployFilter);
+                                processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account, 
+                                        versionIdForUpdate, controllerId, deploymentDate, deployFilter);
                     }).get();
                     break;
                 }
@@ -245,6 +253,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     private void processAfterAdd (
             Either<Problem, Void> either, 
             Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations,
+            Set<UpdateableWorkflowJobAgentName> updateableAgentNames,
             Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedReDeployables,
             String account,
             String versionIdForUpdate,
@@ -257,7 +266,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     verifiedConfigurations, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate);
             deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(
                     verifiedReDeployables, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
-            PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), dbLayer.getSession());
+            PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet().stream().collect(Collectors.toSet()), updateableAgentNames, 
+                    dbLayer.getSession());
             LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
             createAuditLogForEach(deployedObjects, deployFilter, controllerId, true, versionIdForUpdate);
         } else if (either.isLeft()) {
