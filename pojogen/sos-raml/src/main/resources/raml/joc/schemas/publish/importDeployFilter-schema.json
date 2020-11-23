@@ -8,20 +8,8 @@
 		"signatureAlgorithm"
 	],
 	"properties": {
-    "controllers": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "javaType": "com.sos.joc.model.publish.Controller",
-        "required": [
-          "controller"
-        ],
-        "properties": {
-          "controller": {
-            "$ref": "../common/string255-schema.json"
-          }
-        }
-      }
+    "controllerId": {
+      "$ref": "../common/string255-schema.json"
     },
     "keyAlgorithm" : {
       "type": "string"

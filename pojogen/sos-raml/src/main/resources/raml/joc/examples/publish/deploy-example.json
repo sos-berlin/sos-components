@@ -1,27 +1,36 @@
 {
-  "controllers" : [{
-      "controller": "Controller_A"  
+  "controllerIds" : [{
+    "controllerId" : "js7-cluster"
+  }, {
+    "controllerId" : "standalone"
+  }],
+  "store" : {
+    "draftConfigurations" : [{
+      "draftConfiguration" : {
+        "path" : "/myWorkflows/ifElseWorkflow/workflow_10",
+        "objectType" : "Workflow"
+      }
     }, {
-      "controller": "Controller_B"  
-    }, {
-      "controller": "Controller_C"  
-    }, {
-      "controller": "Controller_D"  
-    }
-  ],
-  "update": [{
-      "configurationId": "17",
-      "deploymentId": "4"
-    }, {
-      "configurationId": "8"
-    }, {
-      "deploymentId": "12"
-    }
-  ],
-  "delete": [{
-      "configurationId": "4"
-    }, {
-      "configurationId": "12"
-    }
-  ]
+      "draftConfiguration" : {
+        "path" : "/myWorkflows/ifElseWorkflow/workflow_16",
+        "objectType" : "Workflow"
+      }
+    }],
+    "deployConfigurations" : [{
+      "deployConfiguration" : {
+        "path" : "/myWorkflows/ifElseWorkflow/workflow_12",
+        "objectType" : "Workflow",
+        "commitId" : "4273b6c6-c354-4fcd-afdb-2758088abe4a"
+      }
+    }]
+  },
+  "delete" : {
+    "deployConfigurations" : [{
+      "deployConfiguration" : {
+        "path" : "/myWorkflows/forkJoinWorkflows/workflow_88",
+        "objectType" : "Workflow",
+        "commitId" : "9b5a158f-df73-43e7-a9d4-e124079f35c3"
+      }
+    }]
+  }
 }

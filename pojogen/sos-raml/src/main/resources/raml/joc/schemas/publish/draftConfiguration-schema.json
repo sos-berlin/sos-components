@@ -1,0 +1,18 @@
+{
+	"title": "DraftConfiguration",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.publish.DraftConfiguration",
+	"type": "object",
+  "required": [
+    "path",
+    "objectType"
+  ],
+  "properties": {
+    "path": {
+      "$ref": "../common/path-schema.json"
+    },
+    "objectType": {
+      "$ref": "../../../jobscheduler/schemas/deploy/deployType-schema.json"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+	"title": "DeployConfig",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.publish.DeployConfig",
+	"type": "object",
+  "required": [
+    "deployConfiguration"
+  ],
+  "properties": {
+    "deployConfiguration": {
+      "$ref": "deployConfiguration-schema.json"
+    }
+  }
+}

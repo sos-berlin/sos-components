@@ -1,0 +1,14 @@
+{
+	"title": "DraftConfig",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.publish.DraftConfig",
+	"type": "object",
+  "required": [
+    "draftConfiguration"
+  ],
+  "properties": {
+    "draftConfiguration": {
+      "$ref": "draftConfiguration-schema.json"
+    }
+  }
+}

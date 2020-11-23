@@ -1,0 +1,20 @@
+{
+	"title": "DeployStore",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.publish.DeployStore",
+	"type": "object",
+  "properties": {
+    "draftConfigurations": {
+      "type" : "array",
+      "items" : {
+        "$ref": "draftConfig-schema.json"
+      }
+    },
+    "deployConfigurations": {
+      "type" : "array",
+      "items" : {
+        "$ref": "deployConfig-schema.json"
+      }
+    }
+  }
+}

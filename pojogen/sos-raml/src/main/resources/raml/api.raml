@@ -1066,10 +1066,10 @@ traits:
     /deploy:
       type:
         postJSONWithOkWithoutJSId:
-          description: Deploys a signed JS Object to the current JobScheduler Controller
-          description1: !include joc/documentation/publish/schedulersFilteredById.md
-          description2: !include joc/documentation/publish/updateFilteredById.md
-          description3: !include joc/documentation/publish/deleteFilteredById.md
+          description: Signs and deploys deployable objects to- or deletes already deployed objects from the given Controllers 
+          description1: !include joc/documentation/publish/controllerIdsFilter.md
+          description2: !include joc/documentation/publish/deployStoreFilter.md
+          description3: !include joc/documentation/publish/deployDeleteFilter.md
           description4: " "
           description5: " "
           audit: !include joc/documentation/audit/auditLog.md

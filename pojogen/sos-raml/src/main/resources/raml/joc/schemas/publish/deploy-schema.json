@@ -4,53 +4,23 @@
 	"javaType": "com.sos.joc.model.publish.DeployFilter",
 	"type": "object",
 	"required": [
-		"controllers"
+		"controllerIds"
 	],
 	"properties": {
-		"controllers": {
-			"type": "array",
-			"items": {
-			  "type": "object",
-			  "javaType": "com.sos.joc.model.publish.Controller",
-			  "required": [
-			    "controller"
-			  ],
-			  "properties": {
-          "controller": {
-            "$ref": "../common/string255-schema.json"
-          }
-			  }
-			}
+		"controllerIds": {
+		  "type" : "array",
+	    "items": {
+        "$ref":  "controllerId-schema.json"
+      }
 		},
-		"update": {
-			"type": "array",
-			"items": {
-			  "type": "object",
-        "javaType": "com.sos.joc.model.publish.DeployUpdate",
-        "properties": {
-          "configurationId": {
-            "$ref": "../common/nonNegativeLong-schema.json"
-          },
-          "deploymentId": {
-            "$ref": "../common/nonNegativeLong-schema.json"
-          }
-        }
-			}
+		"store": {
+			"$ref": "deployStore-schema.json"
 		},
 		"delete": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "javaType": "com.sos.joc.model.publish.DeployDelete",
-        "properties": {
-          "configurationId": {
-            "$ref": "../common/nonNegativeLong-schema.json"
-          }
-        }
-      }
-    },
-    "auditLog": {
-      "$ref": "../audit/auditParams-schema.json"
-    }
-  }
+			"$ref": "deployDelete-schema.json"
+		},
+		"auditLog": {
+			"$ref": "../audit/auditParams-schema.json"
+		}
+	}
 }

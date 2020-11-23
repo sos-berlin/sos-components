@@ -1,0 +1,22 @@
+{
+	"title": "DeployConfiguration",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.publish.DeployConfiguration",
+	"type": "object",
+  "required": [
+    "path",
+    "objectType",
+    "commitId"
+  ],
+  "properties": {
+    "path": {
+      "$ref": "../common/path-schema.json"
+    },
+    "objectType": {
+      "$ref": "../../../jobscheduler/schemas/deploy/deployType-schema.json"
+    },
+    "commitId": {
+      "$ref": "../common/string255-schema.json"
+    }
+  }
+}
