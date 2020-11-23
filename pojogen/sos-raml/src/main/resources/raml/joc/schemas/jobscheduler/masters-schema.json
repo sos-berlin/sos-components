@@ -22,6 +22,11 @@
     	"items": {
     		"$ref": "../agent/agent-schema.json"
     	}
+    },
+    "currentSecurityLevel": {
+    	"type": {
+    	  "$ref": "../common/jocSecurityLevel-schema.json"
+    	}
     }
   }
 }

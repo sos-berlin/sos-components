@@ -4,6 +4,8 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -49,10 +51,13 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
                     .getOnlyEnabledAgents());
             Agents agents = new Agents();
             if (dbAgents != null) {
+                Map<String, Set<String>> allAliases = dbLayer.getAgentNamesByAgentIds(dbAgents.stream().map(DBItemInventoryAgentInstance::getAgentId)
+                        .collect(Collectors.toSet()));
                 agents.setAgents(dbAgents.stream().map(a -> {
                     Agent agent = new Agent();
                     agent.setAgentId(a.getAgentId());
                     agent.setAgentName(a.getAgentName());
+                    agent.setAgentNameAliases(allAliases.get(a.getAgentId()));
                     agent.setDisabled(a.getDisabled());
                     agent.setIsClusterWatcher(a.getIsWatcher());
                     agent.setUrl(a.getUri());
@@ -82,7 +87,7 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_NAMES);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             AgentNames agentNames = new AgentNames();
-            agentNames.setAgentNames(dbLayer.getAgentNames(true));
+            agentNames.setAgentNames(dbLayer.getEnabledAgentNames());
             agentNames.setDeliveryDate(Date.from(Instant.now()));
             
             return JOCDefaultResponse.responseStatus200(agentNames);

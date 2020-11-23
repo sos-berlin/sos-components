@@ -1,6 +1,9 @@
 package com.sos.joc.classes.proxy;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -10,13 +13,18 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.exceptions.JobSchedulerAuthorizationException;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JobSchedulerSSLCertificateException;
 import com.sos.joc.exceptions.ProxyNotCoupledException;
 
+import io.vavr.control.Either;
 import js7.base.problem.Problem;
+import js7.base.web.Uri;
+import js7.data.cluster.ClusterSetting.Watch;
+import js7.data.node.NodeId;
 import js7.proxy.data.ProxyEvent;
 import js7.proxy.data.ProxyEvent.ProxyCoupled;
 import js7.proxy.data.ProxyEvent.ProxyCouplingError;
@@ -75,12 +83,6 @@ public class ProxyContext {
         }
     }
     
-    protected void restart(JProxyContext proxyContext, ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
-        stop();
-        this.credentials = credentials;
-        start(ControllerApiContext.newControllerApi(proxyContext, credentials));
-    }
-
     protected void restart(JControllerApi controllerApi, ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
         stop();
         this.credentials = credentials;
@@ -112,11 +114,40 @@ public class ProxyContext {
             return String.format("'%s' (%s)", credentials.getControllerId(), credentials.getUrl());
         }
     }
+    
+    private void checkCluster() {
+        if (credentials.getBackupUrl() != null) { // is Cluster
+            LOGGER.info(toString() + ": check cluster appointment");
+            proxyFuture.thenApply(p -> {
+                Either<Problem, Void> either = null;
+                if (p.currentState().clusterState().toJson().replaceAll("\\s", "").contains("\"TYPE\":\"Empty\"")) { // not appointed
+                    Either<Problem, List<Watch>> clusterWatchers = Proxies.getClusterWatchers(credentials.getControllerId());
+                    if (clusterWatchers.isRight()) {
+                        NodeId activeId = NodeId.unchecked("Primary");
+                        Map<NodeId, Uri> idToUri = new HashMap<>();
+                        idToUri.put(activeId, Uri.of(credentials.getUrl()));
+                        idToUri.put(NodeId.unchecked("Backup"), Uri.of(credentials.getBackupUrl()));
+                        either = p.api().clusterAppointNodes(idToUri, activeId, clusterWatchers.get()).join();
+                    } else {
+                        either = Either.left(clusterWatchers.getLeft());
+                    }
+                } else {
+                    either = Either.right(null);
+                }
+                return either;
+            }).thenAccept(e -> {
+                if (e.isLeft()) {
+                    LOGGER.info(ProblemHelper.getErrorMessage(e.getLeft()));
+                }
+            });
+        }
+    }
 
     private void onProxyCoupled(ProxyCoupled proxyCoupled) {
         LOGGER.info(toString() + ": " + proxyCoupled.toString());
         lastProblem = Optional.empty();
         coupled = true;
+        checkCluster();
         if (!coupledFuture.isDone()) {
             coupledFuture.complete(null);
         }

@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -18,6 +19,7 @@ import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitControllers;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.model.command.Overview;
 import com.sos.joc.Globals;
+import com.sos.joc.agents.impl.AgentsResourceStoreImpl;
 import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCJsonCommand;
@@ -30,6 +32,7 @@ import com.sos.joc.classes.jobscheduler.States;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.ProxiesEdit;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
+import com.sos.joc.db.inventory.DBItemInventoryAgentName;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
@@ -103,8 +106,10 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 index++;
             }
             
-            for (Agent agent : jobSchedulerBody.getAgents()) {
-                CheckJavaVariableName.test("Agent ID", agent.getAgentId());
+            Set<String> agentIds = jobSchedulerBody.getAgents().stream().map(Agent::getAgentId).collect(Collectors.toSet());
+            
+            for (String agentId : agentIds) {
+                CheckJavaVariableName.test("Agent ID", agentId);
             }
             
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getPermissonsJocCockpit(controllerId, accessToken).getJS7Controller()
@@ -198,12 +203,11 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 }
             }
             
-            ProxiesEdit.update(instances.stream().filter(Objects::nonNull).collect(Collectors.toList()));
-            
             //sort Agents from request
             //jobSchedulerBody.getAgents().stream().sorted(Comparator.comparing(Agent::getAgentId));
             Map<String, Agent> agentMap = jobSchedulerBody.getAgents().stream().collect(Collectors.toMap(Agent::getAgentId, Function.identity()));
             List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(Arrays.asList(controllerId));
+            Map<String, Set<DBItemInventoryAgentName>> allAliases = agentDBLayer.getAgentNameAliases(agentIds);
             boolean watcherUpdateRequired = false;
             if (dbAgents != null && !dbAgents.isEmpty()) {
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
@@ -235,6 +239,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     if (dbUpdateRequired) {
                         agentDBLayer.updateAgent(dbAgent);
                     }
+                    AgentsResourceStoreImpl.updateAliases(connection, agent, allAliases.get(agent.getAgentId()));
                 }
             }
             
@@ -254,7 +259,12 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 dbAgent.setUri(agent.getUrl());
                 dbAgent.setVersion(null);
                 agentDBLayer.saveAgent(dbAgent);
+                AgentsResourceStoreImpl.updateAliases(connection, agent, allAliases.get(agent.getAgentId()));
             }
+            
+            ProxiesEdit.update(instances.stream().filter(Objects::nonNull).collect(Collectors.toList()));
+            // appointNodes is call in Proxy when coupled with controller
+            //JobSchedulerResourceModifyJobSchedulerClusterImpl.appointNodes(controllerId, new InventoryAgentInstancesDBLayer(connection), getJocError());
             
             final String cId = controllerId;
             List<DBItemInventoryAgentInstance> dbAvailableAgents = agentDBLayer.getAgentsByControllerIds(Arrays.asList(controllerId), false, true);
@@ -265,8 +275,6 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                         cId));
             }
             
-            // expects Agents in DB
-            //JobSchedulerResourceModifyJobSchedulerClusterImpl.appointNodes(controllerId, new InventoryAgentInstancesDBLayer(connection), getJocError());
             storeAuditLogEntry(jobSchedulerAudit);
             
             if (firstController) { //GUI needs permissions directly for the first controller(s)
@@ -326,8 +334,14 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             }
             List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(Arrays.asList(jobSchedulerBody.getControllerId()));
             if (dbAgents != null) {
+                Map<String, Set<DBItemInventoryAgentName>> allAliases = agentDBLayer.getAgentNameAliases(dbAgents.stream().map(
+                        DBItemInventoryAgentInstance::getAgentId).collect(Collectors.toSet()));
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
                     agentDBLayer.deleteInstance(dbAgent);
+                    Set<DBItemInventoryAgentName> dbAliase = allAliases.get(dbAgent.getAgentId());
+                    for (DBItemInventoryAgentName item : dbAliase) {
+                        connection.delete(item);
+                    }
                 }
             }
             

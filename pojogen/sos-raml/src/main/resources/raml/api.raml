@@ -41,6 +41,7 @@ resourceTypes:
   - postStateResponse: !include joc/resourceTypes/jobscheduler/postStateResponse.raml
   - postJSON: !include joc/resourceTypes/common/postJSON.raml
   - postJSONWithOptionalJSId: !include joc/resourceTypes/common/postJSONWithOptionalJSId.raml
+  - postJSONWithOkAndOnlyOptionalIdResponse: !include joc/resourceTypes/common/postJSONWithOkAndOnlyOptionalIdResponse.raml
   - postJSONWithoutJSId: !include joc/resourceTypes/common/postJSONWithoutJSId.raml
   - postWithoutJSONandJSId: !include joc/resourceTypes/common/postWithoutJSONandJSId.raml
   - postJSONWithOkWithoutJSId: !include joc/resourceTypes/common/postJSONWithOkWithoutJSId.raml
@@ -675,7 +676,18 @@ traits:
         description: Lists all JobScheduler Controllers (permanent information)
         description200: !include joc/documentation/jobscheduler/controller_p.md
         schema200: !include joc/schemas/jobscheduler/masters-schema.json
-        example200: " "
+        example200: !include joc/examples/jobscheduler/controller_p-example.json
+  /security_level:
+    type:
+      postOnlyAccessToken:
+        description: Lists for each Controller its id and security level
+        description200: !include joc/documentation/jobscheduler/securityLevels.md
+        schema200: !include joc/schemas/jobscheduler/masters-schema.json
+        example200: !include joc/examples/jobscheduler/securityLevels-example.json
+    /take_over:
+      type:
+        postJSONWithOkAndOnlyOptionalIdResponse:
+          description: Current security level will be take over to already existing Controllers
           
 /daily_plan:
   description: This is not an API call. Use its children!!

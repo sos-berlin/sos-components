@@ -45,15 +45,17 @@ public class EventBus {
     }
 
     public synchronized void post(final JOCEvent evt) {
-        Set<Object> unsubcribedListeners = new HashSet<>();
-        evt.setTimestamp(Instant.now().toEpochMilli());
-        Collections.unmodifiableSet(listeners).stream().forEach(listener -> {
-            if (!invokeSubcribedMethods(listener, evt)) {
-                unsubcribedListeners.add(listener);
+        if (evt != null) {
+            Set<Object> unsubcribedListeners = new HashSet<>();
+            evt.setTimestamp(Instant.now().toEpochMilli());
+            Collections.unmodifiableSet(listeners).stream().forEach(listener -> {
+                if (!invokeSubcribedMethods(listener, evt)) {
+                    unsubcribedListeners.add(listener);
+                }
+            });
+            if (!unsubcribedListeners.isEmpty()) {
+                listeners.removeAll(unsubcribedListeners);
             }
-        });
-        if (!unsubcribedListeners.isEmpty()) {
-            listeners.removeAll(unsubcribedListeners);
         }
     }
 

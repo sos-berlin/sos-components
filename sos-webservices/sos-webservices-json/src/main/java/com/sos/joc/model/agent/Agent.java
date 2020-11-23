@@ -1,9 +1,12 @@
 
 package com.sos.joc.model.agent;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -20,6 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "controllerId",
     "agentId",
     "agentName",
+    "agentNameAliases",
     "url",
     "isClusterWatcher",
     "disabled"
@@ -52,6 +56,9 @@ public class Agent {
      */
     @JsonProperty("agentName")
     private String agentName;
+    @JsonProperty("agentNameAliases")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> agentNameAliases = new LinkedHashSet<String>();
     /**
      * string without < and >
      * <p>
@@ -136,6 +143,16 @@ public class Agent {
         this.agentName = agentName;
     }
 
+    @JsonProperty("agentNameAliases")
+    public Set<String> getAgentNameAliases() {
+        return agentNameAliases;
+    }
+
+    @JsonProperty("agentNameAliases")
+    public void setAgentNameAliases(Set<String> agentNameAliases) {
+        this.agentNameAliases = agentNameAliases;
+    }
+
     /**
      * string without < and >
      * <p>
@@ -182,12 +199,12 @@ public class Agent {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("url", url).append("isClusterWatcher", isClusterWatcher).append("disabled", disabled).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("agentNameAliases", agentNameAliases).append("url", url).append("isClusterWatcher", isClusterWatcher).append("disabled", disabled).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(controllerId).append(agentName).append(isClusterWatcher).append(disabled).append(url).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(controllerId).append(agentNameAliases).append(agentName).append(isClusterWatcher).append(disabled).append(url).toHashCode();
     }
 
     @Override
@@ -199,7 +216,7 @@ public class Agent {
             return false;
         }
         Agent rhs = ((Agent) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(agentName, rhs.agentName).append(isClusterWatcher, rhs.isClusterWatcher).append(disabled, rhs.disabled).append(url, rhs.url).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(agentNameAliases, rhs.agentNameAliases).append(agentName, rhs.agentName).append(isClusterWatcher, rhs.isClusterWatcher).append(disabled, rhs.disabled).append(url, rhs.url).isEquals();
     }
 
 }

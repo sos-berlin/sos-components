@@ -19,7 +19,7 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_INV_AGENT_INSTANCES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONTROLLER_ID]", "[SECURITY_LEVEL]", "[AGENT_ID]" }) })
+@Table(name = DBLayer.TABLE_INV_AGENT_INSTANCES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[AGENT_ID]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_INV_AGENT_INSTANCES_SEQUENCE, sequenceName = DBLayer.TABLE_INV_AGENT_INSTANCES_SEQUENCE, allocationSize = 1)
 public class DBItemInventoryAgentInstance extends DBItem {
 
@@ -30,20 +30,17 @@ public class DBItemInventoryAgentInstance extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    @Column(name = "[CONTROLLER_ID]", nullable = false)
-    private String controllerId;
-
-    @Column(name = "[SECURITY_LEVEL]", nullable = false)
-    private Integer securityLevel;
-
     @Column(name = "[AGENT_ID]", nullable = false)
     private String agentId;
+
+    @Column(name = "[AGENT_NAME]", nullable = false)
+    private String agentName;
 
     @Column(name = "[URI]", nullable = false)
     private String uri;
 
-    @Column(name = "[AGENT_NAME]", nullable = false)
-    private String agentName;
+    @Column(name = "[CONTROLLER_ID]", nullable = false)
+    private String controllerId;
 
     /* foreign key INVENTORY_OPERTATION_SYSTEM.ID */
     @Column(name = "[OS_ID]", nullable = false)
@@ -56,14 +53,14 @@ public class DBItemInventoryAgentInstance extends DBItem {
     private Date startedAt;
     
     /* 0=no, 1=yes */
-    @Column(name = "[DISABLED]", nullable = false)
-    @Type(type = "numeric_boolean")
-    private boolean disabled;
-
-    /* 0=no, 1=yes */
     @Column(name = "[IS_WATCHER]", nullable = false)
     @Type(type = "numeric_boolean")
     private boolean isWatcher;
+
+    /* 0=no, 1=yes */
+    @Column(name = "[DISABLED]", nullable = false)
+    @Type(type = "numeric_boolean")
+    private boolean disabled;
 
     @Column(name = "[MODIFIED]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
@@ -75,22 +72,6 @@ public class DBItemInventoryAgentInstance extends DBItem {
 
     public void setId(Long val) {
         id = val;
-    }
-
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    public void setControllerId(String val) {
-        controllerId = val;
-    }
-    
-    public Integer getSecurityLevel() {
-        return securityLevel;
-    }
-
-    public void setSecurityLevel(Integer val) {
-        securityLevel = val;
     }
 
     public String getUri() {
@@ -115,6 +96,14 @@ public class DBItemInventoryAgentInstance extends DBItem {
 
     public void setAgentName(String val) {
         agentName = val;
+    }
+    
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    public void setControllerId(String val) {
+        controllerId = val;
     }
     
     public Long getOsId() {
@@ -144,20 +133,20 @@ public class DBItemInventoryAgentInstance extends DBItem {
         startedAt = val;
     }
     
-    public boolean getDisabled() {
-        return disabled;
-    }
-
-    public void setDisabled(boolean val) {
-        disabled = val;
-    }
-
     public boolean getIsWatcher() {
         return isWatcher;
     }
 
     public void setIsWatcher(boolean val) {
         isWatcher = val;
+    }
+
+    public boolean getDisabled() {
+        return disabled;
+    }
+
+    public void setDisabled(boolean val) {
+        disabled = val;
     }
 
     public void setModified(Date val) {

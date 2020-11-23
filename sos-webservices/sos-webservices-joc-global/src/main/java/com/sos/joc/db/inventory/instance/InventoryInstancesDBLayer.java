@@ -23,6 +23,7 @@ import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.model.common.JocSecurityLevel;
+import com.sos.joc.model.jobscheduler.Controller;
 
 public class InventoryInstancesDBLayer {
 
@@ -210,11 +211,59 @@ public class InventoryInstancesDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
+    
+    public List<DBItemInventoryJSInstance> getInventoryInstancesOfAllSecurityLevels(String controllerId) throws DBInvalidDataException,
+            DBConnectionRefusedException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
+            if (controllerId != null && !controllerId.isEmpty()) {
+                sql.append(" where controllerId = :controllerId");
+            }
+            Query<DBItemInventoryJSInstance> query = session.createQuery(sql.toString());
+            if (controllerId != null && !controllerId.isEmpty()) {
+                query.setParameter("controllerId", controllerId);
+            }
+            return session.getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
 
     public List<String> getControllerIds() throws DBInvalidDataException, DBConnectionRefusedException {
         try {
             return session.getResultList(String.format("select controllerId from %s where securityLevel = %d order by modified desc",
                     DBLayer.DBITEM_INV_JS_INSTANCES, level.intValue()));
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public List<Controller> getControllerIdsWithSecurityLevel(boolean onlyCurrentSecurityLevel) throws DBInvalidDataException, DBConnectionRefusedException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("select controllerId, securityLevel from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
+            if (onlyCurrentSecurityLevel) {
+                sql.append(" where securityLevel = :securityLevel");
+            }
+            Query<Object[]> query = session.createQuery(sql.toString());
+            if (onlyCurrentSecurityLevel) {
+                query.setParameter("securityLevel", level.intValue());
+            }
+            List<Object[]> result = session.getResultList(query);
+            if (result != null) {
+                return result.stream().map(item -> {
+                    Controller c = new Controller();
+                    c.setControllerId((String) item[0]); 
+                    c.setSecurityLevel(JocSecurityLevel.fromValue((int) item[1]));
+                    return c;
+                }).distinct().collect(Collectors.toList()); 
+            }
+            return null;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {

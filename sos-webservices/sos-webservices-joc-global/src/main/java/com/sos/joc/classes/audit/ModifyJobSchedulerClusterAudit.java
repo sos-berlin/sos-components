@@ -23,6 +23,12 @@ public class ModifyJobSchedulerClusterAudit extends UrlParameter implements IAud
             setControllerId(urlParameter.getControllerId());
         }
     }
+    
+    public ModifyJobSchedulerClusterAudit(String controllerId, AuditParams auditLog) {
+        setAuditParams(auditLog);
+        setWithFailover(null);
+        setControllerId(controllerId);
+    }
 
     private void setAuditParams(AuditParams auditParams) {
         if (auditParams != null) {

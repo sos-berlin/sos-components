@@ -1,9 +1,9 @@
 Contains collection of Controllers and Agents where each Controller has fields such as
 * controllerId
-* host
-* url
+* securityLevel
 * clusterUrl (if not STANDALONE)
 * role (STANDALONE, PRIMARY or BACKUP)
+* host
 * version
 * operating system
     * name
@@ -13,5 +13,6 @@ and each Agent has fields such as
 * controllerId
 * agentId
 * agentName
+* agentNameAliases
 * url
 * isClusterWatcher

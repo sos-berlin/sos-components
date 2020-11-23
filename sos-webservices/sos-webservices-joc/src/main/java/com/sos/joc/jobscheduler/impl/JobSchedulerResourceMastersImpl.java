@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -88,10 +89,13 @@ public class JobSchedulerResourceMastersImpl extends JOCResourceImpl implements 
         InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
         List<DBItemInventoryAgentInstance> agents = agentDBLayer.getAgentsByControllerIds(controllerIds);
         if (agents != null) {
+            Map<String, Set<String>> allAliases = agentDBLayer.getAgentNamesByAgentIds(agents.stream().map(DBItemInventoryAgentInstance::getAgentId)
+                    .collect(Collectors.toSet()));
             return agents.stream().map(a -> {
                 Agent agent = new Agent();
                 agent.setAgentId(a.getAgentId());
                 agent.setAgentName(a.getAgentName());
+                agent.setAgentNameAliases(allAliases.get(a.getAgentId()));
                 agent.setDisabled(a.getDisabled());
                 agent.setIsClusterWatcher(a.getIsWatcher());
                 agent.setUrl(a.getUri());

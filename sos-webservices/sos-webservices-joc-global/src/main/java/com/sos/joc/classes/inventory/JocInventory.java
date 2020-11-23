@@ -239,11 +239,11 @@ public class JocInventory {
                 Path p = Paths.get(path);
                 name = p.getFileName().toString();
                 CheckJavaVariableName.test(type.value().toLowerCase(), name);
-                if (ConfigurationType.FOLDER.equals(type)) {
-                    folder = path;
-                } else {
+//                if (ConfigurationType.FOLDER.equals(type)) {
+//                    folder = path;
+//                } else {
                     folder = normalizeFolder(p.getParent());
-                }
+//                }
             }
         }
 

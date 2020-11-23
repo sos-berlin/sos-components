@@ -1,13 +1,14 @@
 
 package com.sos.joc.model.agent;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -36,7 +37,8 @@ public class AgentNames {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
     @JsonProperty("agentNames")
-    private List<String> agentNames = new ArrayList<String>();
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> agentNames = new LinkedHashSet<String>();
 
     /**
      * timestamp
@@ -61,12 +63,12 @@ public class AgentNames {
     }
 
     @JsonProperty("agentNames")
-    public List<String> getAgentNames() {
+    public Set<String> getAgentNames() {
         return agentNames;
     }
 
     @JsonProperty("agentNames")
-    public void setAgentNames(List<String> agentNames) {
+    public void setAgentNames(Set<String> agentNames) {
         this.agentNames = agentNames;
     }
 

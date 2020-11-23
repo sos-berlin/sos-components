@@ -18,6 +18,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
+import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.proxy.ProxyRemoved;
@@ -33,6 +34,10 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.ProxyNotCoupledException;
 
+import io.vavr.control.Either;
+import js7.base.problem.Problem;
+import js7.base.web.Uri;
+import js7.data.cluster.ClusterSetting.Watch;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.JProxyContext;
@@ -169,7 +174,8 @@ public class Proxies {
             boolean isNew = !this.controllerDbInstances.containsKey(controllerId);
             this.controllerDbInstances.put(controllerId, controllerDbInstances);
             for (ProxyUser account : ProxyUser.values()) {
-                ProxyCredentials newCredentials = ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances).withAccount(account).build();
+                ProxyCredentials newCredentials = ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances).withAccount(account)
+                        .build();
                 // History needs only ControllerAPI (not Proxy)
                 if (isNew) {
                     if (account == ProxyUser.JOC) {
@@ -387,6 +393,31 @@ public class Proxies {
             }
         }
     }
+    
+    /**
+     * 
+     * @param controllerId
+     * @return Either&lt;Problem, List&lt;Watch&gt;&gt;
+     */
+    protected static Either<Problem, List<Watch>> getClusterWatchers(String controllerId) {
+        SOSHibernateSession sosHibernateSession = null;
+        Either<Problem, List<Watch>> either = null;
+        try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("GetClusterWatchers");
+            List<Watch> watchers = new InventoryAgentInstancesDBLayer(sosHibernateSession).getUrisOfEnabledClusterWatcherByControllerId(controllerId).stream().map(
+                    item -> new Watch(Uri.of(item))).collect(Collectors.toList());
+            if (watchers == null || watchers.isEmpty()) {
+                either = Either.left(Problem.pure("No Cluster Watchers are configured"));
+            } else {
+                either = Either.right(watchers);
+            }
+        } catch (Exception e) {
+            either = Either.left(Problem.pure(e.toString()));
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
+        return either;
+    }
 
     private Map<ProxyCredentials, ProxyContext> proxiesOfControllerId(final String controllerId) {
         return controllerFutures.entrySet().stream().filter(entry -> entry.getKey().getControllerId().equals(controllerId)).collect(Collectors
@@ -435,12 +466,14 @@ public class Proxies {
     }
     
     private boolean restart(ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
+        // contains if controller id and account is equal (see ProxyCredentials.equals)
         if (controllerFutures.containsKey(credentials)) {
             // "identical" checks equality inclusive the urls
             // restart not necessary if a proxy with identically credentials already started
             if (controllerFutures.keySet().stream().anyMatch(key -> key.identical(credentials))) {
                 return false;
             }
+            reloadApi(credentials);
             controllerFutures.get(credentials).restart(loadApi(credentials), credentials);
             return true;
         }

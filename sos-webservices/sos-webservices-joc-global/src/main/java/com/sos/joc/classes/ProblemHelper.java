@@ -68,8 +68,8 @@ public class ProblemHelper {
     }
     
     public static void postProblemEventIfExist(Either<Problem, ?> either, JocError err, String controller) throws JocException {
-        if (either.isLeft()) {
-            if (!err.printMetaInfo().isEmpty()) {
+        if (either != null && either.isLeft()) {
+            if (err != null && !err.printMetaInfo().isEmpty()) {
                 LOGGER.info(err.printMetaInfo());
             }
             EventBus.getInstance().post(getEventOfProblem(either.getLeft(), controller));

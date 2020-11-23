@@ -2,15 +2,18 @@ package com.sos.joc.agents.impl;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.IAgentsResourceStore;
 import com.sos.joc.classes.CheckJavaVariableName;
@@ -20,6 +23,7 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.ModifyAgentClusterAudit;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
+import com.sos.joc.db.inventory.DBItemInventoryAgentName;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.Agent;
@@ -52,8 +56,10 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                 return jocDefaultResponse;
             }
             
-            for (Agent agent : agentStoreParameter.getAgents()) {
-                CheckJavaVariableName.test("Agent ID", agent.getAgentId());
+            Set<String> agentIds = agentStoreParameter.getAgents().stream().map(Agent::getAgentId).collect(Collectors.toSet());
+            
+            for (String agentId : agentIds) {
+                CheckJavaVariableName.test("Agent ID", agentId);
             }
 
             checkRequiredComment(agentStoreParameter.getAuditLog());
@@ -64,7 +70,11 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
             InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
             
             Map<String, Agent> agentMap = agentStoreParameter.getAgents().stream().collect(Collectors.toMap(Agent::getAgentId, Function.identity()));
+            // TODO check unique URLs
+            // Set<String> urls = agentStoreParameter.getAgents().stream().map(Agent::getUrl).map(String::toLowerCase).collect(Collectors.toSet());
             List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(Arrays.asList(controllerId));
+            Map<String, Set<DBItemInventoryAgentName>> allAliases = agentDBLayer.getAgentNameAliases(agentIds);
+            
             boolean watcherUpdateRequired = false;
             if (dbAgents != null && !dbAgents.isEmpty()) {
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
@@ -96,6 +106,8 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                     if (dbUpdateRequired) {
                         agentDBLayer.updateAgent(dbAgent);
                     }
+                    
+                    updateAliases(connection, agent, allAliases.get(agent.getAgentId()));
                 }
             }
             
@@ -115,6 +127,8 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                 dbAgent.setUri(agent.getUrl());
                 dbAgent.setVersion(null);
                 agentDBLayer.saveAgent(dbAgent);
+                
+                updateAliases(connection, agent, allAliases.get(agent.getAgentId()));
             }
             
             List<DBItemInventoryAgentInstance> dbAvailableAgents = agentDBLayer.getAgentsByControllerIds(Arrays.asList(controllerId), false, true);
@@ -142,6 +156,25 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.disconnect(connection);
+        }
+    }
+    
+    public static void updateAliases(SOSHibernateSession connection, Agent agent, Collection<DBItemInventoryAgentName> dbAliases)
+            throws SOSHibernateException {
+        if (dbAliases != null) {
+            for (DBItemInventoryAgentName dbAlias : dbAliases) {
+                connection.delete(dbAlias);
+            }
+        }
+        Set<String> aliases = agent.getAgentNameAliases();
+        if (aliases == null && !aliases.isEmpty()) {
+            aliases.remove(agent.getAgentName());
+            for (String name : aliases) {
+                DBItemInventoryAgentName a = new DBItemInventoryAgentName();
+                a.setAgentId(agent.getAgentId());
+                a.setAgentName(name);
+                connection.save(a);
+            }
         }
     }
 }

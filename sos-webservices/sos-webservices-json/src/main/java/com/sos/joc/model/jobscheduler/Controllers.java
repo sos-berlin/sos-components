@@ -24,7 +24,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "deliveryDate",
     "controllers",
-    "agents"
+    "agents",
+    "currentSecurityLevel"
 })
 public class Controllers {
 
@@ -47,6 +48,8 @@ public class Controllers {
     private List<Controller> controllers = new ArrayList<Controller>();
     @JsonProperty("agents")
     private List<Agent> agents = new ArrayList<Agent>();
+    @JsonProperty("currentSecurityLevel")
+    private Object currentSecurityLevel;
 
     /**
      * timestamp
@@ -102,14 +105,24 @@ public class Controllers {
         this.agents = agents;
     }
 
+    @JsonProperty("currentSecurityLevel")
+    public Object getCurrentSecurityLevel() {
+        return currentSecurityLevel;
+    }
+
+    @JsonProperty("currentSecurityLevel")
+    public void setCurrentSecurityLevel(Object currentSecurityLevel) {
+        this.currentSecurityLevel = currentSecurityLevel;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("controllers", controllers).append("agents", agents).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("controllers", controllers).append("agents", agents).append("currentSecurityLevel", currentSecurityLevel).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllers).append(deliveryDate).append(agents).toHashCode();
+        return new HashCodeBuilder().append(controllers).append(deliveryDate).append(currentSecurityLevel).append(agents).toHashCode();
     }
 
     @Override
@@ -121,7 +134,7 @@ public class Controllers {
             return false;
         }
         Controllers rhs = ((Controllers) other);
-        return new EqualsBuilder().append(controllers, rhs.controllers).append(deliveryDate, rhs.deliveryDate).append(agents, rhs.agents).isEquals();
+        return new EqualsBuilder().append(controllers, rhs.controllers).append(deliveryDate, rhs.deliveryDate).append(currentSecurityLevel, rhs.currentSecurityLevel).append(agents, rhs.agents).isEquals();
     }
 
 }
