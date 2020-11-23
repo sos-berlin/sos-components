@@ -404,8 +404,8 @@ public class Proxies {
         Either<Problem, List<Watch>> either = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("GetClusterWatchers");
-            List<Watch> watchers = new InventoryAgentInstancesDBLayer(sosHibernateSession).getUrisOfEnabledClusterWatcherByControllerId(controllerId).stream().map(
-                    item -> new Watch(Uri.of(item))).collect(Collectors.toList());
+            List<Watch> watchers = new InventoryAgentInstancesDBLayer(sosHibernateSession).getUrisOfEnabledClusterWatcherByControllerId(controllerId)
+                    .stream().map(item -> new Watch(Uri.of(item))).collect(Collectors.toList());
             if (watchers == null || watchers.isEmpty()) {
                 either = Either.left(Problem.pure("No Cluster Watchers are configured"));
             } else {
