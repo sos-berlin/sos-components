@@ -167,7 +167,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
             }
         }
         Set<String> aliases = agent.getAgentNameAliases();
-        if (aliases == null && !aliases.isEmpty()) {
+        if (aliases != null && !aliases.isEmpty()) {
             aliases.remove(agent.getAgentName());
             for (String name : aliases) {
                 DBItemInventoryAgentName a = new DBItemInventoryAgentName();
