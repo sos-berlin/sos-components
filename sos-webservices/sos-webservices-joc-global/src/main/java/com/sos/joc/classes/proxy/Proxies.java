@@ -399,7 +399,7 @@ public class Proxies {
      * @param controllerId
      * @return Either&lt;Problem, List&lt;Watch&gt;&gt;
      */
-    protected static Either<Problem, List<Watch>> getClusterWatchers(String controllerId) {
+    public static Either<Problem, List<Watch>> getClusterWatchers(String controllerId) {
         SOSHibernateSession sosHibernateSession = null;
         Either<Problem, List<Watch>> either = null;
         try {
@@ -409,7 +409,7 @@ public class Proxies {
             if (watchers == null || watchers.isEmpty()) {
                 either = Either.left(Problem.pure("No Cluster Watchers are configured"));
             } else {
-                LOGGER.info("clusterWatchers: " + w.toString());
+                LOGGER.info(String.format("Cluster Watchers of '%s': %s", controllerId, w.toString()));
                 either = Either.right(watchers);
             }
         } catch (Exception e) {

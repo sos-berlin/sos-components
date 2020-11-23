@@ -123,7 +123,6 @@ public class ProxyContext {
             proxyFuture.thenApply(p -> {
                 Either<Problem, Void> either = null;
                 JClusterState clusterState = p.currentState().clusterState();
-                LOGGER.info(clusterState.toJson());
                 if (clusterState.toJson().replaceAll("\\s", "").contains("\"TYPE\":\"Empty\"")) { // not appointed
                     Either<Problem, List<Watch>> clusterWatchers = Proxies.getClusterWatchers(credentials.getControllerId());
                     if (clusterWatchers.isRight()) {
@@ -132,11 +131,18 @@ public class ProxyContext {
                         Map<NodeId, Uri> idToUri = new HashMap<>();
                         idToUri.put(activeId, Uri.of(credentials.getUrl()));
                         idToUri.put(NodeId.unchecked("Backup"), Uri.of(credentials.getBackupUrl()));
-                        either = p.api().clusterAppointNodes(idToUri, activeId, clusterWatchers.get()).join();
-                        if (either.isRight()) {
-                            LOGGER.info("'Appoint Nodes' needs restart of the proxy");
-                            restart(p.api(), credentials); 
-                        }
+                        p.api().clusterAppointNodes(idToUri, activeId, clusterWatchers.get()).thenAccept(e -> {
+                            if (e.isLeft()) {
+                                LOGGER.info(ProblemHelper.getErrorMessage(e.getLeft()));
+                            } else {
+                                LOGGER.info("'Appoint Nodes' successful");
+                            }
+                        });
+                        either = Either.right(null);
+//                        if (either.isRight()) {
+//                            LOGGER.info("'Appoint Nodes' needs restart of the proxy");
+//                            restart(p.api(), credentials); 
+//                        }
                     } else {
                         either = Either.left(clusterWatchers.getLeft());
                     }

@@ -3,7 +3,9 @@ package com.sos.joc.jobscheduler.impl;
 import java.net.URI;
 import java.time.Instant;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -39,6 +41,12 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceModifyJobSchedulerCluster;
 import com.sos.joc.model.jobscheduler.UrlParameter;
 import com.sos.schema.JsonValidator;
+
+import io.vavr.control.Either;
+import js7.base.problem.Problem;
+import js7.base.web.Uri;
+import js7.data.cluster.ClusterSetting.Watch;
+import js7.data.node.NodeId;
 
 @Path("controller")
 public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResourceImpl implements IJobSchedulerResourceModifyJobSchedulerCluster {
@@ -144,26 +152,39 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
         if (controllerInstances == null || controllerInstances.size() < 2) { // is not cluster
             throw new JobSchedulerBadRequestException("There is no cluster configured with the Id: " + controllerId);
         }
-        ClusterAppointNodes command = new ClusterAppointNodes();
-        command.setActiveId("Primary");
-        IdToUri idToUri = new IdToUri();
+//        ClusterAppointNodes command = new ClusterAppointNodes();
+//        command.setActiveId("Primary");
+//        IdToUri idToUri = new IdToUri();
+//        for (DBItemInventoryJSInstance inst : controllerInstances) {
+//            idToUri.getAdditionalProperties().put(inst.getIsPrimary() ? "Primary" : "Backup", inst.getClusterUri());
+//        }
+//        command.setIdToUri(idToUri);
+//        List<String> watchers = dbLayer.getUrisOfEnabledClusterWatcherByControllerId(controllerId);
+//        if (watchers == null || watchers.isEmpty()) {
+//            throw new JobSchedulerBadRequestException("There must exist at least one Agent Cluster Watcher");
+//        }
+//        List<ClusterWatcher> cWatchers = watchers.stream().map(item -> {
+//            ClusterWatcher watcher = new ClusterWatcher();
+//            watcher.setUri(URI.create(item));
+//            return watcher;
+//        }).distinct().collect(Collectors.toList());
+//        command.setClusterWatches(cWatchers);
+//
+//        ControllerApi.of(controllerId).executeCommandJson(Globals.objectMapper.writeValueAsString(command)).thenAccept(e -> ProblemHelper
+//                .postProblemEventIfExist(e, jocError, controllerId));
+
+        NodeId activeId = NodeId.unchecked("Primary");
+        Map<NodeId, Uri> idToUri = new HashMap<>();
         for (DBItemInventoryJSInstance inst : controllerInstances) {
-            idToUri.getAdditionalProperties().put(inst.getIsPrimary() ? "Primary" : "Backup", inst.getClusterUri());
+            idToUri.put(inst.getIsPrimary() ? activeId : NodeId.unchecked("Backup"), Uri.of(inst.getClusterUri()));
         }
-        command.setIdToUri(idToUri);
-        List<String> watchers = dbLayer.getUrisOfEnabledClusterWatcherByControllerId(controllerId);
-        if (watchers == null || watchers.isEmpty()) {
-            throw new JobSchedulerBadRequestException("There must exist at least one Agent Cluster Watcher");
+        Either<Problem, List<Watch>> clusterWatchers = Proxies.getClusterWatchers(controllerId);
+        if (clusterWatchers.isRight()) {
+            ControllerApi.of(controllerId).clusterAppointNodes(idToUri, activeId, clusterWatchers.get()).thenAccept(e -> ProblemHelper
+                    .postProblemEventIfExist(e, jocError, controllerId));
+        } else {
+            ProblemHelper.postProblemEventIfExist(clusterWatchers, jocError, controllerId);
         }
-        List<ClusterWatcher> cWatchers = watchers.stream().map(item -> {
-            ClusterWatcher watcher = new ClusterWatcher();
-            watcher.setUri(URI.create(item));
-            return watcher;
-        }).distinct().collect(Collectors.toList());
-        command.setClusterWatches(cWatchers);
-        
-        ControllerApi.of(controllerId).executeCommandJson(Globals.objectMapper.writeValueAsString(command)).thenAccept(e -> ProblemHelper
-                .postProblemEventIfExist(e, jocError, controllerId));
     }
 
 }
