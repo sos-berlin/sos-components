@@ -1,8 +1,9 @@
 package com.sos.joc.classes.proxy;
 
-import java.net.URI;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -13,11 +14,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.sos.jobscheduler.model.cluster.ClusterWatcher;
-import com.sos.jobscheduler.model.cluster.IdToUri;
-import com.sos.jobscheduler.model.command.ClusterAppointNodes;
-import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.exceptions.JobSchedulerAuthorizationException;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
@@ -27,7 +23,9 @@ import com.sos.joc.exceptions.ProxyNotCoupledException;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
+import js7.base.web.Uri;
 import js7.data.cluster.ClusterSetting.Watch;
+import js7.data.node.NodeId;
 import js7.proxy.data.ProxyEvent;
 import js7.proxy.data.ProxyEvent.ProxyCoupled;
 import js7.proxy.data.ProxyEvent.ProxyCouplingError;
@@ -129,36 +127,15 @@ public class ProxyContext {
                 if (clusterState.toJson().replaceAll("\\s", "").contains("\"TYPE\":\"Empty\"")) { // not appointed
                     Either<Problem, List<Watch>> clusterWatchers = Proxies.getClusterWatchers(credentials.getControllerId());
                     if (clusterWatchers.isRight()) {
-                        LOGGER.info("clusterWatchers: " + clusterWatchers.get().stream().map(w -> w.uri().string()).collect(Collectors.joining(", ")));
-//                        NodeId activeId = NodeId.unchecked("Primary");
-//                        Map<NodeId, Uri> idToUri = new HashMap<>();
-//                        idToUri.put(activeId, Uri.of(credentials.getUrl()));
-//                        idToUri.put(NodeId.unchecked("Backup"), Uri.of(credentials.getBackupUrl()));
-//                        either = p.api().clusterAppointNodes(idToUri, activeId, clusterWatchers.get()).join();
-                        
-                        ClusterAppointNodes command = new ClusterAppointNodes();
-                        command.setActiveId("Primary");
-                        IdToUri idToUri = new IdToUri();
-                        idToUri.getAdditionalProperties().put("Primary", credentials.getUrl());
-                        idToUri.getAdditionalProperties().put("Backup", credentials.getBackupUrl());
-                        command.setIdToUri(idToUri);
-                        List<ClusterWatcher> cWatchers = clusterWatchers.get().stream().map(w -> {
-                            ClusterWatcher watcher = new ClusterWatcher();
-                            watcher.setUri(URI.create(w.uri().string()));
-                            return watcher;
-                        }).distinct().collect(Collectors.toList());
-                        command.setClusterWatches(cWatchers);
-                        try {
-                            String json = Globals.objectMapper.writeValueAsString(command);
-                            LOGGER.info(json);
-                            Either<Problem, String> e = p.api().executeCommandJson(json).join();
-                            if (e.isRight()) {
-                                either = Either.right(null);
-                            } else {
-                                either = Either.left(e.getLeft());
-                            }
-                        } catch (JsonProcessingException e1) {
-                            either = Either.left(Problem.pure(e1.toString()));
+                        LOGGER.info("'Appoint Nodes' will be called");
+                        NodeId activeId = NodeId.unchecked("Primary");
+                        Map<NodeId, Uri> idToUri = new HashMap<>();
+                        idToUri.put(activeId, Uri.of(credentials.getUrl()));
+                        idToUri.put(NodeId.unchecked("Backup"), Uri.of(credentials.getBackupUrl()));
+                        either = p.api().clusterAppointNodes(idToUri, activeId, clusterWatchers.get()).join();
+                        if (either.isRight()) {
+                            LOGGER.info("'Appoint Nodes' needs restart of the proxy");
+                            restart(p.api(), credentials); 
                         }
                     } else {
                         either = Either.left(clusterWatchers.getLeft());
@@ -179,10 +156,10 @@ public class ProxyContext {
         LOGGER.info(toString() + ": " + proxyCoupled.toString());
         lastProblem = Optional.empty();
         coupled = true;
-        checkCluster();
         if (!coupledFuture.isDone()) {
             coupledFuture.complete(null);
         }
+        checkCluster();
     }
 
     private void onProxyDecoupled(ProxyDecoupled$ proxyDecoupled) {
