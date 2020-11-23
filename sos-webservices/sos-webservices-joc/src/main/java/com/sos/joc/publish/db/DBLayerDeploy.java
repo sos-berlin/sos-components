@@ -48,11 +48,12 @@ import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.publish.common.JSObjectFileExtension;
 import com.sos.joc.publish.mapper.FilterAttributesMapper;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
+import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.joc.publish.util.PublishUtils;
 
 public class DBLayerDeploy {
 
-    private SOSHibernateSession session;
+    private final SOSHibernateSession session;
     private ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
     private static final String FROM_DEP_DATE = "deploymentDate >= :fromDate"; 
     private static final String TO_DEP_DATE = "deploymentDate < :toDate"; 
@@ -941,6 +942,18 @@ public class DBLayerDeploy {
         }
         dbItems.removeAll(excludes);
         return dbItems;
+    }
+    
+    public String getAgentIdFromAgentName (String agentName){
+        try {
+            StringBuilder hql = new StringBuilder("select agentId from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
+            hql.append(" where agentName = :agentName");
+            Query<String> query = getSession().createQuery(hql.toString());
+            query.setParameter("agentName", agentName);
+            return query.getSingleResult();
+        } catch (SOSHibernateException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
     }
 
 }

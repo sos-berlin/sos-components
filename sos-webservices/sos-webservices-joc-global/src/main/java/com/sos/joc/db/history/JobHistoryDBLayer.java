@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import javax.persistence.TemporalType;
 
+import org.hibernate.ScrollableResults;
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -35,9 +36,9 @@ public class JobHistoryDBLayer {
 
         private static final long serialVersionUID = 1L;
         {
-            put(HistoryStateText.SUCCESSFUL, "(endTime != null and error = false)");
-            put(HistoryStateText.INCOMPLETE, "(endTime is null)");
-            put(HistoryStateText.FAILED, "(endTime != null and error = true)");
+            put(HistoryStateText.SUCCESSFUL, "(state=" + OrderStateText.FINISHED.intValue() + ")");
+            put(HistoryStateText.INCOMPLETE, "(state=" + OrderStateText.RUNNING.intValue() + ")");
+            put(HistoryStateText.FAILED, "(state=" + OrderStateText.FAILED.intValue() + ")");
         }
     });
 
@@ -65,14 +66,14 @@ public class JobHistoryDBLayer {
         }
     }
 
-    public List<DBItemHistoryOrderStep> getJobs() throws DBConnectionRefusedException, DBInvalidDataException {
+    public ScrollableResults getJobs() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             Query<DBItemHistoryOrderStep> query = createQuery(new StringBuilder().append("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(
                     getOrderStepsWhere()).append(" order by startTime desc").toString());
             if (filter.getLimit() > 0) {
                 query.setMaxResults(filter.getLimit());
             }
-            return session.getResultList(query);
+            return session.scroll(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -80,8 +81,8 @@ public class JobHistoryDBLayer {
         }
     }
 
-    public List<DBItemHistoryOrderStep> getJobsFromHistoryIdAndPosition(Map<Long, Set<String>> mapOfHistoryIdAndPosition)
-            throws DBConnectionRefusedException, DBInvalidDataException {
+    public ScrollableResults getJobsFromHistoryIdAndPosition(Map<Long, Set<String>> mapOfHistoryIdAndPosition) throws DBConnectionRefusedException,
+            DBInvalidDataException {
         try {
             List<String> l = new ArrayList<String>();
             String where = "";
@@ -107,7 +108,7 @@ public class JobHistoryDBLayer {
             StringBuilder hql = new StringBuilder().append("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(where).append(
                     " order by startTime desc");
             Query<DBItemHistoryOrderStep> query = session.createQuery(hql.toString());
-            return session.getResultList(query);
+            return session.scroll(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -115,7 +116,7 @@ public class JobHistoryDBLayer {
         }
     }
 
-    public List<DBItemHistoryOrderStep> getJobsFromOrder(Map<String, Map<String, Set<String>>> mapOfWorkflowAndOrderIdAndPosition) {
+    public ScrollableResults getJobsFromOrder(Map<String, Map<String, Set<String>>> mapOfWorkflowAndOrderIdAndPosition) {
         // TODO Auto-generated method stub
         return null;
     }

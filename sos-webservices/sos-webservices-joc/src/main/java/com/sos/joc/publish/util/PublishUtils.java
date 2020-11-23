@@ -59,6 +59,7 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.sign.keys.sign.SignObject;
 import com.sos.commons.sign.keys.verify.VerifySignature;
 import com.sos.jobscheduler.model.deploy.DeployType;
+import com.sos.jobscheduler.model.job.Job;
 import com.sos.jobscheduler.model.junction.Junction;
 import com.sos.jobscheduler.model.lock.Lock;
 import com.sos.jobscheduler.model.workflow.Workflow;
@@ -90,6 +91,7 @@ import com.sos.joc.model.publish.SignaturePath;
 import com.sos.joc.publish.common.JSObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
+import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 
 import io.vavr.control.Either;
 import js7.base.crypt.SignedString;
@@ -172,22 +174,24 @@ public abstract class PublishUtils {
     }
 
     public static Map<DBItemInventoryConfiguration, DBItemDepSignatures> getDraftsWithSignature(String versionId, String account,
-            Set<DBItemInventoryConfiguration> unsignedDrafts, SOSHibernateSession session, JocSecurityLevel secLvl) 
+            Set<DBItemInventoryConfiguration> unsignedDrafts, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, SOSHibernateSession session, 
+            JocSecurityLevel secLvl) 
                 throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException, 
                 NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, CertificateException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
         if (keyPair != null) {
-            return getDraftsWithSignature(versionId, account, unsignedDrafts, keyPair, session);
+            return getDraftsWithSignature(versionId, account, unsignedDrafts, updateableAgentNames, keyPair, session);
         } else {
             throw new JocMissingKeyException("No Key found for this account.");
         }
     }
 
     public static Map<DBItemInventoryConfiguration, DBItemDepSignatures> getDraftsWithSignature(String versionId, String account,
-            Set<DBItemInventoryConfiguration> unsignedDrafts, JocKeyPair keyPair, SOSHibernateSession session) throws JocMissingKeyException,
-            JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException, NoSuchAlgorithmException,
-            InvalidKeySpecException, InvalidKeyException, SignatureException, CertificateException {
+            Set<DBItemInventoryConfiguration> unsignedDrafts, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, JocKeyPair keyPair, 
+            SOSHibernateSession session) 
+                    throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException,
+                    PGPException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, CertificateException {
         boolean isPGPKey = false;
         Map<DBItemInventoryConfiguration, DBItemDepSignatures> signedDrafts = new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
         if (keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
@@ -196,7 +200,11 @@ public abstract class PublishUtils {
         } else {
             DBItemDepSignatures sig = null;
             for (DBItemInventoryConfiguration draft : unsignedDrafts) {
-                updateVersionIdOnDraftObject(draft, versionId, session);
+                updateVersionIdOnDraftObject(draft, versionId);
+                // update agentName in Workflow jobs before signing agentName -> agentId
+                if (draft.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)) {
+                    replaceAgentNameWithAgentId(draft, updateableAgentNames);
+                }
                 if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                     sig = new DBItemDepSignatures();
                     sig.setAccount(account);
@@ -657,8 +665,8 @@ public abstract class PublishUtils {
         return ControllerApi.of(controllerId).updateRepo(VersionId.of(versionId), Flux.fromIterable(updateRepoOperations));
     }
 
-    private static void updateVersionIdOnDraftObject(DBItemInventoryConfiguration draft, String versionId, SOSHibernateSession session)
-            throws JsonParseException, JsonMappingException, IOException, SOSHibernateException, JocNotImplementedException {
+    private static void updateVersionIdOnDraftObject(DBItemInventoryConfiguration draft, String versionId)
+            throws JsonParseException, JsonMappingException, IOException, JocNotImplementedException {
         switch (ConfigurationType.fromValue(draft.getType())) {
         case WORKFLOW:
             Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
@@ -676,7 +684,6 @@ public abstract class PublishUtils {
         default:
             throw new JocNotImplementedException();
         }
-        session.update(draft);
     }
 
     private static void updateVersionIdOnDeployedObject(DBItemDeploymentHistory deployed, String versionId, SOSHibernateSession session)
@@ -694,6 +701,24 @@ public abstract class PublishUtils {
         default:
             throw new JocNotImplementedException();
         }
+    }
+    
+    public static Set<UpdateableWorkflowJobAgentName> getUpdateableAgentRefInWorkflowJobs(DBItemInventoryConfiguration item, DBLayerDeploy dbLayer) {
+        Set<UpdateableWorkflowJobAgentName> update = new HashSet<UpdateableWorkflowJobAgentName>();
+        try {
+            if (ConfigurationType.WORKFLOW.equals(ConfigurationType.fromValue(item.getType()))) {
+                Workflow workflow = om.readValue(item.getContent(), Workflow.class);
+                workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
+                    Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
+                    String agentName = job.getAgentName();
+                    String agentId = dbLayer.getAgentIdFromAgentName(agentName);
+                    update.add(new UpdateableWorkflowJobAgentName(workflow.getPath(), jobname, job.getAgentName(), agentId));
+                });
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+        return update;
     }
 
     public static Set<DBItemDeploymentHistory> cloneInvConfigurationsToDepHistoryItems(
@@ -832,14 +857,19 @@ public abstract class PublishUtils {
         return deletedObjects;
     }
 
-    public static void prepareNextInvConfigGeneration(Set<DBItemInventoryConfiguration> drafts, SOSHibernateSession hibernateSession) {
+    public static void prepareNextInvConfigGeneration(Set<DBItemInventoryConfiguration> drafts, 
+            Set<UpdateableWorkflowJobAgentName> updateableAgentNames, SOSHibernateSession hibernateSession) {
         try {
             for (DBItemInventoryConfiguration draft : drafts) {
                 draft.setDeployed(true);
                 draft.setModified(Date.from(Instant.now()));
+                // update agentName with original in Workflow jobs before updating  agentId -> agentName
+                if (updateableAgentNames != null && draft.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)) {
+                    replaceAgentIdWithOrigAgentName(draft, updateableAgentNames);
+                }
                 hibernateSession.update(draft);
             }
-        } catch (SOSHibernateException e) {
+        } catch (SOSHibernateException | IOException e) {
             throw new JocSosHibernateException(e);
         }
     }
@@ -1236,4 +1266,27 @@ public abstract class PublishUtils {
         return pathsWithParents; 
     }
     
+    private static void replaceAgentNameWithAgentId(DBItemInventoryConfiguration draft, Set<UpdateableWorkflowJobAgentName> updateableAgentNames)
+            throws JsonParseException, JsonMappingException, IOException {
+        Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
+        Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream()
+                .filter(item -> item.getWorkflowPath().equals(draft.getPath())).collect(Collectors.toSet());
+        workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
+            Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
+            job.setAgentName(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname)).findFirst().get().getAgentId());
+        });
+        draft.setContent(om.writeValueAsString(workflow));
+    }
+
+    private static void replaceAgentIdWithOrigAgentName(DBItemInventoryConfiguration draft, Set<UpdateableWorkflowJobAgentName> updateableAgentNames)
+            throws JsonParseException, JsonMappingException, IOException {
+        Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
+        Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream()
+                .filter(item -> item.getWorkflowPath().equals(draft.getPath())).collect(Collectors.toSet());
+        workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
+            Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
+            job.setAgentName(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname)).findFirst().get().getAgentName());
+        });
+        draft.setContent(om.writeValueAsString(workflow));
+    }
 }
