@@ -15,12 +15,15 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.joc.Globals;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryAgentName;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
+import com.sos.joc.exceptions.JocObjectAlreadyExistException;
+import com.sos.joc.model.common.JocSecurityLevel;
 
 public class InventoryAgentInstancesDBLayer {
 
@@ -238,34 +241,31 @@ public class InventoryAgentInstancesDBLayer {
         }
     }
     
-//    public boolean uriAlreadyExists(String controllerId, Collection<String> uris) throws DBInvalidDataException,
-//            DBConnectionRefusedException, JocObjectAlreadyExistException {
-//        try {
-//            StringBuilder sql = new StringBuilder();
-//            sql.append("select uri from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
-//            sql.append(" where securityLevel = :securityLevel");
-//            sql.append(" and controllerId = :controllerId");
-//            sql.append(" and uri = (:uris)");
-//            
-//            Query<String> query = session.createQuery(sql.toString());
-//            
-//            query.setParameter("securityLevel", level.intValue());
-//            query.setParameter("controllerId", controllerId);
-//            query.setParameterList("uris", uris);
-//            
-//            List<String> result = session.getResultList(query);
-//            if (result != null && !result.isEmpty()) {
-//                throw new JocObjectAlreadyExistException("")
-//            }
-//            return false;
-//        } catch (JocObjectAlreadyExistException ex) {
-//            throw ex;
-//        } catch (SOSHibernateInvalidSessionException ex) {
-//            throw new DBConnectionRefusedException(ex);
-//        } catch (Exception ex) {
-//            throw new DBInvalidDataException(ex);
-//        }
-//    }
+    public boolean agentIdAlreadyExists(Collection<String> agentIds, String controllerId) throws DBInvalidDataException,
+            DBConnectionRefusedException, JocObjectAlreadyExistException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("select agentId from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
+            sql.append(" where agentId in (:agentIds)");
+            sql.append(" and controllerId != :controllerId");
+            
+            Query<String> query = session.createQuery(sql.toString());
+            query.setParameterList("agentIds", agentIds);
+            query.setParameter("controllerId", controllerId);
+
+            List<String> result = session.getResultList(query);
+            if (result != null && !result.isEmpty()) {
+                throw new JocObjectAlreadyExistException("Agent Ids " + result.toString() + " already in use.");
+            }
+            return false;
+        } catch (JocObjectAlreadyExistException ex) {
+            throw ex;
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
     
 //    private String getConstraintErrorMessage(String controllerId, String agentId) {
 //        return String.format("JobScheduler Agent instance (controllerId:%1$s, agentId:%2$s, security level:%3$s) already exists in table %4$s",

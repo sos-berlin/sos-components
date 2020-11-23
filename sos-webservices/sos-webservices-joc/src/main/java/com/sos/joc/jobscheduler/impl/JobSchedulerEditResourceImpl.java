@@ -47,6 +47,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerEditResource;
 import com.sos.joc.model.agent.Agent;
+import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.jobscheduler.ConnectionStateText;
 import com.sos.joc.model.jobscheduler.Controller;
 import com.sos.joc.model.jobscheduler.JobScheduler200;
@@ -106,11 +107,22 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 index++;
             }
             
+            connection = Globals.createSosHibernateStatelessConnection(API_CALL_REGISTER);
+            InventoryInstancesDBLayer instanceDBLayer = new InventoryInstancesDBLayer(connection);
+            if (!requestWithEmptyControllerId) { // try update controllers with given controllerId
+                Integer securityLevel = instanceDBLayer.getSecurityLevel(controllerId);
+                if (securityLevel != null && securityLevel != Globals.getJocSecurityLevel().intValue()) {
+                    throw new JocObjectAlreadyExistException(String.format("Controller with Id '%s' is already configured with a different security level '%s'.",
+                            controllerId, JocSecurityLevel.fromValue(securityLevel)));
+                }
+            }
+            
             Set<String> agentIds = jobSchedulerBody.getAgents().stream().map(Agent::getAgentId).collect(Collectors.toSet());
             
             for (String agentId : agentIds) {
                 CheckJavaVariableName.test("Agent ID", agentId);
             }
+            
             
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getPermissonsJocCockpit(controllerId, accessToken).getJS7Controller()
                     .getView().isStatus());
@@ -118,12 +130,12 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 return jocDefaultResponse;
             }
 
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL_REGISTER);
-            InventoryInstancesDBLayer instanceDBLayer = new InventoryInstancesDBLayer(connection);
             InventoryOperatingSystemsDBLayer osDBLayer = new InventoryOperatingSystemsDBLayer(connection);
             InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
             List<DBItemInventoryJSInstance> instances = new ArrayList<>();
             DBItemInventoryOperatingSystem osSystem = null;
+            
+            agentDBLayer.agentIdAlreadyExists(agentIds, controllerId);
             
             boolean firstController = instanceDBLayer.isEmpty();
             

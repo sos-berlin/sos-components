@@ -258,12 +258,29 @@ public class InventoryInstancesDBLayer {
             if (result != null) {
                 return result.stream().map(item -> {
                     Controller c = new Controller();
-                    c.setControllerId((String) item[0]); 
+                    c.setControllerId((String) item[0]);
+                    c.setIsCoupled(null);
                     c.setSecurityLevel(JocSecurityLevel.fromValue((int) item[1]));
                     return c;
                 }).distinct().collect(Collectors.toList()); 
             }
             return null;
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public Integer getSecurityLevel(String controllerId) throws DBInvalidDataException, DBConnectionRefusedException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("select securityLevel from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
+            sql.append(" where controllerId = :controllerId");
+            Query<Integer> query = session.createQuery(sql.toString());
+            query.setParameter("controllerId", controllerId);
+            query.setMaxResults(1);
+            return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
