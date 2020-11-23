@@ -200,9 +200,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                                 uriChanged = !dbControllers.get(1).getUri().equalsIgnoreCase(controller.getUrl().toString());
                                 instance = setInventoryInstance(dbControllers.get(1), controller, controllerId);
                             }
-                            if (uriChanged) {
-                                instances.add(instance);
-                            }
+                            instances.add(instance);
                             osSystem = osDBLayer.getInventoryOperatingSystem(instance.getOsId());
                             ControllerAnswer jobschedulerAnswer = new ControllerCallable(instance, osSystem, accessToken).call();
                             
@@ -210,6 +208,9 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                             jobschedulerAnswer.setOsId(osId);
                             
                             instanceDBLayer.updateInstance(jobschedulerAnswer.getDbInstance());
+                        }
+                        if (!uriChanged) {
+                            instances.clear();
                         }
                     }
                 }

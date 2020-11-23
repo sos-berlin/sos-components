@@ -9,6 +9,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,7 @@ import js7.proxy.data.ProxyEvent.ProxyDecoupled$;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.JProxyContext;
+import js7.proxy.javaapi.data.cluster.JClusterState;
 import js7.proxy.javaapi.eventbus.JStandardEventBus;
 
 public class ProxyContext {
@@ -98,10 +100,10 @@ public class ProxyContext {
     protected CompletableFuture<Void> stop() {
         JControllerProxy proxy = proxyFuture.getNow(null);
         if (proxy == null) {
-            LOGGER.info(String.format("%s of '%s' will be cancelled", proxyFuture.toString(), toString()));
+            LOGGER.info(String.format("%s of %s will be cancelled", proxyFuture.toString(), toString()));
             return CompletableFuture.runAsync(() -> proxyFuture.cancel(false));
         } else {
-            LOGGER.info(String.format("%s of '%s' will be stopped", proxy.toString(), toString()));
+            LOGGER.info(String.format("%s of %s will be stopped", proxy.toString(), toString()));
             return proxy.stop();
         }
     }
@@ -120,9 +122,12 @@ public class ProxyContext {
             LOGGER.info(toString() + ": check cluster appointment");
             proxyFuture.thenApply(p -> {
                 Either<Problem, Void> either = null;
-                if (p.currentState().clusterState().toJson().replaceAll("\\s", "").contains("\"TYPE\":\"Empty\"")) { // not appointed
+                JClusterState clusterState = p.currentState().clusterState();
+                LOGGER.info(clusterState.toJson());
+                if (clusterState.toJson().replaceAll("\\s", "").contains("\"TYPE\":\"Empty\"")) { // not appointed
                     Either<Problem, List<Watch>> clusterWatchers = Proxies.getClusterWatchers(credentials.getControllerId());
                     if (clusterWatchers.isRight()) {
+                        LOGGER.info("clusterWatchers:" + clusterWatchers.get().stream().map(w -> w.uri().string()).collect(Collectors.joining(", ")));
                         NodeId activeId = NodeId.unchecked("Primary");
                         Map<NodeId, Uri> idToUri = new HashMap<>();
                         idToUri.put(activeId, Uri.of(credentials.getUrl()));
