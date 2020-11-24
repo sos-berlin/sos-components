@@ -118,12 +118,12 @@ public class ProxyContext {
     
     private void checkCluster() {
         if (credentials.getBackupUrl() != null) { // is Cluster
-            LOGGER.debug(toString() + ": check cluster appointment");
+            LOGGER.info(toString() + ": check cluster appointment");
             proxyFuture.thenApply(p -> {
                 Either<Problem, Void> either = null;
                 if (p.currentState().clusterState().toJson().replaceAll("\\s", "").contains("\"TYPE\":\"Empty\"")) { // not appointed
                     try {
-                        LOGGER.debug("'Appoint Cluster Nodes' will be called");
+                        LOGGER.info("Cluster Nodes are not appointed");
                         List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(credentials.getControllerId());
                         if (controllerInstances == null || controllerInstances.size() < 2) { // is not cluster
                             throw new JobSchedulerBadRequestException("There is no cluster configured with the Id: " + credentials.getControllerId());
@@ -131,7 +131,7 @@ public class ProxyContext {
                         NodeId activeId = NodeId.unchecked("Primary");
                         Map<NodeId, Uri> idToUri = new HashMap<>();
                         for (DBItemInventoryJSInstance inst : controllerInstances) {
-                            idToUri.put(inst.getIsPrimary() ? activeId : NodeId.unchecked("Standby"), Uri.of(inst.getClusterUri()));
+                            idToUri.put(inst.getIsPrimary() ? activeId : NodeId.unchecked("Backup"), Uri.of(inst.getClusterUri()));
                         }
                         p.api().clusterAppointNodes(idToUri, activeId, Proxies.getClusterWatchers(credentials.getControllerId(), null)).thenAccept(
                                 e -> {

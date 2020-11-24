@@ -147,7 +147,7 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
 //        command.setActiveId("Primary");
 //        IdToUri idToUri = new IdToUri();
 //        for (DBItemInventoryJSInstance inst : controllerInstances) {
-//            idToUri.getAdditionalProperties().put(inst.getIsPrimary() ? "Primary" : "Standby", inst.getClusterUri());
+//            idToUri.getAdditionalProperties().put(inst.getIsPrimary() ? "Primary" : "Backup", inst.getClusterUri());
 //        }
 //        command.setIdToUri(idToUri);
 //        List<String> watchers = dbLayer.getUrisOfEnabledClusterWatcherByControllerId(controllerId);
@@ -167,7 +167,7 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
         NodeId activeId = NodeId.unchecked("Primary");
         Map<NodeId, Uri> idToUri = new HashMap<>();
         for (DBItemInventoryJSInstance inst : controllerInstances) {
-            idToUri.put(inst.getIsPrimary() ? activeId : NodeId.unchecked("Standby"), Uri.of(inst.getClusterUri()));
+            idToUri.put(inst.getIsPrimary() ? activeId : NodeId.unchecked("Backup"), Uri.of(inst.getClusterUri()));
         }
         ControllerApi.of(controllerId).clusterAppointNodes(idToUri, activeId, Proxies.getClusterWatchers(controllerId, dbLayer)).thenAccept(
                 e -> ProblemHelper.postProblemEventIfExist(e, jocError, controllerId));
