@@ -57,20 +57,6 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
     }
     
     private DepHistory getDepHistoryFromDBItems(List<DBItemDeploymentHistory> dbHistoryItems) {
-        Comparator<DBItemDeploymentHistory> deploymentDateComparatorDescending = new Comparator<DBItemDeploymentHistory>() {
-            
-            @Override
-            public int compare(DBItemDeploymentHistory o1, DBItemDeploymentHistory o2) {
-                if (o1.getDeploymentDate().after(o2.getDeploymentDate())) {
-                    return -1;
-                } else if (o1.getDeploymentDate().before(o2.getDeploymentDate())) {
-                    return 1;
-                } else {
-                    return 0;
-                }
-            }
-        };
-        dbHistoryItems.sort(deploymentDateComparatorDescending);
         DepHistory depHistory = new DepHistory();
         depHistory.setDepHistory(dbHistoryItems.stream().map(item -> mapDBItemToDepHistoryItem(item)).collect(Collectors.toList()));
         depHistory.setDeliveryDate(Date.from(Instant.now()));

@@ -950,11 +950,14 @@ public class DBLayerDeploy {
                         return FROM_DEP_DATE;
                     } else if("to".equals(item)) {
                         return TO_DEP_DATE;
+                    } else if ("limit".equals(item)) {
+                        return null;
                     } else {
                         return item + " = :" + item;
                     }
-                })
+                }).filter(item -> item != null)
                 .collect(Collectors.joining(" and ", " where ", "")));
+        hql.append(" order by deploymentDate desc");
         Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
         presentFilterAttributes.stream().forEach(item -> {
             switch (item) {
@@ -965,6 +968,9 @@ public class DBLayerDeploy {
             case "deploymentDate":
             case "deleteDate":
                 query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter, item), TemporalType.TIMESTAMP);
+                break;
+            case "limit":
+                query.setMaxResults((Integer)FilterAttributesMapper.getValueByFilterAttribute(filter, item));
                 break;
             default:
                 query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter, item));

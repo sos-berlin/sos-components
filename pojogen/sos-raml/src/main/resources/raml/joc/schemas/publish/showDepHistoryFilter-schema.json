@@ -48,6 +48,11 @@
     "timeZone": {
       "description": "see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones",
       "type": "string"
+    }, 
+    "limit": {
+        "description": "Only for db history URIs. Restricts the number of delivered items; -1=unlimited",
+        "type": "integer",
+        "default": 10000
     }
   }
 }
