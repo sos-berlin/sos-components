@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -20,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
@@ -39,10 +37,12 @@ import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.pgp.JocKeyPair;
-import com.sos.joc.model.publish.Controller;
-import com.sos.joc.model.publish.DeployDelete;
+import com.sos.joc.model.publish.ControllerId;
+import com.sos.joc.model.publish.DeployConfig;
+import com.sos.joc.model.publish.DeployConfiguration;
 import com.sos.joc.model.publish.DeployFilter;
-import com.sos.joc.model.publish.DeployUpdate;
+import com.sos.joc.model.publish.DraftConfig;
+import com.sos.joc.model.publish.DraftConfiguration;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.IDeploy;
 import com.sos.joc.publish.util.PublishUtils;
@@ -80,22 +80,28 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     DBItemInventoryJSInstance::getControllerId));
             // process filter
             Set<String> controllerIds = getControllerIdsFromFilter(deployFilter);
-            Set<Long> configurationIdsToDeploy = getConfigurationIdsToUpdateFromFilter(deployFilter);
-            Set<Long> deploymentIdsToReDeploy = getDeploymentIdsToUpdateFromFilter(deployFilter);
-            Set<Long> deploymentIdsToDeleteFromConfigIds = getDeploymentIdsToDeleteByConfigurationIdsFromFilter(deployFilter, allControllers);
-            Set<Long> configurationIdsToDelete = getConfigurationIdsToDeleteFromFilter(deployFilter);
+            List<DraftConfiguration> draftConfigsToStore = getDraftConfigurationsToStoreFromFilter(deployFilter);
+            /* TODO: 
+             * - check for configurationIds with -marked-for-delete- set
+             * - get all deployments from history related to the given configurationId
+             * - get all controllers from those deployments
+             * - delete all those existing deployments from all determined controllers
+            **/
+            List<DeployConfiguration> deployConfigsToStoreAgain = getDeployConfigurationsToStoreFromFilter(deployFilter);
+            List<DeployConfiguration> deployConfigsToDelete = getDeployConfigurationsToDeleteFromFilter(deployFilter);
+            
+//            Set<Long> deploymentIdsToDeleteFromConfigIds = getDeploymentIdsToDeleteByConfigurationIdsFromFilter(deployFilter, allControllers);
+//            Set<Long> configurationIdsToDelete = getDeplozConfigurationsToDeleteFromFilter(deployFilter);
 
             // read all objects provided in the filter from the database
-            List<DBItemInventoryConfiguration> configurationDBItemsToDeploy = dbLayer.getFilteredInventoryConfigurationsByIds(
-                    configurationIdsToDeploy);
-            List<DBItemDeploymentHistory> depHistoryDBItemsToDeploy = dbLayer.getFilteredDeploymentHistory(deploymentIdsToReDeploy);
-            List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete = 
-                    dbLayer.getFilteredDeploymentHistory(deploymentIdsToDeleteFromConfigIds);
+            List<DBItemInventoryConfiguration> configurationDBItemsToDeploy = dbLayer.getFilteredInventoryConfiguration(draftConfigsToStore);
+            List<DBItemDeploymentHistory> depHistoryDBItemsToDeploy = dbLayer.getFilteredDeploymentHistory(deployConfigsToStoreAgain);
+            List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete = dbLayer.getFilteredDeploymentHistory(deployConfigsToDelete);
+
             Map<DBItemInventoryConfiguration, DBItemDepSignatures> signedDrafts = 
                     new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
             Map<DBItemDeploymentHistory, DBItemDepSignatures> signedDeployments = new HashMap<DBItemDeploymentHistory, DBItemDepSignatures>();
 
-            // determine agent names to be replaced
             for (DBItemInventoryConfiguration update : configurationDBItemsToDeploy) {
                 DBItemDepSignatures signature = dbLayer.getSignature(update.getId());
                 if (signature != null) {
@@ -153,7 +159,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     .thenAccept(either -> {
                                 processAfterDelete(either, toDelete, controller, account, versionIdForDeleteRenamed, null);
                             }).get();
-                    JocInventory.deleteConfigurations(configurationIdsToDelete);
                 }
             }
             for (String controllerId : controllerIds) {
@@ -188,7 +193,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     break;
                 }
             }
-            if (configurationIdsToDelete != null && !configurationIdsToDelete.isEmpty()) {
+            if (depHistoryDBItemsToDeployDelete != null && !depHistoryDBItemsToDeployDelete.isEmpty()) {
                 // set new versionId for second round (delete items)
                 final String versionIdForDelete = UUID.randomUUID().toString();
                 for (String controller : allControllers.keySet()) {
@@ -198,7 +203,9 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                                 processAfterDelete(either, depHistoryDBItemsToDeployDelete, controller, account, versionIdForDelete,
                                         deployFilter);
                             }).get();
-                    JocInventory.deleteConfigurations(configurationIdsToDelete);
+                    Set<Long> draftConfigsToDelete = depHistoryDBItemsToDeployDelete.stream()
+                            .map(DBItemDeploymentHistory::getInventoryConfigurationId).collect(Collectors.toSet());
+                    JocInventory.deleteConfigurations(draftConfigsToDelete);
                 }
             }
             if (hasErrors) {
@@ -225,32 +232,47 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     }
 
     private Set<String> getControllerIdsFromFilter(DeployFilter deployFilter) {
-        return deployFilter.getControllers().stream().map(Controller::getController).filter(Objects::nonNull).collect(Collectors.toSet());
+        return deployFilter.getControllerIds().stream().map(ControllerId::getControllerId).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
-    private Set<Long> getConfigurationIdsToUpdateFromFilter(DeployFilter deployFilter) {
-        return deployFilter.getUpdate().stream().map(DeployUpdate::getConfigurationId).filter(Objects::nonNull).collect(Collectors.toSet());
-    }
-
-    private Set<Long> getDeploymentIdsToUpdateFromFilter(DeployFilter deployFilter) {
-        return deployFilter.getUpdate().stream().map(DeployUpdate::getDeploymentId).filter(Objects::nonNull).collect(Collectors.toSet());
-    }
-
-    private Set<Long> getConfigurationIdsToDeleteFromFilter(DeployFilter deployFilter) {
-        return deployFilter.getDelete().stream().map(DeployDelete::getConfigurationId).filter(Objects::nonNull).collect(Collectors.toSet());
-    }
-
-    private Set<Long> getDeploymentIdsToDeleteByConfigurationIdsFromFilter(DeployFilter deployFilter,
-            Map<String, List<DBItemInventoryJSInstance>> controllerInstances) throws SOSHibernateException {
-        Set<Long> configurationIds = deployFilter.getDelete().stream().map(DeployDelete::getConfigurationId).filter(Objects::nonNull).collect(
-                Collectors.toSet());
-        Set<Long> deploymentIdsToDelete = new HashSet<Long>();
-        for (String controller : controllerInstances.keySet()) {
-            List<Long> deploymentIds = dbLayer.getLatestDeploymentFromConfigurationId(configurationIds, controller);
-            deploymentIdsToDelete.addAll(deploymentIds);
+    private List<DraftConfiguration> getDraftConfigurationsToStoreFromFilter(DeployFilter deployFilter) {
+        if (deployFilter.getStore() != null) {
+            return deployFilter.getStore().getDraftConfigurations().stream()
+                    .map(DraftConfig::getDraftConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
+        } else {
+            return null;
         }
-        return deploymentIdsToDelete;
     }
+
+    private List<DeployConfiguration> getDeployConfigurationsToStoreFromFilter(DeployFilter deployFilter) {
+        if (deployFilter.getStore() != null) {
+            return deployFilter.getStore().getDeployConfigurations().stream()
+                    .map(DeployConfig::getDeployConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
+        } else {
+            return null;
+        }
+    }
+
+    private List<DeployConfiguration> getDeployConfigurationsToDeleteFromFilter(DeployFilter deployFilter) {
+        if (deployFilter.getDelete() != null) {
+            return deployFilter.getDelete().getDeployConfigurations().stream()
+                    .map(DeployConfig::getDeployConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
+        } else {
+            return null;
+        }
+    }
+
+//    private Set<Long> getDeploymentIdsToDeleteByConfigurationIdsFromFilter(DeployFilter deployFilter,
+//            Map<String, List<DBItemInventoryJSInstance>> controllerInstances) throws SOSHibernateException {
+//        Set<Long> configurationIds = deployFilter.getDelete().stream().map(DeployDelete::getConfigurationId).filter(Objects::nonNull).collect(
+//                Collectors.toSet());
+//        Set<Long> deploymentIdsToDelete = new HashSet<Long>();
+//        for (String controller : controllerInstances.keySet()) {
+//            List<Long> deploymentIds = dbLayer.getLatestDeploymentFromConfigurationId(configurationIds, controller);
+//            deploymentIdsToDelete.addAll(deploymentIds);
+//        }
+//        return deploymentIdsToDelete;
+//    }
 
     private void processAfterAdd (
             Either<Problem, Void> either, 

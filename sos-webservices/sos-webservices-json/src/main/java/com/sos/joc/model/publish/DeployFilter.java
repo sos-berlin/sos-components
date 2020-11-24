@@ -20,8 +20,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllers",
-    "update",
+    "controllerIds",
+    "store",
     "delete",
     "auditLog"
 })
@@ -32,12 +32,24 @@ public class DeployFilter {
      * (Required)
      * 
      */
-    @JsonProperty("controllers")
-    private List<Controller> controllers = new ArrayList<Controller>();
-    @JsonProperty("update")
-    private List<DeployUpdate> update = new ArrayList<DeployUpdate>();
+    @JsonProperty("controllerIds")
+    private List<ControllerId> controllerIds = new ArrayList<ControllerId>();
+    /**
+     * DeployStore
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("store")
+    private DeployStore store;
+    /**
+     * DeployDelete
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("delete")
-    private List<DeployDelete> delete = new ArrayList<DeployDelete>();
+    private DeployDelete delete;
     /**
      * auditParams
      * <p>
@@ -52,9 +64,9 @@ public class DeployFilter {
      * (Required)
      * 
      */
-    @JsonProperty("controllers")
-    public List<Controller> getControllers() {
-        return controllers;
+    @JsonProperty("controllerIds")
+    public List<ControllerId> getControllerIds() {
+        return controllerIds;
     }
 
     /**
@@ -62,28 +74,52 @@ public class DeployFilter {
      * (Required)
      * 
      */
-    @JsonProperty("controllers")
-    public void setControllers(List<Controller> controllers) {
-        this.controllers = controllers;
+    @JsonProperty("controllerIds")
+    public void setControllerIds(List<ControllerId> controllerIds) {
+        this.controllerIds = controllerIds;
     }
 
-    @JsonProperty("update")
-    public List<DeployUpdate> getUpdate() {
-        return update;
+    /**
+     * DeployStore
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("store")
+    public DeployStore getStore() {
+        return store;
     }
 
-    @JsonProperty("update")
-    public void setUpdate(List<DeployUpdate> update) {
-        this.update = update;
+    /**
+     * DeployStore
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("store")
+    public void setStore(DeployStore store) {
+        this.store = store;
     }
 
+    /**
+     * DeployDelete
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("delete")
-    public List<DeployDelete> getDelete() {
+    public DeployDelete getDelete() {
         return delete;
     }
 
+    /**
+     * DeployDelete
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("delete")
-    public void setDelete(List<DeployDelete> delete) {
+    public void setDelete(DeployDelete delete) {
         this.delete = delete;
     }
 
@@ -111,12 +147,12 @@ public class DeployFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllers", controllers).append("update", update).append("delete", delete).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerIds", controllerIds).append("store", store).append("delete", delete).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllers).append(update).append(auditLog).append(delete).toHashCode();
+        return new HashCodeBuilder().append(store).append(auditLog).append(delete).append(controllerIds).toHashCode();
     }
 
     @Override
@@ -128,7 +164,7 @@ public class DeployFilter {
             return false;
         }
         DeployFilter rhs = ((DeployFilter) other);
-        return new EqualsBuilder().append(controllers, rhs.controllers).append(update, rhs.update).append(auditLog, rhs.auditLog).append(delete, rhs.delete).isEquals();
+        return new EqualsBuilder().append(store, rhs.store).append(auditLog, rhs.auditLog).append(delete, rhs.delete).append(controllerIds, rhs.controllerIds).isEquals();
     }
 
 }

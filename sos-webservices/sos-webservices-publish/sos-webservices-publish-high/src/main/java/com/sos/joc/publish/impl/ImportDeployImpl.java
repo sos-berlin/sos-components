@@ -46,7 +46,6 @@ import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.pgp.JocKeyPair;
-import com.sos.joc.model.publish.Controller;
 import com.sos.joc.model.publish.ImportDeployFilter;
 import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignaturePath;
@@ -155,58 +154,53 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             // Deploy
             final Date deploymentDate = Date.from(Instant.now());
             // call UpdateRepo for all provided Controllers
-            List<Controller> controllers = filter.getControllers();
+            String controllerId = filter.getControllerId();
             final String versionIdForUpdate = versionId;
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
             JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.HIGH);
-            for (Controller controller : controllers) {
-                List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkPathRenamingForUpdate(
-                        importedObjects.keySet(), controller.getController(), dbLayer, keyPair.getKeyAlgorithm());
-                // and subsequently call delete for the object with the previous path before committing the update 
-                if (toDeleteForRename != null && !toDeleteForRename.isEmpty()) {
-                    // clone list as it has to be final now for processing in CompleteableFuture.thenAccept method
-                    final List<DBItemDeploymentHistory> toDelete = toDeleteForRename;
-                    // set new versionId for second round (delete items)
-                    final String versionIdForDeleteRenamed = UUID.randomUUID().toString();
-                        // call updateRepo command via Proxy of given controllers
-                        PublishUtils.updateRepoDelete(versionIdForDeleteRenamed, toDelete, controller.getController(), dbLayer, 
-                                keyPair.getKeyAlgorithm()).thenAccept(either -> {
-                                processAfterDelete(either, toDelete, controller.getController(), account, versionIdForDeleteRenamed, null);
-                        }).get();
-                }
+            List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkPathRenamingForUpdate(
+                    importedObjects.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm());
+            // and subsequently call delete for the object with the previous path before committing the update 
+            if (toDeleteForRename != null && !toDeleteForRename.isEmpty()) {
+                // clone list as it has to be final now for processing in CompleteableFuture.thenAccept method
+                final List<DBItemDeploymentHistory> toDelete = toDeleteForRename;
+                // set new versionId for second round (delete items)
+                final String versionIdForDeleteRenamed = UUID.randomUUID().toString();
+                    // call updateRepo command via Proxy of given controllers
+                    PublishUtils.updateRepoDelete(versionIdForDeleteRenamed, toDelete, controllerId, dbLayer, 
+                            keyPair.getKeyAlgorithm()).thenAccept(either -> {
+                            processAfterDelete(either, toDelete, controllerId, account, versionIdForDeleteRenamed, null);
+                    }).get();
             }
-            for (Controller controller : controllers) {
+//            for (Controller controller : controllers) {
                 // call updateRepo command via ControllerApi for given controllers
                 String signerDN = null;
                 X509Certificate cert = null;
                 switch(keyPair.getKeyAlgorithm()) {
                 case SOSKeyConstants.PGP_ALGORITHM_NAME:
-                    PublishUtils.updateRepoAddOrUpdatePGP(versionIdForUpdate, importedObjects, null, controller.getController(), dbLayer)
+                    PublishUtils.updateRepoAddOrUpdatePGP(versionIdForUpdate, importedObjects, null, controllerId, dbLayer)
                         .thenAccept(either -> {
-                            processAfterAdd(either, importedObjects, null, account, versionIdForUpdate, controller.getController(),
-                                    deploymentDate, filter);
+                            processAfterAdd(either, importedObjects, null, account, versionIdForUpdate, controllerId, deploymentDate, filter);
                     }).get();
                     break;
                 case SOSKeyConstants.RSA_ALGORITHM_NAME:
                     cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                     signerDN = cert.getSubjectDN().getName();
-                    PublishUtils.updateRepoAddOrUpdateWithX509(versionIdForUpdate, importedObjects, null, controller.getController(), dbLayer,
+                    PublishUtils.updateRepoAddOrUpdateWithX509(versionIdForUpdate, importedObjects, null, controllerId, dbLayer,
                             SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
-                                processAfterAdd(either, importedObjects, null, account, versionIdForUpdate, controller.getController(),
-                                    deploymentDate, filter);
+                                processAfterAdd(either, importedObjects, null, account, versionIdForUpdate, controllerId, deploymentDate, filter);
                     }).get();
                     break;
                 case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
                     cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                     signerDN = cert.getSubjectDN().getName();
-                    PublishUtils.updateRepoAddOrUpdateWithX509(versionIdForUpdate, importedObjects, null, controller.getController(), dbLayer,
+                    PublishUtils.updateRepoAddOrUpdateWithX509(versionIdForUpdate, importedObjects, null, controllerId, dbLayer,
                             SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
-                                processAfterAdd(either, importedObjects, null, account, versionIdForUpdate, controller.getController(),
-                                    deploymentDate, filter);
+                                processAfterAdd(either, importedObjects, null, account, versionIdForUpdate, controllerId, deploymentDate, filter);
                     }).get();
                     break;
                 }
-            }
+//            }
             if (hasErrors) {
                 return JOCDefaultResponse.responseStatus419(listOfErrors);
             } else {

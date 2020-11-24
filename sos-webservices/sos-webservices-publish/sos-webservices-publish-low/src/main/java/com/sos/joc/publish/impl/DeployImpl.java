@@ -20,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
@@ -40,10 +39,12 @@ import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.pgp.JocKeyPair;
-import com.sos.joc.model.publish.Controller;
-import com.sos.joc.model.publish.DeployDelete;
+import com.sos.joc.model.publish.ControllerId;
+import com.sos.joc.model.publish.DeployConfig;
+import com.sos.joc.model.publish.DeployConfiguration;
 import com.sos.joc.model.publish.DeployFilter;
-import com.sos.joc.model.publish.DeployUpdate;
+import com.sos.joc.model.publish.DraftConfig;
+import com.sos.joc.model.publish.DraftConfiguration;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.joc.publish.resource.IDeploy;
@@ -69,11 +70,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             initLogging(API_CALL, filter, xAccessToken);
             JsonValidator.validateFailFast(filter, DeployFilter.class);
             DeployFilter deployFilter = Globals.objectMapper.readValue(filter, DeployFilter.class);
-            // this has to be moved to the processing of the items for each one
-//            DeployAudit deployAudit = new DeployAudit(deployFilter);
-//            logAuditMessage(deployAudit);
-//            storeAuditLogEntry(deployAudit);
-            
             JOCDefaultResponse jocDefaultResponse = initPermissions("", 
                     getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isDeploy());
             if (jocDefaultResponse != null) {
@@ -87,26 +83,36 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     dbLayer.getAllControllers().stream().collect(Collectors.groupingBy(DBItemInventoryJSInstance::getControllerId));
             // process filter
             Set<String> controllerIds = getControllerIdsFromFilter(deployFilter);
-            Set<Long> configurationIdsToDeploy = getConfigurationIdsToUpdateFromFilter(deployFilter);
+            List<DraftConfiguration> draftConfigsToStore = getDraftConfigurationsToStoreFromFilter(deployFilter);
             /* TODO: 
              * - check for configurationIds with -marked-for-delete- set
              * - get all deployments from history related to the given configurationId
              * - get all controllers from those deployments
              * - delete all those existing deployments from all determined controllers
             **/
-            Set<Long> deploymentIdsToReDeploy = getDeploymentIdsToUpdateFromFilter(deployFilter);
-            Set<Long> deploymentIdsToDeleteFromConfigIds = getDeploymentIdsToDeleteByConfigurationIdsFromFilter(deployFilter, allControllers);
-            Set<Long> configurationIdsToDelete = getConfigurationIdsToDeleteFromFilter(deployFilter);
+            List<DeployConfiguration> deployConfigsToStoreAgain = getDeployConfigurationsToStoreFromFilter(deployFilter);
+            List<DeployConfiguration> deployConfigsToDelete = getDeployConfigurationsToDeleteFromFilter(deployFilter);
+            
+//            Set<Long> deploymentIdsToDeleteFromConfigIds = getDeploymentIdsToDeleteByConfigurationIdsFromFilter(deployFilter, allControllers);
+//            Set<Long> configurationIdsToDelete = getDeplozConfigurationsToDeleteFromFilter(deployFilter);
 
             // read all objects provided in the filter from the database
-            final List<DBItemInventoryConfiguration> configurationDBItemsToDeploy = 
-                    dbLayer.getFilteredInventoryConfigurationsByIds(configurationIdsToDeploy);
-            List<DBItemDeploymentHistory> depHistoryDBItemsToDeploy = dbLayer.getFilteredDeploymentHistory(deploymentIdsToReDeploy);
-            List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete = dbLayer.getFilteredDeploymentHistory(deploymentIdsToDeleteFromConfigIds);
+            List<DBItemInventoryConfiguration> configurationDBItemsToStore = null;
+            if (!draftConfigsToStore.isEmpty()) {
+                configurationDBItemsToStore = dbLayer.getFilteredInventoryConfiguration(draftConfigsToStore);
+            }
+            List<DBItemDeploymentHistory> depHistoryDBItemsToStore = null;
+            if (!deployConfigsToStoreAgain.isEmpty()) {
+                depHistoryDBItemsToStore = dbLayer.getFilteredDeploymentHistory(deployConfigsToStoreAgain);
+            }
+            List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete = null;
+            if (!deployConfigsToDelete.isEmpty()) {
+                depHistoryDBItemsToDeployDelete = dbLayer.getFilteredDeploymentHistory(deployConfigsToDelete);
+            }
 
             // sign undeployed configurations
-            Set<DBItemInventoryConfiguration> unsignedDrafts = new HashSet<DBItemInventoryConfiguration>(configurationDBItemsToDeploy);
-            Set<DBItemDeploymentHistory> unsignedReDeployables = new HashSet<DBItemDeploymentHistory>(depHistoryDBItemsToDeploy);
+            Set<DBItemInventoryConfiguration> unsignedDrafts = new HashSet<DBItemInventoryConfiguration>(configurationDBItemsToStore);
+            Set<DBItemDeploymentHistory> unsignedReDeployables = new HashSet<DBItemDeploymentHistory>(depHistoryDBItemsToStore);
             
             // determine agent names to be replaced
             Set<UpdateableWorkflowJobAgentName> updateableAgentNames = new HashSet<UpdateableWorkflowJobAgentName>();
@@ -150,8 +156,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         PublishUtils.updateRepoDelete(versionIdForDeleteRenamed, toDelete, controller, dbLayer, 
                                 keyPair.getKeyAlgorithm()).thenAccept(either -> {
                                 processAfterDelete(either, toDelete, controller, account, versionIdForDeleteRenamed, null);
-                        }).get();
-                        JocInventory.deleteConfigurations(configurationIdsToDelete);
+                        });//.get()
                 }
             }
             for (String controllerId : controllerIds) {
@@ -164,7 +169,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                             dbLayer).thenAccept(either -> {
                                 processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account, 
                                         versionIdForUpdate, controllerId, deploymentDate, deployFilter);
-                    }).get();
+                    });//.get()
                     break;
                 case SOSKeyConstants.RSA_ALGORITHM_NAME:
                     cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
@@ -173,7 +178,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                             dbLayer,SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
                                 processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account, 
                                         versionIdForUpdate, controllerId, deploymentDate, deployFilter);
-                    }).get();
+                    });//.get()
                     break;
                 case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
                     cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
@@ -182,19 +187,22 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                             dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
                                 processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account, 
                                         versionIdForUpdate, controllerId, deploymentDate, deployFilter);
-                    }).get();
+                    });//.get()
                     break;
                 }
             }
-            if (configurationIdsToDelete != null && !configurationIdsToDelete.isEmpty()) {
+            if (depHistoryDBItemsToDeployDelete != null && !depHistoryDBItemsToDeployDelete.isEmpty()) {
                 // set new versionId for second round (delete items)
                 final String versionIdForDelete = UUID.randomUUID().toString();
+                final List<DBItemDeploymentHistory> itemsToDelete = depHistoryDBItemsToDeployDelete;
                 for (String controller : allControllers.keySet()) {
                     // call updateRepo command via Proxy of given controllers
-                    PublishUtils.updateRepoDelete(versionIdForDelete, depHistoryDBItemsToDeployDelete, controller, dbLayer, 
+                    PublishUtils.updateRepoDelete(versionIdForDelete, itemsToDelete, controller, dbLayer, 
                             keyPair.getKeyAlgorithm()).thenAccept(either -> {
-                            processAfterDelete(either, depHistoryDBItemsToDeployDelete, controller, account, versionIdForDelete, deployFilter);
-                    }).get();
+                            processAfterDelete(either, itemsToDelete, controller, account, versionIdForDelete, deployFilter);
+                    });//.get()
+                    Set<Long> configurationIdsToDelete = depHistoryDBItemsToDeployDelete.stream()
+                            .map(DBItemDeploymentHistory::getInventoryConfigurationId).collect(Collectors.toSet());
                     JocInventory.deleteConfigurations(configurationIdsToDelete);
                 }
             }
@@ -222,32 +230,34 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     }
 
     private Set<String> getControllerIdsFromFilter (DeployFilter deployFilter) {
-        return deployFilter.getControllers().stream().map(Controller::getController).filter(Objects::nonNull).collect(Collectors.toSet());
+        return deployFilter.getControllerIds().stream().map(ControllerId::getControllerId).filter(Objects::nonNull).collect(Collectors.toSet());
     }
     
-    private Set<Long> getConfigurationIdsToUpdateFromFilter (DeployFilter deployFilter) {
-        return deployFilter.getUpdate().stream().map(DeployUpdate::getConfigurationId).filter(Objects::nonNull).collect(Collectors.toSet());
-    }
-    
-    private Set<Long> getDeploymentIdsToUpdateFromFilter (DeployFilter deployFilter) {
-        return deployFilter.getUpdate().stream().map(DeployUpdate::getDeploymentId).filter(Objects::nonNull).collect(Collectors.toSet());
-    }
-    
-    private Set<Long> getConfigurationIdsToDeleteFromFilter (DeployFilter deployFilter) {
-        return deployFilter.getDelete().stream().map(DeployDelete::getConfigurationId).filter(Objects::nonNull).collect(Collectors.toSet());
-    }
-    
-    private Set<Long> getDeploymentIdsToDeleteByConfigurationIdsFromFilter (DeployFilter deployFilter, 
-            Map<String, List<DBItemInventoryJSInstance>> controllerInstances)
-            throws SOSHibernateException {
-        Set<Long> configurationIds = 
-                deployFilter.getDelete().stream().map(DeployDelete::getConfigurationId).filter(Objects::nonNull).collect(Collectors.toSet());
-        Set<Long> deploymentIdsToDelete = new HashSet<Long>();
-        for (String controller : controllerInstances.keySet()) {
-            List<Long> deploymentIds = dbLayer.getLatestDeploymentFromConfigurationId(configurationIds, controller);
-            deploymentIdsToDelete.addAll(deploymentIds);
+    private List<DraftConfiguration> getDraftConfigurationsToStoreFromFilter (DeployFilter deployFilter) {
+        if (deployFilter.getStore() != null) {
+            return deployFilter.getStore().getDraftConfigurations().stream()
+                    .map(DraftConfig::getDraftConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
+        } else {
+            return new ArrayList<DraftConfiguration>();
         }
-        return deploymentIdsToDelete;
+    }
+    
+    private List<DeployConfiguration> getDeployConfigurationsToStoreFromFilter (DeployFilter deployFilter) {
+        if (deployFilter.getStore() != null) {
+            return deployFilter.getStore().getDeployConfigurations().stream()
+                    .map(DeployConfig::getDeployConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
+        } else {
+            return new ArrayList<DeployConfiguration>();
+        }
+    }
+    
+    private List<DeployConfiguration> getDeployConfigurationsToDeleteFromFilter (DeployFilter deployFilter) {
+        if (deployFilter.getDelete() != null) {
+            return deployFilter.getDelete().getDeployConfigurations().stream()
+                    .map(DeployConfig::getDeployConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
+        } else {
+          return new ArrayList<DeployConfiguration>();
+        }
     }
     
     private void processAfterAdd (

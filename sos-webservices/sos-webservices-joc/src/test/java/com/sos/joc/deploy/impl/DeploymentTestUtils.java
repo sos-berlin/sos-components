@@ -21,8 +21,16 @@ import com.sos.jobscheduler.model.workflow.Branch;
 import com.sos.jobscheduler.model.workflow.Jobs;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.classes.JobSchedulerDate;
+import com.sos.joc.model.publish.ControllerId;
 import com.sos.joc.model.publish.DepHistory;
+import com.sos.joc.model.publish.DeployConfig;
+import com.sos.joc.model.publish.DeployConfiguration;
+import com.sos.joc.model.publish.DeployDelete;
+import com.sos.joc.model.publish.DeployFilter;
+import com.sos.joc.model.publish.DeployStore;
 import com.sos.joc.model.publish.DeploymentState;
+import com.sos.joc.model.publish.DraftConfig;
+import com.sos.joc.model.publish.DraftConfiguration;
 import com.sos.joc.model.publish.ExcludeConfiguration;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
@@ -400,4 +408,54 @@ public class DeploymentTestUtils {
         return filterAttributes;
     }
 
+    public static DeployFilter createExampleDeployFilter () {
+        DeployFilter filter = new DeployFilter();
+        
+        DeployStore store = new DeployStore();
+        filter.setStore(store);
+
+        DeployDelete delete = new DeployDelete();
+        filter.setDelete(delete);
+
+        ControllerId js7Cluster = new ControllerId();
+        js7Cluster.setControllerId("js7-cluster");
+        ControllerId standalone = new ControllerId();
+        standalone.setControllerId("standalone");
+
+        filter.getControllerIds().add(js7Cluster);
+        filter.getControllerIds().add(standalone);
+        
+        DraftConfig workflow10DraftConfig = new DraftConfig();
+        DraftConfiguration workflow10draft = new DraftConfiguration();
+        workflow10draft.setPath("/myWorkflows/ifElseWorkflow/workflow_10");
+        workflow10draft.setObjectType(DeployType.WORKFLOW);
+        workflow10DraftConfig.setDraftConfiguration(workflow10draft);
+
+        DraftConfig workflow16DraftConfig = new DraftConfig();
+        DraftConfiguration workflow16draft = new DraftConfiguration();
+        workflow16draft.setPath("/myWorkflows/ifElseWorkflow/workflow_16");
+        workflow16draft.setObjectType(DeployType.WORKFLOW);
+        workflow16DraftConfig.setDraftConfiguration(workflow16draft);
+        
+        store.getDraftConfigurations().add(workflow10DraftConfig);
+        store.getDraftConfigurations().add(workflow16DraftConfig);
+        
+        DeployConfig workflow12deployConfig = new DeployConfig();
+        DeployConfiguration workflow12deployed = new DeployConfiguration();
+        workflow12deployed.setPath("/myWorkflows/ifElseWorkflow/workflow_12");
+        workflow12deployed.setObjectType(DeployType.WORKFLOW);
+        workflow12deployed.setCommitId("4273b6c6-c354-4fcd-afdb-2758088abe4a");
+        workflow12deployConfig.setDeployConfiguration(workflow12deployed);
+        store.getDeployConfigurations().add(workflow12deployConfig);
+        
+        DeployConfig toDeleteConfig = new DeployConfig();
+        DeployConfiguration toDelete = new DeployConfiguration();
+        toDelete.setPath("/myWorkflows/forkJoinWorkflows/workflow_88");
+        toDelete.setObjectType(DeployType.WORKFLOW);
+        toDelete.setCommitId("9b5a158f-df73-43e7-a9d4-e124079f35c3");
+        toDeleteConfig.setDeployConfiguration(toDelete);
+        delete.getDeployConfigurations().add(toDeleteConfig);
+        
+        return filter;
+    }
 }

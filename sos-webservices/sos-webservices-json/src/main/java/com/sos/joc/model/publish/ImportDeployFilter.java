@@ -1,8 +1,6 @@
 
 package com.sos.joc.model.publish;
 
-import java.util.ArrayList;
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -20,19 +18,20 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllers",
+    "controllerId",
     "keyAlgorithm",
     "auditLog"
 })
 public class ImportDeployFilter {
 
     /**
+     * string without < and >
+     * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("controllers")
-    private List<Controller> controllers = new ArrayList<Controller>();
+    @JsonProperty("controllerId")
+    private String controllerId;
     @JsonProperty("keyAlgorithm")
     private String keyAlgorithm;
     /**
@@ -45,23 +44,25 @@ public class ImportDeployFilter {
     private AuditParams auditLog;
 
     /**
+     * string without < and >
+     * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("controllers")
-    public List<Controller> getControllers() {
-        return controllers;
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
-     * (Required)
      * 
      */
-    @JsonProperty("controllers")
-    public void setControllers(List<Controller> controllers) {
-        this.controllers = controllers;
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     @JsonProperty("keyAlgorithm")
@@ -98,12 +99,12 @@ public class ImportDeployFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllers", controllers).append("keyAlgorithm", keyAlgorithm).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("keyAlgorithm", keyAlgorithm).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllers).append(keyAlgorithm).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(keyAlgorithm).append(controllerId).append(auditLog).toHashCode();
     }
 
     @Override
@@ -115,7 +116,7 @@ public class ImportDeployFilter {
             return false;
         }
         ImportDeployFilter rhs = ((ImportDeployFilter) other);
-        return new EqualsBuilder().append(controllers, rhs.controllers).append(keyAlgorithm, rhs.keyAlgorithm).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(keyAlgorithm, rhs.keyAlgorithm).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

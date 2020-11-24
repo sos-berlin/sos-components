@@ -60,7 +60,7 @@ public class MappingTest {
 
 
     @Test
-    public void test1WorkflowToJsonString() {
+    public void test01WorkflowToJsonString() {
         Workflow ifElseWorkflow = DeploymentTestUtils.createIfElseWorkflow();
         Workflow forkJoinWorkflow = DeploymentTestUtils.createForkJoinWorkflow();
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
@@ -81,7 +81,7 @@ public class MappingTest {
     }
 
     @Test
-    public void test2WorkflowToJSObject() {
+    public void test02WorkflowToJSObject() {
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         Workflow ifElseWorkflow = null;
         try {
@@ -98,7 +98,7 @@ public class MappingTest {
     }
 
     @Test
-    public void test4JsonStringToWorkflow() {
+    public void test04JsonStringToWorkflow() {
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         try {
             Workflow ifElseWorkflow = om.readValue(IF_ELSE_JSON, Workflow.class);
@@ -131,7 +131,7 @@ public class MappingTest {
     }
 
 //    @Test
-    public void test5MapDepHistoryFilter () throws JsonProcessingException {
+    public void test05MapDepHistoryFilter () throws JsonProcessingException {
         ShowDepHistoryFilter filter = DeploymentTestUtils.createDefaultShowDepHistoryFilter();
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         DateFormat df = new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:ss.SSS'Z'");
@@ -150,7 +150,7 @@ public class MappingTest {
     }
 
 //  @Test
-    public void test6MapRedeployFilter () throws JsonProcessingException {
+    public void test06MapRedeployFilter () throws JsonProcessingException {
         RedeployFilter filter = DeploymentTestUtils.createDefaultRedeployFilter();
         ExcludeConfiguration exclude = new ExcludeConfiguration();
         exclude.setPath("/myWorkflows/myIfElseWorkflows/workflow_02");
@@ -164,7 +164,7 @@ public class MappingTest {
      * No Unit test. DB connection needed to test query parameters
      * */
 //    @Test
-    public void test7GetDeploymentHistoryDBLayerDeployTest () throws SOSHibernateException {
+    public void test07GetDeploymentHistoryDBLayerDeployTest () throws SOSHibernateException {
         ShowDepHistoryFilter filter = DeploymentTestUtils.createShowDepHistoryFilterByDeploymentDateAndPath();
 
         Set<String> presentFilterAttributes = DeploymentTestUtils.extractDefaultShowDepHistoryFilterAttributes(filter);
@@ -207,7 +207,7 @@ public class MappingTest {
      * No Unit test. DB connection needed to test query parameters
      * */
 //    @Test
-    public void test8GetDeploymentHistoryFromToDBLayerDeployTest () throws SOSHibernateException {
+    public void test08GetDeploymentHistoryFromToDBLayerDeployTest () throws SOSHibernateException {
        ShowDepHistoryFilter filter = DeploymentTestUtils.createShowDepHistoryFilterByFromToAndPath();
 
         Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter);
@@ -269,7 +269,7 @@ public class MappingTest {
     }
     
     @Test
-    public void test9MapRedeployFilter () throws JsonProcessingException {
+    public void test09MapRedeployFilter () throws JsonProcessingException {
         RedeployFilter filter = DeploymentTestUtils.createDefaultRedeployFilter();
 //        ExcludeConfiguration exclude = new ExcludeConfiguration();
 //        exclude.setPath("/myWorkflows/myIfElseWorkflow/workflow_12");
@@ -293,5 +293,12 @@ public class MappingTest {
                 })
                 .collect(Collectors.joining(" and ", " where ", "")));
         LOGGER.info(hql.toString());
+    }
+
+    @Test
+    public void test10MapDeployFilter () throws JsonProcessingException {
+
+        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
+        LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleDeployFilter()));
     }
 }

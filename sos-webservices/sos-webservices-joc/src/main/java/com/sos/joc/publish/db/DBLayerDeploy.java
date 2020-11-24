@@ -37,7 +37,9 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.publish.DeployConfiguration;
 import com.sos.joc.model.publish.DeploymentState;
+import com.sos.joc.model.publish.DraftConfiguration;
 import com.sos.joc.model.publish.ExcludeConfiguration;
 import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.JSObject;
@@ -48,7 +50,6 @@ import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.publish.common.JSObjectFileExtension;
 import com.sos.joc.publish.mapper.FilterAttributesMapper;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
-import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.joc.publish.util.PublishUtils;
 
 public class DBLayerDeploy {
@@ -171,6 +172,35 @@ public class DBLayerDeploy {
         }
     }
 
+    public List<DBItemInventoryConfiguration> getFilteredInventoryConfiguration(List<DraftConfiguration> configurations)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            hql.append(" where ");
+            for (Integer i=0; i < configurations.size(); i++) {
+                hql.append("(")
+                    .append("path = : path").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7))
+                    .append(" and ")
+                    .append("type = :type").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7))
+                    .append(")");
+                if (i < configurations.size() -1) {
+                    hql.append(" or ");
+                }
+            }
+            Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+            for (Integer i=0; i < configurations.size(); i++) {
+                query.setParameter("path" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), configurations.get(i).getPath());
+                query.setParameter("type" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), PublishUtils.mapDeployType(
+                        configurations.get(i).getObjectType()).intValue());
+            }
+            return query.getResultList();
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
     public List<DBItemInventoryConfiguration> getFilteredInventoryConfigurationsByIds(Collection<Long> configurationIds)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
@@ -184,6 +214,37 @@ public class DBLayerDeploy {
             } else {
                 return new ArrayList<DBItemInventoryConfiguration>();
             }
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    public List<DBItemDeploymentHistory> getFilteredDeploymentHistory(List<DeployConfiguration> deployConfigurations)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append(" where ");
+            for (Integer i=0; i < deployConfigurations.size(); i++) {
+                hql.append("(")
+                    .append("path = : path").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7))
+                    .append(" and ")
+                    .append("type = :type").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7))
+                    .append(" and ")
+                    .append("commitId = :commitId").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7))
+                    .append(")");
+                if (i < deployConfigurations.size() -1) {
+                    hql.append(" or ");
+                }
+            }
+            Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
+            for (Integer i=0; i < deployConfigurations.size(); i++) {
+                query.setParameter("path" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), deployConfigurations.get(i).getPath());
+                query.setParameter("type" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), deployConfigurations.get(i).getObjectType().intValue());
+                query.setParameter("commitId" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), deployConfigurations.get(i).getCommitId());
+            }
+            return query.getResultList();
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -945,14 +1006,18 @@ public class DBLayerDeploy {
     }
     
     public String getAgentIdFromAgentName (String agentName){
-        try {
-            StringBuilder hql = new StringBuilder("select agentId from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
-            hql.append(" where agentName = :agentName");
-            Query<String> query = getSession().createQuery(hql.toString());
-            query.setParameter("agentName", agentName);
-            return query.getSingleResult();
-        } catch (SOSHibernateException e) {
-            throw new RuntimeException(e.getMessage(), e);
+        if (agentName != null) {
+            try {
+                StringBuilder hql = new StringBuilder("select agentId from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
+                hql.append(" where agentName = :agentName");
+                Query<String> query = getSession().createQuery(hql.toString());
+                query.setParameter("agentName", agentName);
+                return query.getSingleResult();
+            } catch (SOSHibernateException e) {
+                throw new RuntimeException(e.getMessage(), e);
+            } 
+        } else {
+            return null;
         }
     }
 

@@ -1289,4 +1289,12 @@ public abstract class PublishUtils {
         });
         draft.setContent(om.writeValueAsString(workflow));
     }
+    
+    public static String getValueAsStringWithleadingZeros(Integer i, int length) {
+        if (i.toString().length() >= length) {
+            return i.toString();
+        } else {
+            return String.format("%0" + (length-i.toString().length()) + "d%s", 0, i.toString());
+        }
+   }
 }
