@@ -94,9 +94,18 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
 //            Set<Long> configurationIdsToDelete = getDeplozConfigurationsToDeleteFromFilter(deployFilter);
 
             // read all objects provided in the filter from the database
-            List<DBItemInventoryConfiguration> configurationDBItemsToDeploy = dbLayer.getFilteredInventoryConfiguration(draftConfigsToStore);
-            List<DBItemDeploymentHistory> depHistoryDBItemsToDeploy = dbLayer.getFilteredDeploymentHistory(deployConfigsToStoreAgain);
-            List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete = dbLayer.getFilteredDeploymentHistory(deployConfigsToDelete);
+            List<DBItemInventoryConfiguration> configurationDBItemsToDeploy = null;
+            if (draftConfigsToStore != null) {
+                configurationDBItemsToDeploy = dbLayer.getFilteredInventoryConfiguration(draftConfigsToStore);
+            }
+            List<DBItemDeploymentHistory> depHistoryDBItemsToDeploy = null;
+            if (deployConfigsToStoreAgain != null) {
+                depHistoryDBItemsToDeploy = dbLayer.getFilteredDeploymentHistory(deployConfigsToStoreAgain);
+            }
+            List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete = null;
+            if (deployConfigsToDelete != null) {
+                depHistoryDBItemsToDeployDelete = dbLayer.getFilteredDeploymentHistory(deployConfigsToDelete);
+            }
 
             Map<DBItemInventoryConfiguration, DBItemDepSignatures> signedDrafts = 
                     new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
@@ -198,9 +207,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 final String versionIdForDelete = UUID.randomUUID().toString();
                 for (String controller : allControllers.keySet()) {
                     // call updateRepo command via Proxy of given controllers
-                    PublishUtils.updateRepoDelete(versionIdForDelete, depHistoryDBItemsToDeployDelete, controller, dbLayer, 
+                    final List<DBItemDeploymentHistory> toDelete = depHistoryDBItemsToDeployDelete;
+                    PublishUtils.updateRepoDelete(versionIdForDelete, toDelete, controller, dbLayer, 
                             keyPair.getKeyAlgorithm()).thenAccept(either -> {
-                                processAfterDelete(either, depHistoryDBItemsToDeployDelete, controller, account, versionIdForDelete,
+                                processAfterDelete(either, toDelete, controller, account, versionIdForDelete,
                                         deployFilter);
                             }).get();
                     Set<Long> draftConfigsToDelete = depHistoryDBItemsToDeployDelete.stream()

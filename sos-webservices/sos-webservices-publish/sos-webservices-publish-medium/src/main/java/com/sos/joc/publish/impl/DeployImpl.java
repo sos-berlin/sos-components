@@ -111,14 +111,22 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             }
 
             // sign undeployed configurations
-            Set<DBItemInventoryConfiguration> unsignedDrafts = new HashSet<DBItemInventoryConfiguration>(configurationDBItemsToStore);
-            Set<DBItemDeploymentHistory> unsignedReDeployables = new HashSet<DBItemDeploymentHistory>(depHistoryDBItemsToStore);
+            Set<DBItemInventoryConfiguration> unsignedDrafts = null;
+            if (configurationDBItemsToStore != null) {
+                unsignedDrafts = new HashSet<DBItemInventoryConfiguration>(configurationDBItemsToStore);
+            }
+            Set<DBItemDeploymentHistory> unsignedReDeployables = null;
+            if (depHistoryDBItemsToStore != null) {
+                unsignedReDeployables = new HashSet<DBItemDeploymentHistory>(depHistoryDBItemsToStore);
+            }
             
             // determine agent names to be replaced
             Set<UpdateableWorkflowJobAgentName> updateableAgentNames = new HashSet<UpdateableWorkflowJobAgentName>();
-            unsignedDrafts.stream()
+            if (unsignedDrafts != null) {
+                unsignedDrafts.stream()
                 .filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW))
                 .forEach(item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(item, dbLayer)));
+            }
             // sign deployed configurations with new versionId
             Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations =
                     new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
@@ -127,11 +135,15 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             final String versionIdForUpdate = UUID.randomUUID().toString();
             final Date deploymentDate = Date.from(Instant.now());
             // all items will be signed or re-signed with current versionId
-            verifiedConfigurations.putAll(PublishUtils.getDraftsWithSignature(
-                    versionIdForUpdate, account, unsignedDrafts, updateableAgentNames, hibernateSession, JocSecurityLevel.LOW));
-            verifiedReDeployables.putAll(
-                    PublishUtils.getDeploymentsWithSignature(versionIdForUpdate, account, unsignedReDeployables, hibernateSession, 
-                            JocSecurityLevel.LOW));
+            if (unsignedDrafts != null && !unsignedDrafts.isEmpty()) {
+                verifiedConfigurations.putAll(PublishUtils.getDraftsWithSignature(
+                        versionIdForUpdate, account, unsignedDrafts, updateableAgentNames, hibernateSession, JocSecurityLevel.LOW));
+            }
+            if (unsignedReDeployables != null && !unsignedReDeployables.isEmpty()) {
+                verifiedReDeployables.putAll(
+                        PublishUtils.getDeploymentsWithSignature(versionIdForUpdate, account, unsignedReDeployables, hibernateSession, 
+                                JocSecurityLevel.LOW));
+            }
             // call UpdateRepo for all provided Controllers and all objects to update
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
             JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.MEDIUM);
