@@ -556,13 +556,17 @@ public class HistoryModel {
                 endEventId = String.valueOf(eventId);
             }
 
-            String errorText = le.getErrorText();
-            if (le.isError() && SOSString.isEmpty(errorText) && cos != null) {
-                errorText = cos.getStdErr();
+            if (le.isError() && SOSString.isEmpty(le.getErrorText()) && cos != null) {
+                le.setErrorText(cos.getStdErr());
             }
             Date startTime = null;
             String startEventId = null;
             switch (eventType) {
+            case OrderJoined:
+                if (le.isError()) {
+                    co.setHasStates(true);
+                }
+                break;
             case OrderFailed:
                 co.setHasStates(true);
                 break;
@@ -583,12 +587,13 @@ public class HistoryModel {
             default:
                 break;
             }
-            dbLayer.setOrderEnd(co.getId(), endTime, endWorkflowPosition, endOrderStepId, endEventId, le.getState(), eventDate, le.isError(), le
-                    .getErrorState(), le.getErrorReason(), le.getReturnCode(), le.getErrorCode(), errorText, startTime, startEventId);
+            dbLayer.setOrderEnd(co.getId(), endTime, endWorkflowPosition, endOrderStepId, endEventId, le.getState(), eventDate, co.getHasStates(), le
+                    .isError(), le.getErrorState(), le.getErrorReason(), le.getReturnCode(), le.getErrorCode(), le.getErrorText(), startTime,
+                    startEventId);
 
             // if (!EventType.OrderFinished.equals(eventType) && co.getHasStates()) {
             if (co.getHasStates()) {
-                saveOrderState(dbLayer, co, le.getState(), eventDate, eventId, le.getErrorCode(), errorText);
+                saveOrderState(dbLayer, co, le.getState(), eventDate, eventId, le.getErrorCode(), le.getErrorText());
             }
 
             le.onOrder(co, co.getWorkflowPosition());
@@ -654,8 +659,9 @@ public class HistoryModel {
                 boolean setError = true;
                 if (eventType.equals(EventType.OrderJoined))
                     if (stepHasError) {
-                        if (le.getReturnCode() != null && le.getReturnCode().equals(0))
+                        if (le.getReturnCode() != null && le.getReturnCode().equals(0)) {
                             le.setReturnCode(cos.getReturnCode());
+                        }
                     } else {
                         setError = false;
                     }
@@ -1010,13 +1016,12 @@ public class HistoryModel {
                     le.setError(OrderStateText.FAILED.value(), entry.getOutcome());
                 }
             }
-            String errorText = le.getErrorText();
-            if (le.isError() && SOSString.isEmpty(errorText)) {
-                errorText = cos.getStdErr();
+            if (le.isError() && SOSString.isEmpty(le.getErrorText())) {
+                le.setErrorText(cos.getStdErr());
             }
             dbLayer.setOrderStepEnd(cos.getId(), cos.getEndTime(), String.valueOf(entry.getEventId()), EventMeta.map2Json(entry.getOutcome()
                     .getKeyValues()), le.getReturnCode(), le.isError() ? OrderStateText.FAILED.intValue() : OrderStateText.FINISHED.intValue(), le
-                            .isError(), le.getErrorState(), le.getErrorReason(), le.getErrorCode(), errorText, new Date());
+                            .isError(), le.getErrorState(), le.getErrorReason(), le.getErrorCode(), le.getErrorText(), new Date());
             le.onOrderStep(cos);
 
             Path log = storeLog2File(le);

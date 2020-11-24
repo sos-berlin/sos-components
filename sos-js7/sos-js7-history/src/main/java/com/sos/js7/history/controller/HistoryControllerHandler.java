@@ -333,6 +333,7 @@ public class HistoryControllerHandler {
                 event.set(order.getOrderId(), outcome);
 
                 break;
+
             case OrderSuspended:
                 order = entry.getOrder();
 

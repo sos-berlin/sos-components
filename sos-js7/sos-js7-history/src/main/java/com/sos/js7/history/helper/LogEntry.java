@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.model.event.EventType;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.history.controller.proxy.fatevent.FatForkedChild;
@@ -228,6 +229,13 @@ public class LogEntry {
 
     public String getErrorCode() {
         return errorCode;
+    }
+
+    public void setErrorText(String val) {
+        if (SOSString.isEmpty(val)) {
+            val = null;
+        }
+        errorText = val;
     }
 
     public String getErrorText() {

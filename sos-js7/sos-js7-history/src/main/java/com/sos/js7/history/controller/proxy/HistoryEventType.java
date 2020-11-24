@@ -14,8 +14,8 @@ import js7.data.order.OrderEvent.OrderJoined;
 import js7.data.order.OrderEvent.OrderProcessed;
 import js7.data.order.OrderEvent.OrderProcessingStarted$;
 import js7.data.order.OrderEvent.OrderResumed;
-import js7.data.order.OrderEvent.OrderStdoutWritten;
 import js7.data.order.OrderEvent.OrderStderrWritten;
+import js7.data.order.OrderEvent.OrderStdoutWritten;
 import js7.data.order.OrderEvent.OrderSuspended$;
 
 public enum HistoryEventType {
