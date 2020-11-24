@@ -56,6 +56,9 @@ public abstract class FilterAttributesMapper {
         if (filter.getTo() != null) {
             filterAttributes.add("to");
         }
+        if (filter.getLimit() != null) {
+            filterAttributes.add("limit");
+        }
         return filterAttributes;
     }
 
@@ -93,6 +96,8 @@ public abstract class FilterAttributesMapper {
                 return JobSchedulerDate.getDateTo(filter.getTo(), filter.getTimeZone());
             case "timeZone":
                 return filter.getTimeZone();
+            case "limit":
+                return filter.getLimit();
         }
         return null;
     }

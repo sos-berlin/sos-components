@@ -32,7 +32,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "deleteDate",
     "from",
     "to",
-    "timeZone"
+    "timeZone",
+    "limit"
 })
 public class ShowDepHistoryFilter {
 
@@ -83,6 +84,13 @@ public class ShowDepHistoryFilter {
     @JsonProperty("timeZone")
     @JsonPropertyDescription("see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
     private String timeZone;
+    /**
+     * Only for db history URIs. Restricts the number of delivered items; -1=unlimited
+     * 
+     */
+    @JsonProperty("limit")
+    @JsonPropertyDescription("Only for db history URIs. Restricts the number of delivered items; -1=unlimited")
+    private Integer limit = 10000;
 
     @JsonProperty("account")
     public String getAccount() {
@@ -256,14 +264,32 @@ public class ShowDepHistoryFilter {
         this.timeZone = timeZone;
     }
 
+    /**
+     * Only for db history URIs. Restricts the number of delivered items; -1=unlimited
+     * 
+     */
+    @JsonProperty("limit")
+    public Integer getLimit() {
+        return limit;
+    }
+
+    /**
+     * Only for db history URIs. Restricts the number of delivered items; -1=unlimited
+     * 
+     */
+    @JsonProperty("limit")
+    public void setLimit(Integer limit) {
+        this.limit = limit;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("account", account).append("path", path).append("folder", folder).append("controllerId", controllerId).append("commitId", commitId).append("version", version).append("deployType", deployType).append("operation", operation).append("state", state).append("deploymentDate", deploymentDate).append("deleteDate", deleteDate).append("from", from).append("to", to).append("timeZone", timeZone).toString();
+        return new ToStringBuilder(this).append("account", account).append("path", path).append("folder", folder).append("controllerId", controllerId).append("commitId", commitId).append("version", version).append("deployType", deployType).append("operation", operation).append("state", state).append("deploymentDate", deploymentDate).append("deleteDate", deleteDate).append("from", from).append("to", to).append("timeZone", timeZone).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(timeZone).append(commitId).append(version).append(deployType).append(path).append(folder).append(deploymentDate).append(from).append(state).append(to).append(operation).append(account).append(deleteDate).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(timeZone).append(commitId).append(version).append(deployType).append(path).append(folder).append(deploymentDate).append(limit).append(from).append(state).append(to).append(operation).append(account).append(deleteDate).toHashCode();
     }
 
     @Override
@@ -275,7 +301,7 @@ public class ShowDepHistoryFilter {
             return false;
         }
         ShowDepHistoryFilter rhs = ((ShowDepHistoryFilter) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(timeZone, rhs.timeZone).append(commitId, rhs.commitId).append(version, rhs.version).append(deployType, rhs.deployType).append(path, rhs.path).append(folder, rhs.folder).append(deploymentDate, rhs.deploymentDate).append(from, rhs.from).append(state, rhs.state).append(to, rhs.to).append(operation, rhs.operation).append(account, rhs.account).append(deleteDate, rhs.deleteDate).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(timeZone, rhs.timeZone).append(commitId, rhs.commitId).append(version, rhs.version).append(deployType, rhs.deployType).append(path, rhs.path).append(folder, rhs.folder).append(deploymentDate, rhs.deploymentDate).append(limit, rhs.limit).append(from, rhs.from).append(state, rhs.state).append(to, rhs.to).append(operation, rhs.operation).append(account, rhs.account).append(deleteDate, rhs.deleteDate).isEquals();
     }
 
 }
