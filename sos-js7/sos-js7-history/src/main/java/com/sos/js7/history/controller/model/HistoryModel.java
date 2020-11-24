@@ -557,7 +557,7 @@ public class HistoryModel {
             }
 
             String errorText = le.getErrorText();
-            if (le.isError() && SOSString.isEmpty(errorText)) {
+            if (le.isError() && SOSString.isEmpty(errorText) && cos != null) {
                 errorText = cos.getStdErr();
             }
             Date startTime = null;
