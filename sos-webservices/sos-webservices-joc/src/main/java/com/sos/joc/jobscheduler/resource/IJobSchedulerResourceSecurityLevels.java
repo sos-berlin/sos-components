@@ -13,13 +13,13 @@ import com.sos.joc.classes.JOCDefaultResponse;
 public interface IJobSchedulerResourceSecurityLevels {
 
     @POST
-    @Path("security_levels")
+    @Path("security_level")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postControllerIdsWithSecurityLevel(@HeaderParam("X-Access-Token") String xAccessToken);
     
     @POST
-    @Path("security_levels/take_over")
+    @Path("security_level/take_over")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse takeOverSecurityLevel(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
