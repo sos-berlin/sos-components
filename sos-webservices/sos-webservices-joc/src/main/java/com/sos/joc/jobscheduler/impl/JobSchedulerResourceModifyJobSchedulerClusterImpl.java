@@ -1,12 +1,10 @@
 package com.sos.joc.jobscheduler.impl;
 
-import java.net.URI;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
@@ -14,9 +12,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.model.cluster.ClusterState;
 import com.sos.jobscheduler.model.cluster.ClusterType;
-import com.sos.jobscheduler.model.cluster.ClusterWatcher;
-import com.sos.jobscheduler.model.cluster.IdToUri;
-import com.sos.jobscheduler.model.command.ClusterAppointNodes;
 import com.sos.jobscheduler.model.command.ClusterSwitchOver;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -26,7 +21,6 @@ import com.sos.joc.classes.audit.ModifyJobSchedulerClusterAudit;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
-import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -42,10 +36,7 @@ import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceModifyJobScheduler
 import com.sos.joc.model.jobscheduler.UrlParameter;
 import com.sos.schema.JsonValidator;
 
-import io.vavr.control.Either;
-import js7.base.problem.Problem;
 import js7.base.web.Uri;
-import js7.data.cluster.ClusterSetting.Watch;
 import js7.data.node.NodeId;
 
 @Path("controller")
@@ -156,7 +147,7 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
 //        command.setActiveId("Primary");
 //        IdToUri idToUri = new IdToUri();
 //        for (DBItemInventoryJSInstance inst : controllerInstances) {
-//            idToUri.getAdditionalProperties().put(inst.getIsPrimary() ? "Primary" : "Backup", inst.getClusterUri());
+//            idToUri.getAdditionalProperties().put(inst.getIsPrimary() ? "Primary" : "Standby", inst.getClusterUri());
 //        }
 //        command.setIdToUri(idToUri);
 //        List<String> watchers = dbLayer.getUrisOfEnabledClusterWatcherByControllerId(controllerId);
@@ -176,15 +167,10 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
         NodeId activeId = NodeId.unchecked("Primary");
         Map<NodeId, Uri> idToUri = new HashMap<>();
         for (DBItemInventoryJSInstance inst : controllerInstances) {
-            idToUri.put(inst.getIsPrimary() ? activeId : NodeId.unchecked("Backup"), Uri.of(inst.getClusterUri()));
+            idToUri.put(inst.getIsPrimary() ? activeId : NodeId.unchecked("Standby"), Uri.of(inst.getClusterUri()));
         }
-        Either<Problem, List<Watch>> clusterWatchers = Proxies.getClusterWatchers(controllerId);
-        if (clusterWatchers.isRight()) {
-            ControllerApi.of(controllerId).clusterAppointNodes(idToUri, activeId, clusterWatchers.get()).thenAccept(e -> ProblemHelper
-                    .postProblemEventIfExist(e, jocError, controllerId));
-        } else {
-            ProblemHelper.postProblemEventIfExist(clusterWatchers, jocError, controllerId);
-        }
+        ControllerApi.of(controllerId).clusterAppointNodes(idToUri, activeId, Proxies.getClusterWatchers(controllerId)).thenAccept(e -> ProblemHelper
+                .postProblemEventIfExist(e, jocError, controllerId));
     }
 
 }

@@ -9,13 +9,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.JobSchedulerAuthorizationException;
+import com.sos.joc.exceptions.JobSchedulerBadRequestException;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JobSchedulerSSLCertificateException;
@@ -24,7 +25,6 @@ import com.sos.joc.exceptions.ProxyNotCoupledException;
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.base.web.Uri;
-import js7.data.cluster.ClusterSetting.Watch;
 import js7.data.node.NodeId;
 import js7.proxy.data.ProxyEvent;
 import js7.proxy.data.ProxyEvent.ProxyCoupled;
@@ -33,7 +33,6 @@ import js7.proxy.data.ProxyEvent.ProxyDecoupled$;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.JProxyContext;
-import js7.proxy.javaapi.data.cluster.JClusterState;
 import js7.proxy.javaapi.eventbus.JStandardEventBus;
 
 public class ProxyContext {
@@ -119,32 +118,31 @@ public class ProxyContext {
     
     private void checkCluster() {
         if (credentials.getBackupUrl() != null) { // is Cluster
-            LOGGER.info(toString() + ": check cluster appointment");
+            LOGGER.debug(toString() + ": check cluster appointment");
             proxyFuture.thenApply(p -> {
                 Either<Problem, Void> either = null;
-                JClusterState clusterState = p.currentState().clusterState();
-                if (clusterState.toJson().replaceAll("\\s", "").contains("\"TYPE\":\"Empty\"")) { // not appointed
-                    Either<Problem, List<Watch>> clusterWatchers = Proxies.getClusterWatchers(credentials.getControllerId());
-                    if (clusterWatchers.isRight()) {
-                        LOGGER.info("'Appoint Nodes' will be called");
+                if (p.currentState().clusterState().toJson().replaceAll("\\s", "").contains("\"TYPE\":\"Empty\"")) { // not appointed
+                    try {
+                        LOGGER.debug("'Appoint Cluster Nodes' will be called");
+                        List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(credentials.getControllerId());
+                        if (controllerInstances == null || controllerInstances.size() < 2) { // is not cluster
+                            throw new JobSchedulerBadRequestException("There is no cluster configured with the Id: " + credentials.getControllerId());
+                        }
                         NodeId activeId = NodeId.unchecked("Primary");
                         Map<NodeId, Uri> idToUri = new HashMap<>();
-                        idToUri.put(activeId, Uri.of(credentials.getUrl()));
-                        idToUri.put(NodeId.unchecked("Backup"), Uri.of(credentials.getBackupUrl()));
-                        p.api().clusterAppointNodes(idToUri, activeId, clusterWatchers.get()).thenAccept(e -> {
+                        for (DBItemInventoryJSInstance inst : controllerInstances) {
+                            idToUri.put(inst.getIsPrimary() ? activeId : NodeId.unchecked("Standby"), Uri.of(inst.getClusterUri()));
+                        }
+                        p.api().clusterAppointNodes(idToUri, activeId, Proxies.getClusterWatchers(credentials.getControllerId())).thenAccept(e -> {
                             if (e.isLeft()) {
-                                LOGGER.info(ProblemHelper.getErrorMessage(e.getLeft()));
+                                LOGGER.warn(ProblemHelper.getErrorMessage(e.getLeft()));
                             } else {
-                                LOGGER.info("'Appoint Nodes' successful");
+                                LOGGER.info("Appointing Cluster Nodes was successful");
                             }
                         });
                         either = Either.right(null);
-//                        if (either.isRight()) {
-//                            LOGGER.info("'Appoint Nodes' needs restart of the proxy");
-//                            restart(p.api(), credentials); 
-//                        }
-                    } else {
-                        either = Either.left(clusterWatchers.getLeft());
+                    } catch(Exception e) {
+                        either = Either.left(Problem.pure(e.toString()));
                     }
                 } else {
                     either = Either.right(null);
@@ -152,7 +150,7 @@ public class ProxyContext {
                 return either;
             }).thenAccept(e -> {
                 if (e.isLeft()) {
-                    LOGGER.info(ProblemHelper.getErrorMessage(e.getLeft()));
+                    LOGGER.error(ProblemHelper.getErrorMessage(e.getLeft()));
                 }
             });
         }

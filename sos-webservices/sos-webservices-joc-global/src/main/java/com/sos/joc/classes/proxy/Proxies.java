@@ -34,8 +34,6 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.ProxyNotCoupledException;
 
-import io.vavr.control.Either;
-import js7.base.problem.Problem;
 import js7.base.web.Uri;
 import js7.data.cluster.ClusterSetting.Watch;
 import js7.proxy.javaapi.JControllerApi;
@@ -399,25 +397,22 @@ public class Proxies {
      * @param controllerId
      * @return Either&lt;Problem, List&lt;Watch&gt;&gt;
      */
-    public static Either<Problem, List<Watch>> getClusterWatchers(String controllerId) {
+    public static List<Watch> getClusterWatchers(String controllerId) throws JocConfigurationException, DBOpenSessionException,
+            DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
         SOSHibernateSession sosHibernateSession = null;
-        Either<Problem, List<Watch>> either = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("GetClusterWatchers");
             List<String> w = new InventoryAgentInstancesDBLayer(sosHibernateSession).getUrisOfEnabledClusterWatcherByControllerId(controllerId);
             List<Watch> watchers = w.stream().map(item -> new Watch(Uri.of(item))).collect(Collectors.toList());
             if (watchers == null || watchers.isEmpty()) {
-                either = Either.left(Problem.pure("No Cluster Watchers are configured"));
+                throw new DBMissingDataException("No Cluster Watchers are configured for Controller '" + controllerId + "'");
             } else {
                 LOGGER.info(String.format("Cluster Watchers of '%s': %s", controllerId, w.toString()));
-                either = Either.right(watchers);
+                return watchers;
             }
-        } catch (Exception e) {
-            either = Either.left(Problem.pure(e.toString()));
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
-        return either;
     }
 
     private Map<ProxyCredentials, ProxyContext> proxiesOfControllerId(final String controllerId) {
