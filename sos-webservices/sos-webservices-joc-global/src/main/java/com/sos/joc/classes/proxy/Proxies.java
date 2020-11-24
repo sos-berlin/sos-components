@@ -397,12 +397,15 @@ public class Proxies {
      * @param controllerId
      * @return Either&lt;Problem, List&lt;Watch&gt;&gt;
      */
-    public static List<Watch> getClusterWatchers(String controllerId) throws JocConfigurationException, DBOpenSessionException,
-            DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
+    public static List<Watch> getClusterWatchers(String controllerId, InventoryAgentInstancesDBLayer dbLayer) throws JocConfigurationException,
+            DBOpenSessionException, DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("GetClusterWatchers");
-            List<String> w = new InventoryAgentInstancesDBLayer(sosHibernateSession).getUrisOfEnabledClusterWatcherByControllerId(controllerId);
+            if (dbLayer == null) {
+                sosHibernateSession = Globals.createSosHibernateStatelessConnection("GetClusterWatchers");
+                dbLayer = new InventoryAgentInstancesDBLayer(sosHibernateSession);
+            }
+            List<String> w = dbLayer.getUrisOfEnabledClusterWatcherByControllerId(controllerId);
             List<Watch> watchers = w.stream().map(item -> new Watch(Uri.of(item))).collect(Collectors.toList());
             if (watchers == null || watchers.isEmpty()) {
                 throw new DBMissingDataException("No Cluster Watchers are configured for Controller '" + controllerId + "'");

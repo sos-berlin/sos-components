@@ -160,10 +160,10 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 }
                 
             } else { // try update controllers with given controllerId
-                if (jobSchedulerBody.getControllers().size() == 1) {  // standalone
+                if (jobSchedulerBody.getControllers().size() == 1) {  // standalone from request
                     RegisterParameter controller = jobSchedulerBody.getControllers().get(0);
                     controller.setRole(Role.STANDALONE);
-                    if (dbControllers.size() == 2) {
+                    if (dbControllers.size() == 2) { // but cluster in DB
                         for (DBItemInventoryJSInstance dbController : dbControllers) {
                             instanceDBLayer.deleteInstance(dbController); 
                         }
@@ -182,8 +182,8 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                         
                         instanceDBLayer.updateInstance(jobschedulerAnswer.getDbInstance());
                     }
-                } else {
-                    if (dbControllers.size() == 1) {
+                } else { // cluster from request
+                    if (dbControllers.size() == 1) { // but standalone in DB
                         instanceDBLayer.deleteInstance(dbControllers.get(0));
                         clusterUriChanged = true;
                         for (RegisterParameter controller : jobSchedulerBody.getControllers()) {
@@ -277,9 +277,10 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             
             instances = instances.stream().filter(Objects::nonNull).collect(Collectors.toList());
             if (!instances.isEmpty()) {
-                // appointClusterNodes is called in Proxy when coupled with controller
+                // appointClusterNodes is called in Proxy when coupled with controller if cluster TYPE:Empty
                 ProxiesEdit.update(instances);
-            } else if (clusterUriChanged || watcherUpdateRequired) {
+            }
+            if (clusterUriChanged || watcherUpdateRequired) {
                 try {
                     JobSchedulerResourceModifyJobSchedulerClusterImpl.appointNodes(controllerId, agentDBLayer, getJocError());
                 } catch (JobSchedulerBadRequestException e) {

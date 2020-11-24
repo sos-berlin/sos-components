@@ -95,15 +95,15 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                 final Map<OrderId, JFreshOrder> freshOrders = result.get(true).stream().map(Either::get).collect(Collectors.toMap(JFreshOrder::id,
                         Function.identity()));
                 final JControllerApi controllerApi = ControllerApi.of(addOrders.getControllerId());
-                controllerApi.addOrders(Flux.fromIterable(freshOrders.values())).thenApply(e -> {
-                    if (e.isRight()) {
-                        return controllerApi.removeOrdersWhenTerminated(freshOrders.keySet()).join();
+                controllerApi.addOrders(Flux.fromIterable(freshOrders.values())).thenAccept(either -> {
+                    if (either.isRight()) {
+                        controllerApi.removeOrdersWhenTerminated(freshOrders.keySet()).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e,
+                                getJocError(), addOrders.getControllerId()));
                     } else {
-                        Either<Problem, Void> either = Either.left(e.getLeft());
-                        return either;
+                        ProblemHelper.postProblemEventIfExist(either, getJocError(), addOrders.getControllerId());
                     }
-                }).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getJocError(), addOrders.getControllerId()));
-                
+                });
+
                 entity.setOrderIds(freshOrders.keySet().stream().map(o -> o.string()).collect(Collectors.toList()));
             }
             entity.setDeliveryDate(Date.from(Instant.now()));

@@ -133,15 +133,16 @@ public class ProxyContext {
                         for (DBItemInventoryJSInstance inst : controllerInstances) {
                             idToUri.put(inst.getIsPrimary() ? activeId : NodeId.unchecked("Standby"), Uri.of(inst.getClusterUri()));
                         }
-                        p.api().clusterAppointNodes(idToUri, activeId, Proxies.getClusterWatchers(credentials.getControllerId())).thenAccept(e -> {
-                            if (e.isLeft()) {
-                                LOGGER.warn(ProblemHelper.getErrorMessage(e.getLeft()));
-                            } else {
-                                LOGGER.info("Appointing Cluster Nodes was successful");
-                            }
-                        });
+                        p.api().clusterAppointNodes(idToUri, activeId, Proxies.getClusterWatchers(credentials.getControllerId(), null)).thenAccept(
+                                e -> {
+                                    if (e.isLeft()) {
+                                        LOGGER.warn(ProblemHelper.getErrorMessage(e.getLeft()));
+                                    } else {
+                                        LOGGER.info("Appointing Cluster Nodes was successful");
+                                    }
+                                });
                         either = Either.right(null);
-                    } catch(Exception e) {
+                    } catch (Exception e) {
                         either = Either.left(Problem.pure(e.toString()));
                     }
                 } else {

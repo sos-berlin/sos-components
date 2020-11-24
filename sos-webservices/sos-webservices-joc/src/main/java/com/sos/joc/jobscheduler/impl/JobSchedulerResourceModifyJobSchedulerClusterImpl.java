@@ -169,8 +169,8 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
         for (DBItemInventoryJSInstance inst : controllerInstances) {
             idToUri.put(inst.getIsPrimary() ? activeId : NodeId.unchecked("Standby"), Uri.of(inst.getClusterUri()));
         }
-        ControllerApi.of(controllerId).clusterAppointNodes(idToUri, activeId, Proxies.getClusterWatchers(controllerId)).thenAccept(e -> ProblemHelper
-                .postProblemEventIfExist(e, jocError, controllerId));
+        ControllerApi.of(controllerId).clusterAppointNodes(idToUri, activeId, Proxies.getClusterWatchers(controllerId, dbLayer)).thenAccept(
+                e -> ProblemHelper.postProblemEventIfExist(e, jocError, controllerId));
     }
 
 }
