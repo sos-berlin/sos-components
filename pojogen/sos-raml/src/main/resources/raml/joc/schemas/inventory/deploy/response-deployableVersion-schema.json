@@ -8,6 +8,9 @@
 		"id": {
 			"$ref": "../../common/nonNegativeLong-schema.json"
 		},
+		"commitId": {
+			"$ref": "../../common/string255-schema.json"
+		},
 		"deploymentId": {
 			"$ref": "../../common/nonNegativeLong-schema.json"
 		},

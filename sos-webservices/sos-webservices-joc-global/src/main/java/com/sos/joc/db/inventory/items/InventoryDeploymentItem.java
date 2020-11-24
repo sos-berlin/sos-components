@@ -5,6 +5,7 @@ import java.util.Date;
 public class InventoryDeploymentItem {
 
     private Long id;
+    private String commitId;
     private String version;
     private Integer operation;
     private Date deploymentDate;
@@ -12,9 +13,10 @@ public class InventoryDeploymentItem {
     private String controllerId;
     private String path;
     
-    public InventoryDeploymentItem(Long deploymentId, String deploymentVersion, Integer deploymentOperation, Date deploymentDate, String path,
+    public InventoryDeploymentItem(Long deploymentId, String commitId, String deploymentVersion, Integer deploymentOperation, Date deploymentDate, String path,
             String controllerId) {
         this.id = deploymentId;
+        this.commitId = commitId;
         this.version = deploymentVersion;
         this.operation = deploymentOperation;
         this.deploymentDate = deploymentDate;
@@ -22,9 +24,10 @@ public class InventoryDeploymentItem {
         this.controllerId = controllerId;
     }
 
-    public InventoryDeploymentItem(Long deploymentId, String deploymentVersion, Integer deploymentOperation, Date deploymentDate, String content,
+    public InventoryDeploymentItem(Long deploymentId, String commitId, String deploymentVersion, Integer deploymentOperation, Date deploymentDate, String content,
             String path, String controllerId) {
         this.id = deploymentId;
+        this.commitId = commitId;
         this.version = deploymentVersion;
         this.operation = deploymentOperation;
         this.deploymentDate = deploymentDate;
@@ -39,6 +42,14 @@ public class InventoryDeploymentItem {
 
     public void setId(Long val) {
         id = val;
+    }
+    
+    public String getCommitId() {
+        return commitId;
+    }
+
+    public void setCommitId(String val) {
+        commitId = val;
     }
 
     public String getVersion() {

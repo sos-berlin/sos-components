@@ -47,7 +47,7 @@ public class InventoryDBLayer extends DBLayer {
     public InventoryDeploymentItem getLastDeploymentHistory(Long configId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeploymentItem.class.getName());
         hql.append("(");
-        hql.append("id as deploymentId,version,operation,deploymentDate,content,path,controllerId");
+        hql.append("id as deploymentId,commitId,version,operation,deploymentDate,content,path,controllerId");
         hql.append(") ");
         hql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY);
         hql.append(" where id=");
@@ -63,7 +63,7 @@ public class InventoryDBLayer extends DBLayer {
     public List<InventoryDeploymentItem> getDeploymentHistory(Long configId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeploymentItem.class.getName());
         hql.append("(");
-        hql.append("id as deploymentId,version,operation,deploymentDate,path,controllerId");
+        hql.append("id as deploymentId,commitId,version,operation,deploymentDate,path,controllerId");
         hql.append(") ");
         hql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY);
         hql.append(" where inventoryConfigurationId = :configId ");
@@ -305,7 +305,7 @@ public class InventoryDBLayer extends DBLayer {
             StringBuilder hql = new StringBuilder("select new ").append(InventoryDeployablesTreeFolderItem.class.getName());
             hql.append("(");
             hql.append("ic");
-            hql.append(",dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,dh.path,dh.controllerId");
+            hql.append(",dh.id as deploymentId,commitId,dh.version,dh.operation,dh.deploymentDate,dh.path,dh.controllerId");
             hql.append(") ");
             hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
             hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");

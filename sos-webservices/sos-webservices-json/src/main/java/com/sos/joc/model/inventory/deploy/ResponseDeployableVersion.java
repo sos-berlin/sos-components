@@ -23,6 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "id",
+    "commitId",
     "deploymentId",
     "deploymentPath",
     "deploymentOperation",
@@ -39,6 +40,14 @@ public class ResponseDeployableVersion {
      */
     @JsonProperty("id")
     private Long id;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("commitId")
+    private String commitId;
     /**
      * non negative long
      * <p>
@@ -97,6 +106,28 @@ public class ResponseDeployableVersion {
     @JsonProperty("id")
     public void setId(Long id) {
         this.id = id;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("commitId")
+    public String getCommitId() {
+        return commitId;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("commitId")
+    public void setCommitId(String commitId) {
+        this.commitId = commitId;
     }
 
     /**
@@ -199,12 +230,12 @@ public class ResponseDeployableVersion {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("deploymentId", deploymentId).append("deploymentPath", deploymentPath).append("deploymentOperation", deploymentOperation).append("versionDate", versionDate).append("versions", versions).toString();
+        return new ToStringBuilder(this).append("id", id).append("commitId", commitId).append("deploymentId", deploymentId).append("deploymentPath", deploymentPath).append("deploymentOperation", deploymentOperation).append("versionDate", versionDate).append("versions", versions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deploymentPath).append(deploymentOperation).append(versions).append(deploymentId).append(id).append(versionDate).toHashCode();
+        return new HashCodeBuilder().append(deploymentPath).append(deploymentOperation).append(versions).append(deploymentId).append(id).append(commitId).append(versionDate).toHashCode();
     }
 
     @Override
@@ -216,7 +247,7 @@ public class ResponseDeployableVersion {
             return false;
         }
         ResponseDeployableVersion rhs = ((ResponseDeployableVersion) other);
-        return new EqualsBuilder().append(deploymentPath, rhs.deploymentPath).append(deploymentOperation, rhs.deploymentOperation).append(versions, rhs.versions).append(deploymentId, rhs.deploymentId).append(id, rhs.id).append(versionDate, rhs.versionDate).isEquals();
+        return new EqualsBuilder().append(deploymentPath, rhs.deploymentPath).append(deploymentOperation, rhs.deploymentOperation).append(versions, rhs.versions).append(deploymentId, rhs.deploymentId).append(id, rhs.id).append(commitId, rhs.commitId).append(versionDate, rhs.versionDate).isEquals();
     }
 
 }

@@ -155,6 +155,7 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
                 deployment -> {
                     ResponseDeployableVersion dv = new ResponseDeployableVersion();
                     dv.setId(confId);
+                    dv.setCommitId(deployment.getCommitId());
                     dv.setVersions(versions.get(deployment.getDeploymentDate()));
                     dv.setVersionDate(deployment.getDeploymentDate());
                     dv.setDeploymentId(deployment.getId());
