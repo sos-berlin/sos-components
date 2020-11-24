@@ -7,6 +7,7 @@ import org.hibernate.criterion.MatchMode;
 
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.joc.classes.JobSchedulerDate;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.RedeployFilter;
@@ -67,7 +68,11 @@ public abstract class FilterAttributesMapper {
             case "folder":
                 return filter.getFolder();
             case "type":
-                return DeployType.fromValue(filter.getDeployType()).intValue();
+                try {
+                    return DeployType.fromValue(filter.getDeployType()).intValue();
+                } catch(Exception e) {
+                    return ConfigurationType.fromValue(filter.getDeployType()).intValue();
+                } 
             case "controllerId":
                 return filter.getControllerId();
             case "commitId":
