@@ -19,21 +19,21 @@ public class InventoryDeployablesTreeFolderItem {
     private InventoryDeploymentItem deployment;
     private DBItemInventoryConfiguration configuration;
     
-    public InventoryDeployablesTreeFolderItem(DBItemInventoryConfiguration conf, Long deploymentId, String deploymentVersion,
+    public InventoryDeployablesTreeFolderItem(DBItemInventoryConfiguration conf, Long deploymentId, String commitId, String deploymentVersion,
             Integer deploymentOperation, Date deploymentDate, String deploymentPath, String controllerId) {
         if (conf != null) {
             conf.setContent(null);
         }
         configuration = conf;
         if (deploymentId != null) {
-            deployment = new InventoryDeploymentItem(deploymentId, deploymentVersion, deploymentOperation, deploymentDate, null, deploymentPath,
-                    controllerId);
+            deployment = new InventoryDeploymentItem(deploymentId, commitId, deploymentVersion, deploymentOperation, deploymentDate, null,
+                    deploymentPath, controllerId);
         }
     }
 
     public InventoryDeployablesTreeFolderItem(Long configId, String configPath, String configFolder, String configName, Integer configType,
-            boolean configValid, boolean configDeleted, boolean configDeployed, Date configModified, Long deploymentId, String deploymentVersion,
-            Integer deploymentOperation, Date deploymentDate, String deploymentPath, String controllerId) {
+            boolean configValid, boolean configDeleted, boolean configDeployed, Date configModified, Long deploymentId, String commitId,
+            String deploymentVersion, Integer deploymentOperation, Date deploymentDate, String deploymentPath, String controllerId) {
         id = configId;
         path = configPath;
         folder = configFolder;
@@ -45,8 +45,8 @@ public class InventoryDeployablesTreeFolderItem {
         modified = configModified;
 
         if (deploymentId != null) {
-            deployment = new InventoryDeploymentItem(deploymentId, deploymentVersion, deploymentOperation, deploymentDate, null, deploymentPath,
-                    controllerId);
+            deployment = new InventoryDeploymentItem(deploymentId, commitId, deploymentVersion, deploymentOperation, deploymentDate, null,
+                    deploymentPath, controllerId);
         }
     }
     

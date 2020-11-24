@@ -278,7 +278,7 @@ public class InventoryDBLayer extends DBLayer {
         if (configIds != null && !configIds.isEmpty()) {
             StringBuilder hql = new StringBuilder("select new ").append(InventoryDeployablesTreeFolderItem.class.getName());
             hql.append("(");
-            hql.append("ic,dh.id as deploymentId,dh.version,dh.operation,dh.deploymentDate,dh.path,dh.controllerId");
+            hql.append("ic,dh.id as deploymentId,dh.commitId,dh.version,dh.operation,dh.deploymentDate,dh.path,dh.controllerId");
             hql.append(") ");
             hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
             hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
@@ -305,7 +305,7 @@ public class InventoryDBLayer extends DBLayer {
             StringBuilder hql = new StringBuilder("select new ").append(InventoryDeployablesTreeFolderItem.class.getName());
             hql.append("(");
             hql.append("ic");
-            hql.append(",dh.id as deploymentId,commitId,dh.version,dh.operation,dh.deploymentDate,dh.path,dh.controllerId");
+            hql.append(",dh.id as deploymentId,dh.commitId,dh.version,dh.operation,dh.deploymentDate,dh.path,dh.controllerId");
             hql.append(") ");
             hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
             hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
