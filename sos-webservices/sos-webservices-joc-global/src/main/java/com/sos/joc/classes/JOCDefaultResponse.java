@@ -223,7 +223,7 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
             ee.addErrorMetaInfo(err);
             return responseStatusJSError(ee, mediaType);
         }
-        if (!"".equals(err.printMetaInfo())) {
+        if (!UnknownSessionException.class.isInstance(e) && !"".equals(err.printMetaInfo())) {
             LOGGER.info(err.printMetaInfo());
         }
         return responseStatus420(getErr420(new JocError(getErrorMessage(e))), mediaType);

@@ -33,6 +33,7 @@ import js7.proxy.data.ProxyEvent.ProxyDecoupled$;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.JProxyContext;
+import js7.proxy.javaapi.data.agent.JAgentRef;
 import js7.proxy.javaapi.eventbus.JStandardEventBus;
 
 public class ProxyContext {
@@ -119,7 +120,7 @@ public class ProxyContext {
     private void checkCluster() {
         if (credentials.getBackupUrl() != null) { // is Cluster
             LOGGER.info(toString() + ": check cluster appointment");
-            proxyFuture.thenApply(p -> {
+            proxyFuture.thenApplyAsync(p -> {
                 Either<Problem, Void> either = null;
                 if (p.currentState().clusterState().toJson().replaceAll("\\s", "").contains("\"TYPE\":\"Empty\"")) { // not appointed
                     try {
@@ -156,6 +157,26 @@ public class ProxyContext {
             });
         }
     }
+    
+    private void reDeployAgents() {
+        proxyFuture.thenAcceptAsync(p -> {
+            try {
+                List<JAgentRef> agents = Proxies.getAgents(credentials.getControllerId(), null);
+                if (!agents.isEmpty()) {
+                    if (p.currentState().nameToAgentRef(agents.get(0).name()).isLeft()) { // Agents doesn't exists
+                        LOGGER.info(toString() + ": Redeploy Agents");
+                        p.api().updateAgentRefs(agents).thenAccept(e -> {
+                            if (e.isLeft()) {
+                                LOGGER.error(ProblemHelper.getErrorMessage(e.getLeft()));
+                            }
+                        });
+                    }
+                }
+            } catch (Exception e) {
+                LOGGER.error(e.toString());
+            }
+        });
+    }
 
     private void onProxyCoupled(ProxyCoupled proxyCoupled) {
         LOGGER.info(toString() + ": " + proxyCoupled.toString());
@@ -165,6 +186,7 @@ public class ProxyContext {
             coupledFuture.complete(null);
         }
         checkCluster();
+        reDeployAgents();
     }
 
     private void onProxyDecoupled(ProxyDecoupled$ proxyDecoupled) {
