@@ -311,7 +311,7 @@ public class InventoryDBLayer extends DBLayer {
             hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
             hql.append("on ic.id=dh.inventoryConfigurationId ");
             hql.append("where ic.id in (:configIds) ");
-            hql.append("and dh.state = :state ");
+            hql.append("and (dh.state = :state or ic.valid = 1)");
 
             Query<InventoryDeployablesTreeFolderItem> query = getSession().createQuery(hql.toString());
             query.setParameterList("configIds", configIds);

@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
-import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;

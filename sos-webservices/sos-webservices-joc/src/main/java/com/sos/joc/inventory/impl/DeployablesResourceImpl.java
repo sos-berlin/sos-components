@@ -142,20 +142,22 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                         ResponseDeployableTreeItem treeItem = DeployableResourceImpl.getResponseDeployableTreeItem(conf);
                         if (deployments != null && !deployments.isEmpty()) {
                             Set<ResponseDeployableVersion> versions = new LinkedHashSet<>();
-                            if (treeItem.getDeployed()) {
-                                treeItem.setDeploymentId(deployments.iterator().next().getId());
-                            } else {
-                                if (conf.getValid()) {
-                                    ResponseDeployableVersion draft = new ResponseDeployableVersion();
-                                    draft.setId(conf.getId());
-                                    draft.setVersionDate(conf.getModified());
-                                    draft.setVersions(null);
-                                    versions.add(draft);
+                            if (ConfigurationType.FOLDER.intValue() != conf.getType()) {
+                                if (treeItem.getDeployed()) {
+                                    treeItem.setDeploymentId(deployments.iterator().next().getId());
+                                } else {
+                                    if (conf.getValid()) {
+                                        ResponseDeployableVersion draft = new ResponseDeployableVersion();
+                                        draft.setId(conf.getId());
+                                        draft.setVersionDate(conf.getModified());
+                                        draft.setVersions(null);
+                                        versions.add(draft);
+                                    }
                                 }
-                            }
-                            versions.addAll(DeployableResourceImpl.getVersions(conf.getId(), deployments));
-                            if (versions.isEmpty()) {
-                                versions = null;
+                                versions.addAll(DeployableResourceImpl.getVersions(conf.getId(), deployments));
+                                if (versions.isEmpty()) {
+                                    versions = null;
+                                }
                             }
                             treeItem.setDeployablesVersions(versions);
                         }
