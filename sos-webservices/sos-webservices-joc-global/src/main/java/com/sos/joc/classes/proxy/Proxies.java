@@ -1,6 +1,7 @@
 package com.sos.joc.classes.proxy;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -17,6 +18,8 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
@@ -35,10 +38,13 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.ProxyNotCoupledException;
 
 import js7.base.web.Uri;
+import js7.data.agent.AgentName;
+import js7.data.agent.AgentRef;
 import js7.data.cluster.ClusterSetting.Watch;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.JProxyContext;
+import js7.proxy.javaapi.data.agent.JAgentRef;
 import js7.proxy.javaapi.data.auth.JHttpsConfig;
 
 public class Proxies {
@@ -413,6 +419,26 @@ public class Proxies {
                 LOGGER.info(String.format("Cluster Watchers of '%s': %s", controllerId, w.toString()));
                 return watchers;
             }
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
+    }
+    
+    public static List<JAgentRef> getAgents(String controllerId, InventoryAgentInstancesDBLayer dbLayer) throws JocException,
+            DBConnectionRefusedException {
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+            if (dbLayer == null) {
+                sosHibernateSession = Globals.createSosHibernateStatelessConnection("GetAgents");
+                dbLayer = new InventoryAgentInstancesDBLayer(sosHibernateSession);
+            }
+            List<DBItemInventoryAgentInstance> dbAvailableAgents = dbLayer.getAgentsByControllerIds(Arrays.asList(controllerId), false, true);
+            if (dbAvailableAgents != null) {
+                return dbAvailableAgents.stream().map(a -> JAgentRef.apply(AgentRef.apply(AgentName.of(a.getAgentId()), Uri.of(a.getUri())))).collect(
+                        Collectors.toList());
+
+            }
+            return Collections.emptyList();
         } finally {
             Globals.disconnect(sosHibernateSession);
         }

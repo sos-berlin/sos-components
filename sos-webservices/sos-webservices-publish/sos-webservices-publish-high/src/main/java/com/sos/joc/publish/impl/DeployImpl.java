@@ -59,10 +59,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     private DBLayerDeploy dbLayer = null;
     private boolean hasErrors = false;
     private List<Err419> listOfErrors = new ArrayList<Err419>();
+    private SOSHibernateSession hibernateSession = null;
 
     @Override
     public JOCDefaultResponse postDeploy(String xAccessToken, byte[] filter) throws Exception {
-        SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, filter, xAccessToken);
             JsonValidator.validateFailFast(filter, DeployFilter.class);
@@ -293,33 +293,39 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             String controllerId,
             Date deploymentDate,
             DeployFilter deployFilter) {
-        if (either.isRight()) {
-            // no error occurred
-            Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(
-                    verifiedConfigurations, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate);
-            deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(
-                    verifiedReDeployables, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
-            createAuditLogFor(deployedObjects, deployFilter, controllerId, true, versionIdForUpdate);
-            PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), null, dbLayer.getSession());
-            LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
-        } else if (either.isLeft()) {
-            // an error occurred
-            String message = String.format(
-                    "Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
-            LOGGER.error(message);
-            // updateRepo command is atomic, therefore all items are rejected
-            List<DBItemDeploymentHistory> failedDeployUpdateItems = dbLayer.updateFailedDeploymentForUpdate(
-                    verifiedConfigurations, verifiedReDeployables, controllerId, account, versionIdForUpdate, either.getLeft().message());
-            // if not successful the objects and the related controllerId have to be stored 
-            // in a submissions table for reprocessing
-            dbLayer.createSubmissionForFailedDeployments(failedDeployUpdateItems);
-            hasErrors = true;
-            if (either.getLeft().codeOrNull() != null) {
-                listOfErrors.add(
-                        new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), either.getLeft().message()), "/"));
-            } else {
-                listOfErrors.add(new BulkError().get(new JocError(either.getLeft().message()), "/"));
+        try {
+            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            dbLayer = new DBLayerDeploy(hibernateSession);
+            if (either.isRight()) {
+                // no error occurred
+                Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(
+                        verifiedConfigurations, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate);
+                deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(
+                        verifiedReDeployables, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
+                createAuditLogFor(deployedObjects, deployFilter, controllerId, true, versionIdForUpdate);
+                PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), null, dbLayer.getSession());
+                LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
+            } else if (either.isLeft()) {
+                // an error occurred
+                String message = String.format(
+                        "Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
+                LOGGER.error(message);
+                // updateRepo command is atomic, therefore all items are rejected
+                List<DBItemDeploymentHistory> failedDeployUpdateItems = dbLayer.updateFailedDeploymentForUpdate(
+                        verifiedConfigurations, verifiedReDeployables, controllerId, account, versionIdForUpdate, either.getLeft().message());
+                // if not successful the objects and the related controllerId have to be stored 
+                // in a submissions table for reprocessing
+                dbLayer.createSubmissionForFailedDeployments(failedDeployUpdateItems);
+                hasErrors = true;
+                if (either.getLeft().codeOrNull() != null) {
+                    listOfErrors.add(
+                            new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), either.getLeft().message()), "/"));
+                } else {
+                    listOfErrors.add(new BulkError().get(new JocError(either.getLeft().message()), "/"));
+                }
             }
+        } finally {
+            Globals.disconnect(hibernateSession);
         }
     }
     

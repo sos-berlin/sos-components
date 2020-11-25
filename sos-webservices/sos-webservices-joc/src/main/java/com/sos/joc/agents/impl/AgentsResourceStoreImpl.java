@@ -22,6 +22,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.ModifyAgentClusterAudit;
 import com.sos.joc.classes.proxy.ControllerApi;
+import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryAgentName;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
@@ -131,10 +132,8 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                 updateAliases(connection, agent, allAliases.get(agent.getAgentId()));
             }
             
-            List<DBItemInventoryAgentInstance> dbAvailableAgents = agentDBLayer.getAgentsByControllerIds(Arrays.asList(controllerId), false, true);
-            if (dbAvailableAgents != null) {
-                List<JAgentRef> agentRefs = dbAvailableAgents.stream().map(a -> JAgentRef.apply(AgentRef.apply(AgentName.of(a.getAgentId()), Uri.of(a
-                        .getUri())))).collect(Collectors.toList());
+            List<JAgentRef> agentRefs = Proxies.getAgents(controllerId, agentDBLayer);
+            if (!agentRefs.isEmpty()) {
                 ControllerApi.of(controllerId).updateAgentRefs(agentRefs).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getJocError(),
                         controllerId));
             }
