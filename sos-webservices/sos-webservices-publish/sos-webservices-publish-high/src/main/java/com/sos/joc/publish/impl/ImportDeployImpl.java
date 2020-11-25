@@ -65,7 +65,6 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
     private DBLayerDeploy dbLayer = null;
     private boolean hasErrors = false;
     private List<Err419> listOfErrors = new ArrayList<Err419>();
-    private SOSHibernateSession hibernateSession = null;
 
     @Override
 	public JOCDefaultResponse postImportDeploy(String xAccessToken, 
@@ -87,6 +86,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
 			AuditParams auditParams, String importDeployFilter) throws Exception {
         InputStream stream = null;
         String uploadFileName = null;
+        SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, importDeployFilter.getBytes(StandardCharsets.UTF_8), xAccessToken);
             JsonValidator.validateFailFast(importDeployFilter.getBytes(StandardCharsets.UTF_8), ImportDeployFilter.class);
@@ -234,9 +234,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             String controllerId,
             Date deploymentDate, 
             ImportDeployFilter filter) {
+        SOSHibernateSession newHibernateSession = null;
         try {
-            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            dbLayer = new DBLayerDeploy(hibernateSession);
+            newHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
             if (either.isRight()) {
                 // no error occurred
                 Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(
@@ -266,7 +267,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 }
             }
         } finally {
-            Globals.disconnect(hibernateSession);
+            Globals.disconnect(newHibernateSession);
         }
     }
     
