@@ -219,7 +219,7 @@ public class SOSHibernateSession implements Serializable {
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateQueryException */
     @SuppressWarnings("unchecked")
-    public <T> NativeQuery<T> createNativeQuery(String sql, Class<T> entityClass) throws SOSHibernateException {
+    public <T> NativeQuery<T> createNativeQuery(String sql, Class<T> resultType) throws SOSHibernateException {
         if (SOSString.isEmpty(sql)) {
             throw new SOSHibernateQueryException("sql statement is empty");
         }
@@ -232,16 +232,20 @@ public class SOSHibernateSession implements Serializable {
         NativeQuery<T> q = null;
         try {
             if (isStatelessSession) {
-                if (entityClass == null) {
+                if (resultType == null) {
                     q = ((StatelessSession) currentSession).createNativeQuery(sql);
                 } else {
-                    q = ((StatelessSession) currentSession).createNativeQuery(sql, entityClass);
+                    // q = ((StatelessSession) currentSession).createNativeQuery(sql, resultType);
+                    q = ((StatelessSession) currentSession).createNativeQuery(sql);
+                    q = (NativeQuery<T>) setResultTransformer(q, resultType);
                 }
             } else {
-                if (entityClass == null) {
+                if (resultType == null) {
                     q = ((Session) currentSession).createNativeQuery(sql);
                 } else {
-                    q = ((Session) currentSession).createNativeQuery(sql, entityClass);
+                    // q = ((Session) currentSession).createNativeQuery(sql, entityClass);
+                    q = ((Session) currentSession).createNativeQuery(sql);
+                    q = (NativeQuery<T>) setResultTransformer(q, resultType);
                 }
             }
         } catch (IllegalStateException e) {
@@ -277,17 +281,17 @@ public class SOSHibernateSession implements Serializable {
                 if (resultType == null) {
                     q = ((StatelessSession) currentSession).createQuery(hql);
                 } else {
+                    // q = ((StatelessSession) currentSession).createQuery(hql, entityClass);
                     q = ((StatelessSession) currentSession).createQuery(hql);
                     q = setResultTransformer(q, resultType);
-                    // q = ((StatelessSession) currentSession).createQuery(hql, entityClass);
                 }
             } else {
                 if (resultType == null) {
                     q = ((Session) currentSession).createQuery(hql);
                 } else {
+                    // q = ((Session) currentSession).createQuery(hql, resultType);
                     q = ((StatelessSession) currentSession).createQuery(hql);
                     q = setResultTransformer(q, resultType);
-                    // q = ((Session) currentSession).createQuery(hql, resultType);
                 }
             }
         } catch (IllegalStateException e) {

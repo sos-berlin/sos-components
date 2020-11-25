@@ -4,7 +4,10 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import org.hibernate.ScrollableResults;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
+import org.hibernate.type.LongType;
+import org.hibernate.type.StringType;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -35,6 +38,8 @@ public class SOSHibernateTest {
         factory.close();
         LOGGER.info("---------- [@AfterClass] ----------");
     }
+
+    /* HQL Queries */
 
     @Ignore
     @Test
@@ -123,6 +128,44 @@ public class SOSHibernateTest {
                 sr.close();
             }
 
+            if (session != null) {
+                session.close();
+            }
+        }
+    }
+
+    /* Native SQL Queries */
+
+    @Ignore
+    @Test
+    public void testNativeJoinWithCustomEntity() throws Exception {
+        SOSHibernateSession session = null;
+        try {
+            session = factory.openStatelessSession();
+
+            StringBuilder sql = new StringBuilder("select ");
+            sql.append(factory.quoteColumn("ho.ORDER_KEY")).append(" as orderKey "); // quote columns and set aliases for all properties
+            sql.append(",").append(factory.quoteColumn("hos.ID")).append(" as stepId ");
+            sql.append(",").append(factory.quoteColumn("hos.JOB_NAME")).append(" as jobName ");
+            sql.append("from " + DBLayer.TABLE_HISTORY_ORDERS).append(" ho ");
+            sql.append(",").append(DBLayer.TABLE_HISTORY_ORDER_STEPS).append(" hos ");
+            sql.append("where ");
+            sql.append(factory.quoteColumn("ho.ID")).append("=").append(factory.quoteColumn("hos.ORDER_ID"));
+
+            NativeQuery<MyJoinEntity> query = session.createNativeQuery(sql.toString(), MyJoinEntity.class); // pass MyJoinEntity as resultType
+            query.addScalar("orderKey", StringType.INSTANCE); // map column value to property type
+            query.addScalar("stepId", LongType.INSTANCE);
+            query.addScalar("jobName", StringType.INSTANCE);
+
+            query.setMaxResults(10); // only for this test
+            List<MyJoinEntity> result = session.getResultList(query);
+            for (MyJoinEntity item : result) {
+                LOGGER.info(SOSHibernate.toString(item));
+            }
+
+        } catch (Exception e) {
+            throw e;
+        } finally {
             if (session != null) {
                 session.close();
             }
