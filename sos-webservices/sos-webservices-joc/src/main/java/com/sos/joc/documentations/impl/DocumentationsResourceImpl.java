@@ -42,7 +42,7 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            checkRequiredParameter("jobschedulerId", filter.getControllerId());
+            checkRequiredParameter("controllerId", filter.getControllerId());
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
             List<DBItemDocumentation> dbDocs = new ArrayList<DBItemDocumentation>();

@@ -67,7 +67,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
     private DeployDocumentations deployDocumentations = null;
 
     @Override
-    public JOCDefaultResponse postImportDocumentations(String xAccessToken, String accessToken, String jobschedulerId, String directory,
+    public JOCDefaultResponse postImportDocumentations(String xAccessToken, String accessToken, String controllerId, String directory,
             FormDataBodyPart body, String timeSpent, String ticketLink, String comment) throws Exception {
         AuditParams auditLog = new AuditParams();
         auditLog.setComment(comment);
@@ -76,16 +76,16 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
             auditLog.setTimeSpent(Integer.valueOf(timeSpent));
         } catch (Exception e) {
         }
-        return postImportDocumentations(getAccessToken(xAccessToken, accessToken), jobschedulerId, directory, body, auditLog);
+        return postImportDocumentations(getAccessToken(xAccessToken, accessToken), controllerId, directory, body, auditLog);
     }
 
-    public JOCDefaultResponse postImportDocumentations(String xAccessToken, String jobschedulerId, String directory, FormDataBodyPart body,
+    public JOCDefaultResponse postImportDocumentations(String xAccessToken, String controllerId, String directory, FormDataBodyPart body,
             AuditParams auditLog) throws Exception {
 
         InputStream stream = null;
         try {
             DocumentationImport filter = new DocumentationImport();
-            filter.setControllerId(jobschedulerId);
+            filter.setControllerId(controllerId);
             if (directory == null || directory.isEmpty()) {
                 directory = "/";
             }
@@ -95,13 +95,13 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
             }
             filter.setAuditLog(auditLog);
 
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, jobschedulerId, getPermissonsJocCockpit(filter
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, controllerId, getPermissonsJocCockpit(filter
                     .getControllerId(), xAccessToken).getDocumentation().isImport());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            checkRequiredParameter("jobschedulerId", filter.getControllerId());
+            checkRequiredParameter("controllerId", filter.getControllerId());
             if (body == null) {
                 throw new JocMissingRequiredParameterException("undefined 'file'");
             }
@@ -150,7 +150,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
                         .toString());
             }
             
-            deployDocumentations(jobschedulerId);
+            deployDocumentations(controllerId);
 
             storeAuditLogEntry(importAudit);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

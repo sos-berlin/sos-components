@@ -1,11 +1,10 @@
 {
-  "deliveryDate": "2020-07-17T21:13:35Z",
-  "surveyDate": "2020-07-17T21:13:35Z",
+  "deliveryDate": "2020-11-24T14:43:06.828Z",
+  "surveyDate": "2020-11-24T14:43:06.165Z",
   "orders": {
     "pending": 58,
     "running": 4,
     "suspended": 1,
-    "setback": 0,
     "waiting": 1,
     "failed": 0,
     "blocked": 0

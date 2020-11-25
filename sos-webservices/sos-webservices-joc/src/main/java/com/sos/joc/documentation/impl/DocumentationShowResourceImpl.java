@@ -162,7 +162,7 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
             DBMissingDataException, UnsupportedEncodingException, DBOpenSessionException {
         SOSHibernateSession connection = null;
         try {
-            checkRequiredParameter("jobschedulerId", documentationFilter.getControllerId());
+            checkRequiredParameter("controllerId", documentationFilter.getControllerId());
             checkRequiredParameter("path", documentationFilter.getPath());
             checkRequiredParameter("objectType", documentationFilter.getType().name());
 

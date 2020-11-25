@@ -68,7 +68,7 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            checkRequiredParameter("jobschedulerId", filter.getControllerId());
+            checkRequiredParameter("controllerId", filter.getControllerId());
             String targetFilename = "documentation_" + filter.getControllerId() + ".zip";
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
@@ -109,18 +109,18 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
     }
 
     @Override
-    public JOCDefaultResponse getExportDocumentations(String xAccessToken, String accessToken, String jobschedulerId, String filename)
+    public JOCDefaultResponse getExportDocumentations(String xAccessToken, String accessToken, String controllerId, String filename)
             throws Exception {
         try {
             xAccessToken = getAccessToken(xAccessToken, accessToken);
             ExportInfo file = new ExportInfo();
             file.setFilename(filename);
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, file, xAccessToken, jobschedulerId, getPermissonsJocCockpit(jobschedulerId,
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, file, xAccessToken, controllerId, getPermissonsJocCockpit(controllerId,
                     xAccessToken).getDocumentation().isExport());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            checkRequiredParameter("jobschedulerId", jobschedulerId);
+            checkRequiredParameter("controllerId", controllerId);
             checkRequiredParameter("filename", filename);
 
             java.nio.file.Path path = Paths.get(System.getProperty("java.io.tmpdir"), filename);
@@ -163,7 +163,7 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
                 }
             };
 
-            return JOCDefaultResponse.responseOctetStreamDownloadStatus200(fileStream, "sos-documentation-" + jobschedulerId + ".zip");
+            return JOCDefaultResponse.responseOctetStreamDownloadStatus200(fileStream, "sos-documentation-" + controllerId + ".zip");
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -182,7 +182,7 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            checkRequiredParameter("jobschedulerId", filter.getControllerId());
+            checkRequiredParameter("controllerId", filter.getControllerId());
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL + "/info");
             List<DocumentationContent> contents = mapToDocumentationContents(filter, connection);

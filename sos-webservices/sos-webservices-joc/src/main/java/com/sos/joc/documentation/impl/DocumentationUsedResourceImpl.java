@@ -29,7 +29,7 @@ public class DocumentationUsedResourceImpl extends JOCResourceImpl implements ID
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            checkRequiredParameter("jobschedulerId", filter.getControllerId());
+            checkRequiredParameter("controllerId", filter.getControllerId());
             checkRequiredParameter("path", filter.getDocumentation());
             UsedBy usedBy = new UsedBy();
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);

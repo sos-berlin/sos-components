@@ -46,13 +46,13 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
     }
 
     @Override
-    public JOCDefaultResponse downloadOrderLog(String accessToken, String queryAccessToken, String jobschedulerId, Long historyId) {
+    public JOCDefaultResponse downloadOrderLog(String accessToken, String queryAccessToken, String controllerId, Long historyId) {
         if (accessToken == null) {
             accessToken = queryAccessToken;
         }
         JsonObjectBuilder builder = Json.createObjectBuilder();
-        if (jobschedulerId != null) {
-            builder.add("jobschedulerId", jobschedulerId);
+        if (controllerId != null) {
+            builder.add("controllerId", controllerId);
         }
         if (historyId != null) {
             builder.add("historyId", historyId);

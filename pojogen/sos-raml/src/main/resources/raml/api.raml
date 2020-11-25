@@ -116,6 +116,13 @@ traits:
         example: !include joc/examples/jobscheduler/jobschedulerParam-example.json
         example200: !include joc/examples/agent/agents_p-example.json
         
+  /reassign:
+    type:
+      postWithOkResponse:
+        description: Reassigns all Agents
+        urlparam: " "
+        failover: " "
+        audit: !include joc/documentation/audit/auditLog.md
   /store:
     type:
       postJSONWithOkResponse:
@@ -768,79 +775,79 @@ traits:
         example: " "
         example200: " "
 
-/documentation:
-  description: |
-    This is not an API call. Use its children!!
-  
-  /{controllerId}/{accessToken}/{path}:
-    type:
-      getDocu:
-        description: " "
-        #description1: !include joc/documentation/docu/docuId.md
-        #description2: " "
-        #example: " "
-  /used:
-    type:
-      postJSON:
-        description: Lists Controller objects which use the documentation
-        description1: !include joc/documentation/docu/docPath.md
-        description2: " "
-        description3: " "
-        description4: " "
-        description5: " "
-        description6: " "
-        description7: " "
-        description8: " "
-        description9: " "
-        description10: " "
-        description200: " "
-        schema: !include joc/schemas/docu/documentationFilter-schema.json
-        schema200: !include joc/schemas/docu/usedBy-schema.json
-        example: " "
-        example200: " "
-  /preview:
-    get:
-    type:
-      postDocu:
-        description: Preview the documentation
-        jsObjectParam: documentation
-        jsObject: documentation
-        #description1: !include joc/documentation/docu/docPath.md
-        #description2: " "
-        #schema: !include joc/schemas/docu/documentationShow-schema.json
-        #example: " "
-  /show:
-    get:
-    is: [ filteredByJSType ]
-    type:
-      postDocu:
-        description: Get the documentation of a Controller object
-        jsObjectParam: path
-        jsObject: JobScheduler object
-        #description1: !include joc/documentation/docu/jsObject.md
-        #description2: " "
-        #schema: !include joc/schemas/docu/documentationShow-schema.json
-        #example: " "
-  /url:
-    post:
-    type:
-      postJSON:
-        description: Get the URL of a documentation of a Controller object
-        description1: !include joc/documentation/docu/jsObject.md
-        description2: " "
-        description3: " "
-        description4: " "
-        description5: " "
-        description6: " "
-        description7: " "
-        description8: " "
-        description9: " "
-        description10: " "
-        description200: " "
-        schema: !include joc/schemas/docu/documentationShow-schema.json
-        schema200: !include joc/schemas/docu/url-schema.json
-        example: " "
-        example200: " "    
+#/documentation:
+#  description: |
+#    This is not an API call. Use its children!!
+#  
+#  /{controllerId}/{accessToken}/{path}:
+#    type:
+#      getDocu:
+#        description: " "
+#        #description1: !include joc/documentation/docu/docuId.md
+#        #description2: " "
+#        #example: " "
+#  /used:
+#    type:
+#      postJSON:
+#        description: Lists Controller objects which use the documentation
+#        description1: !include joc/documentation/docu/docPath.md
+#        description2: " "
+#        description3: " "
+#        description4: " "
+#        description5: " "
+#        description6: " "
+#        description7: " "
+#        description8: " "
+#        description9: " "
+#        description10: " "
+#        description200: " "
+#        schema: !include joc/schemas/docu/documentationFilter-schema.json
+#        schema200: !include joc/schemas/docu/usedBy-schema.json
+#        example: " "
+#        example200: " "
+#  /preview:
+#    get:
+#    type:
+#      postDocu:
+#        description: Preview the documentation
+#        jsObjectParam: documentation
+#        jsObject: documentation
+#        #description1: !include joc/documentation/docu/docPath.md
+#        #description2: " "
+#        #schema: !include joc/schemas/docu/documentationShow-schema.json
+#        #example: " "
+#  /show:
+#    get:
+#    is: [ filteredByJSType ]
+#    type:
+#      postDocu:
+#        description: Get the documentation of a Controller object
+#        jsObjectParam: path
+#        jsObject: JobScheduler object
+#        #description1: !include joc/documentation/docu/jsObject.md
+#        #description2: " "
+#        #schema: !include joc/schemas/docu/documentationShow-schema.json
+#        #example: " "
+#  /url:
+#    post:
+#    type:
+#      postJSON:
+#        description: Get the URL of a documentation of a Controller object
+#        description1: !include joc/documentation/docu/jsObject.md
+#        description2: " "
+#        description3: " "
+#        description4: " "
+#        description5: " "
+#        description6: " "
+#        description7: " "
+#        description8: " "
+#        description9: " "
+#        description10: " "
+#        description200: " "
+#        schema: !include joc/schemas/docu/documentationShow-schema.json
+#        schema200: !include joc/schemas/docu/url-schema.json
+#        example: " "
+#        example200: " "    
 #  /store:
 #    type:
 #      postDocuWithOkResponse:
@@ -875,80 +882,80 @@ traits:
 #        audit: !include joc/documentation/audit/auditLog.md
 #        example: " "
 
-/documentations:
-  type:
-    postJSON:
-      description: Get collection of documentations
-      description1: !include joc/documentation/docu/filteredByPaths.md
-      description2: " "
-      description3: !include joc/documentation/common/regex.md
-      description4: !include joc/documentation/common/folders.md
-      description5: !include joc/documentation/docu/docuTypes.md
-      description6: " "
-      description7: " "
-      description8: " "
-      description9: " "
-      description10: " "
-      description200: !include joc/documentation/docu/docu.md
-      schema: !include joc/schemas/docu/documentationsFilter-schema.json
-      schema200: !include joc/schemas/docu/documentations-schema.json
-      example: " "
-      example200: " "
-  /export:
-    get:
-    type:
-      postForDownload:
-        description: Provides export file (zip) as download of documentations
-        description1: !include joc/documentation/docu/filteredByPaths.md
-        description2: !include joc/documentation/common/folders.md
-        description3: " "
-        description4: " "
-        description5: " "
-        infoapi: ./documentation/export
-        schema: !include joc/schemas/docu/documentationsFilter-schema.json
-        example: " "
-    /info:
-      type:
-        postJSON:
-          description: Temp. Filename for Export 
-          description1: !include joc/documentation/docu/filteredByPaths.md
-          description2: !include joc/documentation/common/folders.md
-          description3: " "
-          description4: " "
-          description5: " "
-          description6: " "
-          description7: " "
-          description8: " "
-          description9: " "
-          description10: " "
-          description200: !include joc/documentation/docu/exportInfo.md
-          schema: !include joc/schemas/docu/documentationsFilter-schema.json
-          schema200: !include joc/schemas/docu/exportInfo-schema.json
-          example: " "
-          example200: " "
-  /import:
-    type:
-      postForUpload:
-        description: Import Documentations
-  /delete:
-    type:
-      postJSON:
-        description: Deletes a list of Documentations
-        description1: !include joc/documentation/docu/filteredByPaths.md
-        description2: " "
-        description3: " "
-        description4: " "
-        description5: " "
-        description6: " "
-        description7: " "
-        description8: " "
-        description9: " "
-        description10: " "
-        description200: " "
-        schema: !include joc/schemas/docu/documentationsFilter-schema.json
-        schema200: ok
-        example: " "
-        example200: " "
+#/documentations:
+#  type:
+#    postJSON:
+#      description: Get collection of documentations
+#      description1: !include joc/documentation/docu/filteredByPaths.md
+#      description2: " "
+#      description3: !include joc/documentation/common/regex.md
+#      description4: !include joc/documentation/common/folders.md
+#      description5: !include joc/documentation/docu/docuTypes.md
+#      description6: " "
+#      description7: " "
+#      description8: " "
+#      description9: " "
+#      description10: " "
+#      description200: !include joc/documentation/docu/docu.md
+#      schema: !include joc/schemas/docu/documentationsFilter-schema.json
+#      schema200: !include joc/schemas/docu/documentations-schema.json
+#      example: " "
+#      example200: " "
+#  /export:
+#    get:
+#    type:
+#      postForDownload:
+#        description: Provides export file (zip) as download of documentations
+#        description1: !include joc/documentation/docu/filteredByPaths.md
+#        description2: !include joc/documentation/common/folders.md
+#        description3: " "
+#        description4: " "
+#        description5: " "
+#        infoapi: ./documentation/export
+#        schema: !include joc/schemas/docu/documentationsFilter-schema.json
+#        example: " "
+#    /info:
+#      type:
+#        postJSON:
+#          description: Temp. Filename for Export 
+#          description1: !include joc/documentation/docu/filteredByPaths.md
+#          description2: !include joc/documentation/common/folders.md
+#          description3: " "
+#          description4: " "
+#          description5: " "
+#          description6: " "
+#          description7: " "
+#          description8: " "
+#          description9: " "
+#          description10: " "
+#          description200: !include joc/documentation/docu/exportInfo.md
+#          schema: !include joc/schemas/docu/documentationsFilter-schema.json
+#          schema200: !include joc/schemas/docu/exportInfo-schema.json
+#          example: " "
+#          example200: " "
+#  /import:
+#    type:
+#      postForUpload:
+#        description: Import Documentations
+#  /delete:
+#    type:
+#      postJSON:
+#        description: Deletes a list of Documentations
+#        description1: !include joc/documentation/docu/filteredByPaths.md
+#        description2: " "
+#        description3: " "
+#        description4: " "
+#        description5: " "
+#        description6: " "
+#        description7: " "
+#        description8: " "
+#        description9: " "
+#        description10: " "
+#        description200: " "
+#        schema: !include joc/schemas/docu/documentationsFilter-schema.json
+#        schema200: ok
+#        example: " "
+#        example200: " "
 
 /events:
   type:
@@ -1056,9 +1063,9 @@ traits:
         description10: " "
         description200: " "
         schema: !include joc/schemas/inventory/deploy/request-deployables-schema.json
-        example: TODO
+        example: !include joc/examples/inventory/deployables-request-example.json
         schema200: !include joc/schemas/inventory/deploy/response-deployables-schema.json
-        example200: !include joc/schemas/inventory/examples/deployables-example.json
+        example200: !include joc/examples/inventory/deployables-response-example.json
   
   /deployment:
     description: This is not an API call. Use child urls instead!

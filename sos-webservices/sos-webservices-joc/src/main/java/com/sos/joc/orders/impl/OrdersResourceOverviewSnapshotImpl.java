@@ -135,8 +135,6 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
         map.put(OrderStateText.BLOCKED, numOfBlockedOrders);
         OrdersHelper.groupByStateClasses.values().stream().distinct().forEach(state -> map.putIfAbsent(state, 0));
 
-        // TODO suspended is not yet supported
-
         OrdersSummary summary = new OrdersSummary();
         summary.setBlocked(map.get(OrderStateText.BLOCKED));
         summary.setPending(map.get(OrderStateText.PENDING) - map.get(OrderStateText.BLOCKED));

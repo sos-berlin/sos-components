@@ -25,7 +25,8 @@ public class JobSchedulerLogImpl extends JOCResourceImpl implements IJobSchedule
 
     private static final String LOG_API_CALL = "./controller/log";
 
-    public JOCDefaultResponse getLog(String accessToken, byte[] filterBytes) {
+    @Override
+    public JOCDefaultResponse getDebugLog(String accessToken, byte[] filterBytes) {
         try {
             initLogging(LOG_API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
@@ -67,24 +68,19 @@ public class JobSchedulerLogImpl extends JOCResourceImpl implements IJobSchedule
     }
 
     @Override
-    public JOCDefaultResponse getDebugLog(String accessToken, String queryAccessToken, String jobschedulerId, String url) {
+    public JOCDefaultResponse getDebugLog(String accessToken, String queryAccessToken, String controllerId, String url) {
 
         if (accessToken == null) {
             accessToken = queryAccessToken;
         }
         JsonObjectBuilder builder = Json.createObjectBuilder();
-        if(jobschedulerId != null) {
-            builder.add("jobschedulerId", jobschedulerId);
+        if(controllerId != null) {
+            builder.add("controllerId", controllerId);
         }
         if (url != null) {
             builder.add("url", url);
         }
-        return getLog(accessToken, builder.build().toString().getBytes(StandardCharsets.UTF_8));
-    }
-
-    @Override
-    public JOCDefaultResponse getDebugLog(String xAccessToken, byte[] filterBytes) {
-        return getLog(xAccessToken, filterBytes);
+        return getDebugLog(accessToken, builder.build().toString().getBytes(StandardCharsets.UTF_8));
     }
 
 }

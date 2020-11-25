@@ -34,7 +34,7 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            checkRequiredParameter("jobschedulerId", filter.getControllerId());
+            checkRequiredParameter("controllerId", filter.getControllerId());
             checkRequiredParameter("documentations", filter.getDocumentations());
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);

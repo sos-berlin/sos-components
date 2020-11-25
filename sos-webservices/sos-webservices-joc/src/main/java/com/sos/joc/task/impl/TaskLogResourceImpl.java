@@ -72,13 +72,13 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
     }
 
     @Override
-    public JOCDefaultResponse downloadTaskLog(String accessToken, String queryAccessToken, String jobschedulerId, Long taskId) {
+    public JOCDefaultResponse downloadTaskLog(String accessToken, String queryAccessToken, String controllerId, Long taskId) {
         if (accessToken == null) {
             accessToken = queryAccessToken;
         }
         JsonObjectBuilder builder = Json.createObjectBuilder();
-        if (jobschedulerId != null) {
-            builder.add("jobschedulerId", jobschedulerId);
+        if (controllerId != null) {
+            builder.add("controllerId", controllerId);
         }
         if (taskId != null) {
             builder.add("taskId", taskId);

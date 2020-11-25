@@ -28,26 +28,26 @@ public class ProcessClassResourceDocumentationImpl extends JOCResourceImpl imple
     private static final String API_CALL_UNASSIGN = API_CALL + "/unassign";
 
     @Override
-    public JOCDefaultResponse postDocumentation(String xAccessToken, String accessToken, String jobschedulerId, String path) throws Exception {
-        return postDocumentation(getAccessToken(xAccessToken, accessToken), jobschedulerId, path);
+    public JOCDefaultResponse postDocumentation(String xAccessToken, String accessToken, String controllerId, String path) throws Exception {
+        return postDocumentation(getAccessToken(xAccessToken, accessToken), controllerId, path);
     }
 
-    public JOCDefaultResponse postDocumentation(String xAccessToken, String jobschedulerId, String path) throws Exception {
+    public JOCDefaultResponse postDocumentation(String xAccessToken, String controllerId, String path) throws Exception {
         SOSHibernateSession connection = null;
         try {
             DocumentationShowFilter documentationFilter = new DocumentationShowFilter();
-            documentationFilter.setControllerId(jobschedulerId);
+            documentationFilter.setControllerId(controllerId);
             documentationFilter.setPath(path);
             //documentationFilter.setType(JobSchedulerObjectType.PROCESSCLASS);
             documentationFilter.setType(JobSchedulerObjectType.JOBCLASS);
             
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, documentationFilter, xAccessToken, documentationFilter.getControllerId(),
-                    getPermissonsJocCockpit(jobschedulerId, xAccessToken).getProcessClass().getView().isDocumentation());
+                    getPermissonsJocCockpit(controllerId, xAccessToken).getProcessClass().getView().isDocumentation());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            checkRequiredParameter("jobschedulerId", jobschedulerId);
+            checkRequiredParameter("controllerId", controllerId);
             checkRequiredParameter("processClass", path);
 
             documentationFilter.setPath(normalizePath(documentationFilter.getPath()));
