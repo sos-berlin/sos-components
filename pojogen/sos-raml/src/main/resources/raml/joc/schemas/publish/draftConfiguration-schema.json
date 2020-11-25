@@ -12,7 +12,7 @@
       "$ref": "../common/path-schema.json"
     },
     "objectType": {
-      "$ref": "../../../jobscheduler/schemas/deploy/deployType-schema.json"
+      "$ref": "../inventory/common/configurationType-schema.json"
     }
   }
 }

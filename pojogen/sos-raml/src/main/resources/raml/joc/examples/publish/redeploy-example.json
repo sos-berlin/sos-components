@@ -3,9 +3,9 @@
   "folder" : "/myWorkflows/myIfElseWorkflows",
   "excludes" : [ {
     "path" : "/myWorkflows/myIfElseWorkflows/workflow_01",
-    "deployType" : "Workflow"
+    "deployType" : "WORKFLOW"
   }, {
     "path" : "/myWorkflows/myIfElseWorkflows/workflow_02",
-    "deployType" : "Workflow"
+    "deployType" : "WORKFLOW"
   } ]
 }

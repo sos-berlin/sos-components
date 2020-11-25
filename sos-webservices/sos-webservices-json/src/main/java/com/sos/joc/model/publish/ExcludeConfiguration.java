@@ -4,7 +4,7 @@ package com.sos.joc.model.publish;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.jobscheduler.model.deploy.DeployType;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -26,14 +26,14 @@ public class ExcludeConfiguration {
     @JsonProperty("path")
     private String path;
     /**
-     * deployType
+     * configuration types
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("deployType")
-    private DeployType deployType = DeployType.fromValue("Workflow");
+    private ConfigurationType deployType;
 
     /**
      * string without < and >
@@ -60,26 +60,26 @@ public class ExcludeConfiguration {
     }
 
     /**
-     * deployType
+     * configuration types
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("deployType")
-    public DeployType getDeployType() {
+    public ConfigurationType getDeployType() {
         return deployType;
     }
 
     /**
-     * deployType
+     * configuration types
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("deployType")
-    public void setDeployType(DeployType deployType) {
+    public void setDeployType(ConfigurationType deployType) {
         this.deployType = deployType;
     }
 

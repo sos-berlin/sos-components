@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.jobscheduler.model.deploy.DeployType;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -35,14 +35,14 @@ public class DraftConfiguration {
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
     /**
-     * deployType
+     * configuration types
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("objectType")
-    private DeployType objectType = DeployType.fromValue("Workflow");
+    private ConfigurationType objectType;
 
     /**
      * path
@@ -69,26 +69,26 @@ public class DraftConfiguration {
     }
 
     /**
-     * deployType
+     * configuration types
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("objectType")
-    public DeployType getObjectType() {
+    public ConfigurationType getObjectType() {
         return objectType;
     }
 
     /**
-     * deployType
+     * configuration types
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("objectType")
-    public void setObjectType(DeployType objectType) {
+    public void setObjectType(ConfigurationType objectType) {
         this.objectType = objectType;
     }
 

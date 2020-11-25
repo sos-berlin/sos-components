@@ -190,8 +190,7 @@ public class DBLayerDeploy {
             Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
             for (Integer i=0; i < configurations.size(); i++) {
                 query.setParameter("path" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), configurations.get(i).getPath());
-                query.setParameter("type" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), PublishUtils.mapDeployType(
-                        configurations.get(i).getObjectType()).intValue());
+                query.setParameter("type" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), configurations.get(i).getObjectType().intValue());
             }
             return query.getResultList();
         } catch (SOSHibernateInvalidSessionException ex) {

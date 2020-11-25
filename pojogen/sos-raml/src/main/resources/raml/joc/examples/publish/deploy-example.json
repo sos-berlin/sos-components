@@ -8,18 +8,18 @@
     "draftConfigurations" : [{
       "draftConfiguration" : {
         "path" : "/myWorkflows/ifElseWorkflow/workflow_10",
-        "objectType" : "Workflow"
+        "objectType" : "WORKFLOW"
       }
     }, {
       "draftConfiguration" : {
         "path" : "/myWorkflows/ifElseWorkflow/workflow_16",
-        "objectType" : "Workflow"
+        "objectType" : "WORKFLOW"
       }
     }],
     "deployConfigurations" : [{
       "deployConfiguration" : {
         "path" : "/myWorkflows/ifElseWorkflow/workflow_12",
-        "objectType" : "Workflow",
+        "objectType" : "WORKFLOW",
         "commitId" : "4273b6c6-c354-4fcd-afdb-2758088abe4a"
       }
     }]
@@ -28,7 +28,7 @@
     "deployConfigurations" : [{
       "deployConfiguration" : {
         "path" : "/myWorkflows/forkJoinWorkflows/workflow_88",
-        "objectType" : "Workflow",
+        "objectType" : "WORKFLOW",
         "commitId" : "9b5a158f-df73-43e7-a9d4-e124079f35c3"
       }
     }]

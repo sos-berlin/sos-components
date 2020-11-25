@@ -27,10 +27,10 @@
 <td>
   <div>"excludes" : [ {</div>
   <div style="padding-left:20px;">"path": "/myWorkflows/ifElseWorkflows/workflow_01",</div>
-  <div style="padding-left:20px;">"deployType" : "Workflow"</div>
+  <div style="padding-left:20px;">"deployType" : "WORKFLOW"</div>
   <div style="padding-left:10px;">}, {</div>
   <div style="padding-left:10px;">"path" : "/myWorkflows/myIfElseWorkflows/workflow_02",</div>
-  <div style="padding-left:20px;">"deployType" : "Workflow"</div>
+  <div style="padding-left:20px;">"deployType" : "WORKFLOW"</div>
   <div style="padding-left:10px;">}</div>
   <div>]</div>
 </td>
