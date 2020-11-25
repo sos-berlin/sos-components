@@ -38,7 +38,7 @@ public class SOSHibernateTest {
 
     @Ignore
     @Test
-    public void testJoin() throws Exception {
+    public void testJoinWithCustomEntity() throws Exception {
         SOSHibernateSession session = null;
         try {
             session = factory.openStatelessSession();
@@ -54,6 +54,38 @@ public class SOSHibernateTest {
             List<MyJoinEntity> result = session.getResultList(query);
             for (MyJoinEntity item : result) {
                 LOGGER.info(SOSHibernate.toString(item));
+            }
+
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testJoinWithoutEntity() throws Exception {
+        SOSHibernateSession session = null;
+        try {
+            session = factory.openStatelessSession();
+
+            StringBuilder hql = new StringBuilder("select ho.orderKey ");
+            hql.append(",hos.id, hos.jobName ");
+            hql.append("from " + DBLayer.DBITEM_HISTORY_ORDER).append(" ho ");
+            hql.append(",").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(" hos ");
+            hql.append("where ho.id=hos.orderId ");
+
+            Query<Object[]> query = session.createQuery(hql.toString());
+            query.setMaxResults(10); // only for this test
+            List<Object[]> result = session.getResultList(query);
+            for (Object[] item : result) {
+                LOGGER.info(SOSHibernate.toString(item));
+                LOGGER.info("   ho.orderKey=" + item[0]);
+                LOGGER.info("   hos.id=" + item[1]);
+                LOGGER.info("   hos.jobName=" + item[2]);
             }
 
         } catch (Exception e) {
