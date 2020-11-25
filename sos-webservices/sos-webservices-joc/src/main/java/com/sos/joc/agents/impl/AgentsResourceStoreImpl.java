@@ -1,6 +1,7 @@
 package com.sos.joc.agents.impl;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -75,6 +76,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
             // Set<String> urls = agentStoreParameter.getAgents().stream().map(Agent::getUrl).map(String::toLowerCase).collect(Collectors.toSet());
             List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(Arrays.asList(controllerId));
             Map<String, Set<DBItemInventoryAgentName>> allAliases = agentDBLayer.getAgentNameAliases(agentIds);
+            List<JAgentRef> agentRefs = new ArrayList<>();
             
             boolean watcherUpdateRequired = false;
             if (dbAgents != null && !dbAgents.isEmpty()) {
@@ -89,6 +91,9 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                     if (dbAgent.getDisabled() != agent.getDisabled()) {
                         dbAgent.setDisabled(agent.getDisabled());
                         dbUpdateRequired = true;
+                        if (!agent.getDisabled()) {
+                            controllerUpdateRequired = true; 
+                        }
                     }
                     if (dbAgent.getIsWatcher() != agent.getIsClusterWatcher()) {
                         dbAgent.setIsWatcher(agent.getIsClusterWatcher());
@@ -96,7 +101,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                         watcherUpdateRequired = true;
                     }
                     if (!dbAgent.getAgentName().equals(agent.getAgentName())) {
-                        dbAgent.setIsWatcher(agent.getIsClusterWatcher());
+                        dbAgent.setAgentName(agent.getAgentName());
                         dbUpdateRequired = true;
                     }
                     if (!dbAgent.getUri().equals(agent.getUrl())) {
@@ -107,18 +112,25 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                     if (dbUpdateRequired) {
                         agentDBLayer.updateAgent(dbAgent);
                     }
+                    if (controllerUpdateRequired) {
+                        agentRefs.add(JAgentRef.apply(AgentRef.apply(AgentName.of(dbAgent.getAgentId()), Uri.of(dbAgent.getUri()))));
+                    }
                     
                     updateAliases(connection, agent, allAliases.get(agent.getAgentId()));
                 }
             }
             
             for (Agent agent : agentMap.values()) {
+                boolean controllerUpdateRequired = true;
                 DBItemInventoryAgentInstance dbAgent = new DBItemInventoryAgentInstance();
                 dbAgent.setId(null);
                 dbAgent.setAgentId(agent.getAgentId());
                 dbAgent.setAgentName(agent.getAgentName());
                 dbAgent.setControllerId(controllerId);
                 dbAgent.setDisabled(agent.getDisabled());
+                if (agent.getDisabled()) {
+                    controllerUpdateRequired = false; 
+                }
                 dbAgent.setIsWatcher(agent.getIsClusterWatcher());
                 if (agent.getIsClusterWatcher()) {
                     watcherUpdateRequired = true;
@@ -129,10 +141,14 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                 dbAgent.setVersion(null);
                 agentDBLayer.saveAgent(dbAgent);
                 
+                if (controllerUpdateRequired) {
+                    agentRefs.add(JAgentRef.apply(AgentRef.apply(AgentName.of(dbAgent.getAgentId()), Uri.of(dbAgent.getUri()))));
+                }
+                
                 updateAliases(connection, agent, allAliases.get(agent.getAgentId()));
             }
             
-            List<JAgentRef> agentRefs = Proxies.getAgents(controllerId, agentDBLayer);
+            //List<JAgentRef> agentRefs = Proxies.getAgents(controllerId, agentDBLayer);
             if (!agentRefs.isEmpty()) {
                 ControllerApi.of(controllerId).updateAgentRefs(agentRefs).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getJocError(),
                         controllerId));
