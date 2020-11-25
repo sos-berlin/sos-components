@@ -29,6 +29,7 @@ import org.hibernate.jdbc.Work;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 import org.hibernate.transform.ResultTransformer;
+import org.hibernate.transform.Transformers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -260,7 +261,7 @@ public class SOSHibernateSession implements Serializable {
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateQueryException */
     @SuppressWarnings("unchecked")
-    public <T> Query<T> createQuery(String hql, Class<T> entityClass) throws SOSHibernateException {
+    public <T> Query<T> createQuery(String hql, Class<T> resultType) throws SOSHibernateException {
         if (SOSString.isEmpty(hql)) {
             throw new SOSHibernateQueryException("hql statement is empty");
         }
@@ -273,16 +274,20 @@ public class SOSHibernateSession implements Serializable {
         Query<T> q = null;
         try {
             if (isStatelessSession) {
-                if (entityClass == null) {
+                if (resultType == null) {
                     q = ((StatelessSession) currentSession).createQuery(hql);
                 } else {
-                    q = ((StatelessSession) currentSession).createQuery(hql, entityClass);
+                    q = ((StatelessSession) currentSession).createQuery(hql);
+                    q = setResultTransformer(q, resultType);
+                    // q = ((StatelessSession) currentSession).createQuery(hql, entityClass);
                 }
             } else {
-                if (entityClass == null) {
+                if (resultType == null) {
                     q = ((Session) currentSession).createQuery(hql);
                 } else {
-                    q = ((Session) currentSession).createQuery(hql, entityClass);
+                    q = ((StatelessSession) currentSession).createQuery(hql);
+                    q = setResultTransformer(q, resultType);
+                    // q = ((Session) currentSession).createQuery(hql, resultType);
                 }
             }
         } catch (IllegalStateException e) {
@@ -1062,6 +1067,12 @@ public class SOSHibernateSession implements Serializable {
 
     public boolean isTransactionOpened() {
         return isTransactionOpened;
+    }
+
+    @SuppressWarnings("deprecation")
+    private <T> Query<T> setResultTransformer(Query<T> query, Class<T> entityClass) {
+        query.setResultTransformer(Transformers.aliasToBean(entityClass));
+        return query;
     }
 
     private void closeSession() {
