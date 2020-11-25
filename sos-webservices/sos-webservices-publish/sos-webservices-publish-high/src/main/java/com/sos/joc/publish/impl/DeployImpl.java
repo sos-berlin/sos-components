@@ -59,10 +59,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     private DBLayerDeploy dbLayer = null;
     private boolean hasErrors = false;
     private List<Err419> listOfErrors = new ArrayList<Err419>();
-    private SOSHibernateSession hibernateSession = null;
 
     @Override
     public JOCDefaultResponse postDeploy(String xAccessToken, byte[] filter) throws Exception {
+        SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, filter, xAccessToken);
             JsonValidator.validateFailFast(filter, DeployFilter.class);
@@ -293,9 +293,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             String controllerId,
             Date deploymentDate,
             DeployFilter deployFilter) {
+        SOSHibernateSession newHibernateSession = null;
         try {
-            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            dbLayer = new DBLayerDeploy(hibernateSession);
+            newHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
             if (either.isRight()) {
                 // no error occurred
                 Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(
@@ -325,7 +326,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 }
             }
         } finally {
-            Globals.disconnect(hibernateSession);
+            Globals.disconnect(newHibernateSession);
         }
     }
     
