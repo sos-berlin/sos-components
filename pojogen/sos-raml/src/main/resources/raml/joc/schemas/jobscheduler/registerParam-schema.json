@@ -4,8 +4,7 @@
   "javaType": "com.sos.joc.model.jobscheduler.RegisterParameters",
   "type": "object",
   "required": [
-    "controllers",
-    "agents"
+    "controllers"
   ],
   "properties": {
     "controllerId": {

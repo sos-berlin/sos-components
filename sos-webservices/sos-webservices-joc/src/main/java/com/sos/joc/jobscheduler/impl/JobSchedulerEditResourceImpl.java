@@ -4,6 +4,7 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -80,6 +81,9 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             
             checkRequiredComment(jobSchedulerBody.getAuditLog());
             String controllerId = jobSchedulerBody.getControllerId();
+            if (jobSchedulerBody.getAgents() == null) {
+                jobSchedulerBody.setAgents(Collections.emptyList());
+            }
             boolean requestWithEmptyControllerId = controllerId.isEmpty();
             int index = 0;
             for (RegisterParameter controller : jobSchedulerBody.getControllers()) {
@@ -93,8 +97,13 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 if (index == 1 && jobSchedulerBody.getControllers().stream().anyMatch(c -> Role.STANDALONE.equals(c.getRole()))) {
                     throw new JobSchedulerBadRequestException("The members of a Controller Cluster must have roles PRIMARY and BACKUP."); 
                 }
-                if (index == 1 && (jobSchedulerBody.getAgents().isEmpty() || !jobSchedulerBody.getAgents().stream().anyMatch(a -> a.getIsClusterWatcher()))) {
-                    throw new JobSchedulerBadRequestException("A Controller Cluster needs at least one Agent Cluster Watcher."); 
+                if (index == 1 && (jobSchedulerBody.getAgents().isEmpty() || !jobSchedulerBody.getAgents()
+                        .stream().anyMatch(Agent::getIsClusterWatcher))) {
+                    throw new JobSchedulerBadRequestException("A Controller Cluster needs at least one Agent Cluster Watcher.");
+                }
+                if (index == 1 && !jobSchedulerBody.getAgents().isEmpty() && jobSchedulerBody.getAgents()
+                        .stream().filter(Agent::getIsClusterWatcher).count() > 0) {
+                    throw new JobSchedulerBadRequestException("Only one Agent may be a Cluster Watcher.");
                 }
 
                 URI otherUri = index == 0 ? null : jobSchedulerBody.getControllers().get(0).getUrl();
