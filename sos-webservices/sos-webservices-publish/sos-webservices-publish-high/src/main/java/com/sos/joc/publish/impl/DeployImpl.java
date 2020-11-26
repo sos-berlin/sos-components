@@ -304,7 +304,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(
                         verifiedReDeployables, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
                 createAuditLogFor(deployedObjects, deployFilter, controllerId, true, versionIdForUpdate);
-                PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), null, dbLayer.getSession());
+                PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), null, controllerId, dbLayer.getSession());
                 LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
             } else if (either.isLeft()) {
                 // an error occurred

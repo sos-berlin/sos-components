@@ -122,11 +122,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             
             // determine agent names to be replaced
             Set<UpdateableWorkflowJobAgentName> updateableAgentNames = new HashSet<UpdateableWorkflowJobAgentName>();
-            if (unsignedDrafts != null) {
-                unsignedDrafts.stream()
-                .filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW))
-                .forEach(item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(item, dbLayer)));
-            }
             // sign deployed configurations with new versionId
             Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations =
                     new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
@@ -135,10 +130,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             final String versionIdForUpdate = UUID.randomUUID().toString();
             final Date deploymentDate = Date.from(Instant.now());
             // all items will be signed or re-signed with current versionId
-            if (unsignedDrafts != null && !unsignedDrafts.isEmpty()) {
-                verifiedConfigurations.putAll(PublishUtils.getDraftsWithSignature(
-                        versionIdForUpdate, account, unsignedDrafts, updateableAgentNames, hibernateSession, JocSecurityLevel.LOW));
-            }
             if (unsignedReDeployables != null && !unsignedReDeployables.isEmpty()) {
                 verifiedReDeployables.putAll(
                         PublishUtils.getDeploymentsWithSignature(versionIdForUpdate, account, unsignedReDeployables, hibernateSession, 
@@ -148,15 +139,24 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
             JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.MEDIUM);
             // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename 
-            for (String controller : allControllers.keySet()) {
+            for (String controllerId : controllerIds) {
+                if (unsignedDrafts != null) {
+                    unsignedDrafts.stream()
+                    .filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW))
+                    .forEach(item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(item, controllerId, dbLayer)));
+                }
+                if (unsignedDrafts != null && !unsignedDrafts.isEmpty()) {
+                    verifiedConfigurations.putAll(PublishUtils.getDraftsWithSignature(
+                            versionIdForUpdate, account, unsignedDrafts, updateableAgentNames, hibernateSession, JocSecurityLevel.LOW));
+                }
                 List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkPathRenamingForUpdate(
-                        verifiedConfigurations.keySet(), controller, dbLayer, keyPair.getKeyAlgorithm());
+                        verifiedConfigurations.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm());
                 if (toDeleteForRename != null) {
                     toDeleteForRename.addAll(PublishUtils.checkPathRenamingForUpdate(
-                            verifiedReDeployables.keySet(), controller, dbLayer, keyPair.getKeyAlgorithm()));
+                            verifiedReDeployables.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm()));
                 } else {
                     toDeleteForRename = PublishUtils.checkPathRenamingForUpdate(
-                            verifiedReDeployables.keySet(), controller, dbLayer, keyPair.getKeyAlgorithm());
+                            verifiedReDeployables.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm());
                 }
                 // and subsequently call delete for the object with the previous path before committing the update 
                 if (toDeleteForRename != null && !toDeleteForRename.isEmpty()) {
@@ -165,13 +165,12 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     // set new versionId for second round (delete items)
                     final String versionIdForDeleteRenamed = UUID.randomUUID().toString();
                         // call updateRepo command via Proxy of given controllers
-                        PublishUtils.updateRepoDelete(versionIdForDeleteRenamed, toDelete, controller, dbLayer, 
+                        PublishUtils.updateRepoDelete(versionIdForDeleteRenamed, toDelete, controllerId, dbLayer, 
                                 keyPair.getKeyAlgorithm()).thenAccept(either -> {
-                                processAfterDelete(either, toDelete, controller, account, versionIdForDeleteRenamed, null);
+                                processAfterDelete(either, toDelete, controllerId, account, versionIdForDeleteRenamed, null);
                         });//.get();
                 }
-            }
-            for (String controllerId : controllerIds) {
+
                 // call updateRepo command via ControllerApi for given controllers
                 String signerDN = null;
                 X509Certificate cert = null;
@@ -294,8 +293,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         verifiedConfigurations, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate);
                 deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(
                         verifiedReDeployables, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
-                PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet().stream().collect(Collectors.toSet()), updateableAgentNames, 
-                        dbLayer.getSession());
+                PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet().stream().collect(Collectors.toSet()), 
+                        updateableAgentNames, controllerId, dbLayer.getSession());
                 LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
                 createAuditLogForEach(deployedObjects, deployFilter, controllerId, true, versionIdForUpdate);
             } else if (either.isLeft()) {

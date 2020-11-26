@@ -1016,13 +1016,14 @@ public class DBLayerDeploy {
         return dbItems;
     }
     
-    public String getAgentIdFromAgentName (String agentName){
+    public String getAgentIdFromAgentName (String agentName, String controllerId){
         if (agentName != null) {
             try {
                 StringBuilder hql = new StringBuilder("select agentId from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
-                hql.append(" where agentName = :agentName");
+                hql.append(" where agentName = :agentName and controllerId = :controllerId");
                 Query<String> query = getSession().createQuery(hql.toString());
                 query.setParameter("agentName", agentName);
+                query.setParameter("controllerId", controllerId);
                 return query.getSingleResult();
             } catch (SOSHibernateException e) {
                 throw new RuntimeException(e.getMessage(), e);

@@ -187,6 +187,20 @@ public abstract class PublishUtils {
         }
     }
 
+    public static Map<DBItemInventoryConfiguration, DBItemDepSignatures> getDraftWithSignature(String versionId, String account,
+            DBItemInventoryConfiguration unsignedDraft, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, SOSHibernateSession session, 
+            JocSecurityLevel secLvl) 
+                throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException, 
+                NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, CertificateException {
+        DBLayerKeys dbLayer = new DBLayerKeys(session);
+        JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
+        if (keyPair != null) {
+            return getDraftWithSignature(versionId, account, unsignedDraft, updateableAgentNames, keyPair, session);
+        } else {
+            throw new JocMissingKeyException("No Key found for this account.");
+        }
+    }
+
     public static Map<DBItemInventoryConfiguration, DBItemDepSignatures> getDraftsWithSignature(String versionId, String account,
             Set<DBItemInventoryConfiguration> unsignedDrafts, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, JocKeyPair keyPair, 
             SOSHibernateSession session) 
@@ -199,7 +213,8 @@ public abstract class PublishUtils {
                     "No private key found fo signing! - Please check your private key from the key management section in your profile.");
         } else {
             DBItemDepSignatures sig = null;
-            for (DBItemInventoryConfiguration draft : unsignedDrafts) {
+            Set<DBItemInventoryConfiguration> unsignedDraftsUpdated = unsignedDrafts.stream().map(item -> cloneDraftToUpdate(item)).collect(Collectors.toSet());
+            for (DBItemInventoryConfiguration draft : unsignedDraftsUpdated) {
                 updateVersionIdOnDraftObject(draft, versionId);
                 // update agentName in Workflow jobs before signing agentName -> agentId
                 if (draft.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)) {
@@ -238,6 +253,61 @@ public abstract class PublishUtils {
                 if (sig != null) {
                     session.save(sig);
                 }
+            }
+        }
+        return signedDrafts;
+    }
+
+    public static Map<DBItemInventoryConfiguration, DBItemDepSignatures> getDraftWithSignature(String versionId, String account,
+            DBItemInventoryConfiguration unsignedDraft, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, JocKeyPair keyPair, 
+            SOSHibernateSession session) 
+                    throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException,
+                    PGPException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, CertificateException {
+        boolean isPGPKey = false;
+        Map<DBItemInventoryConfiguration, DBItemDepSignatures> signedDrafts = new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
+        if (keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
+            throw new JocMissingKeyException(
+                    "No private key found fo signing! - Please check your private key from the key management section in your profile.");
+        } else {
+            DBItemDepSignatures sig = null;
+            DBItemInventoryConfiguration unsignedDraftUpdated = cloneDraftToUpdate(unsignedDraft);
+            updateVersionIdOnDraftObject(unsignedDraftUpdated, versionId);
+            // update agentName in Workflow jobs before signing agentName -> agentId
+            if (unsignedDraft.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)) {
+                replaceAgentNameWithAgentId(unsignedDraftUpdated, updateableAgentNames);
+            }
+            if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+                sig = new DBItemDepSignatures();
+                sig.setAccount(account);
+                sig.setInvConfigurationId(unsignedDraftUpdated.getId());
+                sig.setModified(Date.from(Instant.now()));
+                sig.setSignature(SignObject.signPGP(keyPair.getPrivateKey(), unsignedDraftUpdated.getContent(), null));
+                signedDrafts.put(unsignedDraftUpdated, sig);
+            } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+                KeyPair kp = null;
+                if (keyPair.getPrivateKey().startsWith(SOSKeyConstants.PRIVATE_RSA_KEY_HEADER)) {
+                    kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(keyPair.getPrivateKey());
+                } else {
+                    kp = KeyUtil.getKeyPairFromPrivatKeyString(keyPair.getPrivateKey());
+                }
+                sig = new DBItemDepSignatures();
+                sig.setAccount(account);
+                sig.setInvConfigurationId(unsignedDraftUpdated.getId());
+                sig.setModified(Date.from(Instant.now()));
+                sig.setSignature(SignObject.signX509(kp.getPrivate(), unsignedDraftUpdated.getContent()));
+                signedDrafts.put(unsignedDraftUpdated, sig);
+            } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+                KeyPair kp = KeyUtil.getKeyPairFromECDSAPrivatKeyString(keyPair.getPrivateKey());
+                sig = new DBItemDepSignatures();
+                sig.setAccount(account);
+                sig.setInvConfigurationId(unsignedDraftUpdated.getId());
+                sig.setModified(Date.from(Instant.now()));
+                X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+                sig.setSignature(SignObject.signX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, kp.getPrivate(), unsignedDraftUpdated.getContent()));
+                signedDrafts.put(unsignedDraftUpdated, sig);
+            }
+            if (sig != null) {
+                session.save(sig);
             }
         }
         return signedDrafts;
@@ -703,7 +773,8 @@ public abstract class PublishUtils {
         }
     }
     
-    public static Set<UpdateableWorkflowJobAgentName> getUpdateableAgentRefInWorkflowJobs(DBItemInventoryConfiguration item, DBLayerDeploy dbLayer) {
+    public static Set<UpdateableWorkflowJobAgentName> getUpdateableAgentRefInWorkflowJobs(DBItemInventoryConfiguration item, String controllerId,
+            DBLayerDeploy dbLayer) {
         Set<UpdateableWorkflowJobAgentName> update = new HashSet<UpdateableWorkflowJobAgentName>();
         try {
             if (ConfigurationType.WORKFLOW.equals(ConfigurationType.fromValue(item.getType()))) {
@@ -711,8 +782,8 @@ public abstract class PublishUtils {
                 workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
                     Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
                     String agentName = job.getAgentName();
-                    String agentId = dbLayer.getAgentIdFromAgentName(agentName);
-                    update.add(new UpdateableWorkflowJobAgentName(workflow.getPath(), jobname, job.getAgentName(), agentId));
+                    String agentId = dbLayer.getAgentIdFromAgentName(agentName, controllerId);
+                    update.add(new UpdateableWorkflowJobAgentName(workflow.getPath(), jobname, job.getAgentName(), agentId, controllerId));
                 });
             }
         } catch (IOException e) {
@@ -858,14 +929,14 @@ public abstract class PublishUtils {
     }
 
     public static void prepareNextInvConfigGeneration(Set<DBItemInventoryConfiguration> drafts, 
-            Set<UpdateableWorkflowJobAgentName> updateableAgentNames, SOSHibernateSession hibernateSession) {
+            Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String controllerId, SOSHibernateSession hibernateSession) {
         try {
             for (DBItemInventoryConfiguration draft : drafts) {
                 draft.setDeployed(true);
                 draft.setModified(Date.from(Instant.now()));
                 // update agentName with original in Workflow jobs before updating  agentId -> agentName
                 if (updateableAgentNames != null && draft.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)) {
-                    replaceAgentIdWithOrigAgentName(draft, updateableAgentNames);
+                    replaceAgentIdWithOrigAgentName(draft, updateableAgentNames, controllerId);
                 }
                 hibernateSession.update(draft);
             }
@@ -1278,11 +1349,13 @@ public abstract class PublishUtils {
         draft.setContent(om.writeValueAsString(workflow));
     }
 
-    private static void replaceAgentIdWithOrigAgentName(DBItemInventoryConfiguration draft, Set<UpdateableWorkflowJobAgentName> updateableAgentNames)
+    private static void replaceAgentIdWithOrigAgentName(DBItemInventoryConfiguration draft, 
+            Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String controllerId)
             throws JsonParseException, JsonMappingException, IOException {
         Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
         Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream()
-                .filter(item -> item.getWorkflowPath().equals(draft.getPath())).collect(Collectors.toSet());
+                .filter(item -> item.getWorkflowPath().equals(draft.getPath()) && controllerId.equals(item.getControllerId()))
+                .collect(Collectors.toSet());
         workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
             Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
             job.setAgentName(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname)).findFirst().get().getAgentName());
@@ -1297,4 +1370,24 @@ public abstract class PublishUtils {
             return String.format("%0" + (length-i.toString().length()) + "d%s", 0, i.toString());
         }
    }
+
+    private static DBItemInventoryConfiguration cloneDraftToUpdate(DBItemInventoryConfiguration unsignedDraft) {
+        DBItemInventoryConfiguration unsignedDraftUpdated = new DBItemInventoryConfiguration();
+        unsignedDraftUpdated.setAuditLogId(unsignedDraft.getAuditLogId());
+        unsignedDraftUpdated.setContent(unsignedDraft.getContent());
+        unsignedDraftUpdated.setCreated(unsignedDraft.getCreated());
+        unsignedDraftUpdated.setDeleted(unsignedDraft.getDeleted());
+        unsignedDraftUpdated.setDeployed(unsignedDraft.getDeployed());
+        unsignedDraftUpdated.setDocumentationId(unsignedDraft.getDocumentationId());
+        unsignedDraftUpdated.setFolder(unsignedDraft.getFolder());
+        unsignedDraftUpdated.setId(unsignedDraft.getId());
+        unsignedDraftUpdated.setModified(unsignedDraft.getModified());
+        unsignedDraftUpdated.setName(unsignedDraft.getName());
+        unsignedDraftUpdated.setPath(unsignedDraft.getPath());
+        unsignedDraftUpdated.setReleased(unsignedDraft.getReleased());
+        unsignedDraftUpdated.setTitle(unsignedDraft.getTitle());
+        unsignedDraftUpdated.setType(unsignedDraft.getType());
+        unsignedDraftUpdated.setValid(unsignedDraft.getValid());
+        return unsignedDraftUpdated;
+    }
 }
