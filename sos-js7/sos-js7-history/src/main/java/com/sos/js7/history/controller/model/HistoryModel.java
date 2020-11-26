@@ -721,14 +721,13 @@ public class HistoryModel {
 
         CachedOrder co = getCachedOrder(dbLayer, entry.getOrderId());
         co.setState(OrderStateText.RESUMED.intValue());
-        co.setStartTime(entry.getEventDatetime());
         co.setHasStates(true);
         // addCachedOrder(co.getOrderKey(), co);
 
-        dbLayer.updateOrderOnResumed(co.getId(), co.getStartTime(), co.getState());
-        saveOrderState(dbLayer, co, co.getState(), co.getStartTime(), entry.getEventId(), null, null);
+        dbLayer.updateOrderOnResumed(co.getId(), co.getState(), entry.getEventDatetime());
+        saveOrderState(dbLayer, co, co.getState(), entry.getEventDatetime(), entry.getEventId(), null, null);
 
-        LogEntry le = new LogEntry(LogEntry.LogLevel.MAIN, EventType.OrderResumed, co.getStartTime(), null);
+        LogEntry le = new LogEntry(LogEntry.LogLevel.MAIN, EventType.OrderResumed, entry.getEventDatetime(), null);
         le.onOrder(co, null);
         storeLog2File(le);
     }
@@ -737,20 +736,20 @@ public class HistoryModel {
         checkControllerTimezone(dbLayer);
 
         CachedOrder co = getCachedOrder(dbLayer, entry.getOrderId());
+        co.setHasChildren(true);
         if (co.getState().equals(OrderStateText.PENDING.intValue())) {
             co.setState(OrderStateText.RUNNING.intValue());
         }
-        co.setHasChildren(true);
-        co.setStartTime(entry.getEventDatetime());
+        String startEventId = null;
+        if (SOSDate.equals(co.getStartTime(), Globals.HISTORY_DEFAULT_DATE)) {
+            startEventId = String.valueOf(entry.getEventId());
+            co.setStartTime(entry.getEventDatetime());
+        }
         // addCachedOrder(co.getOrderKey(), co);
 
-        String parentPosition = HistoryUtil.getPositionParentAsString(entry.getPosition());
-        if (parentPosition != null && parentPosition.equals(co.getStartWorkflowPosition())) {
-            dbLayer.updateOrderOnFork(co.getId(), co.getState(), co.getStartTime(), String.valueOf(entry.getEventId()));
-        } else {
-            dbLayer.updateOrderOnFork(co.getId(), co.getState());
-        }
+        dbLayer.updateOrderOnFork(co.getId(), co.getState(), entry.getEventDatetime(), startEventId, co.getStartTime());
 
+        String parentPosition = HistoryUtil.getPositionParentAsString(entry.getPosition());
         LogEntry le = new LogEntry(LogEntry.LogLevel.DETAIL, EventType.OrderForked, co.getStartTime(), null);
         le.onOrder(co, parentPosition, entry.getChilds());
         storeLog2File(le);
@@ -932,11 +931,12 @@ public class HistoryModel {
             dbLayer.getSession().save(item);
 
             co.setCurrentOrderStepId(item.getId());
-
-            // TODO check for Fork -
-            if (item.getWorkflowPosition().equals(co.getStartWorkflowPosition())) {// + order.startTime != default
+            if (SOSDate.equals(co.getStartTime(), Globals.HISTORY_DEFAULT_DATE)) {
+                // if (item.getWorkflowPosition().equals(co.getStartWorkflowPosition())) {// + order.startTime != default
                 // ORDER START
                 co.setState(OrderStateText.RUNNING.intValue());
+                co.setStartTime(item.getStartTime());
+
                 dbLayer.updateOrderOnOrderStep(co.getId(), item.getStartTime(), item.getStartEventId(), co.getState(), entry.getEventDatetime(), co
                         .getCurrentOrderStepId());
 

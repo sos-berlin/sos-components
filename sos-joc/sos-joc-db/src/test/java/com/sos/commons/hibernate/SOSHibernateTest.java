@@ -8,8 +8,6 @@ import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -21,39 +19,16 @@ import com.sos.joc.db.history.DBItemHistoryOrderStep;
 public class SOSHibernateTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateTest.class);
-    private static SOSHibernateFactory factory = null;
-
-    @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
-        LOGGER.info("---------- [@BeforeClass] ----------");
-        try {
-            factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate.cfg.xml"));
-            factory.addClassMapping(DBLayer.getHistoryClassMapping());
-            factory.build();
-        } catch (Exception e) {
-            LOGGER.error(e.toString(), e);
-        }
-        LOGGER.info("---------- [@BeforeClass] ----------");
-    }
-
-    @AfterClass
-    public static void tearDownAfterClass() throws Exception {
-        LOGGER.info("---------- [@AfterClass] ----------");
-        try {
-            factory.close();
-        } catch (Exception e) {
-            LOGGER.error(e.toString(), e);
-        }
-        LOGGER.info("---------- [@AfterClass] ----------");
-    }
 
     /* HQL Queries */
 
     @Ignore
     @Test
     public void testJoinWithCustomEntity() throws Exception {
+        SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
+            factory = createFactory();
             session = factory.openStatelessSession();
 
             StringBuilder hql = new StringBuilder("select ho.orderKey as orderKey "); // set aliases for all properties
@@ -75,14 +50,19 @@ public class SOSHibernateTest {
             if (session != null) {
                 session.close();
             }
+            if (factory != null) {
+                factory.close();
+            }
         }
     }
 
     @Ignore
     @Test
     public void testJoinWithoutEntity() throws Exception {
+        SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
+            factory = createFactory();
             session = factory.openStatelessSession();
 
             StringBuilder hql = new StringBuilder("select ho.orderKey ");
@@ -107,16 +87,20 @@ public class SOSHibernateTest {
             if (session != null) {
                 session.close();
             }
+            if (factory != null) {
+                factory.close();
+            }
         }
     }
 
     @Ignore
     @Test
     public void testScroll() throws Exception {
-
+        SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         ScrollableResults sr = null;
         try {
+            factory = createFactory();
             session = factory.openStatelessSession();
 
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP);
@@ -139,6 +123,9 @@ public class SOSHibernateTest {
             if (session != null) {
                 session.close();
             }
+            if (factory != null) {
+                factory.close();
+            }
         }
     }
 
@@ -147,8 +134,10 @@ public class SOSHibernateTest {
     @Ignore
     @Test
     public void testNativeJoinWithCustomEntity() throws Exception {
+        SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
+            factory = createFactory();
             session = factory.openStatelessSession();
 
             StringBuilder sql = new StringBuilder("select ");
@@ -177,7 +166,17 @@ public class SOSHibernateTest {
             if (session != null) {
                 session.close();
             }
+            if (factory != null) {
+                factory.close();
+            }
         }
+    }
+
+    private SOSHibernateFactory createFactory() throws Exception {
+        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate.cfg.xml"));
+        factory.addClassMapping(DBLayer.getHistoryClassMapping());
+        factory.build();
+        return factory;
     }
 
 }

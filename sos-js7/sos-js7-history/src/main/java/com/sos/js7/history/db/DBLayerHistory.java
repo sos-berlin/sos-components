@@ -182,40 +182,38 @@ public class DBLayerHistory {
         return session.executeUpdate(query);
     }
 
-    public int updateOrderOnResumed(Long id, Date dateTime, Integer state) throws SOSHibernateException {
+    public int updateOrderOnResumed(Long id, Integer state, Date stateTime) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ");
         hql.append(DBLayer.DBITEM_HISTORY_ORDER);
         hql.append(" set state=:state ");
-        hql.append(",stateTime=:dateTime ");
+        hql.append(",stateTime=:stateTime ");
         hql.append(",hasStates=true ");
         hql.append("where id=:id");
         Query<DBItemHistoryOrder> query = session.createQuery(hql.toString());
         query.setParameter("id", id);
-        query.setParameter("dateTime", dateTime);
+        query.setParameter("stateTime", stateTime);
         query.setParameter("state", state);
         return session.executeUpdate(query);
     }
 
-    public int updateOrderOnFork(Long id, Integer state) throws SOSHibernateException {
-        return updateOrderOnFork(id, state, null, null);
-    }
-
-    public int updateOrderOnFork(Long id, Integer state, Date startTime, String startEventId) throws SOSHibernateException {
+    public int updateOrderOnFork(Long id, Integer state, Date stateTime, String startEventId, Date startTime) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ");
         hql.append(DBLayer.DBITEM_HISTORY_ORDER);
         hql.append(" set hasChildren=true");
-        if (startTime != null) {
+        if (startEventId != null) {
             hql.append(", startTime=:startTime ");
             hql.append(", startEventId=:startEventId ");
         }
+        hql.append(", stateTime=:stateTime ");
         hql.append(", state=:state ");
         hql.append("where id=:id");
         Query<DBItemHistoryOrder> query = session.createQuery(hql.toString());
         query.setParameter("id", id);
-        if (startTime != null) {
+        if (startEventId != null) {
             query.setParameter("startTime", startTime);
             query.setParameter("startEventId", startEventId);
         }
+        query.setParameter("stateTime", stateTime);
         query.setParameter("state", state);
         return session.executeUpdate(query);
     }
