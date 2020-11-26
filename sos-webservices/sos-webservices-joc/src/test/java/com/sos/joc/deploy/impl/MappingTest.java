@@ -286,11 +286,11 @@ public class MappingTest {
                     if("folder".equals(item)) {
                         return "folder = :folder or folder like :likeFolder";
                     } else if ("likeFolder".equals(item)) {
-                        return "";
+                        return null;
                     } else {
                         return item + " = :" + item;
                     }
-                })
+                }).filter(item -> item != null)
                 .collect(Collectors.joining(" and ", " where ", "")));
         LOGGER.info(hql.toString());
     }
@@ -301,4 +301,12 @@ public class MappingTest {
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleDeployFilter()));
     }
+
+    @Test
+    public void test11MapDeployFilter () throws JsonProcessingException {
+
+        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
+        LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleExportFilter()));
+    }
+
 }

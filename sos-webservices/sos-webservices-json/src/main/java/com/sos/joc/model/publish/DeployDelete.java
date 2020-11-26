@@ -23,14 +23,29 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class DeployDelete {
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("deployConfigurations")
     private List<DeployConfig> deployConfigurations = new ArrayList<DeployConfig>();
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("deployConfigurations")
     public List<DeployConfig> getDeployConfigurations() {
         return deployConfigurations;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("deployConfigurations")
     public void setDeployConfigurations(List<DeployConfig> deployConfigurations) {
         this.deployConfigurations = deployConfigurations;

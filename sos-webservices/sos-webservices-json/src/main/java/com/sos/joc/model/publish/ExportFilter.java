@@ -20,16 +20,16 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "configurations",
-    "deployments",
+    "draftConfigurations",
+    "deployConfigurations",
     "auditLog"
 })
 public class ExportFilter {
 
-    @JsonProperty("configurations")
-    private List<Long> configurations = new ArrayList<Long>();
-    @JsonProperty("deployments")
-    private List<Long> deployments = new ArrayList<Long>();
+    @JsonProperty("draftConfigurations")
+    private List<DraftConfig> draftConfigurations = new ArrayList<DraftConfig>();
+    @JsonProperty("deployConfigurations")
+    private List<DeployConfig> deployConfigurations = new ArrayList<DeployConfig>();
     /**
      * auditParams
      * <p>
@@ -39,24 +39,24 @@ public class ExportFilter {
     @JsonProperty("auditLog")
     private AuditParams auditLog;
 
-    @JsonProperty("configurations")
-    public List<Long> getConfigurations() {
-        return configurations;
+    @JsonProperty("draftConfigurations")
+    public List<DraftConfig> getDraftConfigurations() {
+        return draftConfigurations;
     }
 
-    @JsonProperty("configurations")
-    public void setConfigurations(List<Long> configurations) {
-        this.configurations = configurations;
+    @JsonProperty("draftConfigurations")
+    public void setDraftConfigurations(List<DraftConfig> draftConfigurations) {
+        this.draftConfigurations = draftConfigurations;
     }
 
-    @JsonProperty("deployments")
-    public List<Long> getDeployments() {
-        return deployments;
+    @JsonProperty("deployConfigurations")
+    public List<DeployConfig> getDeployConfigurations() {
+        return deployConfigurations;
     }
 
-    @JsonProperty("deployments")
-    public void setDeployments(List<Long> deployments) {
-        this.deployments = deployments;
+    @JsonProperty("deployConfigurations")
+    public void setDeployConfigurations(List<DeployConfig> deployConfigurations) {
+        this.deployConfigurations = deployConfigurations;
     }
 
     /**
@@ -83,12 +83,12 @@ public class ExportFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("configurations", configurations).append("deployments", deployments).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("draftConfigurations", draftConfigurations).append("deployConfigurations", deployConfigurations).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deployments).append(auditLog).append(configurations).toHashCode();
+        return new HashCodeBuilder().append(draftConfigurations).append(auditLog).append(deployConfigurations).toHashCode();
     }
 
     @Override
@@ -100,7 +100,7 @@ public class ExportFilter {
             return false;
         }
         ExportFilter rhs = ((ExportFilter) other);
-        return new EqualsBuilder().append(deployments, rhs.deployments).append(auditLog, rhs.auditLog).append(configurations, rhs.configurations).isEquals();
+        return new EqualsBuilder().append(draftConfigurations, rhs.draftConfigurations).append(auditLog, rhs.auditLog).append(deployConfigurations, rhs.deployConfigurations).isEquals();
     }
 
 }

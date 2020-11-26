@@ -3,6 +3,9 @@
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.joc.model.publish.DeployDelete",
 	"type": "object",
+  "required": [
+    "deployConfigurations"
+  ],
   "properties": {
     "deployConfigurations": {
       "type" : "array",

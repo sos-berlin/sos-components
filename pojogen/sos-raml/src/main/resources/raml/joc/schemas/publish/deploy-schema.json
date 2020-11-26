@@ -3,9 +3,18 @@
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.joc.model.publish.DeployFilter",
 	"type": "object",
-	"required": [
-		"controllerIds"
-	],
+  "anyOf": [{
+    "required": [
+        "controllerIds",
+        "store"
+      ]
+    }, {
+      "required": [
+        "controllerIds",
+        "delete"
+      ]
+    }
+  ],
 	"properties": {
 		"controllerIds": {
 		  "type" : "array",
@@ -14,7 +23,7 @@
       }
 		},
 		"store": {
-			"$ref": "deployStore-schema.json"
+			"$ref": "deployableObjects-schema.json"
 		},
 		"delete": {
 			"$ref": "deployDelete-schema.json"

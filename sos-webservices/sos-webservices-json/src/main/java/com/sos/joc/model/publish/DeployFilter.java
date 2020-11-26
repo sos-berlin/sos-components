@@ -27,21 +27,16 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class DeployFilter {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("controllerIds")
     private List<ControllerId> controllerIds = new ArrayList<ControllerId>();
     /**
-     * DeployStore
+     * Deployable Objects
      * <p>
      * 
      * 
      */
     @JsonProperty("store")
-    private DeployStore store;
+    private DeployableObjects store;
     /**
      * DeployDelete
      * <p>
@@ -59,45 +54,35 @@ public class DeployFilter {
     @JsonProperty("auditLog")
     private AuditParams auditLog;
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("controllerIds")
     public List<ControllerId> getControllerIds() {
         return controllerIds;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("controllerIds")
     public void setControllerIds(List<ControllerId> controllerIds) {
         this.controllerIds = controllerIds;
     }
 
     /**
-     * DeployStore
+     * Deployable Objects
      * <p>
      * 
      * 
      */
     @JsonProperty("store")
-    public DeployStore getStore() {
+    public DeployableObjects getStore() {
         return store;
     }
 
     /**
-     * DeployStore
+     * Deployable Objects
      * <p>
      * 
      * 
      */
     @JsonProperty("store")
-    public void setStore(DeployStore store) {
+    public void setStore(DeployableObjects store) {
         this.store = store;
     }
 

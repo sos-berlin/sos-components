@@ -70,6 +70,7 @@ resourceTypes:
   - postForUploadSigned: !include joc/resourceTypes/common/postForUploadSigned.raml
   - postForUploadUnsigned: !include joc/resourceTypes/common/postForUploadUnsigned.raml
   - postForGenerateKey: !include joc/resourceTypes/publish/postForGenerateKey.raml
+  - postForExport: !include joc/resourceTypes/publish/postForExport.raml
   - postForImportDeploy: !include joc/resourceTypes/publish/postForImportDeploy.raml
   - postForShowDepHistory: !include joc/resourceTypes/publish/postForShowDepHistory.raml
   
@@ -1142,9 +1143,9 @@ traits:
   /export:
     get:
     type:
-      postForDownloadUnsigned:
+      postForExport:
         description: provides archive file (zip, tar.gz, gz) to download unsigned JSON files
-        description1: !include joc/documentation/publish/exportFilterById.md
+        description1: !include joc/documentation/publish/exportFilterPost.md
         schema: !include joc/schemas/publish/exportFilter-schema.json
         example: !include joc/examples/publish/publishExport-example.json
 

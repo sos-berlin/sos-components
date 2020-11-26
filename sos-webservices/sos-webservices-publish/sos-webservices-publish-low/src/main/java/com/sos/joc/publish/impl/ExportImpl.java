@@ -1,7 +1,6 @@
 package com.sos.joc.publish.impl;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -45,27 +44,9 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
     private ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
     
     @Override
-    public JOCDefaultResponse getExportConfiguration(String xAccessToken, String accessToken, String filename, String configurations,
-            String deployments) throws Exception {
-        ExportFilter filter = new ExportFilter();
-        List<Long> configs = new ArrayList<Long>();
-        if (configurations != null) {
-            String[] configsAsString = configurations.split(",");
-            for (int i=0; i < configsAsString.length; i++) {
-                configs.add(Long.valueOf(configsAsString[i]));
-            }
-            filter.setConfigurations(configs);
-        }
-        List<Long> deploys = new ArrayList<Long>();
-        if (deployments != null) {
-            String[] deploysAsString = deployments.split(",");
-            for (int i=0; i < deploysAsString.length; i++) {
-                deploys.add(Long.valueOf(deploysAsString[i]));
-            }
-            filter.setDeployments(deploys);
-        }
-        byte[] filterBytes = Globals.objectMapper.writeValueAsBytes(filter);
-        return postExportConfiguration(getAccessToken(xAccessToken, accessToken), filename, filterBytes);
+    public JOCDefaultResponse getExportConfiguration(String xAccessToken, String accessToken, String filename, String exportFilter)
+            throws Exception {
+        return postExportConfiguration(getAccessToken(xAccessToken, accessToken), filename, exportFilter.getBytes());
     }
         
 	@Override
@@ -114,14 +95,14 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
         DBLayerDeploy dbLayer = new DBLayerDeploy(connection);
         Set<JSObject> allObjects = new HashSet<JSObject>();
         
-        if (filter.getDeployments() != null) {
+        if (filter.getDeployConfigurations() != null) {
             List<DBItemDeploymentHistory> deploymentDbItems = dbLayer.getFilteredDeployments(filter);
             for (DBItemDeploymentHistory deployment : deploymentDbItems) {
                 dbLayer.storeCommitIdForLaterUsage(deployment, versionId);
                 allObjects.add(mapDepHistoryToJSObject(deployment, versionId));
             } 
         }
-        if (filter.getConfigurations() != null) {
+        if (filter.getDraftConfigurations() != null) {
             List<DBItemInventoryConfiguration> configurationDbItems = dbLayer.getFilteredConfigurations(filter);
             for (DBItemInventoryConfiguration configuration : configurationDbItems) {
                 dbLayer.storeCommitIdForLaterUsage(configuration, versionId);
@@ -181,7 +162,6 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                 // TODO: 
                 break;
         }
-//        jsObject.setSignedContent(item.getSignedContent());
 //        jsObject.setVersion(item.getVersion());
         jsObject.setAccount(Globals.defaultProfileAccount);
         return jsObject;

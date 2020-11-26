@@ -286,12 +286,18 @@ public class DBLayerDeploy {
 
     public List<DBItemInventoryConfiguration> getFilteredConfigurations(ExportFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        return getFilteredConfigurations(filter.getConfigurations());
+        return getFilteredInventoryConfiguration(
+                filter.getDraftConfigurations().stream()
+                .map(item -> item.getDraftConfiguration())
+                .collect(Collectors.toList()));
     }
 
     public List<DBItemDeploymentHistory> getFilteredDeployments(ExportFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        return getFilteredDeployments(filter.getDeployments());
+        return getFilteredDeploymentHistory(
+                filter.getDeployConfigurations().stream()
+                .map(item -> item.getDeployConfiguration())
+                .collect(Collectors.toList()));
     }
 
     public List<DBItemInventoryConfiguration> getFilteredConfigurations(List<Long> ids) throws DBConnectionRefusedException,

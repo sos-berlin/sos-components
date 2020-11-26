@@ -12,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * DeployStore
+ * Deployable Objects
  * <p>
  * 
  * 
@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "draftConfigurations",
     "deployConfigurations"
 })
-public class DeployStore {
+public class DeployableObjects {
 
     @JsonProperty("draftConfigurations")
     private List<DraftConfig> draftConfigurations = new ArrayList<DraftConfig>();
@@ -64,10 +64,10 @@ public class DeployStore {
         if (other == this) {
             return true;
         }
-        if ((other instanceof DeployStore) == false) {
+        if ((other instanceof DeployableObjects) == false) {
             return false;
         }
-        DeployStore rhs = ((DeployStore) other);
+        DeployableObjects rhs = ((DeployableObjects) other);
         return new EqualsBuilder().append(draftConfigurations, rhs.draftConfigurations).append(deployConfigurations, rhs.deployConfigurations).isEquals();
     }
 

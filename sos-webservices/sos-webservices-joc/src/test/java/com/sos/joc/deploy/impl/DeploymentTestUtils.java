@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import org.bouncycastle.bcpg.sig.Exportable;
+
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.instruction.ForkJoin;
 import com.sos.jobscheduler.model.instruction.IfElse;
@@ -28,11 +30,12 @@ import com.sos.joc.model.publish.DeployConfig;
 import com.sos.joc.model.publish.DeployConfiguration;
 import com.sos.joc.model.publish.DeployDelete;
 import com.sos.joc.model.publish.DeployFilter;
-import com.sos.joc.model.publish.DeployStore;
+import com.sos.joc.model.publish.DeployableObjects;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.DraftConfig;
 import com.sos.joc.model.publish.DraftConfiguration;
 import com.sos.joc.model.publish.ExcludeConfiguration;
+import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.RedeployFilter;
@@ -412,8 +415,8 @@ public class DeploymentTestUtils {
     public static DeployFilter createExampleDeployFilter () {
         DeployFilter filter = new DeployFilter();
         
-        DeployStore store = new DeployStore();
-        filter.setStore(store);
+        DeployableObjects toStore = new DeployableObjects();
+        filter.setStore(toStore);
 
         DeployDelete delete = new DeployDelete();
         filter.setDelete(delete);
@@ -438,8 +441,8 @@ public class DeploymentTestUtils {
         workflow16draft.setObjectType(ConfigurationType.WORKFLOW);
         workflow16DraftConfig.setDraftConfiguration(workflow16draft);
         
-        store.getDraftConfigurations().add(workflow10DraftConfig);
-        store.getDraftConfigurations().add(workflow16DraftConfig);
+        toStore.getDraftConfigurations().add(workflow10DraftConfig);
+        toStore.getDraftConfigurations().add(workflow16DraftConfig);
         
         DeployConfig workflow12deployConfig = new DeployConfig();
         DeployConfiguration workflow12deployed = new DeployConfiguration();
@@ -447,7 +450,7 @@ public class DeploymentTestUtils {
         workflow12deployed.setObjectType(ConfigurationType.WORKFLOW);
         workflow12deployed.setCommitId("4273b6c6-c354-4fcd-afdb-2758088abe4a");
         workflow12deployConfig.setDeployConfiguration(workflow12deployed);
-        store.getDeployConfigurations().add(workflow12deployConfig);
+        toStore.getDeployConfigurations().add(workflow12deployConfig);
         
         DeployConfig toDeleteConfig = new DeployConfig();
         DeployConfiguration toDelete = new DeployConfiguration();
@@ -459,4 +462,40 @@ public class DeploymentTestUtils {
         
         return filter;
     }
+
+    public static ExportFilter createExampleExportFilter () {
+        ExportFilter filter = new ExportFilter();
+        
+//        ControllerId js7Cluster = new ControllerId();
+//        js7Cluster.setControllerId("js7-cluster");
+//        ControllerId standalone = new ControllerId();
+//        standalone.setControllerId("standalone");
+//        filter.getControllerIds().add(js7Cluster);
+//        filter.getControllerIds().add(standalone);
+        
+        DraftConfig workflow10DraftConfig = new DraftConfig();
+        DraftConfiguration workflow10draft = new DraftConfiguration();
+        workflow10draft.setPath("/myWorkflows/ifElseWorkflow/workflow_10");
+        workflow10draft.setObjectType(ConfigurationType.WORKFLOW);
+        workflow10DraftConfig.setDraftConfiguration(workflow10draft);
+        filter.getDraftConfigurations().add(workflow10DraftConfig);
+
+        DraftConfig workflow16DraftConfig = new DraftConfig();
+        DraftConfiguration workflow16draft = new DraftConfiguration();
+        workflow16draft.setPath("/myWorkflows/ifElseWorkflow/workflow_16");
+        workflow16draft.setObjectType(ConfigurationType.WORKFLOW);
+        workflow16DraftConfig.setDraftConfiguration(workflow16draft);
+        filter.getDraftConfigurations().add(workflow16DraftConfig);
+        
+        DeployConfig workflow12deployConfig = new DeployConfig();
+        DeployConfiguration workflow12deployed = new DeployConfiguration();
+        workflow12deployed.setPath("/myWorkflows/ifElseWorkflow/workflow_12");
+        workflow12deployed.setObjectType(ConfigurationType.WORKFLOW);
+        workflow12deployed.setCommitId("4273b6c6-c354-4fcd-afdb-2758088abe4a");
+        workflow12deployConfig.setDeployConfiguration(workflow12deployed);
+        filter.getDeployConfigurations().add(workflow12deployConfig);
+                
+        return filter;
+    }
+
 }

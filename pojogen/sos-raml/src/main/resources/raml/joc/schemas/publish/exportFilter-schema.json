@@ -3,17 +3,27 @@
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.joc.model.publish.ExportFilter",
 	"type": "object",
-	"properties": {
-    "configurations": {
-      "type": "array",
-      "items": {
-          "$ref": "../common/nonNegativeLong-schema.json"
+  "anyOf": [{
+    "required": [
+        "draftConfigurations"
+      ]
+    }, {
+      "required": [
+        "deployConfigurations"
+      ]
+    }
+  ],
+ 	"properties": {
+    "draftConfigurations": {
+      "type" : "array",
+      "items" : {
+        "$ref": "draftConfig-schema.json"
       }
     },
-    "deployments": {
-      "type": "array",
-      "items": {
-          "$ref": "../common/nonNegativeLong-schema.json"
+    "deployConfigurations": {
+      "type" : "array",
+      "items" : {
+        "$ref": "deployConfig-schema.json"
       }
     },
     "auditLog": {

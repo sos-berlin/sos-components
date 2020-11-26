@@ -23,5 +23,5 @@ public interface IExportResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public JOCDefaultResponse getExportConfiguration(@HeaderParam("X-Access-Token") String xAccessToken,
             @QueryParam("accessToken") String accessToken, @QueryParam("filename") String filename, 
-            @QueryParam("configurations") String configurations, @QueryParam("deployments") String deployments) throws Exception;
+            @QueryParam("exportFilter") String exportFilter) throws Exception;
 }
