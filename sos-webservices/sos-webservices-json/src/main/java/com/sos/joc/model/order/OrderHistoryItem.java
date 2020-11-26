@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.common.HistoryOrderState;
 import com.sos.joc.model.common.HistoryState;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -31,6 +32,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "endTime",
     "position",
     "state",
+    "orderState",
     "historyId",
     "children"
 })
@@ -102,7 +104,7 @@ public class OrderHistoryItem {
     @JsonProperty("position")
     private String position;
     /**
-     * orderHistory state
+     * orderHistory status
      * <p>
      * 
      * (Required)
@@ -110,6 +112,14 @@ public class OrderHistoryItem {
      */
     @JsonProperty("state")
     private HistoryState state;
+    /**
+     * orderHistory state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("orderState")
+    private HistoryOrderState orderState;
     /**
      * non negative long
      * <p>
@@ -291,7 +301,7 @@ public class OrderHistoryItem {
     }
 
     /**
-     * orderHistory state
+     * orderHistory status
      * <p>
      * 
      * (Required)
@@ -303,7 +313,7 @@ public class OrderHistoryItem {
     }
 
     /**
-     * orderHistory state
+     * orderHistory status
      * <p>
      * 
      * (Required)
@@ -312,6 +322,28 @@ public class OrderHistoryItem {
     @JsonProperty("state")
     public void setState(HistoryState state) {
         this.state = state;
+    }
+
+    /**
+     * orderHistory state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("orderState")
+    public HistoryOrderState getOrderState() {
+        return orderState;
+    }
+
+    /**
+     * orderHistory state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("orderState")
+    public void setOrderState(HistoryOrderState orderState) {
+        this.orderState = orderState;
     }
 
     /**
@@ -350,12 +382,12 @@ public class OrderHistoryItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("controllerId", controllerId).append("orderId", orderId).append("workflow", workflow).append("startTime", startTime).append("plannedTime", plannedTime).append("endTime", endTime).append("position", position).append("state", state).append("historyId", historyId).append("children", children).toString();
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("controllerId", controllerId).append("orderId", orderId).append("workflow", workflow).append("startTime", startTime).append("plannedTime", plannedTime).append("endTime", endTime).append("position", position).append("state", state).append("orderState", orderState).append("historyId", historyId).append("children", children).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(surveyDate).append(controllerId).append(workflow).append(orderId).append(children).append(historyId).append(plannedTime).append(startTime).append(endTime).append(position).append(state).toHashCode();
+        return new HashCodeBuilder().append(surveyDate).append(controllerId).append(workflow).append(orderId).append(orderState).append(children).append(historyId).append(plannedTime).append(startTime).append(endTime).append(position).append(state).toHashCode();
     }
 
     @Override
@@ -367,7 +399,7 @@ public class OrderHistoryItem {
             return false;
         }
         OrderHistoryItem rhs = ((OrderHistoryItem) other);
-        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(children, rhs.children).append(historyId, rhs.historyId).append(plannedTime, rhs.plannedTime).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(position, rhs.position).append(state, rhs.state).isEquals();
+        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(orderState, rhs.orderState).append(children, rhs.children).append(historyId, rhs.historyId).append(plannedTime, rhs.plannedTime).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(position, rhs.position).append(state, rhs.state).isEquals();
     }
 
 }

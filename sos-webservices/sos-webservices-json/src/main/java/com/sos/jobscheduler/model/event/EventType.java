@@ -21,6 +21,7 @@ public enum EventType {
     OrderStderrWritten("OrderStderrWritten"),
     OrderProcessed("OrderProcessed"),
     OrderResumed("OrderResumed"),
+    OrderResumeMarked("OrderResumeMarked"),
     OrderForked("OrderForked"),
     OrderJoined("OrderJoined"),
     OrderOffered("OrderOffered"),
@@ -34,6 +35,7 @@ public enum EventType {
     OrderAwoke("OrderAwoke"),
     OrderFailedinFork("OrderFailedinFork"),
     OrderSuspended("OrderSuspended"),
+    OrderSuspendMarked("OrderSuspendMarked"),
     OrderBroken("OrderBroken"),
     OrderCancelled("OrderCancelled"),
     OrderFinished("OrderFinished");

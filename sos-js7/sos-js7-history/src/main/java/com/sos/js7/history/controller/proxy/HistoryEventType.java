@@ -14,9 +14,11 @@ import js7.data.order.OrderEvent.OrderJoined;
 import js7.data.order.OrderEvent.OrderProcessed;
 import js7.data.order.OrderEvent.OrderProcessingStarted$;
 import js7.data.order.OrderEvent.OrderResumed;
+import js7.data.order.OrderEvent.OrderResumeMarked;
 import js7.data.order.OrderEvent.OrderStderrWritten;
 import js7.data.order.OrderEvent.OrderStdoutWritten;
 import js7.data.order.OrderEvent.OrderSuspended$;
+import js7.data.order.OrderEvent.OrderSuspendMarked;
 
 public enum HistoryEventType {
     EventWithProblem("EventWithProblem"),// special case for events with problems
@@ -37,7 +39,11 @@ public enum HistoryEventType {
 
     OrderSuspended(OrderSuspended$.class.getSimpleName()),
 
+    OrderSuspendMarked(OrderSuspendMarked.class.getSimpleName()),
+
     OrderResumed(OrderResumed.class.getSimpleName()),
+
+    OrderResumeMarked(OrderResumeMarked.class.getSimpleName()),
 
     OrderFinished(OrderFinished$.class.getSimpleName()),
 

@@ -41,6 +41,9 @@
     "state": {
       "$ref": "../common/historyState-schema.json"
     },
+    "orderState": {
+      "$ref": "../common/historyOrderState-schema.json"
+    },
     "historyId": {
       "$ref": "../common/nonNegativeLong-schema.json"
     },

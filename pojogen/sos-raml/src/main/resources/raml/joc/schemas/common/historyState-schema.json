@@ -1,5 +1,5 @@
 {
-  "title": "orderHistory state",
+  "title": "orderHistory status",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "javaType": "com.sos.joc.model.common.HistoryState",
   "type": "object",

@@ -17,6 +17,7 @@
 		"OrderStderrWritten",
 		"OrderProcessed",
 		"OrderResumed",
+		"OrderResumeMarked",
 		"OrderForked",
 		"OrderJoined",
 		"OrderOffered",
@@ -30,6 +31,7 @@
 		"OrderAwoke",
 		"OrderFailedinFork",
 		"OrderSuspended",
+		"OrderSuspendMarked",
 		"OrderBroken",
 		"OrderCancelled",
 		"OrderFinished"
@@ -48,6 +50,7 @@
 		"OrderStderrWritten",
 		"OrderProcessed",
 		"OrderResumed",
+		"OrderResumeMarked",
 		"OrderForked",
 		"OrderJoined",
 		"OrderOffered",
@@ -61,6 +64,7 @@
 		"OrderAwoke",
 		"OrderFailedinFork",
 		"OrderSuspended",
+		"OrderSuspendMarked",
 		"OrderBroken",
 		"OrderCancelled",
 		"OrderFinished"

@@ -18,6 +18,8 @@ public enum OrderStateText {
     CANCELLED(7),
     FINISHED(8),
     RESUMED(9),
+    SUSPENDMARKED(10),
+    RESUMEMARKED(11),
     UNKNOWN(99);
     private final Integer intValue;
     private final static Map<String, OrderStateText> CONSTANTS = new HashMap<String, OrderStateText>();

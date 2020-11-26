@@ -51,6 +51,7 @@ public class LogOrderContent {
     private static byte[] newlineBytes = { '\r', '\n' };
     private static String newlineString = "\r\n";
     private Long historyId;
+    private Long mainParentHistoryId;
     private Long eventId = null;
     private String orderId;
     private Long unCompressedLength = null;
@@ -101,7 +102,7 @@ public class LogOrderContent {
         orderLog.setComplete(false);
         orderLog.setEventId(Instant.now().toEpochMilli() * 1000);
         try {
-            Path orderLogLines = Paths.get("logs", "history", historyId.toString(), historyId + ".log");
+            Path orderLogLines = Paths.get("logs", "history", mainParentHistoryId.toString(), historyId + ".log");
             if (Files.exists(orderLogLines)) {
                 orderLog.setLogEvents(Arrays.asList(Globals.objectMapper.readValue(SOSPath.readFile(orderLogLines, Collectors.joining(",", "[", "]")),
                         OrderLogItem[].class)));
@@ -144,20 +145,22 @@ public class LogOrderContent {
         return orderLog;
     }
 
-    private DBItemHistoryOrder getDBItemOrder() throws JocConfigurationException, DBOpenSessionException, SOSHibernateException, DBMissingDataException {
+    private DBItemHistoryOrder getDBItemOrder() throws JocConfigurationException, DBOpenSessionException, SOSHibernateException,
+            DBMissingDataException {
         SOSHibernateSession connection = null;
         try {
             connection = Globals.createSosHibernateStatelessConnection("./order/log");
             DBItemHistoryOrder historyOrderItem = connection.get(DBItemHistoryOrder.class, historyId);
             if (historyOrderItem == null) {
                 throw new DBMissingDataException(String.format("Order (Id:%d) not found", historyId));
-            } else if (historyOrderItem.getMainParentId() != historyId) {
-                historyId = historyOrderItem.getMainParentId();
-                historyOrderItem = connection.get(DBItemHistoryOrder.class, historyId);
-                if (historyOrderItem == null) {
-                    throw new DBMissingDataException(String.format("MainOrder (Id:%d) not found", historyId));
-                }
-            }
+            }// else if (historyOrderItem.getMainParentId() != historyId) {
+             // historyId = historyOrderItem.getMainParentId();
+             // historyOrderItem = connection.get(DBItemHistoryOrder.class, historyId);
+             // if (historyOrderItem == null) {
+             // throw new DBMissingDataException(String.format("MainOrder (Id:%d) not found", historyId));
+             // }
+             // }
+            mainParentHistoryId = historyOrderItem.getMainParentId();
             orderId = historyOrderItem.getOrderKey();
             return historyOrderItem;
         } finally {
@@ -173,13 +176,14 @@ public class LogOrderContent {
             DBItemHistoryOrder historyOrderItem = connection.get(DBItemHistoryOrder.class, historyId);
             if (historyOrderItem == null) {
                 throw new DBMissingDataException(String.format("Order (Id:%d) not found", historyId));
-            } else if (historyOrderItem.getMainParentId() != historyId) {
-                historyId = historyOrderItem.getMainParentId();
-                historyOrderItem = connection.get(DBItemHistoryOrder.class, historyId);
-                if (historyOrderItem == null) {
-                    throw new DBMissingDataException(String.format("MainOrder (Id:%d) not found", historyId));
-                }
-            }
+            }// else if (historyOrderItem.getMainParentId() != historyId) {
+             // historyId = historyOrderItem.getMainParentId();
+             // historyOrderItem = connection.get(DBItemHistoryOrder.class, historyId);
+             // if (historyOrderItem == null) {
+             // throw new DBMissingDataException(String.format("MainOrder (Id:%d) not found", historyId));
+             // }
+             // }
+            mainParentHistoryId = historyOrderItem.getMainParentId();
             orderId = historyOrderItem.getOrderKey();
             if (historyOrderItem.getLogId() == 0L) {
                 if (historyOrderItem.getEndTime() == null) {
@@ -227,7 +231,7 @@ public class LogOrderContent {
         // TODO later part of Robert's history
         if (orderLog != null && orderLog.getLogEvents() != null) {
             orderLog.setLogEvents(orderLog.getLogEvents().stream().map(item -> getMappedLogItem(item)).collect(Collectors.toList()));
-            
+
             // set complete true if Order only added -> no running log expected
             if (orderLog.getLogEvents().size() == 1 && LogEvent.OrderAdded.equals(orderLog.getLogEvents().get(0).getLogEvent())) {
                 orderLog.setComplete(true);

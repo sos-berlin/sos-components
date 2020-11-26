@@ -14,6 +14,9 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.util.SOSDate;
@@ -27,11 +30,13 @@ import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.common.HistoryOrderState;
 import com.sos.joc.model.common.HistoryState;
 import com.sos.joc.model.common.HistoryStateText;
 import com.sos.joc.model.order.OrderHistory;
 import com.sos.joc.model.order.OrderHistoryItem;
 import com.sos.joc.model.order.OrderPath;
+import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrdersFilter;
 import com.sos.joc.orders.resource.IOrdersResourceHistory;
 import com.sos.schema.JsonValidator;
@@ -40,6 +45,8 @@ import com.sos.schema.JsonValidator;
 public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrdersResourceHistory {
 
     private static final String API_CALL = "./orders/history";
+    // TMP to remove
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrdersResourceHistoryImpl.class);
 
     @Override
     public JOCDefaultResponse postOrdersHistory(String accessToken, byte[] filterBytes) {
@@ -164,7 +171,6 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
             OrderHistory entity = new OrderHistory();
             entity.setDeliveryDate(new Date());
             entity.setHistory(listHistory);
-
             return JOCDefaultResponse.responseStatus200(entity);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -186,6 +192,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
         history.setPlannedTime(dbItemOrder.getStartTimePlanned());
         history.setStartTime(dbItemOrder.getStartTime());
         history.setState(setState(dbItemOrder));
+        history.setOrderState(getOrderState(dbItemOrder));
         history.setSurveyDate(dbItemOrder.getModified());
         history.setWorkflow(dbItemOrder.getWorkflowPath());
         return history;
@@ -203,6 +210,41 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
             state.setSeverity(2);
             state.set_text(HistoryStateText.FAILED);
         }
+        return state;
+    }
+
+    private HistoryOrderState getOrderState(DBItemHistoryOrder item) {
+        HistoryOrderState state = new HistoryOrderState();
+
+        try {
+            state.set_text(item.getStateAsEnum());
+            switch (state.get_text()) {
+            case FINISHED:
+                state.setSeverity(0);
+                break;
+            case PLANNED:
+            case PENDING:
+            case RUNNING:
+            case WAITING:
+            case RESUMED:
+            case SUSPENDMARKED:
+            case RESUMEMARKED:
+                state.setSeverity(1);
+                break;
+            case SUSPENDED:
+            case FAILED:
+            case BLOCKED:
+            case CANCELLED:
+            case UNKNOWN:
+                state.setSeverity(2);
+                break;
+            }
+        } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
+            state.setSeverity(2);
+            state.set_text(OrderStateText.UNKNOWN);
+        }
+
         return state;
     }
 

@@ -50,6 +50,7 @@ import com.sos.js7.history.controller.proxy.fatevent.FatEventControllerReady;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderAdded;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderForked;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderJoined;
+import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderResumeMarked;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderResumed;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStepProcessed;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStepStarted;
@@ -220,6 +221,9 @@ public class HistoryModel {
                 case OrderResumed:
                     orderResumed(dbLayer, (FatEventOrderResumed) entry);
                     break;
+                case OrderResumeMarked:
+                    orderResumeMarked(dbLayer, (FatEventOrderResumeMarked) entry);
+                    break;
                 case OrderForked:
                     orderForked(dbLayer, (FatEventOrderForked) entry);
                     break;
@@ -243,6 +247,9 @@ public class HistoryModel {
                     break;
                 case OrderSuspended:
                     orderNotCompleted(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderSuspended, endedOrderSteps);
+                    break;
+                case OrderSuspendMarked:
+                    orderNotCompleted(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderSuspendMarked, endedOrderSteps);
                     break;
                 case OrderCancelled:
                     orderProcessed(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderCancelled, endedOrderSteps);
@@ -578,6 +585,7 @@ public class HistoryModel {
                 // }
                 break;
             case OrderSuspended:
+            case OrderSuspendMarked:
                 co.setHasStates(true);
                 // if (SOSDate.equals(co.getStartTime(), Globals.HISTORY_DEFAULT_DATE)) {
                 // startTime = eventDate;
@@ -597,13 +605,18 @@ public class HistoryModel {
             }
 
             le.onOrder(co, co.getWorkflowPosition());
-            Path logFile = storeLog2File(le);
-            if (completeOrder && co.getParentId().longValue() == 0L) {
-                DBItemHistoryLog logItem = storeLogFile2Db(dbLayer, co.getMainParentId(), co.getId(), new Long(0L), false, logFile);
+            Path log = storeLog2File(le);
+            // if (completeOrder && co.getParentId().longValue() == 0L) {
+            if (completeOrder) {
+                DBItemHistoryLog logItem = storeLogFile2Db(dbLayer, co.getMainParentId(), co.getId(), new Long(0L), false, log);
                 if (logItem != null) {
                     dbLayer.setOrderLogId(co.getId(), logItem.getId());
                     if (cleanupLogFiles) {
-                        SOSPath.deleteDirectory(logFile.getParent());
+                        if (co.getParentId().longValue() == 0L) {
+                            SOSPath.deleteDirectory(log.getParent());
+                        } else {
+                            Files.delete(log);
+                        }
                     }
                 }
             }
@@ -689,9 +702,17 @@ public class HistoryModel {
             le.setState(OrderStateText.SUSPENDED.intValue());
             le.setLogLevel(LogLevel.MAIN);
             break;
+        case OrderSuspendMarked:
+            le.setState(OrderStateText.SUSPENDMARKED.intValue());
+            le.setLogLevel(LogLevel.INFO);
+            break;
         case OrderResumed:
             le.setState(OrderStateText.RESUMED.intValue());
             le.setLogLevel(LogLevel.MAIN);
+            break;
+        case OrderResumeMarked:
+            le.setState(OrderStateText.RESUMEMARKED.intValue());
+            le.setLogLevel(LogLevel.INFO);
             break;
         case OrderFinished:
             if (le.isError()) {// TODO ??? error on order_finished ???
@@ -728,6 +749,22 @@ public class HistoryModel {
         saveOrderState(dbLayer, co, co.getState(), entry.getEventDatetime(), entry.getEventId(), null, null);
 
         LogEntry le = new LogEntry(LogEntry.LogLevel.MAIN, EventType.OrderResumed, entry.getEventDatetime(), null);
+        le.onOrder(co, null);
+        storeLog2File(le);
+    }
+
+    private void orderResumeMarked(DBLayerHistory dbLayer, FatEventOrderResumeMarked entry) throws Exception {
+        checkControllerTimezone(dbLayer);
+
+        CachedOrder co = getCachedOrder(dbLayer, entry.getOrderId());
+        co.setState(OrderStateText.RESUMEMARKED.intValue());
+        co.setHasStates(true);
+        // addCachedOrder(co.getOrderKey(), co);
+
+        dbLayer.updateOrderOnResumed(co.getId(), co.getState(), entry.getEventDatetime());
+        saveOrderState(dbLayer, co, co.getState(), entry.getEventDatetime(), entry.getEventId(), null, null);
+
+        LogEntry le = new LogEntry(LogEntry.LogLevel.MAIN, EventType.OrderResumeMarked, entry.getEventDatetime(), null);
         le.onOrder(co, null);
         storeLog2File(le);
     }
@@ -1293,12 +1330,13 @@ public class HistoryModel {
         return item;
     }
 
-    private Path getOrderLog(Path dir, LogEntry entry) {
-        return dir.resolve(entry.getMainOrderId() + ".log");
+    private Path getOrderLog(Path dir, Long orderId) {
+        // return dir.resolve(entry.getMainOrderId() + ".log");
+        return dir.resolve(orderId + ".log");
     }
 
     private Path getOrderStepLog(Path dir, LogEntry entry) {
-        return dir.resolve(entry.getMainOrderId() + "_" + entry.getOrderStepId() + ".log");
+        return dir.resolve(entry.getOrderId() + "_" + entry.getOrderStepId() + ".log");
     }
 
     private Path getOrderLogDirectory(LogEntry entry) {
@@ -1334,8 +1372,9 @@ public class HistoryModel {
 
     private Path storeLog2File(LogEntry entry, CachedOrderStep cos) throws Exception {
 
-        OrderLogEntry orderEntry;
+        OrderLogEntry orderEntry = null;
         StringBuilder content = new StringBuilder();
+        StringBuilder orderEntryContent = null;
         Path dir = getOrderLogDirectory(entry);
         Path file = null;
         boolean newLine;
@@ -1352,7 +1391,8 @@ public class HistoryModel {
             orderEntry.setAgentUrl(entry.getAgentUri());
             orderEntry.setJob(entry.getJobName());
             orderEntry.setTaskId(entry.getOrderStepId());
-            write2file(getOrderLog(dir, entry), new StringBuilder((new ObjectMapper()).writeValueAsString(orderEntry)), newLine);
+            orderEntryContent = new StringBuilder((new ObjectMapper()).writeValueAsString(orderEntry));
+            write2file(getOrderLog(dir, entry.getOrderId()), orderEntryContent, newLine);
 
             // task log
             file = getOrderStepLog(dir, entry);
@@ -1370,7 +1410,8 @@ public class HistoryModel {
             // orderEntry.setAgentUrl(entry.getAgentUri());
             orderEntry.setJob(entry.getJobName());
             orderEntry.setTaskId(entry.getOrderStepId());
-            write2file(getOrderLog(dir, entry), new StringBuilder((new ObjectMapper()).writeValueAsString(orderEntry)), newLine);
+            orderEntryContent = new StringBuilder((new ObjectMapper()).writeValueAsString(orderEntry));
+            write2file(getOrderLog(dir, entry.getOrderId()), orderEntryContent, newLine);
 
             // task log
             file = getOrderStepLog(dir, entry);
@@ -1414,7 +1455,7 @@ public class HistoryModel {
         default:
             // order log
             newLine = true;
-            file = getOrderLog(dir, entry);
+            file = getOrderLog(dir, entry.getOrderId());
 
             orderEntry = createOrderLogEntry(entry);
             orderEntry.setControllerDatetime(getDateAsString(entry.getControllerDatetime(), controllerTimezone));
@@ -1439,7 +1480,21 @@ public class HistoryModel {
             throw e;
         }
 
+        if (orderEntry != null && !entry.getOrderId().equals(entry.getMainOrderId())) {
+            write2MainOrderLog(entry, dir, (orderEntryContent == null ? content : orderEntryContent), newLine);
+        }
+
         return file;
+    }
+
+    private void write2MainOrderLog(LogEntry entry, Path dir, StringBuilder content, boolean newLine) throws Exception {
+        Path file = getOrderLog(dir, entry.getMainOrderId());
+        try {
+            write2file(file, content, newLine);
+        } catch (Exception e) {
+            LOGGER.error(String.format("[%s][%s][%s][%s]%s", identifier, entry.getEventType().value(), entry.getOrderKey(), file, e.toString()), e);
+            throw e;
+        }
     }
 
     private void write2file(Path file, StringBuilder content, boolean newLine) throws Exception {
