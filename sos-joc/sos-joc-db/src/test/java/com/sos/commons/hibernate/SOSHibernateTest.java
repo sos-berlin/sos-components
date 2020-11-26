@@ -26,16 +26,24 @@ public class SOSHibernateTest {
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
         LOGGER.info("---------- [@BeforeClass] ----------");
-        factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate.cfg.xml"));
-        factory.addClassMapping(DBLayer.getHistoryClassMapping());
-        factory.build();
+        try {
+            factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate.cfg.xml"));
+            factory.addClassMapping(DBLayer.getHistoryClassMapping());
+            factory.build();
+        } catch (Exception e) {
+            LOGGER.error(e.toString(), e);
+        }
         LOGGER.info("---------- [@BeforeClass] ----------");
     }
 
     @AfterClass
     public static void tearDownAfterClass() throws Exception {
         LOGGER.info("---------- [@AfterClass] ----------");
-        factory.close();
+        try {
+            factory.close();
+        } catch (Exception e) {
+            LOGGER.error(e.toString(), e);
+        }
         LOGGER.info("---------- [@AfterClass] ----------");
     }
 
