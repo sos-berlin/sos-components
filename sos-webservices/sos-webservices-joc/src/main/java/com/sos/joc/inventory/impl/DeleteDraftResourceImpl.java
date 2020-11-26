@@ -65,8 +65,8 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
 
             session.beginTransaction();
             if (JocInventory.isDeployable(type)) {
-                InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(config.getId());
-                if (lastDeployment == null || OperationType.DELETE.value() == lastDeployment.getOperation() || lastDeployment.getContent() == null) {
+                InventoryDeploymentItem lastDeployment = dbLayer.getLastDeployedContent(config.getId());
+                if (lastDeployment == null) {
                     // never deployed before or deleted or without content
                     JocInventory.deleteConfiguration(dbLayer, config);
                 } else {

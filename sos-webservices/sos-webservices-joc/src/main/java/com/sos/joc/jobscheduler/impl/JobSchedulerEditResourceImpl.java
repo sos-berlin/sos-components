@@ -388,8 +388,10 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
                     agentDBLayer.deleteInstance(dbAgent);
                     Set<DBItemInventoryAgentName> dbAliase = allAliases.get(dbAgent.getAgentId());
-                    for (DBItemInventoryAgentName item : dbAliase) {
-                        connection.delete(item);
+                    if (dbAliase != null) {
+                        for (DBItemInventoryAgentName item : dbAliase) {
+                            connection.delete(item);
+                        }
                     }
                 }
             }

@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -34,6 +35,7 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DeploymentState;
+import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.tree.Tree;
 
 public class InventoryDBLayer extends DBLayer {
@@ -47,17 +49,50 @@ public class InventoryDBLayer extends DBLayer {
     public InventoryDeploymentItem getLastDeploymentHistory(Long configId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeploymentItem.class.getName());
         hql.append("(");
-        hql.append("id as deploymentId,commitId,version,operation,deploymentDate,content,path,controllerId");
+        hql.append("id as deploymentId,commitId,version,operation,deploymentDate,path,controllerId");
         hql.append(") ");
         hql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY);
         hql.append(" where id=");
         hql.append("(");
         hql.append("  select max(dhsub.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dhsub ");
         hql.append("  where dhsub.inventoryConfigurationId=:configId");
+        hql.append("  and state = :state");
         hql.append(") ");
         Query<InventoryDeploymentItem> query = getSession().createQuery(hql.toString());
         query.setParameter("configId", configId);
+        query.setParameter("state", DeploymentState.DEPLOYED.value());
         return getSession().getSingleResult(query);
+    }
+    
+    public InventoryDeploymentItem getLastDeployedContent(Long configId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select controllerId, max(id) ").append(DBLayer.DBITEM_DEP_HISTORY);
+        hql.append(" where inventoryConfigurationId = :configId");
+        hql.append(" and state = :state ");
+        Query<Object[]> query = getSession().createQuery(hql.toString());
+        query.setParameter("configId", configId);
+        query.setParameter("state", DeploymentState.DEPLOYED.value());
+        List<Object[]> result = getSession().getResultList(query);
+        
+        if (result != null && !result.isEmpty()) {
+            hql = new StringBuilder("select new ").append(InventoryDeploymentItem.class.getName());
+            hql.append("(");
+            hql.append("id as deploymentId,commitId,version,operation,deploymentDate,content,path,controllerId");
+            hql.append(") ");
+            hql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append(" where id in (:ids)");
+            Query<InventoryDeploymentItem> query2 = getSession().createQuery(hql.toString());
+            query2.setParameterList("ids", result.stream().map(item -> (Long) item[1]).collect(Collectors.toSet()));
+            List<InventoryDeploymentItem> result2 = getSession().getResultList(query2);
+            
+            if (result2 != null && !result2.isEmpty()) {
+                Optional<InventoryDeploymentItem> lastItem = result2.stream().filter(item -> OperationType.UPDATE.value().equals(item.getOperation())
+                        && item.getContent() != null).max(Comparator.comparingLong(InventoryDeploymentItem::getId));
+                if (lastItem.isPresent()) {
+                    return lastItem.get();
+                }
+            }
+        }
+        return null;
     }
 
     public List<InventoryDeploymentItem> getDeploymentHistory(Long configId) throws SOSHibernateException {

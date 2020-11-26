@@ -20,6 +20,7 @@ public class InventoryDeploymentItem {
         this.version = deploymentVersion;
         this.operation = deploymentOperation;
         this.deploymentDate = deploymentDate;
+        this.content = null;
         this.path = path;
         this.controllerId = controllerId;
     }
