@@ -21,6 +21,7 @@ import com.sos.jobscheduler.model.workflow.Branch;
 import com.sos.jobscheduler.model.workflow.Jobs;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.classes.JobSchedulerDate;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.ControllerId;
 import com.sos.joc.model.publish.DepHistory;
 import com.sos.joc.model.publish.DeployConfig;
@@ -319,7 +320,7 @@ public class DeploymentTestUtils {
         filter.setFolder("/myWorkflows/myIfElseWorkflow");
         ExcludeConfiguration exclude = new ExcludeConfiguration();
         exclude.setPath("/myWorkflows/myIfElseWorkflows/workflow_12");
-        exclude.setDeployType(DeployType.WORKFLOW);
+        exclude.setDeployType(ConfigurationType.WORKFLOW);
         filter.getExcludes().add(exclude);
         return filter;
     }
@@ -428,13 +429,13 @@ public class DeploymentTestUtils {
         DraftConfig workflow10DraftConfig = new DraftConfig();
         DraftConfiguration workflow10draft = new DraftConfiguration();
         workflow10draft.setPath("/myWorkflows/ifElseWorkflow/workflow_10");
-        workflow10draft.setObjectType(DeployType.WORKFLOW);
+        workflow10draft.setObjectType(ConfigurationType.WORKFLOW);
         workflow10DraftConfig.setDraftConfiguration(workflow10draft);
 
         DraftConfig workflow16DraftConfig = new DraftConfig();
         DraftConfiguration workflow16draft = new DraftConfiguration();
         workflow16draft.setPath("/myWorkflows/ifElseWorkflow/workflow_16");
-        workflow16draft.setObjectType(DeployType.WORKFLOW);
+        workflow16draft.setObjectType(ConfigurationType.WORKFLOW);
         workflow16DraftConfig.setDraftConfiguration(workflow16draft);
         
         store.getDraftConfigurations().add(workflow10DraftConfig);
@@ -443,7 +444,7 @@ public class DeploymentTestUtils {
         DeployConfig workflow12deployConfig = new DeployConfig();
         DeployConfiguration workflow12deployed = new DeployConfiguration();
         workflow12deployed.setPath("/myWorkflows/ifElseWorkflow/workflow_12");
-        workflow12deployed.setObjectType(DeployType.WORKFLOW);
+        workflow12deployed.setObjectType(ConfigurationType.WORKFLOW);
         workflow12deployed.setCommitId("4273b6c6-c354-4fcd-afdb-2758088abe4a");
         workflow12deployConfig.setDeployConfiguration(workflow12deployed);
         store.getDeployConfigurations().add(workflow12deployConfig);
@@ -451,7 +452,7 @@ public class DeploymentTestUtils {
         DeployConfig toDeleteConfig = new DeployConfig();
         DeployConfiguration toDelete = new DeployConfiguration();
         toDelete.setPath("/myWorkflows/forkJoinWorkflows/workflow_88");
-        toDelete.setObjectType(DeployType.WORKFLOW);
+        toDelete.setObjectType(ConfigurationType.WORKFLOW);
         toDelete.setCommitId("9b5a158f-df73-43e7-a9d4-e124079f35c3");
         toDeleteConfig.setDeployConfiguration(toDelete);
         delete.getDeployConfigurations().add(toDeleteConfig);
