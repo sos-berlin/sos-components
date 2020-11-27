@@ -38,6 +38,7 @@ import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DeployConfiguration;
+import com.sos.joc.model.publish.DeployConfigurationDelete;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.DraftConfiguration;
 import com.sos.joc.model.publish.ExcludeConfiguration;
@@ -242,6 +243,35 @@ public class DBLayerDeploy {
                 query.setParameter("path" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), deployConfigurations.get(i).getPath());
                 query.setParameter("type" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), deployConfigurations.get(i).getObjectType().intValue());
                 query.setParameter("commitId" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), deployConfigurations.get(i).getCommitId());
+            }
+            return query.getResultList();
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    public List<DBItemDeploymentHistory> getFilteredDeploymentHistoryToDelete(List<DeployConfigurationDelete> deployConfigurations)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append(" where ");
+            for (Integer i=0; i < deployConfigurations.size(); i++) {
+                hql.append("(")
+                    .append("path = : path").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7))
+                    .append(" and ")
+                    .append("type = :type").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7))
+                    .append(")");
+                if (i < deployConfigurations.size() -1) {
+                    hql.append(" or ");
+                }
+            }
+            hql.append(" group by path");
+            Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
+            for (Integer i=0; i < deployConfigurations.size(); i++) {
+                query.setParameter("path" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), deployConfigurations.get(i).getPath());
+                query.setParameter("type" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), deployConfigurations.get(i).getObjectType().intValue());
             }
             return query.getResultList();
         } catch (SOSHibernateInvalidSessionException ex) {

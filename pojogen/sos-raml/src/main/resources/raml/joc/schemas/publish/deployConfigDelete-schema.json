@@ -1,0 +1,14 @@
+{
+	"title": "DeployConfig for delete Operation",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.publish.DeployConfigDelete",
+	"type": "object",
+  "required": [
+    "deployConfiguration"
+  ],
+  "properties": {
+    "deployConfiguration": {
+      "$ref": "deployConfigurationDelete-schema.json"
+    }
+  }
+}

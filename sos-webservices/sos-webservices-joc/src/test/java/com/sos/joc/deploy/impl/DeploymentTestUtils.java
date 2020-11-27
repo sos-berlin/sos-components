@@ -27,7 +27,9 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.ControllerId;
 import com.sos.joc.model.publish.DepHistory;
 import com.sos.joc.model.publish.DeployConfig;
+import com.sos.joc.model.publish.DeployConfigDelete;
 import com.sos.joc.model.publish.DeployConfiguration;
+import com.sos.joc.model.publish.DeployConfigurationDelete;
 import com.sos.joc.model.publish.DeployDelete;
 import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.DeployableObjects;
@@ -452,11 +454,10 @@ public class DeploymentTestUtils {
         workflow12deployConfig.setDeployConfiguration(workflow12deployed);
         toStore.getDeployConfigurations().add(workflow12deployConfig);
         
-        DeployConfig toDeleteConfig = new DeployConfig();
-        DeployConfiguration toDelete = new DeployConfiguration();
+        DeployConfigDelete toDeleteConfig = new DeployConfigDelete();
+        DeployConfigurationDelete toDelete = new DeployConfigurationDelete();
         toDelete.setPath("/myWorkflows/forkJoinWorkflows/workflow_88");
         toDelete.setObjectType(ConfigurationType.WORKFLOW);
-        toDelete.setCommitId("9b5a158f-df73-43e7-a9d4-e124079f35c3");
         toDeleteConfig.setDeployConfiguration(toDelete);
         delete.getDeployConfigurations().add(toDeleteConfig);
         

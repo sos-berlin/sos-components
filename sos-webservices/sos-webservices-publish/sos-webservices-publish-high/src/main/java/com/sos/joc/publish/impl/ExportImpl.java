@@ -54,7 +54,7 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, exportFilter, xAccessToken);
-            JsonValidator.validateFailFast(exportFilter, ExportFilter.class);
+            JsonValidator.validate(exportFilter, ExportFilter.class);
             ExportFilter filter = Globals.objectMapper.readValue(exportFilter, ExportFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", 
             		getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isExport());

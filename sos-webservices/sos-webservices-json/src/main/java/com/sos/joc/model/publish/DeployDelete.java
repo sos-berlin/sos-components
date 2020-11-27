@@ -29,7 +29,7 @@ public class DeployDelete {
      * 
      */
     @JsonProperty("deployConfigurations")
-    private List<DeployConfig> deployConfigurations = new ArrayList<DeployConfig>();
+    private List<DeployConfigDelete> deployConfigurations = new ArrayList<DeployConfigDelete>();
 
     /**
      * 
@@ -37,7 +37,7 @@ public class DeployDelete {
      * 
      */
     @JsonProperty("deployConfigurations")
-    public List<DeployConfig> getDeployConfigurations() {
+    public List<DeployConfigDelete> getDeployConfigurations() {
         return deployConfigurations;
     }
 
@@ -47,7 +47,7 @@ public class DeployDelete {
      * 
      */
     @JsonProperty("deployConfigurations")
-    public void setDeployConfigurations(List<DeployConfig> deployConfigurations) {
+    public void setDeployConfigurations(List<DeployConfigDelete> deployConfigurations) {
         this.deployConfigurations = deployConfigurations;
     }
 

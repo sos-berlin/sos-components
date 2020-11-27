@@ -41,7 +41,9 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.publish.ControllerId;
 import com.sos.joc.model.publish.DeployConfig;
+import com.sos.joc.model.publish.DeployConfigDelete;
 import com.sos.joc.model.publish.DeployConfiguration;
+import com.sos.joc.model.publish.DeployConfigurationDelete;
 import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.DraftConfig;
 import com.sos.joc.model.publish.DraftConfiguration;
@@ -68,7 +70,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, filter, xAccessToken);
-            JsonValidator.validateFailFast(filter, DeployFilter.class);
+            JsonValidator.validate(filter, DeployFilter.class);
             DeployFilter deployFilter = Globals.objectMapper.readValue(filter, DeployFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", 
                     getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isDeploy());
@@ -91,7 +93,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
              * - delete all those existing deployments from all determined controllers
             **/
             List<DeployConfiguration> deployConfigsToStoreAgain = getDeployConfigurationsToStoreFromFilter(deployFilter);
-            List<DeployConfiguration> deployConfigsToDelete = getDeployConfigurationsToDeleteFromFilter(deployFilter);
+            List<DeployConfigurationDelete> deployConfigsToDelete = getDeployConfigurationsToDeleteFromFilter(deployFilter);
             
 //            Set<Long> deploymentIdsToDeleteFromConfigIds = getDeploymentIdsToDeleteByConfigurationIdsFromFilter(deployFilter, allControllers);
 //            Set<Long> configurationIdsToDelete = getDeplozConfigurationsToDeleteFromFilter(deployFilter);
@@ -107,7 +109,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             }
             List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete = null;
             if (!deployConfigsToDelete.isEmpty()) {
-                depHistoryDBItemsToDeployDelete = dbLayer.getFilteredDeploymentHistory(deployConfigsToDelete);
+                depHistoryDBItemsToDeployDelete = dbLayer.getFilteredDeploymentHistoryToDelete(deployConfigsToDelete);
             }
 
             // sign undeployed configurations
@@ -170,36 +172,38 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                                 processAfterDelete(either, toDelete, controllerId, account, versionIdForDeleteRenamed, null);
                         });//.get();
                 }
-
-                // call updateRepo command via ControllerApi for given controllers
-                String signerDN = null;
-                X509Certificate cert = null;
-                switch(keyPair.getKeyAlgorithm()) {
-                case SOSKeyConstants.PGP_ALGORITHM_NAME:
-                    PublishUtils.updateRepoAddOrUpdatePGP(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId, 
-                            dbLayer).thenAccept(either -> {
-                                processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account, 
-                                        versionIdForUpdate, controllerId, deploymentDate, deployFilter);
-                    });//.get();
-                    break;
-                case SOSKeyConstants.RSA_ALGORITHM_NAME:
-                    cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                    signerDN = cert.getSubjectDN().getName();
-                    PublishUtils.updateRepoAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
-                            dbLayer,SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
-                                processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account, 
-                                        versionIdForUpdate, controllerId, deploymentDate, deployFilter);
-                    });//.get();
-                    break;
-                case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
-                    cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                    signerDN = cert.getSubjectDN().getName();
-                    PublishUtils.updateRepoAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
-                            dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
-                                processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account, 
-                                        versionIdForUpdate, controllerId, deploymentDate, deployFilter);
-                    });//.get();
-                    break;
+                if ((verifiedConfigurations != null && !verifiedConfigurations.isEmpty())
+                        || (verifiedReDeployables != null && !verifiedReDeployables.isEmpty())) {
+                    // call updateRepo command via ControllerApi for given controllers
+                    String signerDN = null;
+                    X509Certificate cert = null;
+                    switch(keyPair.getKeyAlgorithm()) {
+                    case SOSKeyConstants.PGP_ALGORITHM_NAME:
+                        PublishUtils.updateRepoAddOrUpdatePGP(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId, 
+                                dbLayer).thenAccept(either -> {
+                                    processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account, 
+                                            versionIdForUpdate, controllerId, deploymentDate, deployFilter);
+                        });//.get();
+                        break;
+                    case SOSKeyConstants.RSA_ALGORITHM_NAME:
+                        cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+                        signerDN = cert.getSubjectDN().getName();
+                        PublishUtils.updateRepoAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
+                                dbLayer,SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
+                                    processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account, 
+                                            versionIdForUpdate, controllerId, deploymentDate, deployFilter);
+                        });//.get();
+                        break;
+                    case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
+                        cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+                        signerDN = cert.getSubjectDN().getName();
+                        PublishUtils.updateRepoAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
+                                dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
+                                    processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account, 
+                                            versionIdForUpdate, controllerId, deploymentDate, deployFilter);
+                        });//.get();
+                        break;
+                    }
                 }
             }
             if (depHistoryDBItemsToDeployDelete != null && !depHistoryDBItemsToDeployDelete.isEmpty()) {
@@ -262,12 +266,12 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         }
     }
     
-    private List<DeployConfiguration> getDeployConfigurationsToDeleteFromFilter (DeployFilter deployFilter) {
+    private List<DeployConfigurationDelete> getDeployConfigurationsToDeleteFromFilter (DeployFilter deployFilter) {
         if (deployFilter.getDelete() != null) {
             return deployFilter.getDelete().getDeployConfigurations().stream()
-                    .map(DeployConfig::getDeployConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
+                    .map(DeployConfigDelete::getDeployConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
         } else {
-          return new ArrayList<DeployConfiguration>();
+          return new ArrayList<DeployConfigurationDelete>();
         }
     }
     
