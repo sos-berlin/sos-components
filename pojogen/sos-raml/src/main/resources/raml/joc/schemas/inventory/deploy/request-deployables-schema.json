@@ -27,6 +27,10 @@
 		"withVersions": {
 			"type": "boolean",
 			"default": false
+		},
+		"withoutRemovedObjects": {
+			"type": "boolean",
+			"default": false
 		}
 	}
 }

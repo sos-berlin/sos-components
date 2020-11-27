@@ -78,6 +78,9 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
                     deletedFolders), permittedFolders));
             releasables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurations(notDeletedIds), in.getOnlyValidObjects(),
                     permittedFolders));
+            if (in.getWithoutRemovedObjects()) {
+                releasables = releasables.stream().filter(item -> !item.getDeleted()).collect(Collectors.toSet());
+            }
             ResponseReleasables result = new ResponseReleasables();
             result.setDeliveryDate(Date.from(Instant.now()));
             result.setReleasables(releasables);
