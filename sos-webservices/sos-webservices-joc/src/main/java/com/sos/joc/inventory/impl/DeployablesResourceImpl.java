@@ -1,15 +1,18 @@
 package com.sos.joc.inventory.impl;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -80,8 +83,10 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             Set<Long> notDeletedIds = dbLayer.getNotDeletedConfigurations(deployableTypes, in.getFolder(), in.getRecursive(), deletedFolders);
             // get deleted deployables outside deleted folders (avoid left join to the historic table DEP_HISTORY)
             if (!in.getWithoutRemovedObjects()) {
+                List<DBItemInventoryConfiguration> folders = dbLayer.getFolderContent(in.getFolder(), in.getRecursive(), Arrays.asList(
+                        ConfigurationType.FOLDER.intValue()));
                 deployables.addAll(getResponseStreamOfDeletedItem(dbLayer.getDeletedConfigurations(deployableTypes, in.getFolder(), in.getRecursive(),
-                        deletedFolders), permittedFolders));
+                        deletedFolders), folders, permittedFolders));
             }
             if (in.getWithVersions()) {
                 deployables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurationsWithAllDeployments(notDeletedIds), in
@@ -111,12 +116,25 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
         return listOfFolders.stream().parallel().anyMatch(filter);
     }
     
-    private Set<ResponseDeployableTreeItem> getResponseStreamOfDeletedItem(List<DBItemInventoryConfiguration> deletedConfs, Set<Folder> permittedFolders) {
+    private Set<ResponseDeployableTreeItem> getResponseStreamOfDeletedItem(List<DBItemInventoryConfiguration> deletedConfs,
+            List<DBItemInventoryConfiguration> folders, Set<Folder> permittedFolders) {
         if (deletedConfs != null) {
-            return deletedConfs.stream()
-                    .filter(item -> folderIsPermitted(item.getFolder(), permittedFolders))
-                    .map(item -> DeployableResourceImpl.getResponseDeployableTreeItem(item))
-                    .collect(Collectors.toSet());
+            Map<String, DBItemInventoryConfiguration> foldersMap = folders.stream().collect(Collectors.toMap(DBItemInventoryConfiguration::getPath,
+                    Function.identity()));
+            Set<ResponseDeployableTreeItem> items = deletedConfs.stream().filter(item -> folderIsPermitted(item.getFolder(), permittedFolders)).map(
+                    item -> DeployableResourceImpl.getResponseDeployableTreeItem(item)).collect(Collectors.toSet());
+            // add parent folders
+            Set<ResponseDeployableTreeItem> parentFolders = new HashSet<>();
+            for (ResponseDeployableTreeItem item : items) {
+                if (JocInventory.ROOT_FOLDER.equals(item.getFolder())) {
+                    continue;
+                }
+                Set<String> keys = foldersMap.keySet().stream().filter(key -> (key + "/").startsWith(item.getFolder()) || key.equals(item
+                        .getFolder())).collect(Collectors.toSet());
+                keys.forEach(key -> parentFolders.add(DeployableResourceImpl.getResponseDeployableTreeItem(foldersMap.remove(key))));
+            }
+            items.addAll(parentFolders);
+            return items;
         } else {
             return Collections.emptySet();
         }

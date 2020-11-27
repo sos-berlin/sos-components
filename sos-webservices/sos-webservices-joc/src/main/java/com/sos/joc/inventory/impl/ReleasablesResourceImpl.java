@@ -1,13 +1,18 @@
 package com.sos.joc.inventory.impl;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -22,6 +27,7 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
+import com.sos.joc.exceptions.JocSignatureVerificationException;
 import com.sos.joc.inventory.resource.IReleasablesResource;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -75,8 +81,10 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
             Set<Long> notDeletedIds = dbLayer.getNotDeletedConfigurations(releasableTypes, in.getFolder(), in.getRecursive(), deletedFolders);
             // get deleted deployables outside deleted folders (avoid left join to the historic table DEP_HISTORY)
             if (!in.getWithoutRemovedObjects()) {
+                List<DBItemInventoryConfiguration> folders = dbLayer.getFolderContent(in.getFolder(), in.getRecursive(), Arrays.asList(
+                        ConfigurationType.FOLDER.intValue()));
                 releasables.addAll(getResponseStreamOfDeletedItem(dbLayer.getDeletedConfigurations(releasableTypes, in.getFolder(), in.getRecursive(),
-                        deletedFolders), permittedFolders));
+                        deletedFolders), folders, permittedFolders));
             }
             releasables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurations(notDeletedIds), in.getOnlyValidObjects(),
                     permittedFolders));
@@ -102,12 +110,25 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
         return listOfFolders.stream().parallel().anyMatch(filter);
     }
     
-    private Set<ResponseReleasableTreeItem> getResponseStreamOfDeletedItem(List<DBItemInventoryConfiguration> deletedConfs, Set<Folder> permittedFolders) {
+    private Set<ResponseReleasableTreeItem> getResponseStreamOfDeletedItem(List<DBItemInventoryConfiguration> deletedConfs,
+            List<DBItemInventoryConfiguration> folders, Set<Folder> permittedFolders) {
         if (deletedConfs != null) {
-            return deletedConfs.stream()
-                    .filter(item -> folderIsPermitted(item.getFolder(), permittedFolders))
-                    .map(item -> ReleasableResourceImpl.getResponseReleasableTreeItem(item))
-                    .collect(Collectors.toSet());
+            Map<String, DBItemInventoryConfiguration> foldersMap = folders.stream().collect(Collectors.toMap(DBItemInventoryConfiguration::getPath,
+                    Function.identity()));
+            Set<ResponseReleasableTreeItem> items = deletedConfs.stream().filter(item -> folderIsPermitted(item.getFolder(), permittedFolders)).map(
+                    item -> ReleasableResourceImpl.getResponseReleasableTreeItem(item)).collect(Collectors.toSet());
+            // add parent folders
+            Set<ResponseReleasableTreeItem> parentFolders = new HashSet<>();
+            for (ResponseReleasableTreeItem item : items) {
+                if (JocInventory.ROOT_FOLDER.equals(item.getFolder())) {
+                    continue;
+                }
+                Set<String> keys = foldersMap.keySet().stream().filter(key -> (key + "/").startsWith(item.getFolder()) || key.equals(item
+                        .getFolder())).collect(Collectors.toSet());
+                keys.forEach(key -> parentFolders.add(ReleasableResourceImpl.getResponseReleasableTreeItem(foldersMap.remove(key))));
+            }
+            items.addAll(parentFolders);
+            return items;
         } else {
             return Collections.emptySet();
         }
