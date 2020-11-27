@@ -38,15 +38,15 @@ import com.sos.joc.model.order.OrderHistoryItem;
 import com.sos.joc.model.order.OrderPath;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrdersFilter;
-import com.sos.joc.orders.resource.IOrdersResourceHistory;
+import com.sos.joc.orders.resource.IOrdersResourceHistoryDeprecated;
 import com.sos.schema.JsonValidator;
-
+/** will be replaced by OrdersResourceHistoryImpl */
 @Path("orders")
-public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrdersResourceHistory {
+public class OrdersResourceHistoryDeprecatedImpl extends JOCResourceImpl implements IOrdersResourceHistoryDeprecated {
 
     private static final String API_CALL = "./orders/history";
     // TMP to remove
-    private static final Logger LOGGER = LoggerFactory.getLogger(OrdersResourceHistoryImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrdersResourceHistoryDeprecatedImpl.class);
 
     @Override
     public JOCDefaultResponse postOrdersHistory(String accessToken, byte[] filterBytes) {
@@ -121,7 +121,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
 
                 connection = Globals.createSosHibernateStatelessConnection(API_CALL);
                 JobHistoryDBLayer jobHistoryDbLayer = new JobHistoryDBLayer(connection, historyFilter);
-                List<DBItemHistoryOrder> dbMainOrderItems = jobHistoryDbLayer.getMainOrders();
+                List<DBItemHistoryOrder> dbMainOrderItems = jobHistoryDbLayer.getMainOrdersDeprecated();
 
                 if (dbMainOrderItems != null && !dbMainOrderItems.isEmpty()) {
 

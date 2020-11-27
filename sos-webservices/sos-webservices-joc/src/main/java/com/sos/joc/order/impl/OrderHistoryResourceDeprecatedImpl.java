@@ -20,11 +20,12 @@ import com.sos.joc.model.common.HistoryStateText;
 import com.sos.joc.model.job.TaskHistory;
 import com.sos.joc.model.job.TaskHistoryItem;
 import com.sos.joc.model.order.OrderHistoryFilter;
-import com.sos.joc.order.resource.IOrderHistoryResource;
+import com.sos.joc.order.resource.IOrderHistoryResourceDeprecated;
 import com.sos.schema.JsonValidator;
 
+/** will be replaced by OrderHistoryResourceImpl */
 @Path("order")
-public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderHistoryResource {
+public class OrderHistoryResourceDeprecatedImpl extends JOCResourceImpl implements IOrderHistoryResourceDeprecated {
 
     private static final String API_CALL = "./order/history";
 
@@ -46,7 +47,7 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             JobHistoryDBLayer jobHistoryDbLayer = new JobHistoryDBLayer(connection);
-            List<DBItemHistoryOrderStep> dbOrderStepItems = jobHistoryDbLayer.getOrderSteps(orderHistoryFilter);
+            List<DBItemHistoryOrderStep> dbOrderStepItems = jobHistoryDbLayer.getOrderSteps(orderHistoryFilter.getHistoryId());
 
             TaskHistory entity = new TaskHistory();
             if (dbOrderStepItems != null) {

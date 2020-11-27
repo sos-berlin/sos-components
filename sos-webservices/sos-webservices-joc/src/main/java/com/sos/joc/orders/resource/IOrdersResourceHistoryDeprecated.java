@@ -8,15 +8,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.WebservicePaths;
-
-public interface IOrdersResourceHistory {
-
-    public static final String PATH = "history_new";// TODO, should be changed to history
-    public static final String IMPL_PATH = WebservicePaths.getResourceImplPath(WebservicePaths.ORDERS, PATH);
+/** will be replaced by IOrdersResourceHistory */
+public interface IOrdersResourceHistoryDeprecated {
 
     @POST
-    @Path(PATH)
+    @Path("history")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postOrdersHistory(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 }
