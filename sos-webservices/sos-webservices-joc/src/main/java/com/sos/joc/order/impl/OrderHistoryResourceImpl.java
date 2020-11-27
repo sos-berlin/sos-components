@@ -82,16 +82,25 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
         }
         if (list.size() > 0) {
             answer.setChildren(list.stream().sorted((item1, item2) -> {
-                int position1 = 0;
-                int position2 = 1;
-                try {
-                    position1 = Integer.parseInt(item1.getTask() == null ? item1.getOrder().getPosition() : item1.getTask().getPosition());
-                    position2 = Integer.parseInt(item2.getTask() == null ? item2.getOrder().getPosition() : item2.getTask().getPosition());
-                } catch (Throwable e) {
-                }
+                int position1 = geLastPosition(item1.getTask() == null ? item1.getOrder().getPosition() : item1.getTask().getPosition(), 0);
+                int position2 = geLastPosition(item2.getTask() == null ? item2.getOrder().getPosition() : item2.getTask().getPosition(), 1);
                 return Integer.compare(position1, position2);
             }).collect(Collectors.toList()));
         }
+    }
+
+    // TODO use history methods
+    private int geLastPosition(String position, int defaultPosition) {
+        try {
+            return Integer.parseInt(position);
+        } catch (Throwable e) {
+            try {
+                String[] arr = position.split("/");
+                return Integer.parseInt(arr[arr.length - 1]);
+            } catch (Throwable t) {
+            }
+        }
+        return defaultPosition;
     }
 
     private void mapStates(OrderHistoryChilds answer, List<DBItemHistoryOrderState> states) {
