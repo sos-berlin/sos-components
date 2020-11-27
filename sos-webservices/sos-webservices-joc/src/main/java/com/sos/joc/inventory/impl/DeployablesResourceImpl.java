@@ -126,13 +126,14 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
     private Set<ResponseDeployableTreeItem> getResponseStreamOfNotDeletedItem(Map<DBItemInventoryConfiguration, Set<InventoryDeploymentItem>> map,
             Boolean onlyValidObjects, Set<Folder> permittedFolders) {
         if (map != null) {
-            final Set<String> paths = map.keySet().stream().map(item -> item.getPath()).collect(Collectors.toSet());
+            final Set<String> paths = map.keySet().stream().filter(item -> ConfigurationType.FOLDER.intValue() != item.getType()).map(item -> item
+                    .getPath()).collect(Collectors.toSet());
             Predicate<Map.Entry<DBItemInventoryConfiguration, Set<InventoryDeploymentItem>>> folderIsNotEmpty = entry -> {
-              if (ConfigurationType.FOLDER.intValue() != entry.getKey().getType()) {
-                  return true;
-              } else {
-                  return folderIsNotEmpty(entry.getKey().getPath(), paths);
-              }
+                if (ConfigurationType.FOLDER.intValue() != entry.getKey().getType()) {
+                    return true;
+                } else {
+                    return folderIsNotEmpty(entry.getKey().getPath(), paths);
+                }
             };
             return map.entrySet().stream()
                     //.filter(entry -> ConfigurationType.FOLDER.intValue() != entry.getKey().getType())
@@ -175,13 +176,14 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
     private Set<ResponseDeployableTreeItem> getResponseStreamOfNotDeletedItem(List<InventoryDeployablesTreeFolderItem> list,
             Boolean onlyValidObjects, Set<Folder> permittedFolders) {
         if (list != null) {
-            final Set<String> paths = list.stream().map(item -> item.getConfiguration().getPath()).collect(Collectors.toSet());
+            final Set<String> paths = list.stream().filter(item -> ConfigurationType.FOLDER.intValue() != item.getType()).map(item -> item
+                    .getConfiguration().getPath()).collect(Collectors.toSet());
             Predicate<InventoryDeployablesTreeFolderItem> folderIsNotEmpty = item -> {
-              if (ConfigurationType.FOLDER.intValue() != item.getConfiguration().getType()) {
-                  return true;
-              } else {
-                  return folderIsNotEmpty(item.getConfiguration().getPath(), paths);
-              }
+                if (ConfigurationType.FOLDER.intValue() != item.getConfiguration().getType()) {
+                    return true;
+                } else {
+                    return folderIsNotEmpty(item.getConfiguration().getPath(), paths);
+                }
             };
             return list.stream()
                     //.filter(item -> ConfigurationType.FOLDER.intValue() != item.getConfiguration().getType())

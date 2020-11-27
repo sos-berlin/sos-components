@@ -116,13 +116,14 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
     private Set<ResponseReleasableTreeItem> getResponseStreamOfNotDeletedItem(List<DBItemInventoryConfiguration> list,
             Boolean onlyValidObjects, Set<Folder> permittedFolders) {
         if (list != null) {
-            final Set<String> paths = list.stream().map(item -> item.getPath()).collect(Collectors.toSet());
+            final Set<String> paths = list.stream().filter(item -> ConfigurationType.FOLDER.intValue() != item.getType()).map(item -> item.getPath())
+                    .collect(Collectors.toSet());
             Predicate<DBItemInventoryConfiguration> folderIsNotEmpty = item -> {
-              if (ConfigurationType.FOLDER.intValue() != item.getType()) {
-                  return true;
-              } else {
-                  return folderIsNotEmpty(item.getPath(), paths);
-              }
+                if (ConfigurationType.FOLDER.intValue() != item.getType()) {
+                    return true;
+                } else {
+                    return folderIsNotEmpty(item.getPath(), paths);
+                }
             };
             return list.stream()
                     //.filter(item -> ConfigurationType.FOLDER.intValue() != item.getConfiguration().getType())
