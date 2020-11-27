@@ -21,7 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "version",
-    "deployments",
+    "deployConfigurations",
     "auditLog"
 })
 public class SetVersionFilter {
@@ -35,8 +35,13 @@ public class SetVersionFilter {
      */
     @JsonProperty("version")
     private String version;
-    @JsonProperty("deployments")
-    private List<Long> deployments = new ArrayList<Long>();
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("deployConfigurations")
+    private List<DeployConfig> deployConfigurations = new ArrayList<DeployConfig>();
     /**
      * auditParams
      * <p>
@@ -70,14 +75,24 @@ public class SetVersionFilter {
         this.version = version;
     }
 
-    @JsonProperty("deployments")
-    public List<Long> getDeployments() {
-        return deployments;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("deployConfigurations")
+    public List<DeployConfig> getDeployConfigurations() {
+        return deployConfigurations;
     }
 
-    @JsonProperty("deployments")
-    public void setDeployments(List<Long> deployments) {
-        this.deployments = deployments;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("deployConfigurations")
+    public void setDeployConfigurations(List<DeployConfig> deployConfigurations) {
+        this.deployConfigurations = deployConfigurations;
     }
 
     /**
@@ -104,12 +119,12 @@ public class SetVersionFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("version", version).append("deployments", deployments).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("version", version).append("deployConfigurations", deployConfigurations).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deployments).append(auditLog).append(version).toHashCode();
+        return new HashCodeBuilder().append(auditLog).append(version).append(deployConfigurations).toHashCode();
     }
 
     @Override
@@ -121,7 +136,7 @@ public class SetVersionFilter {
             return false;
         }
         SetVersionFilter rhs = ((SetVersionFilter) other);
-        return new EqualsBuilder().append(deployments, rhs.deployments).append(auditLog, rhs.auditLog).append(version, rhs.version).isEquals();
+        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(version, rhs.version).append(deployConfigurations, rhs.deployConfigurations).isEquals();
     }
 
 }

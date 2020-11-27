@@ -4,12 +4,12 @@
   "javaType": "com.sos.joc.model.publish.DeploymentVersion",
   "type": "object",
   "required": [
-    "deploymentId",
+    "deployConfiguration",
     "version"
   ],
   "properties": {
-    "deploymentId": {
-        "$ref": "../common/nonNegativeLong-schema.json"
+    "deployConfiguration": {
+        "$ref": "deployConfiguration-schema.json"
     },
     "version": {
       "$ref": "../common/string255-schema.json"

@@ -4,10 +4,10 @@
 	"javaType": "com.sos.joc.model.publish.SetVersionsFilter",
 	"type": "object",
   "required": [
-    "deployments"
+    "deployConfigurations"
   ],
 	"properties": {
-		"deployments": {
+		"deployConfigurations": {
       "type": "array",
       "items": {
           "$ref": "deploymentVersion-schema.json"

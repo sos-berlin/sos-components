@@ -3,7 +3,9 @@ package com.sos.joc.publish.impl;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
@@ -16,6 +18,8 @@ import com.sos.joc.classes.audit.SetVersionAudit;
 import com.sos.joc.db.deployment.DBItemDepVersions;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocSosHibernateException;
+import com.sos.joc.model.publish.DeploymentVersion;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.ISetVersion;
@@ -53,19 +57,20 @@ public class SetVersionImpl extends JOCResourceImpl implements ISetVersion {
     }
 
     private void updateVersions(SetVersionFilter filter, DBLayerDeploy dbLayer) throws SOSHibernateException {
-        Set<String> paths = new HashSet<String>();
-        for (Long deploymentId : filter.getDeployments()) {
-            DBItemDeploymentHistory depHistoryItem = dbLayer.getSession().get(DBItemDeploymentHistory.class, deploymentId);
+        List<DBItemDeploymentHistory> depHistoryItems = dbLayer.getFilteredDeployments(filter);
+        Set<String> paths = depHistoryItems.stream().map(item -> item.getPath()).collect(Collectors.toSet());
+        depHistoryItems.stream().forEach(item -> {
             DBItemDepVersions newVersion = new DBItemDepVersions();
-            if (depHistoryItem != null) {
-                newVersion.setInvConfigurationId(depHistoryItem.getInventoryConfigurationId());
-                paths.add(depHistoryItem.getPath());
-            }
-            newVersion.setDepHistoryId(deploymentId);
+            newVersion.setInvConfigurationId(item.getInventoryConfigurationId());
+            newVersion.setDepHistoryId(item.getId());
             newVersion.setVersion(filter.getVersion());
             newVersion.setModified(Date.from(Instant.now()));
-            dbLayer.getSession().save(newVersion);
-        }
+            try {
+                dbLayer.getSession().save(newVersion);
+            } catch (SOSHibernateException e) {
+                throw new JocSosHibernateException(e.getMessage(), e);
+            }
+        });
         SetVersionAudit audit = new SetVersionAudit(filter, paths, "version updated.");
         logAuditMessage(audit);
         storeAuditLogEntry(audit);

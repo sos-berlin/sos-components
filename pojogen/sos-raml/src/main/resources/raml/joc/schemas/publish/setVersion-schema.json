@@ -4,16 +4,17 @@
   "javaType": "com.sos.joc.model.publish.SetVersionFilter",
   "type": "object",
   "required": [
-    "version"
+    "version",
+    "deployConfigurations"
   ],
   "properties": {
     "version": {
       "$ref": "../common/string255-schema.json"
     },
-    "deployments": {
-      "type": "array",
-      "items": {
-        "$ref": "../common/nonNegativeLong-schema.json"
+    "deployConfigurations": {
+      "type" : "array",
+      "items" : {
+        "$ref": "deployConfig-schema.json"
       }
     },
     "auditLog": {

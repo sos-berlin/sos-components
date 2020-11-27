@@ -1,12 +1,10 @@
 package com.sos.joc.classes.audit;
 
 import java.util.Map;
-import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.SetVersionsFilter;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)

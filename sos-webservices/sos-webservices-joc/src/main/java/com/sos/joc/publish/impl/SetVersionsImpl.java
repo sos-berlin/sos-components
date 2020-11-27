@@ -3,7 +3,9 @@ package com.sos.joc.publish.impl;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
@@ -16,6 +18,7 @@ import com.sos.joc.classes.audit.SetVersionsAudit;
 import com.sos.joc.db.deployment.DBItemDepVersions;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.publish.DeploymentVersion;
 import com.sos.joc.model.publish.SetVersionsFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
@@ -53,21 +56,25 @@ public class SetVersionsImpl extends JOCResourceImpl implements ISetVersions {
         }
     }
 
-    private void updateVersions(SetVersionsFilter filter, DBLayerDeploy dbLayer) throws SOSHibernateException {
+    private void updateVersions(SetVersionsFilter filter, DBLayerDeploy dbLayer) {
         Map<String, String> versionWithPaths = new HashMap<String, String>();
-        for (DeploymentVersion deploymentWithVersion : filter.getDeployments()) {
-            DBItemDeploymentHistory depHistoryItem = 
-                    dbLayer.getSession().get(DBItemDeploymentHistory.class, deploymentWithVersion.getDeploymentId());
+        List<DBItemDeploymentHistory> depHistoryItems = dbLayer.getFilteredDeployments(filter);
+        depHistoryItems.stream().forEach(item -> {
             DBItemDepVersions newVersion = new DBItemDepVersions();
-            if (depHistoryItem != null) {
-                newVersion.setInvConfigurationId(depHistoryItem.getInventoryConfigurationId());
-                versionWithPaths.put(deploymentWithVersion.getVersion(), depHistoryItem.getPath());
-            }
-            newVersion.setDepHistoryId(deploymentWithVersion.getDeploymentId());
-            newVersion.setVersion(deploymentWithVersion.getVersion());
+            newVersion.setInvConfigurationId(item.getInventoryConfigurationId());
+            DeploymentVersion version = filter.getDeployConfigurations().stream()
+                    .filter(versionItem -> versionItem.getDeployConfiguration().getPath().equals(item.getPath()))
+                    .collect(Collectors.toList()).get(0);
+            versionWithPaths.put(version.getVersion(), version.getDeployConfiguration().getPath());
+            newVersion.setDepHistoryId(item.getId());
+            newVersion.setVersion(version.getVersion());
             newVersion.setModified(Date.from(Instant.now()));
-            dbLayer.getSession().save(newVersion);
-        }
+            try {
+                dbLayer.getSession().save(newVersion);
+            } catch (SOSHibernateException e) {
+                throw new JocSosHibernateException(e.getMessage(), e);
+            }
+        });
         SetVersionsAudit audit = new SetVersionsAudit(filter, versionWithPaths, "mutliple versions updated.");
         logAuditMessage(audit);
         storeAuditLogEntry(audit);
