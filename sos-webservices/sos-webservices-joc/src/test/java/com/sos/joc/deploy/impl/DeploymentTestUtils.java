@@ -34,6 +34,7 @@ import com.sos.joc.model.publish.DeployDelete;
 import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.DeployableObjects;
 import com.sos.joc.model.publish.DeploymentState;
+import com.sos.joc.model.publish.DeploymentVersion;
 import com.sos.joc.model.publish.DraftConfig;
 import com.sos.joc.model.publish.DraftConfiguration;
 import com.sos.joc.model.publish.ExcludeConfiguration;
@@ -41,6 +42,8 @@ import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.RedeployFilter;
+import com.sos.joc.model.publish.SetVersionFilter;
+import com.sos.joc.model.publish.SetVersionsFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.model.publish.Signature;
 
@@ -499,4 +502,101 @@ public class DeploymentTestUtils {
         return filter;
     }
 
+    public static SetVersionFilter createExampleSetVersionFilter () {
+        SetVersionFilter filter = new SetVersionFilter();
+
+        DeployConfig workflow10deployConfig = new DeployConfig();
+        DeployConfiguration workflow10deployed = new DeployConfiguration();
+        workflow10deployed.setPath("/myWorkflows/ifElseWorkflow/workflow_10");
+        workflow10deployed.setObjectType(ConfigurationType.WORKFLOW);
+        workflow10deployed.setCommitId("4273b6c6-c354-4fcd-afdb-2758088abe4a");
+        workflow10deployConfig.setDeployConfiguration(workflow10deployed);
+        filter.getDeployConfigurations().add(workflow10deployConfig);
+        
+        DeployConfig workflow12deployConfig = new DeployConfig();
+        DeployConfiguration workflow12deployed = new DeployConfiguration();
+        workflow12deployed.setPath("/myWorkflows/ifElseWorkflow/workflow_12");
+        workflow12deployed.setObjectType(ConfigurationType.WORKFLOW);
+        workflow12deployed.setCommitId("4273b6c6-c354-4fcd-afdb-2758088abe4a");
+        workflow12deployConfig.setDeployConfiguration(workflow12deployed);
+        filter.getDeployConfigurations().add(workflow12deployConfig);
+
+        DeployConfig workflow14deployConfig = new DeployConfig();
+        DeployConfiguration workflow14deployed = new DeployConfiguration();
+        workflow14deployed.setPath("/myWorkflows/ifElseWorkflow/workflow_14");
+        workflow14deployed.setObjectType(ConfigurationType.WORKFLOW);
+        workflow14deployed.setCommitId("4273b6c6-c354-4fcd-afdb-2758088abe4a");
+        workflow14deployConfig.setDeployConfiguration(workflow14deployed);
+        filter.getDeployConfigurations().add(workflow14deployConfig);
+
+        DeployConfig workflow16deployConfig = new DeployConfig();
+        DeployConfiguration workflow16deployed = new DeployConfiguration();
+        workflow16deployed.setPath("/myWorkflows/ifElseWorkflow/workflow_16");
+        workflow16deployed.setObjectType(ConfigurationType.WORKFLOW);
+        workflow16deployed.setCommitId("4273b6c6-c354-4fcd-afdb-2758088abe4a");
+        workflow16deployConfig.setDeployConfiguration(workflow16deployed);
+        filter.getDeployConfigurations().add(workflow16deployConfig);
+
+        DeployConfig workflow18deployConfig = new DeployConfig();
+        DeployConfiguration workflow18deployed = new DeployConfiguration();
+        workflow18deployed.setPath("/myWorkflows/ifElseWorkflow/workflow_18");
+        workflow18deployed.setObjectType(ConfigurationType.WORKFLOW);
+        workflow18deployed.setCommitId("4273b6c6-c354-4fcd-afdb-2758088abe4a");
+        workflow18deployConfig.setDeployConfiguration(workflow18deployed);
+        filter.getDeployConfigurations().add(workflow18deployConfig);
+        filter.setVersion("myTestVersion-1.0.0");
+        return filter;
+    }
+    
+    public static SetVersionsFilter createExampleSetVersionsFilter () {
+        SetVersionsFilter filter = new SetVersionsFilter();
+
+        DeploymentVersion dvWf10 = new DeploymentVersion();
+        DeployConfiguration workflow10 = new DeployConfiguration();
+        workflow10.setPath("/myWorkflows/ifElseWorkflow/workflow_10");
+        workflow10.setObjectType(ConfigurationType.WORKFLOW);
+        workflow10.setCommitId("4273b6c6-c354-4fcd-afdb-2758088abe4a");
+        dvWf10.setDeployConfiguration(workflow10);
+        dvWf10.setVersion("myTestVersion-1.0.0");
+        filter.getDeployConfigurations().add(dvWf10);
+        
+        DeploymentVersion dvWf12 = new DeploymentVersion();
+        DeployConfiguration workflow12 = new DeployConfiguration();
+        workflow12.setPath("/myWorkflows/ifElseWorkflow/workflow_12");
+        workflow12.setObjectType(ConfigurationType.WORKFLOW);
+        workflow12.setCommitId("4273b6c6-c354-4fcd-afdb-2758088abe4a");
+        dvWf12.setDeployConfiguration(workflow12);
+        dvWf12.setVersion("myTestVersion-1.0.0");
+        filter.getDeployConfigurations().add(dvWf12);
+        
+        DeploymentVersion dvWf14 = new DeploymentVersion();
+        DeployConfiguration workflow14 = new DeployConfiguration();
+        workflow14.setPath("/myWorkflows/ifElseWorkflow/workflow_14");
+        workflow14.setObjectType(ConfigurationType.WORKFLOW);
+        workflow14.setCommitId("2a6487a7-091c-446a-b799-67c87b4db6c2");
+        dvWf14.setDeployConfiguration(workflow14);
+        dvWf14.setVersion("myTestVersion-1.1.0");
+        filter.getDeployConfigurations().add(dvWf14);
+        
+        DeploymentVersion dvWf16 = new DeploymentVersion();
+        DeployConfiguration workflow16 = new DeployConfiguration();
+        workflow16.setPath("/myWorkflows/ifElseWorkflow/workflow_16");
+        workflow16.setObjectType(ConfigurationType.WORKFLOW);
+        workflow16.setCommitId("2a6487a7-091c-446a-b799-67c87b4db6c2");
+        dvWf16.setDeployConfiguration(workflow16);
+        dvWf16.setVersion("myTestVersion-1.1.0");
+        filter.getDeployConfigurations().add(dvWf16);
+        
+        DeploymentVersion dvWf18 = new DeploymentVersion();
+        DeployConfiguration workflow18 = new DeployConfiguration();
+        workflow18.setPath("/myWorkflows/ifElseWorkflow/workflow_18");
+        workflow18.setObjectType(ConfigurationType.WORKFLOW);
+        workflow18.setCommitId("17cd67d9-37cb-4d28-8596-c88eab6a755d");
+        dvWf18.setDeployConfiguration(workflow18);
+        dvWf18.setVersion("myTestVersion-1.1.12");
+        filter.getDeployConfigurations().add(dvWf18);
+        
+        return filter;
+    }
+    
 }

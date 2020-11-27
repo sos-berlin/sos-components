@@ -1,5 +1,6 @@
 package com.sos.joc.publish.impl;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -23,6 +24,8 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
@@ -241,7 +244,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             if (either.isRight()) {
                 // no error occurred
                 Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(
-                        verifiedConfigurations, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate);
+                        verifiedConfigurations, null, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate);
                 deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(
                         verifiedReDeployables, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
                 createAuditLogFor(deployedObjects, filter, controllerId, true, versionIdForUpdate);
@@ -266,6 +269,8 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     listOfErrors.add(new BulkError().get(new JocError(either.getLeft().message()), "/"));
                 }
             }
+        } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
         } finally {
             Globals.disconnect(newHibernateSession);
         }

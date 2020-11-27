@@ -275,6 +275,7 @@ public class MappingTest {
 //        exclude.setPath("/myWorkflows/myIfElseWorkflow/workflow_12");
 //        exclude.setDeployType(DeployType.WORKFLOW);
 //        filter.getExcludes().add(exclude);
+        LOGGER.info("RedeployFilter Example");
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         LOGGER.info("\n" + om.writeValueAsString(filter));
         
@@ -297,16 +298,30 @@ public class MappingTest {
 
     @Test
     public void test10MapDeployFilter () throws JsonProcessingException {
-
+        LOGGER.info("DeployFilter Example");
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleDeployFilter()));
     }
 
     @Test
-    public void test11MapDeployFilter () throws JsonProcessingException {
-
+    public void test11MapExportFilter () throws JsonProcessingException {
+        LOGGER.info("ExportFilter Example");
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleExportFilter()));
+    }
+
+    @Test
+    public void test12MapSetVersionFilter () throws JsonProcessingException {
+        LOGGER.info("SetVersionFilter Example");
+        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
+        LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleSetVersionFilter()));
+    }
+
+    @Test
+    public void test13MapSetVersionsFilter () throws JsonProcessingException {
+        LOGGER.info("SetVersionsFilter Example");
+        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
+        LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleSetVersionsFilter()));
     }
 
 }

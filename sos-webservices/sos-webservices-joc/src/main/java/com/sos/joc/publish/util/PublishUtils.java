@@ -793,8 +793,9 @@ public abstract class PublishUtils {
     }
 
     public static Set<DBItemDeploymentHistory> cloneInvConfigurationsToDepHistoryItems(
-            Map<DBItemInventoryConfiguration, DBItemDepSignatures> draftsWithSignature, String account, DBLayerDeploy dbLayerDeploy,
-            String versionId, String controllerId, Date deploymentDate) {
+            Map<DBItemInventoryConfiguration, DBItemDepSignatures> draftsWithSignature, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, 
+            String account, DBLayerDeploy dbLayerDeploy, String versionId, String controllerId, Date deploymentDate)
+                    throws JsonParseException, JsonMappingException, IOException {
         Set<DBItemDeploymentHistory> deployedObjects;
         try {
             DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
@@ -811,6 +812,12 @@ public abstract class PublishUtils {
                 newDeployedObject.setCommitId(versionId);
                 newDeployedObject.setContent(draft.getContent());
                 newDeployedObject.setSignedContent(draftsWithSignature.get(draft).getSignature());
+                if (updateableAgentNames != null && draft.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)) {
+                    newDeployedObject.setInvContent(getContentWithOrigAgentName(draft, updateableAgentNames, controllerId));
+                } else {
+                    // nothing was replaced in the original
+                    newDeployedObject.setInvContent(draft.getContent());
+                }
                 newDeployedObject.setDeploymentDate(deploymentDate);
                 newDeployedObject.setControllerInstanceId(controllerInstance.getId());
                 newDeployedObject.setControllerId(controllerId);
@@ -1352,6 +1359,12 @@ public abstract class PublishUtils {
     private static void replaceAgentIdWithOrigAgentName(DBItemInventoryConfiguration draft, 
             Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String controllerId)
             throws JsonParseException, JsonMappingException, IOException {
+        draft.setContent(getContentWithOrigAgentName(draft, updateableAgentNames, controllerId));
+    }
+    
+    private static String getContentWithOrigAgentName(DBItemInventoryConfiguration draft, 
+            Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String controllerId)
+            throws JsonParseException, JsonMappingException, IOException {
         Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
         Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream()
                 .filter(item -> item.getWorkflowPath().equals(draft.getPath()) && controllerId.equals(item.getControllerId()))
@@ -1360,7 +1373,7 @@ public abstract class PublishUtils {
             Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
             job.setAgentName(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname)).findFirst().get().getAgentName());
         });
-        draft.setContent(om.writeValueAsString(workflow));
+        return om.writeValueAsString(workflow);
     }
     
     public static String getValueAsStringWithleadingZeros(Integer i, int length) {

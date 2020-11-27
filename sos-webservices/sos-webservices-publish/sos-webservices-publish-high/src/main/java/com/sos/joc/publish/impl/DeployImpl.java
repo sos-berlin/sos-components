@@ -1,5 +1,6 @@
 package com.sos.joc.publish.impl;
 
+import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -18,6 +19,8 @@ import javax.ws.rs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
@@ -302,7 +305,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             if (either.isRight()) {
                 // no error occurred
                 Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(
-                        verifiedConfigurations, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate);
+                        verifiedConfigurations, null, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate);
                 deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(
                         verifiedReDeployables, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
                 createAuditLogFor(deployedObjects, deployFilter, controllerId, true, versionIdForUpdate);
@@ -327,6 +330,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     listOfErrors.add(new BulkError().get(new JocError(either.getLeft().message()), "/"));
                 }
             }
+        } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);;
         } finally {
             Globals.disconnect(newHibernateSession);
         }

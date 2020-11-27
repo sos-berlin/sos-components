@@ -47,6 +47,7 @@ import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.RedeployFilter;
 import com.sos.joc.model.publish.SetVersionFilter;
+import com.sos.joc.model.publish.SetVersionsFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.publish.common.JSObjectFileExtension;
 import com.sos.joc.publish.mapper.FilterAttributesMapper;
@@ -150,7 +151,7 @@ public class DBLayerDeploy {
 
     public List<DBItemDeploymentHistory> getFilteredDeploymentsForSetVersion(SetVersionFilter filter)
             throws DBConnectionRefusedException, DBInvalidDataException {
-        return getFilteredDeployments(filter.getDeployments());
+        return getFilteredDeployments(filter);
     }
 
     public List<DBItemInventoryConfiguration> getFilteredInventoryConfigurationsByPaths(List<String> paths) throws DBConnectionRefusedException,
@@ -323,6 +324,22 @@ public class DBLayerDeploy {
     }
 
     public List<DBItemDeploymentHistory> getFilteredDeployments(ExportFilter filter) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        return getFilteredDeploymentHistory(
+                filter.getDeployConfigurations().stream()
+                .map(item -> item.getDeployConfiguration())
+                .collect(Collectors.toList()));
+    }
+
+    public List<DBItemDeploymentHistory> getFilteredDeployments(SetVersionFilter filter) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        return getFilteredDeploymentHistory(
+                filter.getDeployConfigurations().stream()
+                .map(item -> item.getDeployConfiguration())
+                .collect(Collectors.toList()));
+    }
+
+    public List<DBItemDeploymentHistory> getFilteredDeployments(SetVersionsFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
         return getFilteredDeploymentHistory(
                 filter.getDeployConfigurations().stream()

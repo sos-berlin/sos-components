@@ -52,6 +52,9 @@ public class DBItemDeploymentHistory extends DBItem {
     @Column(name = "[CONTENT]", nullable = false)
     private String content;
 
+    @Column(name = "[INV_CONTENT]", nullable = false)
+    private String invContent;
+
     @Column(name = "[SIGNATURE]", nullable = false)
     private String signedContent;
 
@@ -203,6 +206,13 @@ public class DBItemDeploymentHistory extends DBItem {
     }
     public void setDeleteDate(Date deletedDate) {
         this.deleteDate = deletedDate;
+    }
+    
+    public String getInvContent() {
+        return invContent;
+    }
+    public void setInvContent(String invContent) {
+        this.invContent = invContent;
     }
 
 }
