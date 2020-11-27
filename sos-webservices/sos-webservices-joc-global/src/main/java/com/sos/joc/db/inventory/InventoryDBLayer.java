@@ -483,7 +483,7 @@ public class InventoryDBLayer extends DBLayer {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         if (recursive) {
             if (!"/".equals(folder)) {
-                hql.append(" where folder=:folder or folder like :likeFolder");
+                hql.append(" where (folder=:folder or folder like :likeFolder)");
             } else {
                 hql.append(" where 1=1");
             }

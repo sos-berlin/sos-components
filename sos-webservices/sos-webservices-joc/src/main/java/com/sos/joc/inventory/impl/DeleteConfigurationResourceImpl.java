@@ -75,6 +75,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
                         for (DBItemInventoryConfiguration emptyFolder : emptyFolders) {
                             dbLayer.getSession().delete(emptyFolder);
                         }
+                        dbLayer.getSession().delete(config);
                     } else {
                         deleteOrUndeleteSingle(dbLayer, config, IMPL_PATH_DELETE.equals(action));
                         storeAuditLog(type, config.getPath(), config.getFolder());
