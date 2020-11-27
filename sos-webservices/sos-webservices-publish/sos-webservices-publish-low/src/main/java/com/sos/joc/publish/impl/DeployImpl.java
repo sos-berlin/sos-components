@@ -214,9 +214,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                             keyPair.getKeyAlgorithm()).thenAccept(either -> {
                             processAfterDelete(either, itemsToDelete, controller, account, versionIdForDelete, deployFilter);
                     });//.get()
-                    Set<Long> configurationIdsToDelete = depHistoryDBItemsToDeployDelete.stream()
-                            .map(DBItemDeploymentHistory::getInventoryConfigurationId).collect(Collectors.toSet());
-                    JocInventory.deleteConfigurations(configurationIdsToDelete);
                 }
             }
             if (hasErrors) {
@@ -330,28 +327,38 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             String account, 
             String versionIdForDelete,
             DeployFilter deployFilter) {
-        if (either.isRight()) {
-            Set<DBItemDeploymentHistory> deletedDeployItems = 
-                    PublishUtils.updateDeletedDepHistory(depHistoryDBItemsToDeployDelete, dbLayer);
-            createAuditLogForEach(deletedDeployItems, deployFilter, controller, false, versionIdForDelete);
-        } else if (either.isLeft()) {
-            String message = String.format("Response from Controller \"%1$s:\": %2$s", controller, either.getLeft().message());
-            LOGGER.warn(message);
-            // updateRepo command is atomic, therefore all items are rejected
-            List<DBItemDeploymentHistory> failedDeployDeleteItems = dbLayer.updateFailedDeploymentForDelete(
-                    depHistoryDBItemsToDeployDelete, controller, account, versionIdForDelete, either.getLeft().message());
-            // if not successful the objects and the related controllerId have to be stored 
-            // in a submissions table for reprocessing
-            dbLayer.createSubmissionForFailedDeployments(failedDeployDeleteItems);
-            hasErrors = true;
-            if (either.getLeft().codeOrNull() != null) {
-                listOfErrors.add(
-                        new BulkError().get(new JocError(either.getLeft().message()), "/"));
-            } else {
-                listOfErrors.add(
-                        new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), 
-                                either.getLeft().message()), "/"));
+        SOSHibernateSession newHibernateSession = null;
+        try {
+            newHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
+            if (either.isRight()) {
+                Set<Long> configurationIdsToDelete = depHistoryDBItemsToDeployDelete.stream()
+                        .map(DBItemDeploymentHistory::getInventoryConfigurationId).collect(Collectors.toSet());
+                Set<DBItemDeploymentHistory> deletedDeployItems = 
+                        PublishUtils.updateDeletedDepHistory(depHistoryDBItemsToDeployDelete, dbLayer);
+                createAuditLogForEach(deletedDeployItems, deployFilter, controller, false, versionIdForDelete);
+                JocInventory.deleteConfigurations(configurationIdsToDelete);
+            } else if (either.isLeft()) {
+                String message = String.format("Response from Controller \"%1$s:\": %2$s", controller, either.getLeft().message());
+                LOGGER.warn(message);
+                // updateRepo command is atomic, therefore all items are rejected
+                List<DBItemDeploymentHistory> failedDeployDeleteItems = dbLayer.updateFailedDeploymentForDelete(
+                        depHistoryDBItemsToDeployDelete, controller, account, versionIdForDelete, either.getLeft().message());
+                // if not successful the objects and the related controllerId have to be stored 
+                // in a submissions table for reprocessing
+                dbLayer.createSubmissionForFailedDeployments(failedDeployDeleteItems);
+                hasErrors = true;
+                if (either.getLeft().codeOrNull() != null) {
+                    listOfErrors.add(
+                            new BulkError().get(new JocError(either.getLeft().message()), "/"));
+                } else {
+                    listOfErrors.add(
+                            new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), 
+                                    either.getLeft().message()), "/"));
+                }
             }
+        } finally {
+            Globals.disconnect(newHibernateSession);
         }
     }
     
