@@ -25,7 +25,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "recursive",
     "objectTypes",
     "onlyValidObjects",
-    "withVersions"
+    "withVersions",
+    "withoutRemovedObjects"
 })
 public class DeployablesFilter {
 
@@ -47,6 +48,8 @@ public class DeployablesFilter {
     private Boolean onlyValidObjects = false;
     @JsonProperty("withVersions")
     private Boolean withVersions = false;
+    @JsonProperty("withoutRemovedObjects")
+    private Boolean withoutRemovedObjects = false;
 
     /**
      * path
@@ -112,14 +115,24 @@ public class DeployablesFilter {
         this.withVersions = withVersions;
     }
 
+    @JsonProperty("withoutRemovedObjects")
+    public Boolean getWithoutRemovedObjects() {
+        return withoutRemovedObjects;
+    }
+
+    @JsonProperty("withoutRemovedObjects")
+    public void setWithoutRemovedObjects(Boolean withoutRemovedObjects) {
+        this.withoutRemovedObjects = withoutRemovedObjects;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("folder", folder).append("recursive", recursive).append("objectTypes", objectTypes).append("onlyValidObjects", onlyValidObjects).append("withVersions", withVersions).toString();
+        return new ToStringBuilder(this).append("folder", folder).append("recursive", recursive).append("objectTypes", objectTypes).append("onlyValidObjects", onlyValidObjects).append("withVersions", withVersions).append("withoutRemovedObjects", withoutRemovedObjects).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folder).append(objectTypes).append(recursive).append(onlyValidObjects).append(withVersions).toHashCode();
+        return new HashCodeBuilder().append(folder).append(withoutRemovedObjects).append(objectTypes).append(recursive).append(onlyValidObjects).append(withVersions).toHashCode();
     }
 
     @Override
@@ -131,7 +144,7 @@ public class DeployablesFilter {
             return false;
         }
         DeployablesFilter rhs = ((DeployablesFilter) other);
-        return new EqualsBuilder().append(folder, rhs.folder).append(objectTypes, rhs.objectTypes).append(recursive, rhs.recursive).append(onlyValidObjects, rhs.onlyValidObjects).append(withVersions, rhs.withVersions).isEquals();
+        return new EqualsBuilder().append(folder, rhs.folder).append(withoutRemovedObjects, rhs.withoutRemovedObjects).append(objectTypes, rhs.objectTypes).append(recursive, rhs.recursive).append(onlyValidObjects, rhs.onlyValidObjects).append(withVersions, rhs.withVersions).isEquals();
     }
 
 }

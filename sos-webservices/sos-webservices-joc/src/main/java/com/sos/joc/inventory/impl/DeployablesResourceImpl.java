@@ -79,17 +79,16 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             // get not deleted deployables (only these needs left join with historic table DEP_HISTORY)
             Set<Long> notDeletedIds = dbLayer.getNotDeletedConfigurations(deployableTypes, in.getFolder(), in.getRecursive(), deletedFolders);
             // get deleted deployables outside deleted folders (avoid left join to the historic table DEP_HISTORY)
-            deployables.addAll(getResponseStreamOfDeletedItem(dbLayer.getDeletedConfigurations(deployableTypes, in.getFolder(), in.getRecursive(),
-                    deletedFolders), permittedFolders));
+            if (!in.getWithoutRemovedObjects()) {
+                deployables.addAll(getResponseStreamOfDeletedItem(dbLayer.getDeletedConfigurations(deployableTypes, in.getFolder(), in.getRecursive(),
+                        deletedFolders), permittedFolders));
+            }
             if (in.getWithVersions()) {
                 deployables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurationsWithAllDeployments(notDeletedIds), in
                         .getOnlyValidObjects(), permittedFolders));
             } else {
                 deployables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurationsWithMaxDeployment(notDeletedIds), in
                         .getOnlyValidObjects(), permittedFolders));
-            }
-            if (in.getWithoutRemovedObjects()) {
-                deployables = deployables.stream().filter(item -> !item.getDeleted()).collect(Collectors.toSet());
             }
             ResponseDeployables result = new ResponseDeployables();
             result.setDeliveryDate(Date.from(Instant.now()));

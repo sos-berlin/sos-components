@@ -74,13 +74,13 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
             // get not deleted deployables (only these needs left join with historic table DEP_HISTORY)
             Set<Long> notDeletedIds = dbLayer.getNotDeletedConfigurations(releasableTypes, in.getFolder(), in.getRecursive(), deletedFolders);
             // get deleted deployables outside deleted folders (avoid left join to the historic table DEP_HISTORY)
-            releasables.addAll(getResponseStreamOfDeletedItem(dbLayer.getDeletedConfigurations(releasableTypes, in.getFolder(), in.getRecursive(),
-                    deletedFolders), permittedFolders));
+            if (!in.getWithoutRemovedObjects()) {
+                releasables.addAll(getResponseStreamOfDeletedItem(dbLayer.getDeletedConfigurations(releasableTypes, in.getFolder(), in.getRecursive(),
+                        deletedFolders), permittedFolders));
+            }
             releasables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurations(notDeletedIds), in.getOnlyValidObjects(),
                     permittedFolders));
-            if (in.getWithoutRemovedObjects()) {
-                releasables = releasables.stream().filter(item -> !item.getDeleted()).collect(Collectors.toSet());
-            }
+            
             ResponseReleasables result = new ResponseReleasables();
             result.setDeliveryDate(Date.from(Instant.now()));
             result.setReleasables(releasables);
