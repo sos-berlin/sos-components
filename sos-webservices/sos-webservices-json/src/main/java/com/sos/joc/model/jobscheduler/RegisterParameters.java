@@ -23,6 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "controllers",
+    "clusterWatcher",
     "agents",
     "auditLog"
 })
@@ -43,6 +44,14 @@ public class RegisterParameters {
      */
     @JsonProperty("controllers")
     private List<RegisterParameter> controllers = new ArrayList<RegisterParameter>();
+    /**
+     * agent
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("clusterWatcher")
+    private Agent clusterWatcher;
     @JsonProperty("agents")
     private List<Agent> agents = new ArrayList<Agent>();
     /**
@@ -96,6 +105,28 @@ public class RegisterParameters {
         this.controllers = controllers;
     }
 
+    /**
+     * agent
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("clusterWatcher")
+    public Agent getClusterWatcher() {
+        return clusterWatcher;
+    }
+
+    /**
+     * agent
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("clusterWatcher")
+    public void setClusterWatcher(Agent clusterWatcher) {
+        this.clusterWatcher = clusterWatcher;
+    }
+
     @JsonProperty("agents")
     public List<Agent> getAgents() {
         return agents;
@@ -130,12 +161,12 @@ public class RegisterParameters {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("controllers", controllers).append("agents", agents).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("controllers", controllers).append("clusterWatcher", clusterWatcher).append("agents", agents).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllers).append(controllerId).append(auditLog).append(agents).toHashCode();
+        return new HashCodeBuilder().append(controllers).append(clusterWatcher).append(controllerId).append(auditLog).append(agents).toHashCode();
     }
 
     @Override
@@ -147,7 +178,7 @@ public class RegisterParameters {
             return false;
         }
         RegisterParameters rhs = ((RegisterParameters) other);
-        return new EqualsBuilder().append(controllers, rhs.controllers).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(agents, rhs.agents).isEquals();
+        return new EqualsBuilder().append(controllers, rhs.controllers).append(clusterWatcher, rhs.clusterWatcher).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(agents, rhs.agents).isEquals();
     }
 
 }

@@ -9,8 +9,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -20,7 +20,6 @@ import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitControllers;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.model.command.Overview;
 import com.sos.joc.Globals;
-import com.sos.joc.agents.impl.AgentsResourceStoreImpl;
 import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCJsonCommand;
@@ -72,41 +71,46 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
     private static final String API_CALL_TEST = "./controller/test";
 
     @Override
-    public JOCDefaultResponse storeJobscheduler(String accessToken, byte[] filterBytes) {
+    public JOCDefaultResponse registerController(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL_REGISTER, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, RegisterParameters.class);
-            RegisterParameters jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, RegisterParameters.class);
+            RegisterParameters body = Globals.objectMapper.readValue(filterBytes, RegisterParameters.class);
             
-            checkRequiredComment(jobSchedulerBody.getAuditLog());
-            String controllerId = jobSchedulerBody.getControllerId();
-            if (jobSchedulerBody.getAgents() == null) {
-                jobSchedulerBody.setAgents(Collections.emptyList());
+            checkRequiredComment(body.getAuditLog());
+            String controllerId = body.getControllerId();
+            if (body.getAgents() == null) {
+                body.setAgents(Collections.emptyList());
+            }
+            Agent clusterWatcher = body.getClusterWatcher();
+            // only for compatibility
+            if (clusterWatcher == null && body.getAgents().size() == 1) {
+                clusterWatcher = body.getAgents().get(0); 
             }
             boolean requestWithEmptyControllerId = controllerId.isEmpty();
             int index = 0;
-            for (RegisterParameter controller : jobSchedulerBody.getControllers()) {
+            for (RegisterParameter controller : body.getControllers()) {
                 
-                if (index == 1 && controller.getUrl().equals(jobSchedulerBody.getControllers().get(0).getUrl())) {
+                if (index == 1 && controller.getUrl().equals(body.getControllers().get(0).getUrl())) {
                     throw new JobSchedulerBadRequestException("The cluster members must have the different URLs"); 
                 }
-                if (index == 1 && controller.getRole().equals(jobSchedulerBody.getControllers().get(0).getRole())) {
+                if (index == 1 && controller.getRole().equals(body.getControllers().get(0).getRole())) {
                     throw new JobSchedulerBadRequestException("The members of a Controller Cluster must have different roles."); 
                 }
-                if (index == 1 && jobSchedulerBody.getControllers().stream().anyMatch(c -> Role.STANDALONE.equals(c.getRole()))) {
+                if (index == 1 && body.getControllers().stream().anyMatch(c -> Role.STANDALONE.equals(c.getRole()))) {
                     throw new JobSchedulerBadRequestException("The members of a Controller Cluster must have roles PRIMARY and BACKUP."); 
                 }
-                if (index == 1 && (jobSchedulerBody.getAgents().isEmpty() || !jobSchedulerBody.getAgents()
-                        .stream().anyMatch(Agent::getIsClusterWatcher))) {
-                    throw new JobSchedulerBadRequestException("A Controller Cluster needs at least one Agent Cluster Watcher.");
-                }
-                if (index == 1 && !jobSchedulerBody.getAgents().isEmpty() && jobSchedulerBody.getAgents()
-                        .stream().filter(Agent::getIsClusterWatcher).count() > 0) {
-                    throw new JobSchedulerBadRequestException("Only one Agent may be a Cluster Watcher.");
-                }
+//                if (index == 1 && (body.getAgents().isEmpty() || !body.getAgents()
+//                        .stream().anyMatch(Agent::getIsClusterWatcher))) {
+//                    throw new JobSchedulerBadRequestException("A Controller Cluster needs at least one Agent Cluster Watcher.");
+//                }
+//                if (index == 1 && !body.getAgents().isEmpty() && body.getAgents()
+//                        .stream().filter(Agent::getIsClusterWatcher).count() > 0) {
+//                    throw new JobSchedulerBadRequestException("Only one Agent may be a Cluster Watcher.");
+//                }
 
-                URI otherUri = index == 0 ? null : jobSchedulerBody.getControllers().get(0).getUrl();
+                URI otherUri = index == 0 ? null : body.getControllers().get(0).getUrl();
                 Controller jobScheduler = testConnection(controller.getUrl(), controllerId, otherUri);
                 if (jobScheduler.getConnectionState().get_text() == ConnectionStateText.unreachable) {
                     throw new JobSchedulerConnectionRefusedException(controller.getUrl().toString());
@@ -118,6 +122,8 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_REGISTER);
             InventoryInstancesDBLayer instanceDBLayer = new InventoryInstancesDBLayer(connection);
+            InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
+            
             if (!requestWithEmptyControllerId) { // try update controllers with given controllerId
                 Integer securityLevel = instanceDBLayer.getSecurityLevel(controllerId);
                 if (securityLevel != null && securityLevel != Globals.getJocSecurityLevel().intValue()) {
@@ -126,10 +132,10 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 }
             }
             
-            Set<String> agentIds = jobSchedulerBody.getAgents().stream().map(Agent::getAgentId).collect(Collectors.toSet());
-            
-            for (String agentId : agentIds) {
-                CheckJavaVariableName.test("Agent ID", agentId);
+            if (clusterWatcher != null) {
+                clusterWatcher.setIsClusterWatcher(true);
+                CheckJavaVariableName.test("Agent ID", clusterWatcher.getAgentId());
+                agentDBLayer.agentIdAlreadyExists(Arrays.asList(clusterWatcher.getAgentId()), controllerId);
             }
             
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getPermissonsJocCockpit(controllerId, accessToken).getJS7Controller()
@@ -139,16 +145,13 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             }
 
             InventoryOperatingSystemsDBLayer osDBLayer = new InventoryOperatingSystemsDBLayer(connection);
-            InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
             List<DBItemInventoryJSInstance> instances = new ArrayList<>();
             DBItemInventoryOperatingSystem osSystem = null;
-            
-            agentDBLayer.agentIdAlreadyExists(agentIds, controllerId);
-            
+                        
             boolean firstController = instanceDBLayer.isEmpty();
             boolean clusterUriChanged = false;
             
-            ModifyJobSchedulerAudit jobSchedulerAudit = new ModifyJobSchedulerAudit(jobSchedulerBody);
+            ModifyJobSchedulerAudit jobSchedulerAudit = new ModifyJobSchedulerAudit(body);
             logAuditMessage(jobSchedulerAudit);
 
             // sorted by isPrimary first
@@ -158,19 +161,19 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 if (dbControllers != null && !dbControllers.isEmpty()) {
                     throw new JocObjectAlreadyExistException(String.format("Controller(s) with id '%s' already exists", controllerId));
                 }
-                if (jobSchedulerBody.getControllers().size() == 1) {  // standalone
-                    RegisterParameter controller = jobSchedulerBody.getControllers().get(0);
+                if (body.getControllers().size() == 1) {  // standalone
+                    RegisterParameter controller = body.getControllers().get(0);
                     controller.setRole(Role.STANDALONE);
                     instances.add(storeNewInventoryInstance(instanceDBLayer, osDBLayer, controller, controllerId));
                 } else {
-                    for (RegisterParameter controller : jobSchedulerBody.getControllers()) {
+                    for (RegisterParameter controller : body.getControllers()) {
                         instances.add(storeNewInventoryInstance(instanceDBLayer, osDBLayer, controller, controllerId));
                     }
                 }
                 
             } else { // try update controllers with given controllerId
-                if (jobSchedulerBody.getControllers().size() == 1) {  // standalone from request
-                    RegisterParameter controller = jobSchedulerBody.getControllers().get(0);
+                if (body.getControllers().size() == 1) {  // standalone from request
+                    RegisterParameter controller = body.getControllers().get(0);
                     controller.setRole(Role.STANDALONE);
                     if (dbControllers.size() == 2) { // but cluster in DB
                         for (DBItemInventoryJSInstance dbController : dbControllers) {
@@ -195,13 +198,13 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     if (dbControllers.size() == 1) { // but standalone in DB
                         instanceDBLayer.deleteInstance(dbControllers.get(0));
                         clusterUriChanged = true;
-                        for (RegisterParameter controller : jobSchedulerBody.getControllers()) {
+                        for (RegisterParameter controller : body.getControllers()) {
                             instances.add(storeNewInventoryInstance(instanceDBLayer, osDBLayer, controller, controllerId));
                         }
                     } else {
                         DBItemInventoryJSInstance instance = null;
                         boolean uriChanged = false;
-                        for (RegisterParameter controller : jobSchedulerBody.getControllers()) {
+                        for (RegisterParameter controller : body.getControllers()) {
                             if (Role.PRIMARY.equals(controller.getRole())) {
                                 uriChanged = !dbControllers.get(0).getUri().equalsIgnoreCase(controller.getUrl().toString());
                                 clusterUriChanged = !dbControllers.get(0).getClusterUri().equalsIgnoreCase(controller.getClusterUrl().toString());
@@ -229,85 +232,82 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             
             //sort Agents from request
             //jobSchedulerBody.getAgents().stream().sorted(Comparator.comparing(Agent::getAgentId));
-            Map<String, Agent> agentMap = jobSchedulerBody.getAgents().stream().collect(Collectors.toMap(Agent::getAgentId, Function.identity()));
-            List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(Arrays.asList(controllerId));
-            Map<String, Set<DBItemInventoryAgentName>> allAliases = agentDBLayer.getAgentNameAliases(agentIds);
+            //List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(Arrays.asList(controllerId));
+            //Map<String, Set<DBItemInventoryAgentName>> allAliases = agentDBLayer.getAgentNameAliases(agentIds);
+            //List<JAgentRef> agentRefs = new ArrayList<>();
             List<JAgentRef> agentRefs = new ArrayList<>();
+            boolean controllerUpdateRequired = false;
+            boolean updateAgentRequired = false;
             
-            boolean watcherUpdateRequired = false;
-            if (dbAgents != null && !dbAgents.isEmpty()) {
-                for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
-                    Agent agent = agentMap.remove(dbAgent.getAgentId());
-                    if (agent == null) {
-                        // throw something?
-                        continue;
-                    }
-                    boolean controllerUpdateRequired = false;
-                    boolean dbUpdateRequired = false;
-                    if (dbAgent.getDisabled() != agent.getDisabled()) {
-                        dbAgent.setDisabled(agent.getDisabled());
-                        dbUpdateRequired = true;
-                        if (!agent.getDisabled()) {
-                            controllerUpdateRequired = true; 
+            if (clusterWatcher != null) {
+                final String agentId = clusterWatcher.getAgentId();
+                List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(Arrays.asList(controllerId));
+                boolean clusterWatcherIsNew = true;
+                
+                if (dbAgents != null && !dbAgents.isEmpty()) {
+                    Optional<DBItemInventoryAgentInstance> dbAgentOpt = dbAgents.stream().filter(a -> a.getAgentId().equals(agentId)).findAny();
+                    if (dbAgentOpt.isPresent()) { // cluster watcher is not new
+                        clusterWatcherIsNew = false;
+                        DBItemInventoryAgentInstance dbAgent = dbAgentOpt.get();
+                        dbAgents.remove(dbAgent);
+                        boolean watcherIsChanged = false;
+                        if (!dbAgent.getIsWatcher()) { // cluster watcher is already cluster watcher
+                            controllerUpdateRequired = true;
+                            watcherIsChanged = true;
+                            dbAgent.setIsWatcher(true);
+                        }
+                        if (!dbAgent.getAgentName().equals(clusterWatcher.getAgentName())) {
+                            watcherIsChanged = true;
+                            dbAgent.setAgentName(clusterWatcher.getAgentName());
+                        }
+                        if (!dbAgent.getUri().equals(clusterWatcher.getUrl())) {
+                            controllerUpdateRequired = true;
+                            updateAgentRequired = true;
+                            watcherIsChanged = true;
+                            dbAgent.setUri(clusterWatcher.getUrl());
+                        }
+                        if (watcherIsChanged) {
+                            agentDBLayer.updateAgent(dbAgent);
                         }
                     }
-                    if (dbAgent.getIsWatcher() != agent.getIsClusterWatcher()) {
-                        dbAgent.setIsWatcher(agent.getIsClusterWatcher());
-                        dbUpdateRequired = true;
-                        watcherUpdateRequired = true;
+                    for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
+                        if (dbAgent.getIsWatcher()) {
+                            dbAgent.setIsWatcher(false);
+                            agentDBLayer.updateAgent(dbAgent);
+                        }
                     }
-                    if (!dbAgent.getAgentName().equals(agent.getAgentName())) {
-                        dbAgent.setAgentName(agent.getAgentName());
-                        dbUpdateRequired = true;
-                    }
-                    if (!dbAgent.getUri().equals(agent.getUrl())) {
-                        dbAgent.setUri(agent.getUrl());
-                        dbUpdateRequired = true;
-                        controllerUpdateRequired = true;
-                    }
-                    if (dbUpdateRequired) {
-                        agentDBLayer.updateAgent(dbAgent);
-                    }
-                    if (controllerUpdateRequired) {
-                        agentRefs.add(JAgentRef.apply(AgentRef.apply(AgentName.of(dbAgent.getAgentId()), Uri.of(dbAgent.getUri()))));
-                    }
-                    AgentsResourceStoreImpl.updateAliases(connection, agent, allAliases.get(agent.getAgentId()));
                 }
-            }
-            
-            for (Agent agent : agentMap.values()) {
-                boolean controllerUpdateRequired = true;
-                DBItemInventoryAgentInstance dbAgent = new DBItemInventoryAgentInstance();
-                dbAgent.setId(null);
-                dbAgent.setAgentId(agent.getAgentId());
-                dbAgent.setAgentName(agent.getAgentName());
-                dbAgent.setControllerId(controllerId);
-                dbAgent.setDisabled(agent.getDisabled());
-                if (agent.getDisabled()) {
-                    controllerUpdateRequired = false; 
-                }
-                dbAgent.setIsWatcher(agent.getIsClusterWatcher());
-                if (agent.getIsClusterWatcher()) {
-                    watcherUpdateRequired = true;
-                }
-                dbAgent.setOsId(0L);
-                dbAgent.setStartedAt(null);
-                dbAgent.setUri(agent.getUrl());
-                dbAgent.setVersion(null);
-                agentDBLayer.saveAgent(dbAgent);
                 
-                if (controllerUpdateRequired) {
-                    agentRefs.add(JAgentRef.apply(AgentRef.apply(AgentName.of(dbAgent.getAgentId()), Uri.of(dbAgent.getUri()))));
+                if (clusterWatcherIsNew) {
+                    controllerUpdateRequired = true;
+                    updateAgentRequired = true;
+                    DBItemInventoryAgentInstance dbAgent = new DBItemInventoryAgentInstance();
+                    dbAgent.setId(null);
+                    dbAgent.setAgentId(clusterWatcher.getAgentId());
+                    dbAgent.setAgentName(clusterWatcher.getAgentName());
+                    dbAgent.setControllerId(controllerId);
+                    dbAgent.setDisabled(clusterWatcher.getDisabled());
+                    dbAgent.setIsWatcher(true);
+                    dbAgent.setOsId(0L);
+                    dbAgent.setStartedAt(null);
+                    dbAgent.setUri(clusterWatcher.getUrl());
+                    dbAgent.setVersion(null);
+                    agentDBLayer.saveAgent(dbAgent);
                 }
-                AgentsResourceStoreImpl.updateAliases(connection, agent, allAliases.get(agent.getAgentId()));
+                if (updateAgentRequired) {
+                    agentRefs.add(JAgentRef.apply(AgentRef.apply(AgentName.of(clusterWatcher.getAgentId()), Uri.of(clusterWatcher.getUrl()))));
+                }
             }
             
+            
+                
+                
             instances = instances.stream().filter(Objects::nonNull).collect(Collectors.toList());
             if (!instances.isEmpty()) {
                 // appointClusterNodes is called in Proxy when coupled with controller if cluster TYPE:Empty
                 ProxiesEdit.update(instances);
             }
-            if (clusterUriChanged || watcherUpdateRequired) {
+            if (clusterUriChanged || controllerUpdateRequired) {
                 try {
                     JobSchedulerResourceModifyJobSchedulerClusterImpl.appointNodes(controllerId, agentDBLayer, getJocError());
                 } catch (JobSchedulerBadRequestException e) {
@@ -349,7 +349,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
     }
 
     @Override
-    public JOCDefaultResponse deleteJobscheduler(String accessToken, byte[] filterBytes) {
+    public JOCDefaultResponse deleteController(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL_DELETE, filterBytes, accessToken);
@@ -408,7 +408,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
     }
     
     @Override
-    public JOCDefaultResponse testConnectionJobscheduler(String accessToken, byte[] filterBytes) {
+    public JOCDefaultResponse testControllerConnection(String accessToken, byte[] filterBytes) {
         try {
             initLogging(API_CALL_TEST, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);

@@ -413,7 +413,7 @@ public class Proxies {
             List<String> w = dbLayer.getUrisOfEnabledClusterWatcherByControllerId(controllerId);
             List<Watch> watchers = w.stream().map(item -> new Watch(Uri.of(item))).collect(Collectors.toList());
             if (watchers == null || watchers.isEmpty()) {
-                throw new DBMissingDataException("No Cluster Watchers are configured for Controller '" + controllerId + "'");
+                throw new DBMissingDataException("No Cluster Watcher is configured for Controller '" + controllerId + "'");
             } else {
                 LOGGER.info(String.format("Cluster Watchers of '%s': %s", controllerId, w.toString()));
                 return watchers;

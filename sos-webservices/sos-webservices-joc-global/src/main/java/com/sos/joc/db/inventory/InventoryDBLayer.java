@@ -76,7 +76,7 @@ public class InventoryDBLayer extends DBLayer {
         if (result != null && !result.isEmpty()) {
             hql = new StringBuilder("select new ").append(InventoryDeploymentItem.class.getName());
             hql.append("(");
-            hql.append("id as deploymentId,commitId,version,operation,deploymentDate,content,path,controllerId");
+            hql.append("id as deploymentId,commitId,version,operation,deploymentDate,invContent,path,controllerId");
             hql.append(") ");
             hql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY);
             hql.append(" where id in (:ids)");

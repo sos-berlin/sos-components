@@ -16,18 +16,18 @@ public interface IJobSchedulerEditResource {
 	@Path("register")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces({ MediaType.APPLICATION_JSON })
-	public JOCDefaultResponse storeJobscheduler(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes);
+	public JOCDefaultResponse registerController(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes);
 	
 	@POST
     @Path("cleanup")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse deleteJobscheduler(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes);
+    public JOCDefaultResponse deleteController(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes);
     
     @POST
     @Path("test")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse testConnectionJobscheduler(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    public JOCDefaultResponse testControllerConnection(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 
 }
