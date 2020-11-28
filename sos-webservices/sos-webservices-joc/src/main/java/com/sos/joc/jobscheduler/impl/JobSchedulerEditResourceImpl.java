@@ -25,7 +25,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
-import com.sos.joc.classes.audit.ModifyJobSchedulerAudit;
+import com.sos.joc.classes.audit.RegisterControllerAudit;
 import com.sos.joc.classes.jobscheduler.ControllerAnswer;
 import com.sos.joc.classes.jobscheduler.ControllerCallable;
 import com.sos.joc.classes.jobscheduler.States;
@@ -87,6 +87,9 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             // only for compatibility
             if (clusterWatcher == null && body.getAgents().size() == 1) {
                 clusterWatcher = body.getAgents().get(0); 
+            }
+            if (body.getControllers().size() < 2) {
+                clusterWatcher = null;
             }
             boolean requestWithEmptyControllerId = controllerId.isEmpty();
             int index = 0;
@@ -151,7 +154,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             boolean firstController = instanceDBLayer.isEmpty();
             boolean clusterUriChanged = false;
             
-            ModifyJobSchedulerAudit jobSchedulerAudit = new ModifyJobSchedulerAudit(body);
+            RegisterControllerAudit jobSchedulerAudit = new RegisterControllerAudit(body);
             logAuditMessage(jobSchedulerAudit);
 
             // sorted by isPrimary first
@@ -230,11 +233,6 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 }
             }
             
-            //sort Agents from request
-            //jobSchedulerBody.getAgents().stream().sorted(Comparator.comparing(Agent::getAgentId));
-            //List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(Arrays.asList(controllerId));
-            //Map<String, Set<DBItemInventoryAgentName>> allAliases = agentDBLayer.getAgentNameAliases(agentIds);
-            //List<JAgentRef> agentRefs = new ArrayList<>();
             List<JAgentRef> agentRefs = new ArrayList<>();
             boolean controllerUpdateRequired = false;
             boolean updateAgentRequired = false;
@@ -286,7 +284,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     dbAgent.setAgentId(clusterWatcher.getAgentId());
                     dbAgent.setAgentName(clusterWatcher.getAgentName());
                     dbAgent.setControllerId(controllerId);
-                    dbAgent.setDisabled(clusterWatcher.getDisabled());
+                    dbAgent.setDisabled(false);
                     dbAgent.setIsWatcher(true);
                     dbAgent.setOsId(0L);
                     dbAgent.setStartedAt(null);
@@ -314,10 +312,6 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 }
             }
             
-            //List<DBItemInventoryAgentInstance> dbAvailableAgents = agentDBLayer.getAgentsByControllerIds(Arrays.asList(controllerId), false, true);
-            //if (dbAvailableAgents != null) {
-                //List<JAgentRef> agentRefs = dbAvailableAgents.stream().map(a -> JAgentRef.apply(AgentRef.apply(AgentName.of(a.getAgentId()), Uri.of(a
-                //        .getUri())))).collect(Collectors.toList());
             if (!agentRefs.isEmpty()) {
                 final String cId = controllerId;
                 ControllerApi.of(controllerId).updateAgentRefs(agentRefs).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getJocError(),

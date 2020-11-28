@@ -23,7 +23,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.ModifyAgentClusterAudit;
 import com.sos.joc.classes.proxy.ControllerApi;
-import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryAgentName;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
@@ -50,16 +49,17 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
             JsonValidator.validateFailFast(filterBytes, StoreAgents.class);
             StoreAgents agentStoreParameter = Globals.objectMapper.readValue(filterBytes, StoreAgents.class);
             // TODO permissions
-            boolean permission = true; //getPermissonsJocCockpit(agentStoreParameter.getControllerId(), accessToken).getJS7Controller().getExecute().isContinue();
+            boolean permission = true; // getPermissonsJocCockpit(agentStoreParameter.getControllerId(),
+                                       // accessToken).getJS7Controller().getExecute().isContinue();
             String controllerId = agentStoreParameter.getControllerId();
-            
+
             JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, permission);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             Set<String> agentIds = agentStoreParameter.getAgents().stream().map(Agent::getAgentId).collect(Collectors.toSet());
-            
+
             for (String agentId : agentIds) {
                 CheckJavaVariableName.test("Agent ID", agentId);
             }
@@ -67,18 +67,17 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
             checkRequiredComment(agentStoreParameter.getAuditLog());
             ModifyAgentClusterAudit jobschedulerAudit = new ModifyAgentClusterAudit(agentStoreParameter);
             logAuditMessage(jobschedulerAudit);
-            
+
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
-            
+
             Map<String, Agent> agentMap = agentStoreParameter.getAgents().stream().collect(Collectors.toMap(Agent::getAgentId, Function.identity()));
             // TODO check unique URLs
             // Set<String> urls = agentStoreParameter.getAgents().stream().map(Agent::getUrl).map(String::toLowerCase).collect(Collectors.toSet());
             List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(Arrays.asList(controllerId));
             Map<String, Set<DBItemInventoryAgentName>> allAliases = agentDBLayer.getAgentNameAliases(agentIds);
             List<JAgentRef> agentRefs = new ArrayList<>();
-            
-            boolean watcherUpdateRequired = false;
+
             if (dbAgents != null && !dbAgents.isEmpty()) {
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
                     Agent agent = agentMap.remove(dbAgent.getAgentId());
@@ -92,14 +91,13 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                         dbAgent.setDisabled(agent.getDisabled());
                         dbUpdateRequired = true;
                         if (!agent.getDisabled()) {
-                            controllerUpdateRequired = true; 
+                            controllerUpdateRequired = true;
                         }
                     }
-                    if (dbAgent.getIsWatcher() != agent.getIsClusterWatcher()) {
-                        dbAgent.setIsWatcher(agent.getIsClusterWatcher());
-                        dbUpdateRequired = true;
-                        watcherUpdateRequired = true;
-                    }
+//                    if (dbAgent.getIsWatcher() != agent.getIsClusterWatcher()) {
+//                        dbAgent.setIsWatcher(agent.getIsClusterWatcher());
+//                        dbUpdateRequired = true;
+//                    }
                     if (!dbAgent.getAgentName().equals(agent.getAgentName())) {
                         dbAgent.setAgentName(agent.getAgentName());
                         dbUpdateRequired = true;
@@ -115,11 +113,11 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                     if (controllerUpdateRequired) {
                         agentRefs.add(JAgentRef.apply(AgentRef.apply(AgentName.of(dbAgent.getAgentId()), Uri.of(dbAgent.getUri()))));
                     }
-                    
+
                     updateAliases(connection, agent, allAliases.get(agent.getAgentId()));
                 }
             }
-            
+
             for (Agent agent : agentMap.values()) {
                 boolean controllerUpdateRequired = true;
                 DBItemInventoryAgentInstance dbAgent = new DBItemInventoryAgentInstance();
@@ -129,38 +127,35 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                 dbAgent.setControllerId(controllerId);
                 dbAgent.setDisabled(agent.getDisabled());
                 if (agent.getDisabled()) {
-                    controllerUpdateRequired = false; 
+                    controllerUpdateRequired = false;
                 }
-                dbAgent.setIsWatcher(agent.getIsClusterWatcher());
-                if (agent.getIsClusterWatcher()) {
-                    watcherUpdateRequired = true;
-                }
+                //dbAgent.setIsWatcher(agent.getIsClusterWatcher());
+                dbAgent.setIsWatcher(false);
                 dbAgent.setOsId(0L);
                 dbAgent.setStartedAt(null);
                 dbAgent.setUri(agent.getUrl());
                 dbAgent.setVersion(null);
                 agentDBLayer.saveAgent(dbAgent);
-                
+
                 if (controllerUpdateRequired) {
                     agentRefs.add(JAgentRef.apply(AgentRef.apply(AgentName.of(dbAgent.getAgentId()), Uri.of(dbAgent.getUri()))));
                 }
-                
+
                 updateAliases(connection, agent, allAliases.get(agent.getAgentId()));
             }
-            
-            //List<JAgentRef> agentRefs = Proxies.getAgents(controllerId, agentDBLayer);
+
+            // List<JAgentRef> agentRefs = Proxies.getAgents(controllerId, agentDBLayer);
             if (!agentRefs.isEmpty()) {
                 ControllerApi.of(controllerId).updateAgentRefs(agentRefs).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getJocError(),
                         controllerId));
             }
-            
-            
+
             // ask for cluster
-//            List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(controllerId);
-//            if (watcherUpdateRequired && (controllerInstances == null || controllerInstances.size() == 2)) { // is cluster
-//                JobSchedulerResourceModifyJobSchedulerClusterImpl.appointNodes(agentStoreParameter.getControllerId(), agentDBLayer, getJocError());
-//            }
-            
+            // List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(controllerId);
+            // if (watcherUpdateRequired && (controllerInstances == null || controllerInstances.size() == 2)) { // is cluster
+            // JobSchedulerResourceModifyJobSchedulerClusterImpl.appointNodes(agentStoreParameter.getControllerId(), agentDBLayer, getJocError());
+            // }
+
             storeAuditLogEntry(jobschedulerAudit);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -173,7 +168,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
             Globals.disconnect(connection);
         }
     }
-    
+
     public static void updateAliases(SOSHibernateSession connection, Agent agent, Collection<DBItemInventoryAgentName> dbAliases)
             throws SOSHibernateException {
         if (dbAliases != null) {
