@@ -13,6 +13,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.history.JobHistoryDBLayer;
+import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Err;
 import com.sos.joc.model.common.HistoryState;
@@ -61,7 +62,7 @@ public class OrderHistoryResourceDeprecatedImpl extends JOCResourceImpl implemen
                     taskHistoryItem.setJob(dbItemOrderStep.getJobName());
                     taskHistoryItem.setOrderId(dbItemOrderStep.getOrderKey());
                     taskHistoryItem.setExitCode(dbItemOrderStep.getReturnCode());
-                    taskHistoryItem.setState(setState(dbItemOrderStep));
+                    taskHistoryItem.setState(getState(dbItemOrderStep.getSeverity()));
                     taskHistoryItem.setCriticality(dbItemOrderStep.getCriticalityAsEnum().value().toLowerCase());
                     taskHistoryItem.setSurveyDate(dbItemOrderStep.getModified());
                     taskHistoryItem.setTaskId(dbItemOrderStep.getId());
@@ -83,17 +84,20 @@ public class OrderHistoryResourceDeprecatedImpl extends JOCResourceImpl implemen
         }
     }
 
-    private HistoryState setState(DBItemHistoryOrderStep dbItemOrderStep) {
+    private HistoryState getState(Integer severity) {
         HistoryState state = new HistoryState();
-        if (dbItemOrderStep.isSuccessFul()) {
-            state.setSeverity(0);
+        state.setSeverity(severity);
+
+        switch (severity.intValue()) {
+        case HistorySeverity.SUCCESSFUL:
             state.set_text(HistoryStateText.SUCCESSFUL);
-        } else if (dbItemOrderStep.isInComplete()) {
-            state.setSeverity(1);
+            break;
+        case HistorySeverity.INCOMPLETE:
             state.set_text(HistoryStateText.INCOMPLETE);
-        } else if (dbItemOrderStep.isFailed()) {
-            state.setSeverity(2);
+            break;
+        case HistorySeverity.FAILED:
             state.set_text(HistoryStateText.FAILED);
+            break;
         }
         return state;
     }

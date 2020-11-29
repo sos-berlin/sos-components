@@ -54,7 +54,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                 return jocDefaultResponse;
             }
 
-            List<TaskHistoryItem> listOfHistory = new ArrayList<TaskHistoryItem>();
+            List<TaskHistoryItem> history = new ArrayList<TaskHistoryItem>();
             boolean withFolderFilter = in.getFolders() != null && !in.getFolders().isEmpty();
             boolean hasPermission = true;
             boolean getTaskFromHistoryIdAndNode = false;
@@ -162,7 +162,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                             if (matcher != null && !matcher.reset(step.getWorkflowPath() + "," + step.getJobName()).find()) {
                                 continue;
                             }
-                            listOfHistory.add(HistoryMapper.map2TaskHistoryItem(step));
+                            history.add(HistoryMapper.map2TaskHistoryItem(step));
                         }
                     }
                 } catch (Exception e) {
@@ -174,11 +174,11 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                 }
             }
 
-            TaskHistory entity = new TaskHistory();
-            entity.setDeliveryDate(Date.from(Instant.now()));
-            entity.setHistory(listOfHistory);
+            TaskHistory answer = new TaskHistory();
+            answer.setDeliveryDate(Date.from(Instant.now()));
+            answer.setHistory(history);
 
-            return JOCDefaultResponse.responseStatus200(entity);
+            return JOCDefaultResponse.responseStatus200(answer);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);

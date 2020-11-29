@@ -6,6 +6,7 @@ import java.util.Map;
 import js7.controller.data.events.AgentRefStateEvent.AgentReady;
 import js7.controller.data.events.ControllerEvent.ControllerReady;
 import js7.data.order.OrderEvent.OrderAdded;
+import js7.data.order.OrderEvent.OrderBroken;
 import js7.data.order.OrderEvent.OrderCancelled$;
 import js7.data.order.OrderEvent.OrderFailed;
 import js7.data.order.OrderEvent.OrderFinished$;
@@ -36,6 +37,8 @@ public enum HistoryEventType {
     OrderCancelled(OrderCancelled$.class.getSimpleName()),
 
     OrderFailed(OrderFailed.class.getSimpleName()),
+
+    OrderBroken(OrderBroken.class.getSimpleName()),
 
     OrderSuspended(OrderSuspended$.class.getSimpleName()),
 

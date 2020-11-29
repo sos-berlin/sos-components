@@ -1,12 +1,10 @@
 package com.sos.joc.classes.history;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.DBItemHistoryOrderState;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
+import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.model.common.Err;
 import com.sos.joc.model.common.HistoryOrderState;
 import com.sos.joc.model.common.HistoryState;
@@ -18,8 +16,6 @@ import com.sos.joc.model.order.OrderStateText;
 
 public class HistoryMapper {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(HistoryMapper.class);
-
     public static OrderHistoryItem map2OrderHistoryItem(DBItemHistoryOrder item) {
         OrderHistoryItem history = new OrderHistoryItem();
         history.setControllerId(item.getJobSchedulerId());
@@ -28,11 +24,12 @@ public class HistoryMapper {
         history.setOrderId(item.getOrderKey());
         history.setPlannedTime(item.getStartTimePlanned());
         history.setStartTime(item.getStartTime());
-        history.setPosition(getWorkflowPosition(item));
-        history.setState(getState(item));
+        history.setState(getState(item.getSeverity()));
         history.setOrderState(getOrderState(item.getStateAsEnum()));
         history.setSurveyDate(item.getModified());
         history.setWorkflow(item.getWorkflowPath());
+        history.setPosition(getWorkflowPosition(item));
+        history.setSequence(getSequence(item));
         return history;
     }
 
@@ -46,12 +43,14 @@ public class HistoryMapper {
         history.setJob(item.getJobName());
         history.setOrderId(item.getOrderKey());
         history.setExitCode(item.getReturnCode());
-        history.setState(getState(item));
+        history.setState(getState(item.getSeverity()));
         history.setCriticality(item.getCriticalityAsEnum().value().toLowerCase());
         history.setSurveyDate(item.getModified());
         history.setTaskId(item.getId());
         history.setWorkflow(item.getWorkflowPath());
-        history.setPosition(item.getPosition().toString());
+        history.setPosition(item.getWorkflowPosition());
+        history.setSequence(item.getPosition());
+        history.setRetryCounter(item.getRetryCounter());
         return history;
     }
 
@@ -79,75 +78,60 @@ public class HistoryMapper {
     }
 
     private static String getWorkflowPosition(DBItemHistoryOrder item) {
-        if (!SOSString.isEmpty(item.getStartWorkflowPosition())) {
-            return item.getStartWorkflowPosition();
-        } else if (!SOSString.isEmpty(item.getEndWorkflowPosition())) {
-            return item.getEndWorkflowPosition();
+        if (SOSString.isEmpty(item.getStartWorkflowPosition()) || item.getStartWorkflowPosition().equals("0")) {
+            return null;
         }
-        return item.getWorkflowPosition();
+        return item.getStartWorkflowPosition();
     }
 
-    private static HistoryState getState(DBItemHistoryOrder item) {
-        HistoryState state = new HistoryState();
-        if (item.isSuccessFul()) {
-            state.setSeverity(0);
-            state.set_text(HistoryStateText.SUCCESSFUL);
-        } else if (item.isInComplete()) {
-            state.setSeverity(1);
-            state.set_text(HistoryStateText.INCOMPLETE);
-        } else if (item.isFailed()) {
-            state.setSeverity(2);
-            state.set_text(HistoryStateText.FAILED);
-        }
-        return state;
+    private static Integer getSequence(DBItemHistoryOrder item) {
+        return HistoryPosition.getLast(item.getStartWorkflowPosition());
     }
 
-    private static HistoryState getState(DBItemHistoryOrderStep step) {
+    private static HistoryState getState(Integer severity) {
         HistoryState state = new HistoryState();
-        if (step.isSuccessFul()) {
-            state.setSeverity(0);
+        state.setSeverity(severity);
+
+        switch (severity.intValue()) {
+        case HistorySeverity.SUCCESSFUL:
             state.set_text(HistoryStateText.SUCCESSFUL);
-        } else if (step.isInComplete()) {
-            state.setSeverity(1);
+            break;
+        case HistorySeverity.INCOMPLETE:
             state.set_text(HistoryStateText.INCOMPLETE);
-        } else if (step.isFailed()) {
-            state.setSeverity(2);
+            break;
+        case HistorySeverity.FAILED:
             state.set_text(HistoryStateText.FAILED);
+            break;
         }
         return state;
     }
 
     private static HistoryOrderState getOrderState(OrderStateText st) {
         HistoryOrderState state = new HistoryOrderState();
-        try {
-            state.set_text(st);
-            switch (state.get_text()) {
-            case FINISHED:
-                state.setSeverity(0);
-                break;
-            case PLANNED:
-            case PENDING:
-            case RUNNING:
-            case WAITING:
-            case RESUMED:
-            case SUSPENDMARKED:
-            case RESUMEMARKED:
-                state.setSeverity(1);
-                break;
-            case SUSPENDED:
-            case FAILED:
-            case BLOCKED:
-            case CANCELLED:
-            case UNKNOWN:
-                state.setSeverity(2);
-                break;
-            }
-        } catch (Throwable e) {
-            LOGGER.error(e.toString(), e);
-            state.setSeverity(2);
-            state.set_text(OrderStateText.UNKNOWN);
-        }
+        state.set_text(st);
 
+        switch (state.get_text()) {
+        case FINISHED:
+            state.setSeverity(HistorySeverity.SUCCESSFUL);
+            break;
+        case PLANNED:
+        case PENDING:
+        case RUNNING:
+        case WAITING:
+        case RESUMED:
+        case SUSPENDMARKED:
+        case RESUMEMARKED:
+            state.setSeverity(HistorySeverity.INCOMPLETE);
+            break;
+        case SUSPENDED:
+        case FAILED:
+        case BLOCKED:
+        case BROKEN:
+        case CANCELLED:
+        case UNKNOWN:
+            state.setSeverity(HistorySeverity.FAILED);
+            break;
+        }
         return state;
     }
 

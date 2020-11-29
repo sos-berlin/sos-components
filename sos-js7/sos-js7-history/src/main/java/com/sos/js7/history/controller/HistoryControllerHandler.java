@@ -33,11 +33,13 @@ import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryAgentReady;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryControllerReady;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryOrder;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryOrder.OutcomeInfo;
+import com.sos.js7.history.controller.proxy.HistoryEventEntry.OutcomeType;
 import com.sos.js7.history.controller.proxy.HistoryEventType;
 import com.sos.js7.history.controller.proxy.fatevent.AFatEvent;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventAgentReady;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventControllerReady;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderAdded;
+import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderBroken;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderCancelled;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderFailed;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderFinished;
@@ -58,6 +60,7 @@ import com.sos.js7.history.controller.proxy.fatevent.FatOutcome;
 import js7.base.problem.ProblemCode;
 import js7.base.problem.ProblemException;
 import js7.data.event.Event;
+import js7.data.order.OrderEvent.OrderBroken;
 import js7.data.order.OrderEvent.OrderStderrWritten;
 import js7.data.order.OrderEvent.OrderStdoutWritten;
 import js7.data.order.OrderId;
@@ -336,6 +339,18 @@ public class HistoryControllerHandler {
 
                 break;
 
+            case OrderBroken:
+                order = entry.getOrder();
+                OrderBroken ob = (OrderBroken) entry.getEvent();
+
+                oi = order.getOutcomeInfo(OutcomeType.broken, ob.problem());
+                outcome = new FatOutcome(oi.getType(), oi.getReturnCode(), oi.isSuccessReturnCode(), oi.isSucceeded(), oi.isFailed(), oi
+                        .getKeyValues(), oi.getErrorCode(), oi.getErrorMessage());
+
+                event = new FatEventOrderBroken(entry.getEventId(), entry.getEventDate());
+                event.set(order.getOrderId(), outcome);
+
+                break;
             case OrderSuspended:
                 order = entry.getOrder();
 

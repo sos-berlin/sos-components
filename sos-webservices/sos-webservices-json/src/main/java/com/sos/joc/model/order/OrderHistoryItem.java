@@ -31,6 +31,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "plannedTime",
     "endTime",
     "position",
+    "sequence",
     "state",
     "orderState",
     "historyId",
@@ -103,6 +104,15 @@ public class OrderHistoryItem {
      */
     @JsonProperty("position")
     private String position;
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("sequence")
+    private Integer sequence;
     /**
      * orderHistory status
      * <p>
@@ -301,6 +311,30 @@ public class OrderHistoryItem {
     }
 
     /**
+     * non negative integer
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("sequence")
+    public Integer getSequence() {
+        return sequence;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("sequence")
+    public void setSequence(Integer sequence) {
+        this.sequence = sequence;
+    }
+
+    /**
      * orderHistory status
      * <p>
      * 
@@ -382,12 +416,12 @@ public class OrderHistoryItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("controllerId", controllerId).append("orderId", orderId).append("workflow", workflow).append("startTime", startTime).append("plannedTime", plannedTime).append("endTime", endTime).append("position", position).append("state", state).append("orderState", orderState).append("historyId", historyId).append("children", children).toString();
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("controllerId", controllerId).append("orderId", orderId).append("workflow", workflow).append("startTime", startTime).append("plannedTime", plannedTime).append("endTime", endTime).append("position", position).append("sequence", sequence).append("state", state).append("orderState", orderState).append("historyId", historyId).append("children", children).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(surveyDate).append(controllerId).append(workflow).append(orderId).append(orderState).append(children).append(historyId).append(plannedTime).append(startTime).append(endTime).append(position).append(state).toHashCode();
+        return new HashCodeBuilder().append(surveyDate).append(controllerId).append(workflow).append(orderId).append(orderState).append(sequence).append(children).append(historyId).append(plannedTime).append(startTime).append(endTime).append(position).append(state).toHashCode();
     }
 
     @Override
@@ -399,7 +433,7 @@ public class OrderHistoryItem {
             return false;
         }
         OrderHistoryItem rhs = ((OrderHistoryItem) other);
-        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(orderState, rhs.orderState).append(children, rhs.children).append(historyId, rhs.historyId).append(plannedTime, rhs.plannedTime).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(position, rhs.position).append(state, rhs.state).isEquals();
+        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(orderState, rhs.orderState).append(sequence, rhs.sequence).append(children, rhs.children).append(historyId, rhs.historyId).append(plannedTime, rhs.plannedTime).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(position, rhs.position).append(state, rhs.state).isEquals();
     }
 
 }

@@ -17,6 +17,7 @@ import org.hibernate.annotations.Type;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.model.order.OrderStateText;
 
 @Entity
@@ -110,6 +111,9 @@ public class DBItemHistoryOrder extends DBItem {
 
     @Column(name = "[END_ORDER_STEP_ID]", nullable = false)
     private Long endOrderStepId; // db. TABLE_HISTORY_ORDER_STEPS.ID
+
+    @Column(name = "[SEVERITY]", nullable = false)
+    private Integer severity;
 
     @Column(name = "[STATE]", nullable = false)
     private Integer state;
@@ -381,6 +385,19 @@ public class DBItemHistoryOrder extends DBItem {
         return endOrderStepId;
     }
 
+    public Integer getSeverity() {
+        return severity;
+    }
+
+    public void setSeverity(Integer val) {
+        severity = val;
+    }
+
+    @Transient
+    public void setSeverity(OrderStateText val) {
+        setSeverity(HistorySeverity.map2DbSeverity(val));
+    }
+
     public Integer getState() {
         return state;
     }
@@ -464,7 +481,7 @@ public class DBItemHistoryOrder extends DBItem {
     }
 
     public void setErrorText(String val) {
-        errorText = normalizeValue(val, 255);
+        errorText = normalizeValue(val, 500);
     }
 
     public String getErrorText() {
@@ -506,18 +523,4 @@ public class DBItemHistoryOrder extends DBItem {
         return modified;
     }
 
-    @Transient
-    public boolean isSuccessFul() {
-        return endTime != null && !error;
-    }
-
-    @Transient
-    public boolean isInComplete() {
-        return startTime != null && endTime == null;
-    }
-
-    @Transient
-    public boolean isFailed() {
-        return endTime != null && error;
-    }
 }

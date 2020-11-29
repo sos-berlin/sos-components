@@ -141,10 +141,10 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                 }
             }
 
-            OrderHistory entity = new OrderHistory();
-            entity.setDeliveryDate(new Date());
-            entity.setHistory(history);
-            return JOCDefaultResponse.responseStatus200(entity);
+            OrderHistory answer = new OrderHistory();
+            answer.setDeliveryDate(new Date());
+            answer.setHistory(history);
+            return JOCDefaultResponse.responseStatus200(answer);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);

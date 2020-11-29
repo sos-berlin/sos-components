@@ -12,6 +12,7 @@ import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.db.history.DBItemHistoryAgent;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
+import com.sos.joc.db.history.common.HistorySeverity;
 
 public class DBLayerHistory {
 
@@ -185,14 +186,16 @@ public class DBLayerHistory {
     public int updateOrderOnResumed(Long id, Integer state, Date stateTime) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ");
         hql.append(DBLayer.DBITEM_HISTORY_ORDER);
-        hql.append(" set state=:state ");
+        hql.append(" set severity=:severity ");
+        hql.append(",state=:state ");
         hql.append(",stateTime=:stateTime ");
         hql.append(",hasStates=true ");
         hql.append("where id=:id");
         Query<DBItemHistoryOrder> query = session.createQuery(hql.toString());
         query.setParameter("id", id);
-        query.setParameter("stateTime", stateTime);
+        query.setParameter("severity", HistorySeverity.map2DbSeverity(state));
         query.setParameter("state", state);
+        query.setParameter("stateTime", stateTime);
         return session.executeUpdate(query);
     }
 
@@ -204,8 +207,9 @@ public class DBLayerHistory {
             hql.append(", startTime=:startTime ");
             hql.append(", startEventId=:startEventId ");
         }
-        hql.append(", stateTime=:stateTime ");
+        hql.append(", severity=:severity ");
         hql.append(", state=:state ");
+        hql.append(", stateTime=:stateTime ");
         hql.append("where id=:id");
         Query<DBItemHistoryOrder> query = session.createQuery(hql.toString());
         query.setParameter("id", id);
@@ -213,8 +217,9 @@ public class DBLayerHistory {
             query.setParameter("startTime", startTime);
             query.setParameter("startEventId", startEventId);
         }
-        query.setParameter("stateTime", stateTime);
+        query.setParameter("severity", HistorySeverity.map2DbSeverity(state));
         query.setParameter("state", state);
+        query.setParameter("stateTime", stateTime);
         return session.executeUpdate(query);
     }
 
@@ -238,6 +243,7 @@ public class DBLayerHistory {
         hql.append(DBLayer.DBITEM_HISTORY_ORDER);
         hql.append(" set startTime=:startTime ");
         hql.append(",startEventId=:startEventId ");
+        hql.append(",severity=:severity ");
         hql.append(",state=:state ");
         hql.append(",stateTime=:stateTime ");
         hql.append(",currentOrderStepId=:currentOrderStepId ");
@@ -247,6 +253,7 @@ public class DBLayerHistory {
         Query<DBItemHistoryOrder> query = session.createQuery(hql.toString());
         query.setParameter("startTime", startTime);
         query.setParameter("startEventId", startEventId);
+        query.setParameter("severity", HistorySeverity.map2DbSeverity(state));
         query.setParameter("state", state);
         query.setParameter("stateTime", stateTime);
         query.setParameter("currentOrderStepId", currentOrderStepId);
@@ -255,7 +262,7 @@ public class DBLayerHistory {
         return session.executeUpdate(query);
     }
 
-    public int setOrderStepEnd(Long id, Date endTime, String endEventId, String endParameters, Integer returnCode, Integer state, boolean error,
+    public int setOrderStepEnd(Long id, Date endTime, String endEventId, String endParameters, Integer returnCode, Integer severity, boolean error,
             String errorState, String errorReason, String errorCode, String errorText, Date modified) throws SOSHibernateException {
 
         StringBuilder hql = new StringBuilder("update ");
@@ -264,7 +271,7 @@ public class DBLayerHistory {
         hql.append(",endEventId=:endEventId ");
         hql.append(",endParameters=:endParameters ");
         hql.append(",returnCode=:returnCode ");
-        hql.append(",state=:state ");
+        hql.append(",severity=:severity ");
         hql.append(",error=:error ");
         hql.append(",errorState=:errorState ");
         hql.append(",errorReason=:errorReason ");
@@ -278,7 +285,7 @@ public class DBLayerHistory {
         query.setParameter("endEventId", endEventId);
         query.setParameter("endParameters", endParameters);
         query.setParameter("returnCode", returnCode);
-        query.setParameter("state", state);
+        query.setParameter("severity", severity);
         query.setParameter("error", error);
         query.setParameter("errorState", errorState);
         query.setParameter("errorReason", errorReason);
@@ -306,6 +313,7 @@ public class DBLayerHistory {
             hql.append(", startTime=:startTime");
             hql.append(", startEventId=:startEventId");
         }
+        hql.append(", severity=:severity ");
         hql.append(", state=:state ");
         hql.append(", stateTime=:stateTime ");
         hql.append(", hasStates=:hasStates ");
@@ -329,6 +337,7 @@ public class DBLayerHistory {
             query.setParameter("startTime", startTime);
             query.setParameter("startEventId", startEventId);
         }
+        query.setParameter("severity", HistorySeverity.map2DbSeverity(state));
         query.setParameter("state", state);
         query.setParameter("stateTime", stateTime);
         query.setParameter("hasStates", hasStates);

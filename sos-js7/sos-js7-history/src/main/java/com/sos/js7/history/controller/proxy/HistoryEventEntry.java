@@ -5,7 +5,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +46,7 @@ import scala.jdk.javaapi.OptionConverters;
 public class HistoryEventEntry {
 
     public static enum OutcomeType {
-        succeeded, failed, disrupted
+        succeeded, failed, disrupted, broken
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryEventEntry.class);
@@ -196,6 +195,13 @@ public class HistoryEventEntry {
             return outcomeInfo;
         }
 
+        public OutcomeInfo getOutcomeInfo(OutcomeType type, Problem problem) throws Exception {
+            if (outcomeInfo == null) {
+                outcomeInfo = new OutcomeInfo(type, problem);
+            }
+            return outcomeInfo;
+        }
+
         public class ForkedChild {
 
             private final String key;
@@ -257,13 +263,7 @@ public class HistoryEventEntry {
                     type = OutcomeType.disrupted;
                     if (isFailed) {
                         try {
-                            Problem p = c.reason().problem();
-                            if (p != null) {
-                                errorMessage = p.message();
-                                if (p.codeOrNull() != null) {
-                                    errorCode = p.codeOrNull().toString();
-                                }
-                            }
+                            setError(c.reason().problem());
                         } catch (Throwable e) {
                             LOGGER.warn(e.toString(), e);
                         }
@@ -274,6 +274,26 @@ public class HistoryEventEntry {
                                 errorMessage = em.get();
                             }
                         }
+                    }
+                }
+            }
+
+            private OutcomeInfo(OutcomeType type, Problem problem) {
+                this.type = type;
+                setError(problem);
+                if (OutcomeType.broken.equals(type)) {
+                    returnCode = 0;
+                    isSuccessReturnCode = false;
+                    isSucceeded = false;
+                    isFailed = true;
+                }
+            }
+
+            private void setError(Problem problem) {
+                if (problem != null) {
+                    errorMessage = problem.message();
+                    if (problem.codeOrNull() != null) {
+                        errorCode = problem.codeOrNull().toString();
                     }
                 }
             }
@@ -390,59 +410,21 @@ public class HistoryEventEntry {
 
             public class Position {
 
-                private static final String DELIMITER = "/";
                 private final JPosition underlying;
                 private final List<Object> entries;
-                private String value;
 
                 public Position(JPosition p) {
                     underlying = p;
                     entries = underlying.toList();
-                    // value = underlying.toString();
                 }
 
                 public JPosition getUnderlying() {
                     return underlying;
                 }
 
-                public String asString() {
-                    if (value == null) {
-                        value = entries.stream().map(o -> o.toString()).collect(Collectors.joining(DELIMITER));
-                    }
-                    return value;
-                }
-
                 public List<Object> asList() {
                     return entries;
                 }
-
-                public Integer getRetry() {
-                    Optional<Object> r = entries.stream().filter(f -> f.toString().startsWith("try+")).findFirst();
-                    if (r.isPresent()) {
-                        return Integer.parseInt(r.get().toString().substring(3));// TODO check
-                    }
-                    return 0;
-                }
-
-                public Integer getLastPosition() {
-                    return (Integer) entries.get(entries.size() - 1);
-                }
-
-                public String getParentPositionAsString() {// 0->0, 1/fork_1/0 -> 1/fork_1
-                    return getParentPositionAsString(entries);
-                }
-
-                public String getParentPositionAsString(List<Object> pos) {// 0->0, 1/fork_1/0 -> 1/fork_1
-                    if (pos == null || pos.size() < 1) {
-                        return null;
-                    }
-                    // if (pos.size() == 1) {
-                    // return pos.get(0).toString();
-                    // }
-
-                    return pos.stream().limit(pos.size() - 1).map(o -> o.toString()).collect(Collectors.joining(DELIMITER));
-                }
-
             }
         }
 

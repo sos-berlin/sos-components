@@ -14,6 +14,7 @@ import javax.persistence.UniqueConstraint;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.model.inventory.common.JobCriticality;
 import com.sos.joc.model.order.OrderStateText;
 
@@ -102,8 +103,8 @@ public class DBItemHistoryOrderStep extends DBItem {
     @Column(name = "[RETURN_CODE]", nullable = false)
     private Integer returnCode;// event
 
-    @Column(name = "[STATE]", nullable = false)
-    private Integer state;
+    @Column(name = "[SEVERITY]", nullable = false)
+    private Integer severity;
 
     @Column(name = "[ERROR]", nullable = false)
     private boolean error;
@@ -353,22 +354,17 @@ public class DBItemHistoryOrderStep extends DBItem {
         returnCode = val;
     }
 
-    public Integer getState() {
-        return state;
+    public Integer getSeverity() {
+        return severity;
+    }
+
+    public void setSeverity(Integer val) {
+        severity = val;
     }
 
     @Transient
-    public OrderStateText getStateAsEnum() {
-        return OrderStateText.fromValue(state);
-    }
-
-    public void setState(Integer val) {
-        state = val;
-    }
-
-    @Transient
-    public void setState(OrderStateText val) {
-        setState(val == null ? null : val.intValue());
+    public void setSeverity(OrderStateText val) {
+        setSeverity(HistorySeverity.map2DbSeverity(val));
     }
 
     public void setError(boolean val) {
@@ -404,7 +400,7 @@ public class DBItemHistoryOrderStep extends DBItem {
     }
 
     public void setErrorText(String val) {
-        errorText = normalizeValue(val, 255);
+        errorText = normalizeValue(val, 500);
     }
 
     public String getErrorText() {
@@ -444,20 +440,5 @@ public class DBItemHistoryOrderStep extends DBItem {
 
     public Date getModified() {
         return modified;
-    }
-
-    @Transient
-    public boolean isSuccessFul() {
-        return endTime != null && !error;
-    }
-
-    @Transient
-    public boolean isInComplete() {
-        return startTime != null && endTime == null;
-    }
-
-    @Transient
-    public boolean isFailed() {
-        return endTime != null && error;
     }
 }

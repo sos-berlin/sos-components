@@ -14,9 +14,6 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.util.SOSDate;
@@ -25,29 +22,25 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.WebserviceConstants;
+import com.sos.joc.classes.history.HistoryMapper;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.common.HistoryOrderState;
-import com.sos.joc.model.common.HistoryState;
-import com.sos.joc.model.common.HistoryStateText;
 import com.sos.joc.model.order.OrderHistory;
 import com.sos.joc.model.order.OrderHistoryItem;
 import com.sos.joc.model.order.OrderPath;
-import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrdersFilter;
 import com.sos.joc.orders.resource.IOrdersResourceHistoryDeprecated;
 import com.sos.schema.JsonValidator;
+
 /** will be replaced by OrdersResourceHistoryImpl */
 @Path("orders")
 public class OrdersResourceHistoryDeprecatedImpl extends JOCResourceImpl implements IOrdersResourceHistoryDeprecated {
 
     private static final String API_CALL = "./orders/history";
-    // TMP to remove
-    private static final Logger LOGGER = LoggerFactory.getLogger(OrdersResourceHistoryDeprecatedImpl.class);
-
+    
     @Override
     public JOCDefaultResponse postOrdersHistory(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
@@ -155,13 +148,13 @@ public class OrdersResourceHistoryDeprecatedImpl extends JOCResourceImpl impleme
                     Map<Long, List<OrderHistoryItem>> historyChildren = new HashMap<Long, List<OrderHistoryItem>>();
                     for (DBItemHistoryOrder dbItemOrder : dbChildOrderItems) {
 
-                        OrderHistoryItem history = getOrderHistoryItem(dbItemOrder);
+                        OrderHistoryItem history = HistoryMapper.map2OrderHistoryItem(dbItemOrder);
                         history.setChildren(historyChildren.remove(dbItemOrder.getId()));
                         historyChildren.putIfAbsent(dbItemOrder.getParentId(), new ArrayList<OrderHistoryItem>());
                         historyChildren.get(dbItemOrder.getParentId()).add(history);
                     }
                     for (DBItemHistoryOrder dbItemOrder : dbMainOrderItems) {
-                        OrderHistoryItem history = getOrderHistoryItem(dbItemOrder);
+                        OrderHistoryItem history = HistoryMapper.map2OrderHistoryItem(dbItemOrder);
                         history.setChildren(historyChildren.remove(dbItemOrder.getId()));
                         listHistory.add(history);
                     }
@@ -180,72 +173,6 @@ public class OrdersResourceHistoryDeprecatedImpl extends JOCResourceImpl impleme
         } finally {
             Globals.disconnect(connection);
         }
-    }
-
-    private OrderHistoryItem getOrderHistoryItem(DBItemHistoryOrder dbItemOrder) {
-        OrderHistoryItem history = new OrderHistoryItem();
-        history.setControllerId(dbItemOrder.getJobSchedulerId());
-        history.setEndTime(dbItemOrder.getEndTime());
-        history.setHistoryId(dbItemOrder.getId());
-        history.setOrderId(dbItemOrder.getOrderKey());
-        history.setPosition(dbItemOrder.getWorkflowPosition());
-        history.setPlannedTime(dbItemOrder.getStartTimePlanned());
-        history.setStartTime(dbItemOrder.getStartTime());
-        history.setState(setState(dbItemOrder));
-        history.setOrderState(getOrderState(dbItemOrder));
-        history.setSurveyDate(dbItemOrder.getModified());
-        history.setWorkflow(dbItemOrder.getWorkflowPath());
-        return history;
-    }
-
-    private HistoryState setState(DBItemHistoryOrder dbItemOrder) {
-        HistoryState state = new HistoryState();
-        if (dbItemOrder.isSuccessFul()) {
-            state.setSeverity(0);
-            state.set_text(HistoryStateText.SUCCESSFUL);
-        } else if (dbItemOrder.isInComplete()) {
-            state.setSeverity(1);
-            state.set_text(HistoryStateText.INCOMPLETE);
-        } else if (dbItemOrder.isFailed()) {
-            state.setSeverity(2);
-            state.set_text(HistoryStateText.FAILED);
-        }
-        return state;
-    }
-
-    private HistoryOrderState getOrderState(DBItemHistoryOrder item) {
-        HistoryOrderState state = new HistoryOrderState();
-
-        try {
-            state.set_text(item.getStateAsEnum());
-            switch (state.get_text()) {
-            case FINISHED:
-                state.setSeverity(0);
-                break;
-            case PLANNED:
-            case PENDING:
-            case RUNNING:
-            case WAITING:
-            case RESUMED:
-            case SUSPENDMARKED:
-            case RESUMEMARKED:
-                state.setSeverity(1);
-                break;
-            case SUSPENDED:
-            case FAILED:
-            case BLOCKED:
-            case CANCELLED:
-            case UNKNOWN:
-                state.setSeverity(2);
-                break;
-            }
-        } catch (Throwable e) {
-            LOGGER.error(e.toString(), e);
-            state.setSeverity(2);
-            state.set_text(OrderStateText.UNKNOWN);
-        }
-
-        return state;
     }
 
 }

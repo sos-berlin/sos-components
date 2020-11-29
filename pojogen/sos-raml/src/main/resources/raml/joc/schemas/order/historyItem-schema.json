@@ -10,6 +10,7 @@
     "startTime",
     "plannedTime",
     "position",
+    "sequence",
     "state",
     "historyId"
   ],
@@ -37,6 +38,9 @@
     },
     "position": {
       "type": "string"
+    },
+    "sequence": {
+      "$ref": "../common/nonNegativeInteger-schema.json"
     },
     "state": {
       "$ref": "../common/historyState-schema.json"

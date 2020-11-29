@@ -9,6 +9,8 @@
     "job",
     "startTime",
     "position",
+    "sequence",
+    "retryCounter",
     "state",
     "criticality",
     "taskId", 
@@ -38,6 +40,12 @@
     },
     "position": {
       "type": "string"
+    },
+    "sequence": {
+      "$ref": "../common/nonNegativeInteger-schema.json"
+    },
+    "retryCounter": {
+      "$ref": "../common/nonNegativeInteger-schema.json"
     },
     "state": {
       "$ref": "../common/historyState-schema.json"
