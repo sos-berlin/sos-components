@@ -76,6 +76,7 @@ public class EventServiceFactory {
     private JobSchedulerEvent _getEvents(String controllerId, Long eventId, Session session, boolean isCurrentController) {
         JobSchedulerEvent events = new JobSchedulerEvent();
         events.setControllerId(controllerId);
+        events.setEventId(eventId); //default
         SortedSet<EventSnapshot> evt;
         try {
             EventService service = getEventService(controllerId);
@@ -104,20 +105,17 @@ public class EventServiceFactory {
                 service.getEvents().iterator().forEachRemaining(e -> {
                     if (eventId <= e.getEventId()) {
                         evt.add(e);
-                        e.setEventId(null);
                     }
                 });
             } else if (mode == Mode.IMMEDIATLY) {
                 service.getEvents().iterator().forEachRemaining(e -> {
                     if (eventId <= e.getEventId()) {
                         evt.add(e);
-                        e.setEventId(null);
                     }
                 });
             }
-            
+            LOGGER.info("Events for " + controllerId + ": " + evt);
             if (evt.isEmpty()) {
-                events.setEventId(eventId);
                 events.setEventSnapshots(null);
             } else {
                 events.setEventId(evt.last().getEventId());
@@ -127,7 +125,6 @@ public class EventServiceFactory {
                 }).collect(Collectors.toList()));
             }
         } catch (Exception e1) {
-            events.setEventId(eventId);
             Err err = new Err();
             err.setCode("JOC-410");
             err.setMessage(e1.toString());

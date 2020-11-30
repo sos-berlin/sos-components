@@ -181,7 +181,6 @@ public class EventService {
     protected EventServiceFactory.Mode hasEvent() {
         EventServiceFactory.lock.lock();
         try {
-            LOGGER.info("waiting for Events for " + controllerId);
             EventServiceFactory.eventArrived.await();
         } catch (InterruptedException e1) {
         } finally {

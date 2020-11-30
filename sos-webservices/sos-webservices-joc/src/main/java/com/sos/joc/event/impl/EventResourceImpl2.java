@@ -77,12 +77,13 @@ public class EventResourceImpl2 extends JOCResourceImpl implements IEventResourc
             
             Boolean isCurrentJobScheduler = true;
             for (JobSchedulerObjects jsObject : in.getControllers()) {
-                eventList.put(jsObject.getControllerId(), initEvent(jsObject, defaultEventId));
+                JobSchedulerEvent evt = initEvent(jsObject, defaultEventId);
+                eventList.put(jsObject.getControllerId(), evt);
                 if (isCurrentJobScheduler) {
-                    tasks.add(new EventCallable2OfCurrentController(session, jsObject.getEventId(), jsObject.getControllerId()));
+                    tasks.add(new EventCallable2OfCurrentController(session, evt.getEventId(), evt.getControllerId()));
                     isCurrentJobScheduler = false;
                 } else {
-                    tasks.add(new EventCallable2(session, jsObject.getEventId(), jsObject.getControllerId()));
+                    tasks.add(new EventCallable2(session, evt.getEventId(), evt.getControllerId()));
                 }
             }
             
@@ -132,14 +133,12 @@ public class EventResourceImpl2 extends JOCResourceImpl implements IEventResourc
     
     private JobSchedulerEvent initEvent(JobSchedulerObjects jsObject, Long defaultEventId) {
         Long eventId = defaultEventId;
-        String jsId = jsObject.getControllerId();
-
         if (jsObject.getEventId() != null && jsObject.getEventId() > 0L) {
             eventId = jsObject.getEventId();
         }
         JobSchedulerEvent jsEvent = new JobSchedulerEvent();
         jsEvent.setEventId(eventId);
-        jsEvent.setControllerId(jsId);
+        jsEvent.setControllerId(jsObject.getControllerId());
         jsEvent.setEventSnapshots(new ArrayList<EventSnapshot>());
         return jsEvent;
     }
