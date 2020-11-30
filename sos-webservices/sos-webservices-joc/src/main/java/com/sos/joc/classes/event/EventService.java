@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Condition;
 import java.util.function.BiConsumer;
 
 import org.slf4j.Logger;
@@ -62,21 +62,33 @@ public class EventService {
     private String controllerId;
     private volatile CopyOnWriteArraySet<EventSnapshot> events = new CopyOnWriteArraySet<>();
     private AtomicBoolean isCurrentController = new AtomicBoolean(false);
+    private JControllerEventBus evtBus = null;
+    private volatile CopyOnWriteArraySet<Condition> conditions = new CopyOnWriteArraySet<>();
 
-    public EventService(String controllerId) {
+    public EventService(String controllerId) throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException,
+            DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
+            ExecutionException {
         this.controllerId = controllerId;
+        startEventService();
         EventBus.getInstance().register(this);
     }
 
-    public void startEventService(JControllerEventBus evtBus) throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException,
-            DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
-            ExecutionException {
+    public void startEventService() throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, DBMissingDataException,
+            JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
         if (evtBus == null) {
             evtBus = Proxy.of(controllerId).controllerEventBus();
         }
         evtBus.subscribe(eventsOfController, callbackOfController);
     }
 
+    public void addCondition(Condition cond) {
+        conditions.add(cond);
+    }
+    
+    public void removeCondition(Condition cond) {
+        conditions.remove(cond);
+    }
+    
     public CopyOnWriteArraySet<EventSnapshot> getEvents() {
         return events;
     }
@@ -91,7 +103,7 @@ public class EventService {
             EventSnapshot eventSnapshot = new EventSnapshot();
             eventSnapshot.setEventId(evt.getEventId());
             eventSnapshot.setObjectType(EventType.PROBLEM);
-            eventSnapshot.setEventType(evt.getVariables().get("message"));
+            eventSnapshot.setEventType(evt.getKey() + ": " + evt.getVariables().get("message"));
             addEvent(eventSnapshot);
         }
     }
@@ -159,37 +171,37 @@ public class EventService {
         events.add(eventSnapshot);
         LOGGER.info("addEvent for " + controllerId + ": " + eventSnapshot.toString());
         EventServiceFactory.lock.lock();
-        EventServiceFactory.eventArrived.signalAll();
+        conditions.stream().parallel().forEach(Condition::signalAll);
         EventServiceFactory.lock.unlock();
     }
 
-    protected EventServiceFactory.Mode hasOldEvent(Long eventId) {
-        if (events.stream().parallel().anyMatch(e -> eventId <= e.getEventId())) {
+    protected EventServiceFactory.Mode hasOldEvent(Long eventId, Condition eventArrived) {
+        if (events.stream().parallel().anyMatch(e -> eventId < e.getEventId())) {
             LOGGER.info("hasEvent for " + controllerId + ": true");
-            if (isCurrentController.get() && events.stream().parallel().anyMatch(e -> EventType.PROBLEM.equals(e.getObjectType()))) {
-                LOGGER.info("hasProblemEvent for " + controllerId + ": true");
-                EventServiceFactory.signalEvent();
-                return EventServiceFactory.Mode.IMMEDIATLY;
-            }
-            EventServiceFactory.signalEvent();
+//            if (isCurrentController.get() && events.stream().parallel().anyMatch(e -> EventType.PROBLEM.equals(e.getObjectType()))) {
+//                LOGGER.info("hasProblemEvent for " + controllerId + ": true");
+//                EventServiceFactory.signalEvent(eventArrived);
+//                return EventServiceFactory.Mode.IMMEDIATLY;
+//            }
+            EventServiceFactory.signalEvent(eventArrived);
             return EventServiceFactory.Mode.TRUE;
         }
         LOGGER.info("hasEvent for " + controllerId + ": false");
         return EventServiceFactory.Mode.FALSE;
     }
 
-    protected EventServiceFactory.Mode hasEvent() {
+    protected EventServiceFactory.Mode hasEvent(Condition eventArrived) {
         EventServiceFactory.lock.lock();
         try {
-            EventServiceFactory.eventArrived.await();
+            eventArrived.await();
         } catch (InterruptedException e1) {
         } finally {
             EventServiceFactory.lock.unlock();
         }
-        if (events.stream().parallel().anyMatch(e -> EventType.PROBLEM.equals(e.getObjectType()))) {
-            LOGGER.info("ProblemEvent for " + controllerId + ": true");
-            return EventServiceFactory.Mode.IMMEDIATLY;
-        }
+//        if (events.stream().parallel().anyMatch(e -> EventType.PROBLEM.equals(e.getObjectType()))) {
+//            LOGGER.info("ProblemEvent for " + controllerId + ": true");
+//            return EventServiceFactory.Mode.IMMEDIATLY;
+//        }
         return EventServiceFactory.Mode.TRUE;
     }
 

@@ -8,6 +8,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -21,6 +22,13 @@ import org.apache.shiro.session.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.joc.exceptions.DBConnectionRefusedException;
+import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.exceptions.DBMissingDataException;
+import com.sos.joc.exceptions.DBOpenSessionException;
+import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
+import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
+import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.common.Err;
 import com.sos.joc.model.event.EventSnapshot;
@@ -33,14 +41,13 @@ public class EventServiceFactory {
     private volatile Map<String, EventService> eventServices = new ConcurrentHashMap<>();
     private final static Long cleanupPeriod = TimeUnit.MINUTES.toMillis(6);
     protected static Lock lock = new ReentrantLock();
-    protected static Condition eventArrived  = lock.newCondition();
+    //protected static Condition eventArrived  = lock.newCondition();
     
     public enum Mode {
         IMMEDIATLY, TRUE, FALSE;
     }
     
     private EventServiceFactory() {
-//        EventBus.getInstance().register(this);
     }
     
     private static EventServiceFactory getInstance() {
@@ -50,11 +57,13 @@ public class EventServiceFactory {
         return eventServiceFactory;
     }
     
-    public static JobSchedulerEvent getEvents(String controllerId, Long eventId, Session session, boolean isCurrentController) {
-        return EventServiceFactory.getInstance()._getEvents(controllerId, eventId, session, isCurrentController);
+    public static JobSchedulerEvent getEvents(String controllerId, Long eventId, Condition eventArrived, Session session, boolean isCurrentController) {
+        return EventServiceFactory.getInstance()._getEvents(controllerId, eventId, eventArrived, session, isCurrentController);
     }
     
-    public EventService getEventService(String controllerId) {
+    public EventService getEventService(String controllerId) throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException,
+            DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
+            ExecutionException {
         synchronized (eventServices) {
             if (!eventServices.containsKey(controllerId)) {
                 eventServices.put(controllerId, new EventService(controllerId));
@@ -66,28 +75,34 @@ public class EventServiceFactory {
                         Long eventId = (Instant.now().toEpochMilli() - cleanupPeriod - TimeUnit.SECONDS.toMillis(30)) * 1000;
                         eventServices.get(controllerId).getEvents().removeIf(e -> e.getEventId() < eventId);
                     }
-                    
+
                 }, cleanupPeriod, cleanupPeriod);
             }
             return eventServices.get(controllerId);
         }
     }
     
-    private JobSchedulerEvent _getEvents(String controllerId, Long eventId, Session session, boolean isCurrentController) {
+    public static Condition createCondition() {
+        return lock.newCondition();
+    }
+    
+    private JobSchedulerEvent _getEvents(String controllerId, Long eventId, Condition eventArrived, Session session, boolean isCurrentController) {
         JobSchedulerEvent events = new JobSchedulerEvent();
         events.setControllerId(controllerId);
         events.setEventId(eventId); //default
         SortedSet<EventSnapshot> evt;
+        EventService service = null;
         try {
-            EventService service = getEventService(controllerId);
-            service.setIsCurrentController(isCurrentController);
+            service = getEventService(controllerId);
+            service.addCondition(eventArrived);
+            //service.setIsCurrentController(isCurrentController);
             evt = new TreeSet<>(Comparator.comparing(EventSnapshot::getEventId));
-            Mode mode = service.hasOldEvent(eventId);
+            Mode mode = service.hasOldEvent(eventId, eventArrived);
             if (mode == Mode.FALSE) {
                 long delay = Math.min(cleanupPeriod - 1000, getSessionTimeout(session));
                 LOGGER.info("waiting for Events for " + controllerId + ": maxdelay " + delay + "ms");
-                ScheduledFuture<Void> watchdog = startWatchdog(delay);
-                mode = service.hasEvent();
+                ScheduledFuture<Void> watchdog = startWatchdog(delay, eventArrived);
+                mode = service.hasEvent(eventArrived);
                 if (watchdog.isDone()) {
                     LOGGER.info("Event for " + controllerId + " arrived");
                     watchdog.cancel(false);
@@ -119,16 +134,19 @@ public class EventServiceFactory {
                 events.setEventSnapshots(null);
             } else {
                 events.setEventId(evt.last().getEventId());
-                events.setEventSnapshots(evt.stream().map(e -> {
-                    e.setEventId(null); 
-                    return e;
-                }).collect(Collectors.toList()));
+                events.setEventSnapshots(evt.stream().collect(Collectors.toList()));
             }
         } catch (Exception e1) {
             Err err = new Err();
             err.setCode("JOC-410");
             err.setMessage(e1.toString());
             events.setError(err);
+            events.setEventSnapshots(null);
+            LOGGER.error("", e1);
+        } finally {
+            if (service != null) {
+                service.removeCondition(eventArrived);
+            }
         }
         
         return events;
@@ -151,7 +169,7 @@ public class EventServiceFactory {
         }
     }
     
-    protected static void signalEvent() {
+    protected static void signalEvent(Condition eventArrived) {
         lock.lock();
         try {
             eventArrived.signal();
@@ -160,10 +178,10 @@ public class EventServiceFactory {
         }
     }
     
-    private static ScheduledFuture<Void> startWatchdog(long maxDelay) {
+    private static ScheduledFuture<Void> startWatchdog(long maxDelay, Condition eventArrived) {
         return Executors.newScheduledThreadPool(1).schedule(() -> {
             LOGGER.info("start watchdog which stops waiting after for " + maxDelay + "ms");
-            signalEvent();
+            signalEvent(eventArrived);
             return null;
         }, maxDelay, TimeUnit.MILLISECONDS);
     }

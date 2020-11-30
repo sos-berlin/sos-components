@@ -10,6 +10,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.locks.Condition;
 
 import javax.ws.rs.Path;
 
@@ -21,6 +22,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.event.EventCallable2;
 import com.sos.joc.classes.event.EventCallable2OfCurrentController;
+import com.sos.joc.classes.event.EventServiceFactory;
 import com.sos.joc.event.resource.IEventResource2;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JocException;
@@ -76,14 +78,15 @@ public class EventResourceImpl2 extends JOCResourceImpl implements IEventResourc
             List<EventCallable2> tasks = new ArrayList<EventCallable2>();
             
             Boolean isCurrentJobScheduler = true;
+            Condition eventArrived = EventServiceFactory.createCondition();
             for (JobSchedulerObjects jsObject : in.getControllers()) {
                 JobSchedulerEvent evt = initEvent(jsObject, defaultEventId);
                 eventList.put(jsObject.getControllerId(), evt);
                 if (isCurrentJobScheduler) {
-                    tasks.add(new EventCallable2OfCurrentController(session, evt.getEventId(), evt.getControllerId()));
+                    tasks.add(new EventCallable2OfCurrentController(session, evt.getEventId(), evt.getControllerId(), eventArrived));
                     isCurrentJobScheduler = false;
                 } else {
-                    tasks.add(new EventCallable2(session, evt.getEventId(), evt.getControllerId()));
+                    tasks.add(new EventCallable2(session, evt.getEventId(), evt.getControllerId(), eventArrived));
                 }
             }
             
