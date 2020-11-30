@@ -21,9 +21,9 @@ import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
-import com.sos.joc.model.common.JobSchedulerObjectType;
 import com.sos.joc.model.docu.DocumentationShowFilter;
 import com.sos.joc.model.docu.DocumentationUrl;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 
 @Path("documentation")
 public class DocumentationShowResourceImpl extends JOCResourceImpl implements IDocumentationShowResource {
@@ -42,7 +42,7 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
             DocumentationShowFilter documentationFilter = new DocumentationShowFilter();
             documentationFilter.setControllerId(jobschedulerId);
             documentationFilter.setPath(path);
-            documentationFilter.setType(JobSchedulerObjectType.fromValue(type));
+            documentationFilter.setType(ConfigurationType.fromValue(type));
             return show(xAccessToken, documentationFilter);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
@@ -65,7 +65,7 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
                 case LOCK:
                     perm = sosPermission.getLock().getView().isDocumentation();
                     break;
-                case ORDER:
+                case ORDERTEMPLATE:
                     perm = sosPermission.getOrder().getView().isDocumentation();
                     break;
                 //case PROCESSCLASS:

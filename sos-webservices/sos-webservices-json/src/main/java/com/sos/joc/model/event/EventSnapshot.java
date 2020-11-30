@@ -1,14 +1,14 @@
 
 package com.sos.joc.model.event;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.common.JobSchedulerObjectType;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
@@ -22,12 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "eventId",
     "path",
     "eventType",
-    "objectType",
-    "nodeId",
-    "fromNodeId",
-    "taskId",
-    "state",
-    "nodeTransition"
+    "objectType"
 })
 public class EventSnapshot {
 
@@ -65,47 +60,14 @@ public class EventSnapshot {
      * 
      */
     @JsonProperty("objectType")
-    private JobSchedulerObjectType objectType;
+    private EventType objectType;
     /**
      * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("nodeId")
-    private String nodeId;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("fromNodeId")
-    private String fromNodeId;
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("taskId")
-    private Long taskId;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("state")
-    private String state;
-    /**
-     * comes with event OrderStepEnded
-     * 
-     */
-    @JsonProperty("nodeTransition")
-    @JsonPropertyDescription("comes with event OrderStepEnded")
-    private NodeTransition nodeTransition;
-
+    
     /**
      * unique id of an event, monoton increasing, id/1000=milliseconds of UTC time
      * (Required)
@@ -178,7 +140,7 @@ public class EventSnapshot {
      * 
      */
     @JsonProperty("objectType")
-    public JobSchedulerObjectType getObjectType() {
+    public EventType getObjectType() {
         return objectType;
     }
 
@@ -190,124 +152,18 @@ public class EventSnapshot {
      * 
      */
     @JsonProperty("objectType")
-    public void setObjectType(JobSchedulerObjectType objectType) {
+    public void setObjectType(EventType objectType) {
         this.objectType = objectType;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("nodeId")
-    public String getNodeId() {
-        return nodeId;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("nodeId")
-    public void setNodeId(String nodeId) {
-        this.nodeId = nodeId;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("fromNodeId")
-    public String getFromNodeId() {
-        return fromNodeId;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("fromNodeId")
-    public void setFromNodeId(String fromNodeId) {
-        this.fromNodeId = fromNodeId;
-    }
-
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("taskId")
-    public Long getTaskId() {
-        return taskId;
-    }
-
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("taskId")
-    public void setTaskId(Long taskId) {
-        this.taskId = taskId;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("state")
-    public String getState() {
-        return state;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("state")
-    public void setState(String state) {
-        this.state = state;
-    }
-
-    /**
-     * comes with event OrderStepEnded
-     * 
-     */
-    @JsonProperty("nodeTransition")
-    public NodeTransition getNodeTransition() {
-        return nodeTransition;
-    }
-
-    /**
-     * comes with event OrderStepEnded
-     * 
-     */
-    @JsonProperty("nodeTransition")
-    public void setNodeTransition(NodeTransition nodeTransition) {
-        this.nodeTransition = nodeTransition;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("eventId", eventId).append("path", path).append("eventType", eventType).append("objectType", objectType).append("nodeId", nodeId).append("fromNodeId", fromNodeId).append("taskId", taskId).append("state", state).append("nodeTransition", nodeTransition).toString();
+        return new ToStringBuilder(this).append("eventId", eventId).append("path", path).append("eventType", eventType).append("objectType", objectType).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(eventId).append(path).append(eventType).append(state).append(fromNodeId).append(nodeId).append(taskId).append(objectType).append(nodeTransition).toHashCode();
+        return new HashCodeBuilder().append(eventId).append(path).append(eventType).append(objectType).toHashCode();
     }
 
     @Override
@@ -319,7 +175,7 @@ public class EventSnapshot {
             return false;
         }
         EventSnapshot rhs = ((EventSnapshot) other);
-        return new EqualsBuilder().append(eventId, rhs.eventId).append(path, rhs.path).append(eventType, rhs.eventType).append(state, rhs.state).append(fromNodeId, rhs.fromNodeId).append(nodeId, rhs.nodeId).append(taskId, rhs.taskId).append(objectType, rhs.objectType).append(nodeTransition, rhs.nodeTransition).isEquals();
+        return new EqualsBuilder().append(eventId, rhs.eventId).append(path, rhs.path).append(eventType, rhs.eventType).append(objectType, rhs.objectType).isEquals();
     }
 
 }

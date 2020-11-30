@@ -14,13 +14,13 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.auth.rest.SOSShiroCurrentUser;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCJsonCommand;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.common.JobSchedulerObjectType;
 import com.sos.joc.model.event.EventSnapshot;
+import com.sos.joc.model.event.EventType;
 import com.sos.joc.model.event.JobSchedulerEvent;
 
 public class EventCallableOfCurrentCluster extends EventCallable implements Callable<JobSchedulerEvent> {
@@ -103,7 +103,7 @@ public class EventCallableOfCurrentCluster extends EventCallable implements Call
             if (isCurrent && inst != null && !inst.equals(curInstance)) {
                 EventSnapshot masterChangedEventSnapshot = new EventSnapshot();
                 masterChangedEventSnapshot.setEventType("CurrentJobSchedulerChanged");
-                masterChangedEventSnapshot.setObjectType(JobSchedulerObjectType.CONTROLLER);
+                masterChangedEventSnapshot.setObjectType(EventType.CONTROLLER);
                 masterChangedEventSnapshot.setPath(inst.getUri());
                 events.add(masterChangedEventSnapshot);
             }

@@ -1,7 +1,7 @@
 package com.sos.joc.db.documentation;
 
 import com.sos.joc.model.common.JobSchedulerObject;
-import com.sos.joc.model.common.JobSchedulerObjectType;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class DocumentationOfObject {
     private String docPath;
@@ -17,9 +17,9 @@ public class DocumentationOfObject {
         this.docPath = docPath;
         this.docUsage = new JobSchedulerObject();
         try {
-            this.docUsage.setType(JobSchedulerObjectType.fromValue(objType));
+            this.docUsage.setType(ConfigurationType.fromValue(objType));
         } catch (IllegalArgumentException e) {
-            this.docUsage.setType(JobSchedulerObjectType.OTHER);
+            this.docUsage.setType(null);
         }
         this.docUsage.setPath(objPath);
     }

@@ -24,47 +24,7 @@
       "type": "string"
     },
     "objectType": {
-      "$ref": "../common/type-schema.json"
-    },
-    "nodeId": {
-      "description": "comes with events OrderNodeChanged, OrderStepStarted, OrderFinished",
-      "$ref": "../common/string255-schema.json"
-    },
-    "fromNodeId": {
-      "description": "comes with event OrderNodeChanged",
-      "$ref": "../common/string255-schema.json"
-    },
-    "taskId": {
-      "$ref": "../common/nonNegativeLong-schema.json",
-      "description": "comes with event OrderStepStarted"
-    },
-    "state": {
-      "description": "comes with event ...State",
-      "$ref": "../common/string255-schema.json"
-    },
-    "nodeTransition": {
-      "description": "comes with event OrderStepEnded",
-      "javaType": "com.sos.joc.model.event.NodeTransition",
-      "type": "object",
-      "required": [
-        "type"
-      ],
-      "properties": {
-        "type": {
-          "javaType": "com.sos.joc.model.event.NodeTransitionType",
-          "type": "string",
-          "enum": [
-            "SUCCESS",
-            "KEEP",
-            "PROCEEDING",
-            "ERROR"
-          ]
-        },
-        "returnCode": {
-          "description": "if type=ERROR",
-          "type": "integer"
-        }
-      }
+      "$ref": "eventType-schema.json"
     }
   }
 }

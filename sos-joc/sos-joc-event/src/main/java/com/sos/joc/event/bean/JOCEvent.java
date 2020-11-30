@@ -61,8 +61,8 @@ public abstract class JOCEvent {
      */
     @JsonProperty("TYPE")
     private String tYPE;
-    @JsonProperty("timestamp")
-    private Long timestamp;
+    @JsonProperty("eventId")
+    private Long eventId;
     @JsonProperty("controllerId")
     private String controllerId;
     /**
@@ -137,9 +137,9 @@ public abstract class JOCEvent {
      * 
      * 
      */
-    @JsonProperty("timestamp")
-    public Long getTimestamp() {
-        return timestamp;
+    @JsonProperty("eventId")
+    public Long getEventId() {
+        return eventId;
     }
 
     /**
@@ -148,9 +148,9 @@ public abstract class JOCEvent {
      * 
      * 
      */
-    @JsonProperty("timestamp")
-    public void setTimestamp(Long timestamp) {
-        this.timestamp = timestamp;
+    @JsonProperty("eventId")
+    public void setEventId(Long eventId) {
+        this.eventId = eventId;
     }
     
     @JsonAnyGetter

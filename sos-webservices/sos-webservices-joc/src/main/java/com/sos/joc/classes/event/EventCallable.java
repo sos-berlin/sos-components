@@ -23,8 +23,8 @@ import com.sos.joc.exceptions.JobSchedulerNoResponseException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.common.Err;
-import com.sos.joc.model.common.JobSchedulerObjectType;
 import com.sos.joc.model.event.EventSnapshot;
+import com.sos.joc.model.event.EventType;
 import com.sos.joc.model.event.JobSchedulerEvent;
 
 public class EventCallable implements Callable<JobSchedulerEvent> {
@@ -203,7 +203,7 @@ public class EventCallable implements Callable<JobSchedulerEvent> {
         } catch (JobSchedulerConnectionResetException e) {
             EventSnapshot eventSnapshot = new EventSnapshot();
             eventSnapshot.setEventType("SchedulerStateChanged");
-            eventSnapshot.setObjectType(JobSchedulerObjectType.CONTROLLER);
+            eventSnapshot.setObjectType(EventType.CONTROLLER);
             eventSnapshot.setPath(command.getSchemeAndAuthority());
             eventSnapshots.add(eventSnapshot);
         }
@@ -291,22 +291,9 @@ public class EventCallable implements Callable<JobSchedulerEvent> {
             }
             String eventKey = event.getString("key", null);
             eventSnapshot.setPath(eventKey);
-            if (eventType.startsWith("JobState")) {
-                eventSnapshot.setObjectType(JobSchedulerObjectType.JOB);
-                eventSnapshot.setState(event.getString("state", null));
-                if ("initialized,loaded,closed".contains(eventSnapshot.getState())) {
-                    continue;
-                }
-                // TODO analogon for workflow??
-                // } else if (eventType.startsWith("JobChainState")) {
-                // eventSnapshot.setObjectType(JobSchedulerObjectType.JOBCHAIN);
-                // eventSnapshot.setState(event.getString("state", null));
-                // if ("initialized,loaded,closed".contains(eventSnapshot.getState())) {
-                // continue;
-                // }
-            } else if (eventType.startsWith("Order")) {
+            if (eventType.startsWith("Order")) {
                 // TODO reflect new ORDER events
-                eventSnapshot.setObjectType(JobSchedulerObjectType.ORDER);
+                eventSnapshot.setObjectType(EventType.ORDER);
 //                switch (eventType) {
 //                case "OrderNodeChanged":
 //                    eventSnapshot.setNodeId(event.getString("nodeId", null));
@@ -343,7 +330,7 @@ public class EventCallable implements Callable<JobSchedulerEvent> {
 
             } else if (eventType.startsWith("Controller")) {
                 eventSnapshot.setEventType("SchedulerStateChanged");
-                eventSnapshot.setObjectType(JobSchedulerObjectType.CONTROLLER);
+                eventSnapshot.setObjectType(EventType.CONTROLLER);
                 eventSnapshot.setPath(command.getSchemeAndAuthority());
             }
 

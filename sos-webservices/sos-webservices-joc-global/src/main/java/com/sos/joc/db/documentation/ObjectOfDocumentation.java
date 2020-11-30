@@ -1,17 +1,17 @@
 package com.sos.joc.db.documentation;
 
-import com.sos.joc.model.common.JobSchedulerObjectType;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class ObjectOfDocumentation {
     
-    private JobSchedulerObjectType type;
+    private ConfigurationType type;
     private String path;
     
     public ObjectOfDocumentation(String path, String type) {
         try {
-            this.type = JobSchedulerObjectType.fromValue(type);
+            this.type = ConfigurationType.fromValue(type);
         } catch (IllegalArgumentException e) {
-            this.type = JobSchedulerObjectType.OTHER;
+            this.type = null;
         }
         this.path = path;
     }
@@ -20,7 +20,7 @@ public class ObjectOfDocumentation {
         return path;
     }
     
-    public JobSchedulerObjectType getType() {
+    public ConfigurationType getType() {
         return type;
     }
 

@@ -16,8 +16,8 @@ import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JobSchedulerNoResponseException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.common.JobSchedulerObjectType;
 import com.sos.joc.model.event.EventSnapshot;
+import com.sos.joc.model.event.EventType;
 import com.sos.joc.model.event.JobSchedulerEvent;
 
 public class EventCallablePassiveJobSchedulerStateChanged extends EventCallable implements Callable<JobSchedulerEvent> {
@@ -51,7 +51,7 @@ public class EventCallablePassiveJobSchedulerStateChanged extends EventCallable 
             
             if (eventType.startsWith("Controller") || eventType.startsWith("Cluster")) {
                 eventSnapshot.setEventType("SchedulerStateChanged");
-                eventSnapshot.setObjectType(JobSchedulerObjectType.CONTROLLER);
+                eventSnapshot.setObjectType(EventType.CONTROLLER);
                 eventSnapshot.setPath(command.getSchemeAndAuthority());
             } else {
                 continue;
@@ -136,7 +136,7 @@ public class EventCallablePassiveJobSchedulerStateChanged extends EventCallable 
         } catch (JobSchedulerConnectionResetException e) {
             EventSnapshot eventSnapshot = new EventSnapshot();
             eventSnapshot.setEventType("SchedulerStateChanged");
-            eventSnapshot.setObjectType(JobSchedulerObjectType.CONTROLLER);
+            eventSnapshot.setObjectType(EventType.CONTROLLER);
             eventSnapshot.setPath(command.getSchemeAndAuthority());
             eventSnapshots.put(eventSnapshot);
         }

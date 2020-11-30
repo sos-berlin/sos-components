@@ -1,14 +1,15 @@
 
 package com.sos.joc.model.docu;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.common.JobSchedulerObjectType;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 
 
 /**
@@ -42,7 +43,7 @@ public class DocumentationShowFilter {
      * 
      */
     @JsonProperty("type")
-    private JobSchedulerObjectType type;
+    private ConfigurationType type;
     /**
      * path
      * <p>
@@ -86,7 +87,7 @@ public class DocumentationShowFilter {
      * 
      */
     @JsonProperty("type")
-    public JobSchedulerObjectType getType() {
+    public ConfigurationType getType() {
         return type;
     }
 
@@ -98,7 +99,7 @@ public class DocumentationShowFilter {
      * 
      */
     @JsonProperty("type")
-    public void setType(JobSchedulerObjectType type) {
+    public void setType(ConfigurationType type) {
         this.type = type;
     }
 

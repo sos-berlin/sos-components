@@ -25,6 +25,7 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.common.JobSchedulerObject;
 import com.sos.joc.model.common.JobSchedulerObjectType;
 import com.sos.joc.model.docu.DocumentationShowFilter;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.tree.Tree;
 
 public class DocumentationDBLayer {
@@ -159,9 +160,9 @@ public class DocumentationDBLayer {
         return getDocumentationPath(documentationFilter.getControllerId(), documentationFilter.getType(), documentationFilter.getPath());
     }
 
-    public String getDocumentationPath(String schedulerId, JobSchedulerObjectType objectType, String path) throws DBConnectionRefusedException,
+    public String getDocumentationPath(String schedulerId, ConfigurationType objectType, String path) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        if (JobSchedulerObjectType.WORKINGDAYSCALENDAR == objectType || JobSchedulerObjectType.NONWORKINGDAYSCALENDAR == objectType) {
+        if (ConfigurationType.WORKINGDAYSCALENDAR == objectType || ConfigurationType.NONWORKINGDAYSCALENDAR == objectType) {
             return getDocumentationPathOfCalendar(schedulerId, path);
         } else {
             try {

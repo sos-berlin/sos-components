@@ -13,7 +13,7 @@
       "$ref": "../common/filename100-schema.json"
     },
     "type": {
-      "$ref": "../common/type-schema.json"
+      "$ref": "../inventory/common/configurationType-schema.json"
     },
     "path": {
       "$ref": "../common/path-schema.json"

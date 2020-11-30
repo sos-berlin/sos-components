@@ -1,14 +1,18 @@
 package com.sos.joc.classes.proxy;
 
+import java.util.concurrent.ExecutionException;
+
 import com.sos.joc.Globals;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
+import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 
 import js7.proxy.javaapi.JControllerApi;
+import js7.proxy.javaapi.JControllerProxy;
 
 
 public class ControllerApi {
@@ -88,6 +92,12 @@ public class ControllerApi {
             JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
             JobSchedulerConnectionRefusedException {
         return Proxies.getInstance().loadApi(controllerId, user, connectionTimeout);
+    }
+    
+    // only for testing
+    protected static synchronized JControllerApi of(ProxyCredentials credentials) throws JobSchedulerConnectionResetException,
+            JobSchedulerConnectionRefusedException, ExecutionException, DBMissingDataException {
+        return Proxies.getInstance().loadApi(credentials);
     }
 
 }

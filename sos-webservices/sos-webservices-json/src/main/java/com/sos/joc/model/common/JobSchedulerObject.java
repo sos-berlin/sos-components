@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.inventory.common.ConfigurationType;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -30,7 +32,7 @@ public class JobSchedulerObject {
      * 
      */
     @JsonProperty("type")
-    private JobSchedulerObjectType type;
+    private ConfigurationType type;
     /**
      * path
      * <p>
@@ -48,7 +50,7 @@ public class JobSchedulerObject {
      * 
      */
     @JsonProperty("type")
-    public JobSchedulerObjectType getType() {
+    public ConfigurationType getType() {
         return type;
     }
 
@@ -59,7 +61,7 @@ public class JobSchedulerObject {
      * 
      */
     @JsonProperty("type")
-    public void setType(JobSchedulerObjectType type) {
+    public void setType(ConfigurationType type) {
         this.type = type;
     }
 

@@ -1,12 +1,26 @@
 package com.sos.joc.classes.event;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.sos.jobscheduler.model.event.OrderProcessingStarted;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.annotation.Subscribe;
+import com.sos.joc.event.bean.history.OrderStepFinished;
+import com.sos.joc.event.bean.history.OrderStepStarted;
+import com.sos.joc.event.bean.problem.ProblemEvent;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -14,24 +28,23 @@ import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.joc.model.common.JobSchedulerObjectType;
 import com.sos.joc.model.event.EventSnapshot;
+import com.sos.joc.model.event.EventType;
 
 import js7.controller.data.events.ControllerEvent;
-//import js7.data.agent.AgentRefEvent;
+import js7.data.agent.AgentRefEvent;
 import js7.data.cluster.ClusterEvent;
 import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
 import js7.data.order.OrderEvent;
-import js7.data.order.OrderEvent.OrderActorEvent;
 import js7.data.order.OrderEvent.OrderAdded;
 import js7.data.order.OrderEvent.OrderBroken;
 import js7.data.order.OrderEvent.OrderCoreEvent;
 import js7.data.order.OrderEvent.OrderFailed;
 import js7.data.order.OrderEvent.OrderFailedInFork;
 import js7.data.order.OrderEvent.OrderProcessed;
-//import js7.data.order.OrderEvent.OrderProcessingKilled$;
+import js7.data.order.OrderEvent.OrderProcessingKilled$;
 import js7.data.order.OrderEvent.OrderProcessingStarted$;
 import js7.data.order.OrderEvent.OrderRetrying;
 import js7.data.order.OrderEvent.OrderStarted$;
@@ -43,20 +56,22 @@ import js7.proxy.javaapi.eventbus.JControllerEventBus;
 
 public class EventService {
     
-    // OrderAdded, OrderProcessed, OrderProcessingStarted$s extends OrderCoreEvent
+    // OrderAdded, OrderProcessed, OrderProcessingStarted$ extends OrderCoreEvent
     // OrderStarted, OrderProcessingKilled$, OrderFailed, OrderFailedInFork, OrderRetrying, OrderBroken extends OrderActorEvent
-    // OrderFinished, OrderCancelled extends OrderTerminated
-    private static List<Class<? extends Event>> eventsOfController = null; //Arrays.asList(ControllerEvent.class, ClusterEvent.class, AgentRefEvent.class,
-//            OrderStarted$.class, OrderProcessingKilled$.class, OrderFailed.class, OrderFailedInFork.class, OrderRetrying.class, OrderBroken.class,
-//            OrderTerminated.class, OrderCoreEvent.class, OrderAdded.class, OrderProcessed.class, OrderProcessingStarted$.class);
+    // OrderFinished, OrderCancelled, OrderRemoved$ extends OrderTerminated
+    private static List<Class<? extends Event>> eventsOfController = Arrays.asList(ControllerEvent.class, ClusterEvent.class, AgentRefEvent.class,
+            OrderStarted$.class, OrderProcessingKilled$.class, OrderFailed.class, OrderFailedInFork.class, OrderRetrying.class, OrderBroken.class,
+            OrderTerminated.class, OrderCoreEvent.class, OrderAdded.class, OrderProcessed.class, OrderProcessingStarted$.class);
     private String controllerId;
-    private String accessToken;
-    private volatile Events eventSnapshots = new Events();
-    //private volatile Map<String, EventSnapshot> events = new ConcurrentHashMap<>();
+    private volatile CopyOnWriteArraySet<EventSnapshot> events = new CopyOnWriteArraySet<>();
     
-    public EventService(String accessToken, String controllerId) {
-        this.accessToken = accessToken;
+    public enum Mode {
+        IMMEDIATLY, TRUE, FALSE;
+    }
+    
+    public EventService(String controllerId) {
         this.controllerId = controllerId;
+        EventBus.getInstance().register(this);
     }
     
     public void startEventService(JControllerEventBus evtBus) throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException,
@@ -68,8 +83,19 @@ public class EventService {
         evtBus.subscribe(eventsOfController, callbackOfController);
     }
     
-    public List<EventSnapshot> getEvents() {
-        return eventSnapshots.values();
+    public CopyOnWriteArraySet<EventSnapshot> getEvents() {
+        return events;
+    }
+    
+    @Subscribe({ ProblemEvent.class })
+    public void doSomethingWithProblemEvent(ProblemEvent evt) throws JsonProcessingException {
+        if (evt.getControllerId().equals(controllerId)) {
+            EventSnapshot eventSnapshot = new EventSnapshot();
+            eventSnapshot.setEventId(evt.getEventId());
+            eventSnapshot.setObjectType(EventType.PROBLEM);
+            eventSnapshot.setEventType(evt.getVariables().get("message"));
+            addEvent(eventSnapshot);
+        }
     }
     
     BiConsumer<Stamped<KeyedEvent<Event>>, JControllerState> callbackOfController = (stampedEvt, currentState) -> {
@@ -79,44 +105,91 @@ public class EventService {
         
         EventSnapshot eventSnapshot = new EventSnapshot();
         
-        if (evt instanceof ControllerEvent || evt instanceof ClusterEvent) {
-            eventSnapshot.setEventType("ControllerStateChanged");
-            eventSnapshot.setObjectType(JobSchedulerObjectType.CONTROLLER);
-            eventSnapshot.setPath(controllerId);
-//        } else if (evt instanceof AgentRefEvent) {
-//            eventSnapshot.setEventType(evt.getClass().getSimpleName()); //AgentAdded and AgentUpdated
-//            eventSnapshot.setObjectType(JobSchedulerObjectType.AGENTCLUSTER);
-//            eventSnapshot.setPath(controllerId);
-        } else if (evt instanceof OrderEvent) {
+        if (evt instanceof OrderEvent) {
             final OrderId orderId = (OrderId) key;
             Optional<JOrder> opt = currentState.idToOrder(orderId);
             if (opt.isPresent()) {
-                eventSnapshots.put(createWorkflowEventOfOrder(opt.get().workflowId().path().string()));
+                //eventSnapshots.put(createWorkflowEventOfOrder(opt.get().workflowId().path().string()));
+                addEvent(createWorkflowEventOfOrder(opt.get().workflowId().path().string()));
                 eventSnapshot.setPath(opt.get().workflowId().path().string() + "," + orderId.string());
             } else {
                 eventSnapshot.setPath(orderId.string());
             }
-            eventSnapshot.setObjectType(JobSchedulerObjectType.ORDER);
+            eventSnapshot.setObjectType(EventType.ORDER);
             eventSnapshot.setEventType("OrderStateChanged");
             if (evt instanceof OrderAdded) {
                 eventSnapshot.setEventType("OrderAdded");
             } else if (evt instanceof OrderTerminated) {
                 eventSnapshot.setEventType("OrderTerminated");
+            } else if (evt instanceof OrderProcessingStarted$ || evt instanceof OrderProcessed || evt instanceof OrderProcessingKilled$) {
+                addEvent(createTaskEventOfOrder(opt.get().workflowId().path().string()));
             }
+        } else if (evt instanceof ControllerEvent || evt instanceof ClusterEvent) {
+            eventSnapshot.setEventType("ControllerStateChanged");
+            eventSnapshot.setObjectType(EventType.CONTROLLER);
+            eventSnapshot.setPath(controllerId);
+        } else if (evt instanceof AgentRefEvent) {
+            eventSnapshot.setEventType(evt.getClass().getSimpleName()); //AgentAdded and AgentUpdated
+            eventSnapshot.setObjectType(EventType.AGENT);
+            eventSnapshot.setPath(controllerId);
         }
         
         if (eventSnapshot.getObjectType() != null) {
-            //eventSnapshot.setEventId(stampedEvt.eventId());
-            eventSnapshots.put(eventSnapshot);
+            //only for notification eventSnapshot.setEventId(stampedEvt.eventId());
+            //eventSnapshots.put(eventSnapshot);
+            addEvent(eventSnapshot);
         }
     };
     
     private EventSnapshot createWorkflowEventOfOrder(String workflowPath) {
         EventSnapshot workflowEventSnapshot = new EventSnapshot();
         workflowEventSnapshot.setEventType("WorkflowStateChanged");
-        workflowEventSnapshot.setObjectType(JobSchedulerObjectType.WORKFLOW);
+        workflowEventSnapshot.setObjectType(EventType.WORKFLOW);
         workflowEventSnapshot.setPath(workflowPath);
         return workflowEventSnapshot;
     }
+    
+    private EventSnapshot createTaskEventOfOrder(String workflowPath) {
+        EventSnapshot workflowEventSnapshot = new EventSnapshot();
+        workflowEventSnapshot.setEventType("JobStateChanged");
+        workflowEventSnapshot.setObjectType(EventType.JOB);
+        workflowEventSnapshot.setPath(workflowPath);
+        return workflowEventSnapshot;
+    }
+    
+    private void addEvent(EventSnapshot eventSnapshot) {
+        events.add(eventSnapshot);
+        notifyAll();
+    }
+    
+    protected Mode hasEvent(Long eventId, Long maxDelay) {
+        if (events.stream().parallel().anyMatch(e -> eventId <= e.getEventId())) {
+            if (events.stream().parallel().anyMatch(e -> EventType.PROBLEM.equals(e.getObjectType()))) {
+                return Mode.IMMEDIATLY;
+            }
+            return Mode.TRUE;
+        } else {
+            ScheduledFuture<Void> s = Executors.newScheduledThreadPool(1).schedule(() -> {
+                try {
+                    notify(); 
+                } catch (Exception e1) {
+                }
+                return null;
+            }, maxDelay, TimeUnit.MICROSECONDS);
+            try {
+                wait();
+                if (!s.isDone()) {
+                    s.cancel(true);
+                }
+            } catch (InterruptedException e1) {
+            }
+            if (events.stream().parallel().anyMatch(e -> EventType.PROBLEM.equals(e.getObjectType()))) {
+                return Mode.IMMEDIATLY;
+            }
+            return Mode.TRUE;
+        }
+    }
+    
+    
 
 }

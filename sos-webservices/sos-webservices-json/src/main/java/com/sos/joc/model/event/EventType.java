@@ -6,22 +6,28 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum NodeTransitionType {
+public enum EventType {
 
-    SUCCESS("SUCCESS"),
-    KEEP("KEEP"),
-    PROCEEDING("PROCEEDING"),
-    ERROR("ERROR");
+    JOCCLUSTER("JOCCLUSTER"),
+    CONTROLLER("CONTROLLER"),
+    CONTROLLERCLUSTER("CONTROLLERCLUSTER"),
+    AGENT("AGENT"),
+    PROBLEM("PROBLEM"),
+    WORKFLOW("WORKFLOW"),
+    ORDER("ORDER"),
+    ORDERHISTORY("ORDERHISTORY"),
+    TASKHISTORY("TASKHISTORY"),
+    JOB("JOB");
     private final String value;
-    private final static Map<String, NodeTransitionType> CONSTANTS = new HashMap<String, NodeTransitionType>();
+    private final static Map<String, EventType> CONSTANTS = new HashMap<String, EventType>();
 
     static {
-        for (NodeTransitionType c: values()) {
+        for (EventType c: values()) {
             CONSTANTS.put(c.value, c);
         }
     }
 
-    private NodeTransitionType(String value) {
+    private EventType(String value) {
         this.value = value;
     }
 
@@ -36,8 +42,8 @@ public enum NodeTransitionType {
     }
 
     @JsonCreator
-    public static NodeTransitionType fromValue(String value) {
-        NodeTransitionType constant = CONSTANTS.get(value);
+    public static EventType fromValue(String value) {
+        EventType constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {
