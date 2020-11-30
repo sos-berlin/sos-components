@@ -8,7 +8,12 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import org.apache.shiro.session.InvalidSessionException;
@@ -27,6 +32,12 @@ public class EventServiceFactory {
     private static EventServiceFactory eventServiceFactory;
     private volatile Map<String, EventService> eventServices = new ConcurrentHashMap<>();
     private final static Long cleanupPeriod = TimeUnit.MINUTES.toMillis(6);
+    protected static Lock lock = new ReentrantLock();
+    protected static Condition eventArrived  = lock.newCondition();
+    
+    public enum Mode {
+        IMMEDIATLY, TRUE, FALSE;
+    }
     
     private EventServiceFactory() {
 //        EventBus.getInstance().register(this);
@@ -68,12 +79,24 @@ public class EventServiceFactory {
         SortedSet<EventSnapshot> evt;
         try {
             EventService service = getEventService(controllerId);
+            service.setIsCurrentController(isCurrentController);
             evt = new TreeSet<>(Comparator.comparing(EventSnapshot::getEventId));
-            long delay = Math.min(cleanupPeriod - 1000, getSessionTimeout(session));
-            LOGGER.info("waiting for Events for " + controllerId + ": maxdelay " + delay + "ms");
-            EventService.Mode mode = service.hasEvent(eventId, delay);
+            Mode mode = service.hasOldEvent(eventId);
+            if (mode == Mode.FALSE) {
+                long delay = Math.min(cleanupPeriod - 1000, getSessionTimeout(session));
+                LOGGER.info("waiting for Events for " + controllerId + ": maxdelay " + delay + "ms");
+                ScheduledFuture<Void> watchdog = startWatchdog(delay);
+                mode = service.hasEvent();
+                if (watchdog.isDone()) {
+                    LOGGER.info("Event for " + controllerId + " arrived");
+                    watchdog.cancel(false);
+                    LOGGER.info("event watchdog is cancelled");
+                } else {
+                    LOGGER.info("watchdog has stopped waiting events for " + controllerId);
+                }
+            }
             LOGGER.info("received Events for " + controllerId + ": mode " + mode.name());
-            if (mode == EventService.Mode.TRUE) {
+            if (mode == Mode.TRUE) {
                 try {
                     TimeUnit.SECONDS.sleep(2);
                 } catch (InterruptedException e1) {
@@ -84,7 +107,7 @@ public class EventServiceFactory {
                         e.setEventId(null);
                     }
                 });
-            } else if (mode == EventService.Mode.IMMEDIATLY) {
+            } else if (mode == Mode.IMMEDIATLY) {
                 service.getEvents().iterator().forEachRemaining(e -> {
                     if (eventId <= e.getEventId()) {
                         evt.add(e);
@@ -123,15 +146,29 @@ public class EventServiceFactory {
             if (l < 0) {
                 return 0L;
             }
-            if (l >= Long.MAX_VALUE) {
-                return Long.MAX_VALUE;
-            }
             return l;
         } catch (SessionNotExistException e) {
             throw e;
         } catch (InvalidSessionException e) {
             throw new SessionNotExistException(e);
         }
+    }
+    
+    protected static void signalEvent() {
+        lock.lock();
+        try {
+            eventArrived.signal();
+        } finally {
+            lock.unlock();
+        }
+    }
+    
+    private static ScheduledFuture<Void> startWatchdog(long maxDelay) {
+        return Executors.newScheduledThreadPool(1).schedule(() -> {
+            LOGGER.info("start watchdog which stops waiting after for " + maxDelay + "ms");
+            signalEvent();
+            return null;
+        }, maxDelay, TimeUnit.MILLISECONDS);
     }
 
 }
