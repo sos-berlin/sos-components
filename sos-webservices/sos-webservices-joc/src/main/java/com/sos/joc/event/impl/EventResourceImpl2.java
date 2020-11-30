@@ -20,11 +20,13 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.event.EventCallable2;
+import com.sos.joc.classes.event.EventCallable2OfCurrentController;
 import com.sos.joc.event.resource.IEventResource2;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.SessionNotExistException;
+import com.sos.joc.model.event.EventSnapshot;
 import com.sos.joc.model.event.JobSchedulerEvent;
 import com.sos.joc.model.event.JobSchedulerEvents;
 import com.sos.joc.model.event.JobSchedulerObjects;
@@ -40,7 +42,7 @@ public class EventResourceImpl2 extends JOCResourceImpl implements IEventResourc
     public JOCDefaultResponse postEvent(String accessToken, byte[] inBytes) {
 
         JobSchedulerEvents entity = new JobSchedulerEvents();
-        List<JobSchedulerEvent> eventList = new ArrayList<JobSchedulerEvent>();
+        Map<String, JobSchedulerEvent> eventList = new HashMap<String, JobSchedulerEvent>();
         Session session = null;
         
         try {
@@ -67,17 +69,21 @@ public class EventResourceImpl2 extends JOCResourceImpl implements IEventResourc
 //            }
             
             if (in.getControllers() == null && in.getControllers().size() == 0) {
-                throw new JocMissingRequiredParameterException("undefined 'jobscheduler'");
+                throw new JocMissingRequiredParameterException("undefined 'controllers'");
             }
             
             Long defaultEventId = Instant.now().toEpochMilli() * 1000;
             List<EventCallable2> tasks = new ArrayList<EventCallable2>();
             
+            Boolean isCurrentJobScheduler = true;
             for (JobSchedulerObjects jsObject : in.getControllers()) {
-                if (jsObject.getEventId() == null) {
-                    jsObject.setEventId(defaultEventId);
+                eventList.put(jsObject.getControllerId(), initEvent(jsObject, defaultEventId));
+                if (isCurrentJobScheduler) {
+                    tasks.add(new EventCallable2OfCurrentController(session, jsObject.getEventId(), jsObject.getControllerId()));
+                    isCurrentJobScheduler = false;
+                } else {
+                    tasks.add(new EventCallable2(session, jsObject.getEventId(), jsObject.getControllerId()));
                 }
-                tasks.add(new EventCallable2(session, jsObject.getEventId(), jsObject.getControllerId()));
             }
             
             if (!tasks.isEmpty()) {
@@ -88,7 +94,7 @@ public class EventResourceImpl2 extends JOCResourceImpl implements IEventResourc
                     for (Future<JobSchedulerEvent> result : executorService.invokeAll(tasks)) {
                         try {
                             JobSchedulerEvent evt = result.get();
-                            eventList.add(evt);
+                            eventList.put(evt.getControllerId(), evt);
                         } catch (ExecutionException e) {
                             if (e.getCause() instanceof JocException) {
                                 throw (JocException) e.getCause();
@@ -104,11 +110,11 @@ public class EventResourceImpl2 extends JOCResourceImpl implements IEventResourc
                 }
             }
 
-            entity.setEvents(eventList);
+            entity.setEvents(new ArrayList<>(eventList.values()));
             entity.setDeliveryDate(Date.from(Instant.now()));
             
         } catch (JobSchedulerConnectionRefusedException e) {
-            entity.setEvents(eventList);
+            entity.setEvents(new ArrayList<>(eventList.values()));
             entity.setDeliveryDate(Date.from(Instant.now()));
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatus434JSError(e);
@@ -116,12 +122,26 @@ public class EventResourceImpl2 extends JOCResourceImpl implements IEventResourc
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (InvalidSessionException e) {
-            entity.setEvents(eventList);
+            entity.setEvents(new ArrayList<>(eventList.values()));
             entity.setDeliveryDate(Date.from(Instant.now()));
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
         return JOCDefaultResponse.responseStatus200(entity);
+    }
+    
+    private JobSchedulerEvent initEvent(JobSchedulerObjects jsObject, Long defaultEventId) {
+        Long eventId = defaultEventId;
+        String jsId = jsObject.getControllerId();
+
+        if (jsObject.getEventId() != null && jsObject.getEventId() > 0L) {
+            eventId = jsObject.getEventId();
+        }
+        JobSchedulerEvent jsEvent = new JobSchedulerEvent();
+        jsEvent.setEventId(eventId);
+        jsEvent.setControllerId(jsId);
+        jsEvent.setEventSnapshots(new ArrayList<EventSnapshot>());
+        return jsEvent;
     }
 
 }

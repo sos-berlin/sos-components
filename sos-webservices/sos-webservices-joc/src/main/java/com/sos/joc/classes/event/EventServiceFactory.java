@@ -39,20 +39,20 @@ public class EventServiceFactory {
         return eventServiceFactory;
     }
     
-    public static JobSchedulerEvent getEvents(String controllerId, Long eventId, Session session) {
-        return EventServiceFactory.getInstance()._getEvents(controllerId, eventId, session);
+    public static JobSchedulerEvent getEvents(String controllerId, Long eventId, Session session, boolean isCurrentController) {
+        return EventServiceFactory.getInstance()._getEvents(controllerId, eventId, session, isCurrentController);
     }
     
-    private EventService getEventService(String controllerId) {
+    public EventService getEventService(String controllerId) {
         synchronized (eventServices) {
             if (!eventServices.containsKey(controllerId)) {
                 eventServices.put(controllerId, new EventService(controllerId));
-                // cleanup old event each 5 Minutes
+                // cleanup old event each 6 Minutes
                 new Timer().scheduleAtFixedRate(new TimerTask() {
 
                     @Override
                     public void run() {
-                        Long eventId = (Instant.now().toEpochMilli() - cleanupPeriod) * 1000;
+                        Long eventId = (Instant.now().toEpochMilli() - cleanupPeriod - TimeUnit.SECONDS.toMillis(30)) * 1000;
                         eventServices.get(controllerId).getEvents().removeIf(e -> e.getEventId() < eventId);
                     }
                     
@@ -62,7 +62,7 @@ public class EventServiceFactory {
         }
     }
     
-    private JobSchedulerEvent _getEvents(String controllerId, Long eventId, Session session) {
+    private JobSchedulerEvent _getEvents(String controllerId, Long eventId, Session session, boolean isCurrentController) {
         JobSchedulerEvent events = new JobSchedulerEvent();
         events.setControllerId(controllerId);
         SortedSet<EventSnapshot> evt;

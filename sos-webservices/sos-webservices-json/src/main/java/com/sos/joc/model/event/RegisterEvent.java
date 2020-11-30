@@ -19,8 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllers",
-    "close"
+    "controllers"
 })
 public class RegisterEvent {
 
@@ -31,8 +30,6 @@ public class RegisterEvent {
      */
     @JsonProperty("controllers")
     private List<JobSchedulerObjects> controllers = new ArrayList<JobSchedulerObjects>();
-    @JsonProperty("close")
-    private Boolean close = false;
 
     /**
      * 
@@ -54,24 +51,14 @@ public class RegisterEvent {
         this.controllers = controllers;
     }
 
-    @JsonProperty("close")
-    public Boolean getClose() {
-        return close;
-    }
-
-    @JsonProperty("close")
-    public void setClose(Boolean close) {
-        this.close = close;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllers", controllers).append("close", close).toString();
+        return new ToStringBuilder(this).append("controllers", controllers).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllers).append(close).toHashCode();
+        return new HashCodeBuilder().append(controllers).toHashCode();
     }
 
     @Override
@@ -83,7 +70,7 @@ public class RegisterEvent {
             return false;
         }
         RegisterEvent rhs = ((RegisterEvent) other);
-        return new EqualsBuilder().append(controllers, rhs.controllers).append(close, rhs.close).isEquals();
+        return new EqualsBuilder().append(controllers, rhs.controllers).isEquals();
     }
 
 }

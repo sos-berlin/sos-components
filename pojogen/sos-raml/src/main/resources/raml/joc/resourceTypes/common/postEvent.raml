@@ -1,8 +1,8 @@
 type: error
 post:
   description: |
-    <h2>Register JobScheduler objects for collecting events</h2>
-    <p>Events can be sent for multiple JobScheduler.
+    <h2>Register COntroller objects for collecting events</h2>
+    <p>Events can be sent for multiple Controller.
     The request remains open until a requested event has been received or a timeout of ~6min is reached.
     Only one ./event request should be active per browser tab.
     </p>
@@ -25,14 +25,10 @@ post:
     <td> [{
       <div style="padding-left:10px;">"controllerId":"scheduler.1.11",</div>
       <div style="padding-left:10px;">"eventId":1480088631000000,</div>
-      <div style="padding-left:10px;">"objects":[{...objects...}]</div>
+      <!-- div style="padding-left:10px;">"objects":[{...objects...}]</div -->
       }]</td><td></td></tr>
-    <tr><td>``close``</td><td>optional, boolean</td>
-    <td>This parameter finished a still unresponsed previous request of ./event<br/>
-    It has to be called together with ./logout</td>
-    <td>"close":false</td><td>false</td></tr>
-    <tr><td>``eventId``</td><td>optional, string</td>
-    <td>Every response except ``close``=true contains for each jobScheduler a new eventId for the next call.<br/>
+    <tr><td style="padding-left:20px;">``eventId``</td><td>optional, string</td>
+    <td>Every response contains for each Controller a new eventId for the next call.<br/>
     If the eventId is empty then the web service calculates the eventId.</td>
     <td>"eventId":"1480088631000000"</td><td>false</td></tr>
     </tbody></table>

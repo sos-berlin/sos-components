@@ -89,12 +89,12 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             // clients vice versa
             // Globals.forceClosingHttpClients(session);
 
-            if (eventBody.getClose() != null && eventBody.getClose()) {
-                Globals.forceClosingHttpClients(shiroUser, accessToken);
-                entity.setEvents(null);
-                entity.setDeliveryDate(Date.from(Instant.now()));
-                return JOCDefaultResponse.responseStatus200(entity);
-            }
+//            if (eventBody.getClose() != null && eventBody.getClose()) {
+//                Globals.forceClosingHttpClients(shiroUser, accessToken);
+//                entity.setEvents(null);
+//                entity.setDeliveryDate(Date.from(Instant.now()));
+//                return JOCDefaultResponse.responseStatus200(entity);
+//            }
             
 //          TODO temporary with dummy answer
 //            Long defaultEventId = Instant.now().toEpochMilli() * 1000;
