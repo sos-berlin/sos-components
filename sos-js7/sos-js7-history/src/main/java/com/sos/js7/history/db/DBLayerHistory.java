@@ -2,11 +2,13 @@ package com.sos.js7.history.db;
 
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.db.history.DBItemHistoryAgent;
@@ -104,12 +106,62 @@ public class DBLayerHistory {
         return session.executeUpdate(query);
     }
 
-    public List<DBItemHistoryOrder> getOrder(String jobSchedulerId, String orderKey) throws SOSHibernateException {
-        Query<DBItemHistoryOrder> query = session.createQuery(String.format("from %s where jobSchedulerId=:jobSchedulerId and orderKey=:orderKey",
-                DBLayer.DBITEM_HISTORY_ORDER));
+    public DBItemHistoryOrder getOrderByStateTime(String jobSchedulerId, String orderKey, Date stateTime) throws SOSHibernateException {
+        List<DBItemHistoryOrder> result = getOrder(jobSchedulerId, orderKey);
+        if (result != null) {
+            switch (result.size()) {
+            case 0:
+                return null;
+            case 1:
+                return result.get(0);
+            default:
+                DBItemHistoryOrder order = null;
+                for (DBItemHistoryOrder item : result) {
+                    if (SOSDate.equals(stateTime, item.getStateTime())) {
+                        order = item;
+                        break;
+                    }
+                }
+                return order;
+            }
+        }
+        return null;
+    }
+
+    public DBItemHistoryOrder getOrderBeforeCurrentEvent(String jobSchedulerId, String orderKey, Date currentEventTime) throws SOSHibernateException {
+        List<DBItemHistoryOrder> result = getOrder(jobSchedulerId, orderKey);
+        if (result != null) {
+            switch (result.size()) {
+            case 0:
+                return null;
+            case 1:
+                return result.get(0);
+            default:
+                result = result.stream().sorted((item1, item2) -> {
+                    return Long.compare(item2.getId(), item1.getId());
+                }).collect(Collectors.toList());
+
+                long currentStateTime = currentEventTime.getTime();
+                for (DBItemHistoryOrder item : result) {
+                    long itemStateTime = item.getStartTime().getTime();
+                    if (itemStateTime > currentStateTime) {
+                        continue;
+                    }
+                    return item;
+                }
+            }
+        }
+        return null;
+    }
+
+    private List<DBItemHistoryOrder> getOrder(String jobSchedulerId, String orderKey) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER).append(" ");
+        hql.append("where jobSchedulerId=:jobSchedulerId ");
+        hql.append("and orderKey=:orderKey ");
+
+        Query<DBItemHistoryOrder> query = session.createQuery(hql.toString());
         query.setParameter("jobSchedulerId", jobSchedulerId);
         query.setParameter("orderKey", orderKey);
-
         return session.getResultList(query);
     }
 
@@ -126,10 +178,6 @@ public class DBLayerHistory {
         return session.getSingleResult(query);
     }
 
-    public DBItemHistoryOrderStep getOrderStep(String jobSchedulerId, String orderKey) throws SOSHibernateException {
-        return getOrderStep(jobSchedulerId, orderKey, null);
-    }
-
     public DBItemHistoryOrderStep getOrderStepByConstraint(String constraintHash) throws SOSHibernateException {
         Query<DBItemHistoryOrderStep> query = session.createQuery(String.format("from %s where constraintHash=:constraintHash",
                 DBLayer.DBITEM_HISTORY_ORDER_STEP));
@@ -137,11 +185,17 @@ public class DBLayerHistory {
         return session.getSingleResult(query);
     }
 
-    public DBItemHistoryOrderStep getOrderStep(String jobSchedulerId, String orderKey, String startEventId) throws SOSHibernateException {
-        Query<DBItemHistoryOrderStep> query = session.createQuery(String.format("from %s where jobSchedulerId=:jobSchedulerId and orderKey=:orderKey",
-                DBLayer.DBITEM_HISTORY_ORDER_STEP));
+    public DBItemHistoryOrderStep getOrderStepLastBeforeCurrentEvent(String jobSchedulerId, String orderKey, Date currentEventTime,
+            Long currentEventId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(" ");
+        hql.append("where jobSchedulerId=:jobSchedulerId ");
+        hql.append("and orderKey=:orderKey ");
+        hql.append("and startTime <=:startTime ");
+
+        Query<DBItemHistoryOrderStep> query = session.createQuery(hql.toString());
         query.setParameter("jobSchedulerId", jobSchedulerId);
         query.setParameter("orderKey", orderKey);
+        query.setParameter("startTime", currentEventTime);
 
         List<DBItemHistoryOrderStep> result = session.getResultList(query);
         if (result != null) {
@@ -152,21 +206,51 @@ public class DBLayerHistory {
                 return result.get(0);
             default:
                 DBItemHistoryOrderStep step = null;
-                if (startEventId == null) {
-                    Long eventId = new Long(0);
-                    for (DBItemHistoryOrderStep item : result) {
-                        Long itemEventId = Long.parseLong(item.getStartEventId());
-                        if (itemEventId > eventId) {
-                            step = item;
-                            eventId = itemEventId;
-                        }
+                Long eventId = new Long(0);
+                for (DBItemHistoryOrderStep item : result) {
+                    Long itemStartEventId = Long.parseLong(item.getStartEventId());
+                    if (itemStartEventId > currentEventId) {
+                        continue;
                     }
-                } else {
-                    for (DBItemHistoryOrderStep item : result) {
-                        if (item.getStartEventId().equals(startEventId)) {
-                            step = item;
-                            break;
-                        }
+
+                    if (itemStartEventId > eventId) {
+                        step = item;
+                        eventId = itemStartEventId;
+                    }
+                }
+                return step;
+            }
+        }
+        return null;
+    }
+
+    public DBItemHistoryOrderStep getOrderStepByStartTime(String jobSchedulerId, String orderKey, Date startTime, Long startEventId)
+            throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(" ");
+        hql.append("where jobSchedulerId=:jobSchedulerId ");
+        hql.append("and orderKey=:orderKey ");
+        hql.append("and startTime=:startTime ");
+
+        Query<DBItemHistoryOrderStep> query = session.createQuery(hql.toString());
+        query.setParameter("jobSchedulerId", jobSchedulerId);
+        query.setParameter("orderKey", orderKey);
+        query.setParameter("startTime", startTime);
+
+        List<DBItemHistoryOrderStep> result = session.getResultList(query);
+        if (result != null) {
+            switch (result.size()) {
+            case 0:
+                return null;
+            case 1:
+                return result.get(0);
+            default:
+                DBItemHistoryOrderStep step = null;
+                // for cases with startIime diff < ms
+                String seid = String.valueOf(startEventId);
+                for (DBItemHistoryOrderStep item : result) {
+                    if (item.getStartEventId().equals(seid)) {
+                        step = item;
+                        break;
                     }
                 }
                 return step;

@@ -36,7 +36,7 @@ public class JobHistoryDBLayer {
         {
             put(HistoryStateText.SUCCESSFUL, "(severity=" + HistorySeverity.SUCCESSFUL + ")");
             put(HistoryStateText.INCOMPLETE, "(severity=" + HistorySeverity.INCOMPLETE + ")");
-            put(HistoryStateText.FAILED, "(severity =" + HistorySeverity.FAILED + ")");
+            put(HistoryStateText.FAILED, "(severity=" + HistorySeverity.FAILED + ")");
         }
     });
 
@@ -253,6 +253,7 @@ public class JobHistoryDBLayer {
         }
 
         if (orderLogs) {
+            // TODO ???
             where += and + " state > " + OrderStateText.PENDING.intValue();
             and = " and";
         }
