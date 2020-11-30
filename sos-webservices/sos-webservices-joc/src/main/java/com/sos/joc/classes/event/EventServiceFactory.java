@@ -1,7 +1,6 @@
 package com.sos.joc.classes.event;
 
 import java.time.Instant;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.SortedSet;
@@ -14,6 +13,8 @@ import java.util.stream.Collectors;
 
 import org.apache.shiro.session.InvalidSessionException;
 import org.apache.shiro.session.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.common.Err;
@@ -22,6 +23,7 @@ import com.sos.joc.model.event.JobSchedulerEvent;
 
 public class EventServiceFactory {
     
+    private static final Logger LOGGER = LoggerFactory.getLogger(EventServiceFactory.class);
     private static EventServiceFactory eventServiceFactory;
     private volatile Map<String, EventService> eventServices = new ConcurrentHashMap<>();
     private final static Long cleanupPeriod = TimeUnit.MINUTES.toMillis(6);
@@ -68,7 +70,9 @@ public class EventServiceFactory {
             EventService service = getEventService(controllerId);
             evt = new TreeSet<>(Comparator.comparing(EventSnapshot::getEventId));
             long delay = Math.min(cleanupPeriod - 1000, getSessionTimeout(session));
+            LOGGER.info("waiting for Events for " + controllerId + ": maxdelay " + delay + "ms");
             EventService.Mode mode = service.hasEvent(eventId, delay);
+            LOGGER.info("received Events for " + controllerId + ": mode " + mode.name());
             if (mode == EventService.Mode.TRUE) {
                 try {
                     TimeUnit.SECONDS.sleep(2);

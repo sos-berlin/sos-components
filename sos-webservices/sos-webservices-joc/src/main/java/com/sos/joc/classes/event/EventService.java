@@ -1,25 +1,25 @@
 package com.sos.joc.classes.event;
 
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.sos.jobscheduler.model.event.OrderProcessingStarted;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
-import com.sos.joc.event.bean.history.OrderStepFinished;
-import com.sos.joc.event.bean.history.OrderStepStarted;
 import com.sos.joc.event.bean.problem.ProblemEvent;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -56,6 +56,7 @@ import js7.proxy.javaapi.eventbus.JControllerEventBus;
 
 public class EventService {
     
+    private static final Logger LOGGER = LoggerFactory.getLogger(EventService.class);
     // OrderAdded, OrderProcessed, OrderProcessingStarted$ extends OrderCoreEvent
     // OrderStarted, OrderProcessingKilled$, OrderFailed, OrderFailedInFork, OrderRetrying, OrderBroken extends OrderActorEvent
     // OrderFinished, OrderCancelled, OrderRemoved$ extends OrderTerminated
@@ -64,6 +65,8 @@ public class EventService {
             OrderTerminated.class, OrderCoreEvent.class, OrderAdded.class, OrderProcessed.class, OrderProcessingStarted$.class);
     private String controllerId;
     private volatile CopyOnWriteArraySet<EventSnapshot> events = new CopyOnWriteArraySet<>();
+    private Lock lock = new ReentrantLock();
+    private Condition eventArrived  = lock.newCondition();
     
     public enum Mode {
         IMMEDIATLY, TRUE, FALSE;
@@ -159,31 +162,49 @@ public class EventService {
     
     private void addEvent(EventSnapshot eventSnapshot) {
         events.add(eventSnapshot);
-        notifyAll();
+        LOGGER.info("addEvent for " + controllerId + ": " + eventSnapshot.toString());
+        lock.lock();
+        eventArrived.signalAll();
+        lock.unlock();
     }
     
     protected Mode hasEvent(Long eventId, Long maxDelay) {
         if (events.stream().parallel().anyMatch(e -> eventId <= e.getEventId())) {
+            LOGGER.info("hasEvent for " + controllerId + ": true");
             if (events.stream().parallel().anyMatch(e -> EventType.PROBLEM.equals(e.getObjectType()))) {
+                LOGGER.info("hasProblemEvent for " + controllerId + ": true");
                 return Mode.IMMEDIATLY;
             }
             return Mode.TRUE;
         } else {
+            LOGGER.info("hasEvent for " + controllerId + ": false");
             ScheduledFuture<Void> s = Executors.newScheduledThreadPool(1).schedule(() -> {
+                lock.lock();
                 try {
-                    notify(); 
-                } catch (Exception e1) {
+                    LOGGER.info("start watchdog which stops waiting after for " + maxDelay + "ms");
+                    eventArrived.signal();
+                } finally {
+                    lock.unlock();
                 }
                 return null;
-            }, maxDelay, TimeUnit.MICROSECONDS);
+            }, maxDelay, TimeUnit.MILLISECONDS);
+            lock.lock();
             try {
-                wait();
-                if (!s.isDone()) {
-                    s.cancel(true);
+                LOGGER.info("waiting for Events for " + controllerId);
+                eventArrived.await();
+                if (s.isDone()) {
+                    LOGGER.info("Event for " + controllerId + " arrived");
+                    s.cancel(false);
+                    LOGGER.info("event watchdog is cancelled");
+                } else {
+                    LOGGER.info("watchdog has stopped waiting events for " + controllerId);
                 }
             } catch (InterruptedException e1) {
+            } finally {
+                lock.unlock();
             }
             if (events.stream().parallel().anyMatch(e -> EventType.PROBLEM.equals(e.getObjectType()))) {
+                LOGGER.info("ProblemEvent for " + controllerId + ": true");
                 return Mode.IMMEDIATLY;
             }
             return Mode.TRUE;

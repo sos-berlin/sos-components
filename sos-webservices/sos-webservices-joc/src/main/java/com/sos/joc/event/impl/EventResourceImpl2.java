@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import javax.ws.rs.Path;
 
@@ -30,7 +31,7 @@ import com.sos.joc.model.event.JobSchedulerObjects;
 import com.sos.joc.model.event.RegisterEvent;
 import com.sos.schema.JsonValidator;
 
-@Path("events2")
+@Path("events")
 public class EventResourceImpl2 extends JOCResourceImpl implements IEventResource2 {
 
     private static final String API_CALL = "./events";
@@ -39,9 +40,8 @@ public class EventResourceImpl2 extends JOCResourceImpl implements IEventResourc
     public JOCDefaultResponse postEvent(String accessToken, byte[] inBytes) {
 
         JobSchedulerEvents entity = new JobSchedulerEvents();
-        Map<String, JobSchedulerEvent> eventList = new HashMap<String, JobSchedulerEvent>();
+        List<JobSchedulerEvent> eventList = new ArrayList<JobSchedulerEvent>();
         Session session = null;
-        
         
         try {
             initLogging(API_CALL, inBytes, accessToken);
@@ -83,8 +83,20 @@ public class EventResourceImpl2 extends JOCResourceImpl implements IEventResourc
             if (!tasks.isEmpty()) {
                 ExecutorService executorService = Executors.newFixedThreadPool(tasks.size());
                 try {
-                    JobSchedulerEvent evt = executorService.invokeAny(tasks);
-                    eventList.put(evt.getControllerId(), evt);
+//                    JobSchedulerEvent evt = executorService.invokeAll(tasks);
+//                    eventList.put(evt.getControllerId(), evt);
+                    for (Future<JobSchedulerEvent> result : executorService.invokeAll(tasks)) {
+                        try {
+                            JobSchedulerEvent evt = result.get();
+                            eventList.add(evt);
+                        } catch (ExecutionException e) {
+                            if (e.getCause() instanceof JocException) {
+                                throw (JocException) e.getCause();
+                            } else {
+                                throw (Exception) e.getCause();
+                            }
+                        }
+                    }
                 } catch (ExecutionException e) {
                     throw (Exception) e.getCause();
                 } finally {
@@ -92,11 +104,11 @@ public class EventResourceImpl2 extends JOCResourceImpl implements IEventResourc
                 }
             }
 
-            entity.setEvents(new ArrayList<JobSchedulerEvent>(eventList.values()));
+            entity.setEvents(eventList);
             entity.setDeliveryDate(Date.from(Instant.now()));
             
         } catch (JobSchedulerConnectionRefusedException e) {
-            entity.setEvents(new ArrayList<JobSchedulerEvent>(eventList.values()));
+            entity.setEvents(eventList);
             entity.setDeliveryDate(Date.from(Instant.now()));
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatus434JSError(e);
@@ -104,7 +116,7 @@ public class EventResourceImpl2 extends JOCResourceImpl implements IEventResourc
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (InvalidSessionException e) {
-            entity.setEvents(new ArrayList<JobSchedulerEvent>(eventList.values()));
+            entity.setEvents(eventList);
             entity.setDeliveryDate(Date.from(Instant.now()));
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());

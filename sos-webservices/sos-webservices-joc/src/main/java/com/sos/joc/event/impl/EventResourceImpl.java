@@ -47,7 +47,7 @@ import com.sos.joc.model.event.JobSchedulerEvents;
 import com.sos.joc.model.event.JobSchedulerObjects;
 import com.sos.joc.model.event.RegisterEvent;
 
-@Path("events")
+@Path("events2")
 public class EventResourceImpl extends JOCResourceImpl implements IEventResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EventResourceImpl.class);

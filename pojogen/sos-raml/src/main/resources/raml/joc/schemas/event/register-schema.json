@@ -13,10 +13,6 @@
       "items": {
         "$ref": "jobSchedulerObjectFilter-schema.json"
       }
-    },
-    "close": {
-      "type": "boolean",
-      "default": false
     }
   }
 }
