@@ -18,8 +18,8 @@ import com.sos.joc.db.history.DBItemHistoryOrderState;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.JobHistoryDBLayer;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.order.OrderHistoryChildItem;
-import com.sos.joc.model.order.OrderHistoryChilds;
+import com.sos.joc.model.order.OrderHistoryItemChildItem;
+import com.sos.joc.model.order.OrderHistoryItemChilds;
 import com.sos.joc.model.order.OrderHistoryFilter;
 import com.sos.joc.order.resource.IOrderHistoryResource;
 import com.sos.schema.JsonValidator;
@@ -46,7 +46,7 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session);
 
-            OrderHistoryChilds answer = new OrderHistoryChilds();
+            OrderHistoryItemChilds answer = new OrderHistoryItemChilds();
             mapStates(answer, dbLayer.getOrderStates(in.getHistoryId()));
             mapChildren(answer, dbLayer.getOrderSteps(in.getHistoryId()), dbLayer.getOrderForkChilds(in.getHistoryId()));
             answer.setDeliveryDate(new Date());
@@ -62,11 +62,11 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
         }
     }
 
-    private void mapChildren(OrderHistoryChilds answer, List<DBItemHistoryOrderStep> steps, List<DBItemHistoryOrder> forks) {
-        List<OrderHistoryChildItem> list = new ArrayList<OrderHistoryChildItem>();
+    private void mapChildren(OrderHistoryItemChilds answer, List<DBItemHistoryOrderStep> steps, List<DBItemHistoryOrder> forks) {
+        List<OrderHistoryItemChildItem> list = new ArrayList<OrderHistoryItemChildItem>();
         if (steps != null && steps.size() > 0) {
             list.addAll(steps.stream().map(step -> {
-                OrderHistoryChildItem history = new OrderHistoryChildItem();
+                OrderHistoryItemChildItem history = new OrderHistoryItemChildItem();
                 history.setTask(HistoryMapper.map2TaskHistoryItem(step));
                 return history;
             }).collect(Collectors.toList()));
@@ -74,7 +74,7 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
         }
         if (forks != null && forks.size() > 0) {
             list.addAll(forks.stream().map(fork -> {
-                OrderHistoryChildItem history = new OrderHistoryChildItem();
+                OrderHistoryItemChildItem history = new OrderHistoryItemChildItem();
                 history.setOrder(HistoryMapper.map2OrderHistoryItem(fork));
                 return history;
             }).collect(Collectors.toList()));
@@ -90,7 +90,7 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
         }
     }
 
-    private void mapStates(OrderHistoryChilds answer, List<DBItemHistoryOrderState> states) {
+    private void mapStates(OrderHistoryItemChilds answer, List<DBItemHistoryOrderState> states) {
         if (states != null) {
             answer.setStates(states.stream().map(state -> {
                 return HistoryMapper.map2OrderHistoryStateItem(state);

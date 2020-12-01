@@ -15,7 +15,7 @@
     "history": {
       "type": "array",
       "items": {
-        "$ref": "historyItem-schema.json"
+        "$ref": "orderHistoryItem-schema.json"
       }
     }
   }

@@ -126,6 +126,7 @@ public class OrderHistoryItem {
      * orderHistory state
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("orderState")
@@ -362,6 +363,7 @@ public class OrderHistoryItem {
      * orderHistory state
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("orderState")
@@ -373,6 +375,7 @@ public class OrderHistoryItem {
      * orderHistory state
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("orderState")
