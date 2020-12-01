@@ -119,18 +119,18 @@ public class EventServiceFactory {
                 } catch (InterruptedException e1) {
                 }
                 service.getEvents().iterator().forEachRemaining(e -> {
-                    if (eventId < e.getEventId()) {
+                    if (e.getEventId() != null && eventId < e.getEventId()) {
                         evt.add(e);
                     }
                 });
             } else if (mode == Mode.IMMEDIATLY) {
                 service.getEvents().iterator().forEachRemaining(e -> {
-                    if (eventId < e.getEventId()) {
+                    if (e.getEventId() != null && eventId < e.getEventId()) {
                         evt.add(e);
                     }
                 });
             }
-            LOGGER.debug("Events for " + controllerId + ": " + evt);
+            LOGGER.info("Events for " + controllerId + ": " + evt);
             if (evt.isEmpty()) {
                 //events.setEventSnapshots(null);
             } else {
