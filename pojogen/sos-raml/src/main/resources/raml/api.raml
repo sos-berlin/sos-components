@@ -1696,7 +1696,7 @@ traits:
         schema: orderHistoryFilter
         schema200: !include joc/schemas/order/orderHistoryItemChilds-schema.json
         example: " "
-        example200: " "
+        example200: !include joc/examples/order/response-orderHistoryItemChilds-example.json
   /log:
     type:
       postJSON:
@@ -1877,7 +1877,7 @@ traits:
         schema: !include joc/schemas/order/ordersFilter-schema.json
         schema200: !include joc/schemas/order/orderHistory-schema.json
         example: !include joc/examples/order/filteredOrders-example.json
-        example200: TODO
+        example200: !include joc/examples/order/response-orderHistory-example.json
   /overview/snapshot:
       type:
         postJSON:
