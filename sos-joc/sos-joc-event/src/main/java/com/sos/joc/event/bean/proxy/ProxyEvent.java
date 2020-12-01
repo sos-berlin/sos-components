@@ -1,7 +1,5 @@
 package com.sos.joc.event.bean.proxy;
 
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -29,7 +27,7 @@ public abstract class ProxyEvent extends JOCEvent {
      * @param controllerId
      * @param variables
      */
-    public ProxyEvent(String key, String controllerId, Map<String, String> variables) {
-        super(key, controllerId, variables);
+    public ProxyEvent(String key, String controllerId) {
+        super(key, controllerId, null);
     }
 }

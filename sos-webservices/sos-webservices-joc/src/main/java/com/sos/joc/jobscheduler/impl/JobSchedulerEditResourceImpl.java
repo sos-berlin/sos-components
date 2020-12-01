@@ -31,6 +31,8 @@ import com.sos.joc.classes.jobscheduler.ControllerCallable;
 import com.sos.joc.classes.jobscheduler.States;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.ProxiesEdit;
+import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryAgentName;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
@@ -358,6 +360,10 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
 
             checkRequiredParameter("controllerId", jobSchedulerBody.getControllerId());
             checkRequiredComment(jobSchedulerBody.getAuditLog());
+            
+            for (ProxyUser user : ProxyUser.values()) {
+                Proxy.close(jobSchedulerBody.getControllerId(), user);
+            }
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
             InventoryInstancesDBLayer instanceDBLayer = new InventoryInstancesDBLayer(connection);

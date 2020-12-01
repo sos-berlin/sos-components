@@ -1681,7 +1681,7 @@ traits:
   /history:
     type:
       postJSON:
-        description: Order step history of the specified history id from _reporting_
+        description: Order history of the specified history id from _reporting_
         description1: " "
         description2: " "
         description3: !include joc/documentation/order/historyId.md
@@ -1694,7 +1694,7 @@ traits:
         description10: " "
         description200: TODO
         schema: orderHistoryFilter
-        schema200: !include joc/schemas/job/history-schema.json
+        schema200: !include joc/schemas/order/orderHistoryItemChilds-schema.json
         example: " "
         example200: " "
   /log:
@@ -1875,7 +1875,7 @@ traits:
         description13: " "
         description200: TODO
         schema: !include joc/schemas/order/ordersFilter-schema.json
-        schema200: !include joc/schemas/order/history-schema.json
+        schema200: !include joc/schemas/order/orderHistory-schema.json
         example: !include joc/examples/order/filteredOrders-example.json
         example200: TODO
   /overview/snapshot:

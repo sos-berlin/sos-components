@@ -1,7 +1,7 @@
 {
 	"title": "order object in history collection",
 	"$schema": "http://json-schema.org/draft-04/schema#",
-	"javaType": "com.sos.joc.model.order.OrderHistoryChilds",
+	"javaType": "com.sos.joc.model.order.OrderHistoryItemChilds",
 	"type": "object",
 	"required": [
 		"deliveryDate"
@@ -25,7 +25,7 @@
 		"children": {
 			"type": "array",
 			"items": {
-				"$ref": "orderHistoryChildItem-schema.json"
+				"$ref": "orderHistoryItemChildItem-schema.json"
 			}
 		}
 	}

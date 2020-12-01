@@ -88,6 +88,7 @@ public class EventServiceFactory {
     
     private JobSchedulerEvent _getEvents(String controllerId, Long eventId, String accessToken, Condition eventArrived, Session session, boolean isCurrentController) {
         JobSchedulerEvent events = new JobSchedulerEvent();
+        events.setNotifications(null); // TODO not yet implemented
         events.setControllerId(controllerId);
         events.setEventId(eventId); //default
         SortedSet<EventSnapshot> evt;

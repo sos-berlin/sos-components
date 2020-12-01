@@ -27,7 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "hasOrders",
     "children"
 })
-public class OrderHistoryChilds {
+public class OrderHistoryItemChilds {
 
     /**
      * timestamp
@@ -46,7 +46,7 @@ public class OrderHistoryChilds {
     @JsonProperty("hasOrders")
     private Boolean hasOrders;
     @JsonProperty("children")
-    private List<OrderHistoryChildItem> children = new ArrayList<OrderHistoryChildItem>();
+    private List<OrderHistoryItemChildItem> children = new ArrayList<OrderHistoryItemChildItem>();
 
     /**
      * timestamp
@@ -103,12 +103,12 @@ public class OrderHistoryChilds {
     }
 
     @JsonProperty("children")
-    public List<OrderHistoryChildItem> getChildren() {
+    public List<OrderHistoryItemChildItem> getChildren() {
         return children;
     }
 
     @JsonProperty("children")
-    public void setChildren(List<OrderHistoryChildItem> children) {
+    public void setChildren(List<OrderHistoryItemChildItem> children) {
         this.children = children;
     }
 
@@ -127,10 +127,10 @@ public class OrderHistoryChilds {
         if (other == this) {
             return true;
         }
-        if ((other instanceof OrderHistoryChilds) == false) {
+        if ((other instanceof OrderHistoryItemChilds) == false) {
             return false;
         }
-        OrderHistoryChilds rhs = ((OrderHistoryChilds) other);
+        OrderHistoryItemChilds rhs = ((OrderHistoryItemChilds) other);
         return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(hasTasks, rhs.hasTasks).append(children, rhs.children).append(states, rhs.states).append(hasOrders, rhs.hasOrders).isEquals();
     }
 

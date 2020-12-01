@@ -12,6 +12,7 @@
     "position",
     "sequence",
     "state",
+    "orderState",
     "historyId"
   ],
   "properties": {
@@ -50,12 +51,6 @@
     },
     "historyId": {
       "$ref": "../common/nonNegativeLong-schema.json"
-    },
-    "children": {
-      "type": "array",
-      "items": {
-        "$ref": "historyItem-schema.json"
-      }
     }
   }
 }

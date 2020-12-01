@@ -37,6 +37,7 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.publish.DeployConfigDelete;
 import com.sos.joc.model.publish.DeployConfiguration;
 import com.sos.joc.model.publish.DeployConfigurationDelete;
 import com.sos.joc.model.publish.DeploymentState;
@@ -566,16 +567,6 @@ public class DBLayerDeploy {
         return getLatestDepHistoryItem(invConfig.getId(), controllerId);
     }
     
-    public DBItemDeploymentHistory getLatestActiveDepHistoryItem (DBItemInventoryConfiguration invConfig, DBItemInventoryJSInstance controller)
-            throws SOSHibernateException {
-        return getLatestActiveDepHistoryItem(invConfig.getId(), controller.getControllerId());
-    }
-
-    public DBItemDeploymentHistory getLatestActiveDepHistoryItem (DBItemInventoryConfiguration invConfig, String controllerId)
-            throws SOSHibernateException {
-        return getLatestActiveDepHistoryItem(invConfig.getId(), controllerId);
-    }
-
     public DBItemDeploymentHistory getLatestDepHistoryItem (Long configurationId, String controllerId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
         hql.append(" where dep.id = (select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
@@ -585,6 +576,69 @@ public class DBLayerDeploy {
         query.setParameter("cid", configurationId);
         query.setParameter("controllerId", controllerId);
         return session.getSingleResult(query);
+    }
+
+    public DBItemDeploymentHistory getLatestDepHistoryItem (DBItemInventoryConfiguration invConfig) throws SOSHibernateException {
+        return getLatestDepHistoryItem(invConfig.getPath(), invConfig.getTypeAsEnum());
+    }
+   
+    public DBItemDeploymentHistory getLatestDepHistoryItem (DBItemDeploymentHistory depHistory) throws SOSHibernateException {
+        return getLatestDepHistoryItem(depHistory.getPath(), ConfigurationType.fromValue(depHistory.getType()));
+    }
+   
+    public DBItemDeploymentHistory getLatestDepHistoryItem (String path, ConfigurationType objectType) {
+        try {
+            StringBuilder hql = new StringBuilder("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
+            hql.append(" where dep.id = (select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
+            hql.append(" where dep.path = :path");
+            hql.append(" and dep.type = :type").append(")");
+            Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
+            query.setParameter("path", path);
+            query.setParameter("type", objectType.intValue());
+            return session.getSingleResult(query);
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+    }
+
+    public List<DBItemDeploymentHistory> getLatestDepHistoryItems (List<DeployConfigDelete> depConfigsToDelete) {
+        try {
+            StringBuilder hql = new StringBuilder("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
+            hql.append(" where dep.id = (select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
+            for (Integer i=0; i < depConfigsToDelete.size(); i++) {
+                hql.append(" where ((")
+                    .append("dep.folder = : path").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7))
+                    .append(" and ")
+                    .append("dep.type = :type").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7))
+                    .append(")");
+                if (i < depConfigsToDelete.size()-1) {
+                    hql.append(" or ");
+                } else if (i == depConfigsToDelete.size()-1) {
+                    hql.append(")");
+                }
+            }
+            hql.append(")");
+            Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
+             for (Integer i=0; i < depConfigsToDelete.size(); i++) {
+                 query.setParameter("path" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), 
+                         depConfigsToDelete.get(i).getDeployConfiguration().getPath());
+                 query.setParameter("type" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), 
+                         depConfigsToDelete.get(i).getDeployConfiguration().getObjectType().intValue());
+             }
+             return query.getResultList();
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+    }
+
+    public DBItemDeploymentHistory getLatestActiveDepHistoryItem (DBItemInventoryConfiguration invConfig, DBItemInventoryJSInstance controller)
+            throws SOSHibernateException {
+        return getLatestActiveDepHistoryItem(invConfig.getId(), controller.getControllerId());
+    }
+
+    public DBItemDeploymentHistory getLatestActiveDepHistoryItem (DBItemInventoryConfiguration invConfig, String controllerId)
+            throws SOSHibernateException {
+        return getLatestActiveDepHistoryItem(invConfig.getId(), controllerId);
     }
 
     public DBItemDeploymentHistory getLatestActiveDepHistoryItem (Long configurationId, String controllerId) throws SOSHibernateException {
@@ -597,6 +651,102 @@ public class DBLayerDeploy {
         query.setParameter("cid", configurationId);
         query.setParameter("controllerId", controllerId);
         return session.getSingleResult(query);
+    }
+
+    public DBItemDeploymentHistory getLatestActiveDepHistoryItem (DBItemInventoryConfiguration invConfig) throws SOSHibernateException {
+        return getLatestActiveDepHistoryItem(invConfig.getPath(), invConfig.getTypeAsEnum());
+    }
+
+    public DBItemDeploymentHistory getLatestActiveDepHistoryItem (DBItemDeploymentHistory depHistory) throws SOSHibernateException {
+        return getLatestActiveDepHistoryItem(depHistory.getPath(), ConfigurationType.fromValue(depHistory.getType()));
+    }
+
+    public DBItemDeploymentHistory getLatestActiveDepHistoryItem (String folder, ConfigurationType objectType) {
+        try {
+            StringBuilder hql = new StringBuilder("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
+            hql.append(" where dep.id = (select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
+            hql.append(" where dep.folder = :folder");
+            hql.append(" and dep.type = :type");
+            hql.append(" and dep.operation = 0").append(")");
+            Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
+            query.setParameter("type", objectType.intValue());
+            query.setParameter("folder", folder);
+            return session.getSingleResult(query);
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+    }
+
+    public List<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolder (String folder) {
+        try {
+            StringBuilder hql = new StringBuilder("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
+            hql.append(" where dep.id = (select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
+            hql.append(" where history.folder = :folder");
+            hql.append(" and history.state = 0");
+            hql.append(" and history.path = dep.path group by history.path").append(")");
+            Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
+            query.setParameter("folder", folder);
+            return session.getResultList(query);
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+    }
+
+    public List<DBItemDeploymentHistory> getActiveDepHistoryItemsFromFolder (String folder) {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append(" where folder = :folder");
+            hql.append(" and operation = 0");
+            Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
+            query.setParameter("folder", folder);
+            return session.getResultList(query);
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+    }
+
+    public List<DBItemDeploymentHistory> getDeletedDepHistoryItemsFromFolder (String folder) {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append(" where folder = :folder");
+            hql.append(" and operation = 1");
+            Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
+            query.setParameter("folder", folder);
+            return session.getResultList(query);
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+    }
+
+    public List<DBItemDeploymentHistory> getLatestActiveDepHistoryItems (List<DeployConfigDelete> depConfigsToDelete) {
+        try {
+            StringBuilder hql = new StringBuilder("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
+            hql.append(" where dep.id = (select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
+            hql.append(" where dep.operation = 0");
+            for (Integer i=0; i < depConfigsToDelete.size(); i++) {
+                hql.append(" and ((")
+                    .append("dep.folder = : path").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7))
+                    .append(" and ")
+                    .append("dep.type = :type").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7))
+                    .append(")");
+                if (i < depConfigsToDelete.size()-1) {
+                    hql.append(" or ");
+                } else if (i == depConfigsToDelete.size()-1) {
+                    hql.append(")");
+                }
+            }
+            hql.append(")");
+            Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
+             for (Integer i=0; i < depConfigsToDelete.size(); i++) {
+                 query.setParameter("path" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), 
+                         depConfigsToDelete.get(i).getDeployConfiguration().getPath());
+                 query.setParameter("type" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), 
+                         depConfigsToDelete.get(i).getDeployConfiguration().getObjectType().intValue());
+             }
+             return query.getResultList();
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
     }
 
     public Long getLatestDeploymentFromConfigurationId(Long configurationId, Long controllerId) throws SOSHibernateException {
@@ -1073,11 +1223,22 @@ public class DBLayerDeploy {
                 query.setParameter("controllerId", controllerId);
                 return query.getSingleResult();
             } catch (SOSHibernateException e) {
-                throw new RuntimeException(e.getMessage(), e);
+                throw new JocSosHibernateException(e);
             } 
         } else {
             return null;
         }
     }
 
+    public  List<DBItemInventoryConfiguration> getInvCfgFolders(Collection<String> paths) {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
+            hql.append(" where folder in (:folders)");
+            Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+            query.setParameterList("folders", paths);
+            return query.getResultList();
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        } 
+    }
 }

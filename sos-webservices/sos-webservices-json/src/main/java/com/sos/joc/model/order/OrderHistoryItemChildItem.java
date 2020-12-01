@@ -21,7 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "task",
     "order"
 })
-public class OrderHistoryChildItem {
+public class OrderHistoryItemChildItem {
 
     /**
      * task in history collection
@@ -99,10 +99,10 @@ public class OrderHistoryChildItem {
         if (other == this) {
             return true;
         }
-        if ((other instanceof OrderHistoryChildItem) == false) {
+        if ((other instanceof OrderHistoryItemChildItem) == false) {
             return false;
         }
-        OrderHistoryChildItem rhs = ((OrderHistoryChildItem) other);
+        OrderHistoryItemChildItem rhs = ((OrderHistoryItemChildItem) other);
         return new EqualsBuilder().append(task, rhs.task).append(order, rhs.order).isEquals();
     }
 
