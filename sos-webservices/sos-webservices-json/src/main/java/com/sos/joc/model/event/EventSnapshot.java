@@ -1,14 +1,13 @@
 
 package com.sos.joc.model.event;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
@@ -22,7 +21,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "eventId",
     "path",
     "eventType",
-    "objectType"
+    "objectType",
+    "accessToken",
+    "message"
 })
 public class EventSnapshot {
 
@@ -45,15 +46,15 @@ public class EventSnapshot {
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
     /**
-     * FileBasedAdded, FileBasedRemoved, FileBasedReplaced, FileBasedActivated, OrderStarted, OrderStepStarted, OrderStepEnded, OrderNodeChanged, OrderFinished, OrderSetback, OrderSuspended, OrderResumed
+     * e.g. OrderStateChanged, OrderAdded, OrderTerminated, ControllerStateChanged, WorkflowStateChanged, JobStateChanged
      * (Required)
      * 
      */
     @JsonProperty("eventType")
-    @JsonPropertyDescription("FileBasedAdded, FileBasedRemoved, FileBasedReplaced, FileBasedActivated, OrderStarted, OrderStepStarted, OrderStepEnded, OrderNodeChanged, OrderFinished, OrderSetback, OrderSuspended, OrderResumed")
+    @JsonPropertyDescription("e.g. OrderStateChanged, OrderAdded, OrderTerminated, ControllerStateChanged, WorkflowStateChanged, JobStateChanged")
     private String eventType;
     /**
-     * JobScheduler object type
+     * event types
      * <p>
      * 
      * (Required)
@@ -61,13 +62,11 @@ public class EventSnapshot {
      */
     @JsonProperty("objectType")
     private EventType objectType;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    
+    @JsonProperty("accessToken")
+    private String accessToken;
+    @JsonProperty("message")
+    private String message;
+
     /**
      * unique id of an event, monoton increasing, id/1000=milliseconds of UTC time
      * (Required)
@@ -113,7 +112,7 @@ public class EventSnapshot {
     }
 
     /**
-     * FileBasedAdded, FileBasedRemoved, FileBasedReplaced, FileBasedActivated, OrderStarted, OrderStepStarted, OrderStepEnded, OrderNodeChanged, OrderFinished, OrderSetback, OrderSuspended, OrderResumed
+     * e.g. OrderStateChanged, OrderAdded, OrderTerminated, ControllerStateChanged, WorkflowStateChanged, JobStateChanged
      * (Required)
      * 
      */
@@ -123,7 +122,7 @@ public class EventSnapshot {
     }
 
     /**
-     * FileBasedAdded, FileBasedRemoved, FileBasedReplaced, FileBasedActivated, OrderStarted, OrderStepStarted, OrderStepEnded, OrderNodeChanged, OrderFinished, OrderSetback, OrderSuspended, OrderResumed
+     * e.g. OrderStateChanged, OrderAdded, OrderTerminated, ControllerStateChanged, WorkflowStateChanged, JobStateChanged
      * (Required)
      * 
      */
@@ -133,7 +132,7 @@ public class EventSnapshot {
     }
 
     /**
-     * JobScheduler object type
+     * event types
      * <p>
      * 
      * (Required)
@@ -145,7 +144,7 @@ public class EventSnapshot {
     }
 
     /**
-     * JobScheduler object type
+     * event types
      * <p>
      * 
      * (Required)
@@ -156,14 +155,34 @@ public class EventSnapshot {
         this.objectType = objectType;
     }
 
+    @JsonProperty("accessToken")
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    @JsonProperty("accessToken")
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
+
+    @JsonProperty("message")
+    public String getMessage() {
+        return message;
+    }
+
+    @JsonProperty("message")
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("eventId", eventId).append("path", path).append("eventType", eventType).append("objectType", objectType).toString();
+        return new ToStringBuilder(this).append("eventId", eventId).append("path", path).append("eventType", eventType).append("objectType", objectType).append("accessToken", accessToken).append("message", message).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(eventId).append(path).append(eventType).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(path).append(eventType).append(accessToken).append(message).append(objectType).toHashCode();
     }
 
     @Override
@@ -175,7 +194,7 @@ public class EventSnapshot {
             return false;
         }
         EventSnapshot rhs = ((EventSnapshot) other);
-        return new EqualsBuilder().append(eventId, rhs.eventId).append(path, rhs.path).append(eventType, rhs.eventType).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(eventType, rhs.eventType).append(accessToken, rhs.accessToken).append(message, rhs.message).append(objectType, rhs.objectType).isEquals();
     }
 
 }

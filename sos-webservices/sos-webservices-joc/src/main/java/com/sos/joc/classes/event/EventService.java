@@ -104,7 +104,8 @@ public class EventService {
             EventSnapshot eventSnapshot = new EventSnapshot();
             eventSnapshot.setEventId(evt.getEventId());
             eventSnapshot.setObjectType(EventType.PROBLEM);
-            eventSnapshot.setEventType(evt.getKey() + ": " + evt.getVariables().get("message"));
+            eventSnapshot.setAccessToken(evt.getKey());
+            eventSnapshot.setMessage(evt.getVariables().get("message"));
             addEvent(eventSnapshot);
         }
     }
@@ -169,6 +170,7 @@ public class EventService {
     }
 
     private void addEvent(EventSnapshot eventSnapshot) {
+        // consider that eventId is deleted from equals and hashcode method in EventSnapshot
         events.add(eventSnapshot);
         LOGGER.info("addEvent for " + controllerId + ": " + eventSnapshot.toString());
         EventServiceFactory.lock.lock();

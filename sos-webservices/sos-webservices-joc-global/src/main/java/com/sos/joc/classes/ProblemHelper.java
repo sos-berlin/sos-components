@@ -36,24 +36,24 @@ public class ProblemHelper {
         }
     }
     
-    public static ProblemEvent getEventOfProblem(Problem problem, String controller) throws JocException {
+    public static ProblemEvent getEventOfProblem(Problem problem, String accessToken, String controller) throws JocException {
         // TODO stacktrace logging
         switch (problem.httpStatusCode()) {
         case 409:
             // duplicate orders are ignored by controller -> 409 is no longer transmitted
             LOGGER.error("ConflictError: " + getErrorMessage(problem));
-            return new ProblemEvent("ConflictError", controller, getErrorMessage(problem));
+            return new ProblemEvent(accessToken, controller, "ConflictError: " + getErrorMessage(problem));
         case 503:
             LOGGER.error("ServiceUnavailableError: " + getErrorMessage(problem));
-            return new ProblemEvent("ServiceUnavailableError", controller, getErrorMessage(problem));
+            return new ProblemEvent(accessToken, controller, "ServiceUnavailableError: " + getErrorMessage(problem));
         default:
             //UnknownKey
             if (problem.codeOrNull() != null && UNKNOWN_KEY.equalsIgnoreCase(problem.codeOrNull().string())) {
                 LOGGER.error("ObjectNotExistError: " + getErrorMessage(problem));
-                return new ProblemEvent("ObjectNotExistError", controller, getErrorMessage(problem));
+                return new ProblemEvent(accessToken, controller, "ObjectNotExistError: " + getErrorMessage(problem));
             }
             LOGGER.error("BadRequestError: " + getErrorMessage(problem));
-            return new ProblemEvent("BadRequestError", controller, getErrorMessage(problem));
+            return new ProblemEvent(accessToken, controller, "BadRequestError: " + getErrorMessage(problem));
         }
     }
 
@@ -67,12 +67,12 @@ public class ProblemHelper {
         }
     }
     
-    public static void postProblemEventIfExist(Either<Problem, ?> either, JocError err, String controller) throws JocException {
+    public static void postProblemEventIfExist(Either<Problem, ?> either, String accessToken, JocError err, String controller) throws JocException {
         if (either != null && either.isLeft()) {
             if (err != null && !err.printMetaInfo().isEmpty()) {
                 LOGGER.info(err.printMetaInfo());
             }
-            EventBus.getInstance().post(getEventOfProblem(either.getLeft(), controller));
+            EventBus.getInstance().post(getEventOfProblem(either.getLeft(), accessToken, controller));
         }
     }
 }

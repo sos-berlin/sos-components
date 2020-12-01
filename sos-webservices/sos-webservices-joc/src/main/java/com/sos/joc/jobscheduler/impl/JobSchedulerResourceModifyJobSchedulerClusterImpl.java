@@ -87,7 +87,7 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
 //            } catch (TimeoutException e) {
 //            }
             ControllerApi.of(controllerId).executeCommandJson(Globals.objectMapper.writeValueAsString(new ClusterSwitchOver()))
-                    .thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getJocError(), controllerId));
+                    .thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId));
 
             storeAuditLogEntry(jobschedulerAudit);
 
@@ -121,7 +121,7 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
             ModifyJobSchedulerClusterAudit jobschedulerAudit = new ModifyJobSchedulerClusterAudit(urlParameter);
             logAuditMessage(jobschedulerAudit);
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_APPOINT_NODES);
-            appointNodes(urlParameter.getControllerId(), new InventoryAgentInstancesDBLayer(connection), getJocError());
+            appointNodes(urlParameter.getControllerId(), new InventoryAgentInstancesDBLayer(connection), accessToken, getJocError());
             storeAuditLogEntry(jobschedulerAudit);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -135,8 +135,8 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
         }
     }
     
-    public static void appointNodes(String controllerId, InventoryAgentInstancesDBLayer dbLayer, JocError jocError) throws DBMissingDataException,
-            JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
+    public static void appointNodes(String controllerId, InventoryAgentInstancesDBLayer dbLayer, String accessToken, JocError jocError)
+            throws DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
             JobSchedulerConnectionRefusedException, JsonProcessingException, JobSchedulerBadRequestException {
         // ask for cluster
         List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(controllerId);
@@ -170,7 +170,7 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
             idToUri.put(inst.getIsPrimary() ? activeId : NodeId.unchecked("Backup"), Uri.of(inst.getClusterUri()));
         }
         ControllerApi.of(controllerId).clusterAppointNodes(idToUri, activeId, Proxies.getClusterWatchers(controllerId, dbLayer)).thenAccept(
-                e -> ProblemHelper.postProblemEventIfExist(e, jocError, controllerId));
+                e -> ProblemHelper.postProblemEventIfExist(e, accessToken, jocError, controllerId));
     }
 
 }

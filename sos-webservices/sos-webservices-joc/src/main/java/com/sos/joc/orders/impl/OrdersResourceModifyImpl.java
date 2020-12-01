@@ -151,9 +151,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 //            Either<Problem, Void> either = callCommand(action, modifyOrders, orderStream.collect(Collectors.toSet()))
 //                    .get(Globals.httpSocketTimeout, TimeUnit.MILLISECONDS);
 //            ProblemHelper.throwProblemIfExist(either);
-            callCommand(action, modifyOrders, orderStream.collect(Collectors.toSet()))
-                    .thenAccept(either -> ProblemHelper.postProblemEventIfExist(either, getJocError(), modifyOrders.getControllerId()));
-            //ProblemHelper.throwProblemIfExist(either);
+            callCommand(action, modifyOrders, orderStream.collect(Collectors.toSet())).thenAccept(either -> ProblemHelper.postProblemEventIfExist(either,
+                    getAccessToken(), getJocError(), modifyOrders.getControllerId()));
+        //ProblemHelper.throwProblemIfExist(either);
             //TODO auditLog
 //        } catch (TimeoutException e) {
 //            // TODO

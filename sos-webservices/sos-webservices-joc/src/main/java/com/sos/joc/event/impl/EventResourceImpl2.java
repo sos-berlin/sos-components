@@ -83,10 +83,10 @@ public class EventResourceImpl2 extends JOCResourceImpl implements IEventResourc
                 JobSchedulerEvent evt = initEvent(jsObject, defaultEventId);
                 eventList.put(jsObject.getControllerId(), evt);
                 if (isCurrentJobScheduler) {
-                    tasks.add(new EventCallable2OfCurrentController(session, evt.getEventId(), evt.getControllerId(), eventArrived));
+                    tasks.add(new EventCallable2OfCurrentController(session, evt.getEventId(), evt.getControllerId(), accessToken, eventArrived));
                     isCurrentJobScheduler = false;
                 } else {
-                    tasks.add(new EventCallable2(session, evt.getEventId(), evt.getControllerId(), eventArrived));
+                    tasks.add(new EventCallable2(session, evt.getEventId(), evt.getControllerId(), accessToken, eventArrived));
                 }
             }
             

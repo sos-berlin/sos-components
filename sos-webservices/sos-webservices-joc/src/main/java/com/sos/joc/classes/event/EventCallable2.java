@@ -14,25 +14,28 @@ public class EventCallable2 implements Callable<JobSchedulerEvent> {
     public final Long eventId;
     public final boolean isCurrentController;
     public final Condition eventArrived;
+    public String accessToken;
 
-    public EventCallable2(Session session, Long eventId, String controllerId, Condition eventArrived) {
+    public EventCallable2(Session session, Long eventId, String controllerId, String accessToken, Condition eventArrived) {
         this.eventId = eventId;
         this.session = session;
         this.controllerId = controllerId;
         this.eventArrived = eventArrived;
+        this.accessToken = accessToken;
         this.isCurrentController = false;
     }
     
-    public EventCallable2(Session session, Long eventId, String controllerId, Condition eventArrived, boolean isCurrentController) {
+    public EventCallable2(Session session, Long eventId, String controllerId, String accessToken, Condition eventArrived, boolean isCurrentController) {
         this.eventId = eventId;
         this.session = session;
         this.controllerId = controllerId;
         this.eventArrived = eventArrived;
+        this.accessToken = accessToken;
         this.isCurrentController = isCurrentController;
     }
 
     @Override
     public JobSchedulerEvent call() throws Exception {
-        return EventServiceFactory.getEvents(controllerId, eventId, eventArrived, session, isCurrentController);
+        return EventServiceFactory.getEvents(controllerId, eventId, accessToken, eventArrived, session, isCurrentController);
     }
 }

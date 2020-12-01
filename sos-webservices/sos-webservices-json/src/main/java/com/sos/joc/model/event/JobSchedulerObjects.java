@@ -35,7 +35,6 @@ public class JobSchedulerObjects {
      * non negative long
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("eventId")
@@ -69,7 +68,6 @@ public class JobSchedulerObjects {
      * non negative long
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("eventId")
@@ -81,7 +79,6 @@ public class JobSchedulerObjects {
      * non negative long
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("eventId")

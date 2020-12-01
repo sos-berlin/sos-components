@@ -307,15 +307,15 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             }
             if (clusterUriChanged || controllerUpdateRequired) {
                 try {
-                    JobSchedulerResourceModifyJobSchedulerClusterImpl.appointNodes(controllerId, agentDBLayer, getJocError());
+                    JobSchedulerResourceModifyJobSchedulerClusterImpl.appointNodes(controllerId, agentDBLayer, accessToken, getJocError());
                 } catch (JobSchedulerBadRequestException e) {
                 }
             }
             
             if (!agentRefs.isEmpty()) {
                 final String cId = controllerId;
-                ControllerApi.of(controllerId).updateAgentRefs(agentRefs).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getJocError(),
-                        cId));
+                ControllerApi.of(controllerId).updateAgentRefs(agentRefs).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(),
+                        getJocError(), cId));
             }
             
             storeAuditLogEntry(jobSchedulerAudit);

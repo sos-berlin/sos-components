@@ -15,9 +15,9 @@ public enum EventType {
     PROBLEM("PROBLEM"),
     WORKFLOW("WORKFLOW"),
     ORDER("ORDER"),
+    JOB("JOB"),
     ORDERHISTORY("ORDERHISTORY"),
-    TASKHISTORY("TASKHISTORY"),
-    JOB("JOB");
+    TASKHISTORY("TASKHISTORY");
     private final String value;
     private final static Map<String, EventType> CONSTANTS = new HashMap<String, EventType>();
 

@@ -16,7 +16,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "controllerId",
     "error",
     "eventId",
-    "eventSnapshots"
+    "eventSnapshots",
+    "notifications"
 })
 public class JobSchedulerEvent {
 
@@ -46,6 +47,8 @@ public class JobSchedulerEvent {
     private Long eventId;
     @JsonProperty("eventSnapshots")
     private List<EventSnapshot> eventSnapshots = new ArrayList<EventSnapshot>();
+    @JsonProperty("notifications")
+    private List<EventSnapshot> notifications = new ArrayList<EventSnapshot>();
 
     /**
      * filename
@@ -123,14 +126,24 @@ public class JobSchedulerEvent {
         this.eventSnapshots = eventSnapshots;
     }
 
+    @JsonProperty("notifications")
+    public List<EventSnapshot> getNotifications() {
+        return notifications;
+    }
+
+    @JsonProperty("notifications")
+    public void setNotifications(List<EventSnapshot> notifications) {
+        this.notifications = notifications;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("error", error).append("eventId", eventId).append("eventSnapshots", eventSnapshots).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("error", error).append("eventId", eventId).append("eventSnapshots", eventSnapshots).append("notifications", notifications).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(eventId).append(controllerId).append(error).append(eventSnapshots).toHashCode();
+        return new HashCodeBuilder().append(eventId).append(controllerId).append(error).append(eventSnapshots).append(notifications).toHashCode();
     }
 
     @Override
@@ -142,7 +155,7 @@ public class JobSchedulerEvent {
             return false;
         }
         JobSchedulerEvent rhs = ((JobSchedulerEvent) other);
-        return new EqualsBuilder().append(eventId, rhs.eventId).append(controllerId, rhs.controllerId).append(error, rhs.error).append(eventSnapshots, rhs.eventSnapshots).isEquals();
+        return new EqualsBuilder().append(eventId, rhs.eventId).append(controllerId, rhs.controllerId).append(error, rhs.error).append(eventSnapshots, rhs.eventSnapshots).append(notifications, rhs.notifications).isEquals();
     }
 
 }

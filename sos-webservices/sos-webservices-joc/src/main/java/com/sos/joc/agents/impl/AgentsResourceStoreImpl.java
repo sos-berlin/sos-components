@@ -146,8 +146,8 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
 
             // List<JAgentRef> agentRefs = Proxies.getAgents(controllerId, agentDBLayer);
             if (!agentRefs.isEmpty()) {
-                ControllerApi.of(controllerId).updateAgentRefs(agentRefs).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getJocError(),
-                        controllerId));
+                ControllerApi.of(controllerId).updateAgentRefs(agentRefs).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(),
+                        getJocError(), controllerId));
             }
 
             // ask for cluster

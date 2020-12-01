@@ -49,7 +49,7 @@ public class AgentsResourceReassignImpl extends JOCResourceImpl implements IAgen
             List<JAgentRef> agents = Proxies.getAgents(controllerId, null);
             if (!agents.isEmpty()) {
                 ControllerApi.of(controllerId).updateAgentRefs(agents)
-                    .thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getJocError(), controllerId));
+                    .thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
             }
             
             storeAuditLogEntry(reassignAudit);

@@ -97,9 +97,9 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                 controllerApi.addOrders(Flux.fromIterable(freshOrders.values())).thenAccept(either -> {
                     if (either.isRight()) {
                         controllerApi.removeOrdersWhenTerminated(freshOrders.keySet()).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e,
-                                getJocError(), addOrders.getControllerId()));
+                                accessToken, getJocError(), addOrders.getControllerId()));
                     } else {
-                        ProblemHelper.postProblemEventIfExist(either, getJocError(), addOrders.getControllerId());
+                        ProblemHelper.postProblemEventIfExist(either, accessToken, getJocError(), addOrders.getControllerId());
                     }
                 });
 

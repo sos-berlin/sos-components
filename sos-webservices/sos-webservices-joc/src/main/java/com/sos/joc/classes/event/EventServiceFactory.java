@@ -57,8 +57,8 @@ public class EventServiceFactory {
         return eventServiceFactory;
     }
     
-    public static JobSchedulerEvent getEvents(String controllerId, Long eventId, Condition eventArrived, Session session, boolean isCurrentController) {
-        return EventServiceFactory.getInstance()._getEvents(controllerId, eventId, eventArrived, session, isCurrentController);
+    public static JobSchedulerEvent getEvents(String controllerId, Long eventId, String accessToken, Condition eventArrived, Session session, boolean isCurrentController) {
+        return EventServiceFactory.getInstance()._getEvents(controllerId, eventId, accessToken, eventArrived, session, isCurrentController);
     }
     
     public EventService getEventService(String controllerId) throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException,
@@ -86,7 +86,7 @@ public class EventServiceFactory {
         return lock.newCondition();
     }
     
-    private JobSchedulerEvent _getEvents(String controllerId, Long eventId, Condition eventArrived, Session session, boolean isCurrentController) {
+    private JobSchedulerEvent _getEvents(String controllerId, Long eventId, String accessToken, Condition eventArrived, Session session, boolean isCurrentController) {
         JobSchedulerEvent events = new JobSchedulerEvent();
         events.setControllerId(controllerId);
         events.setEventId(eventId); //default
