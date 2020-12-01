@@ -69,8 +69,8 @@ public class EventService {
             DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
             ExecutionException {
         this.controllerId = controllerId;
-        startEventService();
         EventBus.getInstance().register(this);
+        startEventService();
     }
 
     public void startEventService() throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, DBMissingDataException,
@@ -99,7 +99,8 @@ public class EventService {
 
     @Subscribe({ ProblemEvent.class })
     public void doSomethingWithProblemEvent(ProblemEvent evt) throws JsonProcessingException {
-        if (isCurrentController.get() && evt.getControllerId().equals(controllerId)) {
+        //if (isCurrentController.get() && evt.getControllerId().equals(controllerId)) {
+        if (evt.getControllerId().equals(controllerId)) {
             EventSnapshot eventSnapshot = new EventSnapshot();
             eventSnapshot.setEventId(evt.getEventId());
             eventSnapshot.setObjectType(EventType.PROBLEM);
@@ -177,7 +178,7 @@ public class EventService {
 
     protected EventServiceFactory.Mode hasOldEvent(Long eventId, Condition eventArrived) {
         if (events.stream().parallel().anyMatch(e -> eventId < e.getEventId())) {
-            LOGGER.info("hasEvent for " + controllerId + ": true");
+            LOGGER.info("has old Event for " + controllerId + ": true");
 //            if (isCurrentController.get() && events.stream().parallel().anyMatch(e -> EventType.PROBLEM.equals(e.getObjectType()))) {
 //                LOGGER.info("hasProblemEvent for " + controllerId + ": true");
 //                EventServiceFactory.signalEvent(eventArrived);
@@ -186,7 +187,7 @@ public class EventService {
             EventServiceFactory.signalEvent(eventArrived);
             return EventServiceFactory.Mode.TRUE;
         }
-        LOGGER.info("hasEvent for " + controllerId + ": false");
+        LOGGER.info("has old Event for " + controllerId + ": false");
         return EventServiceFactory.Mode.FALSE;
     }
 
