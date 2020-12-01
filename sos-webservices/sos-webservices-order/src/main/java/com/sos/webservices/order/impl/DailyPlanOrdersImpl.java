@@ -53,9 +53,9 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
 
         p.setStartMode(dbItemDailyPlanWithHistory.getStartMode());
 
-        p.setWorkflow(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getWorkflow());
+        p.setWorkflowPath(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getWorkflow());
         p.setOrderId(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getOrderKey());
-        p.setOrderTemplatePath(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getOrderTemplatePath());
+        p.setSchedulePath(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getSchedulePath());
 
         OrderState orderState = new OrderState();
         orderState.set_text(dbItemDailyPlanWithHistory.getStateText());
@@ -96,12 +96,12 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
 
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
             filter.setControllerId(plannedOrdersFilter.getControllerId());
-            filter.setWorkflow(plannedOrdersFilter.getWorkflow());
+            filter.setWorkflowPath(plannedOrdersFilter.getWorkflowPath());
             filter.setSubmissionHistoryId(plannedOrdersFilter.getSubmissionHistoryId());
             filter.setCalendarId(plannedOrdersFilter.getCalendarId());
-            if (plannedOrdersFilter.getOrderTemplates() != null) {
-                for (String orderTemplatePath : plannedOrdersFilter.getOrderTemplates()) {
-                    filter.addOrderTemplatePath(orderTemplatePath);
+            if (plannedOrdersFilter.getSchedulePaths() != null) {
+                for (String schedulePath : plannedOrdersFilter.getSchedulePaths()) {
+                    filter.addSchedulePath(schedulePath);
                 }
             }
             filter.setDailyPlanDate(plannedOrdersFilter.getDailyPlanDate());

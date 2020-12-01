@@ -1,18 +1,15 @@
 package com.sos.js7.order.initiator.classes;
 
-
 public class PlannedOrderKey {
-    String jobschedulerId;
-    String workflowPath;
-    String orderId;
-    
-   
-    
+
+    private String jobschedulerId;
+    private String workflowPath;
+    private String orderId;
+
     public String getJobschedulerId() {
         return jobschedulerId;
     }
 
-    
     public void setJobschedulerId(String jobschedulerId) {
         this.jobschedulerId = jobschedulerId;
     }
@@ -20,15 +17,15 @@ public class PlannedOrderKey {
     public String getWorkflowPath() {
         return workflowPath;
     }
-    
+
     public void setWorkflowPath(String workflowPath) {
         this.workflowPath = workflowPath;
     }
-    
+
     public String getOrderId() {
         return orderId;
     }
-    
+
     public void setOrderId(String orderId) {
         this.orderId = orderId;
     }
@@ -54,10 +51,9 @@ public class PlannedOrderKey {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        PlannedOrderKey other = (PlannedOrderKey) obj;       
+        PlannedOrderKey other = (PlannedOrderKey) obj;
         return (jobschedulerId.equals(other.jobschedulerId) && orderId.equals(other.orderId) && workflowPath.equals(other.workflowPath));
-  
-    } 
 
- 
+    }
+
 }

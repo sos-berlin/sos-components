@@ -65,7 +65,7 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
                 case LOCK:
                     perm = sosPermission.getLock().getView().isDocumentation();
                     break;
-                case ORDERTEMPLATE:
+                case SCHEDULE:
                     perm = sosPermission.getOrder().getView().isDocumentation();
                     break;
                 //case PROCESSCLASS:

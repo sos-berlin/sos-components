@@ -8,12 +8,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.webservices.order.initiator.model.OrderTemplateFilter;
-
-public interface IOrderTemplatesResource {
+import com.sos.webservices.order.initiator.model.ScheduleFilter;
+ 
+public interface ISchedulesResource {
 
     @POST
     @Path("list")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postOrderTemplates(@HeaderParam("X-Access-Token") String accessToken, OrderTemplateFilter orderTemplateFilter);
+    public JOCDefaultResponse postSchedules(@HeaderParam("X-Access-Token") String accessToken, ScheduleFilter scheduleFilter);
 }

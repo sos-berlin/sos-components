@@ -37,7 +37,7 @@ import com.sos.webservices.order.resource.IDailyPlanRemoveOrderResource;
 public class DailyPlanRemoveOrdersImpl extends JOCResourceImpl implements IDailyPlanRemoveOrderResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanRemoveOrdersImpl.class);
-    private static final String API_CALL = "./daily_plan/remove_orders";
+    private static final String API_CALL = "./daily_plan/orders/remove";
 
     private void removeOrdersFromPlanAndController(DailyPlanOrderFilter dailyPlanOrderFilter) throws JocConfigurationException,
             DBConnectionRefusedException, JobSchedulerInvalidResponseDataException, JsonProcessingException, SOSException, URISyntaxException,
@@ -52,13 +52,13 @@ public class DailyPlanRemoveOrdersImpl extends JOCResourceImpl implements IDaily
             Globals.beginTransaction(sosHibernateSession);
 
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-            filter.setListOfOrders(dailyPlanOrderFilter.getOrderKeys());
+            filter.setListOfOrders(dailyPlanOrderFilter.getOrderIds());
             filter.setControllerId(dailyPlanOrderFilter.getControllerId());
             filter.setDailyPlanDate(dailyPlanOrderFilter.getDailyPlanDate());
             filter.setSubmissionHistoryId(dailyPlanOrderFilter.getSubmissionHistoryId());
-            if (dailyPlanOrderFilter.getOrderTemplates() != null) {
-                for (String orderTemplatePath : dailyPlanOrderFilter.getOrderTemplates()) {
-                    filter.addOrderTemplatePath(orderTemplatePath);
+            if (dailyPlanOrderFilter.getSchedules() != null) {
+                for (String schedulePath : dailyPlanOrderFilter.getSchedules()) {
+                    filter.addSchedulePath(schedulePath);
                 }
             }
      

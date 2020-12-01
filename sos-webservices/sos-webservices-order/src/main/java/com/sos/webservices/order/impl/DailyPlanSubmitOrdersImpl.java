@@ -65,14 +65,14 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
             Globals.beginTransaction(sosHibernateSession);
 
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-            filter.setListOfOrders(dailyPlanOrderFilter.getOrderKeys());
+            filter.setListOfOrders(dailyPlanOrderFilter.getOrderIds());
             filter.setSubmitted(false);
             filter.setControllerId(dailyPlanOrderFilter.getControllerId());
             filter.setDailyPlanDate(dailyPlanOrderFilter.getDailyPlanDate());
             filter.setSubmissionHistoryId(dailyPlanOrderFilter.getSubmissionHistoryId());
-            if (dailyPlanOrderFilter.getOrderTemplates() != null) {
-                for (String orderTemplatePath : dailyPlanOrderFilter.getOrderTemplates()) {
-                    filter.addOrderTemplatePath(orderTemplatePath);
+            if (dailyPlanOrderFilter.getSchedules() != null) {
+                for (String schedulePath : dailyPlanOrderFilter.getSchedules()) {
+                    filter.addSchedulePath(schedulePath);
                 }
             }
 

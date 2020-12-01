@@ -10,24 +10,24 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
-public class DBLayerOrderTemplates {
+public class DBLayerSchedules {
 
     private static final String DBItemInventoryConfiguration = com.sos.joc.db.inventory.DBItemInventoryConfiguration.class.getSimpleName();
 
     private final SOSHibernateSession sosHibernateSession;
 
-    public DBLayerOrderTemplates(SOSHibernateSession session) {
+    public DBLayerSchedules(SOSHibernateSession session) {
         this.sosHibernateSession = session;
     }
 
-    public FilterOrderTemplates resetFilter() {
-        FilterOrderTemplates filter = new FilterOrderTemplates();
+    public FilterSchedules resetFilter() {
+        FilterSchedules filter = new FilterSchedules();
         filter.setControllerId("");
         return filter;
     }
 
-    private String getWhere(FilterOrderTemplates filter) {
-        String where = " type = " + ConfigurationType.ORDERTEMPLATE.intValue();
+    private String getWhere(FilterSchedules filter) {
+        String where = " type = " + ConfigurationType.SCHEDULE.intValue();
         String and = " and ";
 
         if (filter.getControllerId() != null && !"".equals(filter.getControllerId())) {
@@ -44,8 +44,8 @@ public class DBLayerOrderTemplates {
             and = " and ";
         }
 
-        if (filter.getOrderTemplates() != null && filter.getOrderTemplates().size() > 0) {
-            where +=  and + SearchStringHelper.getStringListSql(filter.getOrderTemplates(), "path");
+        if (filter.getSchedules() != null && filter.getSchedules().size() > 0) {
+            where +=  and + SearchStringHelper.getStringListSql(filter.getSchedules(), "path");
             and = " and ";
         }
 
@@ -57,7 +57,7 @@ public class DBLayerOrderTemplates {
         return where;
     }
 
-    private <T> Query<T> bindParameters(FilterOrderTemplates filter, Query<T> query) {
+    private <T> Query<T> bindParameters(FilterSchedules filter, Query<T> query) {
 
         if (filter.getControllerId() != null && !"".equals(filter.getControllerId())) {
             // query.setParameter("controllerId", filter.getControllerId());
@@ -71,7 +71,7 @@ public class DBLayerOrderTemplates {
 
     }
 
-    public List<DBItemInventoryConfiguration> getOrderTemplates(FilterOrderTemplates filter, final int limit) throws SOSHibernateException {
+    public List<DBItemInventoryConfiguration> getSchedules(FilterSchedules filter, final int limit) throws SOSHibernateException {
         String q = "from " + DBItemInventoryConfiguration + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
         Query<DBItemInventoryConfiguration> query = sosHibernateSession.createQuery(q);
         query = bindParameters(filter, query);

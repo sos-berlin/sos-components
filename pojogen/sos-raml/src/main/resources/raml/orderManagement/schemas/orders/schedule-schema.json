@@ -1,7 +1,7 @@
 {
 	"title": "Order Template",
 	"$schema": "http://json-schema.org/draft-04/schema#",
-	"javaType": "com.sos.webservices.order.initiator.model.OrderTemplate",
+	"javaType": "com.sos.webservices.order.initiator.model.Schedule",
 	"type": "object",
 	"description": "The order template for scheduling orders to JobScheduler",
  	"javaInterfaces" : [

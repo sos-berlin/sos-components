@@ -5,7 +5,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ResponseFolderItem;
-import com.sos.webservices.order.initiator.model.OrderTemplate;
+import com.sos.webservices.order.initiator.model.Schedule;
 
 public class InventoryTreeFolderItem extends ResponseFolderItem {
 
@@ -13,9 +13,9 @@ public class InventoryTreeFolderItem extends ResponseFolderItem {
 
     public InventoryTreeFolderItem(DBItemInventoryConfiguration conf, Long countDeployments, Long countReleases) {
         if (conf != null) {
-            if (conf.getContent() != null && ConfigurationType.ORDERTEMPLATE.intValue() == conf.getType()) {
+            if (conf.getContent() != null && ConfigurationType.SCHEDULE.intValue() == conf.getType()) {
                 try {
-                    OrderTemplate ot = Globals.objectMapper.readValue(conf.getContent(), OrderTemplate.class);
+                    Schedule ot = Globals.objectMapper.readValue(conf.getContent(), Schedule.class);
                     workflowPath = ot.getWorkflowPath();
                 } catch (Exception e) {
                 }

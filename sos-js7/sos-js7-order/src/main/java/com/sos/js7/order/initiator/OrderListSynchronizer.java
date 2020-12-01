@@ -69,8 +69,8 @@ public class OrderListSynchronizer {
                 FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
                 DBLayerDailyPlannedOrders dbLayerDailyPlan = new DBLayerDailyPlannedOrders(sosHibernateSession);
                 Globals.beginTransaction(sosHibernateSession);
-                filter.setControllerId(plannedOrder.getOrderTemplate().getControllerId());
-                filter.setWorkflow(plannedOrder.getOrderTemplate().getWorkflowPath());
+                filter.setControllerId(plannedOrder.getSchedule().getControllerId());
+                filter.setWorkflowPath(plannedOrder.getSchedule().getWorkflowPath());
                 List<DBItemDailyPlanWithHistory> listOfPlannedOrders = dbLayerDailyPlan.getDailyPlanWithHistoryList(filter, 0);
                 SOSDurations sosDurations = new SOSDurations();
                 for (DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory : listOfPlannedOrders) {
@@ -107,7 +107,7 @@ public class OrderListSynchronizer {
         
         Set<PlannedOrder> addedOrders = new HashSet<PlannedOrder>();
         for (PlannedOrder p : listOfPlannedOrders.values()) {
-            if (p.isStoredInDb() && p.getOrderTemplate().getSubmitOrderToControllerWhenPlanned()) {
+            if (p.isStoredInDb() && p.getSchedule().getSubmitOrderToControllerWhenPlanned()) {
                 addedOrders.add(p);
             }
         }
@@ -158,10 +158,10 @@ public class OrderListSynchronizer {
                     LOGGER.info("----> " + plannedOrder.getFreshOrder().getScheduledFor() + ":" + new Date(plannedOrder.getFreshOrder()
                             .getScheduledFor()));
                     filter.setControllerId(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
-                    filter.setWorkflow(plannedOrder.getFreshOrder().getWorkflowPath());
+                    filter.setWorkflowPath(plannedOrder.getFreshOrder().getWorkflowPath());
                     List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
                     try {
-                        OrderHelper.removeFromJobSchedulerController(plannedOrder.getOrderTemplate().getControllerId(), listOfPlannedOrders);
+                        OrderHelper.removeFromJobSchedulerController(plannedOrder.getSchedule().getControllerId(), listOfPlannedOrders);
                     } catch (JobSchedulerObjectNotExistException e) {
                         LOGGER.warn("Order unknown in JS7 Controller");
                     }

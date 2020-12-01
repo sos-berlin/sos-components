@@ -23,10 +23,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "overwrite",
     "withSubmit",
     "submissionHistoryId",
-    "orderTemplates",
-    "orderKeys",
+    "schedules",
+    "workflowPaths",
+    "orderIds",
     "dailyPlanDate",
-    "orderTemplatesFolder"
+    "schedulesFolder"
 })
 public class DailyPlanOrderFilter {
 
@@ -63,10 +64,12 @@ public class DailyPlanOrderFilter {
      */
     @JsonProperty("submissionHistoryId")
     private Long submissionHistoryId;
-    @JsonProperty("orderTemplates")
-    private List<String> orderTemplates = null;
-    @JsonProperty("orderKeys")
-    private List<String> orderKeys = null;
+    @JsonProperty("schedules")
+    private List<String> schedules = null;
+    @JsonProperty("workflowPaths")
+    private List<String> workflowPaths = null;
+    @JsonProperty("orderIds")
+    private List<String> orderIds = null;
     @JsonProperty("dailyPlanDate")
     private String dailyPlanDate;
     /**
@@ -75,9 +78,9 @@ public class DailyPlanOrderFilter {
      * absolute path of a JobScheduler object.
      * 
      */
-    @JsonProperty("orderTemplatesFolder")
+    @JsonProperty("schedulesFolder")
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
-    private String orderTemplatesFolder;
+    private String schedulesFolder;
 
     /**
      * 
@@ -165,24 +168,34 @@ public class DailyPlanOrderFilter {
         this.submissionHistoryId = submissionHistoryId;
     }
 
-    @JsonProperty("orderTemplates")
-    public List<String> getOrderTemplates() {
-        return orderTemplates;
+    @JsonProperty("schedules")
+    public List<String> getSchedules() {
+        return schedules;
     }
 
-    @JsonProperty("orderTemplates")
-    public void setOrderTemplates(List<String> orderTemplates) {
-        this.orderTemplates = orderTemplates;
+    @JsonProperty("schedules")
+    public void setSchedules(List<String> schedules) {
+        this.schedules = schedules;
     }
 
-    @JsonProperty("orderKeys")
-    public List<String> getOrderKeys() {
-        return orderKeys;
+    @JsonProperty("workflowPaths")
+    public List<String> getWorkflowPaths() {
+        return workflowPaths;
     }
 
-    @JsonProperty("orderKeys")
-    public void setOrderKeys(List<String> orderKeys) {
-        this.orderKeys = orderKeys;
+    @JsonProperty("workflowPaths")
+    public void setWorkflowPaths(List<String> workflowPaths) {
+        this.workflowPaths = workflowPaths;
+    }
+
+    @JsonProperty("orderIds")
+    public List<String> getOrderIds() {
+        return orderIds;
+    }
+
+    @JsonProperty("orderIds")
+    public void setOrderIds(List<String> orderIds) {
+        this.orderIds = orderIds;
     }
 
     @JsonProperty("dailyPlanDate")
@@ -201,9 +214,9 @@ public class DailyPlanOrderFilter {
      * absolute path of a JobScheduler object.
      * 
      */
-    @JsonProperty("orderTemplatesFolder")
-    public String getOrderTemplatesFolder() {
-        return orderTemplatesFolder;
+    @JsonProperty("schedulesFolder")
+    public String getSchedulesFolder() {
+        return schedulesFolder;
     }
 
     /**
@@ -212,19 +225,19 @@ public class DailyPlanOrderFilter {
      * absolute path of a JobScheduler object.
      * 
      */
-    @JsonProperty("orderTemplatesFolder")
-    public void setOrderTemplatesFolder(String orderTemplatesFolder) {
-        this.orderTemplatesFolder = orderTemplatesFolder;
+    @JsonProperty("schedulesFolder")
+    public void setSchedulesFolder(String schedulesFolder) {
+        this.schedulesFolder = schedulesFolder;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("overwrite", overwrite).append("withSubmit", withSubmit).append("submissionHistoryId", submissionHistoryId).append("orderTemplates", orderTemplates).append("orderKeys", orderKeys).append("dailyPlanDate", dailyPlanDate).append("orderTemplatesFolder", orderTemplatesFolder).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("overwrite", overwrite).append("withSubmit", withSubmit).append("submissionHistoryId", submissionHistoryId).append("schedules", schedules).append("workflowPaths", workflowPaths).append("orderIds", orderIds).append("dailyPlanDate", dailyPlanDate).append("schedulesFolder", schedulesFolder).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(orderTemplatesFolder).append(dailyPlanDate).append(controllerId).append(orderKeys).append(submissionHistoryId).append(withSubmit).append(orderTemplates).append(overwrite).toHashCode();
+        return new HashCodeBuilder().append(dailyPlanDate).append(controllerId).append(submissionHistoryId).append(schedules).append(withSubmit).append(workflowPaths).append(orderIds).append(schedulesFolder).append(overwrite).toHashCode();
     }
 
     @Override
@@ -236,7 +249,7 @@ public class DailyPlanOrderFilter {
             return false;
         }
         DailyPlanOrderFilter rhs = ((DailyPlanOrderFilter) other);
-        return new EqualsBuilder().append(orderTemplatesFolder, rhs.orderTemplatesFolder).append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(orderKeys, rhs.orderKeys).append(submissionHistoryId, rhs.submissionHistoryId).append(withSubmit, rhs.withSubmit).append(orderTemplates, rhs.orderTemplates).append(overwrite, rhs.overwrite).isEquals();
+        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(submissionHistoryId, rhs.submissionHistoryId).append(schedules, rhs.schedules).append(withSubmit, rhs.withSubmit).append(workflowPaths, rhs.workflowPaths).append(orderIds, rhs.orderIds).append(schedulesFolder, rhs.schedulesFolder).append(overwrite, rhs.overwrite).isEquals();
     }
 
 }

@@ -39,13 +39,13 @@
 		"folders": {
 			"$ref": "../../../joc/schemas/common/folders-schema.json"
 		},
-		"orderTemplates": {
+		"schedulePaths": {
 			"type": "array",
 			"items": {
 				"$ref": "../../../joc/schemas/common/path-schema.json"
 			}
 		},
-		"workflow": {
+		"workflowPath": {
 			"$ref": "../../../joc/schemas/common/path-schema.json"
 		},
 		"orderId": {

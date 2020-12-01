@@ -72,7 +72,6 @@ public class DailyPlanSubmissionsHistoryImpl extends JOCResourceImpl implements 
                 DailyPlanSubmissionHistoryItem p = new DailyPlanSubmissionHistoryItem();
                 p.setSubmissionHistoryId(dbItemDailySubmissionHistory.getId());
                 p.setControllerId(dbItemDailySubmissionHistory.getControllerId());
-                p.setUserAccount(dbItemDailySubmissionHistory.getUserAccount());
                 p.setDailyPlanDate(dbItemDailySubmissionHistory.getSubmissionForDate());
                 p.setSubmissionTime(dbItemDailySubmissionHistory.getCreated());
                 result.add(p);

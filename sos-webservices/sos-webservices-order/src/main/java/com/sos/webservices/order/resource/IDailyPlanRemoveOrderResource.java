@@ -13,7 +13,7 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 public interface IDailyPlanRemoveOrderResource {
 
     @POST
-    @Path("remove_orders")
+    @Path("orders/remove")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postRemoveOrders(@HeaderParam("X-Access-Token") String accessToken,
             DailyPlanOrderFilter dailyPlanOrderFilter) throws Exception;

@@ -45,8 +45,8 @@ import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
 import com.sos.joc.model.inventory.folder.Folder;
-import com.sos.webservices.order.initiator.model.OrderTemplate;
-
+import com.sos.webservices.order.initiator.model.Schedule;
+ 
 public class JocInventory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JocInventory.class);
@@ -64,7 +64,7 @@ public class JocInventory {
             put(ConfigurationType.JOBCLASS, "classpath:/raml/jobscheduler/schemas/jobClass/jobClass-schema.json");
             put(ConfigurationType.JUNCTION, "classpath:/raml/jobscheduler/schemas/junction/junction-schema.json");
             put(ConfigurationType.LOCK, "classpath:/raml/jobscheduler/schemas/lock/lock-schema.json");
-            put(ConfigurationType.ORDERTEMPLATE, "classpath:/raml/orderManagement/schemas/orders/orderTemplate-schema.json");
+            put(ConfigurationType.SCHEDULE, "classpath:/raml/orderManagement/schemas/orders/orderTemplate-schema.json");
             put(ConfigurationType.WORKFLOW, "classpath:/raml/jobscheduler/schemas/workflow/workflow-schema.json");
             put(ConfigurationType.FOLDER, "classpath:/raml/jobscheduler/schemas/inventory/folder/folder-schema.json");
         }
@@ -99,7 +99,7 @@ public class JocInventory {
             put(ConfigurationType.LOCK, Lock.class);
             put(ConfigurationType.WORKINGDAYSCALENDAR, Calendar.class);
             put(ConfigurationType.NONWORKINGDAYSCALENDAR, Calendar.class);
-            put(ConfigurationType.ORDERTEMPLATE, OrderTemplate.class);
+            put(ConfigurationType.SCHEDULE, Schedule.class);
             put(ConfigurationType.WORKFLOW, Workflow.class);
             put(ConfigurationType.FOLDER, Folder.class);
         }
@@ -109,7 +109,7 @@ public class JocInventory {
             ConfigurationType.JOBCLASS, ConfigurationType.JUNCTION, ConfigurationType.LOCK, ConfigurationType.WORKFLOW)));
 
     public static final Set<ConfigurationType> RELEASABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-            ConfigurationType.ORDERTEMPLATE, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR)));
+            ConfigurationType.SCHEDULE, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR)));
 
     public static String getResourceImplPath(final String path) {
         return String.format("./%s/%s", APPLICATION_PATH, path);
@@ -221,7 +221,7 @@ public class JocInventory {
             return null;
         }
         // temp. compatibility for whenHolidays enum
-        if (ConfigurationType.ORDERTEMPLATE.equals(type)) {
+        if (ConfigurationType.SCHEDULE.equals(type)) {
             content = content.replaceAll("\"suppress\"", "\"SUPPRESS\"");
         }
         return (IConfigurationObject) Globals.objectMapper.readValue(content, CLASS_MAPPING.get(type));

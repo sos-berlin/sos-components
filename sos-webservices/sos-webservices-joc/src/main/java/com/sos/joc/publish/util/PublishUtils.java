@@ -750,7 +750,7 @@ public abstract class PublishUtils {
         case FOLDER:
         case JOBCLASS:
         case JUNCTION:
-        case ORDERTEMPLATE:
+        case SCHEDULE:
         default:
             throw new JocNotImplementedException();
         }

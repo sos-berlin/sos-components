@@ -8,16 +8,16 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.db.SOSFilter;
 
-public class FilterOrderTemplates extends SOSFilter {
+public class FilterSchedules extends SOSFilter {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(FilterOrderTemplates.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FilterSchedules.class);
     private String controllerId;
     private String path;
     private String folder;
     private boolean recursive=false;
     private Boolean deployed;
     private Boolean deleted;
-    private Set<String>orderTemplates;
+    private Set<String>schedule;
     
     public String getControllerId() {
         return controllerId;
@@ -31,16 +31,16 @@ public class FilterOrderTemplates extends SOSFilter {
         return path;
     }
     
-    public void addOrderTemplatePath(String orderTemplatePath) {
-        if (orderTemplates == null) {
-            orderTemplates = new HashSet<String>();
+    public void addSchedulePath(String schedulePath) {
+        if (schedule == null) {
+            schedule = new HashSet<String>();
         }
-        orderTemplates.add(orderTemplatePath);
+        schedule.add(schedulePath);
     }
     
     
-    public Set<String> getOrderTemplates() {
-        return orderTemplates;
+    public Set<String> getSchedules() {
+        return schedule;
     }
 
     public void setPath(String path) {

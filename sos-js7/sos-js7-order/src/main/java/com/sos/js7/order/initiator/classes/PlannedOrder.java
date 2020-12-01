@@ -1,22 +1,23 @@
 package com.sos.js7.order.initiator.classes;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 
 import com.sos.jobscheduler.model.order.FreshOrder;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.model.calendar.Period;
-import com.sos.webservices.order.initiator.model.OrderTemplate;
+import com.sos.webservices.order.initiator.model.Schedule;
+ 
+public class PlannedOrder{
 
-public class PlannedOrder {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(PlannedOrder.class);
+   // private static final Logger LOGGER = LoggerFactory.getLogger(PlannedOrder.class);
     private FreshOrder freshOrder;
     private Long calendarId;
     private Long submissionHistoryId;
     private Period period;
     private Long averageDuration = 0L;
     private boolean storedInDb = false;
+    private Schedule schedule;
 
     public boolean isStoredInDb() {
         return storedInDb;
@@ -26,21 +27,22 @@ public class PlannedOrder {
         this.storedInDb = storedInDb;
     }
 
-    OrderTemplate orderTemplate;
+
+    public PlannedOrder() {
+     }
 
     public PlannedOrder(DBItemDailyPlanOrders dbItemDailyPlannedOrders) {
         this.freshOrder = new FreshOrder();
         freshOrder.setId(dbItemDailyPlannedOrders.getOrderKey());
         freshOrder.setScheduledFor(dbItemDailyPlannedOrders.getPlannedStart().getTime());
         freshOrder.setWorkflowPath(dbItemDailyPlannedOrders.getWorkflow());
-        this.orderTemplate = new OrderTemplate();
-        orderTemplate.setControllerId(dbItemDailyPlannedOrders.getControllerId());
-        orderTemplate.setWorkflowPath((dbItemDailyPlannedOrders.getWorkflow()));
-        orderTemplate.setPath(dbItemDailyPlannedOrders.getOrderTemplatePath());
+        this.schedule = new Schedule();
+        schedule.setControllerId(dbItemDailyPlannedOrders.getControllerId());
+        schedule.setWorkflowPath((dbItemDailyPlannedOrders.getWorkflow()));
+        schedule.setPath(dbItemDailyPlannedOrders.getSchedulePath());
     }
 
-    public PlannedOrder() {
-    }
+   
 
     public FreshOrder getFreshOrder() {
         return freshOrder;
@@ -66,12 +68,12 @@ public class PlannedOrder {
         this.calendarId = calendarId;
     }
 
-    public OrderTemplate getOrderTemplate() {
-        return orderTemplate;
+    public Schedule getSchedule() {
+        return schedule;
     }
 
-    public void setOrderTemplate(OrderTemplate orderTemplate) {
-        this.orderTemplate = orderTemplate;
+    public void setSchedule(Schedule schedule) {
+        this.schedule = schedule;
     }
 
     public void setAverageDuration(Long averageDuration) {
@@ -93,7 +95,7 @@ public class PlannedOrder {
 
     public PlannedOrderKey uniqueOrderkey() {
         PlannedOrderKey plannedOrderKey = new PlannedOrderKey();
-        plannedOrderKey.setJobschedulerId(orderTemplate.getControllerId());
+        plannedOrderKey.setJobschedulerId(schedule.getControllerId());
         plannedOrderKey.setOrderId(freshOrder.getId());
         plannedOrderKey.setWorkflowPath(freshOrder.getWorkflowPath());
         return plannedOrderKey;

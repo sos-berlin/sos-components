@@ -31,7 +31,7 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     private Date orderPlannedStartTo;
     private Date submitTime;
 
-    private String orderKey;
+    private String orderId;
     private Boolean submitted;
     private Set<PlannedOrder> setOfPlannedOrder;
 
@@ -43,10 +43,10 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     private Date plannedStart;
     private Boolean isLate;
     private String controllerId;
-    private String workflow;
+    private String workflowPath;
     private Long submissionHistoryId;
     private Long calendarId;
-    private Set<String> orderTemplates;
+    private Set<String> schedules;
 
     public List<String> getListOfOrders() {
         return listOfOrders;
@@ -56,18 +56,18 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         this.listOfOrders = listOfOrders;
     }
 
-    public void addOrderKey(OrderId orderKey) {
+    public void addOrderId(OrderId orderId) {
         if (setOfOrders == null) {
             setOfOrders = new HashSet<OrderId>();
         }
-        setOfOrders.add(orderKey);
+        setOfOrders.add(orderId);
     }
 
-    public void addOrderKey(String orderKey) {
+    public void addOrderId(String orderId) {
         if (listOfOrders == null) {
             listOfOrders = new ArrayList<String>();
         }
-        listOfOrders.add(orderKey);
+        listOfOrders.add(orderId);
     }
 
     public void setDailyPlanDate(String dailyPlanDate) {
@@ -77,15 +77,15 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         }
     }
 
-    public void addOrderTemplatePath(String orderTemplatePath) {
-        if (orderTemplates == null) {
-            orderTemplates = new HashSet<String>();
+    public void addSchedulePath(String schedulePath) {
+        if (schedules == null) {
+            schedules = new HashSet<String>();
         }
-        orderTemplates.add(orderTemplatePath);
+        schedules.add(schedulePath);
     }
 
-    public Set<String> getOrderTemplates() {
-        return orderTemplates;
+    public Set<String> getSchedules() {
+        return schedules;
     }
 
     private void setOrderPlanDateInterval() {
@@ -152,12 +152,12 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         return states;
     }
 
-    public String getWorkflow() {
-        return workflow;
+    public String getWorkflowPath() {
+        return workflowPath;
     }
 
-    public void setWorkflow(String workflow) {
-        this.workflow = workflow;
+    public void setWorkflowPath(String workflowPath) {
+        this.workflowPath = workflowPath;
     }
 
     public Boolean isLate() {
@@ -231,12 +231,12 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         return false;
     }
 
-    public String getOrderKey() {
-        return orderKey;
+    public String getOrderId() {
+        return orderId;
     }
 
-    public void setOrderKey(String orderKey) {
-        this.orderKey = orderKey;
+    public void setOrderId(String orderKey) {
+        this.orderId = orderKey;
     }
 
     public Boolean getSubmitted() {

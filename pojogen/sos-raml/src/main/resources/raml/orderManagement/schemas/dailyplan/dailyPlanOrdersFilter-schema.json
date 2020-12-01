@@ -20,13 +20,19 @@
 		"submissionHistoryId": {
 			"$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
 		},
-		"orderTemplates": {
+		"schedules": {
 			"type": "array",
 			"items": {
 				"$ref": "../../../joc/schemas/common/path-schema.json"
 			}
 		},
-		"orderKeys": {
+		"workflowPaths": {
+			"type": "array",
+			"items": {
+				"$ref": "../../../joc/schemas/common/path-schema.json"
+			}
+		},
+		"orderIds": {
 			"type": "array",
 			"items": {
 				"type": "string"
@@ -35,7 +41,7 @@
 		"dailyPlanDate": {
 			"type": "string"
 		},
-		"orderTemplatesFolder": {
+		"schedulesFolder": {
 			"$ref": "../../../joc/schemas/common/path-schema.json"
 		}
 	}

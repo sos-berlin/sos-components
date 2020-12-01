@@ -20,7 +20,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "dailyPlanSubmissionHistoryId",
-    "userAccount",
     "dateFrom",
     "dateTo",
     "timeZone"
@@ -42,8 +41,6 @@ public class DailyPlanSubmissionHistoryFilter {
      */
     @JsonProperty("dailyPlanSubmissionHistoryId")
     private Long dailyPlanSubmissionHistoryId;
-    @JsonProperty("userAccount")
-    private String userAccount;
     @JsonProperty("dateFrom")
     private String dateFrom;
     @JsonProperty("dateTo")
@@ -98,16 +95,6 @@ public class DailyPlanSubmissionHistoryFilter {
         this.dailyPlanSubmissionHistoryId = dailyPlanSubmissionHistoryId;
     }
 
-    @JsonProperty("userAccount")
-    public String getUserAccount() {
-        return userAccount;
-    }
-
-    @JsonProperty("userAccount")
-    public void setUserAccount(String userAccount) {
-        this.userAccount = userAccount;
-    }
-
     @JsonProperty("dateFrom")
     public String getDateFrom() {
         return dateFrom;
@@ -148,12 +135,12 @@ public class DailyPlanSubmissionHistoryFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("dailyPlanSubmissionHistoryId", dailyPlanSubmissionHistoryId).append("userAccount", userAccount).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("dailyPlanSubmissionHistoryId", dailyPlanSubmissionHistoryId).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dailyPlanSubmissionHistoryId).append(controllerId).append(userAccount).append(dateTo).append(timeZone).append(dateFrom).toHashCode();
+        return new HashCodeBuilder().append(dateTo).append(dailyPlanSubmissionHistoryId).append(timeZone).append(controllerId).append(dateFrom).toHashCode();
     }
 
     @Override
@@ -165,7 +152,7 @@ public class DailyPlanSubmissionHistoryFilter {
             return false;
         }
         DailyPlanSubmissionHistoryFilter rhs = ((DailyPlanSubmissionHistoryFilter) other);
-        return new EqualsBuilder().append(dailyPlanSubmissionHistoryId, rhs.dailyPlanSubmissionHistoryId).append(controllerId, rhs.controllerId).append(userAccount, rhs.userAccount).append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).isEquals();
+        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(dailyPlanSubmissionHistoryId, rhs.dailyPlanSubmissionHistoryId).append(timeZone, rhs.timeZone).append(controllerId, rhs.controllerId).append(dateFrom, rhs.dateFrom).isEquals();
     }
 
 }

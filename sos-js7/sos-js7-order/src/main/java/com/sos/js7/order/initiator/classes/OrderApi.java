@@ -39,7 +39,7 @@ import com.sos.joc.model.order.AddOrders;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
 import com.sos.js7.order.initiator.OrderListSynchronizer;
 import com.sos.webservices.order.initiator.model.NameValuePair;
-import com.sos.webservices.order.initiator.model.OrderTemplate;
+import com.sos.webservices.order.initiator.model.Schedule;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
@@ -68,19 +68,19 @@ public class OrderApi {
 
         for (AddOrder startOrder : startOrders.getOrders()) {
             PlannedOrder plannedOrder = new PlannedOrder();
-            OrderTemplate orderTemplate = new OrderTemplate();
-            orderTemplate.setPath(startOrder.getOrderName());
-            orderTemplate.setVariables(new ArrayList<NameValuePair>());
-            orderTemplate.setSubmitOrderToControllerWhenPlanned(true);
-            orderTemplate.setWorkflowPath(startOrder.getWorkflowPath());
+            Schedule schedule = new Schedule();
+            schedule.setPath(startOrder.getOrderName());
+            schedule.setVariables(new ArrayList<NameValuePair>());
+            schedule.setSubmitOrderToControllerWhenPlanned(true);
+            schedule.setWorkflowPath(startOrder.getWorkflowPath());
             for (Entry<String, String> v : startOrder.getArguments().getAdditionalProperties().entrySet()) {
                 NameValuePair nameValuePair = new NameValuePair();
                 nameValuePair.setName(v.getKey());
                 nameValuePair.setValue(v.getValue());
-                orderTemplate.getVariables().add(nameValuePair);
+                schedule.getVariables().add(nameValuePair);
             }
 
-            plannedOrder.setOrderTemplate(orderTemplate);
+            plannedOrder.setSchedule(schedule);
             FreshOrder freshOrder = new FreshOrder();
             freshOrder.setId(startOrder.getOrderName());
             Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(startOrder.getScheduledFor(), startOrder.getTimeZone());

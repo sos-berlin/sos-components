@@ -15,7 +15,7 @@ public enum ConfigurationType {
     JUNCTION(5),
     WORKINGDAYSCALENDAR(60),
     NONWORKINGDAYSCALENDAR(61),
-    ORDERTEMPLATE(7),
+    SCHEDULE(7),
     JOB(8);
     private final Integer intValue;
     private final static Map<String, ConfigurationType> CONSTANTS = new HashMap<String, ConfigurationType>();

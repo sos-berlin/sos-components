@@ -15,10 +15,10 @@
 		"surveyDate": {
 			"$ref": "../../../joc/schemas/common/timestamp-schema.json"
 		},
-		"workflow": {
+		"workflowPath": {
 			"$ref": "../../../joc/schemas/common/path-schema.json"
 		},
-		"orderTemplatePath": {
+		"schedulePath": {
 			"$ref": "../../../joc/schemas/common/path-schema.json"
 		},
 		"orderId": {

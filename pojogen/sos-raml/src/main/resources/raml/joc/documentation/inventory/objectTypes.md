@@ -6,5 +6,5 @@
     <li>"JUNCTION"</li>
     <li>"WORKINGDAYSCALENDAR"</li>
     <li>"NONWORKINGDAYSCALENDAR"</li>
-    <li>"ORDERTEMPLATE"</li></ul>
+    <li>"SCHEDULE"</li></ul>
 </td><td>["WORKINGDAYSCALENDAR", "NONWORKINGDAYSCALENDAR"]</td><td></td></tr>

@@ -1,7 +1,7 @@
 {
 	"title": "Order Template States Filter",
 	"$schema": "http://json-schema.org/draft-04/schema#",
-	"javaType": "com.sos.joc.model.order.OrderTemplateDatesFilter",
+	"javaType": "com.sos.joc.model.order.ScheduleDatesFilter",
 	"type": "object",
 	"required": [
 		"timeZone"

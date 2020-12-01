@@ -14,10 +14,10 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.js7.order.initiator.OrderInitiatorRunner;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
-import com.sos.js7.order.initiator.OrderTemplateSource;
-import com.sos.js7.order.initiator.OrderTemplateSourceDB;
-import com.sos.js7.order.initiator.OrderTemplateSourceFile;
-import com.sos.js7.order.initiator.OrderTemplateSourceList;
+import com.sos.js7.order.initiator.ScheduleSource;
+import com.sos.js7.order.initiator.ScheduleSourceDB;
+import com.sos.js7.order.initiator.ScheduleSourceFile;
+import com.sos.js7.order.initiator.ScheduleSourceList;
 import com.sos.webservices.order.resource.IDailyPlanOrdersGenerateResource;
 
 @Path("daily_plan")
@@ -50,18 +50,18 @@ public class DailyPlanOrdersGenerate extends JOCResourceImpl implements IDailyPl
 
             OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings, false);
 
-            OrderTemplateSource orderTemplateSource = null;
-            if (dailyPlanOrderFilter.getOrderTemplates() != null && dailyPlanOrderFilter.getOrderTemplates().size() > 0) {
-                orderTemplateSource = new OrderTemplateSourceList(dailyPlanOrderFilter.getControllerId(), dailyPlanOrderFilter.getOrderTemplates());
+            ScheduleSource scheduleSource = null;
+            if (dailyPlanOrderFilter.getSchedules() != null && dailyPlanOrderFilter.getSchedules().size() > 0) {
+                scheduleSource = new ScheduleSourceList(dailyPlanOrderFilter.getControllerId(), dailyPlanOrderFilter.getSchedules());
             } else {
-                if (dailyPlanOrderFilter.getOrderTemplatesFolder() != null && !dailyPlanOrderFilter.getOrderTemplatesFolder().isEmpty()) {
-                    orderTemplateSource = new OrderTemplateSourceFile(dailyPlanOrderFilter.getOrderTemplatesFolder());
+                if (dailyPlanOrderFilter.getSchedulesFolder() != null && !dailyPlanOrderFilter.getSchedulesFolder().isEmpty()) {
+                    scheduleSource = new ScheduleSourceFile(dailyPlanOrderFilter.getSchedulesFolder());
                 } else {
-                    orderTemplateSource = new OrderTemplateSourceDB(dailyPlanOrderFilter.getControllerId());
+                    scheduleSource = new ScheduleSourceDB(dailyPlanOrderFilter.getControllerId());
                 }
             }
 
-            orderInitiatorRunner.readTemplates(orderTemplateSource);
+            orderInitiatorRunner.readTemplates(scheduleSource);
             orderInitiatorRunner.generateDailyPlan(dailyPlanOrderFilter.getDailyPlanDate(),dailyPlanOrderFilter.getWithSubmit());
 
             return JOCDefaultResponse.responseStatusJSOk(new Date());

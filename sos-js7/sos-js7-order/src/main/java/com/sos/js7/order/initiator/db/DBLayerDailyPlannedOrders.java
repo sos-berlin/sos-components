@@ -1,12 +1,9 @@
 package com.sos.js7.order.initiator.db;
 
 import java.text.ParseException;
-import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.TimeZone;
 
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
@@ -49,8 +46,8 @@ public class DBLayerDailyPlannedOrders {
     public FilterDailyPlannedOrders resetFilter() {
         FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
         filter.setControllerId("");
-        filter.setWorkflow("");
-        filter.setOrderKey("");
+        filter.setWorkflowPath("");
+        filter.setOrderId("");
         filter.setPlannedStart(null);
         filter.setSubmitted(false);
         return filter;
@@ -119,13 +116,13 @@ public class DBLayerDailyPlannedOrders {
             and = " and ";
         }
 
-        if (filter.getWorkflow() != null && !"".equals(filter.getWorkflow())) {
-            where += String.format(and + " p.workflow %s :workflow", SearchStringHelper.getSearchPathOperator(filter.getWorkflow()));
+        if (filter.getWorkflowPath() != null && !"".equals(filter.getWorkflowPath())) {
+            where += String.format(and + " p.workflow %s :workflow", SearchStringHelper.getSearchPathOperator(filter.getWorkflowPath()));
             and = " and ";
         }
 
-        if (filter.getOrderKey() != null && !"".equals(filter.getOrderKey())) {
-            where += String.format(and + " p.orderKey %s :orderKey", SearchStringHelper.getSearchOperator(filter.getOrderKey()));
+        if (filter.getOrderId() != null && !"".equals(filter.getOrderId())) {
+            where += String.format(and + " p.orderId %s :orderId", SearchStringHelper.getSearchOperator(filter.getOrderId()));
             and = " and ";
         }
         if (filter.getIsLate() != null) {
@@ -151,29 +148,29 @@ public class DBLayerDailyPlannedOrders {
             and = " and ";
         }
 
-        if (filter.getOrderTemplates() != null && filter.getOrderTemplates().size() > 0) {
-            where += and + SearchStringHelper.getStringListSql(filter.getOrderTemplates(), "p.orderTemplatePath");
+        if (filter.getSchedules() != null && filter.getSchedules().size() > 0) {
+            where += and + SearchStringHelper.getStringListSql(filter.getSchedules(), "p.schedulePath");
             and = " and ";
         }
 
         if (filter.getSetOfPlannedOrder() != null && filter.getSetOfPlannedOrder().size() > 0) {
             where += and + "(";
             for (PlannedOrder plannedOrder : filter.getSetOfPlannedOrder()) {
-                where += " p.orderKey = '" + plannedOrder.getFreshOrder().getId() + "' or";
+                where += " p.orderId = '" + plannedOrder.getFreshOrder().getId() + "' or";
             }
             where += " 1=0)";
         }
         if (filter.getSetOfOrders() != null && filter.getSetOfOrders().size() > 0) {
             where += and + "(";
-            for (OrderId orderKey : filter.getSetOfOrders()) {
-                where += " p.orderKey = '" + orderKey.toString() + "' or";
+            for (OrderId orderId : filter.getSetOfOrders()) {
+                where += " p.orderKey = '" + orderId.toString() + "' or";
             }
             where += " 1=0)";
         }
         if (filter.getListOfOrders() != null && filter.getListOfOrders().size() > 0) {
             where += and + "(";
-            for (String orderKey : filter.getListOfOrders()) {
-                where += " p.orderKey = '" + orderKey + "' or";
+            for (String orderId : filter.getListOfOrders()) {
+                where += " p.orderId = '" + orderId + "' or";
             }
             where += " 1=0)";
         }
@@ -220,8 +217,8 @@ public class DBLayerDailyPlannedOrders {
             query.setParameter("submitTime", filter.getSubmitTime());
         }
 
-        if (filter.getWorkflow() != null && !"".equals(filter.getWorkflow())) {
-            query.setParameter("workflow", SearchStringHelper.getSearchPathValue(filter.getWorkflow()));
+        if (filter.getWorkflowPath() != null && !"".equals(filter.getWorkflowPath())) {
+            query.setParameter("workflow", SearchStringHelper.getSearchPathValue(filter.getWorkflowPath()));
         }
 
         if (filter.getSubmissionHistoryId() != null) {
@@ -232,8 +229,8 @@ public class DBLayerDailyPlannedOrders {
             query.setParameter("calendarId", filter.getCalendarId());
         }
 
-        if (filter.getOrderKey() != null && !"".equals(filter.getOrderKey())) {
-            query.setParameter("orderKey", filter.getOrderKey());
+        if (filter.getOrderId() != null && !"".equals(filter.getOrderId())) {
+            query.setParameter("orderId", filter.getOrderId());
         }
         return query;
 
@@ -242,7 +239,7 @@ public class DBLayerDailyPlannedOrders {
     public List<DBItemDailyPlanWithHistory> getDailyPlanWithHistoryList(FilterDailyPlannedOrders filter, final int limit)
             throws SOSHibernateException {
         String q = "Select new " + DBItemDailyPlanWithHistory + "(p,o) from " + DBItemDailyPlannedOrders + " p left outer join " + DBItemOrder
-                + " o on p.orderKey = o.orderKey " + getWhere(filter,"p.orderTemplatePath");
+                + " o on p.orderId = o.orderId " + getWhere(filter,"p.orderTemplatePath");
 
         Query<DBItemDailyPlanWithHistory> query = sosHibernateSession.createQuery(q);
         query = bindParameters(filter, query);
@@ -282,7 +279,7 @@ public class DBLayerDailyPlannedOrders {
         Query<Date> query;
         try {
             query = sosHibernateSession.createQuery(q);
-            query.setParameter("^jobschedulerId", jobschedulerId);
+            query.setParameter("jobschedulerId", jobschedulerId);
             Date d = sosHibernateSession.getSingleValue(query);
 
             if (d != null) {
@@ -297,9 +294,9 @@ public class DBLayerDailyPlannedOrders {
 
     public void delete(DBItemDailyPlanOrders dbItemDailyPlanOrders) throws SOSHibernateException {
         FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-        filter.setOrderKey(dbItemDailyPlanOrders.getOrderKey());
+        filter.setOrderId(dbItemDailyPlanOrders.getOrderKey());
         filter.setControllerId(dbItemDailyPlanOrders.getControllerId());
-        filter.setWorkflow(dbItemDailyPlanOrders.getWorkflow());
+        filter.setWorkflowPath(dbItemDailyPlanOrders.getWorkflow());
         delete(filter);
     }
 
@@ -308,8 +305,8 @@ public class DBLayerDailyPlannedOrders {
         FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
         filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
         LOGGER.info("----> " + plannedOrder.getFreshOrder().getScheduledFor() + ":" + new Date(plannedOrder.getFreshOrder().getScheduledFor()));
-        filter.setControllerId(plannedOrder.getOrderTemplate().getControllerId());
-        filter.setWorkflow(plannedOrder.getFreshOrder().getWorkflowPath());
+        filter.setControllerId(plannedOrder.getSchedule().getControllerId());
+        filter.setWorkflowPath(plannedOrder.getFreshOrder().getWorkflowPath());
         return getUniqueDailyPlan(filter);
     }
 
@@ -328,7 +325,7 @@ public class DBLayerDailyPlannedOrders {
     public void store(PlannedOrder plannedOrder) throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException,
             ParseException {
         DBItemDailyPlanOrders dbItemDailyPlannedOrders = new DBItemDailyPlanOrders();
-        dbItemDailyPlannedOrders.setOrderTemplatePath(plannedOrder.getOrderTemplate().getPath());
+        dbItemDailyPlannedOrders.setSchedulePath(plannedOrder.getSchedule().getPath());
         dbItemDailyPlannedOrders.setOrderKey(plannedOrder.getFreshOrder().getId());
         Date start = new Date(plannedOrder.getFreshOrder().getScheduledFor());
         dbItemDailyPlannedOrders.setPlannedStart(start);
@@ -337,7 +334,7 @@ public class DBLayerDailyPlannedOrders {
             dbItemDailyPlannedOrders.setPeriodEnd(start, plannedOrder.getPeriod().getEnd());
             dbItemDailyPlannedOrders.setRepeatInterval(plannedOrder.getPeriod().getRepeat());
         }
-        dbItemDailyPlannedOrders.setControllerId(plannedOrder.getOrderTemplate().getControllerId());
+        dbItemDailyPlannedOrders.setControllerId(plannedOrder.getSchedule().getControllerId());
         dbItemDailyPlannedOrders.setWorkflow(plannedOrder.getFreshOrder().getWorkflowPath());
         dbItemDailyPlannedOrders.setSubmitted(false);
         dbItemDailyPlannedOrders.setSubmissionHistoryId(plannedOrder.getSubmissionHistoryId());

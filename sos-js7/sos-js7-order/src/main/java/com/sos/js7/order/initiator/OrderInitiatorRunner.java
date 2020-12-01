@@ -57,17 +57,17 @@ import com.sos.js7.order.initiator.db.DBLayerOrderVariables;
 import com.sos.js7.order.initiator.db.FilterOrderVariables;
 import com.sos.webservices.order.initiator.model.AssignedNonWorkingCalendars;
 import com.sos.webservices.order.initiator.model.NameValuePair;
-import com.sos.webservices.order.initiator.model.OrderTemplate;
+import com.sos.webservices.order.initiator.model.Schedule;
 
 public class OrderInitiatorRunner extends TimerTask {
 
     private static final String UTC = "UTC";
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderInitiatorRunner.class);
-    private List<OrderTemplate> listOfOrderTemplates;
+    private List<Schedule> listOfSchedules;
     private boolean fromService = true;
 
-    public List<OrderTemplate> getListOfOrderTemplates() {
-        return listOfOrderTemplates;
+    public List<Schedule> getListOfSchedules() {
+        return listOfSchedules;
     }
 
     private Map<String, String> listOfNonWorkingDays;
@@ -101,8 +101,8 @@ public class OrderInitiatorRunner extends TimerTask {
         OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer();
         for (DBItemDailyPlanOrders dbItemDailyPlanOrders : listOfPlannedOrders) {
             PlannedOrder p = new PlannedOrder();
-            OrderTemplate o = new OrderTemplate();
-            o.setPath(dbItemDailyPlanOrders.getOrderTemplatePath());
+            Schedule o = new Schedule();
+            o.setPath(dbItemDailyPlanOrders.getSchedulePath());
             o.setControllerId(dbItemDailyPlanOrders.getControllerId());
 
             FilterOrderVariables filterOrderVariables = new FilterOrderVariables();
@@ -120,7 +120,7 @@ public class OrderInitiatorRunner extends TimerTask {
             o.setVariables(variables);
 
             FreshOrder freshOrder = buildFreshOrder(o, dbItemDailyPlanOrders.getPlannedStart().getTime());
-            p.setOrderTemplate(o);
+            p.setSchedule(o);
             p.setFreshOrder(freshOrder);
             p.setCalendarId(dbItemDailyPlanOrders.getCalendarId());
 
@@ -135,8 +135,8 @@ public class OrderInitiatorRunner extends TimerTask {
 
         try {
 
-            OrderTemplateSource orderTemplateSource = new OrderTemplateSourceDB(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
-            readTemplates(orderTemplateSource);
+            ScheduleSource scheduleSource = new ScheduleSourceDB(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
+            readTemplates(scheduleSource);
             java.util.Calendar calendar = java.util.Calendar.getInstance();
 
             for (int day = 0; day < OrderInitiatorGlobals.orderInitiatorSettings.getDayOffset(); day++) {
@@ -159,11 +159,11 @@ public class OrderInitiatorRunner extends TimerTask {
         }
     }
 
-    public void readTemplates(OrderTemplateSource orderTemplateSource) throws IOException, SOSHibernateException {
-        LOGGER.debug("... readTemplates " + orderTemplateSource.fromSource());
-        OrderTemplates orderTemplates = new OrderTemplates();
-        orderTemplates.fillListOfOrderTemplates(orderTemplateSource);
-        listOfOrderTemplates = orderTemplates.getListOfOrderTemplates();
+    public void readTemplates(ScheduleSource scheduleSource) throws IOException, SOSHibernateException {
+        LOGGER.debug("... readTemplates " + scheduleSource.fromSource());
+        Schedules schedules = new Schedules();
+        schedules.fillListOfSchedules(scheduleSource);
+        listOfSchedules = schedules.getListOfSchedules();
     }
 
     private Calendar getCalendar(String controllerId, String calendarName) throws DBMissingDataException, JsonParseException, JsonMappingException,
@@ -196,16 +196,16 @@ public class OrderInitiatorRunner extends TimerTask {
         return this.dayAsString(calendar);
     }
 
-    private String buildOrderKey(OrderTemplate o, Long startTime) {
+    private String buildOrderKey(Schedule o, Long startTime) {
         Path path = Paths.get(o.getPath());
-        String shortOrderTemplateName = path.getFileName().toString();
-        if (shortOrderTemplateName.length() > 30) {
-            shortOrderTemplateName = shortOrderTemplateName.substring(0, 30);
+        String shortScheduleName = path.getFileName().toString();
+        if (shortScheduleName.length() > 30) {
+            shortScheduleName = shortScheduleName.substring(0, 30);
         }
-        return this.getDailyPlanDate(startTime) + "#P" + "<id" + startTime + ">-" + shortOrderTemplateName;
+        return this.getDailyPlanDate(startTime) + "#P" + "<id" + startTime + ">-" + shortScheduleName;
     }
 
-    private FreshOrder buildFreshOrder(OrderTemplate o, Long startTime) {
+    private FreshOrder buildFreshOrder(Schedule o, Long startTime) {
         Variables variables = new Variables();
         for (NameValuePair param : o.getVariables()) {
             variables.setAdditionalProperty(param.getName(), param.getValue());
@@ -224,7 +224,7 @@ public class OrderInitiatorRunner extends TimerTask {
         return dateS;
     }
 
-    private void generateNonWorkingDays(String dailyPlanDate, OrderTemplate o, String controllerId) throws SOSMissingDataException,
+    private void generateNonWorkingDays(String dailyPlanDate, Schedule o, String controllerId) throws SOSMissingDataException,
             SOSInvalidDataException, JsonParseException, JsonMappingException, DBMissingDataException, DBConnectionRefusedException,
             DBInvalidDataException, IOException, ParseException, JocConfigurationException, DBOpenSessionException, SOSHibernateException {
 
@@ -279,18 +279,18 @@ public class OrderInitiatorRunner extends TimerTask {
 
         try {
             OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer();
-            for (OrderTemplate orderTemplate : listOfOrderTemplates) {
-                if (fromService && !orderTemplate.getPlanOrderAutomatically()) {
-                    LOGGER.debug(String.format("... orderTemplate %s  will not be planned automatically", orderTemplate.getPath()));
+            for (Schedule schedule : listOfSchedules) {
+                if (fromService && !schedule.getPlanOrderAutomatically()) {
+                    LOGGER.debug(String.format("... schedule %s  will not be planned automatically", schedule.getPath()));
                 } else {
-                    String controllerId = orderTemplate.getControllerId();
+                    String controllerId = schedule.getControllerId();
 
                     DBItemDailyPlanSubmissionHistory dbItemDailyPlanSubmissionHistory = addDailyPlanSubmission(sosHibernateSession, controllerId,
                             dailyPlanDate);
 
-                    generateNonWorkingDays(dailyPlanDate, orderTemplate, controllerId);
+                    generateNonWorkingDays(dailyPlanDate, schedule, controllerId);
 
-                    for (com.sos.webservices.order.initiator.model.AssignedCalendars assignedCalendar : orderTemplate.getCalendars()) {
+                    for (com.sos.webservices.order.initiator.model.AssignedCalendars assignedCalendar : schedule.getCalendars()) {
 
                         if (assignedCalendar.getTimeZone() == null) {
                             assignedCalendar.setTimeZone(UTC);
@@ -318,7 +318,7 @@ public class OrderInitiatorRunner extends TimerTask {
                                 LOGGER.trace(d + "will be ignored as it is a non working day");
                             } else {
                                 for (Entry<Long, Period> startTime : periodResolver.getStartTimes(d, dailyPlanDate).entrySet()) {
-                                    FreshOrder freshOrder = buildFreshOrder(orderTemplate, startTime.getKey());
+                                    FreshOrder freshOrder = buildFreshOrder(schedule, startTime.getKey());
 
                                     PlannedOrder plannedOrder = new PlannedOrder();
                                     plannedOrder.setFreshOrder(freshOrder);
@@ -326,9 +326,9 @@ public class OrderInitiatorRunner extends TimerTask {
                                     plannedOrder.setPeriod(startTime.getValue());
                                     plannedOrder.setSubmissionHistoryId(dbItemDailyPlanSubmissionHistory.getId());
                                     if (!fromService) {
-                                        orderTemplate.setSubmitOrderToControllerWhenPlanned(OrderInitiatorGlobals.orderInitiatorSettings.isSubmit());
+                                        schedule.setSubmitOrderToControllerWhenPlanned(OrderInitiatorGlobals.orderInitiatorSettings.isSubmit());
                                     }
-                                    plannedOrder.setOrderTemplate(orderTemplate);
+                                    plannedOrder.setSchedule(schedule);
                                     orderListSynchronizer.add(plannedOrder);
 
                                 }

@@ -14,7 +14,7 @@ public enum TreeType {
     JOBCLASS(2),
     LOCK(4),
     JUNCTION(5),
-    ORDERTEMPLATE(7),
+    SCHEDULE(7),
     JOB(8),
     DOCUMENTATION(20),
     WORKINGDAYSCALENDAR(60),

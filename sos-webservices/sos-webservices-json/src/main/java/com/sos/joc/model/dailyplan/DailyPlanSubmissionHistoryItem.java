@@ -22,8 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "controllerId",
     "submissionHistoryId",
     "dailyPlanDate",
-    "submissionTime",
-    "userAccount"
+    "submissionTime"
 })
 public class DailyPlanSubmissionHistoryItem {
 
@@ -62,8 +61,6 @@ public class DailyPlanSubmissionHistoryItem {
     @JsonProperty("submissionTime")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date submissionTime;
-    @JsonProperty("userAccount")
-    private String userAccount;
 
     /**
      * path
@@ -153,24 +150,14 @@ public class DailyPlanSubmissionHistoryItem {
         this.submissionTime = submissionTime;
     }
 
-    @JsonProperty("userAccount")
-    public String getUserAccount() {
-        return userAccount;
-    }
-
-    @JsonProperty("userAccount")
-    public void setUserAccount(String userAccount) {
-        this.userAccount = userAccount;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("submissionHistoryId", submissionHistoryId).append("dailyPlanDate", dailyPlanDate).append("submissionTime", submissionTime).append("userAccount", userAccount).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("submissionHistoryId", submissionHistoryId).append("dailyPlanDate", dailyPlanDate).append("submissionTime", submissionTime).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dailyPlanDate).append(controllerId).append(submissionTime).append(submissionHistoryId).append(userAccount).toHashCode();
+        return new HashCodeBuilder().append(dailyPlanDate).append(controllerId).append(submissionTime).append(submissionHistoryId).toHashCode();
     }
 
     @Override
@@ -182,7 +169,7 @@ public class DailyPlanSubmissionHistoryItem {
             return false;
         }
         DailyPlanSubmissionHistoryItem rhs = ((DailyPlanSubmissionHistoryItem) other);
-        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(submissionTime, rhs.submissionTime).append(submissionHistoryId, rhs.submissionHistoryId).append(userAccount, rhs.userAccount).isEquals();
+        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(submissionTime, rhs.submissionTime).append(submissionHistoryId, rhs.submissionHistoryId).isEquals();
     }
 
 }
