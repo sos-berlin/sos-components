@@ -12,11 +12,14 @@ import java.util.function.BiConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.problem.ProblemEvent;
+import com.sos.joc.event.bean.proxy.ProxyEvent;
+import com.sos.joc.event.bean.proxy.ProxyRemoved;
+import com.sos.joc.event.bean.proxy.ProxyRestarted;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -96,22 +99,46 @@ public class EventService {
     public void setIsCurrentController(boolean val) {
         isCurrentController.set(val);
     }
+    
+    @Subscribe({ ProxyRestarted.class, ProxyRemoved.class })
+    public void doSomethingWithEvent(ProxyEvent evt) throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException,
+            DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
+            ExecutionException {
+        if (evt.getControllerId().equals(controllerId) && evt.getKey().equals(ProxyUser.JOC.name())) {
+            evtBus.close();
+            if (evt instanceof ProxyRestarted) {
+                evtBus = Proxy.of(controllerId).controllerEventBus();
+                evtBus.subscribe(eventsOfController, callbackOfController);
+            }
+        }
+    }
 
     @Subscribe({ ProblemEvent.class })
-    public void doSomethingWithProblemEvent(ProblemEvent evt) throws JsonProcessingException {
+    public void createEvent(ProblemEvent evt) {
         //if (isCurrentController.get() && evt.getControllerId().equals(controllerId)) {
         if (evt.getControllerId().equals(controllerId)) {
             EventSnapshot eventSnapshot = new EventSnapshot();
             eventSnapshot.setEventId(evt.getEventId());
+            eventSnapshot.setEventType("ProblemEvent");
             eventSnapshot.setObjectType(EventType.PROBLEM);
             eventSnapshot.setAccessToken(evt.getKey());
             eventSnapshot.setMessage(evt.getVariables().get("message"));
             addEvent(eventSnapshot);
         }
     }
+    
+    @Subscribe({ com.sos.joc.event.bean.cluster.ClusterEvent.class })
+    public void createEvent(com.sos.joc.event.bean.cluster.ClusterEvent evt) {
+        EventSnapshot eventSnapshot = new EventSnapshot();
+        eventSnapshot.setEventId(evt.getEventId());
+        eventSnapshot.setEventType("JOCStateChanged");
+        eventSnapshot.setObjectType(EventType.JOCCLUSTER);
+        addEvent(eventSnapshot);
+    }
 
     BiConsumer<Stamped<KeyedEvent<Event>>, JControllerState> callbackOfController = (stampedEvt, currentState) -> {
         KeyedEvent<Event> event = stampedEvt.value();
+        long eventId = stampedEvt.eventId();
         Object key = event.key();
         Event evt = event.event();
 
@@ -121,8 +148,7 @@ public class EventService {
             final OrderId orderId = (OrderId) key;
             Optional<JOrder> opt = currentState.idToOrder(orderId);
             if (opt.isPresent()) {
-                // eventSnapshots.put(createWorkflowEventOfOrder(opt.get().workflowId().path().string()));
-                addEvent(createWorkflowEventOfOrder(opt.get().workflowId().path().string()));
+                addEvent(createWorkflowEventOfOrder(eventId, opt.get().workflowId().path().string()));
                 eventSnapshot.setPath(opt.get().workflowId().path().string() + "," + orderId.string());
             } else {
                 eventSnapshot.setPath(orderId.string());
@@ -134,43 +160,44 @@ public class EventService {
             } else if (evt instanceof OrderTerminated) {
                 eventSnapshot.setEventType("OrderTerminated");
             } else if (evt instanceof OrderProcessingStarted$ || evt instanceof OrderProcessed || evt instanceof OrderProcessingKilled$) {
-                addEvent(createTaskEventOfOrder(opt.get().workflowId().path().string()));
+                addEvent(createTaskEventOfOrder(eventId, opt.get().workflowId().path().string()));
             }
         } else if (evt instanceof ControllerEvent || evt instanceof ClusterEvent) {
             eventSnapshot.setEventType("ControllerStateChanged");
             eventSnapshot.setObjectType(EventType.CONTROLLER);
-            eventSnapshot.setPath(controllerId);
+            //eventSnapshot.setPath(controllerId);
         } else if (evt instanceof AgentRefEvent) {
             eventSnapshot.setEventType(evt.getClass().getSimpleName()); // AgentAdded and AgentUpdated
             eventSnapshot.setObjectType(EventType.AGENT);
-            eventSnapshot.setPath(controllerId);
+            //eventSnapshot.setPath(controllerId);
         }
 
         if (eventSnapshot.getObjectType() != null) {
-            eventSnapshot.setEventId(stampedEvt.eventId());
-            // eventSnapshots.put(eventSnapshot);
+            eventSnapshot.setEventId(eventId);
             addEvent(eventSnapshot);
         }
     };
 
-    private EventSnapshot createWorkflowEventOfOrder(String workflowPath) {
-        EventSnapshot workflowEventSnapshot = new EventSnapshot();
-        workflowEventSnapshot.setEventType("WorkflowStateChanged");
-        workflowEventSnapshot.setObjectType(EventType.WORKFLOW);
-        workflowEventSnapshot.setPath(workflowPath);
-        return workflowEventSnapshot;
+    private EventSnapshot createWorkflowEventOfOrder(long eventId, String workflowPath) {
+        EventSnapshot evt = new EventSnapshot();
+        evt.setEventId(eventId);
+        evt.setEventType("WorkflowStateChanged");
+        evt.setObjectType(EventType.WORKFLOW);
+        evt.setPath(workflowPath);
+        return evt;
     }
 
-    private EventSnapshot createTaskEventOfOrder(String workflowPath) {
-        EventSnapshot workflowEventSnapshot = new EventSnapshot();
-        workflowEventSnapshot.setEventType("JobStateChanged");
-        workflowEventSnapshot.setObjectType(EventType.JOB);
-        workflowEventSnapshot.setPath(workflowPath);
-        return workflowEventSnapshot;
+    private EventSnapshot createTaskEventOfOrder(long eventId, String workflowPath) {
+        EventSnapshot evt = new EventSnapshot();
+        evt.setEventId(eventId);
+        evt.setEventType("JobStateChanged");
+        evt.setObjectType(EventType.JOB);
+        evt.setPath(workflowPath);
+        return evt;
     }
 
     private void addEvent(EventSnapshot eventSnapshot) {
-        // consider that eventId is deleted from equals and hashcode method in EventSnapshot
+        // consider that eventId should be deleted from equals and hashcode method in EventSnapshot
         events.add(eventSnapshot);
         LOGGER.info("addEvent for " + controllerId + ": " + eventSnapshot.toString());
         EventServiceFactory.lock.lock();

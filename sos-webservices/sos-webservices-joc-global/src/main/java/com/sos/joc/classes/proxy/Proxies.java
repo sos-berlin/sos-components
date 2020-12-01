@@ -158,7 +158,7 @@ public class Proxies {
             proxy.stop();
             controllerFutures.remove(key);
             controllerApis.remove(key);
-            EventBus.getInstance().post(new ProxyRemoved(key.getUser().name(), controllerId, null));
+            EventBus.getInstance().post(new ProxyRemoved(key.getUser().name(), controllerId));
         });
         controllerDbInstances.remove(controllerId);
     }
@@ -186,10 +186,10 @@ public class Proxies {
                     } else if (account == ProxyUser.HISTORY) {
                         loadApi(newCredentials);
                     }
-                    EventBus.getInstance().post(new ProxyStarted(account.name(), controllerId, null));
+                    EventBus.getInstance().post(new ProxyStarted(account.name(), controllerId));
                 } else {
                     if ((account == ProxyUser.JOC && restart(newCredentials)) || (account == ProxyUser.HISTORY && reloadApi(newCredentials))) {
-                        EventBus.getInstance().post(new ProxyRestarted(account.name(), controllerId, null));
+                        EventBus.getInstance().post(new ProxyRestarted(account.name(), controllerId));
                     }
                 }
             }
@@ -476,6 +476,12 @@ public class Proxies {
             return controllerFutures.get(credentials).stop().thenRun(() -> {
                 controllerFutures.remove(credentials);
                 controllerApis.remove(credentials);
+                EventBus.getInstance().post(new ProxyRemoved(credentials.getUser().name(), credentials.getControllerId()));
+            });
+        } else if (controllerApis.containsKey(credentials)) {
+            return CompletableFuture.runAsync(() -> {
+                controllerApis.remove(credentials);
+                EventBus.getInstance().post(new ProxyRemoved(credentials.getUser().name(), credentials.getControllerId()));
             });
         } else {
             return CompletableFuture.completedFuture(null);
