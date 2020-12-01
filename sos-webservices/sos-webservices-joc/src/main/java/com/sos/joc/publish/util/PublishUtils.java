@@ -83,6 +83,7 @@ import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.pgp.JocKeyType;
+import com.sos.joc.model.publish.DeployConfigDelete;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
@@ -1403,4 +1404,22 @@ public abstract class PublishUtils {
         unsignedDraftUpdated.setValid(unsignedDraft.getValid());
         return unsignedDraftUpdated;
     }
+
+    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolders(List<DeployConfigDelete> foldersToDelete, DBLayerDeploy dbLayer) {
+        List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
+        foldersToDelete.stream()
+            .map(item -> item.getDeployConfiguration().getPath())
+            .forEach(item -> entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(item)));
+        return entries.stream()
+                .filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
+    }
+    
+    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesDeleteForFolders(List<DeployConfigDelete> foldersToDelete, DBLayerDeploy dbLayer) {
+        List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
+        foldersToDelete.stream()
+            .map(item -> item.getDeployConfiguration().getPath())
+            .forEach(item -> entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(item)));
+        return entries.stream().filter(item -> item.getOperation().equals(OperationType.DELETE.value())).collect(Collectors.toSet());
+    }
+    
 }
