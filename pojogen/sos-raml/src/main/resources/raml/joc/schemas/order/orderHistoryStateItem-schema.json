@@ -9,7 +9,7 @@
   ],
   "properties": {
     "state": {
-      "$ref": "../common/historyOrderState-schema.json"
+      "$ref": "orderState-schema.json"
     },
     "stateTime": {
       "$ref": "../common/timestamp-schema.json"

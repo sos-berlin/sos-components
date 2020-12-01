@@ -10,7 +10,7 @@
       "$ref": "../job/historyItem-schema.json"
     },
     "order": {
-      "$ref": "../order/orderHistoryItem-schema.json"
+      "$ref": "orderHistoryItem-schema.json"
     }
   }
 }

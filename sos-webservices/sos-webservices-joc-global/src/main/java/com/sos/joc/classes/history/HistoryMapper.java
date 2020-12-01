@@ -1,18 +1,17 @@
 package com.sos.joc.classes.history;
 
 import com.sos.commons.util.SOSString;
+import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.DBItemHistoryOrderState;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.model.common.Err;
-import com.sos.joc.model.common.HistoryOrderState;
 import com.sos.joc.model.common.HistoryState;
 import com.sos.joc.model.common.HistoryStateText;
 import com.sos.joc.model.job.TaskHistoryItem;
 import com.sos.joc.model.order.OrderHistoryItem;
 import com.sos.joc.model.order.OrderHistoryStateItem;
-import com.sos.joc.model.order.OrderStateText;
 
 public class HistoryMapper {
 
@@ -25,7 +24,7 @@ public class HistoryMapper {
         history.setPlannedTime(item.getStartTimePlanned());
         history.setStartTime(item.getStartTime());
         history.setState(getState(item.getSeverity()));
-        history.setOrderState(getOrderState(item.getStateAsEnum()));
+        history.setOrderState(OrdersHelper.getState(item.getStateAsEnum()));
         history.setSurveyDate(item.getModified());
         history.setWorkflow(item.getWorkflowPath());
         history.setPosition(getWorkflowPosition(item));
@@ -58,7 +57,7 @@ public class HistoryMapper {
         OrderHistoryStateItem history = new OrderHistoryStateItem();
         history.setStateTime(item.getStateTime());
         history.setStateText(item.getStateText());
-        history.setState(getOrderState(item.getStateAsEnum()));
+        history.setState(OrdersHelper.getState(item.getStateAsEnum()));
         return history;
     }
 
@@ -105,34 +104,4 @@ public class HistoryMapper {
         }
         return state;
     }
-
-    private static HistoryOrderState getOrderState(OrderStateText st) {
-        HistoryOrderState state = new HistoryOrderState();
-        state.set_text(st);
-
-        switch (state.get_text()) {
-        case FINISHED:
-            state.setSeverity(HistorySeverity.SUCCESSFUL);
-            break;
-        case PLANNED:
-        case PENDING:
-        case RUNNING:
-        case WAITING:
-        case RESUMED:
-        case SUSPENDMARKED:
-        case RESUMEMARKED:
-            state.setSeverity(HistorySeverity.INCOMPLETE);
-            break;
-        case SUSPENDED:
-        case FAILED:
-        case BLOCKED:
-        case BROKEN:
-        case CANCELLED:
-        case UNKNOWN:
-            state.setSeverity(HistorySeverity.FAILED);
-            break;
-        }
-        return state;
-    }
-
 }

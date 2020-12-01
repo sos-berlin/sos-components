@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.common.HistoryOrderState;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -27,14 +26,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class OrderHistoryStateItem {
 
     /**
-     * orderHistory state
+     * jobChain state
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("state")
-    private HistoryOrderState state;
+    private OrderState state;
     /**
      * timestamp
      * <p>
@@ -49,26 +48,26 @@ public class OrderHistoryStateItem {
     private String stateText;
 
     /**
-     * orderHistory state
+     * jobChain state
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("state")
-    public HistoryOrderState getState() {
+    public OrderState getState() {
         return state;
     }
 
     /**
-     * orderHistory state
+     * jobChain state
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("state")
-    public void setState(HistoryOrderState state) {
+    public void setState(OrderState state) {
         this.state = state;
     }
 

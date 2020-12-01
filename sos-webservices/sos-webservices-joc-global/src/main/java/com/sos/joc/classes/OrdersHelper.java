@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.jobscheduler.model.order.OrderItem;
 import com.sos.jobscheduler.model.workflow.HistoricOutcome;
 import com.sos.joc.Globals;
+import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.model.order.OrderState;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrderV;
@@ -71,8 +72,9 @@ public class OrdersHelper {
             put("Blocked", OrderStateText.BLOCKED);
         }
     });
-    
+
     public static final Map<OrderStateText, Integer> severityByGroupedStates = Collections.unmodifiableMap(new HashMap<OrderStateText, Integer>() {
+
         // consider 'blocked' as further grouped state
         private static final long serialVersionUID = 1L;
 
@@ -82,14 +84,18 @@ public class OrdersHelper {
             put(OrderStateText.WAITING, 3);
             put(OrderStateText.FAILED, 2);
             put(OrderStateText.SUSPENDED, 2);
+            put(OrderStateText.SUSPENDMARKED, 2);
             put(OrderStateText.CANCELLED, 2);
+            put(OrderStateText.BROKEN, 2);
             put(OrderStateText.RUNNING, 0);
             put(OrderStateText.FINISHED, 0);
+            put(OrderStateText.RESUMED, 0);
+            put(OrderStateText.RESUMEMARKED, 0);
             put(OrderStateText.BLOCKED, 3);
             put(OrderStateText.UNKNOWN, 4);
         }
     });
-    
+
     public static OrderStateText getGroupedState(Class<? extends Order.State> state) {
         OrderStateText groupedState = groupByStateClasses.get(state);
         if (groupedState == null) {
@@ -97,7 +103,7 @@ public class OrdersHelper {
         }
         return groupedState;
     }
-    
+
     public static OrderStateText getGroupedState(String state) {
         if (state == null) {
             return OrderStateText.UNKNOWN;
@@ -108,7 +114,7 @@ public class OrdersHelper {
         }
         return groupedState;
     }
-    
+
     private static OrderState getState(String state, Boolean isSuspended) {
         OrderState oState = new OrderState();
         if (isSuspended == Boolean.TRUE) {
@@ -119,7 +125,17 @@ public class OrdersHelper {
         oState.setSeverity(severityByGroupedStates.get(groupedState));
         return oState;
     }
-    
+
+    public static OrderState getState(OrderStateText st) {
+        OrderState state = new OrderState();
+        state.set_text(st);
+        state.setSeverity(OrdersHelper.severityByGroupedStates.get(state.get_text()));
+        if (state.getSeverity() == null) {
+            state.setSeverity(HistorySeverity.FAILED);
+        }
+        return state;
+    }
+
     public static OrderV mapJOrderToOrderV(JOrder jOrder, Boolean compact, Long surveyDateMillis, boolean withDates) throws JsonParseException,
             JsonMappingException, IOException {
         OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);

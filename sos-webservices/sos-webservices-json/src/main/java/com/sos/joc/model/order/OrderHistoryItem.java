@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.common.HistoryOrderState;
 import com.sos.joc.model.common.HistoryState;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -123,14 +122,14 @@ public class OrderHistoryItem {
     @JsonProperty("state")
     private HistoryState state;
     /**
-     * orderHistory state
+     * jobChain state
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("orderState")
-    private HistoryOrderState orderState;
+    private OrderState orderState;
     /**
      * non negative long
      * <p>
@@ -360,26 +359,26 @@ public class OrderHistoryItem {
     }
 
     /**
-     * orderHistory state
+     * jobChain state
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("orderState")
-    public HistoryOrderState getOrderState() {
+    public OrderState getOrderState() {
         return orderState;
     }
 
     /**
-     * orderHistory state
+     * jobChain state
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("orderState")
-    public void setOrderState(HistoryOrderState orderState) {
+    public void setOrderState(OrderState orderState) {
         this.orderState = orderState;
     }
 
