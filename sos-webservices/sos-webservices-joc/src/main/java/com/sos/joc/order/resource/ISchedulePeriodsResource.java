@@ -9,11 +9,11 @@ import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-public interface IOrderTemplatePeriodsResource {
+public interface ISchedulePeriodsResource {
 
     @Path("runtime")
     @POST
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postOrderTemplatePeriods(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    public JOCDefaultResponse postSchedulePeriods(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 
 }

@@ -1974,10 +1974,10 @@ traits:
         example: " "
         example200: " "
         
-/order_template/runtime:
+/schedule/runtime:
   type:
     postJSONWithoutJSId:
-      description: Runtime periods of an Order Template
+      description: Runtime periods of a Schedule
       description1: " "
       description2: " "
       description3: !include joc/documentation/calendar/dateFrom.md
@@ -1994,10 +1994,10 @@ traits:
       example: !include joc/examples/orderManagement/runtime-example.json
       example200: !include joc/examples/orderManagement/runtime200-example.json
 
-/order_templates/list:
+/schedule/list:
     type:
       postJSON:
-        description: Lists order templates for a given controller 
+        description: Lists schedules for a given controller 
         description1: " "
         description2: " "
         description3: " "

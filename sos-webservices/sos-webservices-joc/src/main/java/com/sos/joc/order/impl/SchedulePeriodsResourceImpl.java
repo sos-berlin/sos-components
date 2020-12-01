@@ -37,21 +37,21 @@ import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.calendar.Period;
 import com.sos.joc.model.dailyplan.RunTime;
 import com.sos.joc.model.order.OrderTemplateDatesFilter;
-import com.sos.joc.order.resource.IOrderTemplatePeriodsResource;
+import com.sos.joc.order.resource.ISchedulePeriodsResource;
 import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.initiator.model.AssignedCalendars;
 import com.sos.webservices.order.initiator.model.AssignedNonWorkingCalendars;
 
-@Path("order_template")
-public class OrderTemplatePeriodsResourceImpl extends JOCResourceImpl implements IOrderTemplatePeriodsResource {
+@Path("schedule")
+public class SchedulePeriodsResourceImpl extends JOCResourceImpl implements ISchedulePeriodsResource {
 
-    private static final String API_CALL = "./order_template/runtime";
+    private static final String API_CALL = "./schedule/runtime";
     private static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
     private static DateTimeFormatter dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE.withZone(ZoneOffset.UTC);
     private static DateTimeFormatter isoFormatter = DateTimeFormatter.ISO_INSTANT;
 
     @Override
-    public JOCDefaultResponse postOrderTemplatePeriods(String accessToken, byte[] filterBytes) {
+    public JOCDefaultResponse postSchedulePeriods(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
