@@ -12,6 +12,7 @@ import java.util.function.BiConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.jobscheduler.model.workflow.WorkflowId;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.event.EventBus;
@@ -51,6 +52,7 @@ import js7.data.order.OrderEvent.OrderTerminated;
 import js7.data.order.OrderId;
 import js7.proxy.javaapi.data.controller.JControllerState;
 import js7.proxy.javaapi.data.order.JOrder;
+import js7.proxy.javaapi.data.workflow.JWorkflowId;
 import js7.proxy.javaapi.eventbus.JControllerEventBus;
 
 public class EventService {
@@ -148,8 +150,10 @@ public class EventService {
             final OrderId orderId = (OrderId) key;
             Optional<JOrder> opt = currentState.idToOrder(orderId);
             if (opt.isPresent()) {
-                addEvent(createWorkflowEventOfOrder(eventId, opt.get().workflowId().path().string()));
-                eventSnapshot.setPath(opt.get().workflowId().path().string() + "," + orderId.string());
+                WorkflowId w = mapWorkflowId(opt.get().workflowId());
+                addEvent(createWorkflowEventOfOrder(eventId, w));
+                eventSnapshot.setPath(orderId.string());
+                eventSnapshot.setWorkflow(w);
             } else {
                 eventSnapshot.setPath(orderId.string());
             }
@@ -160,7 +164,9 @@ public class EventService {
             } else if (evt instanceof OrderTerminated) {
                 eventSnapshot.setEventType("OrderTerminated");
             } else if (evt instanceof OrderProcessingStarted$ || evt instanceof OrderProcessed || evt instanceof OrderProcessingKilled$) {
-                addEvent(createTaskEventOfOrder(eventId, opt.get().workflowId().path().string()));
+                if (opt.isPresent()) {
+                    addEvent(createTaskEventOfOrder(eventId, mapWorkflowId(opt.get().workflowId())));
+                }
             }
         } else if (evt instanceof ControllerEvent || evt instanceof ClusterEvent) {
             eventSnapshot.setEventType("ControllerStateChanged");
@@ -177,22 +183,29 @@ public class EventService {
             addEvent(eventSnapshot);
         }
     };
+    
+    private WorkflowId mapWorkflowId(JWorkflowId workflowId) {
+        WorkflowId w = new WorkflowId();
+        w.setPath(workflowId.path().string());
+        w.setVersionId(workflowId.versionId().string());
+        return w;
+    }
 
-    private EventSnapshot createWorkflowEventOfOrder(long eventId, String workflowPath) {
+    private EventSnapshot createWorkflowEventOfOrder(long eventId, WorkflowId workflowId) {
         EventSnapshot evt = new EventSnapshot();
         evt.setEventId(eventId);
         evt.setEventType("WorkflowStateChanged");
         evt.setObjectType(EventType.WORKFLOW);
-        evt.setPath(workflowPath);
+        evt.setWorkflow(workflowId);
         return evt;
     }
 
-    private EventSnapshot createTaskEventOfOrder(long eventId, String workflowPath) {
+    private EventSnapshot createTaskEventOfOrder(long eventId, WorkflowId workflowId) {
         EventSnapshot evt = new EventSnapshot();
         evt.setEventId(eventId);
         evt.setEventType("JobStateChanged");
         evt.setObjectType(EventType.JOB);
-        evt.setPath(workflowPath);
+        evt.setWorkflow(workflowId);
         return evt;
     }
 

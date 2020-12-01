@@ -25,6 +25,9 @@
     "objectType": {
       "$ref": "eventType-schema.json"
     },
+    "workflow": {
+    	"$ref": "../../../jobscheduler/schemas/workflow/workflowId-schema.json"
+    },
     "accessToken": {
       "type": "string",
       "pattern": "^[1-9a-fA-F_]{32}$",

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.jobscheduler.model.workflow.WorkflowId;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -22,36 +23,36 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "path",
     "eventType",
     "objectType",
+    "workflow",
     "accessToken",
     "message"
 })
 public class EventSnapshot {
 
     /**
-     * unique id of an event, monoton increasing, id/1000=milliseconds of UTC time
+     * eventId/1000=milliseconds of UTC time
      * (Required)
      * 
      */
     @JsonProperty("eventId")
-    @JsonPropertyDescription("unique id of an event, monoton increasing, id/1000=milliseconds of UTC time")
+    @JsonPropertyDescription("eventId/1000=milliseconds of UTC time")
     private Long eventId;
     /**
      * path
      * <p>
      * absolute path of a JobScheduler object.
-     * (Required)
      * 
      */
     @JsonProperty("path")
     @JsonPropertyDescription("absolute path of a JobScheduler object.")
     private String path;
     /**
-     * e.g. OrderStateChanged, OrderAdded, OrderTerminated, ControllerStateChanged, WorkflowStateChanged, JobStateChanged
+     * e.g. OrderStateChanged, OrderAdded, OrderTerminated, JOCStateChanged, ControllerStateChanged, WorkflowStateChanged, JobStateChanged
      * (Required)
      * 
      */
     @JsonProperty("eventType")
-    @JsonPropertyDescription("e.g. OrderStateChanged, OrderAdded, OrderTerminated, ControllerStateChanged, WorkflowStateChanged, JobStateChanged")
+    @JsonPropertyDescription("e.g. OrderStateChanged, OrderAdded, OrderTerminated, JOCStateChanged, ControllerStateChanged, WorkflowStateChanged, JobStateChanged")
     private String eventType;
     /**
      * event types
@@ -62,13 +63,21 @@ public class EventSnapshot {
      */
     @JsonProperty("objectType")
     private EventType objectType;
+    /**
+     * workflowId
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflow")
+    private WorkflowId workflow;
     @JsonProperty("accessToken")
     private String accessToken;
     @JsonProperty("message")
     private String message;
 
     /**
-     * unique id of an event, monoton increasing, id/1000=milliseconds of UTC time
+     * eventId/1000=milliseconds of UTC time
      * (Required)
      * 
      */
@@ -78,7 +87,7 @@ public class EventSnapshot {
     }
 
     /**
-     * unique id of an event, monoton increasing, id/1000=milliseconds of UTC time
+     * eventId/1000=milliseconds of UTC time
      * (Required)
      * 
      */
@@ -91,7 +100,6 @@ public class EventSnapshot {
      * path
      * <p>
      * absolute path of a JobScheduler object.
-     * (Required)
      * 
      */
     @JsonProperty("path")
@@ -103,7 +111,6 @@ public class EventSnapshot {
      * path
      * <p>
      * absolute path of a JobScheduler object.
-     * (Required)
      * 
      */
     @JsonProperty("path")
@@ -112,7 +119,7 @@ public class EventSnapshot {
     }
 
     /**
-     * e.g. OrderStateChanged, OrderAdded, OrderTerminated, ControllerStateChanged, WorkflowStateChanged, JobStateChanged
+     * e.g. OrderStateChanged, OrderAdded, OrderTerminated, JOCStateChanged, ControllerStateChanged, WorkflowStateChanged, JobStateChanged
      * (Required)
      * 
      */
@@ -122,7 +129,7 @@ public class EventSnapshot {
     }
 
     /**
-     * e.g. OrderStateChanged, OrderAdded, OrderTerminated, ControllerStateChanged, WorkflowStateChanged, JobStateChanged
+     * e.g. OrderStateChanged, OrderAdded, OrderTerminated, JOCStateChanged, ControllerStateChanged, WorkflowStateChanged, JobStateChanged
      * (Required)
      * 
      */
@@ -155,6 +162,28 @@ public class EventSnapshot {
         this.objectType = objectType;
     }
 
+    /**
+     * workflowId
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflow")
+    public WorkflowId getWorkflow() {
+        return workflow;
+    }
+
+    /**
+     * workflowId
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflow")
+    public void setWorkflow(WorkflowId workflow) {
+        this.workflow = workflow;
+    }
+
     @JsonProperty("accessToken")
     public String getAccessToken() {
         return accessToken;
@@ -177,12 +206,12 @@ public class EventSnapshot {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("eventId", eventId).append("path", path).append("eventType", eventType).append("objectType", objectType).append("accessToken", accessToken).append("message", message).toString();
+        return new ToStringBuilder(this).append("eventId", eventId).append("path", path).append("eventType", eventType).append("objectType", objectType).append("workflow", workflow).append("accessToken", accessToken).append("message", message).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(eventType).append(accessToken).append(message).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(path).append(workflow).append(eventType).append(accessToken).append(message).append(objectType).toHashCode();
     }
 
     @Override
@@ -194,7 +223,7 @@ public class EventSnapshot {
             return false;
         }
         EventSnapshot rhs = ((EventSnapshot) other);
-        return new EqualsBuilder().append(path, rhs.path).append(eventType, rhs.eventType).append(accessToken, rhs.accessToken).append(message, rhs.message).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(workflow, rhs.workflow).append(eventType, rhs.eventType).append(accessToken, rhs.accessToken).append(message, rhs.message).append(objectType, rhs.objectType).isEquals();
     }
 
 }
