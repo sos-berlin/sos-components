@@ -31,12 +31,15 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.event.EventSnapshot;
 import com.sos.joc.model.event.EventType;
 
+import js7.controller.data.events.AgentRefStateEvent.AgentReady;
 import js7.controller.data.events.ControllerEvent;
+import js7.data.agent.AgentName;
 import js7.data.agent.AgentRefEvent;
 import js7.data.cluster.ClusterEvent;
 import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
+import js7.data.item.RepoEvent.ItemEvent;
 import js7.data.order.OrderEvent;
 import js7.data.order.OrderEvent.OrderAdded;
 import js7.data.order.OrderEvent.OrderBroken;
@@ -62,8 +65,8 @@ public class EventService {
     // OrderStarted, OrderProcessingKilled$, OrderFailed, OrderFailedInFork, OrderRetrying, OrderBroken extends OrderActorEvent
     // OrderFinished, OrderCancelled, OrderRemoved$ extends OrderTerminated
     private static List<Class<? extends Event>> eventsOfController = Arrays.asList(ControllerEvent.class, ClusterEvent.class, AgentRefEvent.class,
-            OrderStarted$.class, OrderProcessingKilled$.class, OrderFailed.class, OrderFailedInFork.class, OrderRetrying.class, OrderBroken.class,
-            OrderTerminated.class, OrderCoreEvent.class, OrderAdded.class, OrderProcessed.class, OrderProcessingStarted$.class);
+            AgentReady.class, OrderStarted$.class, OrderProcessingKilled$.class, OrderFailed.class, OrderFailedInFork.class, OrderRetrying.class, OrderBroken.class,
+            OrderTerminated.class, OrderCoreEvent.class, OrderAdded.class, OrderProcessed.class, OrderProcessingStarted$.class, ItemEvent.class);
     private String controllerId;
     private volatile CopyOnWriteArraySet<EventSnapshot> events = new CopyOnWriteArraySet<>();
     private AtomicBoolean isCurrentController = new AtomicBoolean(false);
@@ -168,14 +171,29 @@ public class EventService {
                     addEvent(createTaskEventOfOrder(eventId, mapWorkflowId(opt.get().workflowId())));
                 }
             }
+            
         } else if (evt instanceof ControllerEvent || evt instanceof ClusterEvent) {
             eventSnapshot.setEventType("ControllerStateChanged");
             eventSnapshot.setObjectType(EventType.CONTROLLER);
             //eventSnapshot.setPath(controllerId);
-        } else if (evt instanceof AgentRefEvent) {
-            eventSnapshot.setEventType(evt.getClass().getSimpleName()); // AgentAdded and AgentUpdated
+            
+        } else if (evt instanceof ItemEvent) {
+            final String p = ((ItemEvent) evt).path().string();
+            String[] pathParts = p.split(":", 2);
+            eventSnapshot.setEventType(evt.getClass().getSimpleName()); // ItemAdded and ItemUpdated etc.
+            eventSnapshot.setPath(pathParts[1]);
+            // TODO EventType should consider Junctions etc.
+            try {
+                eventSnapshot.setObjectType(EventType.fromValue(pathParts[0].toUpperCase()));
+            } catch (Exception e) {
+                //
+            }
+            
+        } else if (evt instanceof AgentRefEvent || evt instanceof AgentReady) {
+            final AgentName agentName = (AgentName) key;
+            eventSnapshot.setEventType(evt.getClass().getSimpleName()); // AgentAdded and AgentUpdated etc.
+            eventSnapshot.setPath(agentName.string());
             eventSnapshot.setObjectType(EventType.AGENT);
-            //eventSnapshot.setPath(controllerId);
         }
 
         if (eventSnapshot.getObjectType() != null) {
@@ -212,7 +230,7 @@ public class EventService {
     private void addEvent(EventSnapshot eventSnapshot) {
         // consider that eventId should be deleted from equals and hashcode method in EventSnapshot
         events.add(eventSnapshot);
-        LOGGER.info("addEvent for " + controllerId + ": " + eventSnapshot.toString());
+        LOGGER.debug("addEvent for " + controllerId + ": " + eventSnapshot.toString());
         EventServiceFactory.lock.lock();
         conditions.stream().parallel().forEach(Condition::signalAll);
         EventServiceFactory.lock.unlock();
@@ -220,7 +238,7 @@ public class EventService {
 
     protected EventServiceFactory.Mode hasOldEvent(Long eventId, Condition eventArrived) {
         if (events.stream().parallel().anyMatch(e -> eventId < e.getEventId())) {
-            LOGGER.info("has old Event for " + controllerId + ": true");
+            LOGGER.debug("has old Event for " + controllerId + ": true");
 //            if (isCurrentController.get() && events.stream().parallel().anyMatch(e -> EventType.PROBLEM.equals(e.getObjectType()))) {
 //                LOGGER.info("hasProblemEvent for " + controllerId + ": true");
 //                EventServiceFactory.signalEvent(eventArrived);
@@ -229,7 +247,7 @@ public class EventService {
             EventServiceFactory.signalEvent(eventArrived);
             return EventServiceFactory.Mode.TRUE;
         }
-        LOGGER.info("has old Event for " + controllerId + ": false");
+        LOGGER.debug("has old Event for " + controllerId + ": false");
         return EventServiceFactory.Mode.FALSE;
     }
 

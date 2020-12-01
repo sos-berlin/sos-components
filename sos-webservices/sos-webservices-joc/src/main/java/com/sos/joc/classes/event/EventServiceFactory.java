@@ -67,7 +67,7 @@ public class EventServiceFactory {
         synchronized (eventServices) {
             if (!eventServices.containsKey(controllerId)) {
                 eventServices.put(controllerId, new EventService(controllerId));
-                // cleanup old event each 6 Minutes
+                // cleanup old event each 6 minutes
                 new Timer().scheduleAtFixedRate(new TimerTask() {
 
                     @Override
@@ -101,18 +101,18 @@ public class EventServiceFactory {
             Mode mode = service.hasOldEvent(eventId, eventArrived);
             if (mode == Mode.FALSE) {
                 long delay = Math.min(cleanupPeriod - 1000, getSessionTimeout(session));
-                LOGGER.info("waiting for Events for " + controllerId + ": maxdelay " + delay + "ms");
+                LOGGER.debug("waiting for Events for " + controllerId + ": maxdelay " + delay + "ms");
                 ScheduledFuture<Void> watchdog = startWatchdog(delay, eventArrived);
                 mode = service.hasEvent(eventArrived);
                 if (watchdog.isDone()) {
-                    LOGGER.info("Event for " + controllerId + " arrived");
+                    LOGGER.debug("Event for " + controllerId + " arrived");
                     watchdog.cancel(false);
-                    LOGGER.info("event watchdog is cancelled");
+                    LOGGER.debug("event watchdog is cancelled");
                 } else {
-                    LOGGER.info("watchdog has stopped waiting events for " + controllerId);
+                    LOGGER.debug("watchdog has stopped waiting events for " + controllerId);
                 }
             }
-            LOGGER.info("received Events for " + controllerId + ": mode " + mode.name());
+            LOGGER.debug("received Events for " + controllerId + ": mode " + mode.name());
             if (mode == Mode.TRUE) {
                 try {
                     TimeUnit.SECONDS.sleep(2);
@@ -130,9 +130,9 @@ public class EventServiceFactory {
                     }
                 });
             }
-            LOGGER.info("Events for " + controllerId + ": " + evt);
+            LOGGER.debug("Events for " + controllerId + ": " + evt);
             if (evt.isEmpty()) {
-                events.setEventSnapshots(null);
+                //events.setEventSnapshots(null);
             } else {
                 events.setEventId(evt.last().getEventId());
                 events.setEventSnapshots(evt.stream().collect(Collectors.toList()));
@@ -181,7 +181,7 @@ public class EventServiceFactory {
     
     private static ScheduledFuture<Void> startWatchdog(long maxDelay, Condition eventArrived) {
         return Executors.newScheduledThreadPool(1).schedule(() -> {
-            LOGGER.info("start watchdog which stops waiting after for " + maxDelay + "ms");
+            LOGGER.debug("start watchdog which stops waiting after for " + maxDelay + "ms");
             signalEvent(eventArrived);
             return null;
         }, maxDelay, TimeUnit.MILLISECONDS);
