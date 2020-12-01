@@ -118,13 +118,13 @@ public class EventServiceFactory {
                 } catch (InterruptedException e1) {
                 }
                 service.getEvents().iterator().forEachRemaining(e -> {
-                    if (eventId <= e.getEventId()) {
+                    if (eventId < e.getEventId()) {
                         evt.add(e);
                     }
                 });
             } else if (mode == Mode.IMMEDIATLY) {
                 service.getEvents().iterator().forEachRemaining(e -> {
-                    if (eventId <= e.getEventId()) {
+                    if (eventId < e.getEventId()) {
                         evt.add(e);
                     }
                 });
