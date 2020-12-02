@@ -150,7 +150,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             if (unsignedReDeployables != null && !unsignedReDeployables.isEmpty()) {
                 verifiedReDeployables.putAll(
                         PublishUtils.getDeploymentsWithSignature(versionIdForUpdate, account, unsignedReDeployables, hibernateSession, 
-                                JocSecurityLevel.LOW));
+                                JocSecurityLevel.MEDIUM));
             }
             // call UpdateRepo for all provided Controllers and all objects to update
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
@@ -162,7 +162,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     .filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW))
                     .forEach(item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(item, controllerId, dbLayer)));
                     verifiedConfigurations.putAll(PublishUtils.getDraftsWithSignature(
-                            versionIdForUpdate, account, unsignedDrafts, updateableAgentNames, hibernateSession, JocSecurityLevel.LOW));
+                            versionIdForUpdate, account, unsignedDrafts, updateableAgentNames, keyPair, hibernateSession));
                 }
                 List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkPathRenamingForUpdate(
                         verifiedConfigurations.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm());
