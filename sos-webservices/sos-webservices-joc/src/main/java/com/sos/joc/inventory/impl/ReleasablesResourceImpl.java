@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,7 +26,6 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
-import com.sos.joc.exceptions.JocSignatureVerificationException;
 import com.sos.joc.inventory.resource.IReleasablesResource;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -71,23 +69,31 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
-            Collection<Integer> releasableTypes = JocInventory.getReleasableTypesWithFolder(in.getObjectTypes());
+            Collection<Integer> releasableTypes = JocInventory.getReleasableTypes(in.getObjectTypes());
+            if (in.getRecursive() || (in.getObjectTypes() != null && in.getObjectTypes().contains(ConfigurationType.FOLDER))) {
+                releasableTypes.add(ConfigurationType.FOLDER.intValue());
+            }
             Set<ResponseReleasableTreeItem> releasables = new TreeSet<>(Comparator.comparing(ResponseReleasableTreeItem::getFolder).thenComparing(
                     ResponseReleasableTreeItem::getObjectName));
             
-            // get deleted folders
-            List<String> deletedFolders = dbLayer.getDeletedFolders();
-            // get not deleted deployables (only these needs left join with historic table DEP_HISTORY)
-            Set<Long> notDeletedIds = dbLayer.getNotDeletedConfigurations(releasableTypes, in.getFolder(), in.getRecursive(), deletedFolders);
-            // get deleted deployables outside deleted folders (avoid left join to the historic table DEP_HISTORY)
-            if (!in.getWithoutRemovedObjects()) {
-                List<DBItemInventoryConfiguration> folders = dbLayer.getFolderContent(in.getFolder(), in.getRecursive(), Arrays.asList(
-                        ConfigurationType.FOLDER.intValue()));
-                releasables.addAll(getResponseStreamOfDeletedItem(dbLayer.getDeletedConfigurations(releasableTypes, in.getFolder(), in.getRecursive(),
-                        deletedFolders), folders, permittedFolders));
+            DBItemInventoryConfiguration folder = dbLayer.getConfiguration(in.getFolder(), ConfigurationType.FOLDER.intValue());
+            if (folder != null && folder.getDeleted()) {
+                releasables.addAll(getResponseStreamOfDeletedItem(Arrays.asList(folder), Collections.emptyList(), permittedFolders));
+            } else {
+                // get deleted folders
+                List<String> deletedFolders = dbLayer.getDeletedFolders();
+                // get not deleted deployables (only these needs left join with historic table DEP_HISTORY)
+                Set<Long> notDeletedIds = dbLayer.getNotDeletedConfigurations(releasableTypes, in.getFolder(), in.getRecursive(), deletedFolders);
+                // get deleted deployables outside deleted folders (avoid left join to the historic table DEP_HISTORY)
+                if (!in.getWithoutRemovedObjects()) {
+                    List<DBItemInventoryConfiguration> folders = dbLayer.getFolderContent(in.getFolder(), in.getRecursive(), Arrays.asList(
+                            ConfigurationType.FOLDER.intValue()));
+                    releasables.addAll(getResponseStreamOfDeletedItem(dbLayer.getDeletedConfigurations(releasableTypes, in.getFolder(), in
+                            .getRecursive(), deletedFolders), folders, permittedFolders));
+                }
+                releasables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurations(notDeletedIds), in.getOnlyValidObjects(),
+                        permittedFolders));
             }
-            releasables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurations(notDeletedIds), in.getOnlyValidObjects(),
-                    permittedFolders));
             
             ResponseReleasables result = new ResponseReleasables();
             result.setDeliveryDate(Date.from(Instant.now()));

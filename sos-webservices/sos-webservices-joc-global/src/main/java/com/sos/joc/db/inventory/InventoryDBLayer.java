@@ -177,7 +177,7 @@ public class InventoryDBLayer extends DBLayer {
         if (deletedFolders != null && !deletedFolders.isEmpty()) {
             List<String> clause = new ArrayList<>();
             for (String deletedFolder : deletedFolders) {
-                clause.add("folder not like '" + deletedFolder + "/%'");
+                clause.add("folder != '" + deletedFolder + "' and folder not like '" + deletedFolder + "/%'");
             }
             hql.append(clause.stream().collect(Collectors.joining(" and ", " and (", ")")));
         }

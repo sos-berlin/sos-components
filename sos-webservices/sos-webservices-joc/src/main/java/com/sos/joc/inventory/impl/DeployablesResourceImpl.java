@@ -73,27 +73,35 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
-            Collection<Integer> deployableTypes = JocInventory.getDeployableTypesWithFolder(in.getObjectTypes());
+            Collection<Integer> deployableTypes = JocInventory.getDeployableTypes(in.getObjectTypes());
+            if (in.getRecursive() || (in.getObjectTypes() != null && in.getObjectTypes().contains(ConfigurationType.FOLDER))) {
+                deployableTypes.add(ConfigurationType.FOLDER.intValue());
+            }
             Set<ResponseDeployableTreeItem> deployables = new TreeSet<>(Comparator.comparing(ResponseDeployableTreeItem::getFolder).thenComparing(
                     ResponseDeployableTreeItem::getObjectName));
             
-            // get deleted folders
-            List<String> deletedFolders = dbLayer.getDeletedFolders();
-            // get not deleted deployables (only these needs left join with historic table DEP_HISTORY)
-            Set<Long> notDeletedIds = dbLayer.getNotDeletedConfigurations(deployableTypes, in.getFolder(), in.getRecursive(), deletedFolders);
-            // get deleted deployables outside deleted folders (avoid left join to the historic table DEP_HISTORY)
-            if (!in.getWithoutRemovedObjects()) {
-                List<DBItemInventoryConfiguration> folders = dbLayer.getFolderContent(in.getFolder(), in.getRecursive(), Arrays.asList(
-                        ConfigurationType.FOLDER.intValue()));
-                deployables.addAll(getResponseStreamOfDeletedItem(dbLayer.getDeletedConfigurations(deployableTypes, in.getFolder(), in.getRecursive(),
-                        deletedFolders), folders, permittedFolders));
-            }
-            if (in.getWithVersions()) {
-                deployables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurationsWithAllDeployments(notDeletedIds), in
-                        .getOnlyValidObjects(), permittedFolders));
+            DBItemInventoryConfiguration folder = dbLayer.getConfiguration(in.getFolder(), ConfigurationType.FOLDER.intValue());
+            if (folder != null && folder.getDeleted()) {
+                deployables.addAll(getResponseStreamOfDeletedItem(Arrays.asList(folder), Collections.emptyList(), permittedFolders));
             } else {
-                deployables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurationsWithMaxDeployment(notDeletedIds), in
-                        .getOnlyValidObjects(), permittedFolders));
+                // get deleted folders
+                List<String> deletedFolders = dbLayer.getDeletedFolders();
+                // get not deleted deployables (only these needs left join with historic table DEP_HISTORY)
+                Set<Long> notDeletedIds = dbLayer.getNotDeletedConfigurations(deployableTypes, in.getFolder(), in.getRecursive(), deletedFolders);
+                // get deleted deployables outside deleted folders (avoid left join to the historic table DEP_HISTORY)
+                if (!in.getWithoutRemovedObjects()) {
+                    List<DBItemInventoryConfiguration> folders = dbLayer.getFolderContent(in.getFolder(), in.getRecursive(), Arrays.asList(
+                            ConfigurationType.FOLDER.intValue()));
+                    deployables.addAll(getResponseStreamOfDeletedItem(dbLayer.getDeletedConfigurations(deployableTypes, in.getFolder(), in
+                            .getRecursive(), deletedFolders), folders, permittedFolders));
+                }
+                if (in.getWithVersions()) {
+                    deployables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurationsWithAllDeployments(notDeletedIds), in
+                            .getOnlyValidObjects(), permittedFolders));
+                } else {
+                    deployables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurationsWithMaxDeployment(notDeletedIds), in
+                            .getOnlyValidObjects(), permittedFolders));
+                }
             }
             ResponseDeployables result = new ResponseDeployables();
             result.setDeliveryDate(Date.from(Instant.now()));
