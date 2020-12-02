@@ -39,7 +39,7 @@ public class OrderHelper {
 
         try {
             Either<Problem, Void> response = ControllerApi.of(controllerId).cancelOrders(listOfPlannedOrders.stream().map(dbItem -> OrderId.of(dbItem
-                    .getOrderKey())).collect(Collectors.toSet()), JCancelMode.freshOnly()).get(99, TimeUnit.SECONDS);
+                    .getOrderId())).collect(Collectors.toSet()), JCancelMode.freshOnly()).get(99, TimeUnit.SECONDS);
             ProblemHelper.throwProblemIfExist(response);
         } catch (TimeoutException e1) {
             throw new JobSchedulerNoResponseException(String.format("No response from controller '%s' after %ds", controllerId, 99));
