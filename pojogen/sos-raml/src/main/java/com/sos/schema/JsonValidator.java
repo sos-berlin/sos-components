@@ -76,7 +76,7 @@ public class JsonValidator {
             put("AddOrders", "order/addOrders-schema.json");
             put("ModifyOrders", "order/modifyOrders-schema.json");
             
-            put("SchedulesDatesFilter", "orderManagement/schedulesFilter-schema.json");
+            put("ScheduleDatesFilter", "orderManagement/scheduleDatesFilter-schema.json");
             
             
             put("JobsFilter", "job/jobsFilter-schema.json");
