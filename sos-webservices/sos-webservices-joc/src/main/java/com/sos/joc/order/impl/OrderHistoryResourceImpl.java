@@ -24,7 +24,6 @@ import com.sos.joc.model.order.OrderHistoryFilter;
 import com.sos.joc.order.resource.IOrderHistoryResource;
 import com.sos.schema.JsonValidator;
 
-/** currently not active */
 @Path(WebservicePaths.ORDER)
 public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderHistoryResource {
 

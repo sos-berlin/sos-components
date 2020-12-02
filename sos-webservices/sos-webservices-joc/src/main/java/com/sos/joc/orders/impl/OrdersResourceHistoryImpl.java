@@ -35,7 +35,6 @@ import com.sos.joc.model.order.OrdersFilter;
 import com.sos.joc.orders.resource.IOrdersResourceHistory;
 import com.sos.schema.JsonValidator;
 
-/* currently not active */
 @Path(WebservicePaths.ORDERS)
 public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrdersResourceHistory {
 

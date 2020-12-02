@@ -12,7 +12,7 @@ import com.sos.joc.classes.WebservicePaths;
 
 public interface IOrderHistoryResource {
 
-    public static final String PATH = "history_new";// TODO, should be changed to history
+    public static final String PATH = "history";
     public static final String IMPL_PATH = WebservicePaths.getResourceImplPath(WebservicePaths.ORDER, PATH);
 
     @POST
