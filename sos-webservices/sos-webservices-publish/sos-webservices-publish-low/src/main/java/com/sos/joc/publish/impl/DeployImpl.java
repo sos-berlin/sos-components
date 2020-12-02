@@ -162,7 +162,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     .filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW))
                     .forEach(item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(item, controllerId, dbLayer)));
                     verifiedConfigurations.putAll(PublishUtils.getDraftsWithSignature(
-                            versionIdForUpdate, account, unsignedDrafts, updateableAgentNames, hibernateSession, JocSecurityLevel.LOW));
+                            versionIdForUpdate, account, unsignedDrafts, updateableAgentNames, keyPair, hibernateSession));
                 }
                 List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkPathRenamingForUpdate(
                         verifiedConfigurations.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm());
