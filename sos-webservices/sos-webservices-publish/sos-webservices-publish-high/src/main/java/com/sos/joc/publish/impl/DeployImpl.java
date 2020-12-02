@@ -95,8 +95,11 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             List<DeployConfiguration> deployConfigsToStoreAgain = getDeployConfigurationsToStoreFromFilter(deployFilter);
             List<DeployConfigurationDelete> deployConfigsToDelete = getDeployConfigurationsToDeleteFromFilter(deployFilter);
             
-            final List<DeployConfigDelete> foldersToDelete = deployFilter.getDelete().getDeployConfigurations().stream()
-                    .filter(item -> item.getDeployConfiguration().getObjectType().equals(ConfigurationType.FOLDER)).collect(Collectors.toList());
+            List<DeployConfigDelete> foldersToDelete = null;
+            if (deployFilter.getDelete() != null) {
+                foldersToDelete = deployFilter.getDelete().getDeployConfigurations().stream()
+                .filter(item -> item.getDeployConfiguration().getObjectType().equals(ConfigurationType.FOLDER)).collect(Collectors.toList());
+            }
 
             // read all objects provided in the filter from the database
             List<DBItemInventoryConfiguration> configurationDBItemsToDeploy = null;
@@ -232,6 +235,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 // process folder to Delete
                 if(itemsFromFolderToDelete != null && !itemsFromFolderToDelete.isEmpty()) {
                     // determine all (latest) entries from the given folder
+                    final List<DeployConfigDelete> folders = foldersToDelete;
                     final List<DBItemDeploymentHistory> itemsToDelete = itemsFromFolderToDelete.stream()
                             .filter(item -> item.getControllerId().equals(controllerId) 
                                     && !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation())))
@@ -242,7 +246,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                             controllerId, 
                             dbLayer, 
                             keyPair.getKeyAlgorithm()).thenAccept(either -> {
-                            processAfterDeleteFromFolder(either, itemsToDelete, foldersToDelete, controllerId, account, versionIdForDeleteFromFolder, 
+                            processAfterDeleteFromFolder(either, itemsToDelete, folders, controllerId, account, versionIdForDeleteFromFolder, 
                                     deployFilter);
                     });//.get()
                 }
