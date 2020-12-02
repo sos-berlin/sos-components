@@ -33,7 +33,7 @@ public class PlannedOrder{
 
     public PlannedOrder(DBItemDailyPlanOrders dbItemDailyPlannedOrders) {
         this.freshOrder = new FreshOrder();
-        freshOrder.setId(dbItemDailyPlannedOrders.getOrderKey());
+        freshOrder.setId(dbItemDailyPlannedOrders.getOrderId());
         freshOrder.setScheduledFor(dbItemDailyPlannedOrders.getPlannedStart().getTime());
         freshOrder.setWorkflowPath(dbItemDailyPlannedOrders.getWorkflow());
         this.schedule = new Schedule();

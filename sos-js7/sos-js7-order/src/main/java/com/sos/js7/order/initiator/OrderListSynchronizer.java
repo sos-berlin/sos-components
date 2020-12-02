@@ -70,7 +70,7 @@ public class OrderListSynchronizer {
                 DBLayerDailyPlannedOrders dbLayerDailyPlan = new DBLayerDailyPlannedOrders(sosHibernateSession);
                 Globals.beginTransaction(sosHibernateSession);
                 filter.setControllerId(plannedOrder.getSchedule().getControllerId());
-                filter.setWorkflowPath(plannedOrder.getSchedule().getWorkflowPath());
+                filter.addWorkflowPath(plannedOrder.getSchedule().getWorkflowPath());
                 List<DBItemDailyPlanWithHistory> listOfPlannedOrders = dbLayerDailyPlan.getDailyPlanWithHistoryList(filter, 0);
                 SOSDurations sosDurations = new SOSDurations();
                 for (DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory : listOfPlannedOrders) {
@@ -158,7 +158,7 @@ public class OrderListSynchronizer {
                     LOGGER.info("----> " + plannedOrder.getFreshOrder().getScheduledFor() + ":" + new Date(plannedOrder.getFreshOrder()
                             .getScheduledFor()));
                     filter.setControllerId(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
-                    filter.setWorkflowPath(plannedOrder.getFreshOrder().getWorkflowPath());
+                    filter.addWorkflowPath(plannedOrder.getFreshOrder().getWorkflowPath());
                     List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
                     try {
                         OrderHelper.removeFromJobSchedulerController(plannedOrder.getSchedule().getControllerId(), listOfPlannedOrders);

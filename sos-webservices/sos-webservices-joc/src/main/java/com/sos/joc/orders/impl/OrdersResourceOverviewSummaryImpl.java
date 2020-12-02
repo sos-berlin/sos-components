@@ -28,13 +28,13 @@ public class OrdersResourceOverviewSummaryImpl extends JOCResourceImpl implement
 
     private static final String API_CALL = "./orders/overview/summary";
 
-    @Override
-    public JOCDefaultResponse postOrdersOverviewSummary(String accessToken, byte[] filterBytes) {
-        SOSHibernateSession connection = null;
-        try {
-            initLogging(API_CALL, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, OrdersFilter.class);
-            OrdersFilter ordersFilter = Globals.objectMapper.readValue(filterBytes, OrdersFilter.class);
+@Override
+public JOCDefaultResponse postOrdersOverviewSummary(String accessToken, byte[] filterBytes) {
+    SOSHibernateSession connection = null;
+    try {
+        initLogging(API_CALL, filterBytes, accessToken);
+        JsonValidator.validateFailFast(filterBytes, OrdersFilter.class);
+        OrdersFilter ordersFilter = Globals.objectMapper.readValue(filterBytes, OrdersFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(ordersFilter.getControllerId(), getPermissonsJocCockpit(ordersFilter
                     .getControllerId(), accessToken).getOrder().getView().isStatus());
             if (jocDefaultResponse != null) {

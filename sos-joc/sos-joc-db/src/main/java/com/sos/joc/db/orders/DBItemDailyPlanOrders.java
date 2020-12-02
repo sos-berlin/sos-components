@@ -22,8 +22,8 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.orders.classes.DailyPlanDate;
 
 @Entity
-@Table(name = DBLayer.DAILY_PLAN_ORDERS_TABLE, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONTROLLER_ID]", "[WORKFLOW]",
-        "[ORDER_KEY]" }) })
+@Table(name = DBLayer.DAILY_PLAN_ORDERS_TABLE, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONTROLLER_ID]", "[WORKFLOW_PATH]",
+        "[ORDER_ID]" }) })
 @SequenceGenerator(name = DBLayer.DAILY_PLAN_ORDERS_TABLE_SEQUENCE, sequenceName = DBLayer.DAILY_PLAN_ORDERS_TABLE_SEQUENCE, allocationSize = 1)
 
 public class DBItemDailyPlanOrders extends DBItem {
@@ -41,11 +41,11 @@ public class DBItemDailyPlanOrders extends DBItem {
     @Column(name = "[CONTROLLER_ID]", nullable = false)
     private String controllerId;
 
-    @Column(name = "[WORKFLOW]", nullable = false)
+    @Column(name = "[WORKFLOW_PATH]", nullable = false)
     private String workflow;
 
-    @Column(name = "[ORDER_KEY]", nullable = false)
-    private String orderKey;
+    @Column(name = "[ORDER_ID]", nullable = false)
+    private String orderId;
 
     @Column(name = "[SCHEDULE_PATH]", nullable = false)
     private String schedulePath;
@@ -124,12 +124,12 @@ public class DBItemDailyPlanOrders extends DBItem {
         return calendarId;
     }
 
-    public void setOrderKey(String orderKey) {
-        this.orderKey = orderKey;
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
     }
 
-    public String getOrderKey() {
-        return orderKey;
+    public String getOrderId() {
+        return orderId;
     }
 
     public void setSchedulePath(String schedulePath) {

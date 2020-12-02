@@ -43,10 +43,10 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     private Date plannedStart;
     private Boolean isLate;
     private String controllerId;
-    private String workflowPath;
+    private List<String> listOfWorkflowPaths;
     private Long submissionHistoryId;
     private Long calendarId;
-    private Set<String> schedules;
+    private List<String> listOfSchedules;
 
     public List<String> getListOfOrders() {
         return listOfOrders;
@@ -69,6 +69,15 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         }
         listOfOrders.add(orderId);
     }
+    
+    public List<String> getListOfWorkflowPaths() {
+        return listOfWorkflowPaths;
+    }
+
+    
+    public void setListOfWorkflowPaths(List<String> listOfWorkflowPaths) {
+        this.listOfWorkflowPaths = listOfWorkflowPaths;
+    }    
 
     public void setDailyPlanDate(String dailyPlanDate) {
         if (dailyPlanDate != null) {
@@ -77,15 +86,14 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         }
     }
 
-    public void addSchedulePath(String schedulePath) {
-        if (schedules == null) {
-            schedules = new HashSet<String>();
-        }
-        schedules.add(schedulePath);
-    }
 
-    public Set<String> getSchedules() {
-        return schedules;
+    
+    public void setListOfSchedules(List<String> listOfSchedules) {
+        this.listOfSchedules = listOfSchedules;
+    }
+    
+    public List<String> getListOfSchedules() {
+        return listOfSchedules;
     }
 
     private void setOrderPlanDateInterval() {
@@ -152,14 +160,7 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         return states;
     }
 
-    public String getWorkflowPath() {
-        return workflowPath;
-    }
-
-    public void setWorkflowPath(String workflowPath) {
-        this.workflowPath = workflowPath;
-    }
-
+   
     public Boolean isLate() {
         return isLate != null && isLate;
     }
@@ -270,4 +271,12 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     public void setSetOfPlannedOrder(Set<PlannedOrder> setOfPlannedOrder) {
         this.setOfPlannedOrder = setOfPlannedOrder;
     }
+
+    public void addWorkflowPath(String workflowPath) {
+        if (this.listOfWorkflowPaths == null) {
+            this.listOfWorkflowPaths = new ArrayList<String>();
+        }
+        this.listOfWorkflowPaths.add(workflowPath);
+    }
+
 }

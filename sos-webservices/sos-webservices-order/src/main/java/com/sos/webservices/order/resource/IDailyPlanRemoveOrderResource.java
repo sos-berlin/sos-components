@@ -15,6 +15,12 @@ public interface IDailyPlanRemoveOrderResource {
     @POST
     @Path("orders/remove")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postRemoveOrders(@HeaderParam("X-Access-Token") String accessToken,
-            DailyPlanOrderFilter dailyPlanOrderFilter) throws Exception;
+    public JOCDefaultResponse postRemoveOrders(@HeaderParam("X-Access-Token") String accessToken, DailyPlanOrderFilter dailyPlanOrderFilter)
+            throws Exception;
+
+    @POST
+    @Path("orders/cancel")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postCancelOrders(@HeaderParam("X-Access-Token") String accessToken, DailyPlanOrderFilter dailyPlanOrderFilter)
+            throws Exception;
 }

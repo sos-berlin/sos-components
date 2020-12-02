@@ -64,7 +64,7 @@ public class JocInventory {
             put(ConfigurationType.JOBCLASS, "classpath:/raml/jobscheduler/schemas/jobClass/jobClass-schema.json");
             put(ConfigurationType.JUNCTION, "classpath:/raml/jobscheduler/schemas/junction/junction-schema.json");
             put(ConfigurationType.LOCK, "classpath:/raml/jobscheduler/schemas/lock/lock-schema.json");
-            put(ConfigurationType.SCHEDULE, "classpath:/raml/orderManagement/schemas/orders/orderTemplate-schema.json");
+            put(ConfigurationType.SCHEDULE, "classpath:/raml/orderManagement/schemas/orders/schedule-schema.json");
             put(ConfigurationType.WORKFLOW, "classpath:/raml/jobscheduler/schemas/workflow/workflow-schema.json");
             put(ConfigurationType.FOLDER, "classpath:/raml/jobscheduler/schemas/inventory/folder/folder-schema.json");
         }
