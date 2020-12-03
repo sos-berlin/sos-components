@@ -76,8 +76,8 @@ public class ProxyTest {
                     put(Order.Forked.class, "waiting");
                     put(Order.Offering.class, "waiting");
                     put(Order.Broken.class, "failed");
-                    put(Order.Failed.class, "failed");
-                    put(Order.FailedInFork.class, "failed");
+                    put(Order.Failed$.class, "failed");
+                    put(Order.FailedInFork$.class, "failed");
                     put(Order.FailedWhileFresh$.class, "failed");
                     put(Order.Ready$.class, "running");
                     put(Order.Processed$.class, "running");
@@ -239,8 +239,15 @@ public class ProxyTest {
     @Test
     public void testControllerEvents() {
         try {
+            Instant a = Instant.now();
             JControllerProxy controllerProxy = Proxy.of(credential);
-            LOGGER.info(Instant.now().toString());
+            Instant b = Instant.now();
+            LOGGER.info("---------------------" + b.toString());
+            JControllerProxy controllerProxy2 = ControllerApi.of(credential).startProxy().get();
+//            JControllerProxy controllerProxy2 = Proxy.of(ProxyCredentialsBuilder.withControllerIdAndUrl("testsuite", "http://centosdev_secondary:5444")
+//            .withBackupUrl("http://centosdev_secondary:5544").withAccount(ProxyUser.HISTORY).build());
+            Instant c = Instant.now();
+            LOGGER.info("---------------------" + c.toString());
             boolean controllerReady = false;
             
             BiConsumer<Stamped<KeyedEvent<Event>>, JControllerState> callbackOfCurrentController = (stampedEvt, state) -> LOGGER.info(
@@ -252,19 +259,26 @@ public class ProxyTest {
             JControllerEventBus evtBus = controllerProxy.controllerEventBus();
             evtBus.subscribe(Arrays.asList(ControllerEvent.class, ClusterEvent.class), callbackOfCurrentController);
             
-            controllerProxy.controllerEventBus().subscribe(Arrays.asList(ControllerEvent.class, ClusterEvent.class), callbackOfCurrentController2);;
+            controllerProxy2.controllerEventBus().subscribe(Arrays.asList(ControllerEvent.class), callbackOfCurrentController2);;
 
             final String restartJson = Globals.objectMapper.writeValueAsString(new Terminate(true, null));
             LOGGER.info(restartJson);
             try {
-                //evtBus.close();
+                evtBus.close();
+                //evtBus.subscribe(Collections.emptyList(), callbackOfCurrentController);
                 TimeUnit.SECONDS.sleep(5);
                 //evtBus.subscribe(Arrays.asList(ControllerEvent.class, ClusterEvent.class), callbackOfCurrentController);
                 controllerProxy.api().executeCommandJson(restartJson).get();
                 controllerReady = finished.get(40, TimeUnit.SECONDS);
             } catch (Exception e) {
                 LOGGER.error("", e);
+            } finally {
+                controllerProxy.stop();
+                controllerProxy2.stop();
             }
+            LOGGER.info("---------------------" + a.toString());
+            LOGGER.info("---------------------" + b.toString());
+            LOGGER.info("---------------------" + c.toString());
             LOGGER.info(Instant.now().toString());
             Assert.assertTrue("Proxy is alive after restart", controllerReady);
         } catch (JobSchedulerConnectionRefusedException e) {

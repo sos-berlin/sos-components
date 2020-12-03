@@ -45,6 +45,7 @@ import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.controller.data.ControllerCommand.AddOrdersResponse;
 import js7.data.order.OrderId;
+import js7.data.value.Value;
 import js7.data.workflow.WorkflowPath;
 import js7.proxy.javaapi.data.order.JFreshOrder;
 import js7.proxy.javaapi.data.order.JOrder;
@@ -97,10 +98,11 @@ public class OrderApi {
 
     private static JFreshOrder mapToFreshOrder(FreshOrder order) {
         OrderId orderId = OrderId.of(order.getId());
-        Map<String, String> arguments = Collections.emptyMap();
-        if (order.getArguments() != null) {
-            arguments = order.getArguments().getAdditionalProperties();
-        }
+        Map<String, Value> arguments = Collections.emptyMap();
+        // TODO
+//        if (order.getArguments() != null) {
+//            arguments = order.getArguments().getAdditionalProperties();
+//        }
         Optional<Instant> scheduledFor = Optional.empty();
         if (order.getScheduledFor() != null) {
             scheduledFor = Optional.of(Instant.ofEpochMilli(order.getScheduledFor()));

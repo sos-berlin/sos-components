@@ -31,8 +31,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 		visible = true)
 @JsonSubTypes({ 
         @JsonSubTypes.Type(value = JSBatchCommands.class, name = "Batch"),
-        @JsonSubTypes.Type(value = CancelOrder.class, name = "CancelOrder"), 
-        @JsonSubTypes.Type(value = SuspendOrder.class, name = "SuspendOrder"), 
+        @JsonSubTypes.Type(value = CancelOrder.class, name = "CancelOrders"), 
+        @JsonSubTypes.Type(value = SuspendOrder.class, name = "SuspendOrders"), 
+        @JsonSubTypes.Type(value = ResumeOrder.class, name = "ResumeOrders"), 
         @JsonSubTypes.Type(value = ResumeOrder.class, name = "ResumeOrder"), 
         @JsonSubTypes.Type(value = Abort.class, name = "EmergencyStop"),
         @JsonSubTypes.Type(value = Terminate.class, name = "ShutDown"), 

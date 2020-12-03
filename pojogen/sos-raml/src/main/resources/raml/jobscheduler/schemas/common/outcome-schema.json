@@ -12,10 +12,7 @@
   		"description": "Succeeded or Failed",
   		"$ref": "outcomeType-schema.json"
   	},
-  	"returnCode": {
-  		"type": "integer"
-  	},
-  	"keyValues": {
+  	"namedValues": {
   		"$ref": "variables-schema.json"
   	}
   },

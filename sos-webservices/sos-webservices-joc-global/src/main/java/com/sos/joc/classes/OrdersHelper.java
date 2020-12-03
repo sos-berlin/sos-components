@@ -35,8 +35,8 @@ public class OrdersHelper {
                     put(Order.Forked.class, OrderStateText.WAITING);
                     put(Order.Offering.class, OrderStateText.WAITING);
                     put(Order.Broken.class, OrderStateText.FAILED);
-                    put(Order.Failed.class, OrderStateText.FAILED);
-                    put(Order.FailedInFork.class, OrderStateText.FAILED);
+                    put(Order.Failed$.class, OrderStateText.FAILED);
+                    put(Order.FailedInFork$.class, OrderStateText.FAILED);
                     put(Order.FailedWhileFresh$.class, OrderStateText.FAILED);
                     put(Order.Ready$.class, OrderStateText.RUNNING);
                     put(Order.Processed$.class, OrderStateText.RUNNING);

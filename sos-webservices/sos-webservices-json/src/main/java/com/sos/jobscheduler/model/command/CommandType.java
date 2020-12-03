@@ -9,7 +9,10 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum CommandType {
 
     BATCH("Batch"),
-    CANCEL_ORDER("CancelOrder"),
+    CANCEL_ORDERS("CancelOrders"),
+    SUSPEND_ORDERS("SuspendOrders"),
+    RESUME_ORDERS("ResumeOrders"),
+    RESUME_ORDER("ResumeOrder"),
     SHUT_DOWN("ShutDown"),
     EMERGENCY_STOP("EmergencyStop"),
     REPLACE_REPO("ReplaceRepo"),

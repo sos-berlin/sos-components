@@ -1,12 +1,12 @@
 
 package com.sos.jobscheduler.model.command;
 
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.jobscheduler.model.common.Variables;
-import com.sos.jobscheduler.model.workflow.WorkflowPosition;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "TYPE",
     "orderId",
-    "workflowPosition",
+    "position",
     "arguments"
 })
 public class ResumeOrder
@@ -37,13 +37,14 @@ public class ResumeOrder
     @JsonProperty("orderId")
     private String orderId;
     /**
-     * WorkflowPosition
+     * position
      * <p>
-     * 
+     * Actually, each even item is a string, each odd item is an integer
      * 
      */
-    @JsonProperty("workflowPosition")
-    private WorkflowPosition workflowPosition;
+    @JsonProperty("position")
+    @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
+    private List<Object> position = null;
     /**
      * key-value pairs
      * <p>
@@ -64,13 +65,13 @@ public class ResumeOrder
     /**
      * 
      * @param orderId
-     * @param workflowPosition
      * @param arguments
+     * @param position
      */
-    public ResumeOrder(String orderId, WorkflowPosition workflowPosition, Variables arguments) {
+    public ResumeOrder(String orderId, List<Object> position, Variables arguments) {
         super();
         this.orderId = orderId;
-        this.workflowPosition = workflowPosition;
+        this.position = position;
         this.arguments = arguments;
     }
 
@@ -95,25 +96,25 @@ public class ResumeOrder
     }
 
     /**
-     * WorkflowPosition
+     * position
      * <p>
-     * 
+     * Actually, each even item is a string, each odd item is an integer
      * 
      */
-    @JsonProperty("workflowPosition")
-    public WorkflowPosition getWorkflowPosition() {
-        return workflowPosition;
+    @JsonProperty("position")
+    public List<Object> getPosition() {
+        return position;
     }
 
     /**
-     * WorkflowPosition
+     * position
      * <p>
-     * 
+     * Actually, each even item is a string, each odd item is an integer
      * 
      */
-    @JsonProperty("workflowPosition")
-    public void setWorkflowPosition(WorkflowPosition workflowPosition) {
-        this.workflowPosition = workflowPosition;
+    @JsonProperty("position")
+    public void setPosition(List<Object> position) {
+        this.position = position;
     }
 
     /**
@@ -140,12 +141,12 @@ public class ResumeOrder
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("orderId", orderId).append("workflowPosition", workflowPosition).append("arguments", arguments).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("orderId", orderId).append("position", position).append("arguments", arguments).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(workflowPosition).append(arguments).append(orderId).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(arguments).append(position).append(orderId).toHashCode();
     }
 
     @Override
@@ -157,7 +158,7 @@ public class ResumeOrder
             return false;
         }
         ResumeOrder rhs = ((ResumeOrder) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(workflowPosition, rhs.workflowPosition).append(arguments, rhs.arguments).append(orderId, rhs.orderId).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(arguments, rhs.arguments).append(position, rhs.position).append(orderId, rhs.orderId).isEquals();
     }
 
 }

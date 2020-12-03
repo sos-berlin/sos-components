@@ -20,8 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "required",
     "TYPE",
-    "returnCode",
-    "keyValues"
+    "namedValues"
 })
 public class Outcome {
 
@@ -35,17 +34,15 @@ public class Outcome {
      */
     @JsonProperty("TYPE")
     private OutcomeType tYPE;
-    @JsonProperty("returnCode")
-    private Integer returnCode;
     /**
      * key-value pairs
      * <p>
      * a map for arbitrary key-value pairs
      * 
      */
-    @JsonProperty("keyValues")
+    @JsonProperty("namedValues")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
-    private Variables keyValues;
+    private Variables namedValues;
 
     /**
      * No args constructor for use in serialization
@@ -56,17 +53,15 @@ public class Outcome {
 
     /**
      * 
-     * @param returnCode
+     * @param namedValues
      * @param tYPE
-     * @param keyValues
      * @param required
      */
-    public Outcome(Object required, OutcomeType tYPE, Integer returnCode, Variables keyValues) {
+    public Outcome(Object required, OutcomeType tYPE, Variables namedValues) {
         super();
         this.required = required;
         this.tYPE = tYPE;
-        this.returnCode = returnCode;
-        this.keyValues = keyValues;
+        this.namedValues = namedValues;
     }
 
     @JsonProperty("required")
@@ -101,14 +96,15 @@ public class Outcome {
         this.tYPE = tYPE;
     }
 
-    @JsonProperty("returnCode")
-    public Integer getReturnCode() {
-        return returnCode;
-    }
-
-    @JsonProperty("returnCode")
-    public void setReturnCode(Integer returnCode) {
-        this.returnCode = returnCode;
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("namedValues")
+    public Variables getNamedValues() {
+        return namedValues;
     }
 
     /**
@@ -117,30 +113,19 @@ public class Outcome {
      * a map for arbitrary key-value pairs
      * 
      */
-    @JsonProperty("keyValues")
-    public Variables getKeyValues() {
-        return keyValues;
-    }
-
-    /**
-     * key-value pairs
-     * <p>
-     * a map for arbitrary key-value pairs
-     * 
-     */
-    @JsonProperty("keyValues")
-    public void setKeyValues(Variables keyValues) {
-        this.keyValues = keyValues;
+    @JsonProperty("namedValues")
+    public void setNamedValues(Variables namedValues) {
+        this.namedValues = namedValues;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("required", required).append("tYPE", tYPE).append("returnCode", returnCode).append("keyValues", keyValues).toString();
+        return new ToStringBuilder(this).append("required", required).append("tYPE", tYPE).append("namedValues", namedValues).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(returnCode).append(tYPE).append(keyValues).append(required).toHashCode();
+        return new HashCodeBuilder().append(tYPE).append(required).append(namedValues).toHashCode();
     }
 
     @Override
@@ -152,7 +137,7 @@ public class Outcome {
             return false;
         }
         Outcome rhs = ((Outcome) other);
-        return new EqualsBuilder().append(returnCode, rhs.returnCode).append(tYPE, rhs.tYPE).append(keyValues, rhs.keyValues).append(required, rhs.required).isEquals();
+        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(required, rhs.required).append(namedValues, rhs.namedValues).isEquals();
     }
 
 }

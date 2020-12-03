@@ -35,6 +35,7 @@ import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
 import js7.data.order.OrderId;
+import js7.data.value.Value;
 import js7.data.workflow.WorkflowPath;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.data.order.JFreshOrder;
@@ -128,10 +129,10 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
         String uniqueId = Long.valueOf(Instant.now().toEpochMilli()).toString().substring(4);
         OrderId orderId = OrderId.of(String.format("#%s#T%s-%s", yyyymmdd, uniqueId, order.getOrderName()));
         Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order.getTimeZone());
-        Map<String, String> arguments = Collections.emptyMap();
-        if (order.getArguments() != null) {
-            arguments = order.getArguments().getAdditionalProperties();
-        }
+        Map<String, Value> arguments = Collections.emptyMap();
+//        if (order.getArguments() != null) {
+//            arguments = order.getArguments().getAdditionalProperties();
+//        }
         return JFreshOrder.of(orderId, WorkflowPath.of(order.getWorkflowPath()), scheduledFor, arguments);
     }
 

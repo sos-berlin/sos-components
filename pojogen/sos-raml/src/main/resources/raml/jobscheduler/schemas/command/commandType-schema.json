@@ -5,7 +5,10 @@
   "type": "string",
   "enum": [
     "Batch",
-    "CancelOrder",
+    "CancelOrders",
+    "SuspendOrders",
+    "ResumeOrders",
+    "ResumeOrder",
     "ShutDown",
     "EmergencyStop",
     "ReplaceRepo",

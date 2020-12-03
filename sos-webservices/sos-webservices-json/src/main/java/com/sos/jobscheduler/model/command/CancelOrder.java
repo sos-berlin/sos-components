@@ -1,6 +1,7 @@
 
 package com.sos.jobscheduler.model.command;
 
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.sos.jobscheduler.model.order.OrderMode;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -30,10 +31,10 @@ public class CancelOrder
     /**
      * 
      * @param mode
-     * @param orderId
+     * @param orderIds
      */
-    public CancelOrder(String orderId, OrderMode mode) {
-        super(orderId, mode);
+    public CancelOrder(List<String> orderIds, OrderMode mode) {
+        super(orderIds, mode);
     }
 
     @Override

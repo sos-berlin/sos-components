@@ -82,12 +82,12 @@ public class PojosTest {
 		JSBatchCommands batch = new JSBatchCommands();
 		//batch.setCommands(new ArrayList<Command>());
 
-		CancelOrder cancelnotStartedOrder = new CancelOrder("TEST-NOT_STARTED-ORDER", new OrderMode(OrderModeType.FRESH_ONLY, null));
-		CancelOrder cancelFreshOrStartedOrder = new CancelOrder("TEST-FRESH_OR_STARTED-ORDER", new OrderMode(OrderModeType.FRESH_OR_STARTED, null));
+		CancelOrder cancelnotStartedOrder = new CancelOrder(Arrays.asList("TEST-NOT_STARTED-ORDER"), new OrderMode(OrderModeType.FRESH_ONLY, null));
+		CancelOrder cancelFreshOrStartedOrder = new CancelOrder(Arrays.asList("TEST-FRESH_OR_STARTED-ORDER"), new OrderMode(OrderModeType.FRESH_OR_STARTED, null));
 		batch.setCommands(Arrays.asList(cancelnotStartedOrder, cancelFreshOrStartedOrder));
 //		System.out.println(objectMapper.writeValueAsString(batch));
-		String expected = "{\"TYPE\":\"Batch\",\"commands\":[{\"TYPE\":\"CancelOrder\",\"orderId\":\"TEST-NOT_STARTED-ORDER\",\"mode\":{\"TYPE\":\"FreshOnly\"}},{\"TYPE\":\"CancelOrder\",\"orderId\":\"TEST-FRESH_OR_STARTED-ORDER\",\"mode\":{\"TYPE\":\"FreshOrStarted\"}}]}";
-		assertEquals("batchCommandTest", expected, objectMapper.writeValueAsString(batch));
+		String expected = "{\"TYPE\":\"Batch\",\"commands\":[{\"TYPE\":\"CancelOrders\",\"orderIds\":[\"TEST-NOT_STARTED-ORDER\"],\"mode\":{\"TYPE\":\"FreshOnly\"}},{\"TYPE\":\"CancelOrders\",\"orderIds\":[\"TEST-FRESH_OR_STARTED-ORDER\"],\"mode\":{\"TYPE\":\"FreshOrStarted\"}}]}";
+        assertEquals("batchCommandTest", expected, objectMapper.writeValueAsString(batch));
 	}
 	
 	@Test

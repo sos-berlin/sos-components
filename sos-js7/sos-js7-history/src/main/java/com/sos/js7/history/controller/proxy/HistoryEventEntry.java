@@ -21,13 +21,13 @@ import js7.data.agent.AgentName;
 import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
-import js7.data.job.ReturnCode;
 import js7.data.order.OrderEvent;
 import js7.data.order.OrderId;
 import js7.data.order.Outcome;
 import js7.data.order.Outcome.Completed;
 import js7.data.order.Outcome.Disrupted;
 import js7.data.order.Outcome.Failed;
+import js7.data.value.Value;
 import js7.data.workflow.instructions.executable.WorkflowJob.Name;
 import js7.proxy.javaapi.data.agent.JAgentRef;
 import js7.proxy.javaapi.data.controller.JControllerState;
@@ -147,7 +147,7 @@ public class HistoryEventEntry {
             return orderId.string();
         }
 
-        public Map<String, String> getArguments() {
+        public Map<String, Value> getArguments() {
             return order == null ? null : order.arguments();
         }
 
@@ -227,7 +227,7 @@ public class HistoryEventEntry {
             private boolean isSuccessReturnCode;
             private boolean isSucceeded;
             private boolean isFailed;
-            private Map<String, String> keyValues;
+            private Map<String, Value> keyValues;
             private OutcomeType type;
             private String errorCode;
             private String errorMessage;
@@ -235,11 +235,16 @@ public class HistoryEventEntry {
             private OutcomeInfo(Outcome outcome) {
                 if (outcome instanceof Completed) {
                     Completed c = (Completed) outcome;
-                    ReturnCode rc = c.returnCode();
-
-                    returnCode = rc.number();
-                    isSuccessReturnCode = rc.isSuccess();
-
+                    
+                    // Ask Joacim, how you get the returncode
+//                    ReturnCode rc = c.returnCode();
+//
+//                    returnCode = rc.number();
+//                    isSuccessReturnCode = rc.isSuccess();
+                    //returnCode = c.namedValues().get("returnCode");
+                    returnCode = 0;
+                    isSuccessReturnCode = c.isSucceeded();
+                    
                     isSucceeded = c.isSucceeded();
                     isFailed = c.isFailed();
                     if (isFailed) {
@@ -255,7 +260,7 @@ public class HistoryEventEntry {
                     } else {
                         type = OutcomeType.succeeded;
                     }
-                    keyValues = JavaConverters.asJava(c.keyValues());
+                    keyValues = JavaConverters.asJava(c.namedValues());
                 } else if (outcome instanceof Disrupted) {
                     Disrupted c = (Disrupted) outcome;
                     isSucceeded = c.isSucceeded();
@@ -322,7 +327,7 @@ public class HistoryEventEntry {
                 return errorCode;
             }
 
-            public Map<String, String> getKeyValues() {
+            public Map<String, Value> getKeyValues() {
                 return keyValues;
             }
 

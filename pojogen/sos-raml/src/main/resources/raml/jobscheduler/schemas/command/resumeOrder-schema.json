@@ -12,15 +12,15 @@
 	"propertyOrder": [
     	"TYPE",
     	"orderId",
-    	"workflowPosition",
+    	"position",
     	"arguments"
   	],
   	"properties": {
 		"orderId": {
 			"type": "string"
 		},
-		"workflowPosition": {
-	        "$ref": "../workflow/workflowPosition-schema.json"
+		"position": {
+	        "$ref": "../common/position-schema.json"
 		},
 		"arguments": {
 	        "$ref": "../common/variables-schema.json"

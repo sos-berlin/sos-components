@@ -181,7 +181,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             return ControllerApi.of(modifyOrders.getControllerId()).cancelOrders(oIds, cancelMode);
         case RESUME:
             //TODO missing parameter!
-            return ControllerApi.of(modifyOrders.getControllerId()).resumeOrders(oIds, position);
+            // resumeOrder
+            return ControllerApi.of(modifyOrders.getControllerId()).resumeOrders(oIds);
         case SUSPEND:
             //TODO position! Why JWorkflowPosition instead JPosition?
             JSuspendMode suspendMode = null;

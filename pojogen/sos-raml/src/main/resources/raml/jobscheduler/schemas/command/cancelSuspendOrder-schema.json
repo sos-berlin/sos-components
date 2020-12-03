@@ -11,12 +11,15 @@
 	],
 	"propertyOrder": [
     	"TYPE",
-    	"orderId",
+    	"orderIds",
     	"mode"
   	],
   	"properties": {
-		"orderId": {
-			"type": "string"
+		"orderIds": {
+			"type": "array",
+			"items": {
+				"type": "string"
+			}
 		},
 		"mode": {
 			"type": "object",
@@ -32,8 +35,8 @@
 				        "type": "boolean",
 				        "default": false
 				    },
-				    "workflowPosition": {
-				        "$ref": "../workflow/workflowPosition-schema.json"
+				    "position": {
+				        "$ref": "../common/position-schema.json"
 				    }
 				  },
 				  "additionalProperties": false
