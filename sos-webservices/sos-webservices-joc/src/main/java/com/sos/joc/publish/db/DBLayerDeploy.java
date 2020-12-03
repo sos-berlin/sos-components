@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.NoResultException;
 import javax.persistence.TemporalType;
 
 import org.hibernate.criterion.MatchMode;
@@ -1212,8 +1213,12 @@ public class DBLayerDeploy {
         dbItems.removeAll(excludes);
         return dbItems;
     }
-    
+
     public String getAgentIdFromAgentName (String agentName, String controllerId){
+        return getAgentIdFromAgentName (agentName, controllerId, null, null);
+    }
+
+    public String getAgentIdFromAgentName (String agentName, String controllerId, String workflowPath, String jobname){
         if (agentName != null) {
             try {
                 StringBuilder hql = new StringBuilder("select agentId from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
@@ -1222,8 +1227,18 @@ public class DBLayerDeploy {
                 query.setParameter("agentName", agentName);
                 query.setParameter("controllerId", controllerId);
                 return query.getSingleResult();
+            } catch (NoResultException e) {
+                if (workflowPath != null && jobname != null) {
+                    throw new JocSosHibernateException(
+                            String.format("No agentId found for agentName=\"%1$s\" and controllerId=\"%2$s\" in Workflow \"%3$s\" and Job \"%4$s\"!",
+                                    agentName, controllerId, workflowPath, jobname), e);
+                } else {
+                    throw new JocSosHibernateException(
+                            String.format("No agentId found for agentName=\"%1$s\" and controllerId=\"%2$s\"!", agentName, controllerId), e);
+                }
+                
             } catch (SOSHibernateException e) {
-                throw new JocSosHibernateException(e);
+                throw new JocSosHibernateException(e.getMessage(), e);
             } 
         } else {
             return null;

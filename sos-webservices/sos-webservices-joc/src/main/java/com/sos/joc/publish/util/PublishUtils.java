@@ -783,7 +783,7 @@ public abstract class PublishUtils {
                 workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
                     Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
                     String agentName = job.getAgentName();
-                    String agentId = dbLayer.getAgentIdFromAgentName(agentName, controllerId);
+                    String agentId = dbLayer.getAgentIdFromAgentName(agentName, controllerId, workflow.getPath(), jobname);
                     update.add(new UpdateableWorkflowJobAgentName(workflow.getPath(), jobname, job.getAgentName(), agentId, controllerId));
                 });
             }
