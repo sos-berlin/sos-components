@@ -135,12 +135,8 @@ public class EventServiceFactory {
                 //events.setEventSnapshots(null);
             } else {
                 events.setEventId(evt.last().getEventId());
-                List<EventSnapshot> es = evt.stream().map(e -> {
-                    e.setEventId(null);
-                    return e;
-                }).distinct().collect(Collectors.toList());
                 LOGGER.info("Events for " + controllerId + ": " + evt);
-                events.setEventSnapshots(es);
+                events.setEventSnapshots(evt.stream().collect(Collectors.toList()));
             }
         } catch (Exception e1) {
             Err err = new Err();
