@@ -4,7 +4,7 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -98,11 +98,13 @@ public class OrderApi {
 
     private static JFreshOrder mapToFreshOrder(FreshOrder order) {
         OrderId orderId = OrderId.of(order.getId());
-        Map<String, Value> arguments = Collections.emptyMap();
-        // TODO
-//        if (order.getArguments() != null) {
-//            arguments = order.getArguments().getAdditionalProperties();
-//        }
+        Map<String, Value> arguments = new HashMap<>();
+        if (order.getArguments() != null) {
+            Map<String, String> a = order.getArguments().getAdditionalProperties();
+            for(String key : a.keySet()) {
+                arguments.put(key, Value.of(a.get(key)));
+            }
+        }
         Optional<Instant> scheduledFor = Optional.empty();
         if (order.getScheduledFor() != null) {
             scheduledFor = Optional.of(Instant.ofEpochMilli(order.getScheduledFor()));

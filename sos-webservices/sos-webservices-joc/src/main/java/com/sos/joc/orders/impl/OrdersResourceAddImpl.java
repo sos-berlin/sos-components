@@ -3,8 +3,8 @@ package com.sos.joc.orders.impl;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -129,10 +129,13 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
         String uniqueId = Long.valueOf(Instant.now().toEpochMilli()).toString().substring(4);
         OrderId orderId = OrderId.of(String.format("#%s#T%s-%s", yyyymmdd, uniqueId, order.getOrderName()));
         Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order.getTimeZone());
-        Map<String, Value> arguments = Collections.emptyMap();
-//        if (order.getArguments() != null) {
-//            arguments = order.getArguments().getAdditionalProperties();
-//        }
+        Map<String, Value> arguments = new HashMap<>();
+        if (order.getArguments() != null) {
+            Map<String, String> a = order.getArguments().getAdditionalProperties();
+            for(String key : a.keySet()) {
+                arguments.put(key, Value.of(a.get(key)));
+            }
+        }
         return JFreshOrder.of(orderId, WorkflowPath.of(order.getWorkflowPath()), scheduledFor, arguments);
     }
 
