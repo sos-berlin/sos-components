@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.sos.joc.model.common.JocSecurityLevel;
+
 public class MapUrls {
 
     public static final Map<String, String> centosdev_secondary_urlMapper = Collections.unmodifiableMap(new HashMap<String, String>() {
@@ -32,7 +34,20 @@ public class MapUrls {
         }
     });
     
+    public static final Map<String, JocSecurityLevel> securityLevelByUser = Collections.unmodifiableMap(new HashMap<String, JocSecurityLevel>() {
+
+        private static final long serialVersionUID = 1L;
+
+        {
+            put("oh", JocSecurityLevel.LOW);
+        }
+    });
+    
     public static Map<String, String> getUrlMapperByUser() {
         return urlMapperByUser.get(System.getProperty("user.name").toLowerCase());
+    }
+    
+    public static JocSecurityLevel getSecurityLevelByUser() {
+        return securityLevelByUser.get(System.getProperty("user.name").toLowerCase());
     }
 }

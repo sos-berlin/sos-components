@@ -28,6 +28,7 @@ public class JocServletContainer extends ServletContainer {
         super.init();
 
         Globals.sosCockpitProperties = new JocCockpitProperties();
+        Globals.getJocSecurityLevel(MapUrls.getSecurityLevelByUser());
         Proxies.startAll(Globals.sosCockpitProperties, 0, ProxyUser.JOC, MapUrls.getUrlMapperByUser());
         SOSShell.printSystemInfos();
         SOSShell.printJVMInfos();

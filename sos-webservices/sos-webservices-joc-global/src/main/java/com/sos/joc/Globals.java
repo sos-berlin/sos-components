@@ -318,11 +318,15 @@ public class Globals {
         }
         return ("/" + path.trim()).replaceAll("//+", "/").replaceFirst("/$", "");
     }
-
+    
     public static JocSecurityLevel getJocSecurityLevel() {
+        return getJocSecurityLevel(JocSecurityLevel.LOW);
+    }
+
+    public static JocSecurityLevel getJocSecurityLevel(JocSecurityLevel defaultLevel) {
         // the JocSecurity classes should have a method getJocSecurityLevel which is callable static during an abstract class
         if (Globals.jocSecurityLevel == null) {
-            Globals.jocSecurityLevel = JocSecurityLevel.LOW; // default
+            Globals.jocSecurityLevel = defaultLevel; // default
             try {
                 InputStream stream = Globals.class.getResourceAsStream("/joc-settings.properties");
                 if (stream != null) {
