@@ -11,16 +11,11 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
-import com.sos.jobscheduler.model.cluster.ClusterState;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
-import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.jobscheduler.Controller;
@@ -41,32 +36,6 @@ public class InventoryInstancesDBLayer {
                 return null;
             }
             return session.get(DBItemInventoryJSInstance.class, id);
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
-    }
-
-    @Deprecated
-    public DBItemInventoryJSInstance getInventoryInstanceByControllerId(String controllerId, String accessToken) throws DBInvalidDataException,
-            DBMissingDataException, DBConnectionRefusedException {
-        try {
-            //TODO do we need isActive?? String sql = String.format("from %s where controllerId = :controllerId order by isActive desc, isPrimary desc",
-            //DBLayer.DBITEM_INVENTORY_INSTANCES);
-            String sql = String.format("from %s where controllerId = :controllerId order by isPrimary desc",
-                    DBLayer.DBITEM_INV_JS_INSTANCES);
-            Query<DBItemInventoryJSInstance> query = session.createQuery(sql.toString());
-            query.setParameter("controllerId", controllerId);
-            List<DBItemInventoryJSInstance> result = session.getResultList(query);
-            if (result != null && !result.isEmpty()) {
-                return getRunningJobSchedulerClusterMember(result, accessToken);
-            } else {
-                String errMessage = String.format("controllerId %1$s not found in table %2$s", controllerId, DBLayer.TABLE_INV_JS_INSTANCES);
-                throw new DBMissingDataException(errMessage);
-            }
-        } catch (DBMissingDataException ex) {
-            throw ex;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -360,42 +329,6 @@ public class InventoryInstancesDBLayer {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
-        }
-    }
-
-    @Deprecated
-    private DBItemInventoryJSInstance getRunningJobSchedulerClusterMember(List<DBItemInventoryJSInstance> schedulerInstancesDBList, String accessToken) {
-        if (schedulerInstancesDBList.get(0).getIsCluster()) {
-            for (DBItemInventoryJSInstance schedulerInstancesDBItem : schedulerInstancesDBList) {
-                if (getJobSchedulerState(schedulerInstancesDBItem, accessToken)) {
-                    return schedulerInstancesDBItem;
-                }
-            }
-        }
-        return schedulerInstancesDBList.get(0);
-    }
-
-    @Deprecated
-    private boolean getJobSchedulerState(DBItemInventoryJSInstance schedulerInstancesDBItem, String accessToken) {
-        try {
-            JOCJsonCommand jocJsonCommand = new JOCJsonCommand(schedulerInstancesDBItem, accessToken);
-            jocJsonCommand.setUriBuilderForCluster();
-            ClusterState clusterState = jocJsonCommand.getJsonObjectFromGet(ClusterState.class);
-            if (clusterState != null) {
-                switch (clusterState.getTYPE()) {
-                case EMPTY:
-                    return true;
-                default:
-                    String activeClusterUri = clusterState.getSetting().getIdToUri().getAdditionalProperties().get(clusterState.getSetting().getActiveId());
-                    return activeClusterUri.equalsIgnoreCase(schedulerInstancesDBItem.getClusterUri()) || activeClusterUri.equalsIgnoreCase(
-                            schedulerInstancesDBItem.getUri());
-                }
-            }
-            return true; //TODO ??
-        } catch (JobSchedulerInvalidResponseDataException e) {
-            return true; //TODO ??
-        } catch (JocException e) {
-            return false;
         }
     }
 

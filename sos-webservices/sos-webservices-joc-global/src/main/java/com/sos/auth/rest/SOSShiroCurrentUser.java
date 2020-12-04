@@ -34,7 +34,6 @@ public class SOSShiroCurrentUser {
     private HttpServletRequest httpServletRequest;
 
     private SOSPermissionJocCockpitControllers sosPermissionJocCockpitControllers;
-    private Map<String, DBItemInventoryJSInstance> listOfSchedulerInstances;
     private Map<String, SOSPermissionJocCockpit> listOfSOSPermissionJocCockpit;
     private SOSShiroFolderPermissions sosShiroFolderPermissions;
     private SOSShiroFolderPermissions sosShiroCalendarFolderPermissions;
@@ -43,14 +42,12 @@ public class SOSShiroCurrentUser {
     public SOSShiroCurrentUser(String username, String password) {
         super();
         initFolders();
-        this.listOfSchedulerInstances = new HashMap<String, DBItemInventoryJSInstance>();
         this.username = username;
         this.password = password;
     }
 
     public SOSShiroCurrentUser(String username, String password, String authorization) {
         super();
-        this.listOfSchedulerInstances = new HashMap<String, DBItemInventoryJSInstance>();
         this.username = username;
         this.authorization = authorization;
         this.password = password;
@@ -272,33 +269,6 @@ public class SOSShiroCurrentUser {
         } else {
             return false;
         }
-    }
-
-    public Map<String, DBItemInventoryJSInstance> getMapOfSchedulerInstances() {
-        return listOfSchedulerInstances;
-    }
-
-    public DBItemInventoryJSInstance getSchedulerInstanceDBItem(String jobSchedulerId) {
-        return listOfSchedulerInstances.get(jobSchedulerId);
-    }
-
-    public DBItemInventoryJSInstance removeSchedulerInstanceDBItem(String jobSchedulerId) {
-        return listOfSchedulerInstances.remove(jobSchedulerId);
-    }
-
-    public void addSchedulerInstanceDBItem(String jobSchedulerId, DBItemInventoryJSInstance schedulerInstancesDBItem) {
-        listOfSchedulerInstances.put(jobSchedulerId, schedulerInstancesDBItem);
-    }
-
-    public DBItemInventoryJSInstance getSchedulerInstanceByKey(Long id) {
-        for (Map.Entry<String, DBItemInventoryJSInstance> entry : listOfSchedulerInstances.entrySet()) {
-            DBItemInventoryJSInstance instance = entry.getValue();
-            if (instance.getId().equals(id)) {
-                return instance;
-            }
-        }
-        return null;
-
     }
 
     public void initFolders() {
