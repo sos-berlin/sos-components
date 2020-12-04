@@ -12,6 +12,10 @@
     "WORKFLOW",
     "ORDER",
     "JOB",
+    "JUNCTION",
+    "JOBCLASS",
+    "SCHEDULE",
+    "CALENDAR",
     "ORDERHISTORY",
     "TASKHISTORY"
   ]

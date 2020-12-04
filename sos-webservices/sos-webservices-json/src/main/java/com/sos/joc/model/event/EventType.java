@@ -16,6 +16,10 @@ public enum EventType {
     WORKFLOW("WORKFLOW"),
     ORDER("ORDER"),
     JOB("JOB"),
+    JUNCTION("JUNCTION"),
+    JOBCLASS("JOBCLASS"),
+    SCHEDULE("SCHEDULE"),
+    CALENDAR("CALENDAR"),
     ORDERHISTORY("ORDERHISTORY"),
     TASKHISTORY("TASKHISTORY");
     private final String value;

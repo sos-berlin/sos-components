@@ -1,7 +1,7 @@
 {
-  "title": "JobScheduler objects filter",
+  "title": "Controller filter",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.joc.model.event.JobSchedulerObjects",
+  "javaType": "com.sos.joc.model.event.Controller",
   "type": "object",
   "required": [
     "controllerId"

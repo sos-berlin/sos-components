@@ -10,7 +10,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * JobScheduler objects filter
+ * Controller filter
  * <p>
  * 
  * 
@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "controllerId",
     "eventId"
 })
-public class JobSchedulerObjects {
+public class Controller {
 
     /**
      * filename
@@ -101,10 +101,10 @@ public class JobSchedulerObjects {
         if (other == this) {
             return true;
         }
-        if ((other instanceof JobSchedulerObjects) == false) {
+        if ((other instanceof Controller) == false) {
             return false;
         }
-        JobSchedulerObjects rhs = ((JobSchedulerObjects) other);
+        Controller rhs = ((Controller) other);
         return new EqualsBuilder().append(controllerId, rhs.controllerId).append(eventId, rhs.eventId).isEquals();
     }
 

@@ -2,6 +2,7 @@ package com.sos.joc.event.impl;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -28,10 +29,9 @@ import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.SessionNotExistException;
-import com.sos.joc.model.event.EventSnapshot;
+import com.sos.joc.model.event.Controller;
 import com.sos.joc.model.event.JobSchedulerEvent;
 import com.sos.joc.model.event.JobSchedulerEvents;
-import com.sos.joc.model.event.JobSchedulerObjects;
 import com.sos.joc.model.event.RegisterEvent;
 import com.sos.schema.JsonValidator;
 
@@ -64,12 +64,6 @@ public class EventResourceImpl2 extends JOCResourceImpl implements IEventResourc
                 throw new SessionNotExistException(e1);
             }
             
-//            if (in.getClose() != null && in.getClose()) {
-//                entity.setEvents(null);
-//                entity.setDeliveryDate(Date.from(Instant.now()));
-//                return JOCDefaultResponse.responseStatus200(entity);
-//            }
-            
             if (in.getControllers() == null && in.getControllers().size() == 0) {
                 throw new JocMissingRequiredParameterException("undefined 'controllers'");
             }
@@ -80,9 +74,9 @@ public class EventResourceImpl2 extends JOCResourceImpl implements IEventResourc
             
             Boolean isCurrentJobScheduler = true;
             Condition eventArrived = EventServiceFactory.createCondition();
-            for (JobSchedulerObjects jsObject : in.getControllers()) {
-                JobSchedulerEvent evt = initEvent(jsObject, defaultEventId);
-                eventList.put(jsObject.getControllerId(), evt);
+            for (Controller controller : in.getControllers()) {
+                JobSchedulerEvent evt = initEvent(controller, defaultEventId);
+                eventList.put(controller.getControllerId(), evt);
                 if (isCurrentJobScheduler) {
                     tasks.add(new EventCallable2OfCurrentController(session, evt.getEventId(), evt.getControllerId(), accessToken, eventArrived));
                     isCurrentJobScheduler = false;
@@ -99,6 +93,10 @@ public class EventResourceImpl2 extends JOCResourceImpl implements IEventResourc
                     for (Future<JobSchedulerEvent> result : executorService.invokeAll(tasks)) {
                         try {
                             JobSchedulerEvent evt = result.get();
+//                            evt.setEventSnapshots(evt.getEventSnapshots().stream().map(e -> {
+//                                e.setEventId(null);
+//                                return e;
+//                            }).distinct().collect(Collectors.toList()));
                             eventList.put(evt.getControllerId(), evt);
                         } catch (ExecutionException e) {
                             if (e.getCause() instanceof JocException) {
@@ -135,15 +133,15 @@ public class EventResourceImpl2 extends JOCResourceImpl implements IEventResourc
         return JOCDefaultResponse.responseStatus200(entity);
     }
     
-    private JobSchedulerEvent initEvent(JobSchedulerObjects jsObject, long defaultEventId) {
+    private JobSchedulerEvent initEvent(Controller controller, long defaultEventId) {
         long eventId = defaultEventId;
-        if (jsObject.getEventId() != null && jsObject.getEventId() > 0L) {
-            eventId = jsObject.getEventId();
+        if (controller.getEventId() != null && controller.getEventId() > 0L) {
+            eventId = controller.getEventId();
         }
         JobSchedulerEvent jsEvent = new JobSchedulerEvent();
         jsEvent.setEventId(eventId);
-        jsEvent.setControllerId(jsObject.getControllerId());
-        jsEvent.setEventSnapshots(new ArrayList<EventSnapshot>());
+        jsEvent.setControllerId(controller.getControllerId());
+        jsEvent.setEventSnapshots(Collections.emptyList());
         return jsEvent;
     }
 

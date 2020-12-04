@@ -29,7 +29,7 @@ public class RegisterEvent {
      * 
      */
     @JsonProperty("controllers")
-    private List<JobSchedulerObjects> controllers = new ArrayList<JobSchedulerObjects>();
+    private List<Controller> controllers = new ArrayList<Controller>();
 
     /**
      * 
@@ -37,7 +37,7 @@ public class RegisterEvent {
      * 
      */
     @JsonProperty("controllers")
-    public List<JobSchedulerObjects> getControllers() {
+    public List<Controller> getControllers() {
         return controllers;
     }
 
@@ -47,7 +47,7 @@ public class RegisterEvent {
      * 
      */
     @JsonProperty("controllers")
-    public void setControllers(List<JobSchedulerObjects> controllers) {
+    public void setControllers(List<Controller> controllers) {
         this.controllers = controllers;
     }
 

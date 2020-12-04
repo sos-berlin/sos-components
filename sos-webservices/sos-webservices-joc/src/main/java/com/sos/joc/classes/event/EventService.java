@@ -228,6 +228,7 @@ public class EventService {
     }
 
     private void addEvent(EventSnapshot eventSnapshot) {
+        events.stream().forEachOrdered(e -> LOGGER.info(e.toString()));
         // events.remove(eventSnapshot);
         if (events.add(eventSnapshot)) {
             LOGGER.debug("addEvent for " + controllerId + ": " + eventSnapshot.toString());
