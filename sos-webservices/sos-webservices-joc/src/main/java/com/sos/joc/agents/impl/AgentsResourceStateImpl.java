@@ -45,10 +45,10 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         private static final long serialVersionUID = 1L;
 
         {
-            put(AgentStateText.coupled, 0);
-            put(AgentStateText.decoupled, 1);
-            put(AgentStateText.couplingFailed, 2);
-            put(AgentStateText.unknown, 4);
+            put(AgentStateText.COUPLED, 0);
+            put(AgentStateText.DECOUPLED, 1);
+            put(AgentStateText.COUPLINGFAILED, 2);
+            put(AgentStateText.UNKNOWN, 4);
         }
     });
 
@@ -86,16 +86,16 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                 if (either.isRight()) {
                     AgentRefState.CouplingState couplingState = either.get().asScala().couplingState();
                     if (couplingState instanceof AgentRefState.CouplingFailed) {
-                        agent.setFailedMessage(ProblemHelper.getErrorMessage(((AgentRefState.CouplingFailed) couplingState).problem()));
-                        agent.setState(getState(AgentStateText.couplingFailed));
+                        agent.setErrorMessage(ProblemHelper.getErrorMessage(((AgentRefState.CouplingFailed) couplingState).problem()));
+                        agent.setState(getState(AgentStateText.COUPLINGFAILED));
                     } else if (couplingState instanceof AgentRefState.Coupled$) {
-                        agent.setState(getState(AgentStateText.coupled));
+                        agent.setState(getState(AgentStateText.COUPLED));
                     } else if (couplingState instanceof AgentRefState.Decoupled$) {
-                        agent.setState(getState(AgentStateText.decoupled));
+                        agent.setState(getState(AgentStateText.DECOUPLED));
                     }
                 } else {
-                    agent.setFailedMessage(ProblemHelper.getErrorMessage(either.getLeft()));
-                    agent.setState(getState(AgentStateText.unknown));
+                    agent.setErrorMessage(ProblemHelper.getErrorMessage(either.getLeft()));
+                    agent.setState(getState(AgentStateText.UNKNOWN));
                 }
                 return agent;
             }).filter(Objects::nonNull).collect(Collectors.toList()));

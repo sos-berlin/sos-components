@@ -8,10 +8,10 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum AgentStateText {
 
-    coupled("coupled"),
-    decoupled("decoupled"),
-    couplingFailed("couplingFailed"),
-    unknown("unknown");
+    COUPLED("COUPLED"),
+    DECOUPLED("DECOUPLED"),
+    COUPLINGFAILED("COUPLINGFAILED"),
+    UNKNOWN("UNKNOWN");
     private final String value;
     private final static Map<String, AgentStateText> CONSTANTS = new HashMap<String, AgentStateText>();
 

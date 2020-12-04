@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "agentId",
     "agentName",
     "state",
-    "failedMessage",
+    "errorMessage",
     "url",
     "isClusterWatcher"
 })
@@ -63,12 +63,12 @@ public class AgentV {
     @JsonProperty("state")
     private AgentState state;
     /**
-     * if state == couplngFailed
+     * if state == couplngFailed or unknown
      * 
      */
-    @JsonProperty("failedMessage")
-    @JsonPropertyDescription("if state == couplngFailed")
-    private String failedMessage;
+    @JsonProperty("errorMessage")
+    @JsonPropertyDescription("if state == couplngFailed or unknown")
+    private String errorMessage;
     /**
      * string without < and >
      * <p>
@@ -174,21 +174,21 @@ public class AgentV {
     }
 
     /**
-     * if state == couplngFailed
+     * if state == couplngFailed or unknown
      * 
      */
-    @JsonProperty("failedMessage")
-    public String getFailedMessage() {
-        return failedMessage;
+    @JsonProperty("errorMessage")
+    public String getErrorMessage() {
+        return errorMessage;
     }
 
     /**
-     * if state == couplngFailed
+     * if state == couplngFailed or unknown
      * 
      */
-    @JsonProperty("failedMessage")
-    public void setFailedMessage(String failedMessage) {
-        this.failedMessage = failedMessage;
+    @JsonProperty("errorMessage")
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
     }
 
     /**
@@ -227,12 +227,12 @@ public class AgentV {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("state", state).append("failedMessage", failedMessage).append("url", url).append("isClusterWatcher", isClusterWatcher).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("state", state).append("errorMessage", errorMessage).append("url", url).append("isClusterWatcher", isClusterWatcher).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(controllerId).append(agentName).append(isClusterWatcher).append(state).append(failedMessage).append(url).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(controllerId).append(errorMessage).append(agentName).append(isClusterWatcher).append(state).append(url).toHashCode();
     }
 
     @Override
@@ -244,7 +244,7 @@ public class AgentV {
             return false;
         }
         AgentV rhs = ((AgentV) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(agentName, rhs.agentName).append(isClusterWatcher, rhs.isClusterWatcher).append(state, rhs.state).append(failedMessage, rhs.failedMessage).append(url, rhs.url).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(errorMessage, rhs.errorMessage).append(agentName, rhs.agentName).append(isClusterWatcher, rhs.isClusterWatcher).append(state, rhs.state).append(url, rhs.url).isEquals();
     }
 
 }

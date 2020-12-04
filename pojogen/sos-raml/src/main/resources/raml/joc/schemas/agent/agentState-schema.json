@@ -9,23 +9,17 @@
   ],
   "properties": {
     "severity": {
-      "description": "0=coupled, 1=decoupled, 2=couplingFailed, 3=unknown",
+      "description": "0=COUPLED, 1=DECOUPLED, 2=COUPLINGFAILED, 3=UNKNOWN",
       "type": "integer"
     },
     "_text": {
       "javaType": "com.sos.joc.model.agent.AgentStateText",
       "type": "string",
       "enum": [
-        "coupled",
-        "decoupled",
-        "couplingFailed",
-        "unknown"
-      ],
-      "javaEnumNames": [
-        "coupled",
-        "decoupled",
-        "couplingFailed",
-        "unknown"
+        "COUPLED",
+        "DECOUPLED",
+        "COUPLINGFAILED",
+        "UNKNOWN"
       ]
     }
   }

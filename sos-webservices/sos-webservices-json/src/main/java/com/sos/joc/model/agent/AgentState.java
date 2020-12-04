@@ -24,12 +24,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class AgentState {
 
     /**
-     *  0=coupled, 1=decoupled, 2=couplingFailed, 3=unknown
+     *  0=COUPLED, 1=DECOUPLED, 2=COUPLINGFAILED, 3=UNKNOWN
      * (Required)
      * 
      */
     @JsonProperty("severity")
-    @JsonPropertyDescription("0=coupled, 1=decoupled, 2=couplingFailed, 3=unknown")
+    @JsonPropertyDescription("0=COUPLED, 1=DECOUPLED, 2=COUPLINGFAILED, 3=UNKNOWN")
     private Integer severity;
     /**
      * 
@@ -40,7 +40,7 @@ public class AgentState {
     private AgentStateText _text;
 
     /**
-     *  0=coupled, 1=decoupled, 2=couplingFailed, 3=unknown
+     *  0=COUPLED, 1=DECOUPLED, 2=COUPLINGFAILED, 3=UNKNOWN
      * (Required)
      * 
      */
@@ -50,7 +50,7 @@ public class AgentState {
     }
 
     /**
-     *  0=coupled, 1=decoupled, 2=couplingFailed, 3=unknown
+     *  0=COUPLED, 1=DECOUPLED, 2=COUPLINGFAILED, 3=UNKNOWN
      * (Required)
      * 
      */

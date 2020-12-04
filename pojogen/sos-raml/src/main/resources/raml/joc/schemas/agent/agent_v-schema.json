@@ -23,8 +23,8 @@
     "state": {
     	"$ref": "agentState-schema.json"
     },
-    "failedMessage": {
-    	"description": "if state == couplngFailed",
+    "errorMessage": {
+    	"description": "if state == couplngFailed or unknown",
     	"type": "string"
     },
     "url": {
