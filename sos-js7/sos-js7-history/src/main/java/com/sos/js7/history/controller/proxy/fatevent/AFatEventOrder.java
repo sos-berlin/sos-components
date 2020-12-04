@@ -2,6 +2,13 @@ package com.sos.js7.history.controller.proxy.fatevent;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.sos.js7.event.controller.EventMeta;
+
+import js7.data.value.Value;
 
 public abstract class AFatEventOrder extends AFatEvent {
 
@@ -11,12 +18,13 @@ public abstract class AFatEventOrder extends AFatEvent {
     private String workflowVersionId;
 
     private List<?> position;
-    private String arguments;
+    private Map<String, Value> arguments;
 
     public AFatEventOrder(Long eventId, Date eventDatetime) {
         super(eventId, eventDatetime);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void set(Object... objects) {
         if (objects.length >= 5) {
@@ -24,7 +32,7 @@ public abstract class AFatEventOrder extends AFatEvent {
             this.workflowPath = (String) objects[1];
             this.workflowVersionId = (String) objects[2];
             this.position = (List<?>) objects[3];
-            this.arguments = (String) objects[4];
+            this.arguments = (Map<String, Value>) objects[4];
         }
     }
 
@@ -44,7 +52,11 @@ public abstract class AFatEventOrder extends AFatEvent {
         return position;
     }
 
-    public String getArguments() {
-        return arguments;
+    public String getArgumentsAsJsonString() throws JsonProcessingException {
+        Map<String, String> map = null;
+        if (arguments != null) {
+            map = arguments.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().toString()));
+        }
+        return EventMeta.map2Json(map);
     }
 }
