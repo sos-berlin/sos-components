@@ -58,6 +58,9 @@ public class ProblemHelper {
     }
 
     public static String getErrorMessage(Problem problem) {
+        if (problem == null) {
+            return null;
+        }
         return String.format("%s%s", (problem.codeOrNull() != null) ? problem.codeOrNull().string() + ": " : "", problem.message());
     }
 

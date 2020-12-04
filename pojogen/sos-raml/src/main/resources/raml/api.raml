@@ -85,7 +85,12 @@ traits:
   - filename: !include joc/traits/filename.raml
 
 /agents:
-  description: This is not an API call. Use its children!!
+  type:
+    postOnlyId:
+      description: Get states of Agents
+      description200: " "
+      schema200: !include joc/schemas/agent/agents_v-schema.json
+      example200: " "
   
   /names:
     type:
@@ -124,6 +129,7 @@ traits:
         urlparam: " "
         failover: " "
         audit: !include joc/documentation/audit/auditLog.md
+        
   /store:
     type:
       postJSONWithOkResponse:

@@ -1,0 +1,32 @@
+{
+  "title": "component state",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.joc.model.agent.AgentState",
+  "type": "object",
+  "required": [
+    "severity",
+    "_text"
+  ],
+  "properties": {
+    "severity": {
+      "description": "0=coupled, 1=decoupled, 2=couplingFailed, 3=unknown",
+      "type": "integer"
+    },
+    "_text": {
+      "javaType": "com.sos.joc.model.agent.AgentStateText",
+      "type": "string",
+      "enum": [
+        "coupled",
+        "decoupled",
+        "couplingFailed",
+        "unknown"
+      ],
+      "javaEnumNames": [
+        "coupled",
+        "decoupled",
+        "couplingFailed",
+        "unknown"
+      ]
+    }
+  }
+}

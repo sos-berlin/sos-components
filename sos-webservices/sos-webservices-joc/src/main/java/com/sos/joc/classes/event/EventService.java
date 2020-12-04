@@ -228,7 +228,6 @@ public class EventService {
     }
 
     private void addEvent(EventSnapshot eventSnapshot) {
-        events.stream().forEachOrdered(e -> LOGGER.info(e.toString()));
         // events.remove(eventSnapshot);
         if (events.add(eventSnapshot)) {
             LOGGER.debug("addEvent for " + controllerId + ": " + eventSnapshot.toString());
@@ -239,7 +238,6 @@ public class EventService {
     }
 
     protected EventServiceFactory.Mode hasOldEvent(Long eventId, Condition eventArrived) {
-        events.stream().forEachOrdered(e -> LOGGER.info(e.toString()));
         if (events.stream().parallel().anyMatch(e -> eventId < e.getEventId())) {
             LOGGER.debug("has old Event for " + controllerId + ": true");
 //            if (isCurrentController.get() && events.stream().parallel().anyMatch(e -> EventType.PROBLEM.equals(e.getObjectType()))) {
