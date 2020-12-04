@@ -67,23 +67,23 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIds(Arrays.asList(controllerId), false, true);
             JControllerState currentState = Proxy.of(controllerId).currentState();
-            
+
             AgentsV agents = new AgentsV();
             agents.setSurveyDate(Date.from(Instant.ofEpochMilli(currentState.eventId() / 1000)));
             agents.setAgents(dbAgents.stream().map(dbAgent -> {
                 Either<Problem, JAgentRefState> either = currentState.nameToAgentRefState(AgentName.of(dbAgent.getAgentId()));
+                AgentV agent = new AgentV();
+                agent.setAgentId(dbAgent.getAgentId());
+                agent.setAgentName(dbAgent.getAgentName());
+                agent.setControllerId(controllerId);
+                agent.setUrl(dbAgent.getUri());
+                agent.setIsClusterWatcher(dbAgent.getIsWatcher());
                 if (either.isRight()) {
-                    AgentV agent = new AgentV();
-                    agent.setAgentId(dbAgent.getAgentId());
-                    agent.setAgentName(dbAgent.getAgentName());
-                    agent.setControllerId(controllerId);
-                    agent.setUrl(dbAgent.getUri());
-                    agent.setIsClusterWatcher(dbAgent.getIsWatcher());
                     AgentRefState.CouplingState couplingState = either.get().asScala().couplingState();
                     if (couplingState instanceof AgentRefState.CouplingFailed) {
                         agent.setFailedMessage(ProblemHelper.getErrorMessage(((AgentRefState.CouplingFailed) couplingState).problem()));
@@ -93,10 +93,11 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                     } else if (couplingState instanceof AgentRefState.Decoupled$) {
                         agent.setState(getState(AgentStateText.decoupled));
                     }
-                    return agent;
                 } else {
-                    return null;
+                    agent.setFailedMessage(ProblemHelper.getErrorMessage(either.getLeft()));
+                    agent.setState(getState(AgentStateText.unknown));
                 }
+                return agent;
             }).filter(Objects::nonNull).collect(Collectors.toList()));
             agents.setDeliveryDate(Date.from(Instant.now()));
 
@@ -110,7 +111,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             Globals.disconnect(connection);
         }
     }
-    
+
     private static AgentState getState(AgentStateText state) {
         AgentState s = new AgentState();
         s.set_text(state);
