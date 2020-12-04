@@ -19,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "eventSnapshots",
     "notifications"
 })
-public class JobSchedulerEvent {
+public class Event {
 
     /**
      * filename
@@ -151,10 +151,10 @@ public class JobSchedulerEvent {
         if (other == this) {
             return true;
         }
-        if ((other instanceof JobSchedulerEvent) == false) {
+        if ((other instanceof Event) == false) {
             return false;
         }
-        JobSchedulerEvent rhs = ((JobSchedulerEvent) other);
+        Event rhs = ((Event) other);
         return new EqualsBuilder().append(eventId, rhs.eventId).append(controllerId, rhs.controllerId).append(error, rhs.error).append(eventSnapshots, rhs.eventSnapshots).append(notifications, rhs.notifications).isEquals();
     }
 

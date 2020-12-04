@@ -5,9 +5,9 @@ import java.util.concurrent.locks.Condition;
 
 import org.apache.shiro.session.Session;
 
-import com.sos.joc.model.event.JobSchedulerEvent;
+import com.sos.joc.model.event.Event;
 
-public class EventCallable2 implements Callable<JobSchedulerEvent> {
+public class EventCallable implements Callable<Event> {
 
     public final Session session;
     public final String controllerId;
@@ -16,7 +16,7 @@ public class EventCallable2 implements Callable<JobSchedulerEvent> {
     public final Condition eventArrived;
     public String accessToken;
 
-    public EventCallable2(Session session, Long eventId, String controllerId, String accessToken, Condition eventArrived) {
+    public EventCallable(Session session, Long eventId, String controllerId, String accessToken, Condition eventArrived) {
         this.eventId = eventId;
         this.session = session;
         this.controllerId = controllerId;
@@ -25,7 +25,7 @@ public class EventCallable2 implements Callable<JobSchedulerEvent> {
         this.isCurrentController = false;
     }
     
-    public EventCallable2(Session session, Long eventId, String controllerId, String accessToken, Condition eventArrived, boolean isCurrentController) {
+    public EventCallable(Session session, Long eventId, String controllerId, String accessToken, Condition eventArrived, boolean isCurrentController) {
         this.eventId = eventId;
         this.session = session;
         this.controllerId = controllerId;
@@ -35,7 +35,7 @@ public class EventCallable2 implements Callable<JobSchedulerEvent> {
     }
 
     @Override
-    public JobSchedulerEvent call() throws Exception {
+    public Event call() throws Exception {
         return EventServiceFactory.getEvents(controllerId, eventId, accessToken, eventArrived, session, isCurrentController);
     }
 }

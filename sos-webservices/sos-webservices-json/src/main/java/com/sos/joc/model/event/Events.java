@@ -24,7 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "events",
     "deliveryDate"
 })
-public class JobSchedulerEvents {
+public class Events {
 
     /**
      * 
@@ -32,7 +32,7 @@ public class JobSchedulerEvents {
      * 
      */
     @JsonProperty("events")
-    private List<JobSchedulerEvent> events = new ArrayList<JobSchedulerEvent>();
+    private List<Event> events = new ArrayList<Event>();
     /**
      * timestamp
      * <p>
@@ -50,7 +50,7 @@ public class JobSchedulerEvents {
      * 
      */
     @JsonProperty("events")
-    public List<JobSchedulerEvent> getEvents() {
+    public List<Event> getEvents() {
         return events;
     }
 
@@ -60,7 +60,7 @@ public class JobSchedulerEvents {
      * 
      */
     @JsonProperty("events")
-    public void setEvents(List<JobSchedulerEvent> events) {
+    public void setEvents(List<Event> events) {
         this.events = events;
     }
 
@@ -103,10 +103,10 @@ public class JobSchedulerEvents {
         if (other == this) {
             return true;
         }
-        if ((other instanceof JobSchedulerEvents) == false) {
+        if ((other instanceof Events) == false) {
             return false;
         }
-        JobSchedulerEvents rhs = ((JobSchedulerEvents) other);
+        Events rhs = ((Events) other);
         return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(events, rhs.events).isEquals();
     }
 

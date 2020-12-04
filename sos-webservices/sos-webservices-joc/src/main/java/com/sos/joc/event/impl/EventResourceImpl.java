@@ -21,30 +21,30 @@ import org.apache.shiro.session.Session;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.event.EventCallable2;
-import com.sos.joc.classes.event.EventCallable2OfCurrentController;
+import com.sos.joc.classes.event.EventCallable;
+import com.sos.joc.classes.event.EventCallableOfCurrentController;
 import com.sos.joc.classes.event.EventServiceFactory;
-import com.sos.joc.event.resource.IEventResource2;
+import com.sos.joc.event.resource.IEventResource;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.event.Controller;
-import com.sos.joc.model.event.JobSchedulerEvent;
-import com.sos.joc.model.event.JobSchedulerEvents;
+import com.sos.joc.model.event.Event;
+import com.sos.joc.model.event.Events;
 import com.sos.joc.model.event.RegisterEvent;
 import com.sos.schema.JsonValidator;
 
 @Path("events")
-public class EventResourceImpl2 extends JOCResourceImpl implements IEventResource2 {
+public class EventResourceImpl extends JOCResourceImpl implements IEventResource {
 
     private static final String API_CALL = "./events";
 
     @Override
     public JOCDefaultResponse postEvent(String accessToken, byte[] inBytes) {
 
-        JobSchedulerEvents entity = new JobSchedulerEvents();
-        Map<String, JobSchedulerEvent> eventList = new HashMap<String, JobSchedulerEvent>();
+        Events entity = new Events();
+        Map<String, Event> eventList = new HashMap<String, Event>();
         Session session = null;
         
         try {
@@ -70,18 +70,18 @@ public class EventResourceImpl2 extends JOCResourceImpl implements IEventResourc
             
             //Long defaultEventId = Instant.now().toEpochMilli() * 1000;
             long defaultEventId = Instant.now().getEpochSecond();
-            List<EventCallable2> tasks = new ArrayList<EventCallable2>();
+            List<EventCallable> tasks = new ArrayList<EventCallable>();
             
             Boolean isCurrentJobScheduler = true;
             Condition eventArrived = EventServiceFactory.createCondition();
             for (Controller controller : in.getControllers()) {
-                JobSchedulerEvent evt = initEvent(controller, defaultEventId);
+                Event evt = initEvent(controller, defaultEventId);
                 eventList.put(controller.getControllerId(), evt);
                 if (isCurrentJobScheduler) {
-                    tasks.add(new EventCallable2OfCurrentController(session, evt.getEventId(), evt.getControllerId(), accessToken, eventArrived));
+                    tasks.add(new EventCallableOfCurrentController(session, evt.getEventId(), evt.getControllerId(), accessToken, eventArrived));
                     isCurrentJobScheduler = false;
                 } else {
-                    tasks.add(new EventCallable2(session, evt.getEventId(), evt.getControllerId(), accessToken, eventArrived));
+                    tasks.add(new EventCallable(session, evt.getEventId(), evt.getControllerId(), accessToken, eventArrived));
                 }
             }
             
@@ -90,9 +90,9 @@ public class EventResourceImpl2 extends JOCResourceImpl implements IEventResourc
                 try {
 //                    JobSchedulerEvent evt = executorService.invokeAll(tasks);
 //                    eventList.put(evt.getControllerId(), evt);
-                    for (Future<JobSchedulerEvent> result : executorService.invokeAll(tasks)) {
+                    for (Future<Event> result : executorService.invokeAll(tasks)) {
                         try {
-                            JobSchedulerEvent evt = result.get();
+                            Event evt = result.get();
 //                            evt.setEventSnapshots(evt.getEventSnapshots().stream().map(e -> {
 //                                e.setEventId(null);
 //                                return e;
@@ -133,12 +133,12 @@ public class EventResourceImpl2 extends JOCResourceImpl implements IEventResourc
         return JOCDefaultResponse.responseStatus200(entity);
     }
     
-    private JobSchedulerEvent initEvent(Controller controller, long defaultEventId) {
+    private Event initEvent(Controller controller, long defaultEventId) {
         long eventId = defaultEventId;
         if (controller.getEventId() != null && controller.getEventId() > 0L) {
             eventId = controller.getEventId();
         }
-        JobSchedulerEvent jsEvent = new JobSchedulerEvent();
+        Event jsEvent = new Event();
         jsEvent.setEventId(eventId);
         jsEvent.setControllerId(controller.getControllerId());
         jsEvent.setEventSnapshots(Collections.emptyList());

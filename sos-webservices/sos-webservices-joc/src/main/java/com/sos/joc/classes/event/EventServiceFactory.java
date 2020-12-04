@@ -32,7 +32,7 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.common.Err;
 import com.sos.joc.model.event.EventSnapshot;
-import com.sos.joc.model.event.JobSchedulerEvent;
+import com.sos.joc.model.event.Event;
 
 public class EventServiceFactory {
     
@@ -57,7 +57,7 @@ public class EventServiceFactory {
         return eventServiceFactory;
     }
     
-    public static JobSchedulerEvent getEvents(String controllerId, Long eventId, String accessToken, Condition eventArrived, Session session, boolean isCurrentController) {
+    public static Event getEvents(String controllerId, Long eventId, String accessToken, Condition eventArrived, Session session, boolean isCurrentController) {
         return EventServiceFactory.getInstance()._getEvents(controllerId, eventId, accessToken, eventArrived, session, isCurrentController);
     }
     
@@ -86,9 +86,9 @@ public class EventServiceFactory {
         return lock.newCondition();
     }
     
-    private JobSchedulerEvent _getEvents(String controllerId, Long eventId, String accessToken, Condition eventArrived, Session session,
+    private Event _getEvents(String controllerId, Long eventId, String accessToken, Condition eventArrived, Session session,
             boolean isCurrentController) {
-        JobSchedulerEvent events = new JobSchedulerEvent();
+        Event events = new Event();
         events.setNotifications(null); // TODO not yet implemented
         events.setControllerId(controllerId);
         events.setEventId(eventId); //default

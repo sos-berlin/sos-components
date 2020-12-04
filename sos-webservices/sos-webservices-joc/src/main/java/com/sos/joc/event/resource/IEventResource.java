@@ -8,7 +8,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.model.event.RegisterEvent;
 
  
 public interface IEventResource {
@@ -16,5 +15,5 @@ public interface IEventResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON )
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postEvent(@HeaderParam("X-Access-Token") String xAccessToken, RegisterEvent eventBody);
+    public JOCDefaultResponse postEvent(@HeaderParam("X-Access-Token") String xAccessToken, byte[] inBytes);
 }
