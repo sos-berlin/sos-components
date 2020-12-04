@@ -2,7 +2,6 @@ package com.sos.joc.classes.event;
 
 import java.time.Instant;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.Timer;
@@ -40,7 +39,7 @@ public class EventServiceFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(EventServiceFactory.class);
     private static EventServiceFactory eventServiceFactory;
     private volatile Map<String, EventService> eventServices = new ConcurrentHashMap<>();
-    private final static Long cleanupPeriod = TimeUnit.MINUTES.toMillis(6);
+    private final static long cleanupPeriodInMillis = TimeUnit.MINUTES.toMillis(6);
     protected static Lock lock = new ReentrantLock();
     //protected static Condition eventArrived  = lock.newCondition();
     
@@ -73,11 +72,11 @@ public class EventServiceFactory {
 
                     @Override
                     public void run() {
-                        Long eventId = (Instant.now().toEpochMilli() - cleanupPeriod - TimeUnit.SECONDS.toMillis(30)) / 1000;
+                        Long eventId = (Instant.now().toEpochMilli() - cleanupPeriodInMillis - TimeUnit.SECONDS.toMillis(30)) / 1000;
                         eventServices.get(controllerId).getEvents().removeIf(e -> e.getEventId() < eventId);
                     }
 
-                }, cleanupPeriod, cleanupPeriod);
+                }, cleanupPeriodInMillis, cleanupPeriodInMillis);
             }
             return eventServices.get(controllerId);
         }
@@ -87,21 +86,21 @@ public class EventServiceFactory {
         return lock.newCondition();
     }
     
-    private JobSchedulerEvent _getEvents(String controllerId, Long eventId, String accessToken, Condition eventArrived, Session session, boolean isCurrentController) {
+    private JobSchedulerEvent _getEvents(String controllerId, Long eventId, String accessToken, Condition eventArrived, Session session,
+            boolean isCurrentController) {
         JobSchedulerEvent events = new JobSchedulerEvent();
         events.setNotifications(null); // TODO not yet implemented
         events.setControllerId(controllerId);
         events.setEventId(eventId); //default
-        SortedSet<EventSnapshot> evt;
         EventService service = null;
         try {
             service = getEventService(controllerId);
             service.addCondition(eventArrived);
             //service.setIsCurrentController(isCurrentController);
-            evt = new TreeSet<>(Comparator.comparing(EventSnapshot::getEventId));
+            SortedSet<EventSnapshot> evt = new TreeSet<>(Comparator.comparing(EventSnapshot::getEventId));
             Mode mode = service.hasOldEvent(eventId, eventArrived);
             if (mode == Mode.FALSE) {
-                long delay = Math.min(cleanupPeriod - 1000, getSessionTimeout(session));
+                long delay = Math.min(cleanupPeriodInMillis - 1000, getSessionTimeout(session));
                 LOGGER.debug("waiting for Events for " + controllerId + ": maxdelay " + delay + "ms");
                 ScheduledFuture<Void> watchdog = startWatchdog(delay, eventArrived);
                 mode = service.hasEvent(eventArrived);
@@ -136,7 +135,8 @@ public class EventServiceFactory {
             } else {
                 events.setEventId(evt.last().getEventId());
                 LOGGER.info("Events for " + controllerId + ": " + evt);
-                events.setEventSnapshots(evt.stream().collect(Collectors.toList()));
+                events.setEventSnapshots(evt.stream().map(e -> cloneEvent(e)).distinct().collect(Collectors.toList()));
+                //events.setEventSnapshots(evt.stream().collect(Collectors.toList()));
             }
         } catch (Exception e1) {
             Err err = new Err();
@@ -152,6 +152,18 @@ public class EventServiceFactory {
         }
         
         return events;
+    }
+    
+    private static EventSnapshot cloneEvent(EventSnapshot e) {
+        EventSnapshot es = new EventSnapshot();
+        es.setAccessToken(e.getAccessToken());
+        es.setEventId(null);
+        es.setEventType(e.getEventType());
+        es.setMessage(e.getMessage());
+        es.setObjectType(e.getObjectType());
+        es.setPath(e.getPath());
+        es.setWorkflow(e.getWorkflow());
+        return es;
     }
     
     private long getSessionTimeout(Session session) throws SessionNotExistException {
