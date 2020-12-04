@@ -25,6 +25,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.WorkflowPublish;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDepCommitIds;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
@@ -33,6 +34,7 @@ import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.deployment.DBItemDeploymentSubmission;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
+import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocNotImplementedException;
@@ -183,7 +185,7 @@ public class DBLayerDeploy {
             hql.append(" where ");
             for (Integer i=0; i < configurations.size(); i++) {
                 hql.append("(")
-                    .append("path = : path").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7))
+                    .append("path = :path").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7))
                     .append(" and ")
                     .append("type = :type").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7))
                     .append(")");
@@ -678,13 +680,39 @@ public class DBLayerDeploy {
         }
     }
 
+    public List<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolder (String folder, String controllerId) {
+        try {
+            StringBuilder hql = new StringBuilder("select dep from ")
+                    .append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
+            hql.append(" where dep.id = (")
+                .append("select max(history.id) from ")
+                .append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
+            hql.append(" where history.folder = :folder")
+                .append(" and history.controllerId = :controllerId")
+                .append(" and history.state = 0")
+                .append(" and history.path = dep.path group by history.path")
+                .append(")");
+            Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
+            query.setParameter("folder", folder);
+            query.setParameter("controllerId", controllerId);
+            return session.getResultList(query);
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+    }
+
     public List<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolder (String folder) {
         try {
-            StringBuilder hql = new StringBuilder("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
-            hql.append(" where dep.id = (select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
-            hql.append(" where history.folder = :folder");
-            hql.append(" and history.state = 0");
-            hql.append(" and history.path = dep.path group by history.path").append(")");
+            StringBuilder hql = new StringBuilder("select dep from ")
+                    .append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
+            hql.append(" where dep.id = (")
+                .append("select max(history.id) from ")
+                .append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
+            hql.append(" where history.folder = :folder")
+                .append(" and history.controllerId = dep.controllerId")
+                .append(" and history.state = 0")
+                .append(" and history.path = dep.path group by history.path")
+                .append(")");
             Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
             query.setParameter("folder", folder);
             return session.getResultList(query);
@@ -1221,8 +1249,14 @@ public class DBLayerDeploy {
     public String getAgentIdFromAgentName (String agentName, String controllerId, String workflowPath, String jobname){
         if (agentName != null) {
             try {
-                StringBuilder hql = new StringBuilder("select agentId from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
-                hql.append(" where agentName = :agentName and controllerId = :controllerId");
+                StringBuilder hql = new StringBuilder("select instance.agentId from ");
+                hql.append(DBLayer.DBITEM_INV_AGENT_INSTANCES).append(" as instance, ")
+                    .append(DBLayer.DBITEM_INV_AGENT_NAMES).append(" as aliases")
+                    .append(" where instance.controllerId = :controllerId and (")
+                    .append(" instance.agentName = :agentName or (")
+                    .append(" instance.controllerId = :controllerId and")
+                    .append(" instance.agentId = aliases.agentId and")
+                    .append(" aliases.agentName = :agentName))");
                 Query<String> query = getSession().createQuery(hql.toString());
                 query.setParameter("agentName", agentName);
                 query.setParameter("controllerId", controllerId);
@@ -1245,13 +1279,62 @@ public class DBLayerDeploy {
         }
     }
 
-    public  List<DBItemInventoryConfiguration> getInvCfgFolders(Collection<String> paths) {
+    public  List<DBItemInventoryConfiguration> getInvConfigurationFolders(Collection<String> paths) {
         try {
-            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
-            hql.append(" where folder in (:folders)");
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            hql.append(" where path in (:paths)");
             Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-            query.setParameterList("folders", paths);
+            query.setParameterList("paths", paths);
             return query.getResultList();
+        } catch(NoResultException e) {
+            return null;
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        } 
+    }
+    
+    public  DBItemInventoryConfiguration getInvConfigurationFolder(String path) {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            hql.append(" where path = :path");
+            Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+            query.setParameter("path", path);
+            return query.getSingleResult();
+        } catch(NoResultException e) {
+            return null;
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        } 
+    }
+    
+    public List<DBItemInventoryReleasedConfiguration> getReleasedConfigurations (String folder) {
+        try {
+            StringBuilder hql = new StringBuilder("from ")
+                    .append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+            hql.append(" where folder = :folder");
+            Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
+            query.setParameter("folder", folder);
+            return query.getResultList();
+        } catch(NoResultException e) {
+            return null;
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        } 
+    }
+    
+    public List<DBItemInventoryConfiguration> getReleasableConfigurations (String folder) {
+        Set<Integer> types = JocInventory.getReleasableTypes();
+        try {
+            StringBuilder hql = new StringBuilder("from ")
+                    .append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            hql.append(" where folder = :folder");
+            hql.append(" and type in (:types)");
+            Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+            query.setParameter("folder", folder);
+            query.setParameterList("types", types);
+            return query.getResultList();
+        } catch(NoResultException e) {
+            return null;
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         } 

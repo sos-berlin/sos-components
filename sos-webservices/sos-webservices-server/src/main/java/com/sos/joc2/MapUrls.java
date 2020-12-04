@@ -25,12 +25,27 @@ public class MapUrls {
         }
     });
     
+    public static final Map<String, String> centostest_primary_urlMapper = Collections.unmodifiableMap(new HashMap<String, String>() {
+
+        private static final long serialVersionUID = 1L;
+
+        {
+            put("http://controller-2-0-primary:4444", "http://centostest_primary.sos:5444/");
+            put("http://controller-2-0-secondary:4444", "http://centostest_primary.sos:5544");
+            put("http://controller-2-0-standalone:4444", "http://centostest_primary.sos:5344");
+            put("https://controller-2-0-primary:4443", "http://centostest_primary.sos:5444");
+            put("https://controller-2-0-secondary:4443", "http://centostest_primary.sos:5544");
+            put("https://controller-2-0-standalone:4443", "http://centostest_primary.sos:5344");
+        }
+    });
+
     public static final Map<String, Map<String, String>> urlMapperByUser = Collections.unmodifiableMap(new HashMap<String, Map<String, String>>() {
 
         private static final long serialVersionUID = 1L;
 
         {
             put("oh", centosdev_secondary_urlMapper);
+//            put("santiago", centostest_primary_urlMapper);
         }
     });
     
@@ -40,6 +55,7 @@ public class MapUrls {
 
         {
             put("oh", JocSecurityLevel.LOW);
+            put("santiago", JocSecurityLevel.MEDIUM);
         }
     });
     

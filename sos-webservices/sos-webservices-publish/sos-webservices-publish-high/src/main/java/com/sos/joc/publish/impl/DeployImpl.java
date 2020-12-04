@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -31,6 +33,7 @@ import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
+import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
@@ -62,7 +65,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     private static final String API_CALL = "./inventory/deployment/deploy";
     private static final Logger LOGGER = LoggerFactory.getLogger(DeployImpl.class);
     private DBLayerDeploy dbLayer = null;
-    private boolean hasErrors = false;
+//    private boolean hasErrors = false;
     private List<Err419> listOfErrors = new ArrayList<Err419>();
 
     @Override
@@ -115,15 +118,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 depHistoryDBItemsToDeployDelete = dbLayer.getFilteredDeploymentHistoryToDelete(deployConfigsToDelete);
             }
 
-            // determine all (latest) entries from the given folders
-            List<DBItemDeploymentHistory> itemsFromFolderToDelete = new ArrayList<DBItemDeploymentHistory>();
-            if(foldersToDelete != null && !foldersToDelete.isEmpty()) {
-                foldersToDelete.stream()
-                    .map(DeployConfigDelete::getDeployConfiguration)
-                    .map(item -> dbLayer.getLatestDepHistoryItemsFromFolder(item.getPath()))
-                        .forEach(item -> itemsFromFolderToDelete.addAll(item));
-            }
-
             Map<DBItemInventoryConfiguration, DBItemDepSignatures> signedDrafts = 
                     new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
             Map<DBItemDeploymentHistory, DBItemDepSignatures> signedDeployments = new HashMap<DBItemDeploymentHistory, DBItemDepSignatures>();
@@ -147,7 +141,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             String versionId = null;
             final String versionIdForDelete = UUID.randomUUID().toString();
             final String versionIdForDeleteFromFolder = UUID.randomUUID().toString();
-            final Date deploymentDate = Date.from(Instant.now());
             // only signed objects will be processed
             // existing signatures of objects are verified
             for (DBItemInventoryConfiguration draft : signedDrafts.keySet()) {
@@ -166,14 +159,15 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.HIGH);
             // call UpdateRepo for all provided Controllers
             // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename
-            for (String controller : allControllers.keySet()) {
+            for (String controllerId : allControllers.keySet()) {
+                // determine all (latest) entries from the given folders
                 List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkPathRenamingForUpdate(verifiedConfigurations.keySet(),
-                        controller, dbLayer, keyPair.getKeyAlgorithm());
+                        controllerId, dbLayer, keyPair.getKeyAlgorithm());
                 if (toDeleteForRename != null) {
-                    toDeleteForRename.addAll(PublishUtils.checkPathRenamingForUpdate(verifiedReDeployables.keySet(), controller, dbLayer, 
+                    toDeleteForRename.addAll(PublishUtils.checkPathRenamingForUpdate(verifiedReDeployables.keySet(), controllerId, dbLayer, 
                             keyPair.getKeyAlgorithm()));
                 } else {
-                    toDeleteForRename = PublishUtils.checkPathRenamingForUpdate(verifiedReDeployables.keySet(), controller, dbLayer, 
+                    toDeleteForRename = PublishUtils.checkPathRenamingForUpdate(verifiedReDeployables.keySet(), controllerId, dbLayer, 
                             keyPair.getKeyAlgorithm());
                 }
                 // and subsequently call delete for the object with the previous path before committing the update
@@ -183,13 +177,21 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     // set new versionId for second round (delete items)
                     final String versionIdForDeleteRenamed = UUID.randomUUID().toString();
                     // call updateRepo command via Proxy of given controllers
-                    PublishUtils.updateRepoDelete(versionIdForDeleteRenamed, toDelete, controller, dbLayer, keyPair.getKeyAlgorithm())
+                    PublishUtils.updateRepoDelete(versionIdForDeleteRenamed, toDelete, controllerId, dbLayer, keyPair.getKeyAlgorithm())
                     .thenAccept(either -> {
-                                processAfterDelete(either, toDelete, controller, account, versionIdForDeleteRenamed, null);
+                                processAfterDelete(either, toDelete, controllerId, account, versionIdForDeleteRenamed, null);
                             }).get();
                 }
             }
             for (String controllerId : controllerIds) {
+                // determine all (latest) entries from the given folders
+                List<DBItemDeploymentHistory> itemsFromFolderToDelete = new ArrayList<DBItemDeploymentHistory>();
+                if(foldersToDelete != null && !foldersToDelete.isEmpty()) {
+                    foldersToDelete.stream()
+                        .map(DeployConfigDelete::getDeployConfiguration)
+                        .map(item -> dbLayer.getLatestDepHistoryItemsFromFolder(item.getPath(), controllerId))
+                            .forEach(item -> itemsFromFolderToDelete.addAll(item));
+                }
                 if ((verifiedConfigurations != null && !verifiedConfigurations.isEmpty())
                         || (verifiedReDeployables != null && !verifiedReDeployables.isEmpty())) {
                     // call updateRepo command via ControllerApi for given controllers
@@ -200,7 +202,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         PublishUtils.updateRepoAddOrUpdatePGP(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId, 
                                 dbLayer).thenAccept(either -> {
                                     processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, versionIdForUpdate, controllerId,
-                                            deploymentDate, deployFilter);
+                                            deployFilter);
                                 }).get();
                         break;
                     case SOSKeyConstants.RSA_ALGORITHM_NAME:
@@ -209,7 +211,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         PublishUtils.updateRepoAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
                                 dbLayer, SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
                                     processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, versionIdForUpdate, controllerId,
-                                            deploymentDate, deployFilter);
+                                            deployFilter);
                                 }).get();
                         break;
                     case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
@@ -218,7 +220,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         PublishUtils.updateRepoAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
                                 dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
                                     processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, versionIdForUpdate, controllerId,
-                                            deploymentDate, deployFilter);
+                                            deployFilter);
                                 }).get();
                         break;
                     }
@@ -250,10 +252,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                                     deployFilter);
                     });//.get()
                 }
-            }
-            if (hasErrors) {
-                return JOCDefaultResponse.responseStatus419(listOfErrors);
-            } else {
                 if (verifiedConfigurations != null && !verifiedConfigurations.isEmpty()) {
                     dbLayer.cleanupSignaturesForConfigurations(verifiedConfigurations.keySet());
                     dbLayer.cleanupCommitIdsForConfigurations(verifiedConfigurations.keySet());
@@ -262,8 +260,12 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     dbLayer.cleanupSignaturesForRedeployments(verifiedReDeployables.keySet());
                     dbLayer.cleanupCommitIdsForRedeployments(verifiedReDeployables.keySet());
                 }
-                return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             }
+//            if (hasErrors) {
+//                return JOCDefaultResponse.responseStatus419(listOfErrors);
+//            } else {
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+//            }
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -315,12 +317,12 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             String account,
             String versionIdForUpdate,
             String controllerId,
-            Date deploymentDate,
             DeployFilter deployFilter) {
         SOSHibernateSession newHibernateSession = null;
         try {
             newHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
+            final Date deploymentDate = Date.from(Instant.now());
             if (either.isRight()) {
                 // no error occurred
                 Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(
@@ -341,7 +343,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 // if not successful the objects and the related controllerId have to be stored 
                 // in a submissions table for reprocessing
                 dbLayer.createSubmissionForFailedDeployments(failedDeployUpdateItems);
-                hasErrors = true;
+//                hasErrors = true;
                 if (either.getLeft().codeOrNull() != null) {
                     listOfErrors.add(
                             new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), either.getLeft().message()), "/"));
@@ -384,7 +386,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 // if not successful the objects and the related controllerId have to be stored 
                 // in a submissions table for reprocessing
                 dbLayer.createSubmissionForFailedDeployments(failedDeployDeleteItems);
-                hasErrors = true;
+//                hasErrors = true;
                 if (either.getLeft().codeOrNull() != null) {
                     listOfErrors.add(
                             new BulkError().get(new JocError(either.getLeft().message()), "/"));
@@ -403,7 +405,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             Either<Problem, Void> either, 
             List<DBItemDeploymentHistory> itemsToDelete, 
             List<DeployConfigDelete> foldersToDelete,
-            String controller, 
+            String controllerId, 
             String account, 
             String versionIdForDelete,
             DeployFilter deployFilter) {
@@ -416,35 +418,59 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         .map(DBItemDeploymentHistory::getInventoryConfigurationId).collect(Collectors.toSet());
                 Set<DBItemDeploymentHistory> deletedDeployItems = 
                         PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer);
-                createAuditLogForEach(deletedDeployItems, deployFilter, controller, false, versionIdForDelete);
+                createAuditLogForEach(deletedDeployItems, deployFilter, controllerId, false, versionIdForDelete);
                 JocInventory.deleteConfigurations(configurationIdsToDelete);
-                Set<DBItemDeploymentHistory> stillActive = PublishUtils.getLatestDepHistoryEntriesActiveForFolders(foldersToDelete, dbLayer);
-                if (stillActive != null && !stillActive.isEmpty()) {
-                    Set<String> controllerIds = stillActive.stream().map(item -> item.getControllerId()).collect(Collectors.toSet());
-                    controllerIds.stream()
-                        .forEach(item -> 
-                            LOGGER.warn(String.format("removed folder can´t be deleted from inventory. Deployments still exist on controller %1$s.", item)));
-                    
-                } else {
-                    // no active items from dep history, folders can be safely deleted from inventory
-                    JocInventory.deleteConfigurations(dbLayer.getInvCfgFolders(
-                            foldersToDelete.stream()
-                            .map(item -> item.getDeployConfiguration().getPath())
-                            .collect(Collectors.toList()))
-                    .stream()
-                    .map(item -> item.getId()).collect(Collectors.toSet()));
+                if (foldersToDelete != null && !foldersToDelete.isEmpty()) {
+                    for (DeployConfigDelete folder : foldersToDelete) {
+                        // check if deployable objects still exist in the folder
+                        Set<DBItemDeploymentHistory> stillActiveDeployments = 
+                                PublishUtils.getLatestDepHistoryEntriesActiveForFolder(folder, dbLayer);
+                        // check if releasable objects still exist in the folder
+                        List<DBItemInventoryReleasedConfiguration> stillActiveReleased = dbLayer.
+                                getReleasedConfigurations(folder.getDeployConfiguration().getPath());
+                        List<DBItemInventoryConfiguration> stillActiveReleasables = dbLayer
+                                .getReleasableConfigurations(folder.getDeployConfiguration().getPath());
+                        if (checkAnyItemsStillExist(
+                                stillActiveDeployments, 
+                                stillActiveReleased, 
+                                stillActiveReleasables)) {
+                            if (checkDeploymentItemsStillExist(stillActiveDeployments)) {
+                                LOGGER.warn(String
+                                        .format("removed folder \"%1$s\" can´t be deleted from inventory. Deployments still exist on controller %1$s.", 
+                                                folder.getDeployConfiguration().getPath(), controllerId));
+                            }
+                            if (checkReleasedItemsStillExist(stillActiveReleased)) {
+                                LOGGER.warn(String
+                                        .format("removed folder \"%1$s\" can´t be deleted from inventory, released objects still exist.", 
+                                                folder.getDeployConfiguration().getPath()));
+                            }
+                            if (checkReleaseablesItemsStillExist(stillActiveReleasables)) {
+                                LOGGER.warn(String
+                                        .format("removed folder \"%1$s\" can´t be deleted from inventory, releasable objects still exist.", 
+                                                folder.getDeployConfiguration().getPath()));
+                            }
+                        } else {
+                            // no active items still exist in dep history, inv configurations and inv released configurations
+                            // folder can be safely deleted from inventory
+                            DBItemInventoryConfiguration folderConfig = dbLayer
+                                    .getInvConfigurationFolder(folder.getDeployConfiguration().getPath());
+                            if(folderConfig != null) {
+                                JocInventory.deleteConfigurations(
+                                        new HashSet<Long>(Arrays.asList(folderConfig.getId())));
+                            }
+                        }
+                    }
                 }
-                
             } else if (either.isLeft()) {
-                String message = String.format("Response from Controller \"%1$s:\": %2$s", controller, either.getLeft().message());
+                String message = String.format("Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
                 LOGGER.warn(message);
                 // updateRepo command is atomic, therefore all items are rejected
                 List<DBItemDeploymentHistory> failedDeployDeleteItems = dbLayer.updateFailedDeploymentForDelete(
-                        itemsToDelete, controller, account, versionIdForDelete, either.getLeft().message());
+                        itemsToDelete, controllerId, account, versionIdForDelete, either.getLeft().message());
                 // if not successful the objects and the related controllerId have to be stored 
                 // in a submissions table for reprocessing
                 dbLayer.createSubmissionForFailedDeployments(failedDeployDeleteItems);
-                hasErrors = true;
+//                hasErrors = true;
                 if (either.getLeft().codeOrNull() != null) {
                     listOfErrors.add(
                             new BulkError().get(new JocError(either.getLeft().message()), "/"));
@@ -474,4 +500,33 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         audits.stream().forEach(audit -> storeAuditLogEntry(audit));
     }
     
+    private boolean checkAnyItemsStillExist (
+            Set<DBItemDeploymentHistory> deployments, 
+            List<DBItemInventoryReleasedConfiguration> released, 
+            List<DBItemInventoryConfiguration> releaseables) {
+        return checkDeploymentItemsStillExist(deployments)
+                || checkReleasedItemsStillExist(released)
+                || checkReleaseablesItemsStillExist(releaseables);
+    }
+
+    private boolean checkDeploymentItemsStillExist (Set<DBItemDeploymentHistory> deployments) {
+        if (deployments != null && !deployments.isEmpty()) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean checkReleasedItemsStillExist (List<DBItemInventoryReleasedConfiguration> released) {
+        if (released != null && !released.isEmpty()) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean checkReleaseablesItemsStillExist (List<DBItemInventoryConfiguration> releaseables) {
+        if(releaseables != null && !releaseables.isEmpty()) {
+            return true;
+        }
+        return false;
+    }
 }

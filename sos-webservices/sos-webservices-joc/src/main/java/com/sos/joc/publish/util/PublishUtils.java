@@ -175,28 +175,28 @@ public abstract class PublishUtils {
     }
 
     public static Map<DBItemInventoryConfiguration, DBItemDepSignatures> getDraftsWithSignature(String versionId, String account,
-            Set<DBItemInventoryConfiguration> unsignedDrafts, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, SOSHibernateSession session, 
+            Set<DBItemInventoryConfiguration> unsignedDrafts, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String controllerId, SOSHibernateSession session, 
             JocSecurityLevel secLvl) 
                 throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException, 
                 NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, CertificateException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
         if (keyPair != null) {
-            return getDraftsWithSignature(versionId, account, unsignedDrafts, updateableAgentNames, keyPair, session);
+            return getDraftsWithSignature(versionId, account, unsignedDrafts, updateableAgentNames, keyPair, controllerId, session);
         } else {
             throw new JocMissingKeyException("No Key found for this account.");
         }
     }
 
     public static Map<DBItemInventoryConfiguration, DBItemDepSignatures> getDraftWithSignature(String versionId, String account,
-            DBItemInventoryConfiguration unsignedDraft, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, SOSHibernateSession session, 
-            JocSecurityLevel secLvl) 
+            DBItemInventoryConfiguration unsignedDraft, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String controllerId,
+            SOSHibernateSession session, JocSecurityLevel secLvl) 
                 throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException, 
                 NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, CertificateException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
         if (keyPair != null) {
-            return getDraftWithSignature(versionId, account, unsignedDraft, updateableAgentNames, keyPair, session);
+            return getDraftWithSignature(versionId, account, unsignedDraft, updateableAgentNames, keyPair, controllerId, session);
         } else {
             throw new JocMissingKeyException("No Key found for this account.");
         }
@@ -204,7 +204,7 @@ public abstract class PublishUtils {
 
     public static Map<DBItemInventoryConfiguration, DBItemDepSignatures> getDraftsWithSignature(String versionId, String account,
             Set<DBItemInventoryConfiguration> unsignedDrafts, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, JocKeyPair keyPair, 
-            SOSHibernateSession session) 
+            String controllerId, SOSHibernateSession session) 
                     throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException,
                     PGPException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, CertificateException {
         boolean isPGPKey = false;
@@ -219,7 +219,7 @@ public abstract class PublishUtils {
                 updateVersionIdOnDraftObject(draft, versionId);
                 // update agentName in Workflow jobs before signing agentName -> agentId
                 if (draft.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)) {
-                    replaceAgentNameWithAgentId(draft, updateableAgentNames);
+                    replaceAgentNameWithAgentId(draft, updateableAgentNames, controllerId);
                 }
                 if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                     sig = new DBItemDepSignatures();
@@ -260,8 +260,8 @@ public abstract class PublishUtils {
     }
 
     public static Map<DBItemInventoryConfiguration, DBItemDepSignatures> getDraftWithSignature(String versionId, String account,
-            DBItemInventoryConfiguration unsignedDraft, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, JocKeyPair keyPair, 
-            SOSHibernateSession session) 
+            DBItemInventoryConfiguration unsignedDraft, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, JocKeyPair keyPair,
+            String controllerId, SOSHibernateSession session) 
                     throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException,
                     PGPException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, CertificateException {
         boolean isPGPKey = false;
@@ -275,7 +275,7 @@ public abstract class PublishUtils {
             updateVersionIdOnDraftObject(unsignedDraftUpdated, versionId);
             // update agentName in Workflow jobs before signing agentName -> agentId
             if (unsignedDraft.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)) {
-                replaceAgentNameWithAgentId(unsignedDraftUpdated, updateableAgentNames);
+                replaceAgentNameWithAgentId(unsignedDraftUpdated, updateableAgentNames, controllerId);
             }
             if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                 sig = new DBItemDepSignatures();
@@ -774,17 +774,30 @@ public abstract class PublishUtils {
         }
     }
     
-    public static Set<UpdateableWorkflowJobAgentName> getUpdateableAgentRefInWorkflowJobs(DBItemInventoryConfiguration item, String controllerId,
-            DBLayerDeploy dbLayer) {
+    public static Set<UpdateableWorkflowJobAgentName> getUpdateableAgentRefInWorkflowJobs(DBItemInventoryConfiguration item, 
+            String controllerId, DBLayerDeploy dbLayer) {
+        return getUpdateableAgentRefInWorkflowJobs(item.getContent(), 
+                ConfigurationType.fromValue(item.getType()), controllerId, dbLayer);
+    }
+
+    public static Set<UpdateableWorkflowJobAgentName> getUpdateableAgentRefInWorkflowJobs(DBItemDeploymentHistory item,
+            String controllerId, DBLayerDeploy dbLayer) {
+        return getUpdateableAgentRefInWorkflowJobs(item.getInvContent(), 
+                ConfigurationType.fromValue(item.getType()), controllerId, dbLayer);
+    }
+
+    public static Set<UpdateableWorkflowJobAgentName> getUpdateableAgentRefInWorkflowJobs(String json, ConfigurationType type,
+            String controllerId, DBLayerDeploy dbLayer) {
         Set<UpdateableWorkflowJobAgentName> update = new HashSet<UpdateableWorkflowJobAgentName>();
         try {
-            if (ConfigurationType.WORKFLOW.equals(ConfigurationType.fromValue(item.getType()))) {
-                Workflow workflow = om.readValue(item.getContent(), Workflow.class);
+            if (ConfigurationType.WORKFLOW.equals(type)) {
+                Workflow workflow = om.readValue(json, Workflow.class);
                 workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
                     Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
                     String agentName = job.getAgentName();
                     String agentId = dbLayer.getAgentIdFromAgentName(agentName, controllerId, workflow.getPath(), jobname);
-                    update.add(new UpdateableWorkflowJobAgentName(workflow.getPath(), jobname, job.getAgentName(), agentId, controllerId));
+                    update.add(
+                            new UpdateableWorkflowJobAgentName(workflow.getPath(), jobname, job.getAgentName(), agentId, controllerId));
                 });
             }
         } catch (IOException e) {
@@ -1345,14 +1358,16 @@ public abstract class PublishUtils {
         return pathsWithParents; 
     }
     
-    private static void replaceAgentNameWithAgentId(DBItemInventoryConfiguration draft, Set<UpdateableWorkflowJobAgentName> updateableAgentNames)
+    private static void replaceAgentNameWithAgentId(DBItemInventoryConfiguration draft, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String controllerId)
             throws JsonParseException, JsonMappingException, IOException {
         Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
         Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream()
                 .filter(item -> item.getWorkflowPath().equals(draft.getPath())).collect(Collectors.toSet());
         workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
             Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-            job.setAgentName(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname)).findFirst().get().getAgentId());
+            job.setAgentName(filteredUpdateables.stream()
+                    .filter(item -> item.getJobName().equals(jobname) && controllerId.equals(item.getControllerId()))
+                    .findFirst().get().getAgentId());
         });
         draft.setContent(om.writeValueAsString(workflow));
     }
@@ -1405,6 +1420,22 @@ public abstract class PublishUtils {
         return unsignedDraftUpdated;
     }
 
+    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolder(DeployConfigDelete folder, DBLayerDeploy dbLayer) {
+        List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
+        entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(
+                folder.getDeployConfiguration().getPath()));
+        return entries.stream()
+                .filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
+    }
+    
+    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolder(DeployConfigDelete folder, String controllerId, DBLayerDeploy dbLayer) {
+        List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
+        entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(
+                folder.getDeployConfiguration().getPath(), controllerId));
+        return entries.stream()
+                .filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
+    }
+    
     public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolders(List<DeployConfigDelete> foldersToDelete, DBLayerDeploy dbLayer) {
         List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
         foldersToDelete.stream()
@@ -1414,11 +1445,26 @@ public abstract class PublishUtils {
                 .filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
     }
     
-    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesDeleteForFolders(List<DeployConfigDelete> foldersToDelete, DBLayerDeploy dbLayer) {
+    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolders(List<DeployConfigDelete> foldersToDelete, String controllerId, DBLayerDeploy dbLayer) {
         List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
         foldersToDelete.stream()
             .map(item -> item.getDeployConfiguration().getPath())
-            .forEach(item -> entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(item)));
+            .forEach(item -> entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(item, controllerId)));
+        return entries.stream()
+                .filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
+    }
+    
+    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesDeleteForFolder(DeployConfigDelete folder, String controllerId, DBLayerDeploy dbLayer) {
+        List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
+        entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(folder.getDeployConfiguration().getPath(), controllerId));
+        return entries.stream().filter(item -> item.getOperation().equals(OperationType.DELETE.value())).collect(Collectors.toSet());
+    }
+    
+    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesDeleteForFolders(List<DeployConfigDelete> foldersToDelete, String controllerId, DBLayerDeploy dbLayer) {
+        List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
+        foldersToDelete.stream()
+            .map(item -> item.getDeployConfiguration().getPath())
+            .forEach(item -> entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(item, controllerId)));
         return entries.stream().filter(item -> item.getOperation().equals(OperationType.DELETE.value())).collect(Collectors.toSet());
     }
     
