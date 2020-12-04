@@ -2,6 +2,7 @@ package com.sos.joc.classes.event;
 
 import java.time.Instant;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.Timer;
@@ -72,7 +73,7 @@ public class EventServiceFactory {
 
                     @Override
                     public void run() {
-                        Long eventId = (Instant.now().toEpochMilli() - cleanupPeriod - TimeUnit.SECONDS.toMillis(30)) * 1000;
+                        Long eventId = (Instant.now().toEpochMilli() - cleanupPeriod - TimeUnit.SECONDS.toMillis(30)) / 1000;
                         eventServices.get(controllerId).getEvents().removeIf(e -> e.getEventId() < eventId);
                     }
 
@@ -130,12 +131,16 @@ public class EventServiceFactory {
                     }
                 });
             }
-            LOGGER.info("Events for " + controllerId + ": " + evt);
             if (evt.isEmpty()) {
                 //events.setEventSnapshots(null);
             } else {
                 events.setEventId(evt.last().getEventId());
-                events.setEventSnapshots(evt.stream().collect(Collectors.toList()));
+                List<EventSnapshot> es = evt.stream().map(e -> {
+                    e.setEventId(null);
+                    return e;
+                }).distinct().collect(Collectors.toList());
+                LOGGER.info("Events for " + controllerId + ": " + evt);
+                events.setEventSnapshots(es);
             }
         } catch (Exception e1) {
             Err err = new Err();

@@ -123,7 +123,7 @@ public class EventService {
         //if (isCurrentController.get() && evt.getControllerId().equals(controllerId)) {
         if (evt.getControllerId().equals(controllerId)) {
             EventSnapshot eventSnapshot = new EventSnapshot();
-            eventSnapshot.setEventId(evt.getEventId());
+            eventSnapshot.setEventId(evt.getEventId() / 1000000);
             eventSnapshot.setEventType("ProblemEvent");
             eventSnapshot.setObjectType(EventType.PROBLEM);
             eventSnapshot.setAccessToken(evt.getKey());
@@ -135,7 +135,7 @@ public class EventService {
     @Subscribe({ com.sos.joc.event.bean.cluster.ClusterEvent.class })
     public void createEvent(com.sos.joc.event.bean.cluster.ClusterEvent evt) {
         EventSnapshot eventSnapshot = new EventSnapshot();
-        eventSnapshot.setEventId(evt.getEventId());
+        eventSnapshot.setEventId(evt.getEventId() / 1000000);
         eventSnapshot.setEventType("JOCStateChanged");
         eventSnapshot.setObjectType(EventType.JOCCLUSTER);
         addEvent(eventSnapshot);
@@ -143,7 +143,7 @@ public class EventService {
 
     BiConsumer<Stamped<KeyedEvent<Event>>, JControllerState> callbackOfController = (stampedEvt, currentState) -> {
         KeyedEvent<Event> event = stampedEvt.value();
-        long eventId = stampedEvt.eventId();
+        long eventId = stampedEvt.eventId() / 1000000; //eventId per second
         Object key = event.key();
         Event evt = event.event();
 
@@ -228,12 +228,13 @@ public class EventService {
     }
 
     private void addEvent(EventSnapshot eventSnapshot) {
-        // consider that eventId should be deleted from equals and hashcode method in EventSnapshot
-        events.add(eventSnapshot);
-        LOGGER.debug("addEvent for " + controllerId + ": " + eventSnapshot.toString());
-        EventServiceFactory.lock.lock();
-        conditions.stream().parallel().forEach(Condition::signalAll);
-        EventServiceFactory.lock.unlock();
+        // events.remove(eventSnapshot);
+        if (events.add(eventSnapshot)) {
+            LOGGER.debug("addEvent for " + controllerId + ": " + eventSnapshot.toString());
+            EventServiceFactory.lock.lock();
+            conditions.stream().parallel().forEach(Condition::signalAll);
+            EventServiceFactory.lock.unlock();
+        }
     }
 
     protected EventServiceFactory.Mode hasOldEvent(Long eventId, Condition eventArrived) {

@@ -211,7 +211,7 @@ public class EventSnapshot {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(workflow).append(eventType).append(accessToken).append(message).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(eventId).append(path).append(workflow).append(eventType).append(accessToken).append(message).append(objectType).toHashCode();
     }
 
     @Override
@@ -223,7 +223,7 @@ public class EventSnapshot {
             return false;
         }
         EventSnapshot rhs = ((EventSnapshot) other);
-        return new EqualsBuilder().append(path, rhs.path).append(workflow, rhs.workflow).append(eventType, rhs.eventType).append(accessToken, rhs.accessToken).append(message, rhs.message).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(eventId, rhs.eventId).append(path, rhs.path).append(workflow, rhs.workflow).append(eventType, rhs.eventType).append(accessToken, rhs.accessToken).append(message, rhs.message).append(objectType, rhs.objectType).isEquals();
     }
 
 }

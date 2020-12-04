@@ -74,7 +74,8 @@ public class EventResourceImpl2 extends JOCResourceImpl implements IEventResourc
                 throw new JocMissingRequiredParameterException("undefined 'controllers'");
             }
             
-            Long defaultEventId = Instant.now().toEpochMilli() * 1000;
+            //Long defaultEventId = Instant.now().toEpochMilli() * 1000;
+            long defaultEventId = Instant.now().getEpochSecond();
             List<EventCallable2> tasks = new ArrayList<EventCallable2>();
             
             Boolean isCurrentJobScheduler = true;
@@ -134,8 +135,8 @@ public class EventResourceImpl2 extends JOCResourceImpl implements IEventResourc
         return JOCDefaultResponse.responseStatus200(entity);
     }
     
-    private JobSchedulerEvent initEvent(JobSchedulerObjects jsObject, Long defaultEventId) {
-        Long eventId = defaultEventId;
+    private JobSchedulerEvent initEvent(JobSchedulerObjects jsObject, long defaultEventId) {
+        long eventId = defaultEventId;
         if (jsObject.getEventId() != null && jsObject.getEventId() > 0L) {
             eventId = jsObject.getEventId();
         }
