@@ -18,9 +18,10 @@ import com.sos.joc.db.history.DBItemHistoryOrderState;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.JobHistoryDBLayer;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.order.OrderHistoryFilter;
 import com.sos.joc.model.order.OrderHistoryItemChildItem;
 import com.sos.joc.model.order.OrderHistoryItemChilds;
-import com.sos.joc.model.order.OrderHistoryFilter;
+import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.order.resource.IOrderHistoryResource;
 import com.sos.schema.JsonValidator;
 
@@ -90,10 +91,22 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
     }
 
     private void mapStates(OrderHistoryItemChilds answer, List<DBItemHistoryOrderState> states) {
-        if (states != null) {
+        if (states == null) {
+            return;
+        }
+        switch (states.size()) {
+        case 0:
+            return;
+        case 1:
+            Integer st = states.get(0).getState();
+            if (OrderStateText.FAILED.intValue().equals(st)) {
+                return;
+            }
+        default:
             answer.setStates(states.stream().map(state -> {
                 return HistoryMapper.map2OrderHistoryStateItem(state);
             }).collect(Collectors.toList()));
+            break;
         }
     }
 

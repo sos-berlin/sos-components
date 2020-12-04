@@ -51,6 +51,8 @@ public class HistoryEventEntry {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryEventEntry.class);
 
+    private static final String NAMED_NAME_RETURN_CODE = "returnCode";
+
     private final JEventAndControllerState<Event> eventAndState;
     private final KeyedEvent<Event> keyedEvent;
     private final Event event;
@@ -224,10 +226,9 @@ public class HistoryEventEntry {
         public class OutcomeInfo {
 
             private Integer returnCode;
-            private boolean isSuccessReturnCode;
             private boolean isSucceeded;
             private boolean isFailed;
-            private Map<String, Value> keyValues;
+            private Map<String, Value> namedValues;
             private OutcomeType type;
             private String errorCode;
             private String errorMessage;
@@ -235,16 +236,20 @@ public class HistoryEventEntry {
             private OutcomeInfo(Outcome outcome) {
                 if (outcome instanceof Completed) {
                     Completed c = (Completed) outcome;
-                    
-                    // Ask Joacim, how you get the returncode
-//                    ReturnCode rc = c.returnCode();
-//
-//                    returnCode = rc.number();
-//                    isSuccessReturnCode = rc.isSuccess();
-                    //returnCode = c.namedValues().get("returnCode");
+
                     returnCode = 0;
-                    isSuccessReturnCode = c.isSucceeded();
-                    
+                    if (c.namedValues() != null) {
+                        namedValues = JavaConverters.asJava(c.namedValues());
+                        try {
+                            Value rt = namedValues.get(NAMED_NAME_RETURN_CODE);
+                            if (rt != null) {
+                                returnCode = Integer.parseInt(rt.toString());
+                            }
+                        } catch (Throwable e) {
+                            LOGGER.error(String.format("[can't extract returnCode][%s]", SOSString.toString(namedValues), e.toString()), e);
+                        }
+                    }
+
                     isSucceeded = c.isSucceeded();
                     isFailed = c.isFailed();
                     if (isFailed) {
@@ -260,7 +265,6 @@ public class HistoryEventEntry {
                     } else {
                         type = OutcomeType.succeeded;
                     }
-                    keyValues = JavaConverters.asJava(c.namedValues());
                 } else if (outcome instanceof Disrupted) {
                     Disrupted c = (Disrupted) outcome;
                     isSucceeded = c.isSucceeded();
@@ -286,11 +290,15 @@ public class HistoryEventEntry {
             private OutcomeInfo(OutcomeType type, Problem problem) {
                 this.type = type;
                 setError(problem);
-                if (OutcomeType.broken.equals(type)) {
+                switch (type) {
+                case failed:
+                case broken:
                     returnCode = 0;
-                    isSuccessReturnCode = false;
                     isSucceeded = false;
                     isFailed = true;
+                    break;
+                default:
+                    break;
                 }
             }
 
@@ -305,10 +313,6 @@ public class HistoryEventEntry {
 
             public Integer getReturnCode() {
                 return returnCode;
-            }
-
-            public boolean isSuccessReturnCode() {
-                return isSuccessReturnCode;
             }
 
             public boolean isSucceeded() {
@@ -327,8 +331,8 @@ public class HistoryEventEntry {
                 return errorCode;
             }
 
-            public Map<String, Value> getKeyValues() {
-                return keyValues;
+            public Map<String, Value> getNamedValues() {
+                return namedValues;
             }
 
             public OutcomeType getType() {

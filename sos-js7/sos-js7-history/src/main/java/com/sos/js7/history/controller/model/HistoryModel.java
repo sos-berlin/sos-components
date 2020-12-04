@@ -484,7 +484,7 @@ public class HistoryModel {
             item.setStartTime(Globals.HISTORY_DEFAULT_DATE);// 1970-01-01 01:00:00
             item.setStartWorkflowPosition(HistoryPosition.asString(entry.getPosition()));
             item.setStartEventId(String.valueOf(entry.getEventId()));
-            item.setStartParameters(entry.getArguments());
+            item.setStartParameters(entry.getArgumentsAsJsonString());
 
             item.setCurrentOrderStepId(new Long(0));
 
@@ -828,7 +828,7 @@ public class HistoryModel {
             item.setStartTime(startTime);
             item.setStartWorkflowPosition(HistoryPosition.asString(entry.getPosition()));
             item.setStartEventId(String.valueOf(entry.getEventId()));
-            item.setStartParameters(entry.getArguments()); // TODO or forkOrder arguments ???
+            item.setStartParameters(entry.getArgumentsAsJsonString()); // TODO or forkOrder arguments ???
 
             item.setCurrentOrderStepId(new Long(0L));
 
@@ -936,8 +936,7 @@ public class HistoryModel {
             item.setStartCause(OrderStepStartCause.order.name());// TODO
             item.setStartTime(agentStartTime);
             item.setStartEventId(String.valueOf(entry.getEventId()));
-            // item.setStartParameters(EventMeta.map2Json(order.getKeyValues()));
-            item.setStartParameters(entry.getArguments());// TODO check
+            item.setStartParameters(entry.getArgumentsAsJsonString());// TODO check
 
             item.setEndTime(null);
             item.setEndEventId(null);
@@ -1038,9 +1037,9 @@ public class HistoryModel {
                 le.setErrorText(cos.getStdErr());
             }
             Integer severity = HistorySeverity.map2DbSeverity(le.isError() ? OrderStateText.FAILED : OrderStateText.FINISHED);
-            dbLayer.setOrderStepEnd(cos.getId(), cos.getEndTime(), String.valueOf(entry.getEventId()), EventMeta.map2Json(entry.getOutcome()
-                    .getKeyValues()), le.getReturnCode(), severity, le.isError(), le.getErrorState(), le.getErrorReason(), le.getErrorCode(), le
-                            .getErrorText(), new Date());
+            dbLayer.setOrderStepEnd(cos.getId(), cos.getEndTime(), String.valueOf(entry.getEventId()), entry.getOutcome()
+                    .getNamedValuesAsJsonString(), le.getReturnCode(), severity, le.isError(), le.getErrorState(), le.getErrorReason(), le
+                            .getErrorCode(), le.getErrorText(), new Date());
             le.onOrderStep(cos);
 
             Path log = storeLog2File(le);
