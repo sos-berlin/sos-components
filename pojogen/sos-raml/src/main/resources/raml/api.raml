@@ -762,10 +762,10 @@ traits:
           description: Generates orders for a given daily plan 
           description1: !include joc/documentation/dailyplan/dailyPlanDate.md
           description2: !include joc/documentation/dailyplan/schedules.md
-          description3: !include joc/documentation/dailyplan/overwrite.md
-          description4: !include joc/documentation/dailyplan/withSubmit.md
-          description5: !include joc/documentation/dailyplan/scheduleFolder.md
-          description6: " "
+	      description3: !include joc/documentation/common/folders.md
+          description4: !include joc/documentation/common/controllerIds.md
+          description5: !include joc/documentation/dailyplan/overwrite.md
+          description6: !include joc/documentation/dailyplan/withSubmit.md
           description7: " "
           description8: " "
           description9: " "
@@ -775,7 +775,7 @@ traits:
           schema200: ok
           example: " "
           example200: " "
-    /remove:
+    /delete:
       type:
         postJSON:
           description: Delete planned orders for a given daily plan 
@@ -2032,12 +2032,12 @@ traits:
       example: !include joc/examples/orderManagement/runtime-example.json
       example200: !include joc/examples/orderManagement/runtime200-example.json
 
-/schedule/list:
+/schedules:
     type:
       postJSON:
         description: Lists schedules for a given controller 
-        description1: " "
-        description2: " "
+        description1: !include joc/documentation/common/folders.md
+        description2: !include joc/documentation/dailyplan/schedules.md
         description3: " "
         description4: " "
         description5: " "
