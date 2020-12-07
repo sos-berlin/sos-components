@@ -1269,17 +1269,16 @@ public class DBLayerDeploy {
         if (agentName != null) {
             try {
                 StringBuilder hql = new StringBuilder("select instance.agentId from ");
-                hql.append(DBLayer.DBITEM_INV_AGENT_INSTANCES).append(" as instance, ")
-                    .append(DBLayer.DBITEM_INV_AGENT_NAMES).append(" as aliases")
+                hql.append(DBLayer.DBITEM_INV_AGENT_INSTANCES).append(" as instance ")
+                    .append(" left join ").append(DBLayer.DBITEM_INV_AGENT_NAMES).append(" as aliases")
+                    .append(" on instance.agentId = aliases.agentId")
                     .append(" where instance.controllerId = :controllerId and (")
-                    .append(" instance.agentName = :agentName or (")
-                    .append(" instance.controllerId = :controllerId and")
-                    .append(" instance.agentId = aliases.agentId and")
-                    .append(" aliases.agentName = :agentName))");
+                    .append(" instance.agentName = :agentName or ")
+                    .append(" aliases.agentName = :agentName)");
                 Query<String> query = getSession().createQuery(hql.toString());
                 query.setParameter("agentName", agentName);
                 query.setParameter("controllerId", controllerId);
-                return query.getResultList().get(0);
+                return query.getSingleResult();
             } catch (NoResultException e) {
                 if (workflowPath != null && jobname != null) {
                     throw new JocSosHibernateException(
