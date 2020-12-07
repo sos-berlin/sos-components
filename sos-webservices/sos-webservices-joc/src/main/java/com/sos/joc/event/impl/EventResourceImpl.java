@@ -72,14 +72,13 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             long defaultEventId = Instant.now().getEpochSecond();
             List<EventCallable> tasks = new ArrayList<EventCallable>();
             
-            Boolean isCurrentJobScheduler = true;
+            String currentControllerId = in.getControllers().get(0).getControllerId();
             Condition eventArrived = EventServiceFactory.createCondition();
             for (Controller controller : in.getControllers()) {
                 Event evt = initEvent(controller, defaultEventId);
                 eventList.put(controller.getControllerId(), evt);
-                if (isCurrentJobScheduler) {
+                if (currentControllerId.equals(controller.getControllerId())) {
                     tasks.add(new EventCallableOfCurrentController(session, evt.getEventId(), evt.getControllerId(), accessToken, eventArrived));
-                    isCurrentJobScheduler = false;
                 } else {
                     tasks.add(new EventCallable(session, evt.getEventId(), evt.getControllerId(), accessToken, eventArrived));
                 }
@@ -88,15 +87,12 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             if (!tasks.isEmpty()) {
                 ExecutorService executorService = Executors.newFixedThreadPool(tasks.size());
                 try {
-//                    JobSchedulerEvent evt = executorService.invokeAll(tasks);
-//                    eventList.put(evt.getControllerId(), evt);
                     for (Future<Event> result : executorService.invokeAll(tasks)) {
                         try {
                             Event evt = result.get();
-//                            evt.setEventSnapshots(evt.getEventSnapshots().stream().map(e -> {
-//                                e.setEventId(null);
-//                                return e;
-//                            }).distinct().collect(Collectors.toList()));
+                            if (!currentControllerId.equals(evt.getControllerId())) {
+                                evt.setEventSnapshots(Collections.emptyList());
+                            }
                             eventList.put(evt.getControllerId(), evt);
                         } catch (ExecutionException e) {
                             if (e.getCause() instanceof JocException) {
