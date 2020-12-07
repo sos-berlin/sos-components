@@ -56,11 +56,12 @@ public class AgentTasks {
     @JsonProperty("agentName")
     private String agentName;
     @JsonProperty("orderIds")
-    private List<Object> orderIds = new ArrayList<Object>();
+    private List<String> orderIds = new ArrayList<String>();
     /**
      * non negative integer
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("runningTasks")
@@ -148,12 +149,12 @@ public class AgentTasks {
     }
 
     @JsonProperty("orderIds")
-    public List<Object> getOrderIds() {
+    public List<String> getOrderIds() {
         return orderIds;
     }
 
     @JsonProperty("orderIds")
-    public void setOrderIds(List<Object> orderIds) {
+    public void setOrderIds(List<String> orderIds) {
         this.orderIds = orderIds;
     }
 
@@ -161,6 +162,7 @@ public class AgentTasks {
      * non negative integer
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("runningTasks")
@@ -172,6 +174,7 @@ public class AgentTasks {
      * non negative integer
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("runningTasks")

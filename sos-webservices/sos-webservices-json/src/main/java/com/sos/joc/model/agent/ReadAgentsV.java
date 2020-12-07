@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -22,7 +23,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "controllerId",
     "agentIds",
     "states",
-    "onlyEnabledAgents"
+    "onlyEnabledAgents",
+    "compact"
 })
 public class ReadAgentsV {
 
@@ -41,6 +43,15 @@ public class ReadAgentsV {
     private List<AgentStateText> states = new ArrayList<AgentStateText>();
     @JsonProperty("onlyEnabledAgents")
     private Boolean onlyEnabledAgents = false;
+    /**
+     * compact parameter
+     * <p>
+     * controls if the object's data is compact or detailed
+     * 
+     */
+    @JsonProperty("compact")
+    @JsonPropertyDescription("controls if the object's data is compact or detailed")
+    private Boolean compact = false;
 
     /**
      * filename
@@ -96,14 +107,36 @@ public class ReadAgentsV {
         this.onlyEnabledAgents = onlyEnabledAgents;
     }
 
+    /**
+     * compact parameter
+     * <p>
+     * controls if the object's data is compact or detailed
+     * 
+     */
+    @JsonProperty("compact")
+    public Boolean getCompact() {
+        return compact;
+    }
+
+    /**
+     * compact parameter
+     * <p>
+     * controls if the object's data is compact or detailed
+     * 
+     */
+    @JsonProperty("compact")
+    public void setCompact(Boolean compact) {
+        this.compact = compact;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentIds", agentIds).append("states", states).append("onlyEnabledAgents", onlyEnabledAgents).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentIds", agentIds).append("states", states).append("onlyEnabledAgents", onlyEnabledAgents).append("compact", compact).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentIds).append(controllerId).append(onlyEnabledAgents).append(states).toHashCode();
+        return new HashCodeBuilder().append(agentIds).append(controllerId).append(onlyEnabledAgents).append(compact).append(states).toHashCode();
     }
 
     @Override
@@ -115,7 +148,7 @@ public class ReadAgentsV {
             return false;
         }
         ReadAgentsV rhs = ((ReadAgentsV) other);
-        return new EqualsBuilder().append(agentIds, rhs.agentIds).append(controllerId, rhs.controllerId).append(onlyEnabledAgents, rhs.onlyEnabledAgents).append(states, rhs.states).isEquals();
+        return new EqualsBuilder().append(agentIds, rhs.agentIds).append(controllerId, rhs.controllerId).append(onlyEnabledAgents, rhs.onlyEnabledAgents).append(compact, rhs.compact).append(states, rhs.states).isEquals();
     }
 
 }

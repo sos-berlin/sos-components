@@ -6,7 +6,8 @@
   "required": [
   	"agentId",
   	"agentName",
-  	"url"
+  	"url",
+  	"runningTasks"
   ],
   "properties": {
     "controllerId": {
@@ -22,7 +23,7 @@
     },
     "orderIds": {
     	"type": "array",
-    	"item": {
+    	"items": {
     		"type": "string"
     	}
     },
@@ -37,5 +38,6 @@
     	"type": "boolean",
     	"default": false
     }
-  }
+  },
+  "additionalProperties": false
 }

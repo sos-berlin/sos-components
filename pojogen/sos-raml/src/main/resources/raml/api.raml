@@ -91,7 +91,7 @@ traits:
       description1: !include joc/documentation/agent/agentIds.md
       description2: !include joc/documentation/agent/states.md
       description3: !include joc/documentation/agent/onlyEnabledAgents.md
-      description4: " "
+      description4: !include joc/documentation/common/compact.md
       description5: " "
       description6: " "
       description7: " "
@@ -160,25 +160,25 @@ traits:
         schema: !include joc/schemas/agent/storeParam-schema.json
         example: !include joc/examples/agent/store-example.json
         
-  /tasks:
-    type:
-      postJSON:
-        description: Get collection of Agents from database
-        description1: !include joc/documentation/agent/agentIds.md
-        description2: !include joc/documentation/agent/onlyEnabledAgents.md
-        description3: " "
-        description4: " "
-        description5: " "
-        description6: " "
-        description7: " "
-        description8: " "
-        description9: " "
-        description10: " "
-        description200: " "
-        schema: !include joc/schemas/agent/readAgents_v-schema.json
-        schema200: !include joc/schemas/agent/agentTasks-schema.json
-        example: !include joc/examples/agent/agents_v-request-example.json
-        example200: " "
+#  /tasks:
+#    type:
+#      postJSON:
+#        description: Get collection of Agents from database
+#        description1: !include joc/documentation/agent/agentIds.md
+#        description2: !include joc/documentation/agent/onlyEnabledAgents.md
+#        description3: " "
+#        description4: " "
+#        description5: " "
+#        description6: " "
+#        description7: " "
+#        description8: " "
+#        description9: " "
+#        description10: " "
+#        description200: " "
+#        schema: !include joc/schemas/agent/readAgents_v-schema.json
+#        schema200: !include joc/schemas/agent/agentTasks-schema.json
+#        example: !include joc/examples/agent/agents_v-request-example.json
+#        example200: " "
         
 
 /audit_log:

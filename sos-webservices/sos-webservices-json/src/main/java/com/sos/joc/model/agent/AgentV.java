@@ -1,6 +1,8 @@
 
 package com.sos.joc.model.agent;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -23,6 +25,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "agentName",
     "state",
     "errorMessage",
+    "orderIds",
+    "runningTasks",
     "url",
     "isClusterWatcher"
 })
@@ -69,6 +73,16 @@ public class AgentV {
     @JsonProperty("errorMessage")
     @JsonPropertyDescription("if state == couplngFailed or unknown")
     private String errorMessage;
+    @JsonProperty("orderIds")
+    private List<String> orderIds = new ArrayList<String>();
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("runningTasks")
+    private Integer runningTasks;
     /**
      * string without < and >
      * <p>
@@ -191,6 +205,38 @@ public class AgentV {
         this.errorMessage = errorMessage;
     }
 
+    @JsonProperty("orderIds")
+    public List<String> getOrderIds() {
+        return orderIds;
+    }
+
+    @JsonProperty("orderIds")
+    public void setOrderIds(List<String> orderIds) {
+        this.orderIds = orderIds;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("runningTasks")
+    public Integer getRunningTasks() {
+        return runningTasks;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("runningTasks")
+    public void setRunningTasks(Integer runningTasks) {
+        this.runningTasks = runningTasks;
+    }
+
     /**
      * string without < and >
      * <p>
@@ -227,12 +273,12 @@ public class AgentV {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("state", state).append("errorMessage", errorMessage).append("url", url).append("isClusterWatcher", isClusterWatcher).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("state", state).append("errorMessage", errorMessage).append("orderIds", orderIds).append("runningTasks", runningTasks).append("url", url).append("isClusterWatcher", isClusterWatcher).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(controllerId).append(errorMessage).append(agentName).append(isClusterWatcher).append(state).append(url).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(controllerId).append(errorMessage).append(agentName).append(isClusterWatcher).append(state).append(orderIds).append(runningTasks).append(url).toHashCode();
     }
 
     @Override
@@ -244,7 +290,7 @@ public class AgentV {
             return false;
         }
         AgentV rhs = ((AgentV) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(errorMessage, rhs.errorMessage).append(agentName, rhs.agentName).append(isClusterWatcher, rhs.isClusterWatcher).append(state, rhs.state).append(url, rhs.url).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(errorMessage, rhs.errorMessage).append(agentName, rhs.agentName).append(isClusterWatcher, rhs.isClusterWatcher).append(state, rhs.state).append(orderIds, rhs.orderIds).append(runningTasks, rhs.runningTasks).append(url, rhs.url).isEquals();
     }
 
 }
