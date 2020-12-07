@@ -86,10 +86,25 @@ traits:
 
 /agents:
   type:
-    postOnlyId:
-      description: Get states of Agents
+    postJSONWithOptionalJSId:
+      description: Get status of Agents
+      description1: !include joc/documentation/agent/agentIds.md
+      description2: !include joc/documentation/agent/states.md
+      description3: " "
+      description4: " "
+      description5: " "
+      description6: " "
+      description7: " "
+      description8: " "
+      description9: " "
+      description10: " "
+      description11: " "
+      description12: " "
+      description13: " "
       description200: !include joc/documentation/agent/agents_v.md
+      schema: !include joc/schemas/agent/readAgents_v-schema.json
       schema200: !include joc/schemas/agent/agents_v-schema.json
+      example: !include joc/examples/jobscheduler/jobschedulerParam-example.json
       example200: !include joc/examples/agent/agents_v-example.json
   
   /names:

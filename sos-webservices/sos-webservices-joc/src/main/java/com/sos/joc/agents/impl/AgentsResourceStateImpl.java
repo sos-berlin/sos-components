@@ -1,7 +1,7 @@
 package com.sos.joc.agents.impl;
 
 import java.time.Instant;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -26,7 +26,7 @@ import com.sos.joc.model.agent.AgentState;
 import com.sos.joc.model.agent.AgentStateText;
 import com.sos.joc.model.agent.AgentV;
 import com.sos.joc.model.agent.AgentsV;
-import com.sos.joc.model.common.ControllerId;
+import com.sos.joc.model.agent.ReadAgentsV;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
@@ -57,9 +57,9 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, ControllerId.class);
-            ControllerId controllerParam = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
-            String controllerId = controllerParam.getControllerId();
+            JsonValidator.validateFailFast(filterBytes, ReadAgentsV.class);
+            ReadAgentsV agentsParam = Globals.objectMapper.readValue(filterBytes, ReadAgentsV.class);
+            String controllerId = agentsParam.getControllerId();
             // TODO permissions?
             boolean permission = getPermissonsJocCockpit(controllerId, accessToken).getJS7Controller().getView().isStatus();
 
@@ -70,36 +70,56 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
-            List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIds(Arrays.asList(controllerId), false, true);
-            JControllerState currentState = Proxy.of(controllerId).currentState();
-
-            AgentsV agents = new AgentsV();
-            agents.setSurveyDate(Date.from(Instant.ofEpochMilli(currentState.eventId() / 1000)));
-            agents.setAgents(dbAgents.stream().map(dbAgent -> {
-                Either<Problem, JAgentRefState> either = currentState.nameToAgentRefState(AgentName.of(dbAgent.getAgentId()));
-                AgentV agent = new AgentV();
-                agent.setAgentId(dbAgent.getAgentId());
-                agent.setAgentName(dbAgent.getAgentName());
-                agent.setControllerId(controllerId);
-                agent.setUrl(dbAgent.getUri());
-                agent.setIsClusterWatcher(dbAgent.getIsWatcher());
-                if (either.isRight()) {
-                    AgentRefState.CouplingState couplingState = either.get().asScala().couplingState();
-                    if (couplingState instanceof AgentRefState.CouplingFailed) {
-                        agent.setErrorMessage(ProblemHelper.getErrorMessage(((AgentRefState.CouplingFailed) couplingState).problem()));
-                        agent.setState(getState(AgentStateText.COUPLINGFAILED));
-                    } else if (couplingState instanceof AgentRefState.Coupled$) {
-                        agent.setState(getState(AgentStateText.COUPLED));
-                    } else if (couplingState instanceof AgentRefState.Decoupled$) {
-                        agent.setState(getState(AgentStateText.DECOUPLED));
-                    }
-                } else {
-                    agent.setErrorMessage(ProblemHelper.getErrorMessage(either.getLeft()));
-                    agent.setState(getState(AgentStateText.UNKNOWN));
+            List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIds(controllerId, agentsParam.getAgentIds(),
+                    false, true);
+            
+            long surveyDate = Instant.now().toEpochMilli();
+            List<AgentV> agentsList = new ArrayList<>();
+            
+            boolean withStateFilter = agentsParam.getStates() != null && !agentsParam.getStates().isEmpty();
+            
+            if (dbAgents != null) {
+                Map<String, List<DBItemInventoryAgentInstance>> dbAgentsMap = dbAgents.stream().collect(Collectors.groupingBy(
+                        DBItemInventoryAgentInstance::getControllerId));
+                
+                for (Map.Entry<String, List<DBItemInventoryAgentInstance>> dbAgentsPerController : dbAgentsMap.entrySet()) {
+                    JControllerState currentState = Proxy.of(dbAgentsPerController.getKey()).currentState();
+                    surveyDate = Math.min(surveyDate, currentState.eventId() / 1000);
+                    agentsList.addAll(dbAgentsPerController.getValue().stream().map(dbAgent -> {
+                        Either<Problem, JAgentRefState> either = currentState.nameToAgentRefState(AgentName.of(dbAgent.getAgentId()));
+                        AgentV agent = new AgentV();
+                        AgentStateText stateText = AgentStateText.UNKNOWN;
+                        if (either.isRight()) {
+                            AgentRefState.CouplingState couplingState = either.get().asScala().couplingState();
+                            if (couplingState instanceof AgentRefState.CouplingFailed) {
+                                stateText = AgentStateText.COUPLINGFAILED;
+                                agent.setErrorMessage(ProblemHelper.getErrorMessage(((AgentRefState.CouplingFailed) couplingState).problem()));
+                            } else if (couplingState instanceof AgentRefState.Coupled$) {
+                                stateText = AgentStateText.COUPLED;
+                            } else if (couplingState instanceof AgentRefState.Decoupled$) {
+                                stateText = AgentStateText.DECOUPLED;
+                            }
+                        } else {
+                            agent.setErrorMessage(ProblemHelper.getErrorMessage(either.getLeft()));
+                        }
+                        if (withStateFilter && !agentsParam.getStates().contains(stateText)) {
+                            return null;
+                        }
+                        agent.setAgentId(dbAgent.getAgentId());
+                        agent.setAgentName(dbAgent.getAgentName());
+                        agent.setControllerId(controllerId);
+                        agent.setUrl(dbAgent.getUri());
+                        agent.setIsClusterWatcher(dbAgent.getIsWatcher());
+                        agent.setState(getState(stateText));
+                        return agent;
+                    }).filter(Objects::nonNull).collect(Collectors.toList()));
                 }
-                return agent;
-            }).filter(Objects::nonNull).collect(Collectors.toList()));
+            }
+            
+            AgentsV agents = new AgentsV();
+            agents.setSurveyDate(Date.from(Instant.ofEpochMilli(surveyDate)));
             agents.setDeliveryDate(Date.from(Instant.now()));
+            agents.setAgents(agentsList);
 
             return JOCDefaultResponse.responseStatus200(agents);
         } catch (JocException e) {

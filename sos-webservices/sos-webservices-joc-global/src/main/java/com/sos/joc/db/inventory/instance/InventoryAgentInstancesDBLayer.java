@@ -105,6 +105,44 @@ public class InventoryAgentInstancesDBLayer {
         }
     }
     
+    public List<DBItemInventoryAgentInstance> getAgentsByControllerIdAndAgentIds(String controllerId, Collection<String> agentIds, boolean onlyWatcher,
+            boolean onlyEnabledAgents) throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
+        try {
+            StringBuilder hql = new StringBuilder();
+            hql.append("from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
+            List<String> clauses = new ArrayList<>();
+            if (controllerId != null && !controllerId.isEmpty()) {
+                clauses.add("controllerId = :controllerId");
+            }
+            if (agentIds != null && !agentIds.isEmpty()) {
+                clauses.add("agentId in (:agentIds)");
+            }
+            if (onlyWatcher) {
+                clauses.add("isWatcher = 1");
+            }
+            if (onlyEnabledAgents) {
+                clauses.add("disabled = 0");
+            }
+            if (!clauses.isEmpty()) {
+                hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
+            }
+            Query<DBItemInventoryAgentInstance> query = session.createQuery(hql.toString());
+            if (controllerId != null && !controllerId.isEmpty()) {
+                query.setParameter("controllerId", controllerId);
+            }
+            if (agentIds != null && !agentIds.isEmpty()) {
+                query.setParameterList("agentIds", agentIds);
+            }
+            return session.getResultList(query);
+        } catch (DBMissingDataException ex) {
+            throw ex;
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
     public Set<String> getEnabledAgentNames() throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
         return getAgentNames(true);
     }
@@ -264,26 +302,6 @@ public class InventoryAgentInstancesDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
-//    private String getConstraintErrorMessage(String controllerId, String agentId) {
-//        return String.format("JobScheduler Agent instance (controllerId:%1$s, agentId:%2$s, security level:%3$s) already exists in table %4$s",
-//                controllerId, agentId, level.value(), DBLayer.TABLE_INV_JS_INSTANCES);
-//    }
-
-//    public List<DBItemInventoryAgentInstance> getAgents() throws DBInvalidDataException, DBConnectionRefusedException {
-//        try {
-//            StringBuilder sql = new StringBuilder();
-//            sql.append("from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
-//            sql.append(" where securityLevel = :securityLevel");
-//            Query<DBItemInventoryAgentInstance> query = session.createQuery(sql.toString());
-//            query.setParameter("securityLevel", level.intValue());
-//            return session.getResultList(query);
-//        } catch (SOSHibernateInvalidSessionException ex) {
-//            throw new DBConnectionRefusedException(ex);
-//        } catch (Exception ex) {
-//            throw new DBInvalidDataException(ex);
-//        }
-//    }
 
     public void deleteInstance(DBItemInventoryAgentInstance agent) throws DBConnectionRefusedException, DBInvalidDataException {
         try {

@@ -32,6 +32,8 @@ public class AgentState {
     @JsonPropertyDescription("0=COUPLED, 1=DECOUPLED, 2=COUPLINGFAILED, 3=UNKNOWN")
     private Integer severity;
     /**
+     * component state
+     * <p>
      * 
      * (Required)
      * 
@@ -60,6 +62,8 @@ public class AgentState {
     }
 
     /**
+     * component state
+     * <p>
      * 
      * (Required)
      * 
@@ -70,6 +74,8 @@ public class AgentState {
     }
 
     /**
+     * component state
+     * <p>
      * 
      * (Required)
      * 
