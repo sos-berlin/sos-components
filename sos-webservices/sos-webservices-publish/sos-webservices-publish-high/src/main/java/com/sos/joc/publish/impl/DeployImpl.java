@@ -332,6 +332,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 createAuditLogForEach(deployedObjects, deployFilter, controllerId, true, versionIdForUpdate);
                 PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), null, controllerId, dbLayer.getSession());
                 LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
+                JocInventory.handleWorkflowSearch(newHibernateSession, deployedObjects, false);
             } else if (either.isLeft()) {
                 // an error occurred
                 String message = String.format(
@@ -377,6 +378,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 JocInventory.deleteConfigurations(draftConfigsToDelete);
                 createAuditLogForEach(deletedDeployItems, deployFilter, controller, false, versionIdForDelete);
                 JocInventory.deleteConfigurations(draftConfigsToDelete);
+                JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);
             } else if (either.isLeft()) {
                 String message = String.format("Response from Controller \"%1$s:\": %2$s", controller, either.getLeft().message());
                 LOGGER.warn(message);
@@ -420,6 +422,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer);
                 createAuditLogForEach(deletedDeployItems, deployFilter, controllerId, false, versionIdForDelete);
                 JocInventory.deleteConfigurations(configurationIdsToDelete);
+                JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);
                 if (foldersToDelete != null && !foldersToDelete.isEmpty()) {
                     for (DeployConfigDelete folder : foldersToDelete) {
                         // check if deployable objects still exist in the folder

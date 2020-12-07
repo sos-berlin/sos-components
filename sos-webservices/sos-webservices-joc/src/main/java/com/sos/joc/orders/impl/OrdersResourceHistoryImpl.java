@@ -1,5 +1,7 @@
 package com.sos.joc.orders.impl;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -12,6 +14,8 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 
 import org.hibernate.ScrollableResults;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
@@ -37,6 +41,9 @@ import com.sos.schema.JsonValidator;
 
 @Path(WebservicePaths.ORDERS)
 public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrdersResourceHistory {
+
+    // tmp , to remove ..
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrdersResourceHistoryImpl.class);
 
     @Override
     public JOCDefaultResponse postOrdersHistory(String accessToken, byte[] inBytes) {
@@ -108,6 +115,11 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                 }
                 dbFilter.setLimit(in.getLimit());
 
+                if (dbFilter.getExecutedFrom() == null) {
+                    // 1970-01-01 01:00:00 + 1 day
+                    dbFilter.setExecutedFrom(SOSDate.add(Instant.ofEpochMilli(Globals.HISTORY_DEFAULT_DATE.getTime()), 1, ChronoUnit.DAYS));
+                }
+
                 session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                 JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, dbFilter);
                 ScrollableResults sr = null;
@@ -117,11 +129,20 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                         matcher = Pattern.compile(in.getRegex()).matcher("");
                     }
                     sr = dbLayer.getMainOrders();
+
+                    // tmp outputs to remove...
+                    int i = 0;
+                    int logStep = 1_000;
+                    String range = "order";
+                    LOGGER.info(String.format("[%s]start read and map ..", range));
                     while (sr.next()) {
+                        i++;
+
                         DBItemHistoryOrder item = (DBItemHistoryOrder) sr.get(0);
-                        if (SOSDate.equals(item.getStartTime(), Globals.HISTORY_DEFAULT_DATE)) {
-                            continue;// TODO
+                        if (i == 1) {
+                            LOGGER.info(String.format(" [%s][%s]first entry retrieved", range, i));
                         }
+
                         if (in.getControllerId().isEmpty() && !getPermissonsJocCockpit(item.getJobSchedulerId(), accessToken).getHistory().getView()
                                 .isStatus()) {
                             continue;
@@ -130,7 +151,12 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                             continue;
                         }
                         history.add(HistoryMapper.map2OrderHistoryItem(item));
+
+                        if (i == 1 || i % logStep == 0) {
+                            LOGGER.info(String.format(" [%s][%s]entries processed", range, i));
+                        }
                     }
+                    LOGGER.info(String.format("[%s][%s]end read and map", range, i));
                 } catch (Exception e) {
                     throw e;
                 } finally {

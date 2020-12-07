@@ -21,8 +21,11 @@ import org.hibernate.Session;
 import org.hibernate.StaleStateException;
 import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
+import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.internal.StatelessSessionImpl;
 import org.hibernate.jdbc.Work;
@@ -1233,5 +1236,24 @@ public class SOSHibernateSession implements Serializable {
             }
             LOGGER.debug(sb.toString());
         }
+    }
+
+    // TODO currently only for select statements. todo delete, update ...
+    public String getSQLString(Query<?> query) {
+        if (query == null || factory == null) {
+            return null;
+        }
+        try {
+            ASTQueryTranslatorFactory f = new ASTQueryTranslatorFactory();
+            SessionFactoryImplementor impl = (SessionFactoryImplementor) factory.getSessionFactory();
+            String hql = query.unwrap(org.hibernate.query.Query.class).getQueryString();
+
+            QueryTranslator qt = f.createQueryTranslator("", hql, java.util.Collections.EMPTY_MAP, impl, null);
+            qt.compile(java.util.Collections.EMPTY_MAP, false);
+            return String.format("[%s][maxResults=%s][%s]", qt.getSQLString(), query.getMaxResults(), SOSHibernate.getQueryParametersAsString(query));
+        } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
+        }
+        return null;
     }
 }

@@ -41,7 +41,7 @@ import com.sos.joc.model.tree.Tree;
 public class InventoryDBLayer extends DBLayer {
 
     private static final long serialVersionUID = 1L;
-
+ 
     public InventoryDBLayer(SOSHibernateSession session) {
         super(session);
     }
@@ -63,7 +63,7 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("state", DeploymentState.DEPLOYED.value());
         return getSession().getSingleResult(query);
     }
-    
+
     public InventoryDeploymentItem getLastDeployedContent(Long configId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select controllerId, max(id) ").append(DBLayer.DBITEM_DEP_HISTORY);
         hql.append(" where inventoryConfigurationId = :configId");
@@ -72,7 +72,7 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("configId", configId);
         query.setParameter("state", DeploymentState.DEPLOYED.value());
         List<Object[]> result = getSession().getResultList(query);
-        
+
         if (result != null && !result.isEmpty()) {
             hql = new StringBuilder("select new ").append(InventoryDeploymentItem.class.getName());
             hql.append("(");
@@ -83,7 +83,7 @@ public class InventoryDBLayer extends DBLayer {
             Query<InventoryDeploymentItem> query2 = getSession().createQuery(hql.toString());
             query2.setParameterList("ids", result.stream().map(item -> (Long) item[1]).collect(Collectors.toSet()));
             List<InventoryDeploymentItem> result2 = getSession().getResultList(query2);
-            
+
             if (result2 != null && !result2.isEmpty()) {
                 Optional<InventoryDeploymentItem> lastItem = result2.stream().filter(item -> OperationType.UPDATE.value().equals(item.getOperation())
                         && item.getContent() != null).max(Comparator.comparingLong(InventoryDeploymentItem::getId));
@@ -545,11 +545,11 @@ public class InventoryDBLayer extends DBLayer {
         }
     }
 
-    public void searchWorkflow2DeploymentHistory(Long searchWorkflowId, List<Long> deploymentIds, boolean delete) throws DBConnectionRefusedException,
-            DBInvalidDataException {
+    public void searchWorkflow2DeploymentHistory(Long searchWorkflowId, Long inventoryId, String controllerId, List<Long> deploymentIds,
+            boolean delete) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
+            deleteSearchWorkflow2DeploymentHistory(searchWorkflowId, inventoryId, controllerId);
             if (delete) {
-                deleteSearchWorkflow2DeploymentHistory(searchWorkflowId, deploymentIds);
                 Long count = getCountSearchWorkflow2DeploymentHistory(searchWorkflowId);
                 if (count == null || count.equals(0L)) {
                     deleteSearchWorkflow(searchWorkflowId, true);
@@ -558,6 +558,8 @@ public class InventoryDBLayer extends DBLayer {
                 for (Long deploymentId : deploymentIds) {
                     DBItemSearchWorkflow2DeploymentHistory item = new DBItemSearchWorkflow2DeploymentHistory();
                     item.setSearchWorkflowId(searchWorkflowId);
+                    item.setInventoryConfigurationId(inventoryId);
+                    item.setControllerId(controllerId);
                     item.setDeploymentHistoryId(deploymentId);
                     getSession().save(item);
                 }
@@ -570,44 +572,60 @@ public class InventoryDBLayer extends DBLayer {
         }
     }
 
-    private int deleteSearchWorkflow2DeploymentHistory(Long searchWorkflowId, List<Long> deploymentIds) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS_DEPLOYMENT_HISTORY);
+    private int deleteSearchWorkflow2DeploymentHistory(Long searchWorkflowId, Long inventoryId, String controllerId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS_DEPLOYMENT_HISTORY);
         hql.append(" where searchWorkflowId=:searchWorkflowId");
-        if (deploymentIds.size() == 1) {
-            hql.append(" and deploymentHistoryId=:deploymentId");
-        } else {
-            hql.append(" and deploymentHistoryId in (:deploymentIds)");
-        }
-        Query<?> query = getSession().createQuery(hql.toString());
-        if (deploymentIds.size() == 1) {
-            query.setParameter("deploymentId", deploymentIds.get(0));
+        hql.append(" and inventoryConfigurationId=:inventoryId");
+        hql.append(" and controllerId=:controllerId");
 
-        } else {
-            query.setParameterList("deploymentIds", deploymentIds);
+        Query<DBItemSearchWorkflow2DeploymentHistory> query = getSession().createQuery(hql.toString());
+        query.setParameter("searchWorkflowId", searchWorkflowId);
+        query.setParameter("inventoryId", inventoryId);
+        query.setParameter("controllerId", controllerId);
+
+        List<DBItemSearchWorkflow2DeploymentHistory> result = getSession().getResultList(query);
+        int deleted = 0;
+        if (result != null) {
+            for (DBItemSearchWorkflow2DeploymentHistory item : result) {
+                getSession().delete(item);
+                deleted++;
+            }
         }
-        return getSession().executeUpdate(query);
+        return deleted;
     }
 
     private int deleteSearchWorkflow(Long id, boolean deployed) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS);
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS);
         hql.append(" where id=:id");
         hql.append(" and deployed=:deployed");
 
-        Query<?> query = getSession().createQuery(hql.toString());
+        Query<DBItemSearchWorkflow> query = getSession().createQuery(hql.toString());
         query.setParameter("id", id);
         query.setParameter("deployed", deployed);
-        return getSession().executeUpdate(query);
+
+        DBItemSearchWorkflow item = getSession().getSingleResult(query);
+        if (item != null) {
+            getSession().delete(item);
+            return 1;
+        }
+        return 0;
     }
 
     public int deleteSearchWorkflowByInventoryId(Long id, boolean deployed) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS);
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS);
         hql.append(" where inventoryConfigurationId=:id");
         hql.append(" and deployed=:deployed");
 
-        Query<?> query = getSession().createQuery(hql.toString());
+        Query<DBItemSearchWorkflow> query = getSession().createQuery(hql.toString());
         query.setParameter("id", id);
         query.setParameter("deployed", deployed);
-        return getSession().executeUpdate(query);
+
+        DBItemSearchWorkflow item = getSession().getSingleResult(query);
+        if (item != null) {
+            getSession().delete(item);
+            return 1;
+        }
+        return 0;
     }
 
     private Long getCountSearchWorkflow2DeploymentHistory(Long searchWorkflowId) throws SOSHibernateException {
@@ -748,7 +766,7 @@ public class InventoryDBLayer extends DBLayer {
                     query.setParameterList("type", inventoryTypes);
                 }
             }
-            
+
             List<Object[]> result = getSession().getResultList(query);
             if (result != null && !result.isEmpty()) {
                 Set<String> folders = result.stream().map(item -> {
@@ -756,9 +774,9 @@ public class InventoryDBLayer extends DBLayer {
                     if (type.equals(ConfigurationType.FOLDER.intValue())) {
                         return (String) item[2];
                     }
-                    return (String) item[0]; 
+                    return (String) item[0];
                 }).collect(Collectors.toSet());
-                
+
                 Set<String> folderWithParents = new HashSet<>();
                 for (String f : folders) {
                     Path p = Paths.get(f);

@@ -7,6 +7,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.temporal.IsoFields;
+import java.time.temporal.TemporalUnit;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -419,6 +420,18 @@ public class SOSDate {
             return false;
         }
         return val1.getTime() == val2.getTime();
+    }
+
+    // TODO Weeks, Years not supported...
+    public static Date add(Instant input, int amountToAdd, TemporalUnit unit) {
+        if (input == null) {
+            return null;
+        }
+        if (amountToAdd > 0) {
+            return Date.from(input.plus(amountToAdd, unit));
+        } else {
+            return Date.from(input.minus(amountToAdd, unit));
+        }
     }
 
     public static void main(String[] args) {

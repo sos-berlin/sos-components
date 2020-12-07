@@ -19,6 +19,13 @@ public class DBItemSearchWorkflow2DeploymentHistory extends DBItem {
     private Long searchWorkflowId;
 
     @Id
+    @Column(name = "[INV_CID]", nullable = false) /* INV_CONFIGURATIONS.ID */
+    private Long inventoryConfigurationId;
+
+    @Id
+    @Column(name = "[CONTROLLER_ID]", nullable = false)
+    private String controllerId;
+
     @Column(name = "[DEP_HID]", nullable = false) /* DEP_HISTORY.ID */
     private Long deploymentHistoryId;
 
@@ -28,6 +35,22 @@ public class DBItemSearchWorkflow2DeploymentHistory extends DBItem {
 
     public void setSearchWorkflowId(Long val) {
         searchWorkflowId = val;
+    }
+
+    public Long getInventoryConfigurationId() {
+        return inventoryConfigurationId;
+    }
+
+    public void setInventoryConfigurationId(Long val) {
+        inventoryConfigurationId = val;
+    }
+
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    public void setControllerId(String val) {
+        controllerId = val;
     }
 
     public Long getDeploymentHistoryId() {

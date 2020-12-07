@@ -46,7 +46,7 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
 import com.sos.joc.model.inventory.folder.Folder;
 import com.sos.webservices.order.initiator.model.Schedule;
- 
+
 public class JocInventory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JocInventory.class);
@@ -239,11 +239,11 @@ public class JocInventory {
                 Path p = Paths.get(path);
                 name = p.getFileName().toString();
                 CheckJavaVariableName.test(type.value().toLowerCase(), name);
-//                if (ConfigurationType.FOLDER.equals(type)) {
-//                    folder = path;
-//                } else {
-                    folder = normalizeFolder(p.getParent());
-//                }
+                // if (ConfigurationType.FOLDER.equals(type)) {
+                // folder = path;
+                // } else {
+                folder = normalizeFolder(p.getParent());
+                // }
             }
         }
 
@@ -329,22 +329,21 @@ public class JocInventory {
         groupedWorkflows.keySet().forEach(inventoryId -> {
             List<DBItemDeploymentHistory> list = groupedWorkflows.get(inventoryId);
             if (list.size() > 0) {
-                String content = list.get(0).getContent();
+                String content = list.get(0).getInvContent();
                 if (!SOSString.isEmpty(content)) {
                     try {
                         Workflow workflow = Globals.objectMapper.readValue(content, Workflow.class);
                         workflow.setVersionId(null); // make same versionId for all deployments
+
+                        String controllerId = list.get(0).getControllerId();
                         List<Long> deploymentIds = list.stream().map(DBItemDeploymentHistory::getId).collect(Collectors.toList());
                         try {
-                            handleWorkflowSearch(new InventoryDBLayer(session), workflow, inventoryId, deploymentIds, deleteDeployments);
-                        } catch (SOSHibernateException e) {
+                            handleWorkflowSearch(new InventoryDBLayer(session), workflow, inventoryId, controllerId, deploymentIds,
+                                    deleteDeployments);
+                        } catch (Throwable e) {
                             LOGGER.error(e.toString(), e);
                         }
-                    } catch (JsonParseException e) {
-                        LOGGER.error(e.toString(), e);
-                    } catch (JsonMappingException e) {
-                        LOGGER.error(e.toString(), e);
-                    } catch (IOException e) {
+                    } catch (Throwable e) {
                         LOGGER.error(e.toString(), e);
                     }
                 }
@@ -365,15 +364,15 @@ public class JocInventory {
 
     public static void handleWorkflowSearch(InventoryDBLayer dbLayer, Workflow workflow, Long inventoryId) throws JsonProcessingException,
             SOSHibernateException {
-        handleWorkflowSearch(dbLayer, workflow, inventoryId, null, false);
+        handleWorkflowSearch(dbLayer, workflow, inventoryId, null, null, false);
     }
 
-    public static void handleWorkflowSearch(InventoryDBLayer dbLayer, Workflow workflow, Long inventoryId, List<Long> deploymentIds,
-            boolean deleteDeployments) throws JsonProcessingException, SOSHibernateException {
+    public static void handleWorkflowSearch(InventoryDBLayer dbLayer, Workflow workflow, Long inventoryId, String controllerId,
+            List<Long> deploymentIds, boolean deleteDeployments) throws JsonProcessingException, SOSHibernateException {
 
         String hash = hash(workflow);
         boolean deployed = deploymentIds != null;
-
+      
         DBItemSearchWorkflow item = dbLayer.getSearchWorkflow(inventoryId, deployed ? hash : null);
         if (item == null) {
             if (deleteDeployments) {
@@ -391,11 +390,11 @@ public class JocInventory {
             dbLayer.getSession().save(item);
 
             if (deployed) {
-                dbLayer.searchWorkflow2DeploymentHistory(item.getId(), deploymentIds, false);
+                dbLayer.searchWorkflow2DeploymentHistory(item.getId(), inventoryId, controllerId, deploymentIds, false);
             }
         } else {
             if (deployed) {// same hash
-                dbLayer.searchWorkflow2DeploymentHistory(item.getId(), deploymentIds, deleteDeployments);
+                dbLayer.searchWorkflow2DeploymentHistory(item.getId(), inventoryId, controllerId, deploymentIds, deleteDeployments);
             } else {
                 if (!hash.equals(item.getContentHash())) {
                     item.setContentHash(hash);
@@ -468,7 +467,7 @@ public class JocInventory {
                     DBItemInventoryConfiguration::getId).collect(Collectors.toList());
             if (workflows.size() > 0) {
                 InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-                //dbLayer.deleteSearchWorkflowByInventoryId(id, deployed)
+                // dbLayer.deleteSearchWorkflowByInventoryId(id, deployed)
             }
 
         }
