@@ -21,7 +21,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "agentIds",
-    "states"
+    "states",
+    "onlyEnabledAgents"
 })
 public class ReadAgentsV {
 
@@ -38,6 +39,8 @@ public class ReadAgentsV {
     private List<String> agentIds = new ArrayList<String>();
     @JsonProperty("states")
     private List<AgentStateText> states = new ArrayList<AgentStateText>();
+    @JsonProperty("onlyEnabledAgents")
+    private Boolean onlyEnabledAgents = false;
 
     /**
      * filename
@@ -83,14 +86,24 @@ public class ReadAgentsV {
         this.states = states;
     }
 
+    @JsonProperty("onlyEnabledAgents")
+    public Boolean getOnlyEnabledAgents() {
+        return onlyEnabledAgents;
+    }
+
+    @JsonProperty("onlyEnabledAgents")
+    public void setOnlyEnabledAgents(Boolean onlyEnabledAgents) {
+        this.onlyEnabledAgents = onlyEnabledAgents;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentIds", agentIds).append("states", states).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentIds", agentIds).append("states", states).append("onlyEnabledAgents", onlyEnabledAgents).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentIds).append(controllerId).append(states).toHashCode();
+        return new HashCodeBuilder().append(agentIds).append(controllerId).append(onlyEnabledAgents).append(states).toHashCode();
     }
 
     @Override
@@ -102,7 +115,7 @@ public class ReadAgentsV {
             return false;
         }
         ReadAgentsV rhs = ((ReadAgentsV) other);
-        return new EqualsBuilder().append(agentIds, rhs.agentIds).append(controllerId, rhs.controllerId).append(states, rhs.states).isEquals();
+        return new EqualsBuilder().append(agentIds, rhs.agentIds).append(controllerId, rhs.controllerId).append(onlyEnabledAgents, rhs.onlyEnabledAgents).append(states, rhs.states).isEquals();
     }
 
 }

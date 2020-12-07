@@ -147,22 +147,22 @@ public class InventoryAgentInstancesDBLayer {
         return getAgentNames(true);
     }
     
-    public Set<String> getAgentNames(boolean onlyEnabledAgents) throws DBInvalidDataException, DBMissingDataException,
-            DBConnectionRefusedException {
+    public Set<String> getAgentNames(boolean onlyEnabledAgents) throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
         try {
             List<DBItemInventoryAgentInstance> agents = getAgentsByControllerIds(null, false, onlyEnabledAgents);
-            Set<String> agentNames = agents.stream().map(DBItemInventoryAgentInstance::getAgentName).filter(Objects::nonNull).collect(Collectors.toSet());
-            if (agents != null && !agents.isEmpty()) {
-                StringBuilder hql = new StringBuilder();
-                hql.append("select agentName from ").append(DBLayer.DBITEM_INV_AGENT_NAMES);
-                hql.append(" where agentId in (:agentIds)");
-                Query<String> query = session.createQuery(hql.toString());
-                query.setParameterList("agentIds", agents.stream().map(DBItemInventoryAgentInstance::getAgentId).collect(Collectors.toSet()));
-                List<String> aliases = session.getResultList(query);
-                if (aliases != null) {
-                    agentNames.addAll(aliases); 
-                }
-                return agentNames.stream().sorted().collect(Collectors.toSet());
+            if (agents == null || agents.isEmpty()) {
+                return Collections.emptySet();
+            }
+            Set<String> agentNames = agents.stream().map(DBItemInventoryAgentInstance::getAgentName).filter(Objects::nonNull).collect(Collectors
+                    .toSet());
+            StringBuilder hql = new StringBuilder();
+            hql.append("select agentName from ").append(DBLayer.DBITEM_INV_AGENT_NAMES);
+            hql.append(" where agentId in (:agentIds)");
+            Query<String> query = session.createQuery(hql.toString());
+            query.setParameterList("agentIds", agents.stream().map(DBItemInventoryAgentInstance::getAgentId).collect(Collectors.toSet()));
+            List<String> aliases = session.getResultList(query);
+            if (aliases != null && !aliases.isEmpty()) {
+                agentNames.addAll(aliases);
             }
             return agentNames.stream().sorted().collect(Collectors.toSet());
         } catch (DBMissingDataException ex) {

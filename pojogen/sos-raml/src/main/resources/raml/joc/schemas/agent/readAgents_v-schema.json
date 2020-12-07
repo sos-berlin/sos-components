@@ -21,6 +21,10 @@
     	"items": {
     		"$ref": "agentStateText-schema.json"
     	}
+    },
+    "onlyEnabledAgents": {
+    	"type": "boolean",
+    	"default": "false"
     }
   },
   "additionalProperties": false

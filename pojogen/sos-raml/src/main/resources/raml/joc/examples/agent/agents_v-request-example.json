@@ -1,0 +1,4 @@
+{
+  "controllerId":"scheduler",
+  "onlyEnabledAgents": true
+}
