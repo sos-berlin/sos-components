@@ -140,6 +140,24 @@ public class DBLayerDeploy {
         }
     }
 
+    public List<DBItemDeploymentHistory> getDeployedConfigurationByPathAndType(String path, Integer type)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append(" from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            sql.append(" where path = :path");
+            sql.append(" and type = :type");
+            Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
+            query.setParameter("path", path);
+            query.setParameter("type", type);
+            return session.getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
     public List<DBItemInventoryConfiguration> getAllInventoryConfigurations() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
@@ -1171,6 +1189,7 @@ public class DBLayerDeploy {
         folder.setModified(Date.from(now));
         return folder;
     }
+
     public List<DBItemDeploymentHistory> getDeploymentHistory(ShowDepHistoryFilter filter) throws SOSHibernateException {
         Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter);
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
@@ -1260,7 +1279,7 @@ public class DBLayerDeploy {
                 Query<String> query = getSession().createQuery(hql.toString());
                 query.setParameter("agentName", agentName);
                 query.setParameter("controllerId", controllerId);
-                return query.getSingleResult();
+                return query.getResultList().get(0);
             } catch (NoResultException e) {
                 if (workflowPath != null && jobname != null) {
                     throw new JocSosHibernateException(
