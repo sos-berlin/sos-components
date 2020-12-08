@@ -25,11 +25,12 @@ public class SOSHibernateRegexp extends StandardSQLFunction {
     }
 
     public static String getFunction(final String property, final String regexp) {
-        return new StringBuilder(NAME).append("(").append(property).append(",'").append(regexp).append("')=1").toString();
+        return new StringBuilder(NAME).append("(").append(property).append(",").append(quote(regexp)).append(")=1").toString();
     }
 
     public static String getFunction(final String property, final String regexp, final String mssqlRegexp) {
-        return new StringBuilder(NAME).append("(").append(property).append(",'").append(regexp).append("','" + mssqlRegexp + "')=1").toString();
+        return new StringBuilder(NAME).append("(").append(property).append(",").append(quote(regexp)).append("," + quote(mssqlRegexp) + ")=1")
+                .toString();
     }
 
     @SuppressWarnings("rawtypes")
@@ -83,6 +84,14 @@ public class SOSHibernateRegexp extends StandardSQLFunction {
     @Override
     public Type getReturnType(Type firstArgumentType, Mapping mapping) throws QueryException {
         return StandardBasicTypes.INTEGER;
+    }
+
+    private static String quote(String regexp) {
+        if (regexp == null) {
+            return "'null'";
+        }
+        // : for parameter binding
+        return regexp.startsWith(":") ? regexp : "'" + regexp + "'";
     }
 
 }

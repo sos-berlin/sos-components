@@ -407,8 +407,8 @@ public class HistoryModel {
             if (controllerTimezone == null) {
                 // TODO read from controller api, and instances
                 // throw new Exception(String.format("controller not found: %s", controllerConfiguration.getCurrent().getId()));
-                LOGGER.error(String.format("controller not found: %s, temp. set controllerTimezone to UTC ", controllerConfiguration.getCurrent()
-                        .getId()));
+                LOGGER.warn(String.format("[%s][%s]controller not found in the history. set controller timezone=UTC", identifier,
+                        controllerConfiguration.getCurrent().getId()));
                 controllerTimezone = "UTC";
             }
         }
