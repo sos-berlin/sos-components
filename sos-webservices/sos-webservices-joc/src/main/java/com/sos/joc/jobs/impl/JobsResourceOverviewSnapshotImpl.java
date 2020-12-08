@@ -44,7 +44,7 @@ public class JobsResourceOverviewSnapshotImpl extends JOCResourceImpl implements
             jobs.setRunning(0);
             
             JControllerState controllerState = Proxy.of(jobScheduler.getControllerId()).currentState();
-            jobs.setRunning(controllerState.orderStateToCount(JOrderPredicates.byOrderState(Order.Processing$.class)).get(Order.Processing$.class));
+            jobs.setRunning(controllerState.orderStateToCount(JOrderPredicates.byOrderState(Order.Processing$.class)).getOrDefault(Order.Processing$.class, 0));
             
             JobsSnapshot entity = new JobsSnapshot();
             entity.setSurveyDate(Date.from(Instant.ofEpochMilli(controllerState.eventId() / 1000)));

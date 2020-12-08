@@ -42,7 +42,7 @@ import js7.proxy.javaapi.data.workflow.JWorkflowId;
 public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implements IOrdersResourceOverviewSnapshot {
 
     private static final String API_CALL = "./orders/overview/snapshot";
-    
+
     @Override
     public JOCDefaultResponse postOrdersOverviewSnapshot(String accessToken, byte[] filterBytes) {
         try {
@@ -58,7 +58,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
 
             boolean withWorkFlowFilter = body.getWorkflowIds() != null && !body.getWorkflowIds().isEmpty();
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-            
+
             return JOCDefaultResponse.responseStatus200(getSnapshot(Proxy.of(body.getControllerId()).currentState(), checkFolderPermission(body
                     .getWorkflowIds(), permittedFolders), permittedFolders, withWorkFlowFilter));
 
@@ -87,7 +87,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             if (!workflowIds.isEmpty()) {
 
                 orderStates = controllerState.orderStateToCount(o -> !o.isSuspended() && workflowIds.contains(o.workflowId()));
-                if (orderStates.containsKey(Order.Fresh.class) && orderStates.get(Order.Fresh.class) > 0) {
+                if (orderStates.getOrDefault(Order.Fresh.class, 0) > 0) {
                     blockedOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh.class)).filter(o -> !o.asScala().isSuspended()
                             && workflowIds.contains(o.workflowId()));
                 }
@@ -97,15 +97,17 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                 orderStates = Collections.emptyMap();
             }
         } else if (permittedFolders != null && !permittedFolders.isEmpty()) {
-            orderStates = controllerState.orderStateToCount(o -> !o.isSuspended() && orderIsPermitted(o.workflowId().path().string(), permittedFolders));
-            if (orderStates.containsKey(Order.Fresh.class) && orderStates.get(Order.Fresh.class) > 0) {
-                blockedOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh.class)).filter(o -> !o.asScala().isSuspended() && orderIsPermitted(o.workflowId()
-                        .path().string(), permittedFolders));
+            orderStates = controllerState.orderStateToCount(o -> !o.isSuspended() && orderIsPermitted(o.workflowId().path().string(),
+                    permittedFolders));
+            if (orderStates.getOrDefault(Order.Fresh.class, 0) > 0) {
+                blockedOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh.class)).filter(o -> !o.asScala().isSuspended()
+                        && orderIsPermitted(o.workflowId().path().string(), permittedFolders));
             }
-            suspendedOrders = controllerState.ordersBy(o -> o.isSuspended() && orderIsPermitted(o.workflowId().path().string(), permittedFolders)).mapToInt(e -> 1).sum();
+            suspendedOrders = controllerState.ordersBy(o -> o.isSuspended() && orderIsPermitted(o.workflowId().path().string(), permittedFolders))
+                    .mapToInt(e -> 1).sum();
         } else {
             orderStates = controllerState.orderStateToCount(o -> !o.isSuspended());
-            if (orderStates.containsKey(Order.Fresh.class) && orderStates.get(Order.Fresh.class) > 0) {
+            if (orderStates.getOrDefault(Order.Fresh.class, 0) > 0) {
                 blockedOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh.class)).filter(o -> !o.asScala().isSuspended());
             }
             suspendedOrders = controllerState.ordersBy(o -> o.isSuspended()).mapToInt(e -> 1).sum();
@@ -126,22 +128,23 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             // }
             // }).filter(tstamp -> tstamp != null && tstamp < nowMillis).mapToInt(e -> 1).sum();
 
-            numOfBlockedOrders = blockedOrders.map(order -> order.asScala().state().maybeDelayedUntil()).filter(tstamp -> !tstamp.isEmpty()
-                    && tstamp.get().toInstant().isBefore(now)).mapToInt(item -> 1).sum();
+            numOfBlockedOrders = blockedOrders.map(order -> order.asScala().state().maybeDelayedUntil()).filter(tstamp -> !tstamp.isEmpty() && tstamp
+                    .get().toInstant().isBefore(now)).mapToInt(item -> 1).sum();
         }
 
-        final Map<OrderStateText, Integer> map = orderStates.entrySet().stream().collect(Collectors.groupingBy(entry -> OrdersHelper.groupByStateClasses.get(
-                entry.getKey()), Collectors.summingInt(entry -> entry.getValue())));
+        final Map<OrderStateText, Integer> map = orderStates.entrySet().stream().collect(Collectors.groupingBy(
+                entry -> OrdersHelper.groupByStateClasses.get(entry.getKey()), Collectors.summingInt(entry -> entry.getValue())));
         map.put(OrderStateText.BLOCKED, numOfBlockedOrders);
         OrdersHelper.groupByStateClasses.values().stream().distinct().forEach(state -> map.putIfAbsent(state, 0));
 
         OrdersSummary summary = new OrdersSummary();
-        summary.setBlocked(map.get(OrderStateText.BLOCKED));
-        summary.setPending(map.get(OrderStateText.PENDING) - map.get(OrderStateText.BLOCKED));
-        summary.setRunning(map.get(OrderStateText.RUNNING));
-        summary.setFailed(map.get(OrderStateText.FAILED));
+        summary.setBlocked(map.getOrDefault(OrderStateText.BLOCKED, 0));
+        summary.setPending(map.getOrDefault(OrderStateText.PENDING, 0) - map.getOrDefault(OrderStateText.BLOCKED, 0));
+        summary.setInProgress(map.getOrDefault(OrderStateText.INPROGRESS, 0));
+        summary.setRunning(map.getOrDefault(OrderStateText.RUNNING, 0));
+        summary.setFailed(map.getOrDefault(OrderStateText.FAILED, 0));
         summary.setSuspended(suspendedOrders);
-        summary.setWaiting(map.get(OrderStateText.WAITING));
+        summary.setWaiting(map.getOrDefault(OrderStateText.WAITING, 0));
 
         OrdersSnapshot entity = new OrdersSnapshot();
         entity.setSurveyDate(Date.from(now));
@@ -149,7 +152,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
         entity.setDeliveryDate(Date.from(Instant.now()));
         return entity;
     }
-    
+
     private static Set<ItemId<WorkflowPath>> checkFolderPermission(List<WorkflowId> workflowIds, Set<Folder> permittedFolders) {
         Set<ItemId<WorkflowPath>> wIds = new HashSet<>();
         if (workflowIds != null) {
@@ -162,7 +165,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
         }
         return wIds;
     }
-    
+
     private static boolean orderIsPermitted(String orderPath, Set<Folder> listOfFolders) {
         return folderIsPermitted(Paths.get(orderPath).getParent().toString().replace('\\', '/'), listOfFolders);
     }

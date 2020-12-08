@@ -40,21 +40,21 @@ public class AddOrder {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
     @JsonProperty("workflowPath")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String workflowPath;
     /**
      * timestamp with now
      * <p>
-     * ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS
+     * ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS or empty
      * 
      */
     @JsonProperty("scheduledFor")
-    @JsonPropertyDescription("ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS")
+    @JsonPropertyDescription("ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS or empty")
     private String scheduledFor;
     /**
      * string without < and >
@@ -101,7 +101,7 @@ public class AddOrder {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
@@ -113,7 +113,7 @@ public class AddOrder {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
@@ -125,7 +125,7 @@ public class AddOrder {
     /**
      * timestamp with now
      * <p>
-     * ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS
+     * ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS or empty
      * 
      */
     @JsonProperty("scheduledFor")
@@ -136,7 +136,7 @@ public class AddOrder {
     /**
      * timestamp with now
      * <p>
-     * ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS
+     * ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS or empty
      * 
      */
     @JsonProperty("scheduledFor")

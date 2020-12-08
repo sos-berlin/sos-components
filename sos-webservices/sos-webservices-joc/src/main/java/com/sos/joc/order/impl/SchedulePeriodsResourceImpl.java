@@ -36,7 +36,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.calendar.Period;
 import com.sos.joc.model.dailyplan.RunTime;
-import com.sos.joc.model.order.OrderTemplateDatesFilter;
+import com.sos.joc.model.order.ScheduleDatesFilter;
 import com.sos.joc.order.resource.ISchedulePeriodsResource;
 import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.initiator.model.AssignedCalendars;
@@ -55,8 +55,8 @@ public class SchedulePeriodsResourceImpl extends JOCResourceImpl implements ISch
         SOSHibernateSession session = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, OrderTemplateDatesFilter.class);
-            OrderTemplateDatesFilter in = Globals.objectMapper.readValue(filterBytes, OrderTemplateDatesFilter.class);
+            JsonValidator.validateFailFast(filterBytes, ScheduleDatesFilter.class);
+            ScheduleDatesFilter in = Globals.objectMapper.readValue(filterBytes, ScheduleDatesFilter.class);
             // TODO permission
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getPermissonsJocCockpit(null, accessToken).getOrder().getView().isStatus());
             if (jocDefaultResponse != null) {
@@ -122,7 +122,7 @@ public class SchedulePeriodsResourceImpl extends JOCResourceImpl implements ISch
         }
     }
     
-    private List<String> getNonWorkingDays(InventoryDBLayer dbLayer, OrderTemplateDatesFilter in) throws SOSHibernateException, JsonParseException,
+    private List<String> getNonWorkingDays(InventoryDBLayer dbLayer, ScheduleDatesFilter in) throws SOSHibernateException, JsonParseException,
             JsonMappingException, IOException, SOSMissingDataException, SOSInvalidDataException {
         FrequencyResolver fr = new FrequencyResolver();
         List<String> nonWorkingDays = new ArrayList<>();

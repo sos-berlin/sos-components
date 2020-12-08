@@ -39,12 +39,12 @@ public class OrderDocuFilter {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
     @JsonProperty("workflow")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String workflow;
     /**
      * 
@@ -56,12 +56,12 @@ public class OrderDocuFilter {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
     @JsonProperty("documentation")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String documentation;
     /**
      * auditParams
@@ -99,7 +99,7 @@ public class OrderDocuFilter {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
@@ -111,7 +111,7 @@ public class OrderDocuFilter {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
@@ -143,7 +143,7 @@ public class OrderDocuFilter {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
@@ -155,7 +155,7 @@ public class OrderDocuFilter {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */

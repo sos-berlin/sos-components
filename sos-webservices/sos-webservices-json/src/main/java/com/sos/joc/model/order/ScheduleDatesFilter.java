@@ -28,7 +28,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "dateTo",
     "timeZone"
 })
-public class OrderTemplateDatesFilter {
+public class ScheduleDatesFilter {
 
     /**
      * Assigned Calendars
@@ -202,10 +202,10 @@ public class OrderTemplateDatesFilter {
         if (other == this) {
             return true;
         }
-        if ((other instanceof OrderTemplateDatesFilter) == false) {
+        if ((other instanceof ScheduleDatesFilter) == false) {
             return false;
         }
-        OrderTemplateDatesFilter rhs = ((OrderTemplateDatesFilter) other);
+        ScheduleDatesFilter rhs = ((ScheduleDatesFilter) other);
         return new EqualsBuilder().append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(dateFrom, rhs.dateFrom).append(calendars, rhs.calendars).isEquals();
     }
 

@@ -2,6 +2,7 @@
 <td>Filtered all orders with states such as
 <ul>
 <li>PENDING</li>
+<li>INPROGRESS</li>
 <li>RUNNING</li>
 <li>SUSPENDED</li>
 <li>WAITING</li>

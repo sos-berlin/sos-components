@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -18,6 +19,9 @@ import com.sos.joc.model.order.OrderState;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrderV;
 
+import io.vavr.control.Either;
+import js7.base.problem.Problem;
+import js7.data.agent.AgentName;
 import js7.data.order.Order;
 import js7.proxy.javaapi.data.order.JOrder;
 
@@ -38,8 +42,8 @@ public class OrdersHelper {
                     put(Order.Failed$.class, OrderStateText.FAILED);
                     put(Order.FailedInFork$.class, OrderStateText.FAILED);
                     put(Order.FailedWhileFresh$.class, OrderStateText.FAILED);
-                    put(Order.Ready$.class, OrderStateText.RUNNING);
-                    put(Order.Processed$.class, OrderStateText.RUNNING);
+                    put(Order.Ready$.class, OrderStateText.INPROGRESS);
+                    put(Order.Processed$.class, OrderStateText.INPROGRESS);
                     put(Order.Processing$.class, OrderStateText.RUNNING);
                     put(Order.Finished$.class, OrderStateText.FINISHED);
                     put(Order.Cancelled$.class, OrderStateText.CANCELLED);
@@ -62,8 +66,8 @@ public class OrdersHelper {
             put("Failed", OrderStateText.FAILED);
             put("FailedInFork", OrderStateText.FAILED);
             put("FailedWhileFresh", OrderStateText.FAILED);
-            put("Ready", OrderStateText.RUNNING);
-            put("Processed", OrderStateText.RUNNING);
+            put("Ready", OrderStateText.INPROGRESS);
+            put("Processed", OrderStateText.INPROGRESS);
             put("Processing", OrderStateText.RUNNING);
             put("Suspended", OrderStateText.SUSPENDED);
             put("Finished", OrderStateText.FINISHED);
@@ -88,6 +92,7 @@ public class OrdersHelper {
             put(OrderStateText.CANCELLED, 2);
             put(OrderStateText.BROKEN, 2);
             put(OrderStateText.RUNNING, 0);
+            put(OrderStateText.INPROGRESS, 0);
             put(OrderStateText.FINISHED, 0);
             put(OrderStateText.RESUMED, 0);
             put(OrderStateText.RESUMEMARKED, 0);
@@ -150,16 +155,20 @@ public class OrdersHelper {
         if (compact != Boolean.TRUE) {
             o.setHistoricOutcome(outcomes);
         }
+        Either<Problem, AgentName> opt = jOrder.attached();
+        if (opt.isRight()) {
+           o.setAgent(opt.get().string()); 
+        }
         o.setPosition(oItem.getWorkflowPosition().getPosition());
         Long scheduledFor = oItem.getState().getScheduledFor();
-        if (scheduledFor != null && scheduledFor < surveyDateMillis) {
+        if (scheduledFor != null && surveyDateMillis != null && scheduledFor < surveyDateMillis) {
             o.setState(getState("Blocked", oItem.getIsSuspended()));
         } else {
             o.setState(getState(oItem.getState().getTYPE(), oItem.getIsSuspended()));
         }
         o.setScheduledFor(scheduledFor);
         o.setWorkflowId(oItem.getWorkflowPosition().getWorkflowId());
-        if (withDates) {
+        if (withDates && surveyDateMillis != null) {
             o.setSurveyDate(Date.from(Instant.ofEpochMilli(surveyDateMillis)));
             o.setDeliveryDate(Date.from(Instant.now()));
         }

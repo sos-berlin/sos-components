@@ -6,5 +6,5 @@ Contains collection of Agents where each Agent has fields such as
 * isClusterWatcher
 * state (COUPLED, DECOUPLED, COUPLINGFAILED, UNKNOWN)
 * runningTasks
-* orderIds (of running tasks if ``compact`` == true)
+* orders (of running tasks if ``compact`` == false)
 * errorMessage (if COUPLINGFAILED or INKNOWN)

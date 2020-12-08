@@ -1,7 +1,6 @@
 {
-  "title": "job chain order summary",
+  "title": "order summary",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "only relevant for order jobs and is empty if job's order queue is empty",
   "javaType": "com.sos.joc.model.order.OrdersSummary",
   "type": "object",
   "properties": {
@@ -9,6 +8,9 @@
       "$ref": "../common/nonNegativeInteger-schema.json"
     },
     "running": {
+      "$ref": "../common/nonNegativeInteger-schema.json"
+    },
+    "inProgress": {
       "$ref": "../common/nonNegativeInteger-schema.json"
     },
     "suspended": {

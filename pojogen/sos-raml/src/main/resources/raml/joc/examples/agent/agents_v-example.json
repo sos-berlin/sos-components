@@ -4,7 +4,7 @@
 		"agentName": "agent-primary",
 		"controllerId": "testsuite",
 		"isClusterWatcher": true,
-		"orderIds": [],
+		"orders": [],
         "runningTasks": 0,
 		"state": {
 			"_text": "COUPLED",
@@ -18,7 +18,7 @@
 		"controllerId": "testsuite",
 		"errorMessage": "Connection refused",
 		"isClusterWatcher": false,
-		"orderIds": [],
+		"orders": [],
         "runningTasks": 0,
 		"state": {
 			"_text": "COUPLINGFAILED",

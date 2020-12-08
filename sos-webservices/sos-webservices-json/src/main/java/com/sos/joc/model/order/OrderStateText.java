@@ -21,6 +21,7 @@ public enum OrderStateText {
     SUSPENDMARKED(10),
     RESUMEMARKED(11),
     BROKEN(12),
+    INPROGRESS(13),
     UNKNOWN(99);
     private final Integer intValue;
     private final static Map<String, OrderStateText> CONSTANTS = new HashMap<String, OrderStateText>();

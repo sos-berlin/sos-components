@@ -46,13 +46,12 @@ public class OrdersSnapshot {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date surveyDate;
     /**
-     * job chain order summary
+     * order summary
      * <p>
-     * only relevant for order jobs and is empty if job's order queue is empty
+     * 
      * 
      */
     @JsonProperty("orders")
-    @JsonPropertyDescription("only relevant for order jobs and is empty if job's order queue is empty")
     private OrdersSummary orders;
 
     /**
@@ -104,9 +103,9 @@ public class OrdersSnapshot {
     }
 
     /**
-     * job chain order summary
+     * order summary
      * <p>
-     * only relevant for order jobs and is empty if job's order queue is empty
+     * 
      * 
      */
     @JsonProperty("orders")
@@ -115,9 +114,9 @@ public class OrdersSnapshot {
     }
 
     /**
-     * job chain order summary
+     * order summary
      * <p>
-     * only relevant for order jobs and is empty if job's order queue is empty
+     * 
      * 
      */
     @JsonProperty("orders")

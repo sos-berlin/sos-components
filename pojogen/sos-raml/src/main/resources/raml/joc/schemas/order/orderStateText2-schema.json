@@ -18,7 +18,7 @@
     "Processing",
     "Finished",
     "Cancelled",
-    "ProcessingCancelled",
+    "ProcessingKilled",
     "Suspended"
   ],
   "javaEnumNames": [
@@ -36,7 +36,7 @@
     "Processing",
     "Finished",
     "Cancelled",
-    "ProcessingCancelled",
+    "ProcessingKilled",
     "Suspended"
   ]
 }

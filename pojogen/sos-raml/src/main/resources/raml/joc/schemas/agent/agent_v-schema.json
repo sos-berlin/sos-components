@@ -27,10 +27,10 @@
     	"description": "if state == couplngFailed or unknown",
     	"type": "string"
     },
-    "orderIds": {
+    "orders": {
     	"type": "array",
     	"items": {
-    		"type": "string"
+    		"$ref": "../order/order_v-schema.json"
     	}
     },
     "runningTasks": {

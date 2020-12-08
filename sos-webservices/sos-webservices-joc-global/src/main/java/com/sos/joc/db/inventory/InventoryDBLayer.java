@@ -65,7 +65,7 @@ public class InventoryDBLayer extends DBLayer {
     }
 
     public InventoryDeploymentItem getLastDeployedContent(Long configId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select controllerId, max(id) ").append(DBLayer.DBITEM_DEP_HISTORY);
+        StringBuilder hql = new StringBuilder("select controllerId, max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
         hql.append(" where inventoryConfigurationId = :configId");
         hql.append(" and state = :state ");
         Query<Object[]> query = getSession().createQuery(hql.toString());

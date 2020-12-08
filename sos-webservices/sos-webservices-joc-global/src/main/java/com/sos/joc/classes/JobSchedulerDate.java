@@ -28,6 +28,8 @@ import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 public class JobSchedulerDate {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JobSchedulerDate.class);
+    // max datetime in database with 000 millis: 9999-12-31T23:59:59.000Z -> 253402300799000L
+    private static final Instant NEVER =  Instant.ofEpochMilli(253402300799000L);
 
     
     public static Date nowInUtc() {
@@ -87,8 +89,7 @@ public class JobSchedulerDate {
         if (eventId == null) {
             return null;
         }
-        Instant fromEpochMilli = Instant.ofEpochMilli(eventId / 1000);
-        return Date.from(fromEpochMilli);
+        return Date.from(Instant.ofEpochMilli(eventId / 1000));
     }
 
     public static Date getDateTo(String date, String timeZone) throws JobSchedulerInvalidResponseDataException {
@@ -115,6 +116,8 @@ public class JobSchedulerDate {
     public static Optional<Instant> getScheduledForInUTC(String scheduledFor, String userTimezone) throws JobSchedulerBadRequestException {
         if (scheduledFor == null || scheduledFor.isEmpty() || "now".equals(scheduledFor.trim().toLowerCase())) {
             return Optional.empty();
+        } else if ("never".equals(scheduledFor.trim().toLowerCase())) {
+            Optional.of(NEVER);
         }
         scheduledFor = scheduledFor.trim();
         if (userTimezone == null) {
