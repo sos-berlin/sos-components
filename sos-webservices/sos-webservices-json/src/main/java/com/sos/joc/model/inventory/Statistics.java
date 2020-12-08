@@ -53,7 +53,7 @@ public class Statistics {
      * 
      */
     @JsonProperty("numOfJobs")
-    private Integer numOfJobs;
+    private Long numOfJobs;
     /**
      * non negative integer
      * <p>
@@ -61,7 +61,7 @@ public class Statistics {
      * 
      */
     @JsonProperty("numOfWorkflows")
-    private Integer numOfWorkflows;
+    private Long numOfWorkflows;
 
     /**
      * timestamp
@@ -118,7 +118,7 @@ public class Statistics {
      * 
      */
     @JsonProperty("numOfJobs")
-    public Integer getNumOfJobs() {
+    public Long getNumOfJobs() {
         return numOfJobs;
     }
 
@@ -129,7 +129,7 @@ public class Statistics {
      * 
      */
     @JsonProperty("numOfJobs")
-    public void setNumOfJobs(Integer numOfJobs) {
+    public void setNumOfJobs(Long numOfJobs) {
         this.numOfJobs = numOfJobs;
     }
 
@@ -140,7 +140,7 @@ public class Statistics {
      * 
      */
     @JsonProperty("numOfWorkflows")
-    public Integer getNumOfWorkflows() {
+    public Long getNumOfWorkflows() {
         return numOfWorkflows;
     }
 
@@ -151,7 +151,7 @@ public class Statistics {
      * 
      */
     @JsonProperty("numOfWorkflows")
-    public void setNumOfWorkflows(Integer numOfWorkflows) {
+    public void setNumOfWorkflows(Long numOfWorkflows) {
         this.numOfWorkflows = numOfWorkflows;
     }
 

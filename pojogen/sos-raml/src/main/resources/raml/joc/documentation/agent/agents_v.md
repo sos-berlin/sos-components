@@ -7,4 +7,4 @@ Contains collection of Agents where each Agent has fields such as
 * state (COUPLED, DECOUPLED, COUPLINGFAILED, UNKNOWN)
 * runningTasks
 * orders (of running tasks if ``compact`` == false)
-* errorMessage (if COUPLINGFAILED or INKNOWN)
+* errorMessage (if COUPLINGFAILED or UNKNOWN)

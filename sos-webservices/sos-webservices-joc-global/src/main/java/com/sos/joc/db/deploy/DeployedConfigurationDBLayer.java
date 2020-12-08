@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -22,8 +23,10 @@ import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.deploy.items.NumOfDeployment;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.tree.Tree;
 import com.sos.joc.model.workflow.WorkflowFilter;
 
@@ -88,6 +91,53 @@ public class DeployedConfigurationDBLayer {
             return (Workflow) Globals.objectMapper.readValue(content, Workflow.class);
         } else {
             return null;
+        }
+    }
+    
+    public Map<ConfigurationType, Long> getNumOfDeployedObjects(String controllerId) {
+        try {
+            StringBuilder hql = new StringBuilder("select new ").append(NumOfDeployment.class.getName());
+            hql.append("(type, count(id) as numof) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
+            if (controllerId != null && !controllerId.isEmpty()) {
+                hql.append(" where controllerId = :controllerId");
+            }
+            hql.append(" group by type");
+            Query<NumOfDeployment> query = session.createQuery(hql.toString());
+            if (controllerId != null && !controllerId.isEmpty()) {
+                query.setParameter("controllerId", controllerId);
+            }
+            List<NumOfDeployment> result = session.getResultList(query);
+            if (result != null) {
+                return result.stream().filter(i -> i.getConfigurationType() != null).collect(Collectors.toMap(NumOfDeployment::getConfigurationType,
+                        NumOfDeployment::getNumOf));
+            }
+            return Collections.emptyMap();
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public Long getNumOfDeployedJobs(String controllerId) {
+        try {
+            StringBuilder hql = new StringBuilder("select sum(sw.jobsCount) as numofjobs from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS);
+            hql.append(" sw inner join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS_DEPLOYMENT_HISTORY).append(" swdh");
+            hql.append(" on sw.id = swdh.searchWorkflowId");
+            hql.append(" where sw.deployed = 1");
+            if (controllerId != null && !controllerId.isEmpty()) {
+                hql.append(" and swdh.controllerId = :controllerId");
+            }
+            Query<Long> query = session.createQuery(hql.toString());
+            if (controllerId != null && !controllerId.isEmpty()) {
+                query.setParameter("controllerId", controllerId);
+            }
+            Long result = session.getSingleResult(query);
+            return result == null ? 0L : result;
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
         }
     }
 

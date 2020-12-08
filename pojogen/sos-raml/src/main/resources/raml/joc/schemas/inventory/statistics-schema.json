@@ -15,10 +15,10 @@
       "$ref": "../common/timestamp-schema.json"
     },
     "numOfJobs": {
-      "$ref": "../common/nonNegativeInteger-schema.json"
+      "$ref": "../common/nonNegativeLong-schema.json"
     },
     "numOfWorkflows": {
-      "$ref": "../common/nonNegativeInteger-schema.json"
+      "$ref": "../common/nonNegativeLong-schema.json"
     }
   }
 }
