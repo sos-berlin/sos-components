@@ -933,6 +933,7 @@ public abstract class PublishUtils {
         try {
             for (DBItemDeploymentHistory delete : toDelete) {
                 delete.setId(null);
+                delete.setInventoryConfigurationId(dbLayer.getInventoryConfigurationIdByPathAndType(delete.getPath(), delete.getType()));
                 delete.setOperation(OperationType.DELETE.value());
                 delete.setState(DeploymentState.DEPLOYED.value());
                 delete.setDeleteDate(Date.from(Instant.now()));

@@ -157,6 +157,24 @@ public class DBLayerDeploy {
         }
     }
 
+    public Long getInventoryConfigurationIdByPathAndType(String path, Integer type)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("select id from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            sql.append(" where path = :path");
+            sql.append(" and type = :type");
+            Query<Long> query = session.createQuery(sql.toString());
+            query.setParameter("path", path);
+            query.setParameter("type", type);
+            return session.getSingleResult(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
     public List<DBItemInventoryConfiguration> getAllInventoryConfigurations() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();

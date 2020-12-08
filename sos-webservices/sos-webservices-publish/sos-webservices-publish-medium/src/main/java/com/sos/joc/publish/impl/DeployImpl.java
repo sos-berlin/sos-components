@@ -366,7 +366,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
             if (either.isRight()) {
                 Set<Long> configurationIdsToDelete = itemsToDelete.stream()
-                        .map(DBItemDeploymentHistory::getInventoryConfigurationId).collect(Collectors.toSet());
+                        .map(item -> dbLayer.getInventoryConfigurationIdByPathAndType(item.getPath(), item.getType()))
+                        .collect(Collectors.toSet());
                 Set<DBItemDeploymentHistory> deletedDeployItems = 
                         PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer);
                 createAuditLogForEach(deletedDeployItems, deployFilter, controllerId, false, versionIdForDelete);
