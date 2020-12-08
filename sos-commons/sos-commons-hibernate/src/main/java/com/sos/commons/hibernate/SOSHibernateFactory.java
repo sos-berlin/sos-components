@@ -38,7 +38,7 @@ import com.sos.commons.util.SOSString;
 public class SOSHibernateFactory implements Serializable {
 
     public enum Dbms {
-        DB2, FBSQL, MSSQL, MYSQL, ORACLE, PGSQL, SYBASE, UNKNOWN
+        DB2, H2, FBSQL, MSSQL, MYSQL, ORACLE, PGSQL, SYBASE, UNKNOWN
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateFactory.class);
@@ -415,6 +415,8 @@ public class SOSHibernateFactory implements Serializable {
             String dialectClassName = dialect.getClass().getSimpleName().toLowerCase();
             if (dialectClassName.contains("db2")) {
                 db = Dbms.DB2;
+            } else if (dialectClassName.contains("h2")) {
+                db = Dbms.H2;
             } else if (dialectClassName.contains("firebird")) {
                 db = Dbms.FBSQL;
             } else if (dialectClassName.contains("sqlserver")) {
