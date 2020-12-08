@@ -105,7 +105,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                         } catch (Exception e) {
                             return null;
                         }
-                    }).filter(Objects::nonNull).collect(Collectors.groupingBy(OrderV::getAgent)));
+                    }).filter(Objects::nonNull).collect(Collectors.groupingBy(OrderV::getAgentId)));
                 }
 
                 agentsList.addAll(dbAgents.stream().map(dbAgent -> {

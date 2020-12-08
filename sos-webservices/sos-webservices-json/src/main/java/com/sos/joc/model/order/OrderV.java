@@ -33,7 +33,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "workflowId",
     "state",
     "attachedState",
-    "agent",
+    "agentId",
     "position",
     "scheduledFor",
     "lastOutcome",
@@ -103,8 +103,8 @@ public class OrderV {
      */
     @JsonProperty("attachedState")
     private OrderAttachedState attachedState;
-    @JsonProperty("agent")
-    private String agent;
+    @JsonProperty("agentId")
+    private String agentId;
     /**
      * position
      * <p>
@@ -298,14 +298,14 @@ public class OrderV {
         this.attachedState = attachedState;
     }
 
-    @JsonProperty("agent")
-    public String getAgent() {
-        return agent;
+    @JsonProperty("agentId")
+    public String getAgentId() {
+        return agentId;
     }
 
-    @JsonProperty("agent")
-    public void setAgent(String agent) {
-        this.agent = agent;
+    @JsonProperty("agentId")
+    public void setAgentId(String agentId) {
+        this.agentId = agentId;
     }
 
     /**
@@ -394,12 +394,12 @@ public class OrderV {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orderId", orderId).append("arguments", arguments).append("workflowId", workflowId).append("state", state).append("attachedState", attachedState).append("agent", agent).append("position", position).append("scheduledFor", scheduledFor).append("lastOutcome", lastOutcome).append("historicOutcome", historicOutcome).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orderId", orderId).append("arguments", arguments).append("workflowId", workflowId).append("state", state).append("attachedState", attachedState).append("agent", agentId).append("position", position).append("scheduledFor", scheduledFor).append("lastOutcome", lastOutcome).append("historicOutcome", historicOutcome).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(attachedState).append(agent).append(surveyDate).append(orderId).append(lastOutcome).append(historicOutcome).append(scheduledFor).append(arguments).append(state).append(position).append(deliveryDate).append(workflowId).toHashCode();
+        return new HashCodeBuilder().append(attachedState).append(agentId).append(surveyDate).append(orderId).append(lastOutcome).append(historicOutcome).append(scheduledFor).append(arguments).append(state).append(position).append(deliveryDate).append(workflowId).toHashCode();
     }
 
     @Override
@@ -411,7 +411,7 @@ public class OrderV {
             return false;
         }
         OrderV rhs = ((OrderV) other);
-        return new EqualsBuilder().append(attachedState, rhs.attachedState).append(agent, rhs.agent).append(surveyDate, rhs.surveyDate).append(orderId, rhs.orderId).append(lastOutcome, rhs.lastOutcome).append(historicOutcome, rhs.historicOutcome).append(scheduledFor, rhs.scheduledFor).append(arguments, rhs.arguments).append(state, rhs.state).append(position, rhs.position).append(deliveryDate, rhs.deliveryDate).append(workflowId, rhs.workflowId).isEquals();
+        return new EqualsBuilder().append(attachedState, rhs.attachedState).append(agentId, rhs.agentId).append(surveyDate, rhs.surveyDate).append(orderId, rhs.orderId).append(lastOutcome, rhs.lastOutcome).append(historicOutcome, rhs.historicOutcome).append(scheduledFor, rhs.scheduledFor).append(arguments, rhs.arguments).append(state, rhs.state).append(position, rhs.position).append(deliveryDate, rhs.deliveryDate).append(workflowId, rhs.workflowId).isEquals();
     }
 
 }

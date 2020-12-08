@@ -7,7 +7,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -143,6 +142,7 @@ public class OrdersHelper {
 
     public static OrderV mapJOrderToOrderV(JOrder jOrder, Boolean compact, Long surveyDateMillis, boolean withDates) throws JsonParseException,
             JsonMappingException, IOException {
+        // TODO mapping without ObjectMapper
         OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
         OrderV o = new OrderV();
         o.setArguments(oItem.getArguments());
@@ -157,7 +157,7 @@ public class OrdersHelper {
         }
         Either<Problem, AgentName> opt = jOrder.attached();
         if (opt.isRight()) {
-           o.setAgent(opt.get().string()); 
+           o.setAgentId(opt.get().string()); 
         }
         o.setPosition(oItem.getWorkflowPosition().getPosition());
         Long scheduledFor = oItem.getState().getScheduledFor();

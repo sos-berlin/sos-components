@@ -30,7 +30,7 @@
 	"attachedState": {
 		"$ref": "../../../jobscheduler/schemas/order/orderAttachedState-schema.json"
 	},
-	"agent": {
+	"agentId": {
 		"type": "string"
 	},
 	"position": {
