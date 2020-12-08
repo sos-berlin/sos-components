@@ -10,16 +10,16 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * DeployConfig for delete Operation
+ * DeployConfig
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "deployConfiguration"
+    "draftConfiguration"
 })
-public class DeployConfigDelete {
+public class ReleasableConfig {
 
     /**
      * Filter for Configurations
@@ -28,8 +28,8 @@ public class DeployConfigDelete {
      * (Required)
      * 
      */
-    @JsonProperty("deployConfiguration")
-    private ConfigurationFilter deployConfiguration;
+    @JsonProperty("draftConfiguration")
+    private ConfigurationFilter draftConfiguration;
 
     /**
      * Filter for Configurations
@@ -38,9 +38,9 @@ public class DeployConfigDelete {
      * (Required)
      * 
      */
-    @JsonProperty("deployConfiguration")
-    public ConfigurationFilter getDeployConfiguration() {
-        return deployConfiguration;
+    @JsonProperty("draftConfiguration")
+    public ConfigurationFilter getDraftConfiguration() {
+        return draftConfiguration;
     }
 
     /**
@@ -50,19 +50,19 @@ public class DeployConfigDelete {
      * (Required)
      * 
      */
-    @JsonProperty("deployConfiguration")
-    public void setDeployConfiguration(ConfigurationFilter deployConfiguration) {
-        this.deployConfiguration = deployConfiguration;
+    @JsonProperty("draftConfiguration")
+    public void setDraftConfiguration(ConfigurationFilter draftConfiguration) {
+        this.draftConfiguration = draftConfiguration;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deployConfiguration", deployConfiguration).toString();
+        return new ToStringBuilder(this).append("draftConfiguration", draftConfiguration).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deployConfiguration).toHashCode();
+        return new HashCodeBuilder().append(draftConfiguration).toHashCode();
     }
 
     @Override
@@ -70,11 +70,11 @@ public class DeployConfigDelete {
         if (other == this) {
             return true;
         }
-        if ((other instanceof DeployConfigDelete) == false) {
+        if ((other instanceof ReleasableConfig) == false) {
             return false;
         }
-        DeployConfigDelete rhs = ((DeployConfigDelete) other);
-        return new EqualsBuilder().append(deployConfiguration, rhs.deployConfiguration).isEquals();
+        ReleasableConfig rhs = ((ReleasableConfig) other);
+        return new EqualsBuilder().append(draftConfiguration, rhs.draftConfiguration).isEquals();
     }
 
 }

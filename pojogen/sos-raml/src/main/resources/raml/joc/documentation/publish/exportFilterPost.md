@@ -1,35 +1,54 @@
 <tr>
-<td>``draftConfigurations``</td>
-<td>optional, array</td>
-<td>Filter collection of draft configurations specified by their path and objectType.</td>
-<td>  "draftConfigurations" : [
-  <div style="padding-left:10px;">{</div>
-  <div style="padding-left:20px;">"draftConfiguration" : {</div>
-  <div style="padding-left:30px;">"path" : "/myWorkflows/ifElseWorkflow/workflow_10",</div>
-  <div style="padding-left:30px;">"objectType" : "Workflow"</div>
-  <div style="padding-left:20px;">}</div>
-  <div style="padding-left:10px;">}, {</div>
-  <div style="padding-left:20px;">"draftConfiguration" : {</div>
-  <div style="padding-left:30px;">"path" : "/myWorkflows/ifElseWorkflow/workflow_16",</div>
-  <div style="padding-left:30px;">"objectType" : "Workflow"</div>
-  <div style="padding-left:20px;">}</div>
-  <div style="padding-left:10px;">}</div>
-  ]</td>
+<td>``forSigning``</td>
+<td>required, boolean</td>
+<td>This property decides if the export is meant to be used to sign the exported objects [default=false].</td>
+<td>  "forSigning" : false</td>
 <td></td>
 </tr>
 <tr>
-<td>``deployConfigurations``</td>
+<td>``deployables``</td>
 <td>optional, array</td>
-<td>Filter collection of already deployed configurations specified by their path and objectType.</td>
-<td>  "deployConfigurations" : [
-  <div style="padding-left:10px;">{</div>
-  <div style="padding-left:10px;">"deployConfiguration" : {</div>
-  <div style="padding-left:30px;">"path" : "/myWorkflows/ifElseWorkflow/workflow_12",</div>
-  <div style="padding-left:30px;">"objectType" : "Workflow",</div>
-  <div style="padding-left:30px;">"commitId" : "4273b6c6-c354-4fcd-afdb-2758088abe4a"</div>
-  <div style="padding-left:20px;">}</div>
-  <div style="padding-left:10px;">}</div>
-  ]</td>
+<td>Filter collection of deployable configurations specified by their path and objectType. Deployable objects can be in draft state or already deployed objects.</br>Any of [deployables] or [releasables] is required.</td>
+<td>"deployables" : {  
+<div style="padding-left:10px;">"draftConfigurations" : [ {</div>
+<div style="padding-left:20px;">"draftConfiguration" : {</div>
+<div style="padding-left:30px;">"path" : "/myWorkflows/ifElseWorkflow/workflow_10",</div>
+<div style="padding-left:30px;">"objectType" : "WORKFLOW"</div>
+<div style="padding-left:20px;">}</div>
+<div style="padding-left:10px;">}, {</div>
+<div style="padding-left:20px;">"draftConfiguration" : {</div>
+<div style="padding-left:30px;">"path" : "/myWorkflows/ifElseWorkflow/workflow_16",</div>
+<div style="padding-left:30px;">"objectType" : "WORKFLOW"</div>
+<div style="padding-left:20px;">}</div>
+<div style="padding-left:10px;">}],</div>
+<div style="padding-left:10px;">"deployConfigurations" : [ {</div>
+<div style="padding-left:20px;">"deployConfiguration" : {</div>
+<div style="padding-left:30px;">"path" : "/myWorkflows/ifElseWorkflow/workflow_12",</div>
+<div style="padding-left:30px;">"objectType" : "WORKFLOW",</div>
+<div style="padding-left:30px;">"commitId" : "4273b6c6-c354-4fcd-afdb-2758088abe4a"</div>
+<div style="padding-left:20px;">}</div>
+<div style="padding-left:10px;">}]</div>
+}</td>
+<td></td>
+</tr>
+<tr>
+<td>``releasables``</td>
+<td>optional, array</td>
+<td>Filter collection of releasable configurations specified by their path and objectType. Releasable objects can be in draft state or already released objects.</br>Any of [deployables] or [releasables] is required.</td>
+<td>"releasables" : {  
+<div style="padding-left:10px;">"draftConfigurations" : [ {</div>
+<div style="padding-left:20px;">"draftConfiguration" : {</div>
+<div style="padding-left:30px;">"path" : "mySchedules/newSchedules/mySchedule",</div>
+<div style="padding-left:30px;">"objectType" : "SCHEDULE"</div>
+<div style="padding-left:20px;">}</div>
+<div style="padding-left:10px;">}],</div>
+<div style="padding-left:10px;">"deployConfigurations" : [ {</div>
+<div style="padding-left:20px;">"deployConfiguration" : {</div>
+<div style="padding-left:30px;">"path" : "/myCalendars/newCalendars/myCalendar",</div>
+<div style="padding-left:30px;">"objectType" : "WORKINGDAYSCALENDAR"</div>
+<div style="padding-left:20px;">}</div>
+<div style="padding-left:10px;">}]</div>
+}</td>
 <td></td>
 </tr>
 <tr>

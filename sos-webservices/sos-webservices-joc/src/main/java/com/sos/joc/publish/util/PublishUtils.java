@@ -16,7 +16,6 @@ import java.security.PublicKey;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -207,7 +206,6 @@ public abstract class PublishUtils {
             String controllerId, SOSHibernateSession session) 
                     throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException,
                     PGPException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, CertificateException {
-        boolean isPGPKey = false;
         Map<DBItemInventoryConfiguration, DBItemDepSignatures> signedDrafts = new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
         if (keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
             throw new JocMissingKeyException(
@@ -247,7 +245,7 @@ public abstract class PublishUtils {
                     sig.setAccount(account);
                     sig.setInvConfigurationId(draft.getId());
                     sig.setModified(Date.from(Instant.now()));
-                    X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+//                    X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                     sig.setSignature(SignObject.signX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, kp.getPrivate(), draft.getContent()));
                     signedDrafts.put(draft, sig);
                 }
@@ -264,7 +262,6 @@ public abstract class PublishUtils {
             String controllerId, SOSHibernateSession session) 
                     throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException,
                     PGPException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, CertificateException {
-        boolean isPGPKey = false;
         Map<DBItemInventoryConfiguration, DBItemDepSignatures> signedDrafts = new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
         if (keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
             throw new JocMissingKeyException(
@@ -303,7 +300,7 @@ public abstract class PublishUtils {
                 sig.setAccount(account);
                 sig.setInvConfigurationId(unsignedDraftUpdated.getId());
                 sig.setModified(Date.from(Instant.now()));
-                X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+//                X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                 sig.setSignature(SignObject.signX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, kp.getPrivate(), unsignedDraftUpdated.getContent()));
                 signedDrafts.put(unsignedDraftUpdated, sig);
             }
@@ -431,32 +428,32 @@ public abstract class PublishUtils {
         }
     }
 
-    public static Set<DBItemInventoryConfiguration> verifyPGPSignatures(String account, Set<DBItemInventoryConfiguration> signedDrafts,
-            JocKeyPair keyPair, SOSHibernateSession connection) throws SOSHibernateException, IOException, PGPException {
-        Set<DBItemInventoryConfiguration> verifiedDrafts = new HashSet<DBItemInventoryConfiguration>();
-        String publicKey = null;
-        if (keyPair.getPublicKey() == null) {
-            publicKey = KeyUtil.extractPublicKey(keyPair.getPrivateKey());
-        } else {
-            publicKey = keyPair.getPublicKey();
-        }
-        Boolean verified = false;
-        for (DBItemInventoryConfiguration draft : signedDrafts) {
-            DBLayerDeploy dbLayer = new DBLayerDeploy(connection);
-            DBItemDepSignatures dbSignature = dbLayer.getSignature(draft.getId());
-            if(dbSignature != null) {
-                verified = VerifySignature.verifyPGP(publicKey, draft.getContent(), dbSignature.getSignature());
-                if (!verified) {
-                    LOGGER.trace(
-                            String.format("Signature of object %1$s could not be verified! Object will not be deployed.", draft.getPath()));
-                } else {
-                    verifiedDrafts.add(draft);
-                }
-            }
-        }
-        return verifiedDrafts;
-    }
-
+//    public static Set<DBItemInventoryConfiguration> verifyPGPSignatures(String account, Set<DBItemInventoryConfiguration> signedDrafts,
+//            JocKeyPair keyPair, SOSHibernateSession connection) throws SOSHibernateException, IOException, PGPException {
+//        Set<DBItemInventoryConfiguration> verifiedDrafts = new HashSet<DBItemInventoryConfiguration>();
+//        String publicKey = null;
+//        if (keyPair.getPublicKey() == null) {
+//            publicKey = KeyUtil.extractPublicKey(keyPair.getPrivateKey());
+//        } else {
+//            publicKey = keyPair.getPublicKey();
+//        }
+//        Boolean verified = false;
+//        for (DBItemInventoryConfiguration draft : signedDrafts) {
+//            DBLayerDeploy dbLayer = new DBLayerDeploy(connection);
+//            DBItemDepSignatures dbSignature = dbLayer.getSignature(draft.getId());
+//            if(dbSignature != null) {
+//                verified = VerifySignature.verifyPGP(publicKey, draft.getContent(), dbSignature.getSignature());
+//                if (!verified) {
+//                    LOGGER.trace(
+//                            String.format("Signature of object %1$s could not be verified! Object will not be deployed.", draft.getPath()));
+//                } else {
+//                    verifiedDrafts.add(draft);
+//                }
+//            }
+//        }
+//        return verifiedDrafts;
+//    }
+//
     public static DBItemInventoryConfiguration verifyPGPSignature(String account, DBItemInventoryConfiguration signedDraft,
             DBItemDepSignatures draftSignature, JocKeyPair keyPair) throws SOSHibernateException, IOException, PGPException {
         DBItemInventoryConfiguration verifiedDraft = null;
@@ -690,52 +687,52 @@ public abstract class PublishUtils {
         return ControllerApi.of(controllerId).updateRepo(VersionId.of(versionId), Flux.fromIterable(updateRepoOperations));
     }
 
-    public static CompletableFuture<Either<Problem, Void>> updateRepoAddUpdateDeleteDelete(
-            String versionId, Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, 
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, List<DBItemDeploymentHistory> alreadyDeployedtoDelete, 
-            String controllerId, DBLayerDeploy dbLayer, String keyAlgorithm) 
-                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
-        if ("RSA".equals(keyAlgorithm) || "ECDSA".equals(keyAlgorithm)) {
-            keyAlgorithm = "X509";
-        }
-        Set<JUpdateRepoOperation> updateRepoOperations = new HashSet<JUpdateRepoOperation>();
-        if (drafts != null) {
-            for (DBItemInventoryConfiguration draft : drafts.keySet()) {
-                if (draft != null) {
-                    updateRepoOperations.add(JUpdateRepoOperation.addOrReplace(SignedString.of(
-                            draft.getContent(), keyAlgorithm, drafts.get(draft).getSignature())));
-                }
-            }
-        }
-        if (alreadyDeployed != null) {
-            for (DBItemDeploymentHistory reDeploy : alreadyDeployed.keySet()) {
-                if (reDeploy != null) {
-                    updateRepoOperations.add(JUpdateRepoOperation.addOrReplace(SignedString.of(
-                            reDeploy.getContent(), keyAlgorithm, alreadyDeployed.get(reDeploy).getSignature())));
-                }
-            }
-        }
-        if (alreadyDeployedtoDelete != null) {
-            for (DBItemDeploymentHistory toDelete : alreadyDeployedtoDelete) {
-                switch (DeployType.fromValue(toDelete.getType())) {
-                case WORKFLOW:
-                    updateRepoOperations.add(JUpdateRepoOperation.delete(WorkflowPath.of(toDelete.getPath())));
-                    break;
-                case JOBCLASS:
-                    // TODO:
-                case LOCK:
-                    // TODO:
-                case JUNCTION:
-                    // TODO:
-                    throw new JocNotImplementedException();
-                default:
-                    break;
-                }
-            }
-        }
-        return ControllerApi.of(controllerId).updateRepo(VersionId.of(versionId), Flux.fromIterable(updateRepoOperations));
-    }
-
+//    public static CompletableFuture<Either<Problem, Void>> updateRepoAddUpdateDeleteDelete(
+//            String versionId, Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, 
+//            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, List<DBItemDeploymentHistory> alreadyDeployedtoDelete, 
+//            String controllerId, DBLayerDeploy dbLayer, String keyAlgorithm) 
+//                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+//        if ("RSA".equals(keyAlgorithm) || "ECDSA".equals(keyAlgorithm)) {
+//            keyAlgorithm = "X509";
+//        }
+//        Set<JUpdateRepoOperation> updateRepoOperations = new HashSet<JUpdateRepoOperation>();
+//        if (drafts != null) {
+//            for (DBItemInventoryConfiguration draft : drafts.keySet()) {
+//                if (draft != null) {
+//                    updateRepoOperations.add(JUpdateRepoOperation.addOrReplace(SignedString.of(
+//                            draft.getContent(), keyAlgorithm, drafts.get(draft).getSignature())));
+//                }
+//            }
+//        }
+//        if (alreadyDeployed != null) {
+//            for (DBItemDeploymentHistory reDeploy : alreadyDeployed.keySet()) {
+//                if (reDeploy != null) {
+//                    updateRepoOperations.add(JUpdateRepoOperation.addOrReplace(SignedString.of(
+//                            reDeploy.getContent(), keyAlgorithm, alreadyDeployed.get(reDeploy).getSignature())));
+//                }
+//            }
+//        }
+//        if (alreadyDeployedtoDelete != null) {
+//            for (DBItemDeploymentHistory toDelete : alreadyDeployedtoDelete) {
+//                switch (DeployType.fromValue(toDelete.getType())) {
+//                case WORKFLOW:
+//                    updateRepoOperations.add(JUpdateRepoOperation.delete(WorkflowPath.of(toDelete.getPath())));
+//                    break;
+//                case JOBCLASS:
+//                    // TODO:
+//                case LOCK:
+//                    // TODO:
+//                case JUNCTION:
+//                    // TODO:
+//                    throw new JocNotImplementedException();
+//                default:
+//                    break;
+//                }
+//            }
+//        }
+//        return ControllerApi.of(controllerId).updateRepo(VersionId.of(versionId), Flux.fromIterable(updateRepoOperations));
+//    }
+//
     private static void updateVersionIdOnDraftObject(DBItemInventoryConfiguration draft, String versionId)
             throws JsonParseException, JsonMappingException, IOException, JocNotImplementedException {
         switch (ConfigurationType.fromValue(draft.getType())) {
@@ -847,39 +844,39 @@ public abstract class PublishUtils {
         return deployedObjects;
     }
 
-    public static Set<DBItemDeploymentHistory> cloneInvConfigurationsToDepHistoryItems(
-            Map<DBItemInventoryConfiguration, JSObject> importedObjects, String account, DBLayerDeploy dbLayerDeploy, String controllerId,
-            Date deploymentDate, String versionId) {
-        Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
-        try {
-            DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
-            for (DBItemInventoryConfiguration draft : importedObjects.keySet()) {
-                DBItemDeploymentHistory newDeployedObject = new DBItemDeploymentHistory();
-                newDeployedObject.setAccount(account);
-                // TODO: get Version to set here
-                newDeployedObject.setVersion(null);
-                newDeployedObject.setPath(draft.getPath());
-                newDeployedObject.setFolder(draft.getFolder());
-                newDeployedObject.setType(
-                        PublishUtils.mapInventoryMetaConfigurationType(ConfigurationType.fromValue(draft.getType())).intValue());
-                newDeployedObject.setCommitId(versionId);
-                newDeployedObject.setContent(draft.getContent());
-                newDeployedObject.setSignedContent(importedObjects.get(draft).getSignedContent());
-                newDeployedObject.setDeploymentDate(deploymentDate);
-                newDeployedObject.setControllerInstanceId(controllerInstance.getId());
-                newDeployedObject.setControllerId(controllerId);
-                newDeployedObject.setInventoryConfigurationId(draft.getId());
-                newDeployedObject.setOperation(OperationType.UPDATE.value());
-                newDeployedObject.setState(DeploymentState.DEPLOYED.value());
-                dbLayerDeploy.getSession().save(newDeployedObject);
-                deployedObjects.add(newDeployedObject);
-            }
-        } catch (SOSHibernateException e) {
-            throw new JocSosHibernateException(e);
-        }
-        return deployedObjects;
-    }
-
+//    public static Set<DBItemDeploymentHistory> cloneInvConfigurationsToDepHistoryItems(
+//            Map<DBItemInventoryConfiguration, JSObject> importedObjects, String account, DBLayerDeploy dbLayerDeploy, String controllerId,
+//            Date deploymentDate, String versionId) {
+//        Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
+//        try {
+//            DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
+//            for (DBItemInventoryConfiguration draft : importedObjects.keySet()) {
+//                DBItemDeploymentHistory newDeployedObject = new DBItemDeploymentHistory();
+//                newDeployedObject.setAccount(account);
+//                // TODO: get Version to set here
+//                newDeployedObject.setVersion(null);
+//                newDeployedObject.setPath(draft.getPath());
+//                newDeployedObject.setFolder(draft.getFolder());
+//                newDeployedObject.setType(
+//                        PublishUtils.mapInventoryMetaConfigurationType(ConfigurationType.fromValue(draft.getType())).intValue());
+//                newDeployedObject.setCommitId(versionId);
+//                newDeployedObject.setContent(draft.getContent());
+//                newDeployedObject.setSignedContent(importedObjects.get(draft).getSignedContent());
+//                newDeployedObject.setDeploymentDate(deploymentDate);
+//                newDeployedObject.setControllerInstanceId(controllerInstance.getId());
+//                newDeployedObject.setControllerId(controllerId);
+//                newDeployedObject.setInventoryConfigurationId(draft.getId());
+//                newDeployedObject.setOperation(OperationType.UPDATE.value());
+//                newDeployedObject.setState(DeploymentState.DEPLOYED.value());
+//                dbLayerDeploy.getSession().save(newDeployedObject);
+//                deployedObjects.add(newDeployedObject);
+//            }
+//        } catch (SOSHibernateException e) {
+//            throw new JocSosHibernateException(e);
+//        }
+//        return deployedObjects;
+//    }
+//
     public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToRedeployed(
             Map<DBItemDeploymentHistory, DBItemDepSignatures> redeployedWithSignature, String account, DBLayerDeploy dbLayerDeploy,
             String versionId, String controllerId, Date deploymentDate) {
@@ -979,18 +976,18 @@ public abstract class PublishUtils {
         }
     }
 
-    public static ConfigurationType mapDeployType(DeployType deployType) {
-        switch (deployType) {
-        case WORKFLOW:
-            return ConfigurationType.WORKFLOW;
-        case LOCK:
-            return ConfigurationType.LOCK;
-        case JUNCTION:
-            return ConfigurationType.JUNCTION;
-        default:
-            return null;
-        }
-    }
+//    public static ConfigurationType mapDeployType(DeployType deployType) {
+//        switch (deployType) {
+//        case WORKFLOW:
+//            return ConfigurationType.WORKFLOW;
+//        case LOCK:
+//            return ConfigurationType.LOCK;
+//        case JUNCTION:
+//            return ConfigurationType.JUNCTION;
+//        default:
+//            return null;
+//        }
+//    }
 
     public static <T extends DBItem> List<DBItemDeploymentHistory> checkPathRenamingForUpdate(
             Set<T> verifiedObjects, String controllerId, DBLayerDeploy dbLayer, String keyAlgorithm)

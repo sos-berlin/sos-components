@@ -5,26 +5,26 @@
 	"type": "object",
   "anyOf": [{
     "required": [
-        "draftConfigurations"
+        "forSigning",
+        "deployables"
       ]
     }, {
       "required": [
-        "deployConfigurations"
+        "forSigning",
+        "releasables"
       ]
     }
   ],
  	"properties": {
-    "draftConfigurations": {
-      "type" : "array",
-      "items" : {
-        "$ref": "draftConfig-schema.json"
-      }
+    "forSigning": {
+      "description": "decides if the export is meant for signing the exported objects [default=false]",
+      "type" : "boolean"
     },
-    "deployConfigurations": {
-      "type" : "array",
-      "items" : {
-        "$ref": "deployConfig-schema.json"
-      }
+    "deployables": {
+        "$ref": "exportDeployables-schema.json"
+    },
+    "releasables": {
+        "$ref": "exportReleasables-schema.json"
     },
     "auditLog": {
       "$ref": "../audit/auditParams-schema.json"

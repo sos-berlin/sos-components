@@ -1,0 +1,15 @@
+{
+	"title": "Released Configuration",
+	"description": "Path and Type to identify a configuration of a release Objects",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.publish.ReleasedConfig",
+	"type": "object",
+  "required": [
+    "releasedConfiguration"
+  ],
+  "properties": {
+    "releasedConfiguration": {
+      "$ref": "configurationFilter-schema.json"
+    }
+  }
+}

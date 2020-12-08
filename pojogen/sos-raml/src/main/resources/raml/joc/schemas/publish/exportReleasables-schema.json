@@ -1,0 +1,33 @@
+{
+	"title": "Export Releasables",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.publish.ExportReleasables",
+	"type": "object",
+  "anyOf": [{
+    "required": [
+        "draftConfigurations"
+      ]
+    }, {
+      "required": [
+        "releasedConfigurations"
+      ]
+    }
+  ],
+ 	"properties": {
+    "draftConfigurations": {
+      "type" : "array",
+      "items" : {
+        "$ref": "releasableConfig-schema.json"
+      }
+    },
+    "releasedConfigurations": {
+      "type" : "array",
+      "items" : {
+        "$ref": "releasedConfig-schema.json"
+      }
+    },
+    "auditLog": {
+      "$ref": "../audit/auditParams-schema.json"
+    }
+	}
+}

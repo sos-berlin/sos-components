@@ -40,11 +40,10 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.publish.ConfigurationFilter;
 import com.sos.joc.model.publish.DeployConfigDelete;
 import com.sos.joc.model.publish.DeployConfiguration;
-import com.sos.joc.model.publish.DeployConfigurationDelete;
 import com.sos.joc.model.publish.DeploymentState;
-import com.sos.joc.model.publish.DraftConfiguration;
 import com.sos.joc.model.publish.ExcludeConfiguration;
 import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.JSObject;
@@ -196,7 +195,7 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemInventoryConfiguration> getFilteredInventoryConfiguration(List<DraftConfiguration> configurations)
+    public List<DBItemInventoryConfiguration> getFilteredInventoryConfiguration(List<ConfigurationFilter> configurations)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
@@ -275,7 +274,7 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemDeploymentHistory> getFilteredDeploymentHistoryToDelete(List<DeployConfigurationDelete> deployConfigurations)
+    public List<DBItemDeploymentHistory> getFilteredDeploymentHistoryToDelete(List<ConfigurationFilter> deployConfigurations)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
@@ -340,7 +339,7 @@ public class DBLayerDeploy {
     public List<DBItemInventoryConfiguration> getFilteredConfigurations(ExportFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
         return getFilteredInventoryConfiguration(
-                filter.getDraftConfigurations().stream()
+                filter.getDeployables().getDraftConfigurations().stream()
                 .map(item -> item.getDraftConfiguration())
                 .collect(Collectors.toList()));
     }
@@ -348,7 +347,7 @@ public class DBLayerDeploy {
     public List<DBItemDeploymentHistory> getFilteredDeployments(ExportFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
         return getFilteredDeploymentHistory(
-                filter.getDeployConfigurations().stream()
+                filter.getDeployables().getDeployConfigurations().stream()
                 .map(item -> item.getDeployConfiguration())
                 .collect(Collectors.toList()));
     }

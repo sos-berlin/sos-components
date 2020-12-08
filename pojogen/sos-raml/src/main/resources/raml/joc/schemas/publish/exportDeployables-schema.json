@@ -1,0 +1,33 @@
+{
+	"title": "Export Deployables",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.publish.ExportDeployables",
+	"type": "object",
+  "anyOf": [{
+    "required": [
+        "draftConfigurations"
+      ]
+    }, {
+      "required": [
+        "deployConfigurations"
+      ]
+    }
+  ],
+ 	"properties": {
+    "draftConfigurations": {
+      "type" : "array",
+      "items" : {
+        "$ref": "draftConfig-schema.json"
+      }
+    },
+    "deployConfigurations": {
+      "type" : "array",
+      "items" : {
+        "$ref": "deployConfig-schema.json"
+      }
+    },
+    "auditLog": {
+      "$ref": "../audit/auditParams-schema.json"
+    }
+	}
+}

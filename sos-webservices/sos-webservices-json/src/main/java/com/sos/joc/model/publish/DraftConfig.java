@@ -22,36 +22,36 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class DraftConfig {
 
     /**
-     * DraftConfiguration
+     * Filter for Configurations
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("draftConfiguration")
-    private DraftConfiguration draftConfiguration;
+    private ConfigurationFilter draftConfiguration;
 
     /**
-     * DraftConfiguration
+     * Filter for Configurations
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("draftConfiguration")
-    public DraftConfiguration getDraftConfiguration() {
+    public ConfigurationFilter getDraftConfiguration() {
         return draftConfiguration;
     }
 
     /**
-     * DraftConfiguration
+     * Filter for Configurations
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("draftConfiguration")
-    public void setDraftConfiguration(DraftConfiguration draftConfiguration) {
+    public void setDraftConfiguration(ConfigurationFilter draftConfiguration) {
         this.draftConfiguration = draftConfiguration;
     }
 

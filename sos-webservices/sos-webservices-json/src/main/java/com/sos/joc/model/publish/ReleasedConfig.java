@@ -10,16 +10,16 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * DeployConfig for delete Operation
+ * Released Configuration
  * <p>
- * 
+ * Path and Type to identify a configuration of a release Objects
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "deployConfiguration"
+    "releasedConfiguration"
 })
-public class DeployConfigDelete {
+public class ReleasedConfig {
 
     /**
      * Filter for Configurations
@@ -28,8 +28,8 @@ public class DeployConfigDelete {
      * (Required)
      * 
      */
-    @JsonProperty("deployConfiguration")
-    private ConfigurationFilter deployConfiguration;
+    @JsonProperty("releasedConfiguration")
+    private ConfigurationFilter releasedConfiguration;
 
     /**
      * Filter for Configurations
@@ -38,9 +38,9 @@ public class DeployConfigDelete {
      * (Required)
      * 
      */
-    @JsonProperty("deployConfiguration")
-    public ConfigurationFilter getDeployConfiguration() {
-        return deployConfiguration;
+    @JsonProperty("releasedConfiguration")
+    public ConfigurationFilter getReleasedConfiguration() {
+        return releasedConfiguration;
     }
 
     /**
@@ -50,19 +50,19 @@ public class DeployConfigDelete {
      * (Required)
      * 
      */
-    @JsonProperty("deployConfiguration")
-    public void setDeployConfiguration(ConfigurationFilter deployConfiguration) {
-        this.deployConfiguration = deployConfiguration;
+    @JsonProperty("releasedConfiguration")
+    public void setReleasedConfiguration(ConfigurationFilter releasedConfiguration) {
+        this.releasedConfiguration = releasedConfiguration;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deployConfiguration", deployConfiguration).toString();
+        return new ToStringBuilder(this).append("releasedConfiguration", releasedConfiguration).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deployConfiguration).toHashCode();
+        return new HashCodeBuilder().append(releasedConfiguration).toHashCode();
     }
 
     @Override
@@ -70,11 +70,11 @@ public class DeployConfigDelete {
         if (other == this) {
             return true;
         }
-        if ((other instanceof DeployConfigDelete) == false) {
+        if ((other instanceof ReleasedConfig) == false) {
             return false;
         }
-        DeployConfigDelete rhs = ((DeployConfigDelete) other);
-        return new EqualsBuilder().append(deployConfiguration, rhs.deployConfiguration).isEquals();
+        ReleasedConfig rhs = ((ReleasedConfig) other);
+        return new EqualsBuilder().append(releasedConfiguration, rhs.releasedConfiguration).isEquals();
     }
 
 }

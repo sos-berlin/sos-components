@@ -12,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * DeployConfiguration
+ * Filter for Configurations
  * <p>
  * 
  * 
@@ -20,10 +20,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "path",
-    "objectType",
-    "commitId"
+    "objectType"
 })
-public class DeployConfiguration {
+public class ConfigurationFilter {
 
     /**
      * path
@@ -44,15 +43,6 @@ public class DeployConfiguration {
      */
     @JsonProperty("objectType")
     private ConfigurationType objectType;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("commitId")
-    private String commitId;
 
     /**
      * path
@@ -102,38 +92,14 @@ public class DeployConfiguration {
         this.objectType = objectType;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("commitId")
-    public String getCommitId() {
-        return commitId;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("commitId")
-    public void setCommitId(String commitId) {
-        this.commitId = commitId;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("objectType", objectType).append("commitId", commitId).toString();
+        return new ToStringBuilder(this).append("path", path).append("objectType", objectType).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(commitId).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(path).append(objectType).toHashCode();
     }
 
     @Override
@@ -141,11 +107,11 @@ public class DeployConfiguration {
         if (other == this) {
             return true;
         }
-        if ((other instanceof DeployConfiguration) == false) {
+        if ((other instanceof ConfigurationFilter) == false) {
             return false;
         }
-        DeployConfiguration rhs = ((DeployConfiguration) other);
-        return new EqualsBuilder().append(path, rhs.path).append(commitId, rhs.commitId).append(objectType, rhs.objectType).isEquals();
+        ConfigurationFilter rhs = ((ConfigurationFilter) other);
+        return new EqualsBuilder().append(path, rhs.path).append(objectType, rhs.objectType).isEquals();
     }
 
 }

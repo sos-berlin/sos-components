@@ -1,0 +1,30 @@
+{
+	"title": "Deployable Objects",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.publish.DeployableObjects",
+	"type": "object",
+  "anyOf": [{
+    "required": [
+        "draftConfigurations"
+      ]
+    }, {
+      "required": [
+        "releasedConfigurations"
+      ]
+    }
+  ],
+  "properties": {
+    "draftConfigurations": {
+      "type" : "array",
+      "items" : {
+        "$ref": "releasableConfig-schema.json"
+      }
+    },
+    "releasedConfigurations": {
+      "type" : "array",
+      "items" : {
+        "$ref": "releasedConfig-schema.json"
+      }
+    }
+  }
+}

@@ -42,14 +42,13 @@ import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.pgp.JocKeyPair;
+import com.sos.joc.model.publish.ConfigurationFilter;
 import com.sos.joc.model.publish.ControllerId;
 import com.sos.joc.model.publish.DeployConfig;
 import com.sos.joc.model.publish.DeployConfigDelete;
 import com.sos.joc.model.publish.DeployConfiguration;
-import com.sos.joc.model.publish.DeployConfigurationDelete;
 import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.DraftConfig;
-import com.sos.joc.model.publish.DraftConfiguration;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
@@ -89,13 +88,13 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     DBItemInventoryJSInstance::getControllerId));
             // process filter
             Set<String> controllerIds = getControllerIdsFromFilter(deployFilter);
-            List<DraftConfiguration> draftConfigsToStore = getDraftConfigurationsToStoreFromFilter(deployFilter);
+            List<ConfigurationFilter> draftConfigsToStore = getDraftConfigurationsToStoreFromFilter(deployFilter);
             /*
              * TODO: - check for configurationIds with -marked-for-delete- set - get all deployments from history related to the given configurationId - get all
              * controllers from those deployments - delete all those existing deployments from all determined controllers
              **/
             List<DeployConfiguration> deployConfigsToStoreAgain = getDeployConfigurationsToStoreFromFilter(deployFilter);
-            List<DeployConfigurationDelete> deployConfigsToDelete = getDeployConfigurationsToDeleteFromFilter(deployFilter);
+            List<ConfigurationFilter> deployConfigsToDelete = getDeployConfigurationsToDeleteFromFilter(deployFilter);
             List<DeployConfigDelete> foldersToDelete = null;
             if (deployFilter.getDelete() != null) {
                 foldersToDelete = deployFilter.getDelete().getDeployConfigurations().stream().filter(item -> item.getDeployConfiguration()
@@ -268,12 +267,12 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         return deployFilter.getControllerIds().stream().map(ControllerId::getControllerId).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
-    private List<DraftConfiguration> getDraftConfigurationsToStoreFromFilter(DeployFilter deployFilter) {
+    private List<ConfigurationFilter> getDraftConfigurationsToStoreFromFilter(DeployFilter deployFilter) {
         if (deployFilter.getStore() != null) {
             return deployFilter.getStore().getDraftConfigurations().stream().filter(item -> !item.getDraftConfiguration().getObjectType().equals(
                     ConfigurationType.FOLDER)).map(DraftConfig::getDraftConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
         } else {
-            return new ArrayList<DraftConfiguration>();
+            return new ArrayList<ConfigurationFilter>();
         }
     }
 
@@ -286,12 +285,12 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         }
     }
 
-    private List<DeployConfigurationDelete> getDeployConfigurationsToDeleteFromFilter(DeployFilter deployFilter) {
+    private List<ConfigurationFilter> getDeployConfigurationsToDeleteFromFilter(DeployFilter deployFilter) {
         if (deployFilter.getDelete() != null) {
             return deployFilter.getDelete().getDeployConfigurations().stream().filter(item -> !item.getDeployConfiguration().getObjectType().equals(
                     ConfigurationType.FOLDER)).map(DeployConfigDelete::getDeployConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
         } else {
-            return new ArrayList<DeployConfigurationDelete>();
+            return new ArrayList<ConfigurationFilter>();
         }
     }
 

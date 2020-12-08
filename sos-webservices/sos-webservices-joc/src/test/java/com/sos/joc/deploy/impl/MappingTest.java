@@ -304,21 +304,28 @@ public class MappingTest {
     }
 
     @Test
-    public void test11MapExportFilter () throws JsonProcessingException {
-        LOGGER.info("ExportFilter Example");
+    public void test11MapExportFilterForSigning () throws JsonProcessingException {
+        LOGGER.info("ExportFilter forSigning=true Example");
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
-        LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleExportFilter()));
+        LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleExportFilter(true)));
     }
 
     @Test
-    public void test12MapSetVersionFilter () throws JsonProcessingException {
+    public void test12MapExportFilter () throws JsonProcessingException {
+        LOGGER.info("ExportFilter forSigning=false Example");
+        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
+        LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleExportFilter(false)));
+    }
+
+    @Test
+    public void test13MapSetVersionFilter () throws JsonProcessingException {
         LOGGER.info("SetVersionFilter Example");
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleSetVersionFilter()));
     }
 
     @Test
-    public void test13MapSetVersionsFilter () throws JsonProcessingException {
+    public void test14MapSetVersionsFilter () throws JsonProcessingException {
         LOGGER.info("SetVersionsFilter Example");
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleSetVersionsFilter()));

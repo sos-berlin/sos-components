@@ -95,14 +95,14 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             IOException, SOSHibernateException {
         DBLayerDeploy dbLayer = new DBLayerDeploy(connection);
         Set<JSObject> allObjects = new HashSet<JSObject>();
-        if (filter.getDeployConfigurations() != null) {
+        if (filter.getDeployables().getDeployConfigurations() != null) {
             List<DBItemDeploymentHistory> deploymentDbItems = dbLayer.getFilteredDeployments(filter);
             for (DBItemDeploymentHistory deployment : deploymentDbItems) {
                 dbLayer.storeCommitIdForLaterUsage(deployment, versionId);
                 allObjects.add(mapDepHistoryToJSObject(deployment, versionId));
             } 
         }
-        if (filter.getDraftConfigurations() != null) {
+        if (filter.getDeployables().getDraftConfigurations() != null) {
             List<DBItemInventoryConfiguration> configurationDbItems = dbLayer.getFilteredConfigurations(filter);
             for (DBItemInventoryConfiguration configuration : configurationDbItems) {
                 dbLayer.storeCommitIdForLaterUsage(configuration, versionId);

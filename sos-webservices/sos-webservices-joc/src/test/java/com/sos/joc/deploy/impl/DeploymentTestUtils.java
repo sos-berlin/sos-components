@@ -24,6 +24,7 @@ import com.sos.jobscheduler.model.workflow.Jobs;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.publish.ConfigurationFilter;
 import com.sos.joc.model.publish.ControllerId;
 import com.sos.joc.model.publish.DepHistory;
 import com.sos.joc.model.publish.DeployConfig;
@@ -38,10 +39,14 @@ import com.sos.joc.model.publish.DeploymentVersion;
 import com.sos.joc.model.publish.DraftConfig;
 import com.sos.joc.model.publish.DraftConfiguration;
 import com.sos.joc.model.publish.ExcludeConfiguration;
+import com.sos.joc.model.publish.ExportDeployables;
 import com.sos.joc.model.publish.ExportFilter;
+import com.sos.joc.model.publish.ExportReleasables;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.RedeployFilter;
+import com.sos.joc.model.publish.ReleasableConfig;
+import com.sos.joc.model.publish.ReleasedConfig;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.model.publish.SetVersionsFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
@@ -435,13 +440,13 @@ public class DeploymentTestUtils {
         filter.getControllerIds().add(standalone);
         
         DraftConfig workflow10DraftConfig = new DraftConfig();
-        DraftConfiguration workflow10draft = new DraftConfiguration();
+        ConfigurationFilter workflow10draft = new ConfigurationFilter();
         workflow10draft.setPath("/myWorkflows/ifElseWorkflow/workflow_10");
         workflow10draft.setObjectType(ConfigurationType.WORKFLOW);
         workflow10DraftConfig.setDraftConfiguration(workflow10draft);
 
         DraftConfig workflow16DraftConfig = new DraftConfig();
-        DraftConfiguration workflow16draft = new DraftConfiguration();
+        ConfigurationFilter workflow16draft = new ConfigurationFilter();
         workflow16draft.setPath("/myWorkflows/ifElseWorkflow/workflow_16");
         workflow16draft.setObjectType(ConfigurationType.WORKFLOW);
         workflow16DraftConfig.setDraftConfiguration(workflow16draft);
@@ -458,7 +463,7 @@ public class DeploymentTestUtils {
         toStore.getDeployConfigurations().add(workflow12deployConfig);
         
         DeployConfigDelete toDeleteConfig = new DeployConfigDelete();
-        DeployConfigurationDelete toDelete = new DeployConfigurationDelete();
+        ConfigurationFilter toDelete = new ConfigurationFilter();
         toDelete.setPath("/myWorkflows/forkJoinWorkflows/workflow_88");
         toDelete.setObjectType(ConfigurationType.WORKFLOW);
         toDeleteConfig.setDeployConfiguration(toDelete);
@@ -467,29 +472,24 @@ public class DeploymentTestUtils {
         return filter;
     }
 
-    public static ExportFilter createExampleExportFilter () {
+    public static ExportFilter createExampleExportFilter (boolean forSigning) {
         ExportFilter filter = new ExportFilter();
-        
-//        ControllerId js7Cluster = new ControllerId();
-//        js7Cluster.setControllerId("js7-cluster");
-//        ControllerId standalone = new ControllerId();
-//        standalone.setControllerId("standalone");
-//        filter.getControllerIds().add(js7Cluster);
-//        filter.getControllerIds().add(standalone);
-        
+        filter.setDeployables(new ExportDeployables());
+        filter.setForSigning(forSigning);
+
         DraftConfig workflow10DraftConfig = new DraftConfig();
-        DraftConfiguration workflow10draft = new DraftConfiguration();
+        ConfigurationFilter workflow10draft = new ConfigurationFilter();
         workflow10draft.setPath("/myWorkflows/ifElseWorkflow/workflow_10");
         workflow10draft.setObjectType(ConfigurationType.WORKFLOW);
         workflow10DraftConfig.setDraftConfiguration(workflow10draft);
-        filter.getDraftConfigurations().add(workflow10DraftConfig);
+        filter.getDeployables().getDraftConfigurations().add(workflow10DraftConfig);
 
         DraftConfig workflow16DraftConfig = new DraftConfig();
-        DraftConfiguration workflow16draft = new DraftConfiguration();
+        ConfigurationFilter workflow16draft = new ConfigurationFilter();
         workflow16draft.setPath("/myWorkflows/ifElseWorkflow/workflow_16");
         workflow16draft.setObjectType(ConfigurationType.WORKFLOW);
         workflow16DraftConfig.setDraftConfiguration(workflow16draft);
-        filter.getDraftConfigurations().add(workflow16DraftConfig);
+        filter.getDeployables().getDraftConfigurations().add(workflow16DraftConfig);
         
         DeployConfig workflow12deployConfig = new DeployConfig();
         DeployConfiguration workflow12deployed = new DeployConfiguration();
@@ -497,8 +497,25 @@ public class DeploymentTestUtils {
         workflow12deployed.setObjectType(ConfigurationType.WORKFLOW);
         workflow12deployed.setCommitId("4273b6c6-c354-4fcd-afdb-2758088abe4a");
         workflow12deployConfig.setDeployConfiguration(workflow12deployed);
-        filter.getDeployConfigurations().add(workflow12deployConfig);
-                
+        filter.getDeployables().getDeployConfigurations().add(workflow12deployConfig);
+        
+        if(!forSigning) {
+            filter.setReleasables(new ExportReleasables());
+
+            ReleasableConfig scheduleCfg = new ReleasableConfig();
+            ConfigurationFilter schedule = new ConfigurationFilter();
+            schedule.setPath("mySchedules/newSchedules/mySchedule");
+            schedule.setObjectType(ConfigurationType.SCHEDULE);
+            scheduleCfg.setDraftConfiguration(schedule);
+            filter.getReleasables().getDraftConfigurations().add(scheduleCfg);
+            
+            ReleasedConfig calendarCfg = new ReleasedConfig();
+            ConfigurationFilter calendar = new ConfigurationFilter();
+            calendar.setPath("/myCalendars/newCalendars/myCalendar");
+            calendar.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
+            calendarCfg.setReleasedConfiguration(calendar);
+            filter.getReleasables().getReleasedConfigurations().add(calendarCfg);
+        }
         return filter;
     }
 

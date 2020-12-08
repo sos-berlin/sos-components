@@ -1,10 +1,9 @@
 
 package com.sos.joc.model.publish;
 
-import java.util.ArrayList;
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -20,16 +19,36 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "draftConfigurations",
-    "deployConfigurations",
+    "forSigning",
+    "deployables",
+    "releasables",
     "auditLog"
 })
 public class ExportFilter {
 
-    @JsonProperty("draftConfigurations")
-    private List<DraftConfig> draftConfigurations = new ArrayList<DraftConfig>();
-    @JsonProperty("deployConfigurations")
-    private List<DeployConfig> deployConfigurations = new ArrayList<DeployConfig>();
+    /**
+     * decides if the export is meant for signing the exported objects [default=false]
+     * 
+     */
+    @JsonProperty("forSigning")
+    @JsonPropertyDescription("decides if the export is meant for signing the exported objects [default=false]")
+    private Boolean forSigning;
+    /**
+     * Export Deployables
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("deployables")
+    private ExportDeployables deployables;
+    /**
+     * Export Releasables
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("releasables")
+    private ExportReleasables releasables;
     /**
      * auditParams
      * <p>
@@ -39,24 +58,66 @@ public class ExportFilter {
     @JsonProperty("auditLog")
     private AuditParams auditLog;
 
-    @JsonProperty("draftConfigurations")
-    public List<DraftConfig> getDraftConfigurations() {
-        return draftConfigurations;
+    /**
+     * decides if the export is meant for signing the exported objects [default=false]
+     * 
+     */
+    @JsonProperty("forSigning")
+    public Boolean getForSigning() {
+        return forSigning;
     }
 
-    @JsonProperty("draftConfigurations")
-    public void setDraftConfigurations(List<DraftConfig> draftConfigurations) {
-        this.draftConfigurations = draftConfigurations;
+    /**
+     * decides if the export is meant for signing the exported objects [default=false]
+     * 
+     */
+    @JsonProperty("forSigning")
+    public void setForSigning(Boolean forSigning) {
+        this.forSigning = forSigning;
     }
 
-    @JsonProperty("deployConfigurations")
-    public List<DeployConfig> getDeployConfigurations() {
-        return deployConfigurations;
+    /**
+     * Export Deployables
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("deployables")
+    public ExportDeployables getDeployables() {
+        return deployables;
     }
 
-    @JsonProperty("deployConfigurations")
-    public void setDeployConfigurations(List<DeployConfig> deployConfigurations) {
-        this.deployConfigurations = deployConfigurations;
+    /**
+     * Export Deployables
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("deployables")
+    public void setDeployables(ExportDeployables deployables) {
+        this.deployables = deployables;
+    }
+
+    /**
+     * Export Releasables
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("releasables")
+    public ExportReleasables getReleasables() {
+        return releasables;
+    }
+
+    /**
+     * Export Releasables
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("releasables")
+    public void setReleasables(ExportReleasables releasables) {
+        this.releasables = releasables;
     }
 
     /**
@@ -83,12 +144,12 @@ public class ExportFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("draftConfigurations", draftConfigurations).append("deployConfigurations", deployConfigurations).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("forSigning", forSigning).append("deployables", deployables).append("releasables", releasables).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(draftConfigurations).append(auditLog).append(deployConfigurations).toHashCode();
+        return new HashCodeBuilder().append(deployables).append(forSigning).append(auditLog).append(releasables).toHashCode();
     }
 
     @Override
@@ -100,7 +161,7 @@ public class ExportFilter {
             return false;
         }
         ExportFilter rhs = ((ExportFilter) other);
-        return new EqualsBuilder().append(draftConfigurations, rhs.draftConfigurations).append(auditLog, rhs.auditLog).append(deployConfigurations, rhs.deployConfigurations).isEquals();
+        return new EqualsBuilder().append(deployables, rhs.deployables).append(forSigning, rhs.forSigning).append(auditLog, rhs.auditLog).append(releasables, rhs.releasables).isEquals();
     }
 
 }

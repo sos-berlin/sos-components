@@ -1,7 +1,7 @@
 {
-	"title": "DeployConfiguration",
+	"title": "Filter for Configurations",
 	"$schema": "http://json-schema.org/draft-04/schema#",
-	"javaType": "com.sos.joc.model.publish.DeployConfigurationDelete",
+	"javaType": "com.sos.joc.model.publish.ConfigurationFilter",
 	"type": "object",
   "required": [
     "path",

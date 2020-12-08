@@ -8,7 +8,7 @@
   ],
   "properties": {
     "draftConfiguration": {
-      "$ref": "draftConfiguration-schema.json"
+      "$ref": "configurationFilter-schema.json"
     }
   }
 }
