@@ -37,4 +37,7 @@ public class HistoryUtil {
         return eventId == null ? null : Date.from(EventMeta.eventId2Instant(eventId));
     }
 
+    public static Long getDateAsEventId(Date date) {
+        return date == null ? null : date.getTime() * 1_000;
+    }
 }

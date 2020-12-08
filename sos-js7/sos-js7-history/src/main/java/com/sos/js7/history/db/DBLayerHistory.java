@@ -15,6 +15,7 @@ import com.sos.joc.db.history.DBItemHistoryAgent;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.common.HistorySeverity;
+import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 
 public class DBLayerHistory {
 
@@ -91,6 +92,18 @@ public class DBLayerHistory {
         Query<DBItemHistoryAgent> query = session.createQuery(hql.toString());
         query.setParameter("jobSchedulerId", jobSchedulerId);
         query.setParameter("agentPath", agentPath);
+        return session.getSingleResult(query);
+    }
+
+    public DBItemInventoryAgentInstance getAgentInstance(String controllerId, String agentId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ");
+        hql.append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
+        hql.append(" where controllerId=:controllerId");
+        hql.append(" and agentId=:agentId");
+
+        Query<DBItemInventoryAgentInstance> query = session.createQuery(hql.toString());
+        query.setParameter("controllerId", controllerId);
+        query.setParameter("agentId", agentId);
         return session.getSingleResult(query);
     }
 

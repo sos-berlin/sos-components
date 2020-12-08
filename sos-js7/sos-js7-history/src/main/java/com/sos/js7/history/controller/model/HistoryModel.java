@@ -37,6 +37,7 @@ import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.DBItemHistoryOrderState;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.common.HistorySeverity;
+import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.model.inventory.common.JobCriticality;
 import com.sos.joc.model.order.OrderStateText;
@@ -1218,12 +1219,49 @@ public class HistoryModel {
         if (co == null) {
             DBItemHistoryAgent item = dbLayer.getAgent(controllerConfiguration.getCurrent().getId(), key);
             if (item == null) {
-                throw new Exception(String.format("[%s]agent not found. jobSchedulerId=%s, agentPath=%s", identifier, controllerConfiguration
-                        .getCurrent().getId(), key));
-            } else {
-                co = new CachedAgent(item);
-                addCachedAgent(key, co);
+                LOGGER.warn(String.format("[%s][%s][%s]agent not found in the history. try to find in the agent instances...", identifier,
+                        controllerConfiguration.getCurrent().getId(), key));
+                DBItemInventoryAgentInstance inst = dbLayer.getAgentInstance(controllerConfiguration.getCurrent().getId(), key);
+                // TODO read from controller API?
+                if (inst == null) {
+                    Date startTime = new Date();
+                    String uri = "http://localhost:4445";
+
+                    LOGGER.warn(String.format(
+                            "[%s][%s][%s]agent not found in the agent instances. set agent timezone to controller timezone=%s, start time=%s, uri=%s",
+                            identifier, controllerConfiguration.getCurrent().getId(), key, controllerTimezone, getDateAsString(startTime), uri));
+
+                    item = new DBItemHistoryAgent();
+                    item.setJobSchedulerId(controllerConfiguration.getCurrent().getId());
+                    item.setPath(key);
+                    item.setUri(uri);
+                    item.setTimezone(controllerTimezone);
+                    item.setStartTime(startTime);
+                    item.setEventId(String.valueOf(HistoryUtil.getDateAsEventId(startTime)));
+                    item.setCreated(new Date());
+                } else {
+                    Date startTime = inst.getStartedAt();
+                    if (startTime == null) {
+                        startTime = new Date();
+                    }
+                    LOGGER.info(String.format(
+                            "[%s][%s][%s]agent found in the agent instances. set agent timezone to controller timezone=%s, start time=%s", identifier,
+                            controllerConfiguration.getCurrent().getId(), key, controllerTimezone, getDateAsString(startTime)));
+
+                    item = new DBItemHistoryAgent();
+                    item.setJobSchedulerId(controllerConfiguration.getCurrent().getId());
+                    item.setPath(key);
+                    item.setUri(inst.getUri());
+                    item.setTimezone(controllerTimezone);
+                    item.setStartTime(startTime);
+                    item.setEventId(String.valueOf(HistoryUtil.getDateAsEventId(startTime)));
+                    item.setCreated(new Date());
+                }
+                dbLayer.getSession().save(item);
             }
+
+            co = new CachedAgent(item);
+            addCachedAgent(key, co);
         }
         return co;
     }
@@ -1322,6 +1360,10 @@ public class HistoryModel {
 
     private String getDateAsString(Date date, String timeZone) throws Exception {
         return SOSDate.getDateAsString(date, "yyyy-MM-dd HH:mm:ss.SSSZZZZ", TimeZone.getTimeZone(timeZone));
+    }
+
+    private String getDateAsString(Date date) throws Exception {
+        return SOSDate.getDateAsString(date, "yyyy-MM-dd HH:mm:ss.SSSZZZZ");
     }
 
     private Path storeLog2File(LogEntry entry) throws Exception {
