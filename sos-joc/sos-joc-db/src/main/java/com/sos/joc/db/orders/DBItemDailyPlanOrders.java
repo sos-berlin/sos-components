@@ -42,7 +42,7 @@ public class DBItemDailyPlanOrders extends DBItem {
     private String controllerId;
 
     @Column(name = "[WORKFLOW_PATH]", nullable = false)
-    private String workflow;
+    private String workflowPath;
 
     @Column(name = "[ORDER_ID]", nullable = false)
     private String orderId;
@@ -140,12 +140,12 @@ public class DBItemDailyPlanOrders extends DBItem {
         return schedulePath;
     }
 
-    public void setWorkflow(String workflow) {
-        this.workflow = workflow;
+    public void setWorkflowPath(String workflowPath) {
+        this.workflowPath = workflowPath;
     }
 
-    public String getWorkflow() {
-        return workflow;
+    public String getWorkflowPath() {
+        return workflowPath;
     }
 
     public void setSubmitted(boolean submitted) {

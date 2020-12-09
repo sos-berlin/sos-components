@@ -21,7 +21,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
     "path",
     "workflowPath",
     "title",
@@ -35,14 +34,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class Schedule implements IConfigurationObject, IReleaseObject
 {
 
-    /**
-     * filename
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
     /**
      * path
      * <p>
@@ -108,28 +99,6 @@ public class Schedule implements IConfigurationObject, IReleaseObject
      */
     @JsonProperty("variables")
     private List<NameValuePair> variables = null;
-
-    /**
-     * filename
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * filename
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
 
     /**
      * path
@@ -313,12 +282,12 @@ public class Schedule implements IConfigurationObject, IReleaseObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("path", path).append("workflowPath", workflowPath).append("title", title).append("documentationId", documentationId).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("variables", variables).toString();
+        return new ToStringBuilder(this).append("path", path).append("workflowPath", workflowPath).append("title", title).append("documentationId", documentationId).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("variables", variables).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(planOrderAutomatically).append(path).append(variables).append(nonWorkingCalendars).append(controllerId).append(workflowPath).append(documentationId).append(calendars).append(submitOrderToControllerWhenPlanned).append(title).toHashCode();
+        return new HashCodeBuilder().append(planOrderAutomatically).append(path).append(variables).append(nonWorkingCalendars).append(workflowPath).append(documentationId).append(calendars).append(submitOrderToControllerWhenPlanned).append(title).toHashCode();
     }
 
     @Override
@@ -330,7 +299,7 @@ public class Schedule implements IConfigurationObject, IReleaseObject
             return false;
         }
         Schedule rhs = ((Schedule) other);
-        return new EqualsBuilder().append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(variables, rhs.variables).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(controllerId, rhs.controllerId).append(workflowPath, rhs.workflowPath).append(documentationId, rhs.documentationId).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(variables, rhs.variables).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(workflowPath, rhs.workflowPath).append(documentationId, rhs.documentationId).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(title, rhs.title).isEquals();
     }
 
 }

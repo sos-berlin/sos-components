@@ -18,19 +18,12 @@ public abstract class ScheduleSource {
 
     protected boolean checkMandatory(Schedule schedule) {
         if (schedule.getPath() == null ) {
-            LOGGER.warn("Adding order for controller:" + schedule.getControllerId() + " and workflow: " + schedule.getWorkflowPath()
+            LOGGER.warn("Adding order for workflow: " + schedule.getWorkflowPath()
                     + " --> scheduleName: must not be null or empty.");
             return false;
         }
         if (schedule.getWorkflowPath() == null || schedule.getWorkflowPath().isEmpty()) {
-            LOGGER.warn("Adding order: " + schedule.getPath() + " for controller:" + schedule.getControllerId()
-                    + " --> workflowPath: must not be null or empty.");
-            return false;
-        }
-
-        if (schedule.getControllerId() == null || schedule.getControllerId().isEmpty()) {
-            LOGGER.warn("Adding order: " + schedule.getPath() + " for workflow: " + schedule.getWorkflowPath()
-                    + " --> JobSchedulerId: must not be null or empty.");
+            LOGGER.warn("Adding order: " + schedule.getPath()  + " --> workflowPath: must not be null or empty.");
             return false;
         }
 

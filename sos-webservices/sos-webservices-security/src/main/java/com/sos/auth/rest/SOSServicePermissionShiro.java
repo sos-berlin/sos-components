@@ -59,7 +59,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.security.SecurityConfiguration;
 
-@Path("/security")
+@Path("/authentication")
 public class SOSServicePermissionShiro {
 
 //    private static final String JOC_COCKPIT_CLIENT_ID = "JOC Cockpit";

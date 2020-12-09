@@ -38,8 +38,7 @@ public class ScheduleSourceFile extends ScheduleSource {
             if (schedule.getSubmitOrderToControllerWhenPlanned() == null){
                 schedule.setSubmitOrderToControllerWhenPlanned(true);
             }
-            LOGGER.trace("adding order: " + schedule.getPath() + " for workflow: " + schedule.getWorkflowPath() + " on controller: "
-                    + schedule.getControllerId());
+            LOGGER.trace("adding order: " + schedule.getPath() + " for workflow: " + schedule.getWorkflowPath());
             if (checkMandatory(schedule)) {
                 listOfSchedules.add(schedule);
             }

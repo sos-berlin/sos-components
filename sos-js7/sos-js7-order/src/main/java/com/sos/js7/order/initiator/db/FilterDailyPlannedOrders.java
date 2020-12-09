@@ -279,4 +279,9 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         this.listOfWorkflowPaths.add(workflowPath);
     }
 
+    
+    public void setStates(List<OrderStateText> states) {
+        this.states = states;
+    }
+
 }

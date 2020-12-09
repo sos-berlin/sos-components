@@ -12,6 +12,7 @@ public class PlannedOrder{
 
    // private static final Logger LOGGER = LoggerFactory.getLogger(PlannedOrder.class);
     private FreshOrder freshOrder;
+    private String controllerId; 
     private Long calendarId;
     private Long submissionHistoryId;
     private Period period;
@@ -35,10 +36,9 @@ public class PlannedOrder{
         this.freshOrder = new FreshOrder();
         freshOrder.setId(dbItemDailyPlannedOrders.getOrderId());
         freshOrder.setScheduledFor(dbItemDailyPlannedOrders.getPlannedStart().getTime());
-        freshOrder.setWorkflowPath(dbItemDailyPlannedOrders.getWorkflow());
+        freshOrder.setWorkflowPath(dbItemDailyPlannedOrders.getWorkflowPath());
         this.schedule = new Schedule();
-        schedule.setControllerId(dbItemDailyPlannedOrders.getControllerId());
-        schedule.setWorkflowPath((dbItemDailyPlannedOrders.getWorkflow()));
+        schedule.setWorkflowPath((dbItemDailyPlannedOrders.getWorkflowPath()));
         schedule.setPath(dbItemDailyPlannedOrders.getSchedulePath());
     }
 
@@ -95,10 +95,20 @@ public class PlannedOrder{
 
     public PlannedOrderKey uniqueOrderkey() {
         PlannedOrderKey plannedOrderKey = new PlannedOrderKey();
-        plannedOrderKey.setJobschedulerId(schedule.getControllerId());
+        plannedOrderKey.setControllerId(this.getControllerId());
         plannedOrderKey.setOrderId(freshOrder.getId());
         plannedOrderKey.setWorkflowPath(freshOrder.getWorkflowPath());
         return plannedOrderKey;
+    }
+
+    
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
 }

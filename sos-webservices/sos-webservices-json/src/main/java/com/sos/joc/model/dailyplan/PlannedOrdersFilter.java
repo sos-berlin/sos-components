@@ -31,7 +31,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "timeZone",
     "folders",
     "schedulePaths",
-    "workflowPath",
+    "workflowPaths",
     "orderId"
 })
 public class PlannedOrdersFilter {
@@ -91,15 +91,8 @@ public class PlannedOrdersFilter {
     private List<Folder> folders = null;
     @JsonProperty("schedulePaths")
     private List<String> schedulePaths = null;
-    /**
-     * path
-     * <p>
-     * absolute path of a JobScheduler object.
-     * 
-     */
-    @JsonProperty("workflowPath")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
-    private String workflowPath;
+    @JsonProperty("workflowPaths")
+    private List<String> workflowPaths = null;
     @JsonProperty("orderId")
     private String orderId;
 
@@ -269,26 +262,14 @@ public class PlannedOrdersFilter {
         this.schedulePaths = schedulePaths;
     }
 
-    /**
-     * path
-     * <p>
-     * absolute path of a JobScheduler object.
-     * 
-     */
-    @JsonProperty("workflowPath")
-    public String getWorkflowPath() {
-        return workflowPath;
+    @JsonProperty("workflowPaths")
+    public List<String> getWorkflowPaths() {
+        return workflowPaths;
     }
 
-    /**
-     * path
-     * <p>
-     * absolute path of a JobScheduler object.
-     * 
-     */
-    @JsonProperty("workflowPath")
-    public void setWorkflowPath(String workflowPath) {
-        this.workflowPath = workflowPath;
+    @JsonProperty("workflowPaths")
+    public void setWorkflowPaths(List<String> workflowPaths) {
+        this.workflowPaths = workflowPaths;
     }
 
     @JsonProperty("orderId")
@@ -303,12 +284,12 @@ public class PlannedOrdersFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("calendarId", calendarId).append("submissionHistoryId", submissionHistoryId).append("states", states).append("late", late).append("withSubmit", withSubmit).append("dailyPlanDate", dailyPlanDate).append("timeZone", timeZone).append("folders", folders).append("schedulePaths", schedulePaths).append("workflowPath", workflowPath).append("orderId", orderId).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("calendarId", calendarId).append("submissionHistoryId", submissionHistoryId).append("states", states).append("late", late).append("withSubmit", withSubmit).append("dailyPlanDate", dailyPlanDate).append("timeZone", timeZone).append("folders", folders).append("schedulePaths", schedulePaths).append("workflowPaths", workflowPaths).append("orderId", orderId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dailyPlanDate).append(folders).append(controllerId).append(workflowPath).append(orderId).append(timeZone).append(states).append(schedulePaths).append(calendarId).append(late).append(submissionHistoryId).append(withSubmit).toHashCode();
+        return new HashCodeBuilder().append(dailyPlanDate).append(folders).append(controllerId).append(orderId).append(timeZone).append(states).append(schedulePaths).append(calendarId).append(late).append(submissionHistoryId).append(withSubmit).append(workflowPaths).toHashCode();
     }
 
     @Override
@@ -320,7 +301,7 @@ public class PlannedOrdersFilter {
             return false;
         }
         PlannedOrdersFilter rhs = ((PlannedOrdersFilter) other);
-        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(workflowPath, rhs.workflowPath).append(orderId, rhs.orderId).append(timeZone, rhs.timeZone).append(states, rhs.states).append(schedulePaths, rhs.schedulePaths).append(calendarId, rhs.calendarId).append(late, rhs.late).append(submissionHistoryId, rhs.submissionHistoryId).append(withSubmit, rhs.withSubmit).isEquals();
+        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(orderId, rhs.orderId).append(timeZone, rhs.timeZone).append(states, rhs.states).append(schedulePaths, rhs.schedulePaths).append(calendarId, rhs.calendarId).append(late, rhs.late).append(submissionHistoryId, rhs.submissionHistoryId).append(withSubmit, rhs.withSubmit).append(workflowPaths, rhs.workflowPaths).isEquals();
     }
 
 }

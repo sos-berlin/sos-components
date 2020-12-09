@@ -17,6 +17,7 @@ import javax.persistence.UniqueConstraint;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.webservices.order.initiator.model.Schedule;
 
 @Entity
 @Table(name = DBLayer.TABLE_INV_RELEASED_CONFIGURATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[TYPE]", "[PATH]" }) })
@@ -64,6 +65,8 @@ public class DBItemInventoryReleasedConfiguration extends DBItem {
     @Column(name = "[MODIFIED]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date modified;
+    @Transient
+    private Schedule schedule;
 
     public Long getId() {
         return id;
@@ -98,7 +101,7 @@ public class DBItemInventoryReleasedConfiguration extends DBItem {
     public void setPath(String val) {
         path = val;
     }
-    
+
     public Long getCid() {
         return cid;
     }
@@ -169,5 +172,14 @@ public class DBItemInventoryReleasedConfiguration extends DBItem {
 
     public void setModified(Date val) {
         modified = val;
+    }
+
+    public void setSchedule(Schedule schedule) {
+        schedule.setPath(this.getPath());
+        this.schedule = schedule;
+    }
+
+    public Schedule getSchedule() {
+        return schedule;
     }
 }

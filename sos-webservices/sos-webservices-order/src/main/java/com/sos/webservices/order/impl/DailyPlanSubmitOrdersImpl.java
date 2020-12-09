@@ -70,7 +70,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
             filter.setControllerId(dailyPlanOrderFilter.getControllerId());
             filter.setDailyPlanDate(dailyPlanOrderFilter.getDailyPlanDate());
             filter.setSubmissionHistoryId(dailyPlanOrderFilter.getSubmissionHistoryId());
-            filter.setListOfSchedules(dailyPlanOrderFilter.getSchedules());
+            filter.setListOfSchedules(dailyPlanOrderFilter.getSchedulePaths());
            
 
             List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);

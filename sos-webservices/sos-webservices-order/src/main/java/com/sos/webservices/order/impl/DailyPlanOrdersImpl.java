@@ -41,33 +41,38 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
         PlannedOrderItem p = new PlannedOrderItem();
         p.setLate(dbItemDailyPlanWithHistory.isLate());
         Period period = new Period();
-        period.setBegin(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getPeriodBegin());
-        period.setEnd(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getPeriodEnd());
-        period.setRepeat(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getRepeatInterval());
+        period.setBegin(dbItemDailyPlanWithHistory.getPeriodBegin());
+        period.setEnd(dbItemDailyPlanWithHistory.getPeriodEnd());
+        period.setRepeat(dbItemDailyPlanWithHistory.getRepeatInterval());
         p.setPeriod(period);
 
-        p.setPlannedStartTime(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getPlannedStart());
-        p.setExpectedEndTime(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getExpectedEnd());
+        p.setPlannedStartTime(dbItemDailyPlanWithHistory.getPlannedStart());
+        p.setExpectedEndTime(dbItemDailyPlanWithHistory.getExpectedEnd());
         p.setLate(dbItemDailyPlanWithHistory.isLate());
-        p.setSurveyDate(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getCreated());
+        p.setSurveyDate(dbItemDailyPlanWithHistory.getPlannedOrderCreated());
 
         p.setStartMode(dbItemDailyPlanWithHistory.getStartMode());
 
-        p.setWorkflowPath(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getWorkflow());
-        p.setOrderId(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getOrderId());
-        p.setSchedulePath(dbItemDailyPlanWithHistory.getDbItemDailyPlannedOrders().getSchedulePath());
+        p.setWorkflowPath(dbItemDailyPlanWithHistory.getWorkflowPath());
+        p.setOrderId(dbItemDailyPlanWithHistory.getOrderId());
+        p.setSchedulePath(dbItemDailyPlanWithHistory.getSchedulePath());
 
         OrderState orderState = new OrderState();
-        orderState.set_text(dbItemDailyPlanWithHistory.getStateText());
-        orderState.setSeverity(OrdersHelper.severityByGroupedStates.get(orderState.get_text()));
+        if (dbItemDailyPlanWithHistory.isSubmitted()) {
+            orderState.set_text(dbItemDailyPlanWithHistory.getStateText());
+            orderState.setSeverity(OrdersHelper.severityByGroupedStates.get(orderState.get_text()));
+        } else {
+            orderState.set_text(OrderStateText.PLANNED);
+            orderState.setSeverity(OrdersHelper.severityByGroupedStates.get(orderState.get_text()));
+        }
         p.setState(orderState);
 
-        if (dbItemDailyPlanWithHistory.getDbItemOrder() != null) {
-            if (dbItemDailyPlanWithHistory.getDbItemOrder().getStartTime().after(new Date(0L)))   {
-                p.setStartTime(dbItemDailyPlanWithHistory.getDbItemOrder().getStartTime());
-                p.setEndTime(dbItemDailyPlanWithHistory.getDbItemOrder().getEndTime());
+        if (dbItemDailyPlanWithHistory.getOrderHistoryId() != null) {
+            if (dbItemDailyPlanWithHistory.getStartTime().after(new Date(0L))) {
+                p.setStartTime(dbItemDailyPlanWithHistory.getStartTime());
+                p.setEndTime(dbItemDailyPlanWithHistory.getEndTime());
             }
-            p.setHistoryId(String.valueOf(dbItemDailyPlanWithHistory.getDbItemOrder().getId()));
+            p.setHistoryId(String.valueOf(dbItemDailyPlanWithHistory.getOrderHistoryId()));
         }
         return p;
 
@@ -96,11 +101,11 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
 
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
             filter.setControllerId(plannedOrdersFilter.getControllerId());
-            filter.addWorkflowPath(plannedOrdersFilter.getWorkflowPath());
+            filter.setListOfWorkflowPaths(plannedOrdersFilter.getWorkflowPaths());
             filter.setSubmissionHistoryId(plannedOrdersFilter.getSubmissionHistoryId());
             filter.setCalendarId(plannedOrdersFilter.getCalendarId());
             filter.setListOfSchedules(plannedOrdersFilter.getSchedulePaths());
-           
+
             filter.setDailyPlanDate(plannedOrdersFilter.getDailyPlanDate());
 
             filter.setLate(plannedOrdersFilter.getLate());

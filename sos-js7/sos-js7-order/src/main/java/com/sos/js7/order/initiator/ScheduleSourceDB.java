@@ -10,17 +10,22 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
+import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.js7.order.initiator.db.DBLayerSchedules;
 import com.sos.js7.order.initiator.db.FilterSchedules;
 import com.sos.webservices.order.initiator.model.Schedule;
 
 public class ScheduleSourceDB extends ScheduleSource {
 
-    private String controllerId;
+    private DailyPlanOrderFilter dailyPlanOrderFilter;
+
+ 
 
     public ScheduleSourceDB(String controllerId) {
-        super();
-        this.controllerId = controllerId;
+        dailyPlanOrderFilter = new DailyPlanOrderFilter();
+        dailyPlanOrderFilter.setControllerIds(new ArrayList<String>());
+        dailyPlanOrderFilter.getControllerIds().add(controllerId);
     }
 
     @Override
@@ -30,19 +35,12 @@ public class ScheduleSourceDB extends ScheduleSource {
         List<Schedule> listOfSchedules = new ArrayList<Schedule>();
         DBLayerSchedules dbLayerSchedules = new DBLayerSchedules(sosHibernateSession);
 
-        filterSchedules.setControllerId(controllerId);
+        filterSchedules.setListOfControllerIds(dailyPlanOrderFilter.getControllerIds());
+        filterSchedules.setListOfFolders(dailyPlanOrderFilter.getFolders());
 
-        ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-        List<DBItemInventoryConfiguration> listOfSchedulesDbItems = dbLayerSchedules.getSchedules(filterSchedules, 0);
-        for (DBItemInventoryConfiguration dbItemInventoryConfiguration : listOfSchedulesDbItems) {
-            // temp replace because of introducing enum for whenHoliday
-            Schedule schedule = objectMapper.readValue(dbItemInventoryConfiguration.getContent().replaceAll("\"suppress\"", "\"SUPPRESS\""),
-                    Schedule.class);
-            schedule.setPath(dbItemInventoryConfiguration.getPath());
-            if (schedule.getControllerId().equals(this.controllerId)) {
-                listOfSchedules.add(schedule);
-            }
+        List<DBItemInventoryReleasedConfiguration> listOfSchedulesDbItems = dbLayerSchedules.getSchedules(filterSchedules, 0);
+        for (DBItemInventoryReleasedConfiguration dbItemInventoryConfiguration : listOfSchedulesDbItems) {
+            listOfSchedules.add(dbItemInventoryConfiguration.getSchedule());
         }
 
         return listOfSchedules;

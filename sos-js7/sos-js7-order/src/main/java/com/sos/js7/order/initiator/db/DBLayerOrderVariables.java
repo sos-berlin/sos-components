@@ -35,7 +35,7 @@ public class DBLayerOrderVariables {
             where = "v.plannedOrderId = p.id";
             and = " and ";
             if (filter.getPlannedOrderKey() != null && !filter.getPlannedOrderKey().isEmpty()) {
-                where += and + " p.orderKey = :plannedOrderKey";
+                where += and + " p.orderId = :plannedOrderKey";
                 and = " and ";
             }
         }

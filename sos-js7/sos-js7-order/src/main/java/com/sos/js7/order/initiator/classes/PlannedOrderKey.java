@@ -2,16 +2,16 @@ package com.sos.js7.order.initiator.classes;
 
 public class PlannedOrderKey {
 
-    private String jobschedulerId;
+    private String controllerId;
     private String workflowPath;
     private String orderId;
 
     public String getJobschedulerId() {
-        return jobschedulerId;
+        return controllerId;
     }
 
-    public void setJobschedulerId(String jobschedulerId) {
-        this.jobschedulerId = jobschedulerId;
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     public String getWorkflowPath() {
@@ -34,7 +34,7 @@ public class PlannedOrderKey {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((jobschedulerId == null) ? 0 : jobschedulerId.hashCode());
+        result = prime * result + ((controllerId == null) ? 0 : controllerId.hashCode());
         result = prime * result + ((orderId == null) ? 0 : orderId.hashCode());
         result = prime * result + ((workflowPath == null) ? 0 : workflowPath.hashCode());
         return result;
@@ -52,7 +52,7 @@ public class PlannedOrderKey {
             return false;
         }
         PlannedOrderKey other = (PlannedOrderKey) obj;
-        return (jobschedulerId.equals(other.jobschedulerId) && orderId.equals(other.orderId) && workflowPath.equals(other.workflowPath));
+        return (controllerId.equals(other.controllerId) && orderId.equals(other.orderId) && workflowPath.equals(other.workflowPath));
 
     }
 

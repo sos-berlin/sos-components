@@ -1,6 +1,8 @@
 package com.sos.webservices.order.impl;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Set;
 
 import javax.ws.rs.Path;
 
@@ -11,6 +13,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.js7.order.initiator.OrderInitiatorRunner;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
@@ -39,30 +42,59 @@ public class DailyPlanOrdersGenerate extends JOCResourceImpl implements IDailyPl
 
             this.checkRequiredParameter("dailyPlanDate", dailyPlanOrderFilter.getDailyPlanDate());
 
-            OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
-            orderInitiatorSettings.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
-            orderInitiatorSettings.setControllerId(dailyPlanOrderFilter.getControllerId());
-            orderInitiatorSettings.setOverwrite(dailyPlanOrderFilter.getOverwrite());
-            orderInitiatorSettings.setSubmit(dailyPlanOrderFilter.getWithSubmit());
-  
-            orderInitiatorSettings.setTimeZone(Globals.sosCockpitProperties.getProperty("daily_plan_timezone",Globals.DEFAULT_TIMEZONE_DAILY_PLAN));
-            orderInitiatorSettings.setPeriodBegin(Globals.sosCockpitProperties.getProperty("daily_plan_period_begin",Globals.DEFAULT_PERIOD_DAILY_PLAN));
+            boolean withFolderFilter = dailyPlanOrderFilter.getFolders() != null && !dailyPlanOrderFilter.getFolders().isEmpty();
+            boolean hasPermission = true;
 
-            OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings, false);
-
-            ScheduleSource scheduleSource = null;
-            if (dailyPlanOrderFilter.getSchedules() != null && dailyPlanOrderFilter.getSchedules().size() > 0) {
-                scheduleSource = new ScheduleSourceList(dailyPlanOrderFilter.getControllerId(), dailyPlanOrderFilter.getSchedules());
-            } else {
-                if (dailyPlanOrderFilter.getSchedulesFolder() != null && !dailyPlanOrderFilter.getSchedulesFolder().isEmpty()) {
-                    scheduleSource = new ScheduleSourceFile(dailyPlanOrderFilter.getSchedulesFolder());
-                } else {
-                    scheduleSource = new ScheduleSourceDB(dailyPlanOrderFilter.getControllerId());
-                }
+            Set<Folder> folders = addPermittedFolder(dailyPlanOrderFilter.getFolders());
+            dailyPlanOrderFilter.setFolders(new ArrayList<Folder>());
+            for (Folder folder : folders) {
+                dailyPlanOrderFilter.getFolders().add(folder);
             }
 
-            orderInitiatorRunner.readTemplates(scheduleSource);
-            orderInitiatorRunner.generateDailyPlan(dailyPlanOrderFilter.getDailyPlanDate(),dailyPlanOrderFilter.getWithSubmit());
+            OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
+            orderInitiatorSettings.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
+            orderInitiatorSettings.setOverwrite(dailyPlanOrderFilter.getOverwrite());
+            orderInitiatorSettings.setSubmit(dailyPlanOrderFilter.getWithSubmit());
+
+            if (withFolderFilter && (folders == null || folders.isEmpty())) {
+                hasPermission = false;
+            }
+
+            if (hasPermission) {
+
+                orderInitiatorSettings.setTimeZone(Globals.sosCockpitProperties.getProperty("daily_plan_timezone",
+                        Globals.DEFAULT_TIMEZONE_DAILY_PLAN));
+                orderInitiatorSettings.setPeriodBegin(Globals.sosCockpitProperties.getProperty("daily_plan_period_begin",
+                        Globals.DEFAULT_PERIOD_DAILY_PLAN));
+
+                OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings, false);
+                if (dailyPlanOrderFilter.getControllerIds() == null) {
+                    dailyPlanOrderFilter.setControllerIds(new ArrayList<String>());
+                    dailyPlanOrderFilter.getControllerIds().add(dailyPlanOrderFilter.getControllerId());
+                } else {
+                    if (!dailyPlanOrderFilter.getControllerIds().contains(dailyPlanOrderFilter.getControllerId())) {
+                        dailyPlanOrderFilter.getControllerIds().add(dailyPlanOrderFilter.getControllerId());
+                    }
+                }
+
+                for (String controllerId : dailyPlanOrderFilter.getControllerIds()) {
+                    orderInitiatorSettings.setControllerId(controllerId);
+
+                    ScheduleSource scheduleSource = null;
+                    if (dailyPlanOrderFilter.getSchedulePaths() != null && dailyPlanOrderFilter.getSchedulePaths().size() > 0) {
+                        scheduleSource = new ScheduleSourceList(controllerId, dailyPlanOrderFilter.getSchedulePaths());
+                    } else {
+                        if (dailyPlanOrderFilter.getSchedulesFolder() != null && !dailyPlanOrderFilter.getSchedulesFolder().isEmpty()) {
+                            scheduleSource = new ScheduleSourceFile(dailyPlanOrderFilter.getSchedulesFolder());
+                        } else {
+                            scheduleSource = new ScheduleSourceDB(controllerId);
+                        }
+                    }
+
+                    orderInitiatorRunner.readTemplates(scheduleSource);
+                    orderInitiatorRunner.generateDailyPlan(dailyPlanOrderFilter.getDailyPlanDate(), dailyPlanOrderFilter.getWithSubmit());
+                }
+            }
 
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 

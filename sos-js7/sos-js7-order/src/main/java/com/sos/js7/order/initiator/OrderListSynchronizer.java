@@ -69,15 +69,15 @@ public class OrderListSynchronizer {
                 FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
                 DBLayerDailyPlannedOrders dbLayerDailyPlan = new DBLayerDailyPlannedOrders(sosHibernateSession);
                 Globals.beginTransaction(sosHibernateSession);
-                filter.setControllerId(plannedOrder.getSchedule().getControllerId());
+                filter.setControllerId(plannedOrder.getControllerId());
                 filter.addWorkflowPath(plannedOrder.getSchedule().getWorkflowPath());
                 List<DBItemDailyPlanWithHistory> listOfPlannedOrders = dbLayerDailyPlan.getDailyPlanWithHistoryList(filter, 0);
                 SOSDurations sosDurations = new SOSDurations();
                 for (DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory : listOfPlannedOrders) {
-                    if (dbItemDailyPlanWithHistory.getDbItemOrder() != null) {
+                    if (dbItemDailyPlanWithHistory.getOrderHistoryId() != null) {
                         SOSDuration sosDuration = new SOSDuration();
-                        Date startTime = dbItemDailyPlanWithHistory.getDbItemOrder().getStartTime();
-                        Date endTime = dbItemDailyPlanWithHistory.getDbItemOrder().getEndTime();
+                        Date startTime = dbItemDailyPlanWithHistory.getStartTime();
+                        Date endTime = dbItemDailyPlanWithHistory.getEndTime();
                         sosDuration.setStartTime(startTime);
                         sosDuration.setEndTime(endTime);
                         sosDurations.add(sosDuration);
@@ -127,8 +127,8 @@ public class OrderListSynchronizer {
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
             filter.setControllerId(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
             filter.setSetOfPlannedOrder(addedOrders);
-
-            dbLayerDailyPlannedOrders.markOrdersAsSubmitted(filter);
+            filter.setSubmitted(true);
+            dbLayerDailyPlannedOrders.setSubmitted(filter);
             OrderApi.setRemoveOrdersWhenTerminated(setOfOrderIds);
             Globals.commit(sosHibernateSession);
         } finally {
@@ -161,7 +161,7 @@ public class OrderListSynchronizer {
                     filter.addWorkflowPath(plannedOrder.getFreshOrder().getWorkflowPath());
                     List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
                     try {
-                        OrderHelper.removeFromJobSchedulerController(plannedOrder.getSchedule().getControllerId(), listOfPlannedOrders);
+                        OrderHelper.removeFromJobSchedulerController(plannedOrder.getControllerId(), listOfPlannedOrders);
                     } catch (JobSchedulerObjectNotExistException e) {
                         LOGGER.warn("Order unknown in JS7 Controller");
                     }

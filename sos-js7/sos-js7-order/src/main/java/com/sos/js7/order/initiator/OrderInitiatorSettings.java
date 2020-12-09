@@ -1,20 +1,23 @@
 package com.sos.js7.order.initiator;
 
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.sos.joc.model.common.Folder;
 
 public class OrderInitiatorSettings {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderInitiatorSettings.class);
     private String controllerId;
-    
+
     public String getControllerId() {
         return controllerId;
     }
 
-    
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
     }
@@ -31,24 +34,18 @@ public class OrderInitiatorSettings {
     private boolean submit = true;
     private int runInterval = 1440;
     private String firstRunAt = "00:00:00";
-
-    
-    
+ 
     public boolean isSubmit() {
         return submit;
     }
 
-
-    
     public void setSubmit(boolean submit) {
         this.submit = submit;
     }
 
-
     public boolean isOverwrite() {
         return overwrite;
     }
-
 
     public void setOverwrite(boolean overwrite) {
         this.overwrite = overwrite;
@@ -114,7 +111,6 @@ public class OrderInitiatorSettings {
         this.dayOffset = Integer.parseInt(property);
     }
 
-
     public boolean isRunOnStart() {
         return runOnStart;
     }
@@ -149,5 +145,7 @@ public class OrderInitiatorSettings {
     public void setFirstRunAt(String firstRunAt) {
         this.firstRunAt = firstRunAt;
     }
+
+    
 
 }

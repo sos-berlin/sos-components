@@ -69,6 +69,7 @@ public class OrderApi {
 
         for (AddOrder startOrder : startOrders.getOrders()) {
             PlannedOrder plannedOrder = new PlannedOrder();
+            plannedOrder.setControllerId(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
             Schedule schedule = new Schedule();
             schedule.setPath(startOrder.getOrderName());
             schedule.setVariables(new ArrayList<NameValuePair>());

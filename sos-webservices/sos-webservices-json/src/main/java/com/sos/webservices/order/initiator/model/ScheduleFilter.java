@@ -1,9 +1,11 @@
 
 package com.sos.webservices.order.initiator.model;
 
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.common.Folder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -18,9 +20,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "schedulePath",
-    "folder",
-    "recursive"
+    "controllerIds",
+    "schedulePaths",
+    "folders"
 })
 public class ScheduleFilter {
 
@@ -31,12 +33,18 @@ public class ScheduleFilter {
      */
     @JsonProperty("controllerId")
     private String controllerId;
-    @JsonProperty("schedulePath")
-    private String schedulePath;
-    @JsonProperty("folder")
-    private String folder;
-    @JsonProperty("recursive")
-    private Boolean recursive;
+    @JsonProperty("controllerIds")
+    private List<String> controllerIds = null;
+    @JsonProperty("schedulePaths")
+    private List<String> schedulePaths = null;
+    /**
+     * folders
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("folders")
+    private List<Folder> folders = null;
 
     /**
      * 
@@ -58,44 +66,56 @@ public class ScheduleFilter {
         this.controllerId = controllerId;
     }
 
-    @JsonProperty("schedulePath")
-    public String getSchedulePath() {
-        return schedulePath;
+    @JsonProperty("controllerIds")
+    public List<String> getControllerIds() {
+        return controllerIds;
     }
 
-    @JsonProperty("schedulePath")
-    public void setSchedulePath(String schedulePath) {
-        this.schedulePath = schedulePath;
+    @JsonProperty("controllerIds")
+    public void setControllerIds(List<String> controllerIds) {
+        this.controllerIds = controllerIds;
     }
 
-    @JsonProperty("folder")
-    public String getFolder() {
-        return folder;
+    @JsonProperty("schedulePaths")
+    public List<String> getSchedulePaths() {
+        return schedulePaths;
     }
 
-    @JsonProperty("folder")
-    public void setFolder(String folder) {
-        this.folder = folder;
+    @JsonProperty("schedulePaths")
+    public void setSchedulePaths(List<String> schedulePaths) {
+        this.schedulePaths = schedulePaths;
     }
 
-    @JsonProperty("recursive")
-    public Boolean getRecursive() {
-        return recursive;
+    /**
+     * folders
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("folders")
+    public List<Folder> getFolders() {
+        return folders;
     }
 
-    @JsonProperty("recursive")
-    public void setRecursive(Boolean recursive) {
-        this.recursive = recursive;
+    /**
+     * folders
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("folders")
+    public void setFolders(List<Folder> folders) {
+        this.folders = folders;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("schedulePath", schedulePath).append("folder", folder).append("recursive", recursive).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("controllerIds", controllerIds).append("schedulePaths", schedulePaths).append("folders", folders).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folder).append(controllerId).append(recursive).append(schedulePath).toHashCode();
+        return new HashCodeBuilder().append(schedulePaths).append(folders).append(controllerId).append(controllerIds).toHashCode();
     }
 
     @Override
@@ -107,7 +127,7 @@ public class ScheduleFilter {
             return false;
         }
         ScheduleFilter rhs = ((ScheduleFilter) other);
-        return new EqualsBuilder().append(folder, rhs.folder).append(controllerId, rhs.controllerId).append(recursive, rhs.recursive).append(schedulePath, rhs.schedulePath).isEquals();
+        return new EqualsBuilder().append(schedulePaths, rhs.schedulePaths).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(controllerIds, rhs.controllerIds).isEquals();
     }
 
 }

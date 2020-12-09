@@ -8,13 +8,11 @@ import javax.ws.rs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.exceptions.JocException;
 import com.sos.js7.order.initiator.db.DBLayerSchedules;
 import com.sos.js7.order.initiator.db.FilterSchedules;
@@ -27,12 +25,12 @@ import com.sos.webservices.order.resource.ISchedulesResource;
 public class Schedules extends JOCResourceImpl implements ISchedulesResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Schedules.class);
-    private static final String API_CALL = "./schedules/list";
+    private static final String API_CALL = "./schedules";
 
     @Override
     public JOCDefaultResponse postSchedules(String xAccessToken, ScheduleFilter scheduleFilter) {
         SOSHibernateSession sosHibernateSession = null;
-        LOGGER.debug("reading list of order templates");
+        LOGGER.debug("reading list of schedules");
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, scheduleFilter, xAccessToken, scheduleFilter.getControllerId(),
                     getPermissonsJocCockpit(scheduleFilter.getControllerId(), xAccessToken).getWorkflow().getExecute().isAddOrder());
@@ -47,17 +45,14 @@ public class Schedules extends JOCResourceImpl implements ISchedulesResource {
 
             DBLayerSchedules dbLayerSchedules = new DBLayerSchedules(sosHibernateSession);
             FilterSchedules filterSchedules = new FilterSchedules();
-            filterSchedules.setControllerId(scheduleFilter.getControllerId());
-            filterSchedules.setPath(scheduleFilter.getSchedulePath());
+            filterSchedules.setListOfControllerIds(scheduleFilter.getControllerIds());
+            filterSchedules.addControllerId(scheduleFilter.getControllerId());
+            filterSchedules.setListOfSchedules(scheduleFilter.getSchedulePaths());
 
-            ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-            List<DBItemInventoryConfiguration> listOfSchedules = dbLayerSchedules.getSchedules(filterSchedules, 0);
-            for (DBItemInventoryConfiguration dbItemInventoryConfiguration : listOfSchedules) {
+            List<DBItemInventoryReleasedConfiguration> listOfSchedules = dbLayerSchedules.getSchedules(filterSchedules, 0);
+            for (DBItemInventoryReleasedConfiguration  dbItemInventoryConfiguration : listOfSchedules) {
                 if (dbItemInventoryConfiguration.getContent() != null) {
-                    Schedule schedule = objectMapper.readValue(dbItemInventoryConfiguration.getContent(), Schedule.class);
-                    schedule.setPath(dbItemInventoryConfiguration.getPath());
-                    schedulesList.getSchedules().add(schedule);
+                    schedulesList.getSchedules().add(dbItemInventoryConfiguration.getSchedule());
                 }
             }
 

@@ -9,6 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -50,6 +51,7 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
 import com.sos.joc.model.calendar.Period;
+import com.sos.joc.model.common.Folder;
 import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 import com.sos.js7.order.initiator.classes.PlannedOrder;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlanSubmissionHistory;
@@ -103,7 +105,7 @@ public class OrderInitiatorRunner extends TimerTask {
             PlannedOrder p = new PlannedOrder();
             Schedule o = new Schedule();
             o.setPath(dbItemDailyPlanOrders.getSchedulePath());
-            o.setControllerId(dbItemDailyPlanOrders.getControllerId());
+            p.setControllerId(dbItemDailyPlanOrders.getControllerId());
 
             FilterOrderVariables filterOrderVariables = new FilterOrderVariables();
 
@@ -136,6 +138,7 @@ public class OrderInitiatorRunner extends TimerTask {
         try {
 
             ScheduleSource scheduleSource = new ScheduleSourceDB(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
+            // ScheduleSource scheduleSource = new ScheduleSourceDB("");
             readTemplates(scheduleSource);
             java.util.Calendar calendar = java.util.Calendar.getInstance();
 
@@ -283,7 +286,7 @@ public class OrderInitiatorRunner extends TimerTask {
                 if (fromService && !schedule.getPlanOrderAutomatically()) {
                     LOGGER.debug(String.format("... schedule %s  will not be planned automatically", schedule.getPath()));
                 } else {
-                    String controllerId = schedule.getControllerId();
+                    String controllerId = OrderInitiatorGlobals.orderInitiatorSettings.getControllerId();
 
                     DBItemDailyPlanSubmissionHistory dbItemDailyPlanSubmissionHistory = addDailyPlanSubmission(sosHibernateSession, controllerId,
                             dailyPlanDate);
@@ -321,6 +324,8 @@ public class OrderInitiatorRunner extends TimerTask {
                                     FreshOrder freshOrder = buildFreshOrder(schedule, startTime.getKey());
 
                                     PlannedOrder plannedOrder = new PlannedOrder();
+                                    plannedOrder.setControllerId(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
+
                                     plannedOrder.setFreshOrder(freshOrder);
                                     plannedOrder.setCalendarId(calendar.getId());
                                     plannedOrder.setPeriod(startTime.getValue());

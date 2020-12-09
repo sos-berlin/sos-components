@@ -1,83 +1,77 @@
 package com.sos.js7.order.initiator.db;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.db.SOSFilter;
+import com.sos.joc.model.common.Folder;
 
 public class FilterSchedules extends SOSFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterSchedules.class);
-    private String controllerId;
-    private String path;
-    private String folder;
-    private boolean recursive=false;
-    private Boolean deployed;
+    private List<String> listOfControllerIds;
+    private List<Folder> listOfFolders;
+    private Boolean released;
     private Boolean deleted;
-    private Set<String>schedule;
-    
-    public String getControllerId() {
-        return controllerId;
-    }
-    
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
-    
-    public String getPath() {
-        return path;
-    }
-    
+    private List<String> listOfSchedules;
+
     public void addSchedulePath(String schedulePath) {
-        if (schedule == null) {
-            schedule = new HashSet<String>();
+        if (listOfSchedules == null) {
+            listOfSchedules = new ArrayList<String>();
         }
-        schedule.add(schedulePath);
-    }
-    
-    
-    public Set<String> getSchedules() {
-        return schedule;
+        listOfSchedules.add(schedulePath);
     }
 
-    public void setPath(String path) {
-        this.path = path;
+    public Boolean getReleased() {
+        return released;
     }
-    
-    public String getFolder() {
-        return folder;
+
+    public void setReleased(Boolean released) {
+        this.released = released;
     }
-    
-    public void setFolder(String folder) {
-        this.folder = folder;
-    }
-    
-    public boolean getRecursive() {
-        return recursive;
-    }
-    
-    public void setRecursive(Boolean recursive) {
-        this.recursive = recursive;
-    }
-    
-    public Boolean getDeployed() {
-        return deployed;
-    }
-    
-    public void setDeployed(Boolean deployed) {
-        this.deployed = deployed;
-    }
-    
+
     public Boolean getDeleted() {
         return deleted;
     }
-    
+
     public void setDeleted(Boolean deleted) {
         this.deleted = deleted;
     }
-  
+
+    public List<String> getListOfControllerIds() {
+        return listOfControllerIds;
+    }
+
+    public void setListOfControllerIds(List<String> listOfControllerIds) {
+        this.listOfControllerIds = listOfControllerIds;
+    }
+
+    public List<Folder> getListOfFolders() {
+        return listOfFolders;
+    }
+
+    public void setListOfFolders(List<Folder> listOfFolders) {
+        this.listOfFolders = listOfFolders;
+    }
+
+    public void addControllerId(String controllerId) {
+        if (listOfControllerIds == null) {
+            listOfControllerIds = new ArrayList<String>();
+        }
+        if (!listOfControllerIds.contains(controllerId)) {
+            listOfControllerIds.add(controllerId);
+        }
+    }
+
+    public List<String> getListOfSchedules() {
+        return listOfSchedules;
+    }
+
+    public void setListOfSchedules(List<String> listOfSchedules) {
+        this.listOfSchedules = listOfSchedules;
+    }
 
 }

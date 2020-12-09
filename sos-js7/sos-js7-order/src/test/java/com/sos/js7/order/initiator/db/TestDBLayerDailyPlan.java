@@ -31,7 +31,7 @@ public class TestDBLayerDailyPlan {
 		FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
 		DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(sosHibernateSession);
 		List<DBItemDailyPlanWithHistory> l = dbLayer.getDailyPlanWithHistoryList(filter,0);
-		System.out.println(l.get(0).getDbItemDailyPlannedOrders().getControllerId());
+		System.out.println(l.get(0).getControllerId());
  	}
 
 }
