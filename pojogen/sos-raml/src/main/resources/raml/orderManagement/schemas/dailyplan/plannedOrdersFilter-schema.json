@@ -45,8 +45,11 @@
 				"$ref": "../../../joc/schemas/common/path-schema.json"
 			}
 		},
-		"workflowPath": {
-			"$ref": "../../../joc/schemas/common/path-schema.json"
+		"workflowPaths": {
+			"type": "array",
+			"items": {
+				"$ref": "../../../joc/schemas/common/path-schema.json"
+			}
 		},
 		"orderId": {
 			"type": "string"

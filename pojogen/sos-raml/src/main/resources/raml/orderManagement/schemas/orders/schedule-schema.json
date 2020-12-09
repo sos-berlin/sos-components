@@ -14,9 +14,7 @@
 		"calendars"
 	],
 	"properties": {
-		"controllerId": {
-			"$ref": "../../../joc/schemas/common/filename100-schema.json"
-		},
+		
 		"path": {
 			"$ref": "../../../joc/schemas/common/path-schema.json"
 		},

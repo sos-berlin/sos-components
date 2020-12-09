@@ -8,17 +8,23 @@
 		"controllerId"
 	],
 	"properties": {
-		"controllerId": {
+       	"controllerId": {
 			"type": "string"
 		},
-		"schedulePath": {
-			"type": "string"
+		"controllerIds": {
+			"type": "array",
+			"items": {
+				"type": "string"
+			}
 		},
-		"folder": {
-			"type": "string"
+		"schedulePaths": {
+			"type": "array",
+			"items": {
+				"$ref": "../../../joc/schemas/common/path-schema.json"
+			}
 		},
-		"recursive": {
-			"type": "boolean"
+		"folders": {
+			"$ref": "../../../joc/schemas/common/folders-schema.json"
 		}
 	}
 }

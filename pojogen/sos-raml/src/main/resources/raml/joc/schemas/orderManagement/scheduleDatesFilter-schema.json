@@ -1,5 +1,5 @@
 {
-	"title": "Order Template States Filter",
+	"title": "Order Template Dates Filter",
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.joc.model.order.ScheduleDatesFilter",
 	"type": "object",
