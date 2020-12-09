@@ -794,6 +794,25 @@ traits:
           schema200: ok
           example: " "
           example200: " "
+    /cancel:
+      type:
+        postJSON:
+          description: Cancel submitted orders for a given daily plan 
+          description1: !include joc/documentation/dailyplan/dailyPlanDateNotRequired.md
+          description2: !include joc/documentation/dailyplan/schedules.md
+          description3: !include joc/documentation/dailyplan/submissionHistoryId.md
+          description4: !include joc/documentation/dailyplan/orderIds.md
+          description5: !include joc/documentation/order/workflowPathsNotRequired.md
+          description6: " "
+          description7: " "
+          description8: " "
+          description9: " "
+          description10: " "
+          description200: " "
+          schema: !include orderManagement/schemas/dailyplan/dailyPlanOrdersFilter-schema.json
+          schema200: ok
+          example: " "
+          example200: " "
   /submissions:
      type:
       postJSON:
