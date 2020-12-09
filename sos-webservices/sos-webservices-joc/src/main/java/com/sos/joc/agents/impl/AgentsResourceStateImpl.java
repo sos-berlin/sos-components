@@ -3,6 +3,7 @@ package com.sos.joc.agents.impl;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -145,7 +146,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                     agent.setIsClusterWatcher(dbAgent.getIsWatcher());
                     agent.setState(getState(stateText));
                     return agent;
-                }).filter(Objects::nonNull).collect(Collectors.toList()));
+                }).filter(Objects::nonNull).sorted(Comparator.comparingInt(AgentV::getRunningTasks).reversed()).collect(Collectors.toList()));
             }
 
             agents.setDeliveryDate(Date.from(Instant.now()));
