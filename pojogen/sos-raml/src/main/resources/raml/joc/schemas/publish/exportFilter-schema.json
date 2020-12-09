@@ -20,6 +20,9 @@
       "description": "decides if the export is meant for signing the exported objects [default=false]",
       "type" : "boolean"
     },
+    "controllerId": {
+      "$ref": "../common/string255-schema.json"
+    },
     "deployables": {
         "$ref": "exportDeployables-schema.json"
     },

@@ -241,6 +241,34 @@ public class DBLayerDeploy {
         }
     }
     
+    public List<DBItemInventoryReleasedConfiguration> getFilteredReleasedConfiguration(List<ConfigurationFilter> configurations)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+            hql.append(" where ");
+            for (Integer i=0; i < configurations.size(); i++) {
+                hql.append("(")
+                    .append("path = :path").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7))
+                    .append(" and ")
+                    .append("type = :type").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7))
+                    .append(")");
+                if (i < configurations.size() -1) {
+                    hql.append(" or ");
+                }
+            }
+            Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
+            for (Integer i=0; i < configurations.size(); i++) {
+                query.setParameter("path" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), configurations.get(i).getPath());
+                query.setParameter("type" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), configurations.get(i).getObjectType().intValue());
+            }
+            return query.getResultList();
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
     public List<DBItemInventoryConfiguration> getFilteredInventoryConfigurationsByIds(Collection<Long> configurationIds)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
@@ -354,11 +382,27 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemInventoryConfiguration> getFilteredConfigurations(ExportFilter filter) throws DBConnectionRefusedException,
+    public List<DBItemInventoryConfiguration> getFilteredDeployableConfigurations(ExportFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
         return getFilteredInventoryConfiguration(
-                filter.getDeployables().getDraftConfigurations().stream()
+            filter.getDeployables().getDraftConfigurations().stream()
+            .map(item -> item.getDraftConfiguration())
+            .collect(Collectors.toList()));
+    }
+
+    public List<DBItemInventoryConfiguration> getFilteredReleasableConfigurations(ExportFilter filter) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        return getFilteredInventoryConfiguration(
+                filter.getReleasables().getDraftConfigurations().stream()
                 .map(item -> item.getDraftConfiguration())
+                .collect(Collectors.toList()));
+    }
+
+    public List<DBItemInventoryReleasedConfiguration> getFilteredReleasedConfigurations(ExportFilter filter) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        return getFilteredReleasedConfiguration(
+                filter.getReleasables().getReleasedConfigurations().stream()
+                .map(item -> item.getReleasedConfiguration())
                 .collect(Collectors.toList()));
     }
 
