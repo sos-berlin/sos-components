@@ -1,14 +1,21 @@
 <tr>
 <td>``forSigning``</td>
 <td>required, boolean</td>
-<td>This property decides if the export is meant to be used to sign the exported objects [default=false].</td>
+<td>This property decides if the export is meant to be used to sign the exported objects.</td>
 <td>  "forSigning" : false</td>
+<td>false</td>
+</tr>
+<tr>
+<td>``controllerId``</td>
+<td>optional, string</td>
+<td>This property sets the controller the export is intended for.<ul><li>Required if ``forSigning`` is true.</li><li>Will be ignored if ``forSigning`` is false.</li></ul></td>
+<td>  "controllerId" : "testsuite"</td>
 <td></td>
 </tr>
 <tr>
 <td>``deployables``</td>
 <td>optional, array</td>
-<td>Filter collection of deployable configurations specified by their path and objectType. Deployable objects can be in draft state or already deployed objects.</br>Any of [deployables] or [releasables] is required.</td>
+<td>Filter collection of deployable configurations specified by their path and objectType. Deployable objects can be in draft state or already deployed objects.</br>Any of ``deployables`` or ``releasables`` is required.</td>
 <td>"deployables" : {  
 <div style="padding-left:10px;">"draftConfigurations" : [ {</div>
 <div style="padding-left:20px;">"draftConfiguration" : {</div>
@@ -34,7 +41,7 @@
 <tr>
 <td>``releasables``</td>
 <td>optional, array</td>
-<td>Filter collection of releasable configurations specified by their path and objectType. Releasable objects can be in draft state or already released objects.</br>Any of [deployables] or [releasables] is required.</td>
+<td>Filter collection of releasable configurations specified by their path and objectType. Releasable objects can be in draft state or already released objects.</br>Any of ``deployables`` or ``releasables`` is required.</td>
 <td>"releasables" : {  
 <div style="padding-left:10px;">"draftConfigurations" : [ {</div>
 <div style="padding-left:20px;">"draftConfiguration" : {</div>

@@ -476,6 +476,7 @@ public class DeploymentTestUtils {
         ExportFilter filter = new ExportFilter();
         filter.setDeployables(new ExportDeployables());
         filter.setForSigning(forSigning);
+        filter.setControllerId("testsuite");
 
         DraftConfig workflow10DraftConfig = new DraftConfig();
         ConfigurationFilter workflow10draft = new ConfigurationFilter();

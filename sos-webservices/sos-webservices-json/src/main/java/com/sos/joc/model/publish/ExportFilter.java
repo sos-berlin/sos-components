@@ -20,6 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "forSigning",
+    "controllerId",
     "deployables",
     "releasables",
     "auditLog"
@@ -33,6 +34,14 @@ public class ExportFilter {
     @JsonProperty("forSigning")
     @JsonPropertyDescription("decides if the export is meant for signing the exported objects [default=false]")
     private Boolean forSigning;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * Export Deployables
      * <p>
@@ -74,6 +83,28 @@ public class ExportFilter {
     @JsonProperty("forSigning")
     public void setForSigning(Boolean forSigning) {
         this.forSigning = forSigning;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
     /**
@@ -144,12 +175,12 @@ public class ExportFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("forSigning", forSigning).append("deployables", deployables).append("releasables", releasables).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("forSigning", forSigning).append("controllerId", controllerId).append("deployables", deployables).append("releasables", releasables).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deployables).append(forSigning).append(auditLog).append(releasables).toHashCode();
+        return new HashCodeBuilder().append(deployables).append(forSigning).append(controllerId).append(auditLog).append(releasables).toHashCode();
     }
 
     @Override
@@ -161,7 +192,7 @@ public class ExportFilter {
             return false;
         }
         ExportFilter rhs = ((ExportFilter) other);
-        return new EqualsBuilder().append(deployables, rhs.deployables).append(forSigning, rhs.forSigning).append(auditLog, rhs.auditLog).append(releasables, rhs.releasables).isEquals();
+        return new EqualsBuilder().append(deployables, rhs.deployables).append(forSigning, rhs.forSigning).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(releasables, rhs.releasables).isEquals();
     }
 
 }

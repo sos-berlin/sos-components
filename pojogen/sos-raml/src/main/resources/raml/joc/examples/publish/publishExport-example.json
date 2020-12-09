@@ -2,6 +2,7 @@
   "examples": [{
       "example1": {
         "forSigning": true,
+        "controllerId" : "testsuite",
         "deployables": {
           "draftConfigurations": [{
               "draftConfiguration": {
