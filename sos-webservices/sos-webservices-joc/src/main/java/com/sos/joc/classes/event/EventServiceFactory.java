@@ -104,7 +104,7 @@ public class EventServiceFactory {
                 LOGGER.debug("waiting for Events for " + controllerId + ": maxdelay " + delay + "ms");
                 ScheduledFuture<Void> watchdog = startWatchdog(delay, eventArrived);
                 mode = service.hasEvent(eventArrived);
-                if (watchdog.isDone()) {
+                if (!watchdog.isDone()) {
                     LOGGER.debug("Event for " + controllerId + " arrived");
                     watchdog.cancel(false);
                     LOGGER.debug("event watchdog is cancelled");
