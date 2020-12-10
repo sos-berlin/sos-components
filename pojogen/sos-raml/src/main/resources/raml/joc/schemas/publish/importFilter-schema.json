@@ -4,11 +4,14 @@
 	"javaType": "com.sos.joc.model.publish.ImportFilter",
 	"type": "object",
 	"required": [
-		"keyAlgorithm"
+		"overwrite"
 	],
 	"properties": {
-		"keyAlgorithm": {
-			"type": "string"
+		"overwrite": {
+			"type": "boolean"
+		}, 
+		"folder": {
+		"$ref": "../common/path-schema.json"
 		},
 		"auditLog": {
 			"$ref": "../audit/auditParams-schema.json"

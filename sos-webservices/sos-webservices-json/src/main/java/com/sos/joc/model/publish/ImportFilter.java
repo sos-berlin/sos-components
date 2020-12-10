@@ -3,6 +3,7 @@ package com.sos.joc.model.publish;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -18,7 +19,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "keyAlgorithm",
+    "overwrite",
+    "folder",
     "auditLog"
 })
 public class ImportFilter {
@@ -28,8 +30,17 @@ public class ImportFilter {
      * (Required)
      * 
      */
-    @JsonProperty("keyAlgorithm")
-    private String keyAlgorithm;
+    @JsonProperty("overwrite")
+    private Boolean overwrite;
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
+    @JsonProperty("folder")
+    @JsonPropertyDescription("absolute path of an object.")
+    private String folder;
     /**
      * auditParams
      * <p>
@@ -44,9 +55,9 @@ public class ImportFilter {
      * (Required)
      * 
      */
-    @JsonProperty("keyAlgorithm")
-    public String getKeyAlgorithm() {
-        return keyAlgorithm;
+    @JsonProperty("overwrite")
+    public Boolean getOverwrite() {
+        return overwrite;
     }
 
     /**
@@ -54,9 +65,31 @@ public class ImportFilter {
      * (Required)
      * 
      */
-    @JsonProperty("keyAlgorithm")
-    public void setKeyAlgorithm(String keyAlgorithm) {
-        this.keyAlgorithm = keyAlgorithm;
+    @JsonProperty("overwrite")
+    public void setOverwrite(Boolean overwrite) {
+        this.overwrite = overwrite;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
+    @JsonProperty("folder")
+    public String getFolder() {
+        return folder;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
+    @JsonProperty("folder")
+    public void setFolder(String folder) {
+        this.folder = folder;
     }
 
     /**
@@ -83,12 +116,12 @@ public class ImportFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("keyAlgorithm", keyAlgorithm).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("overwrite", overwrite).append("folder", folder).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(auditLog).append(keyAlgorithm).toHashCode();
+        return new HashCodeBuilder().append(folder).append(auditLog).append(overwrite).toHashCode();
     }
 
     @Override
@@ -100,7 +133,7 @@ public class ImportFilter {
             return false;
         }
         ImportFilter rhs = ((ImportFilter) other);
-        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(keyAlgorithm, rhs.keyAlgorithm).isEquals();
+        return new EqualsBuilder().append(folder, rhs.folder).append(auditLog, rhs.auditLog).append(overwrite, rhs.overwrite).isEquals();
     }
 
 }

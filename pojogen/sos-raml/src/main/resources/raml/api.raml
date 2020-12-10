@@ -66,9 +66,9 @@ resourceTypes:
   - postOrderLogWithPlainResponse: !include joc/resourceTypes/order/postWithPlainResponse.raml
   - modifyCalendar: !include joc/resourceTypes/calendar/modify.raml
   - loginConfiguration: !include joc/resourceTypes/configuration/login.raml
-  - postForDownloadUnsigned: !include joc/resourceTypes/common/postForDownloadUnsigned.raml
-  - postForUploadSigned: !include joc/resourceTypes/common/postForUploadSigned.raml
-  - postForUploadUnsigned: !include joc/resourceTypes/common/postForUploadUnsigned.raml
+  - postForDownloadUnsigned: !include joc/resourceTypes/publish/postForDownloadUnsigned.raml
+  - postForUploadSigned: !include joc/resourceTypes/publish/postForUploadSigned.raml
+  - postForUploadUnsigned: !include joc/resourceTypes/publish/postForUploadUnsigned.raml
   - postForGenerateKey: !include joc/resourceTypes/publish/postForGenerateKey.raml
   - postForExport: !include joc/resourceTypes/publish/postForExport.raml
   - postForImportDeploy: !include joc/resourceTypes/publish/postForImportDeploy.raml
@@ -1209,7 +1209,7 @@ traits:
   /import:
     type:
       postForUploadUnsigned:
-        description: uploads archive file (zip, tar.gz, gz) with signed and unsigned JSON files of JobScheduler Objects  
+        description: uploads archive file (zip, tar.gz, gz) with unsigned JSON files of deployable and releasable objects  
         schema: !include joc/schemas/publish/importFilter-schema.json
         example: !include joc/examples/publish/publishImport-example.json
 
@@ -2058,7 +2058,7 @@ traits:
           description: |
             imports a Private Key, a Public Key or a Certificate file(ASCII format only, no binary files)
             and stores the file content
-          schema: !include joc/schemas/publish/importFilter-schema.json
+          schema: !include joc/schemas/publish/importKeyFilter-schema.json
           example: " "
     /store:
       type:

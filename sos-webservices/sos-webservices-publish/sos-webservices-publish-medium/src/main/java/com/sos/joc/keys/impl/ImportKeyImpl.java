@@ -20,7 +20,7 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.ImportAudit;
+import com.sos.joc.classes.audit.ImportKeyAudit;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
@@ -33,7 +33,7 @@ import com.sos.joc.keys.resource.IImportKey;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.pgp.JocKeyPair;
-import com.sos.joc.model.publish.ImportFilter;
+import com.sos.joc.model.publish.ImportKeyFilter;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
 
@@ -62,8 +62,8 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, importKeyFilter.getBytes(), xAccessToken);
-            JsonValidator.validateFailFast(importKeyFilter.getBytes(StandardCharsets.UTF_8), ImportFilter.class);
-            ImportFilter filter = Globals.objectMapper.readValue(importKeyFilter, ImportFilter.class);
+            JsonValidator.validateFailFast(importKeyFilter.getBytes(StandardCharsets.UTF_8), ImportKeyFilter.class);
+            ImportKeyFilter filter = Globals.objectMapper.readValue(importKeyFilter, ImportKeyFilter.class);
             filter.setAuditLog(auditLog);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", 
                     getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isImportKey());
@@ -141,7 +141,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.MEDIUM);
-            ImportAudit importAudit = new ImportAudit(filter, reason);
+            ImportKeyAudit importAudit = new ImportKeyAudit(filter, reason);
             logAuditMessage(importAudit);
             storeAuditLogEntry(importAudit);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -160,7 +160,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
         }
     }
 
-    private String readFileContent(InputStream inputStream, ImportFilter filter) throws DBConnectionRefusedException, DBInvalidDataException,
+    private String readFileContent(InputStream inputStream, ImportKeyFilter filter) throws DBConnectionRefusedException, DBInvalidDataException,
             SOSHibernateException, IOException, JocUnsupportedFileTypeException, JocConfigurationException, DBOpenSessionException {
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
         try {
