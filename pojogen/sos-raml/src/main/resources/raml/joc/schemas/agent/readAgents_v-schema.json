@@ -24,7 +24,7 @@
     },
     "onlyEnabledAgents": {
     	"type": "boolean",
-    	"default": "false"
+    	"default": false
     },
     "compact": {
     	"$ref": "../common/compactParam-schema.json"
