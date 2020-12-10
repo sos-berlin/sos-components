@@ -13,8 +13,11 @@
 		"calendarId": {
 			"$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
 		},
-		"submissionHistoryId": {
-			"$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
+		"dailyPlanSubmissionHistoryIds": {
+			"type": "array",
+			"items": {
+				"$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
+			}
 		},
 		"states": {
 			"type": "array",
