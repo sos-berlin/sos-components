@@ -38,10 +38,20 @@ public class SOSHibernateJsonType implements UserType {
     @Override
     public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws HibernateException,
             SQLException {
-        if (rs.getString(names[0]) == null) {
+        String val = rs.getString(names[0]);
+        if (val == null) {
             return null;
         }
-        return rs.getString(names[0]);
+        if (dbms == null) {
+            dbms = SOSHibernateFactory.getDbms(session.getFactory().getJdbcServices().getDialect());
+        }
+        if (dbms.equals(SOSHibernateFactory.Dbms.H2)) {
+            // TODO tmp solution to replace: "{\"TYPE\":\"xxx\"}"
+            val = val.substring(1, val.length() - 1).replaceAll("\\\\\"", "\"").replaceAll("(\\\\r\\\\n|\\\\n)", "\\\n");
+            // System.out.println(val);
+            return val;
+        }
+        return val;
     }
 
     @Override
