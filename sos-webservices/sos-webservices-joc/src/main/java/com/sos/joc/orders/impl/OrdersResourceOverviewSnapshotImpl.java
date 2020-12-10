@@ -145,6 +145,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
         summary.setFailed(map.getOrDefault(OrderStateText.FAILED, 0));
         summary.setSuspended(suspendedOrders);
         summary.setWaiting(map.getOrDefault(OrderStateText.WAITING, 0));
+        summary.setCalling(0);
 
         OrdersSnapshot entity = new OrdersSnapshot();
         entity.setSurveyDate(Date.from(now));
