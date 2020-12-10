@@ -18,12 +18,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "pending",
-    "running",
     "inProgress",
+    "running",
     "suspended",
+    "calling",
     "waiting",
-    "failed",
-    "blocked"
+    "blocked",
+    "failed"
 })
 public class OrdersSummary {
 
@@ -41,16 +42,16 @@ public class OrdersSummary {
      * 
      * 
      */
-    @JsonProperty("running")
-    private Integer running;
+    @JsonProperty("inProgress")
+    private Integer inProgress;
     /**
      * non negative integer
      * <p>
      * 
      * 
      */
-    @JsonProperty("inProgress")
-    private Integer inProgress;
+    @JsonProperty("running")
+    private Integer running;
     /**
      * non negative integer
      * <p>
@@ -65,6 +66,14 @@ public class OrdersSummary {
      * 
      * 
      */
+    @JsonProperty("calling")
+    private Integer calling;
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("waiting")
     private Integer waiting;
     /**
@@ -73,16 +82,16 @@ public class OrdersSummary {
      * 
      * 
      */
-    @JsonProperty("failed")
-    private Integer failed;
+    @JsonProperty("blocked")
+    private Integer blocked;
     /**
      * non negative integer
      * <p>
      * 
      * 
      */
-    @JsonProperty("blocked")
-    private Integer blocked;
+    @JsonProperty("failed")
+    private Integer failed;
 
     /**
      * non negative integer
@@ -104,28 +113,6 @@ public class OrdersSummary {
     @JsonProperty("pending")
     public void setPending(Integer pending) {
         this.pending = pending;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("running")
-    public Integer getRunning() {
-        return running;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("running")
-    public void setRunning(Integer running) {
-        this.running = running;
     }
 
     /**
@@ -156,6 +143,28 @@ public class OrdersSummary {
      * 
      * 
      */
+    @JsonProperty("running")
+    public Integer getRunning() {
+        return running;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("running")
+    public void setRunning(Integer running) {
+        this.running = running;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("suspended")
     public Integer getSuspended() {
         return suspended;
@@ -170,6 +179,28 @@ public class OrdersSummary {
     @JsonProperty("suspended")
     public void setSuspended(Integer suspended) {
         this.suspended = suspended;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("calling")
+    public Integer getCalling() {
+        return calling;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("calling")
+    public void setCalling(Integer calling) {
+        this.calling = calling;
     }
 
     /**
@@ -200,28 +231,6 @@ public class OrdersSummary {
      * 
      * 
      */
-    @JsonProperty("failed")
-    public Integer getFailed() {
-        return failed;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("failed")
-    public void setFailed(Integer failed) {
-        this.failed = failed;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("blocked")
     public Integer getBlocked() {
         return blocked;
@@ -238,14 +247,36 @@ public class OrdersSummary {
         this.blocked = blocked;
     }
 
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("failed")
+    public Integer getFailed() {
+        return failed;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("failed")
+    public void setFailed(Integer failed) {
+        this.failed = failed;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("pending", pending).append("running", running).append("inProgress", inProgress).append("suspended", suspended).append("waiting", waiting).append("failed", failed).append("blocked", blocked).toString();
+        return new ToStringBuilder(this).append("pending", pending).append("inProgress", inProgress).append("running", running).append("suspended", suspended).append("calling", calling).append("waiting", waiting).append("blocked", blocked).append("failed", failed).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(running).append(inProgress).append(waiting).append(blocked).append(pending).append(failed).append(suspended).toHashCode();
+        return new HashCodeBuilder().append(running).append(inProgress).append(waiting).append(blocked).append(pending).append(calling).append(failed).append(suspended).toHashCode();
     }
 
     @Override
@@ -257,7 +288,7 @@ public class OrdersSummary {
             return false;
         }
         OrdersSummary rhs = ((OrdersSummary) other);
-        return new EqualsBuilder().append(running, rhs.running).append(inProgress, rhs.inProgress).append(waiting, rhs.waiting).append(blocked, rhs.blocked).append(pending, rhs.pending).append(failed, rhs.failed).append(suspended, rhs.suspended).isEquals();
+        return new EqualsBuilder().append(running, rhs.running).append(inProgress, rhs.inProgress).append(waiting, rhs.waiting).append(blocked, rhs.blocked).append(pending, rhs.pending).append(calling, rhs.calling).append(failed, rhs.failed).append(suspended, rhs.suspended).isEquals();
     }
 
 }

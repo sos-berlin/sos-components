@@ -31,7 +31,6 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.event.EventSnapshot;
 import com.sos.joc.model.event.EventType;
 
-import javassist.expr.Instanceof;
 import js7.controller.data.events.AgentRefStateEvent;
 import js7.controller.data.events.ControllerEvent;
 import js7.data.agent.AgentName;

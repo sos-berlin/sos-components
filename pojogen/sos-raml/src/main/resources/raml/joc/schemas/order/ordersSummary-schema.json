@@ -7,22 +7,25 @@
     "pending": {
       "$ref": "../common/nonNegativeInteger-schema.json"
     },
-    "running": {
+    "inProgress": {
       "$ref": "../common/nonNegativeInteger-schema.json"
     },
-    "inProgress": {
+    "running": {
       "$ref": "../common/nonNegativeInteger-schema.json"
     },
     "suspended": {
       "$ref": "../common/nonNegativeInteger-schema.json"
     },
+    "calling": {
+      "$ref": "../common/nonNegativeInteger-schema.json"
+    },
     "waiting": {
       "$ref": "../common/nonNegativeInteger-schema.json"
     },
-    "failed": {
+    "blocked": {
       "$ref": "../common/nonNegativeInteger-schema.json"
     },
-    "blocked": {
+    "failed": {
       "$ref": "../common/nonNegativeInteger-schema.json"
     }
   }
