@@ -233,6 +233,8 @@ public class SOSSQLCommandExtractor {
                 commandSpltter = "(?i)\nGO\\s*\n|\n/\n";
             } else if (dbms.equals(SOSHibernateFactory.Dbms.MYSQL)) {
                 commandSpltter = "\n\\\\g\n";
+            } else if (dbms.equals(SOSHibernateFactory.Dbms.H2)) {
+                commandSpltter = "\n\\\\g\n";
             } else if (dbms.equals(SOSHibernateFactory.Dbms.ORACLE)) {
                 commandSpltter = "\n/\n";
             } else if (dbms.equals(SOSHibernateFactory.Dbms.PGSQL)) {
