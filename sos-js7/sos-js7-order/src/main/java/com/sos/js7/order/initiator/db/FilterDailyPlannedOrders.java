@@ -44,7 +44,8 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     private Boolean isLate;
     private String controllerId;
     private List<String> listOfWorkflowPaths;
-    private Long submissionHistoryId;
+    private List<Long> listOfSubmissionIds;
+
     private Long calendarId;
     private List<String> listOfSchedules;
 
@@ -69,15 +70,14 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         }
         listOfOrders.add(orderId);
     }
-    
+
     public List<String> getListOfWorkflowPaths() {
         return listOfWorkflowPaths;
     }
 
-    
     public void setListOfWorkflowPaths(List<String> listOfWorkflowPaths) {
         this.listOfWorkflowPaths = listOfWorkflowPaths;
-    }    
+    }
 
     public void setDailyPlanDate(String dailyPlanDate) {
         if (dailyPlanDate != null) {
@@ -86,12 +86,10 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         }
     }
 
-
-    
     public void setListOfSchedules(List<String> listOfSchedules) {
         this.listOfSchedules = listOfSchedules;
     }
-    
+
     public List<String> getListOfSchedules() {
         return listOfSchedules;
     }
@@ -160,7 +158,6 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         return states;
     }
 
-   
     public Boolean isLate() {
         return isLate != null && isLate;
     }
@@ -196,20 +193,10 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         return this.plannedStart;
     }
 
-    public Long getSubmissionHistoryId() {
-        return submissionHistoryId;
-    }
-
-    public void setSubmissionHistoryId(Long submissionHistoryId) {
-        this.submissionHistoryId = submissionHistoryId;
-    }
-
-    
     public Long getCalendarId() {
         return calendarId;
     }
 
-    
     public void setCalendarId(Long calendarId) {
         this.calendarId = calendarId;
     }
@@ -279,9 +266,16 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         this.listOfWorkflowPaths.add(workflowPath);
     }
 
-    
     public void setStates(List<OrderStateText> states) {
         this.states = states;
+    }
+
+    public List<Long> getListOfSubmissionIds() {
+        return listOfSubmissionIds;
+    }
+
+    public void setListOfSubmissionIds(List<Long> listOfSubmissionIds) {
+        this.listOfSubmissionIds = listOfSubmissionIds;
     }
 
 }

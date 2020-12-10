@@ -39,6 +39,15 @@ public class SearchStringHelper {
         }
         return clause;
     }
+    
+    public static String getLongSetSql(final Collection<Long> values, final String fieldName) {
+
+        String clause = values.stream().filter(Objects::nonNull).map(value -> fieldName + "=" + value).collect(Collectors.joining(" or "));
+        if (values.size() > 1) {
+            clause = "(" + clause + ")";
+        }
+        return clause;
+    }
 
     public static String getStringListSql(final Collection<String> values, final String fieldName) {
 

@@ -49,7 +49,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
         filter.setListOfOrders(dailyPlanOrderFilter.getOrderIds());
         filter.setControllerId(dailyPlanOrderFilter.getControllerId());
         filter.setDailyPlanDate(dailyPlanOrderFilter.getDailyPlanDate());
-        filter.setSubmissionHistoryId(dailyPlanOrderFilter.getSubmissionHistoryId());
+        filter.setListOfSubmissionIds(dailyPlanOrderFilter.getDailyPlanSubmissionHistoryIds());
         filter.setListOfWorkflowPaths(dailyPlanOrderFilter.getWorkflowPaths());
         filter.setListOfSchedules(dailyPlanOrderFilter.getSchedulePaths());
         return filter;

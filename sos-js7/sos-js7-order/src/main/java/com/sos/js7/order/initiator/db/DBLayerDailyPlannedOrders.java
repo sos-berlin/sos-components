@@ -103,10 +103,7 @@ public class DBLayerDailyPlannedOrders {
             where += and + " p.controllerId = :controllerId";
             and = " and ";
         }
-        if (filter.getSubmissionHistoryId() != null) {
-            where += and + " p.submissionHistoryId = :submissionHistoryId";
-            and = " and ";
-        }
+
         if (filter.getCalendarId() != null) {
             where += and + " p.calendarId = :calendarId";
             and = " and ";
@@ -150,6 +147,11 @@ public class DBLayerDailyPlannedOrders {
 
         if (filter.getListOfSchedules() != null && filter.getListOfSchedules().size() > 0) {
             where += and + SearchStringHelper.getStringListSql(filter.getListOfSchedules(), "p.schedulePath");
+            and = " and ";
+        }
+
+        if (filter.getListOfSubmissionIds() != null && filter.getListOfSubmissionIds().size() > 0) {
+            where += and + SearchStringHelper.getLongSetSql(filter.getListOfSubmissionIds(), "p.submissionHistoryId");
             and = " and ";
         }
 
@@ -215,10 +217,6 @@ public class DBLayerDailyPlannedOrders {
 
         if (filter.getSubmitTime() != null) {
             query.setParameter("submitTime", filter.getSubmitTime());
-        }
-
-        if (filter.getSubmissionHistoryId() != null) {
-            query.setParameter("submissionHistoryId", filter.getSubmissionHistoryId());
         }
 
         if (filter.getCalendarId() != null) {

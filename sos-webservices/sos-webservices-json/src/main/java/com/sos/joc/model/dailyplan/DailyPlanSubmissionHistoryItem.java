@@ -29,11 +29,11 @@ public class DailyPlanSubmissionHistoryItem {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("controllerId")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String controllerId;
     /**
      * non negative long
@@ -65,7 +65,7 @@ public class DailyPlanSubmissionHistoryItem {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("controllerId")
@@ -76,7 +76,7 @@ public class DailyPlanSubmissionHistoryItem {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("controllerId")

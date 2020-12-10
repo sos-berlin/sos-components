@@ -1,6 +1,7 @@
 
 package com.sos.joc.model.dailyplan;
 
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -19,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "dailyPlanSubmissionHistoryId",
+    "dailyPlanSubmissionHistoryIds",
     "dateFrom",
     "dateTo",
     "timeZone"
@@ -33,14 +34,8 @@ public class DailyPlanSubmissionHistoryFilter {
      */
     @JsonProperty("controllerId")
     private String controllerId;
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("dailyPlanSubmissionHistoryId")
-    private Long dailyPlanSubmissionHistoryId;
+    @JsonProperty("dailyPlanSubmissionHistoryIds")
+    private List<Long> dailyPlanSubmissionHistoryIds = null;
     @JsonProperty("dateFrom")
     private String dateFrom;
     @JsonProperty("dateTo")
@@ -73,26 +68,14 @@ public class DailyPlanSubmissionHistoryFilter {
         this.controllerId = controllerId;
     }
 
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("dailyPlanSubmissionHistoryId")
-    public Long getDailyPlanSubmissionHistoryId() {
-        return dailyPlanSubmissionHistoryId;
+    @JsonProperty("dailyPlanSubmissionHistoryIds")
+    public List<Long> getDailyPlanSubmissionHistoryIds() {
+        return dailyPlanSubmissionHistoryIds;
     }
 
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("dailyPlanSubmissionHistoryId")
-    public void setDailyPlanSubmissionHistoryId(Long dailyPlanSubmissionHistoryId) {
-        this.dailyPlanSubmissionHistoryId = dailyPlanSubmissionHistoryId;
+    @JsonProperty("dailyPlanSubmissionHistoryIds")
+    public void setDailyPlanSubmissionHistoryIds(List<Long> dailyPlanSubmissionHistoryIds) {
+        this.dailyPlanSubmissionHistoryIds = dailyPlanSubmissionHistoryIds;
     }
 
     @JsonProperty("dateFrom")
@@ -135,12 +118,12 @@ public class DailyPlanSubmissionHistoryFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("dailyPlanSubmissionHistoryId", dailyPlanSubmissionHistoryId).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("dailyPlanSubmissionHistoryIds", dailyPlanSubmissionHistoryIds).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dateTo).append(dailyPlanSubmissionHistoryId).append(timeZone).append(controllerId).append(dateFrom).toHashCode();
+        return new HashCodeBuilder().append(dateTo).append(timeZone).append(dailyPlanSubmissionHistoryIds).append(controllerId).append(dateFrom).toHashCode();
     }
 
     @Override
@@ -152,7 +135,7 @@ public class DailyPlanSubmissionHistoryFilter {
             return false;
         }
         DailyPlanSubmissionHistoryFilter rhs = ((DailyPlanSubmissionHistoryFilter) other);
-        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(dailyPlanSubmissionHistoryId, rhs.dailyPlanSubmissionHistoryId).append(timeZone, rhs.timeZone).append(controllerId, rhs.controllerId).append(dateFrom, rhs.dateFrom).isEquals();
+        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).append(dailyPlanSubmissionHistoryIds, rhs.dailyPlanSubmissionHistoryIds).append(controllerId, rhs.controllerId).append(dateFrom, rhs.dateFrom).isEquals();
     }
 
 }
