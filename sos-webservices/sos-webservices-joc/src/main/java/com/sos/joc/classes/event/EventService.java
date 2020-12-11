@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.function.BiConsumer;
@@ -72,6 +73,7 @@ public class EventService {
     private AtomicBoolean isCurrentController = new AtomicBoolean(false);
     private JControllerEventBus evtBus = null;
     private volatile CopyOnWriteArraySet<Condition> conditions = new CopyOnWriteArraySet<>();
+    private AtomicBoolean atLeastOneConditionIsHold = new AtomicBoolean(false);
 
     public EventService(String controllerId) throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException,
             DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
@@ -142,65 +144,69 @@ public class EventService {
     }
 
     BiConsumer<Stamped<KeyedEvent<Event>>, JControllerState> callbackOfController = (stampedEvt, currentState) -> {
-        KeyedEvent<Event> event = stampedEvt.value();
-        long eventId = stampedEvt.eventId() / 1000000; //eventId per second
-        Object key = event.key();
-        Event evt = event.event();
+        try {
+            KeyedEvent<Event> event = stampedEvt.value();
+            long eventId = stampedEvt.eventId() / 1000000; //eventId per second
+            Object key = event.key();
+            Event evt = event.event();
 
-        EventSnapshot eventSnapshot = new EventSnapshot();
+            EventSnapshot eventSnapshot = new EventSnapshot();
 
-        if (evt instanceof OrderEvent) {
-            final OrderId orderId = (OrderId) key;
-            Optional<JOrder> opt = currentState.idToOrder(orderId);
-            if (opt.isPresent()) {
-                WorkflowId w = mapWorkflowId(opt.get().workflowId());
-                addEvent(createWorkflowEventOfOrder(eventId, w));
-                eventSnapshot.setPath(orderId.string());
-                eventSnapshot.setWorkflow(w);
-            } else {
-                eventSnapshot.setPath(orderId.string());
-            }
-            eventSnapshot.setObjectType(EventType.ORDER);
-            eventSnapshot.setEventType("OrderStateChanged");
-            if (evt instanceof OrderAdded) {
-                eventSnapshot.setEventType("OrderAdded");
-            } else if (evt instanceof OrderTerminated) {
-                eventSnapshot.setEventType("OrderTerminated");
-            } else if (evt instanceof OrderProcessingStarted$ || evt instanceof OrderProcessed || evt instanceof OrderProcessingKilled$) {
+            if (evt instanceof OrderEvent) {
+                final OrderId orderId = (OrderId) key;
+                Optional<JOrder> opt = currentState.idToOrder(orderId);
                 if (opt.isPresent()) {
-                    addEvent(createTaskEventOfOrder(eventId, mapWorkflowId(opt.get().workflowId())));
+                    WorkflowId w = mapWorkflowId(opt.get().workflowId());
+                    addEvent(createWorkflowEventOfOrder(eventId, w));
+                    eventSnapshot.setPath(orderId.string());
+                    eventSnapshot.setWorkflow(w);
+                } else {
+                    eventSnapshot.setPath(orderId.string());
                 }
+                eventSnapshot.setObjectType(EventType.ORDER);
+                eventSnapshot.setEventType("OrderStateChanged");
+                if (evt instanceof OrderAdded) {
+                    eventSnapshot.setEventType("OrderAdded");
+                } else if (evt instanceof OrderTerminated) {
+                    eventSnapshot.setEventType("OrderTerminated");
+                } else if (evt instanceof OrderProcessingStarted$ || evt instanceof OrderProcessed || evt instanceof OrderProcessingKilled$) {
+                    if (opt.isPresent()) {
+                        addEvent(createTaskEventOfOrder(eventId, mapWorkflowId(opt.get().workflowId())));
+                    }
+                }
+                
+            } else if (evt instanceof ControllerEvent || evt instanceof ClusterEvent) {
+                eventSnapshot.setEventType("ControllerStateChanged");
+                eventSnapshot.setObjectType(EventType.CONTROLLER);
+                
+            } else if (evt instanceof ItemEvent) {
+                final String p = ((ItemEvent) evt).path().string();
+                String[] pathParts = p.split(":", 2);
+                eventSnapshot.setEventType(evt.getClass().getSimpleName()); // ItemAdded and ItemUpdated etc.
+                eventSnapshot.setPath(pathParts[1]);
+                try {
+                    eventSnapshot.setObjectType(EventType.fromValue(pathParts[0].toUpperCase()));
+                } catch (Exception e) {
+                    //
+                }
+                
+            } else if (evt instanceof AgentRefEvent.AgentAdded || evt instanceof AgentRefEvent.AgentUpdated) {
+                eventSnapshot.setEventType(evt.getClass().getSimpleName());
+                eventSnapshot.setPath(((AgentName) key).string());
+                eventSnapshot.setObjectType(EventType.AGENT);
+                
+            } else if (evt instanceof AgentRefStateEvent && !(evt instanceof AgentRefStateEvent.AgentEventsObserved)) {
+                eventSnapshot.setEventType("AgentStateChanged");
+                eventSnapshot.setPath(((AgentName) key).string());
+                eventSnapshot.setObjectType(EventType.AGENT);
             }
-            
-        } else if (evt instanceof ControllerEvent || evt instanceof ClusterEvent) {
-            eventSnapshot.setEventType("ControllerStateChanged");
-            eventSnapshot.setObjectType(EventType.CONTROLLER);
-            
-        } else if (evt instanceof ItemEvent) {
-            final String p = ((ItemEvent) evt).path().string();
-            String[] pathParts = p.split(":", 2);
-            eventSnapshot.setEventType(evt.getClass().getSimpleName()); // ItemAdded and ItemUpdated etc.
-            eventSnapshot.setPath(pathParts[1]);
-            try {
-                eventSnapshot.setObjectType(EventType.fromValue(pathParts[0].toUpperCase()));
-            } catch (Exception e) {
-                //
-            }
-            
-        } else if (evt instanceof AgentRefEvent.AgentAdded || evt instanceof AgentRefEvent.AgentUpdated) {
-            eventSnapshot.setEventType(evt.getClass().getSimpleName());
-            eventSnapshot.setPath(((AgentName) key).string());
-            eventSnapshot.setObjectType(EventType.AGENT);
-            
-        } else if (evt instanceof AgentRefStateEvent && !(evt instanceof AgentRefStateEvent.AgentEventsObserved)) {
-            eventSnapshot.setEventType("AgentStateChanged");
-            eventSnapshot.setPath(((AgentName) key).string());
-            eventSnapshot.setObjectType(EventType.AGENT);
-        }
 
-        if (eventSnapshot.getObjectType() != null) {
-            eventSnapshot.setEventId(eventId);
-            addEvent(eventSnapshot);
+            if (eventSnapshot.getObjectType() != null) {
+                eventSnapshot.setEventId(eventId);
+                addEvent(eventSnapshot);
+            }
+        } catch (Exception e) {
+            LOGGER.warn(e.toString());
         }
     };
     
@@ -232,9 +238,20 @@ public class EventService {
     private void addEvent(EventSnapshot eventSnapshot) {
         if (events.add(eventSnapshot)) {
             LOGGER.debug("addEvent for " + controllerId + ": " + eventSnapshot.toString());
-            EventServiceFactory.lock.lock();
-            conditions.stream().parallel().forEach(Condition::signalAll);
-            EventServiceFactory.lock.unlock();
+            try {
+                if (atLeastOneConditionIsHold.get() && EventServiceFactory.lock.tryLock(200L, TimeUnit.MILLISECONDS)) {
+                    try {
+                        conditions.stream().parallel().forEach(Condition::signalAll);
+                        atLeastOneConditionIsHold.set(false);
+                    } catch (Exception e) {
+                    } finally {
+                        EventServiceFactory.lock.unlock();
+                    }
+                }
+            } catch (InterruptedException e) {
+            } catch (Exception e) {
+                LOGGER.warn(e.toString());
+            }
         }
     }
 
@@ -247,6 +264,7 @@ public class EventService {
 //                return EventServiceFactory.Mode.IMMEDIATLY;
 //            }
             EventServiceFactory.signalEvent(eventArrived);
+            atLeastOneConditionIsHold.set(false);
             return EventServiceFactory.Mode.TRUE;
         }
         LOGGER.debug("has old Event for " + controllerId + ": false");
@@ -254,12 +272,17 @@ public class EventService {
     }
 
     protected EventServiceFactory.Mode hasEvent(Condition eventArrived) {
-        EventServiceFactory.lock.lock();
         try {
-            eventArrived.await();
-        } catch (InterruptedException e1) {
-        } finally {
-            EventServiceFactory.lock.unlock();
+            if (EventServiceFactory.lock.tryLock(200L, TimeUnit.MILLISECONDS)) { // with timeout
+                try {
+                    atLeastOneConditionIsHold.set(true);
+                    eventArrived.await();
+                } catch (InterruptedException e1) {
+                } finally {
+                    EventServiceFactory.lock.unlock();
+                }
+            }
+        } catch (InterruptedException e) {
         }
 //        if (events.stream().parallel().anyMatch(e -> EventType.PROBLEM.equals(e.getObjectType()))) {
 //            LOGGER.info("ProblemEvent for " + controllerId + ": true");

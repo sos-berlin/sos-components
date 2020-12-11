@@ -184,11 +184,15 @@ public class EventServiceFactory {
     }
     
     protected static void signalEvent(Condition eventArrived) {
-        lock.lock();
         try {
-            eventArrived.signal();
-        } finally {
-            lock.unlock();
+            if (lock.tryLock(2L, TimeUnit.SECONDS)) {
+                try {
+                    eventArrived.signalAll();
+                } finally {
+                    lock.unlock();
+                }
+            }
+        } catch (InterruptedException e) {
         }
     }
     
