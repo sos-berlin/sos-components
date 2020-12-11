@@ -12,6 +12,7 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
@@ -51,22 +52,27 @@ public class DBItemSearchWorkflow extends DBItem {
 
     @Column(name = "[JOBS]", nullable = false)
     @Type(type = SOSHibernateJsonType.TYPE_NAME)
+    @ColumnTransformer(write = SOSHibernateJsonType.COLUMN_TRANSFORMER_WRITE_DEFAULT)
     private String jobs;
 
     @Column(name = "[JOBS_ARGS]", nullable = false)
     @Type(type = SOSHibernateJsonType.TYPE_NAME)
+    @ColumnTransformer(write = SOSHibernateJsonType.COLUMN_TRANSFORMER_WRITE_DEFAULT)
     private String jobsArgs;
 
     @Column(name = "[JOBS_SCRIPTS]", nullable = false)
     @Type(type = SOSHibernateJsonType.TYPE_NAME)
+    @ColumnTransformer(write = SOSHibernateJsonType.COLUMN_TRANSFORMER_WRITE_DEFAULT)
     private String jobsScripts;
 
     @Column(name = "[INSTRUCTIONS]", nullable = false)
     @Type(type = SOSHibernateJsonType.TYPE_NAME)
+    @ColumnTransformer(write = SOSHibernateJsonType.COLUMN_TRANSFORMER_WRITE_DEFAULT)
     private String instructions;
 
     @Column(name = "[INSTRUCTIONS_ARGS]", nullable = false)
     @Type(type = SOSHibernateJsonType.TYPE_NAME)
+    @ColumnTransformer(write = SOSHibernateJsonType.COLUMN_TRANSFORMER_WRITE_DEFAULT)
     private String instructionsArgs;
 
     @Column(name = "[CREATED]", nullable = false)

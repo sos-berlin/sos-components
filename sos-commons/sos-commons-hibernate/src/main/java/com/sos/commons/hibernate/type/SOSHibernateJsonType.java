@@ -14,7 +14,10 @@ import com.sos.commons.hibernate.SOSHibernateFactory;
 
 public class SOSHibernateJsonType implements UserType {
 
+    public static final String COLUMN_TRANSFORMER_WRITE_DEFAULT = "?";
+    public static final String COLUMN_TRANSFORMER_WRITE_H2 = "? FORMAT JSON";
     public static final String TYPE_NAME = "sos_json";
+
     private final int[] sqlTypes = new int[] { Types.JAVA_OBJECT };
     private Enum<SOSHibernateFactory.Dbms> dbms;
 
@@ -47,8 +50,10 @@ public class SOSHibernateJsonType implements UserType {
         }
         if (dbms.equals(SOSHibernateFactory.Dbms.H2)) {
             // TODO tmp solution to replace: "{\"TYPE\":\"xxx\"}"
-            val = val.substring(1, val.length() - 1).replaceAll("\\\\\"", "\"").replaceAll("(\\\\r\\\\n|\\\\n)", "\\\n");
-            // System.out.println(val);
+            if (val.startsWith("\"")) {
+                val = val.substring(1, val.length() - 1);
+            }
+            val = val.replaceAll("\\\\\"", "\"").replaceAll("(\\\\r\\\\n|\\\\n)", "\\\n");
             return val;
         }
         return val;

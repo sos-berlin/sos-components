@@ -76,6 +76,9 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
                 r.append("'->>'").append(arr[arr.length - 1]).append("'");
             }
             return r.toString();
+        } else if (Dbms.H2.equals(dbms)) {
+            // TODO
+            return property;
         }
         return NAME;
     }
