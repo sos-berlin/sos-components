@@ -21,8 +21,9 @@ public interface IImportResource {
     public JOCDefaultResponse postImportConfiguration(
             @HeaderParam("X-Access-Token") String xAccessToken, 
             @FormDataParam("file") FormDataBodyPart body,
+            @FormDataParam("overwrite") boolean overwrite,
+            @FormDataParam("folder") String folder,
             @FormDataParam("timeSpent") String timeSpent,
             @FormDataParam("ticketLink") String ticketLink,
-            @FormDataParam("updateRepo") boolean updateRepo,
             @FormDataParam("comment") String comment) throws Exception;
 }

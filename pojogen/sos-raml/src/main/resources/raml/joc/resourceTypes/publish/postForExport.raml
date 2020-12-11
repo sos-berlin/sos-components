@@ -63,6 +63,17 @@ post:
     </thead><tbody>
     <<description1>>
     </tbody></table>
+  headers:
+    X-Access-Token:
+      description: Request requires authentication!
+      type: string
+      required: true
+      example: 550e8400-e29b-11d4-a716-446655440000
+    Filename:
+      description: Desired Filename for the exported file!
+      type: string
+      required: true
+      example: my_export.zip
   body:
     application/json:
       schema: <<schema>>

@@ -98,13 +98,22 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                 releasables = getReleasableObjectsFromDB(filter, dbLayer);
             }
             StreamingOutput stream = null;
+            if (filename == null || filename.isEmpty()) {
+                throw new JocMissingRequiredParameterException("The header parameter filename is required!");
+            }
             if (filename.endsWith("tar.gz") || filename.endsWith("gzip")) {
                 stream = PublishUtils.writeTarGzipFile(deployables, releasables, updateableAgentNames, commitId, controllerId, dbLayer);
             } else {
                 stream = PublishUtils.writeZipFile(deployables, releasables, updateableAgentNames, commitId, controllerId, dbLayer);
             }
-            ExportAudit audit = new ExportAudit(filter, 
-                    String.format("objects exported for controller <%1$s> to file <%2$s> with profile <%3$s>.", controllerId, filename, account));
+            ExportAudit audit = null;
+            if (controllerId != null) {
+                audit = new ExportAudit(filter, 
+                        String.format("objects exported for controller <%1$s> to file <%2$s> with profile <%3$s>.", controllerId, filename, account));
+            } else {
+                audit = new ExportAudit(filter, 
+                        String.format("objects exported to file <%1$s> with profile <%2$s>.", filename, account));
+            }
             logAuditMessage(audit);
             storeAuditLogEntry(audit);
             return JOCDefaultResponse.responseOctetStreamDownloadStatus200(stream, filename);
@@ -171,7 +180,7 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
         JSObject jsObject = new JSObject();
         jsObject.setId(item.getId());
         jsObject.setPath(item.getPath());
-        jsObject.setObjectType(PublishUtils.mapInventoryMetaConfigurationType(ConfigurationType.fromValue(item.getType())));
+        jsObject.setObjectType(PublishUtils.mapConfigurationType(ConfigurationType.fromValue(item.getType())));
         switch (jsObject.getObjectType()) {
             case WORKFLOW:
                 Workflow workflow = om.readValue(item.getContent().getBytes(), Workflow.class);

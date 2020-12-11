@@ -59,9 +59,14 @@ import com.sos.commons.sign.keys.sign.SignObject;
 import com.sos.commons.sign.keys.verify.VerifySignature;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.job.Job;
+import com.sos.jobscheduler.model.jobclass.JobClass;
+import com.sos.jobscheduler.model.jobclass.JobClassEdit;
 import com.sos.jobscheduler.model.junction.Junction;
+import com.sos.jobscheduler.model.junction.JunctionEdit;
 import com.sos.jobscheduler.model.lock.Lock;
+import com.sos.jobscheduler.model.lock.LockEdit;
 import com.sos.jobscheduler.model.workflow.Workflow;
+import com.sos.jobscheduler.model.workflow.WorkflowEdit;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
@@ -78,8 +83,12 @@ import com.sos.joc.exceptions.JocSignatureVerificationException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.keys.db.DBLayerKeys;
+import com.sos.joc.model.calendar.Calendar;
+import com.sos.joc.model.calendar.NonWorkingDaysCalendarEdit;
+import com.sos.joc.model.calendar.WorkingDaysCalendarEdit;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.ConfigurationObject;
+import com.sos.joc.model.inventory.common.CalendarType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.pgp.JocKeyType;
@@ -94,6 +103,8 @@ import com.sos.joc.publish.common.JSObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
+import com.sos.webservices.order.initiator.model.Schedule;
+import com.sos.webservices.order.initiator.model.ScheduleEdit;
 
 import io.vavr.control.Either;
 import js7.base.crypt.SignedString;
@@ -776,7 +787,7 @@ public abstract class PublishUtils {
                 newDeployedObject.setPath(draft.getPath());
                 newDeployedObject.setFolder(draft.getFolder());
                 newDeployedObject.setType(
-                        PublishUtils.mapInventoryMetaConfigurationType(ConfigurationType.fromValue(draft.getType())).intValue());
+                        PublishUtils.mapConfigurationType(ConfigurationType.fromValue(draft.getType())).intValue());
                 newDeployedObject.setCommitId(commitId);
                 newDeployedObject.setContent(draft.getContent());
                 newDeployedObject.setSignedContent(draftsWithSignature.get(draft).getSignature());
@@ -921,7 +932,7 @@ public abstract class PublishUtils {
         }
     }
 
-    public static DeployType mapInventoryMetaConfigurationType(ConfigurationType inventoryType) {
+    public static DeployType mapConfigurationType(ConfigurationType inventoryType) {
         switch (inventoryType) {
         case WORKFLOW:
             return DeployType.WORKFLOW;
@@ -977,7 +988,7 @@ public abstract class PublishUtils {
         return alreadyDeployedToDelete;
     }
 
-    public static Set<SignaturePath> readZipFileContent(InputStream inputStream, Set<Workflow> workflows
+    public static Set<SignaturePath> readZipFileContentWithSignatures(InputStream inputStream, Set<Workflow> workflows
             /* , Set<Lock> locks */) throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException,
             IOException, JocUnsupportedFileTypeException, JocConfigurationException, DBOpenSessionException {
         Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
@@ -1024,7 +1035,84 @@ public abstract class PublishUtils {
         return signaturePaths;
     }
 
-    public static Set<SignaturePath> readTarGzipFileContent(InputStream inputStream, Set<Workflow> workflows
+    public static Set<ConfigurationObject> readZipFileContent(InputStream inputStream)
+            throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException, 
+            JocConfigurationException, DBOpenSessionException {
+        Set<ConfigurationObject> objects = new HashSet<ConfigurationObject>();
+        ZipInputStream zipStream = null;
+        try {
+            zipStream = new ZipInputStream(inputStream);
+            ZipEntry entry = null;
+            while ((entry = zipStream.getNextEntry()) != null) {
+                if (entry.isDirectory()) {
+                    continue;
+                }
+                String entryName = entry.getName().replace('\\', '/');
+                ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
+                byte[] binBuffer = new byte[8192];
+                int binRead = 0;
+                while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
+                    outBuffer.write(binBuffer, 0, binRead);
+                }
+                // process deployables and releaseables
+                if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+                    WorkflowEdit workflowEdit = new WorkflowEdit();
+                    workflowEdit.setConfiguration(om.readValue(outBuffer.toString(), Workflow.class));
+                    workflowEdit.setPath(workflowEdit.getConfiguration().getPath());
+                    workflowEdit.setObjectType(ConfigurationType.WORKFLOW);
+                    objects.add(workflowEdit);
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
+                    LockEdit lockEdit = new LockEdit();
+                    lockEdit.setConfiguration(om.readValue(outBuffer.toString(), Lock.class));
+                    lockEdit.setPath(lockEdit.getConfiguration().getPath());
+                    lockEdit.setObjectType(ConfigurationType.LOCK);
+                    objects.add(lockEdit);
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
+                    JunctionEdit junctionEdit = new JunctionEdit();
+                    junctionEdit.setConfiguration(om.readValue(outBuffer.toString(), Junction.class));
+                    junctionEdit.setPath(junctionEdit.getConfiguration().getPath());
+                    junctionEdit.setObjectType(ConfigurationType.JUNCTION);
+                    objects.add(junctionEdit);
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
+                    JobClassEdit jobClassEdit = new JobClassEdit();
+                    jobClassEdit.setConfiguration(om.readValue(outBuffer.toString(), JobClass.class));
+                    jobClassEdit.setPath(jobClassEdit.getConfiguration().getPath());
+                    jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
+                    objects.add(jobClassEdit);
+                } else if (("/" + entryName).endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value())) {
+                    ScheduleEdit scheduleEdit = new ScheduleEdit();
+                    scheduleEdit.setConfiguration(om.readValue(outBuffer.toString(), Schedule.class));
+                    scheduleEdit.setPath(scheduleEdit.getConfiguration().getPath());
+                    scheduleEdit.setObjectType(ConfigurationType.SCHEDULE);
+                    objects.add(scheduleEdit);
+                } else if (("/" + entryName).endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
+                    Calendar cal = om.readValue(outBuffer.toString(), Calendar.class);
+                    if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
+                        WorkingDaysCalendarEdit wdcEdit = new WorkingDaysCalendarEdit();
+                        wdcEdit.setConfiguration(cal);
+                        wdcEdit.setPath(wdcEdit.getConfiguration().getPath());
+                        wdcEdit.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
+                        objects.add(wdcEdit);
+                    } else if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
+                        NonWorkingDaysCalendarEdit nwdcEdit = new NonWorkingDaysCalendarEdit();
+                        nwdcEdit.setConfiguration(cal);
+                        nwdcEdit.setPath(nwdcEdit.getConfiguration().getPath());
+                        nwdcEdit.setObjectType(ConfigurationType.NONWORKINGDAYSCALENDAR);
+                        objects.add(nwdcEdit);
+                    }
+                }
+            }
+        } finally {
+            if (zipStream != null) {
+                try {
+                    zipStream.close();
+                } catch (IOException e) {}
+            }
+        }
+        return objects;
+    }
+
+    public static Set<SignaturePath> readTarGzipFileContentWithSignatures(InputStream inputStream, Set<Workflow> workflows
             /* , Set<Lock> locks */) throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException,
             IOException, JocUnsupportedFileTypeException, JocConfigurationException, DBOpenSessionException {
         Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
@@ -1074,6 +1162,88 @@ public abstract class PublishUtils {
             } catch (Exception e) {}
         }
         return signaturePaths;
+    }
+
+    public static Set<ConfigurationObject> readTarGzipFileContent(InputStream inputStream) 
+            throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException, 
+            JocConfigurationException, DBOpenSessionException {
+        Set<ConfigurationObject> objects = new HashSet<ConfigurationObject>();
+        GZIPInputStream gzipInputStream = null;
+        TarArchiveInputStream tarArchiveInputStream = null;
+        try {
+            gzipInputStream = new GZIPInputStream(inputStream);
+            tarArchiveInputStream = new TarArchiveInputStream(gzipInputStream);
+            ArchiveEntry entry = null;
+            while ((entry = tarArchiveInputStream.getNextEntry()) != null) {
+                if (entry.isDirectory()) {
+                    continue;
+                }
+                String entryName = entry.getName().replace('\\', '/');
+                ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
+                byte[] binBuffer = new byte[8192];
+                int binRead = 0;
+                while ((binRead = tarArchiveInputStream.read(binBuffer, 0, 8192)) >= 0) {
+                    outBuffer.write(binBuffer, 0, binRead);
+                }
+                // process deployables and releaseables
+                if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+                    WorkflowEdit workflowEdit = new WorkflowEdit();
+                    workflowEdit.setConfiguration(om.readValue(outBuffer.toString(), Workflow.class));
+                    workflowEdit.setPath(workflowEdit.getConfiguration().getPath());
+                    workflowEdit.setObjectType(ConfigurationType.WORKFLOW);
+                    objects.add(workflowEdit);
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
+                    LockEdit lockEdit = new LockEdit();
+                    lockEdit.setConfiguration(om.readValue(outBuffer.toString(), Lock.class));
+                    lockEdit.setPath(lockEdit.getConfiguration().getPath());
+                    lockEdit.setObjectType(ConfigurationType.LOCK);
+                    objects.add(lockEdit);
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
+                    JunctionEdit junctionEdit = new JunctionEdit();
+                    junctionEdit.setConfiguration(om.readValue(outBuffer.toString(), Junction.class));
+                    junctionEdit.setPath(junctionEdit.getConfiguration().getPath());
+                    junctionEdit.setObjectType(ConfigurationType.JUNCTION);
+                    objects.add(junctionEdit);
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
+                    JobClassEdit jobClassEdit = new JobClassEdit();
+                    jobClassEdit.setConfiguration(om.readValue(outBuffer.toString(), JobClass.class));
+                    jobClassEdit.setPath(jobClassEdit.getConfiguration().getPath());
+                    jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
+                    objects.add(jobClassEdit);
+                } else if (("/" + entryName).endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value())) {
+                    ScheduleEdit scheduleEdit = new ScheduleEdit();
+                    scheduleEdit.setConfiguration(om.readValue(outBuffer.toString(), Schedule.class));
+                    scheduleEdit.setPath(scheduleEdit.getConfiguration().getPath());
+                    scheduleEdit.setObjectType(ConfigurationType.SCHEDULE);
+                    objects.add(scheduleEdit);
+                } else if (("/" + entryName).endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
+                    Calendar cal = om.readValue(outBuffer.toString(), Calendar.class);
+                    if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
+                        WorkingDaysCalendarEdit wdcEdit = new WorkingDaysCalendarEdit();
+                        wdcEdit.setConfiguration(cal);
+                        wdcEdit.setPath(wdcEdit.getConfiguration().getPath());
+                        wdcEdit.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
+                        objects.add(wdcEdit);
+                    } else if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
+                        NonWorkingDaysCalendarEdit nwdcEdit = new NonWorkingDaysCalendarEdit();
+                        nwdcEdit.setConfiguration(cal);
+                        nwdcEdit.setPath(nwdcEdit.getConfiguration().getPath());
+                        nwdcEdit.setObjectType(ConfigurationType.NONWORKINGDAYSCALENDAR);
+                        objects.add(nwdcEdit);
+                    }
+                }
+            }
+        } finally {
+            try {
+                if (tarArchiveInputStream != null) {
+                    tarArchiveInputStream.close();
+                }
+                if (gzipInputStream != null) {
+                    gzipInputStream.close();
+                }
+            } catch (Exception e) {}
+        }
+        return objects;
     }
 
     public static StreamingOutput writeZipFile (Set<JSObject> deployables, Set<ConfigurationObject> releasables, 

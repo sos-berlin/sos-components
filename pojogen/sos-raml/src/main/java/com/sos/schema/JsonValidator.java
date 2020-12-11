@@ -132,7 +132,7 @@ public class JsonValidator {
             validate(json, URI.create("classpath:/raml/joc/schemas/" + schemaPath), false, false);
         }
     }
-
+    
     /** Validation which raises all errors
      * 
      * @param json
@@ -252,6 +252,55 @@ public class JsonValidator {
                 throw new SOSJsonSchemaException(e.getMessage());
             }
             LOGGER.warn("JSON Validation impossible: " + e.toString());
+        }
+    }
+
+    /** Checks if object is valid without raising any exceptions.
+     * 
+     * @param json
+     * @param schemaPath - path relative to ./resources/raml/schemas directory
+     * 
+     * @return true/false
+     *
+     **/
+    public static boolean isValid(byte[] json, String schemaPath) {
+        return isValid(json, URI.create("classpath:/raml/joc/schemas/" + schemaPath));
+    }
+    
+    /** Checks if object is valid without raising any exceptions.
+     * 
+     * @param json
+     * @param clazz
+     * 
+     * @return true/false
+     *
+     **/
+   public static boolean isValid(byte[] json, Class<?> clazz) {
+        return isValid(json, getSchemaPath(clazz));
+    }
+
+   /** Checks if object is valid without raising any exceptions.
+    * 
+    * @param json
+    * @param schemaUri
+    * 
+    * @return true/false
+    *
+    **/
+    public static boolean isValid(byte[] json, URI schemaUri) {
+        if (schemaUri != null) {
+            return isValid(json, schemaUri, true, false);
+        } else {
+            return false;
+        }
+    }
+
+    public static boolean isValid(byte[] json, URI schemaUri, boolean failFast, boolean strict) {
+        try {
+            validate(json, schemaUri, failFast, strict);
+            return true;
+        } catch (IOException | SOSJsonSchemaException e) {
+            return false;
         }
     }
 

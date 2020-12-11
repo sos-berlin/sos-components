@@ -25,6 +25,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.workflow.WorkflowPublish;
+import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDepCommitIds;
@@ -37,8 +38,10 @@ import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.exceptions.JocSosHibernateException;
+import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.ConfigurationFilter;
 import com.sos.joc.model.publish.DeployConfigDelete;
@@ -56,6 +59,7 @@ import com.sos.joc.publish.common.JSObjectFileExtension;
 import com.sos.joc.publish.mapper.FilterAttributesMapper;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.util.PublishUtils;
+import com.sos.schema.JsonValidator;
 
 public class DBLayerDeploy {
 
@@ -488,6 +492,110 @@ public class DBLayerDeploy {
         }
     }
 
+    public void saveOrUpdateInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId,
+            String folder) {
+        saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, false, folder);
+    }
+    
+    public void saveOrUpdateInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId,
+            boolean overwrite) {
+        saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, overwrite, null);   
+    }
+    
+    public void saveOrUpdateInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId,
+            boolean overwrite, String folder) {
+        try {
+            StringBuilder hql = new StringBuilder(" from ");
+            hql.append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            hql.append(" where path = :path");
+            hql.append(" and type = :type");
+            Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
+            query.setParameter("path", configuration.getPath());
+            query.setParameter("type", configuration.getObjectType().intValue());
+            DBItemInventoryConfiguration existingConfiguration = session.getSingleResult(query);
+            Path folderPath = null;
+            String name = null;
+            if (overwrite) {
+                if (existingConfiguration != null) {
+                    existingConfiguration.setModified(Date.from(Instant.now()));
+                    existingConfiguration.setContent(om.writeValueAsString(configuration.getConfiguration()));
+                    existingConfiguration.setAuditLogId(auditLogId);
+                    existingConfiguration.setValid(JsonValidator.isValid(
+                            Globals.objectMapper.writeValueAsBytes(configuration.getConfiguration()), ConfigurationObject.class));
+                    existingConfiguration.setDeployed(false);
+                    session.update(existingConfiguration);
+                } else {
+                    DBItemInventoryConfiguration newConfiguration = new DBItemInventoryConfiguration();
+                    Date now = Date.from(Instant.now());
+                    newConfiguration.setModified(now);
+                    newConfiguration.setCreated(now);
+                    newConfiguration.setContent(om.writeValueAsString(configuration.getConfiguration()));
+                    folderPath = Paths.get(configuration.getPath()).getParent();
+                    newConfiguration.setFolder(folderPath.toString().replace('\\', '/'));
+                    newConfiguration.setPath(configuration.getPath());
+                    name = Paths.get(configuration.getPath()).getFileName().toString();
+                    newConfiguration.setName(name);
+                    newConfiguration.setType(configuration.getObjectType());
+                    newConfiguration.setAuditLogId(auditLogId);
+                    newConfiguration.setDocumentationId(0L);
+                    newConfiguration.setDeployed(false);
+                    newConfiguration.setReleased(false);
+                    newConfiguration.setValid(JsonValidator.isValid(
+                            Globals.objectMapper.writeValueAsBytes(configuration.getConfiguration()), ConfigurationObject.class));
+                    session.save(newConfiguration);
+                }
+            } else {
+                if (folder != null) {
+                    DBItemInventoryConfiguration newConfiguration = new DBItemInventoryConfiguration();
+                    Date now = Date.from(Instant.now());
+                    newConfiguration.setModified(now);
+                    newConfiguration.setCreated(now);
+                    Path pathWithFolder = Paths.get(folder + configuration.getPath());
+                    folderPath = pathWithFolder.getParent();
+                    newConfiguration.setFolder(folderPath.toString().replace('\\', '/'));
+                    newConfiguration.setPath(pathWithFolder.toString().replace('\\', '/'));
+                    configuration.getConfiguration().setPath(pathWithFolder.toString().replace('\\', '/'));
+                    newConfiguration.setContent(om.writeValueAsString(configuration.getConfiguration()));
+                    name = Paths.get(configuration.getPath()).getFileName().toString();
+                    newConfiguration.setName(name);
+                    newConfiguration.setType(configuration.getObjectType());
+                    newConfiguration.setAuditLogId(auditLogId);
+                    newConfiguration.setDocumentationId(0L);
+                    newConfiguration.setDeployed(false);
+                    newConfiguration.setReleased(false);
+                    newConfiguration.setValid(JsonValidator.isValid(
+                            Globals.objectMapper.writeValueAsBytes(configuration.getConfiguration()), ConfigurationObject.class));
+                    session.save(newConfiguration);
+                } else {
+                    if (existingConfiguration == null) {
+                        DBItemInventoryConfiguration newConfiguration = new DBItemInventoryConfiguration();
+                        Date now = Date.from(Instant.now());
+                        newConfiguration.setModified(now);
+                        newConfiguration.setCreated(now);
+                        newConfiguration.setContent(om.writeValueAsString(configuration.getConfiguration()));
+                        folderPath = Paths.get(configuration.getPath()).getParent();
+                        newConfiguration.setFolder(folderPath.toString().replace('\\', '/'));
+                        newConfiguration.setPath(configuration.getPath());
+                        name = Paths.get(configuration.getPath()).getFileName().toString();
+                        newConfiguration.setName(name);
+                        newConfiguration.setType(configuration.getObjectType());
+                        newConfiguration.setAuditLogId(auditLogId);
+                        newConfiguration.setDocumentationId(0L);
+                        newConfiguration.setDeployed(false);
+                        newConfiguration.setReleased(false);
+                        newConfiguration.setValid(JsonValidator.isValid(
+                                Globals.objectMapper.writeValueAsBytes(configuration.getConfiguration()), ConfigurationObject.class));
+                        session.save(newConfiguration);
+                    }
+                }
+            }
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        } catch (JsonProcessingException e) {
+            throw new JocException(e);
+        }
+    }
+    
     public DBItemInventoryConfiguration saveOrUpdateInventoryConfiguration(String path, JSObject jsObject, DeployType type, String account, Long auditLogId)
             throws SOSHibernateException, JsonProcessingException {
         StringBuilder hql = new StringBuilder(" from ");
@@ -903,7 +1011,7 @@ public class DBLayerDeploy {
                 newDepHistoryItem.setDeleteDate(null);
                 newDepHistoryItem.setDeploymentDate(Date.from(Instant.now()));
                 newDepHistoryItem.setInventoryConfigurationId(inventoryConfig.getId());
-                DeployType deployType = PublishUtils.mapInventoryMetaConfigurationType(ConfigurationType.fromValue(inventoryConfig.getType()));
+                DeployType deployType = PublishUtils.mapConfigurationType(ConfigurationType.fromValue(inventoryConfig.getType()));
                 newDepHistoryItem.setType(deployType.intValue());
                 newDepHistoryItem.setOperation(OperationType.UPDATE.value());
                 newDepHistoryItem.setState(DeploymentState.NOT_DEPLOYED.value());
@@ -1001,7 +1109,7 @@ public class DBLayerDeploy {
                 newDepHistoryItem.setDeleteDate(null);
                 newDepHistoryItem.setDeploymentDate(Date.from(Instant.now()));
                 newDepHistoryItem.setInventoryConfigurationId(inventoryConfig.getId());
-                DeployType deployType = PublishUtils.mapInventoryMetaConfigurationType(
+                DeployType deployType = PublishUtils.mapConfigurationType(
                         ConfigurationType.fromValue(inventoryConfig.getType()));
                 newDepHistoryItem.setType(deployType.intValue());
                 newDepHistoryItem.setOperation(OperationType.UPDATE.value());

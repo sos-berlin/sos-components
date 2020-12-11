@@ -12,7 +12,9 @@ public enum JSObjectFileExtension {
     LOCK_FILE_EXTENSION(".lock.json"),
     LOCK_SIGNATURE_FILE_EXTENSION(".lock.json.asc"),
     JUNCTION_FILE_EXTENSION(".junction.json"),
-    JUNCTION_SIGNATURE_FILE_EXTENSION(".junction.json.asc");
+    JUNCTION_SIGNATURE_FILE_EXTENSION(".junction.json.asc"),
+    JOBCLASS_FILE_EXTENSION(".jobclass.json"),
+    JOBCLASS_SIGNATURE_FILE_EXTENSION(".jobclass.json.asc");
 
     private final String value;
     private static final Map<String, JSObjectFileExtension> CONSTANTS = new HashMap<String, JSObjectFileExtension>();
