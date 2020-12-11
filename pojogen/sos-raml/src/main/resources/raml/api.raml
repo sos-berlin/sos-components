@@ -741,14 +741,14 @@ traits:
     type: 
       postJSON:
         description: Lists JobScheduler orders for a given daily plan 
-        description1: !include joc/documentation/dailyplan/dailyPlanDate.md
-        description2: !include joc/documentation/dailyplan/schedules2.md
-        description3: !include joc/documentation/common/folders.md
-        description4: !include joc/documentation/order/workflowPathsNotRequired.md
-        description5: !include joc/documentation/dailyplan/late.md
-        description6: !include joc/documentation/dailyplan/states.md
-        description7: !include joc/documentation/dailyplan/submissionHistoryIds.md
-        description8: " "
+        description1: !include joc/documentation/dailyplan/orders/dailyPlanOrdersFilterDef.md
+        description2: !include joc/documentation/dailyplan/dailyPlanDate.md
+        description3: !include joc/documentation/dailyplan/orders/schedules.md
+        description4: !include joc/documentation/dailyplan/orders/folders.md
+        description5: !include joc/documentation/dailyplan/orders/workflowPaths.md
+        description6: !include joc/documentation/dailyplan/orders/late.md
+        description7: !include joc/documentation/dailyplan/orders/states.md
+        description8: !include joc/documentation/dailyplan/orders/submissionHistoryIds.md
         description9: " "
         description10: " "
         description200: " "
@@ -760,18 +760,18 @@ traits:
       type:
         postJSON:
           description: Generates orders for a given daily plan 
-          description1: !include joc/documentation/dailyplan/dailyPlanDate.md
-          description2: !include joc/documentation/dailyplan/schedules2.md
-          description3: !include joc/documentation/common/folders.md
-          description4: !include joc/documentation/common/controllerIds.md
-          description5: !include joc/documentation/dailyplan/overwrite.md
-          description6: !include joc/documentation/dailyplan/withSubmit.md
-          description7: " "
-          description8: " "
+          description1: !include joc/documentation/dailyplan/generate/dailyPlanOrdersSelectorDef.md
+          description2: !include joc/documentation/dailyplan/dailyPlanDate.md
+          description3: !include joc/documentation/dailyplan/generate/schedules.md
+          description4: !include joc/documentation/dailyplan/generate/folders.md
+          description5: !include joc/documentation/dailyplan/generate/workflowPaths.md
+          description6: !include joc/documentation/dailyplan/generate/controllerIds.md
+          description7: !include joc/documentation/dailyplan/generate/overwrite.md
+          description8: !include joc/documentation/dailyplan/generate/withSubmit.md
           description9: " "
           description10: " "
           description200: " "
-          schema: !include orderManagement/schemas/dailyplan/dailyPlanOrdersFilter-schema.json
+          schema: !include orderManagement/schemas/dailyplan/dailyPlanOrdersSelector-schema.json
           schema200: ok
           example: " "
           example200: " "
@@ -779,14 +779,14 @@ traits:
       type:
         postJSON:
           description: Delete planned orders for a given daily plan 
-          description1: !include joc/documentation/dailyplan/dailyPlanDateNotRequired.md
-          description2: !include joc/documentation/dailyplan/schedules.md
-          description3: !include joc/documentation/dailyplan/submissionHistoryIds.md
-          description4: !include joc/documentation/dailyplan/orderIds.md
-          description5: !include joc/documentation/order/workflowPathsNotRequired.md
-          description6: " "
-          description7: " "
-          description8: " "
+          description1: !include joc/documentation/dailyplan/orders/dailyPlanOrdersFilterDef.md
+          description2: !include joc/documentation/dailyplan/dailyPlanDate.md
+          description3: !include joc/documentation/dailyplan/orders/schedules.md
+          description4: !include joc/documentation/dailyplan/orders/folders.md
+          description5: !include joc/documentation/dailyplan/orders/workflowPaths.md
+          description6: !include joc/documentation/dailyplan/orders/late.md
+          description7: !include joc/documentation/dailyplan/orders/states.md
+          description8: !include joc/documentation/dailyplan/orders/submissionHistoryIds.md
           description9: " "
           description10: " "
           description200: " "
@@ -798,14 +798,14 @@ traits:
       type:
         postJSON:
           description: Cancel submitted orders for a given daily plan 
-          description1: !include joc/documentation/dailyplan/dailyPlanDateNotRequired.md
-          description2: !include joc/documentation/dailyplan/schedules.md
-          description3: !include joc/documentation/dailyplan/submissionHistoryIds.md
-          description4: !include joc/documentation/dailyplan/orderIds.md
-          description5: !include joc/documentation/order/workflowPathsNotRequired.md
-          description6: " "
-          description7: " "
-          description8: " "
+          description1: !include joc/documentation/dailyplan/orders/dailyPlanOrdersFilterDef.md
+          description2: !include joc/documentation/dailyplan/dailyPlanDate.md
+          description3: !include joc/documentation/dailyplan/orders/schedules.md
+          description4: !include joc/documentation/dailyplan/orders/folders.md
+          description5: !include joc/documentation/dailyplan/orders/workflowPaths.md
+          description6: !include joc/documentation/dailyplan/orders/late.md
+          description7: !include joc/documentation/dailyplan/orders/states.md
+          description8: !include joc/documentation/dailyplan/orders/submissionHistoryIds.md
           description9: " "
           description10: " "
           description200: " "
@@ -817,18 +817,18 @@ traits:
      type:
       postJSON:
         description: Lists submissions for daily plans 
-        description1: !include joc/documentation/dailyplan/dateFrom.md
-        description2: !include joc/documentation/dailyplan/dateTo.md
-        description3: " "              
-        description4: " "
-        description5: " "
+        description1: !include joc/documentation/dailyplan/submissions/dailyPlanSubmissionsFilterDef.md
+        description2: !include joc/documentation/dailyplan/submissions/dateFrom.md
+        description3: !include joc/documentation/dailyplan/submissions/dateTo.md
+        description5: !include joc/documentation/dailyplan/submissions/controllerIds.md
+        description4: !include joc/documentation/dailyplan/submissions/timeZone.md
         description6: " "
         description7: " "
         description8: " "
         description9: " "
         description10: " "
         description200: " "
-        schema: !include orderManagement/schemas/dailyplan/dailyPlanOrdersFilter-schema.json
+        schema: !include orderManagement/schemas/dailyplan/dailyplanSubmissionHistoryFilter-schema.json
         schema200: !include orderManagement/schemas/dailyplan/dailyPlanSubmissionHistory-schema.json 
         example: " "
         example200: " "
@@ -2097,10 +2097,10 @@ traits:
     type:
       postJSON:
         description: Lists schedules for a given controller 
-        description1: !include joc/documentation/common/folders.md
-        description2: !include joc/documentation/dailyplan/schedules.md
-        description3: " "
-        description4: " "
+        description1: !include joc/documentation/dailyplan/schedules/dailyPlanSchedulesFilterDef.md
+        description2: !include joc/documentation/dailyplan/schedules/folders.md
+        description3: !include joc/documentation/dailyplan/schedules/schedules.md
+        description4: !include joc/documentation/dailyplan/schedules/workflowPaths.md
         description5: " "
         description6: " "
         description7: " "
@@ -2108,8 +2108,8 @@ traits:
         description9: " "
         description10: " "
         description200: " "
-        schema: !include joc/schemas/common/controllerId-schema.json
-        schema200: !include orderManagement/schemas/orders/schedule-schema.json
+        schema: !include orderManagement/schemas/orders/scheduleFilter-schema.json
+        schema200: !include orderManagement/schemas/orders/schedulesList-schema.json
         example: " "
         example200: " "
 
