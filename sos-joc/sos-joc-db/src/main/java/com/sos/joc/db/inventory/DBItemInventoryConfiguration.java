@@ -14,6 +14,7 @@ import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
+import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
@@ -22,7 +23,6 @@ import com.sos.commons.hibernate.type.SOSHibernateJsonType;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.webservices.order.initiator.model.Schedule;
 
 @Entity
 @Table(name = DBLayer.TABLE_INV_CONFIGURATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[TYPE]", "[PATH]" }) })
@@ -54,6 +54,7 @@ public class DBItemInventoryConfiguration extends DBItem {
 
     @Column(name = "[CONTENT]", nullable = true)
     @Type(type = SOSHibernateJsonType.TYPE_NAME)
+    @ColumnTransformer(write = SOSHibernateJsonType.COLUMN_TRANSFORMER_WRITE_DEFAULT)
     private String content;
 
     @Column(name = "[VALID]", nullable = false)

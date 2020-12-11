@@ -1,15 +1,19 @@
 package com.sos.commons.hibernate;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import javax.persistence.PersistenceException;
 
@@ -17,7 +21,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.NumericBooleanType;
 import org.hibernate.type.TimestampType;
@@ -31,8 +34,10 @@ import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
 import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue;
 import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
+import com.sos.commons.hibernate.type.SOSHibernateJsonType;
 import com.sos.commons.util.SOSClassList;
 import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
 
 public class SOSHibernateFactory implements Serializable {
@@ -106,6 +111,7 @@ public class SOSHibernateFactory implements Serializable {
             initConfiguration();
             adjustConfiguration(configuration);
             showConfigurationProperties();
+            adjustAnnotations(dbms);
             initSessionFactory();
             if (isDebugEnabled) {
                 String method = SOSHibernate.getMethodName(logIdentifier, "build");
@@ -395,6 +401,8 @@ public class SOSHibernateFactory implements Serializable {
                 }
 
             }
+            dialect = Dialect.getDialect(configuration.getProperties());
+            setDbms(dialect);
         } catch (MalformedURLException e) {
             throw new SOSHibernateConfigurationException(String.format("exception on get configFile %s as url", configFile), e);
         } catch (PersistenceException e) {
@@ -469,11 +477,11 @@ public class SOSHibernateFactory implements Serializable {
         ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
         sessionFactory = configuration.buildSessionFactory(serviceRegistry);
 
-        SessionFactoryImplementor impl = (SessionFactoryImplementor) sessionFactory;
-        if (impl != null) {
-            dialect = impl.getJdbcServices().getDialect();
-            setDbms(dialect);
-        }
+        // SessionFactoryImplementor impl = (SessionFactoryImplementor) sessionFactory;
+        // if (impl != null) {
+        // dialect = impl.getJdbcServices().getDialect();
+        // setDbms(dialect);
+        // }
     }
 
     private void showConfigurationProperties() {
@@ -538,6 +546,37 @@ public class SOSHibernateFactory implements Serializable {
                     LOGGER.trace(String.format("%s %s=%s", method, key, value));
                 }
                 configuration.setProperty(key, value);
+            }
+        }
+    }
+
+    private void adjustAnnotations(Enum<SOSHibernateFactory.Dbms> dbms) {
+        if (classMapping != null) {
+            if (Dbms.H2.equals(dbms)) {
+                changeJsonAnnotations4H2();
+            }
+        }
+    }
+
+    private void changeJsonAnnotations4H2() {
+        for (Class<?> c : classMapping.getClasses()) {
+            List<Field> fields = Arrays.stream(c.getDeclaredFields()).filter(m -> m.isAnnotationPresent(org.hibernate.annotations.Type.class) && m
+                    .getAnnotation(org.hibernate.annotations.Type.class).type().equals(SOSHibernateJsonType.TYPE_NAME)).collect(Collectors.toList());
+            if (fields != null && fields.size() > 0) {
+                for (Field field : fields) {
+                    field.setAccessible(true);
+                    org.hibernate.annotations.ColumnTransformer ct = field.getAnnotation(org.hibernate.annotations.ColumnTransformer.class);
+                    if (ct != null) {
+                        try {
+                            SOSReflection.changeAnnotationValue(ct, "write", SOSHibernateJsonType.COLUMN_TRANSFORMER_WRITE_H2);
+                        } catch (Throwable e) {
+                            LOGGER.warn(String.format("[%s.%s]%s", c.getSimpleName(), field.getName(), e.toString()), e);
+                        }
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[ColumnTransformer][%s.%s]%s", c.getSimpleName(), field.getName(), ct.write()));
+                        }
+                    }
+                }
             }
         }
     }
