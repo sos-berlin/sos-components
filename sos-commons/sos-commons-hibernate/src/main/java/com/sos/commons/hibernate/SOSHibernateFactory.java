@@ -553,12 +553,12 @@ public class SOSHibernateFactory implements Serializable {
     private void adjustAnnotations(Enum<SOSHibernateFactory.Dbms> dbms) {
         if (classMapping != null) {
             if (Dbms.H2.equals(dbms)) {
-                changeH2JsonAnnotations();
+                changeJsonAnnotations4H2();
             }
         }
     }
 
-    private void changeH2JsonAnnotations() {
+    private void changeJsonAnnotations4H2() {
         for (Class<?> c : classMapping.getClasses()) {
             List<Field> fields = Arrays.stream(c.getDeclaredFields()).filter(m -> m.isAnnotationPresent(org.hibernate.annotations.Type.class) && m
                     .getAnnotation(org.hibernate.annotations.Type.class).type().equals(SOSHibernateJsonType.TYPE_NAME)).collect(Collectors.toList());
