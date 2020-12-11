@@ -11,50 +11,8 @@
 		"controllerId": {
 			"type": "string"
 		},
-		"overwrite": {
-			"$ref": "overwriteParam-schema.json"
-		},
-		"withSubmit": {
-			"$ref": "withSubmitParam-schema.json"
-		},
-		"dailyPlanSubmissionHistoryIds": {
-			"type": "array",
-			"items": {
-				"$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
-			}
-		},
-		"folders": {
-			"$ref": "../../../joc/schemas/common/folders-schema.json"
-		},
-		"schedulePaths": {
-			"type": "array",
-			"items": {
-				"$ref": "../../../joc/schemas/common/path-schema.json"
-			}
-		},
-		"workflowPaths": {
-			"type": "array",
-			"items": {
-				"$ref": "../../../joc/schemas/common/path-schema.json"
-			}
-		},
-		"orderIds": {
-			"type": "array",
-			"items": {
-				"type": "string"
-			}
-		},
-		"controllerIds": {
-			"type": "array",
-			"items": {
-				"type": "string"
-			}
-		},
-		"dailyPlanDate": {
-			"type": "string"
-		},
-		"schedulesFolder": {
-			"$ref": "../../../joc/schemas/common/path-schema.json"
+		"filter": {
+			"$ref": "dailyPlanOrdersFilterDef-schema.json"
 		}
 	}
 }
