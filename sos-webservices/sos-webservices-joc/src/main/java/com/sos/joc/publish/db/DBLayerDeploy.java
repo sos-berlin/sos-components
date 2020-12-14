@@ -508,19 +508,13 @@ public class DBLayerDeploy {
             boolean overwrite, String folder) {
         try {
             DBItemInventoryConfiguration existingConfiguration = null;
-            Path folderPath = null;
-            Path pathWithFolder = null;
             StringBuilder hql = new StringBuilder(" from ");
             hql.append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             hql.append(" where path = :path");
             hql.append(" and type = :type");
             Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
             query.setParameter("type", configuration.getObjectType().intValue());
-            if (folder != null) {
-                query.setParameter("path", configuration.getPath());
-            } else {
-                query.setParameter("path", folder + configuration.getPath());
-            }
+            query.setParameter("path", configuration.getPath());
             existingConfiguration = session.getSingleResult(query);
             boolean valid = false;
             try {
@@ -543,15 +537,8 @@ public class DBLayerDeploy {
                     newConfiguration.setModified(now);
                     newConfiguration.setCreated(now);
                     newConfiguration.setContent(om.writeValueAsString(configuration.getConfiguration()));
-                    if (folder != null) {
-                        pathWithFolder = Paths.get(folder + configuration.getPath());
-                        folderPath = pathWithFolder.getParent();
-                        newConfiguration.setPath(pathWithFolder.toString().replace('\\', '/'));
-                    } else {
-                        folderPath = Paths.get(configuration.getPath()).getParent();
-                        newConfiguration.setPath(configuration.getPath());
-                    }
-                    newConfiguration.setFolder(folderPath.toString().replace('\\', '/'));
+                    newConfiguration.setPath(configuration.getPath());
+                    newConfiguration.setFolder(Paths.get(configuration.getPath()).getParent().toString().replace('\\', '/'));
                     newConfiguration.setName(Paths.get(newConfiguration.getPath()).getFileName().toString());
                     newConfiguration.setType(configuration.getObjectType());
                     newConfiguration.setAuditLogId(auditLogId);
@@ -568,15 +555,8 @@ public class DBLayerDeploy {
                     newConfiguration.setModified(now);
                     newConfiguration.setCreated(now);
                     newConfiguration.setContent(om.writeValueAsString(configuration.getConfiguration()));
-                    if (folder != null) {
-                        pathWithFolder = Paths.get(folder + configuration.getPath());
-                        folderPath = pathWithFolder.getParent();
-                        newConfiguration.setPath(pathWithFolder.toString().replace('\\', '/'));
-                    } else {
-                        folderPath = Paths.get(configuration.getPath()).getParent();
-                        newConfiguration.setPath(configuration.getPath());
-                    }
-                    newConfiguration.setFolder(folderPath.toString().replace('\\', '/'));
+                    newConfiguration.setPath(configuration.getPath());
+                    newConfiguration.setFolder(Paths.get(configuration.getPath()).getParent().toString().replace('\\', '/'));
                     newConfiguration.setName(Paths.get(newConfiguration.getPath()).getFileName().toString());
                     newConfiguration.setType(configuration.getObjectType());
                     newConfiguration.setAuditLogId(auditLogId);

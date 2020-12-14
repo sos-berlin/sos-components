@@ -95,7 +95,11 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(importAudit);
             Set<java.nio.file.Path> folders = new HashSet<java.nio.file.Path>();
             if(filter.getFolder() != null && !filter.getFolder().isEmpty()) {
-                configurations.stream().forEach(item -> dbLayer.saveOrUpdateInventoryConfiguration(item, account, dbItemAuditLog.getId(), filter.getFolder()));
+                configurations.stream().map(item -> {
+                    item.setPath(filter.getFolder() + item.getPath());
+                    item.getConfiguration().setPath(item.getPath());
+                    return item;
+                }).forEach(item -> dbLayer.saveOrUpdateInventoryConfiguration(item, account, dbItemAuditLog.getId(), filter.getOverwrite(), filter.getFolder()));
             } else {
                 configurations.stream().forEach(item -> dbLayer.saveOrUpdateInventoryConfiguration(item, account, dbItemAuditLog.getId(), filter.getOverwrite()));
             }
