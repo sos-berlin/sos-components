@@ -248,6 +248,9 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
         } else if (dbms == SOSHibernateFactory.Dbms.PGSQL) {
             db.setDbms("PostgreSQL");
             stmt = "show server_version";
+        } else if (dbms == SOSHibernateFactory.Dbms.H2) {
+            db.setDbms("H2");
+            stmt = "show h2version()";
         }
 
         if (stmt != null) {
