@@ -45,17 +45,6 @@ public class SOSHibernateJsonType implements UserType {
         if (val == null) {
             return null;
         }
-        if (dbms == null) {
-            dbms = SOSHibernateFactory.getDbms(session.getFactory().getJdbcServices().getDialect());
-        }
-        if (dbms.equals(SOSHibernateFactory.Dbms.H2)) {
-            // TODO tmp solution to replace: "{\"TYPE\":\"xxx\"}"
-            if (val.startsWith("\"")) {
-                val = val.substring(1, val.length() - 1);
-            }
-            val = val.replaceAll("\\\\\"", "\"").replaceAll("(\\\\r\\\\n|\\\\n)", "\\\n");
-            return val;
-        }
         return val;
     }
 
