@@ -17,6 +17,12 @@
     		"$ref": "../common/string255-schema.json"
     	}
     },
+    "urls": {
+    	"type": "array",
+    	"items": {
+    		"$ref": "../common/string255-schema.json"
+    	}
+    },
     "states": {
     	"type": "array",
     	"items": {

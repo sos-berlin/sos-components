@@ -43,9 +43,9 @@ public class InventoryAgentInstancesDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
-    public List<String> getUrisOfEnabledClusterWatcherByControllerId(String controllerId) throws DBInvalidDataException,
-            DBMissingDataException, DBConnectionRefusedException {
+
+    public List<String> getUrisOfEnabledClusterWatcherByControllerId(String controllerId) throws DBInvalidDataException, DBMissingDataException,
+            DBConnectionRefusedException {
         if (controllerId == null || controllerId.isEmpty()) {
             return null;
         }
@@ -55,7 +55,7 @@ public class InventoryAgentInstancesDBLayer {
             hql.append(" where controllerId = :controllerId");
             hql.append(" and isWatcher = 1");
             hql.append(" and disabled = 0");
-            
+
             Query<String> query = session.createQuery(hql.toString());
             query.setParameter("controllerId", controllerId);
             return session.getResultList(query);
@@ -104,9 +104,10 @@ public class InventoryAgentInstancesDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
-    public List<DBItemInventoryAgentInstance> getAgentsByControllerIdAndAgentIds(String controllerId, Collection<String> agentIds, boolean onlyWatcher,
-            boolean onlyEnabledAgents) throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
+
+    public List<DBItemInventoryAgentInstance> getAgentsByControllerIdAndAgentIdsAndUrls(String controllerId, Collection<String> agentIds,
+            Collection<String> agentUrls, boolean onlyWatcher, boolean onlyEnabledAgents) throws DBInvalidDataException, DBMissingDataException,
+            DBConnectionRefusedException {
         try {
             StringBuilder hql = new StringBuilder();
             hql.append("from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
@@ -114,8 +115,14 @@ public class InventoryAgentInstancesDBLayer {
             if (controllerId != null && !controllerId.isEmpty()) {
                 clauses.add("controllerId = :controllerId");
             }
-            if (agentIds != null && !agentIds.isEmpty()) {
-                clauses.add("agentId in (:agentIds)");
+            if ((agentIds != null && !agentIds.isEmpty()) || (agentUrls != null && !agentUrls.isEmpty())) {
+                if ((agentIds != null && !agentIds.isEmpty()) && (agentUrls != null && !agentUrls.isEmpty())) {
+                    clauses.add("(agentId in (:agentIds) or uri in (:agentUrls))");
+                } else if (agentIds != null && !agentIds.isEmpty()) {
+                    clauses.add("agentId in (:agentIds)");
+                } else {
+                    clauses.add("uri in (:agentUrls)");
+                }
             }
             if (onlyWatcher) {
                 clauses.add("isWatcher = 1");
@@ -133,6 +140,9 @@ public class InventoryAgentInstancesDBLayer {
             if (agentIds != null && !agentIds.isEmpty()) {
                 query.setParameterList("agentIds", agentIds);
             }
+            if (agentUrls != null && !agentUrls.isEmpty()) {
+                query.setParameterList("agentUrls", agentUrls);
+            }
             return session.getResultList(query);
         } catch (DBMissingDataException ex) {
             throw ex;
@@ -142,11 +152,11 @@ public class InventoryAgentInstancesDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public Set<String> getEnabledAgentNames() throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
         return getAgentNames(true);
     }
-    
+
     public Set<String> getAgentNames(boolean onlyEnabledAgents) throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
         try {
             List<DBItemInventoryAgentInstance> agents = getAgentsByControllerIds(null, false, onlyEnabledAgents);
@@ -173,7 +183,7 @@ public class InventoryAgentInstancesDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public Map<String, Set<String>> getAgentNamesByAgentIds(Collection<String> agentIds) throws DBInvalidDataException, DBMissingDataException,
             DBConnectionRefusedException {
         try {
@@ -200,9 +210,8 @@ public class InventoryAgentInstancesDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
-    public Set<String> getAgentNamesByAgentIds(String agentId) throws DBInvalidDataException, DBMissingDataException,
-            DBConnectionRefusedException {
+
+    public Set<String> getAgentNamesByAgentIds(String agentId) throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
         if (agentId == null || agentId.isEmpty()) {
             return null;
         }
@@ -225,9 +234,9 @@ public class InventoryAgentInstancesDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
-    public Map<String, Set<DBItemInventoryAgentName>> getAgentNameAliases(Collection<String> agentIds) throws DBInvalidDataException, DBMissingDataException,
-            DBConnectionRefusedException {
+
+    public Map<String, Set<DBItemInventoryAgentName>> getAgentNameAliases(Collection<String> agentIds) throws DBInvalidDataException,
+            DBMissingDataException, DBConnectionRefusedException {
         try {
             StringBuilder hql = new StringBuilder();
             hql.append("from ").append(DBLayer.DBITEM_INV_AGENT_NAMES);
@@ -264,8 +273,7 @@ public class InventoryAgentInstancesDBLayer {
         }
     }
 
-    public Long updateAgent(DBItemInventoryAgentInstance agent) throws DBInvalidDataException,
-            DBConnectionRefusedException {
+    public Long updateAgent(DBItemInventoryAgentInstance agent) throws DBInvalidDataException, DBConnectionRefusedException {
         try {
             agent.setModified(Date.from(Instant.now()));
             session.update(agent);
@@ -276,15 +284,15 @@ public class InventoryAgentInstancesDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
-    public boolean agentIdAlreadyExists(Collection<String> agentIds, String controllerId) throws DBInvalidDataException,
-            DBConnectionRefusedException, JocObjectAlreadyExistException {
+
+    public boolean agentIdAlreadyExists(Collection<String> agentIds, String controllerId) throws DBInvalidDataException, DBConnectionRefusedException,
+            JocObjectAlreadyExistException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("select agentId from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
             sql.append(" where agentId in (:agentIds)");
             sql.append(" and controllerId != :controllerId");
-            
+
             Query<String> query = session.createQuery(sql.toString());
             query.setParameterList("agentIds", agentIds);
             query.setParameter("controllerId", controllerId);
