@@ -1,5 +1,6 @@
 package com.sos.joc.publish.db;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -41,6 +42,7 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.exceptions.JocSosHibernateException;
+import com.sos.joc.inventory.impl.ValidateResourceImpl;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.ConfigurationFilter;
@@ -59,7 +61,7 @@ import com.sos.joc.publish.common.JSObjectFileExtension;
 import com.sos.joc.publish.mapper.FilterAttributesMapper;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.util.PublishUtils;
-import com.sos.schema.JsonValidator;
+import com.sos.schema.exception.SOSJsonSchemaException;
 
 public class DBLayerDeploy {
 
@@ -505,23 +507,34 @@ public class DBLayerDeploy {
     public void saveOrUpdateInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId,
             boolean overwrite, String folder) {
         try {
+            DBItemInventoryConfiguration existingConfiguration = null;
+            Path folderPath = null;
+            Path pathWithFolder = null;
             StringBuilder hql = new StringBuilder(" from ");
             hql.append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             hql.append(" where path = :path");
             hql.append(" and type = :type");
             Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
-            query.setParameter("path", configuration.getPath());
             query.setParameter("type", configuration.getObjectType().intValue());
-            DBItemInventoryConfiguration existingConfiguration = session.getSingleResult(query);
-            Path folderPath = null;
-            String name = null;
+            if (folder != null) {
+                query.setParameter("path", configuration.getPath());
+            } else {
+                query.setParameter("path", folder + configuration.getPath());
+            }
+            existingConfiguration = session.getSingleResult(query);
+            boolean valid = false;
+            try {
+                ValidateResourceImpl.validate(configuration.getObjectType(), Globals.objectMapper.writeValueAsBytes(configuration.getConfiguration()));
+                valid = true;
+            } catch (SOSJsonSchemaException | IOException e) {
+                valid = false;
+            }
             if (overwrite) {
                 if (existingConfiguration != null) {
                     existingConfiguration.setModified(Date.from(Instant.now()));
                     existingConfiguration.setContent(om.writeValueAsString(configuration.getConfiguration()));
                     existingConfiguration.setAuditLogId(auditLogId);
-                    existingConfiguration.setValid(JsonValidator.isValid(
-                            Globals.objectMapper.writeValueAsBytes(configuration.getConfiguration()), ConfigurationObject.class));
+                    existingConfiguration.setValid(valid);
                     existingConfiguration.setDeployed(false);
                     session.update(existingConfiguration);
                 } else {
@@ -530,63 +543,48 @@ public class DBLayerDeploy {
                     newConfiguration.setModified(now);
                     newConfiguration.setCreated(now);
                     newConfiguration.setContent(om.writeValueAsString(configuration.getConfiguration()));
-                    folderPath = Paths.get(configuration.getPath()).getParent();
+                    if (folder != null) {
+                        pathWithFolder = Paths.get(folder + configuration.getPath());
+                        folderPath = pathWithFolder.getParent();
+                        newConfiguration.setPath(pathWithFolder.toString().replace('\\', '/'));
+                    } else {
+                        folderPath = Paths.get(configuration.getPath()).getParent();
+                        newConfiguration.setPath(configuration.getPath());
+                    }
                     newConfiguration.setFolder(folderPath.toString().replace('\\', '/'));
-                    newConfiguration.setPath(configuration.getPath());
-                    name = Paths.get(configuration.getPath()).getFileName().toString();
-                    newConfiguration.setName(name);
+                    newConfiguration.setName(Paths.get(newConfiguration.getPath()).getFileName().toString());
                     newConfiguration.setType(configuration.getObjectType());
                     newConfiguration.setAuditLogId(auditLogId);
                     newConfiguration.setDocumentationId(0L);
                     newConfiguration.setDeployed(false);
                     newConfiguration.setReleased(false);
-                    newConfiguration.setValid(JsonValidator.isValid(
-                            Globals.objectMapper.writeValueAsBytes(configuration.getConfiguration()), ConfigurationObject.class));
+                    newConfiguration.setValid(valid);
                     session.save(newConfiguration);
                 }
             } else {
-                if (folder != null) {
+                if (existingConfiguration == null) {
                     DBItemInventoryConfiguration newConfiguration = new DBItemInventoryConfiguration();
                     Date now = Date.from(Instant.now());
                     newConfiguration.setModified(now);
                     newConfiguration.setCreated(now);
-                    Path pathWithFolder = Paths.get(folder + configuration.getPath());
-                    folderPath = pathWithFolder.getParent();
-                    newConfiguration.setFolder(folderPath.toString().replace('\\', '/'));
-                    newConfiguration.setPath(pathWithFolder.toString().replace('\\', '/'));
-                    configuration.getConfiguration().setPath(pathWithFolder.toString().replace('\\', '/'));
                     newConfiguration.setContent(om.writeValueAsString(configuration.getConfiguration()));
-                    name = Paths.get(configuration.getPath()).getFileName().toString();
-                    newConfiguration.setName(name);
+                    if (folder != null) {
+                        pathWithFolder = Paths.get(folder + configuration.getPath());
+                        folderPath = pathWithFolder.getParent();
+                        newConfiguration.setPath(pathWithFolder.toString().replace('\\', '/'));
+                    } else {
+                        folderPath = Paths.get(configuration.getPath()).getParent();
+                        newConfiguration.setPath(configuration.getPath());
+                    }
+                    newConfiguration.setFolder(folderPath.toString().replace('\\', '/'));
+                    newConfiguration.setName(Paths.get(newConfiguration.getPath()).getFileName().toString());
                     newConfiguration.setType(configuration.getObjectType());
                     newConfiguration.setAuditLogId(auditLogId);
                     newConfiguration.setDocumentationId(0L);
                     newConfiguration.setDeployed(false);
                     newConfiguration.setReleased(false);
-                    newConfiguration.setValid(JsonValidator.isValid(
-                            Globals.objectMapper.writeValueAsBytes(configuration.getConfiguration()), ConfigurationObject.class));
+                    newConfiguration.setValid(valid);
                     session.save(newConfiguration);
-                } else {
-                    if (existingConfiguration == null) {
-                        DBItemInventoryConfiguration newConfiguration = new DBItemInventoryConfiguration();
-                        Date now = Date.from(Instant.now());
-                        newConfiguration.setModified(now);
-                        newConfiguration.setCreated(now);
-                        newConfiguration.setContent(om.writeValueAsString(configuration.getConfiguration()));
-                        folderPath = Paths.get(configuration.getPath()).getParent();
-                        newConfiguration.setFolder(folderPath.toString().replace('\\', '/'));
-                        newConfiguration.setPath(configuration.getPath());
-                        name = Paths.get(configuration.getPath()).getFileName().toString();
-                        newConfiguration.setName(name);
-                        newConfiguration.setType(configuration.getObjectType());
-                        newConfiguration.setAuditLogId(auditLogId);
-                        newConfiguration.setDocumentationId(0L);
-                        newConfiguration.setDeployed(false);
-                        newConfiguration.setReleased(false);
-                        newConfiguration.setValid(JsonValidator.isValid(
-                                Globals.objectMapper.writeValueAsBytes(configuration.getConfiguration()), ConfigurationObject.class));
-                        session.save(newConfiguration);
-                    }
                 }
             }
         } catch (SOSHibernateException e) {
