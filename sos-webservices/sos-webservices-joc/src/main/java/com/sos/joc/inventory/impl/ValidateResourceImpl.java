@@ -6,11 +6,16 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.model.instruction.ForkJoin;
 import com.sos.jobscheduler.model.instruction.IfElse;
 import com.sos.jobscheduler.model.instruction.Instruction;
@@ -23,7 +28,10 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.PredicateParser;
+import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
+import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IValidateResource;
 import com.sos.joc.model.common.IConfigurationObject;
@@ -31,6 +39,9 @@ import com.sos.joc.model.inventory.Validate;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
+import com.sos.webservices.order.initiator.model.AssignedCalendars;
+import com.sos.webservices.order.initiator.model.AssignedNonWorkingCalendars;
+import com.sos.webservices.order.initiator.model.Schedule;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class ValidateResourceImpl extends JOCResourceImpl implements IValidateResource {
@@ -66,20 +77,23 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
         }
     }
 
-    public static void validate(ConfigurationType type, byte[] configBytes) throws SOSJsonSchemaException, IOException {
+    public static void validate(ConfigurationType type, byte[] configBytes) throws SOSJsonSchemaException, IOException, SOSHibernateException {
         validate(type, configBytes, (IConfigurationObject) Globals.objectMapper.readValue(configBytes, JocInventory.CLASS_MAPPING.get(type)));
     }
 
-    public static void validate(ConfigurationType type, IConfigurationObject config) throws SOSJsonSchemaException, IOException {
+    public static void validate(ConfigurationType type, IConfigurationObject config) throws SOSJsonSchemaException, IOException,
+            SOSHibernateException {
         validate(type, Globals.objectMapper.writeValueAsBytes(config), config);
     }
 
-    private static void validate(ConfigurationType type, byte[] configBytes, IConfigurationObject config) throws SOSJsonSchemaException,
-            IOException {
+    private static void validate(ConfigurationType type, byte[] configBytes, IConfigurationObject config) throws SOSJsonSchemaException, IOException,
+            SOSHibernateException {
         JsonValidator.validate(configBytes, URI.create(JocInventory.SCHEMA_LOCATION.get(type)));
         if (ConfigurationType.WORKFLOW.equals(type)) {
             JsonValidator.validateStrict(configBytes, URI.create("classpath:/raml/jobscheduler/schemas/workflow/workflowJobs-schema.json"));
             validateInstructions(((Workflow) config).getInstructions(), "instructions", new HashMap<String, String>());
+        } else if (ConfigurationType.SCHEDULE.equals(type)) {
+            validateCalendarRefs((Schedule) config);
         }
     }
 
@@ -93,6 +107,29 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
             v.setInvalidMsg(e.getMessage());
         }
         return v;
+    }
+
+    private static void validateCalendarRefs(Schedule schedule) throws SOSHibernateException {
+        Set<String> calendarPaths = schedule.getCalendars().stream().map(AssignedCalendars::getCalendarPath).collect(Collectors.toSet());
+        if (schedule.getNonWorkingCalendars() != null) {
+            calendarPaths.addAll(schedule.getNonWorkingCalendars().stream().map(AssignedNonWorkingCalendars::getCalendarPath).collect(Collectors
+                    .toSet()));
+        }
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+            List<DBItemInventoryConfiguration> dbCalendars = dbLayer.getCalendars(calendarPaths.stream());
+            if (dbCalendars == null || dbCalendars.isEmpty()) {
+                throw new JocConfigurationException("Missing assigned Calendars: " + calendarPaths.toString()); 
+            } else if (dbCalendars.size() < calendarPaths.size()) {
+                calendarPaths.removeAll(dbCalendars.stream().map(DBItemInventoryConfiguration::getPath).collect(Collectors.toSet()));
+                throw new JocConfigurationException("Missing assigned Calendars: " + calendarPaths.toString());
+            }
+        } finally {
+            Globals.disconnect(session);
+        }
+
     }
 
     private static void validateInstructions(Collection<Instruction> instructions, String position, Map<String, String> labels)
@@ -156,5 +193,5 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
             }
         }
     }
-    
+
 }
