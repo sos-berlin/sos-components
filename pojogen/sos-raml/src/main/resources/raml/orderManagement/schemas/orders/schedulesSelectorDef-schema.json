@@ -1,16 +1,10 @@
 {
-	"title": "Order Template Filter",
+	"title": "Daily Plan  Order Filter Definition",
 	"$schema": "http://json-schema.org/draft-04/schema#",
-	"javaType": "com.sos.webservices.order.initiator.model.ScheduleFilter",
+	"javaType": "com.sos.webservices.order.initiator.model.SchedulesSelector",
 	"type": "object",
-	"description": "The filter for the list of order template for scheduling orders to JobScheduler",
-	"required": [
-		"controllerId"
-	],
+	"description": "Define the selector to get schedules",
 	"properties": {
-       	"controllerId": {
-			"type": "string"
-		},
 		"controllerIds": {
 			"type": "array",
 			"items": {

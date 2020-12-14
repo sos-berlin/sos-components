@@ -692,7 +692,7 @@ traits:
         description6: !include joc/documentation/dailyplan/orders/late.md
         description7: !include joc/documentation/dailyplan/orders/states.md
         description8: !include joc/documentation/dailyplan/orders/submissionHistoryIds.md
-        description9: " "
+        description9: !include joc/documentation/dailyplan/orders/controllerIds.md
         description10: " "
         description200: " "
         schema: !include orderManagement/schemas/dailyplan/dailyPlanOrdersFilter-schema.json
@@ -722,14 +722,14 @@ traits:
       type:
         postJSON:
           description: Delete planned orders for a given daily plan 
-          description1: !include joc/documentation/dailyplan/orders/dailyPlanOrdersFilterDef.md
+          description1: !include joc/documentation/dailyplan/delete/dailyPlanOrdersFilterDef.md
           description2: !include joc/documentation/dailyplan/dailyPlanDate.md
           description3: !include joc/documentation/dailyplan/orders/schedules.md
           description4: !include joc/documentation/dailyplan/orders/folders.md
           description5: !include joc/documentation/dailyplan/orders/workflowPaths.md
           description6: !include joc/documentation/dailyplan/orders/late.md
-          description7: !include joc/documentation/dailyplan/orders/states.md
-          description8: !include joc/documentation/dailyplan/orders/submissionHistoryIds.md
+          description7: !include joc/documentation/dailyplan/orders/submissionHistoryIds.md
+          description8: !include joc/documentation/dailyplan/orders/controllerIds.md
           description9: " "
           description10: " "
           description200: " "
@@ -741,15 +741,14 @@ traits:
       type:
         postJSON:
           description: Cancel submitted orders for a given daily plan 
-          description1: !include joc/documentation/dailyplan/orders/dailyPlanOrdersFilterDef.md
+          description1: !include joc/documentation/dailyplan/delete/dailyPlanOrdersFilterDef.md
           description2: !include joc/documentation/dailyplan/dailyPlanDate.md
           description3: !include joc/documentation/dailyplan/orders/schedules.md
           description4: !include joc/documentation/dailyplan/orders/folders.md
           description5: !include joc/documentation/dailyplan/orders/workflowPaths.md
           description6: !include joc/documentation/dailyplan/orders/late.md
-          description7: !include joc/documentation/dailyplan/orders/states.md
-          description8: !include joc/documentation/dailyplan/orders/submissionHistoryIds.md
-          description9: " "
+          description7: !include joc/documentation/dailyplan/cancel/states.md
+          description9: !include joc/documentation/dailyplan/orders/controllerIds.md
           description10: " "
           description200: " "
           schema: !include orderManagement/schemas/dailyplan/dailyPlanOrdersFilter-schema.json
@@ -775,7 +774,7 @@ traits:
         schema200: !include orderManagement/schemas/dailyplan/dailyPlanSubmissionHistory-schema.json 
         example: " "
         example200: " "
-        
+       
 #/documentation:
 #  description: |
 #    This is not an API call. Use its children!!
@@ -1919,11 +1918,11 @@ traits:
     type:
       postJSON:
         description: Lists schedules for a given controller 
-        description1: !include joc/documentation/dailyplan/schedules/dailyPlanSchedulesFilterDef.md
+        description1: !include joc/documentation/dailyplan/schedules/dailyPlanSchedulesSelectorDef.md
         description2: !include joc/documentation/dailyplan/schedules/folders.md
         description3: !include joc/documentation/dailyplan/schedules/schedules.md
         description4: !include joc/documentation/dailyplan/schedules/workflowPaths.md
-        description5: " "
+        description5: !include joc/documentation/dailyplan/schedules/controllerIds.md
         description6: " "
         description7: " "
         description8: " "
@@ -1934,6 +1933,7 @@ traits:
         schema200: !include orderManagement/schemas/orders/schedulesList-schema.json
         example: " "
         example200: " "
+
 
 /authentication:
   description: This is not an API call. Use child urls instead!

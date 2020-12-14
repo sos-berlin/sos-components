@@ -23,9 +23,6 @@ workflowPaths
 late
 </li>
 <li>
-states
-</li>
-<li>
 submissionHistoryIds
 </li>
 <li>
