@@ -23,7 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "calendarIds",
-    "calendars",
+    "calendarPaths",
     "compact",
     "type",
     "regex",
@@ -34,8 +34,8 @@ public class CalendarsFilter {
 
     @JsonProperty("calendarIds")
     private List<Long> calendarIds = null;
-    @JsonProperty("calendars")
-    private List<String> calendars = null;
+    @JsonProperty("calendarPaths")
+    private List<String> calendarPaths = null;
     /**
      * compact parameter
      * <p>
@@ -89,14 +89,14 @@ public class CalendarsFilter {
         this.calendarIds = calendarIds;
     }
 
-    @JsonProperty("calendars")
-    public List<String> getCalendars() {
-        return calendars;
+    @JsonProperty("calendarPaths")
+    public List<String> getCalendarPaths() {
+        return calendarPaths;
     }
 
-    @JsonProperty("calendars")
-    public void setCalendars(List<String> calendars) {
-        this.calendars = calendars;
+    @JsonProperty("calendarPaths")
+    public void setCalendarPaths(List<String> calendarPaths) {
+        this.calendarPaths = calendarPaths;
     }
 
     /**
@@ -211,12 +211,12 @@ public class CalendarsFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("calendarIds", calendarIds).append("calendars", calendars).append("compact", compact).append("type", type).append("regex", regex).append("folders", folders).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("calendarIds", calendarIds).append("calendarPaths", calendarPaths).append("compact", compact).append("type", type).append("regex", regex).append("folders", folders).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(calendarIds).append(regex).append(folders).append(compact).append(auditLog).append(calendars).append(type).toHashCode();
+        return new HashCodeBuilder().append(calendarIds).append(regex).append(folders).append(compact).append(auditLog).append(calendarPaths).append(type).toHashCode();
     }
 
     @Override
@@ -228,7 +228,7 @@ public class CalendarsFilter {
             return false;
         }
         CalendarsFilter rhs = ((CalendarsFilter) other);
-        return new EqualsBuilder().append(calendarIds, rhs.calendarIds).append(regex, rhs.regex).append(folders, rhs.folders).append(compact, rhs.compact).append(auditLog, rhs.auditLog).append(calendars, rhs.calendars).append(type, rhs.type).isEquals();
+        return new EqualsBuilder().append(calendarIds, rhs.calendarIds).append(regex, rhs.regex).append(folders, rhs.folders).append(compact, rhs.compact).append(auditLog, rhs.auditLog).append(calendarPaths, rhs.calendarPaths).append(type, rhs.type).isEquals();
     }
 
 }

@@ -1,7 +1,5 @@
 package com.sos.joc.order.impl;
 
-import java.time.Instant;
-import java.util.Date;
 import java.util.Optional;
 
 import javax.ws.rs.Path;
@@ -14,7 +12,6 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.JobSchedulerObjectNotExistException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.order.OrderFilter;
-import com.sos.joc.model.order.OrderV;
 import com.sos.joc.order.resource.IOrderResource;
 import com.sos.schema.JsonValidator;
 
@@ -48,14 +45,7 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
                 return JOCDefaultResponse.responseStatus200(OrdersHelper.mapJOrderToOrderV(optional.get(), orderFilter.getCompact(), surveyDateMillis,
                         true));
             } else {
-                if (orderFilter.getSuppressNotExistException() != null && orderFilter.getSuppressNotExistException()) {
-                    OrderV order = new OrderV();
-                    order.setSurveyDate(Date.from(Instant.ofEpochMilli(surveyDateMillis)));
-                    order.setDeliveryDate(Date.from(Instant.now()));
-                    return JOCDefaultResponse.responseStatus200(order);
-                } else {
-                    throw new JobSchedulerObjectNotExistException(String.format("unknown Order '%s'", orderFilter.getOrderId()));
-                }
+                throw new JobSchedulerObjectNotExistException(String.format("unknown Order '%s'", orderFilter.getOrderId()));
             }
 
         } catch (JocException e) {

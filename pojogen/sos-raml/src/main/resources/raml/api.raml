@@ -107,13 +107,13 @@ traits:
   /names:
     type:
       postOnlyAccessToken:
-        description: Get collection of enabled Agent names
+        description: Get collection of enabled Agent names and aliases
         description200: Collection of enabled Agent names
         schema200: !include joc/schemas/agent/agentNames-schema.json
         example200 : !include joc/examples/agent/agentNames-example.json
   /p:
     type:
-      postJSONWithOptionalJSId:
+      postJSON:
         description: Get collection of Agents from database
         description1: !include joc/documentation/agent/onlyEnabledAgents.md
         description2: " "
@@ -125,9 +125,6 @@ traits:
         description8: " "
         description9: " "
         description10: " "
-        description11: " "
-        description12: " "
-        description13: " "
         description200: !include joc/documentation/agent/agents_p.md
         schema: !include joc/schemas/agent/readAgents-schema.json
         schema200: !include joc/schemas/agent/agents-schema.json
@@ -192,7 +189,7 @@ traits:
       description5: !include joc/documentation/common/folders.md
       description6: !include joc/documentation/job/filteredByJobs.md
       description7: !include joc/documentation/order/filteredByOrders.md
-      description8: !include joc/documentation/calendar/filteredByCalendars.md
+      description8: !include joc/documentation/calendar/filteredByCalendarPaths.md
       description9: !include joc/documentation/audit/ticketLink.md
       description10: !include joc/documentation/configuration/userParam.md
       description11: !include joc/documentation/common/limit.md
@@ -221,28 +218,6 @@ traits:
 #        description: Show documentation
 #        jsObjectParam: calendar
 #        jsObject: Calendar
-#    /assign:
-#      type:
-#        postDocuWithOkResponse:
-#          description: Assigns a Documentation to the Calendar
-#          description1: !include joc/documentation/docu/docPath.md
-#          description2: " "
-#          description3: !include joc/documentation/calendar/calendarRequired.md
-#          description4: " "
-#          schema: !include joc/schemas/calendar/calendarDocuFilter-schema.json
-#          example: TODO
-#          audit: !include joc/documentation/audit/auditLog.md
-#    /unassign:
-#      type:
-#        postDocuWithOkResponse:
-#          description: Unassigns a Documentation of the Calendar
-#          description1: " "
-#          description2: " "
-#          description3: !include joc/documentation/calendar/calendarRequired.md
-#          description4: " "
-#          schema: !include joc/schemas/calendar/calendarDocuFilter-schema.json
-#          example: TODO
-#          audit: !include joc/documentation/audit/auditLog.md
 
 /calendar/dates:
   type:
@@ -268,13 +243,13 @@ traits:
   type:
     postJSONWithoutJSId:
       description: Get collection of calendar items
-      description1: !include joc/documentation/common/compact.md
-      description2: !include joc/documentation/common/regex.md
-      description3: !include joc/documentation/common/folders.md
-      description4: !include joc/documentation/calendar/calendarType.md
-      description5: " "
-      description6: !include joc/documentation/calendar/filteredByCalendars.md
-      description7: !include joc/documentation/calendar/filteredByCalendarIds.md
+      description1: !include joc/documentation/calendar/filteredByCalendarPaths.md
+      description2: !include joc/documentation/calendar/filteredByCalendarIds.md
+      description3: !include joc/documentation/common/compact.md
+      description4: !include joc/documentation/common/regex.md
+      description5: !include joc/documentation/common/folders.md
+      description6: !include joc/documentation/calendar/calendarType.md
+      description7: " "
       description8: " "
       description9: " "
       description10: " "
@@ -284,38 +259,6 @@ traits:
       example: " "
       example200: " "
       
-#  /delete:
-#    type:
-#      modifyCalendar:
-#        description: Deletes calendars
-#        audit: !include joc/documentation/audit/auditLog.md
-#  
-#  /export:
-#    type:
-#      postForDownload:
-#        description: Provides Calendars export file as download  (see <a href="../calendars/import.html">./calendars/import</a>)
-#        description1: !include joc/documentation/calendar/filteredByCalendars.md
-#        description2: " "
-#        description3: " "
-#        description4: " "
-#        description5: " "
-#        schema: !include joc/schemas/calendar/calendarsFilter-schema.json
-#        example: " "
-#
-#  /import:
-#    type:
-#      postCalendarWithOkResponse:
-##      postForUpload:
-#        description: Imports Calendar export file (see <a href="../calendars/export.html">./calendars/export</a>)
-#        description1: !include joc/documentation/calendar/calendarsObj.md
-#        description2: " "
-#        description3: " "
-#        description4: " "
-#        description200: " "
-#        schema: !include joc/schemas/calendar/calendarImportFilter-schema.json
-#        audit: !include joc/documentation/audit/auditLog.md
-#        example: " "
-#
 #  /used:
 #    type:
 #      postJSON:
@@ -325,7 +268,7 @@ traits:
 #        description3: !include joc/documentation/common/folders.md
 #        description4: !include joc/documentation/calendar/calendarType.md
 #        description5: " "
-#        description6: !include joc/documentation/calendar/filteredByCalendars.md
+#        description6: !include joc/documentation/calendar/filteredByCalendarPaths.md
 #        description7: !include joc/documentation/calendar/filteredByCalendarIds.md
 #        description8: " "
 #        description9: " "
@@ -732,7 +675,7 @@ traits:
         example200: !include joc/examples/jobscheduler/securityLevels-example.json
     /take_over:
       type:
-        postJSONWithOkAndOnlyOptionalIdResponse:
+        postWithOkResponse:
           description: Current security level will be take over to already existing Controllers
           
 /daily_plan:
@@ -906,39 +849,7 @@ traits:
 #        schema200: !include joc/schemas/docu/url-schema.json
 #        example: " "
 #        example200: " "    
-#  /store:
-#    type:
-#      postDocuWithOkResponse:
-#        description: Save or Rename a documentation
-#        description1: !include joc/documentation/docu/calendarStoreObj.md
-#        description2: " "
-#        description3: " "
-#        description4: " "
-#        schema: !include joc/schemas/docu/calendarObjectFilter-schema.json
-#        audit: !include joc/documentation/audit/auditLog.md
-#        example: " "  
-#  /save_as:
-#    type:
-#      postDocuWithOkResponse:
-#        description: SaveAs a documentation
-#        description1: !include joc/documentation/docu/calendarObj.md
-#        description2: " "
-#        description3: " "
-#        description4: " "
-#        schema: !include joc/schemas/docu/calendarObjectFilter-schema.json
-#        audit: !include joc/documentation/audit/auditLog.md
-#        example: " "  
-#  /rename:
-#    type:
-#      postDocuWithOkResponse:
-#        description: Renames a documentation
-#        description1: !include joc/documentation/docu/calendarRequired.md
-#        description2: " "
-#        description3: !include joc/documentation/docu/calendarNewRequired.md
-#        description4: " "
-#        schema: !include joc/schemas/docu/calendarRenameFilter-schema.json
-#        audit: !include joc/documentation/audit/auditLog.md
-#        example: " "
+
 
 #/documentations:
 #  type:
@@ -1240,7 +1151,7 @@ traits:
         description1: !include joc/documentation/inventory/path.md
         description2: !include joc/documentation/inventory/objectTypes.md
         description3: !include joc/documentation/common/recursive.md
-        description4: !include joc/documentation/common/onlyValidObjects.md
+        description4: !include joc/documentation/inventory/onlyValidObjects.md
         description5: " "
         description6: " "
         description7: " "
@@ -1407,28 +1318,7 @@ traits:
 #        description: Show documentation
 #        jsObjectParam: job
 #        jsObject: Job
-#    /assign:
-#      type:
-#        postDocuWithOkResponse:
-#          description: Assigns a Documentation to the Job
-#          description1: !include joc/documentation/docu/docPath.md
-#          description2: " "
-#          description3: !include joc/documentation/job/jobRequired.md
-#          description4: " "
-#          schema: !include joc/schemas/job/jobDocuFilter-schema.json
-#          example: TODO
-#          audit: !include joc/documentation/audit/auditLog.md
-#    /unassign:
-#      type:
-#        postDocuWithOkResponse:
-#          description: Unassigns a Documentation of the Job
-#          description1: " "
-#          description2: " "
-#          description3: !include joc/documentation/job/jobRequired.md
-#          description4: " "
-#          schema: !include joc/schemas/job/jobDocuFilter-schema.json
-#          example: TODO
-#          audit: !include joc/documentation/audit/auditLog.md
+
 
 #TODO
 #/jobclass:
@@ -1520,46 +1410,34 @@ traits:
 #        example200: !include joc/examples/processClass/processClasses_p-example.json
 
           
-/jobs:
-  /overview/snapshot:
-    type:
-      postOnlyId:
-        description: |
-            Summary with number of<h5>
-            * pending jobs
-            * running tasks
-            </h5>
-        description200: " "
-        schema200: !include joc/schemas/job/snapshot-schema.json
-        example200: !include joc/examples/job/snapshot-example.json
-  /overview/summary:
-    type:
-      postJSON:
-        description: |
-            Summary with number of<h5>
-            * successful tasks
-            * failed tasks
+/jobs/overview/summary:
+  type:
+    postJSON:
+      description: |
+          Summary with number of<h5>
+          * successful tasks
+          * failed tasks
 
-            filtered by <code>dateFrom</code> parameter until now
-            </h5>
-        description1: !include joc/documentation/common/dateFrom.md
-        description2: !include joc/documentation/common/dateTo.md
-        description3: !include joc/documentation/common/timeZone.md
-        description4: " "
-        description5: !include joc/documentation/job/filteredByJobs.md
-        description6: " "
-        description7: " "
-        description8: " "
-        description9: " "
-        description10: " "
-        description200: " "
-        schema200: !include joc/schemas/job/summary-schema.json
-        schema: !include joc/schemas/job/jobsFilter-schema.json
-        example: |
-            {
-              "dateFrom": "1d"
-            }
-        example200: !include joc/examples/job/summary-example.json
+          filtered by <code>dateFrom</code> parameter until now
+          </h5>
+      description1: !include joc/documentation/common/dateFrom.md
+      description2: !include joc/documentation/common/dateTo.md
+      description3: !include joc/documentation/common/timeZone.md
+      description4: " "
+      description5: !include joc/documentation/job/filteredByJobs.md
+      description6: " "
+      description7: " "
+      description8: " "
+      description9: " "
+      description10: " "
+      description200: " "
+      schema200: !include joc/schemas/job/summary-schema.json
+      schema: !include joc/schemas/job/jobsFilter-schema.json
+      example: |
+          {
+            "dateFrom": "1d"
+          }
+      example200: !include joc/examples/job/summary-example.json
         
 /joc:
   description: This is not an API call. Use its children!!
@@ -1715,7 +1593,7 @@ traits:
       description1: " "
       description2: !include joc/documentation/order/orderIdRequired.md
       description3: !include joc/documentation/common/compact.md
-      description4: !include joc/documentation/common/suppressObjectNotExistException.md
+      description4: " "
       description5: " "
       description6: " "
       description7: " "
@@ -1788,63 +1666,7 @@ traits:
       type:
         postOrderLogWithPlainResponse:
           description: Provides order log as download
-#  /configuration:
-#    type:
-#      postJSON:
-#        description: !include joc/documentation/common/configuration.md
-#        description1: !include joc/documentation/order/workflow.md
-#        description2: !include joc/documentation/order/orderIdRequired.md
-#        description3: !include joc/documentation/common/configurationFileMimeParam.md
-#        description4: " "
-#        description5: " "
-#        description6: " "
-#        description7: " "
-#        description8: " "
-#        description9: " "
-#        description10: " "
-#        description200: Returns the order configuration in XML or HTML format
-#        schema: !include joc/schemas/order/orderConfigurationFilter-schema.json
-#        schema200: !include joc/schemas/common/configuration-schema.json
-#        example: !include joc/examples/order/filteredOrder-example.json
-#        example200: !include joc/examples/order/configuration-example.json
-#  /run_time:
-#    type:
-#      postJSON:
-#        description: run time as XML string embedded in JSON
-#        description1: !include joc/documentation/order/workflow.md
-#        description2: !include joc/documentation/order/orderIdRequired.md
-#        description3: " "
-#        description4: " "
-#        description5: " "
-#        description6: " "
-#        description7: " "
-#        description8: " "
-#        description9: " "
-#        description10: " "
-#        description200: Returns the run time as XML string in the JSON content field
-#        schema: !include joc/schemas/order/orderFilter-schema.json
-#        schema200: !include joc/schemas/common/runtime200-schema.json
-#        example: !include joc/examples/order/filteredOrder-example.json
-#        example200: !include joc/examples/common/runtime-example.json
-#  /calendars:
-#    type:
-#      postJSON:
-#        description: send assigned calendars
-#        description1: !include joc/documentation/order/workflow.md
-#        description2: !include joc/documentation/order/orderIdRequired.md
-#        description3: !include joc/documentation/common/compact.md
-#        description4: " "
-#        description5: " "
-#        description6: " "
-#        description7: " "
-#        description8: " "
-#        description9: " "
-#        description10: " "
-#        description200: !include joc/documentation/calendar/calendar.md
-#        schema: !include joc/schemas/order/orderFilter-schema.json
-#        schema200: !include joc/schemas/calendar/calendars-schema.json
-#        example: !include joc/examples/order/filteredOrder-example.json
-#        example200: TODO
+
 #  /documentation:
 #    get:
 #    is: [ filteredByOrderId ]
@@ -2253,7 +2075,7 @@ traits:
       description5: " "
       description6: !include joc/documentation/common/folders.md
       description7: !include joc/documentation/common/typesParam.md
-      description8: !include joc/documentation/common/onlyValidObjects.md
+      description8: !include joc/documentation/inventory/onlyValidObjects.md
       description9: " "
       description10: " "
       description200: !include joc/documentation/tree/tree.md

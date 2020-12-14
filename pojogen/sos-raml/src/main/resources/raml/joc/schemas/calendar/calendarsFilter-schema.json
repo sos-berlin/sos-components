@@ -10,7 +10,7 @@
         "$ref": "../common/nonNegativeLong-schema.json"
       }
     },
-    "calendars": {
+    "calendarPaths": {
       "type": "array",
       "items": {
         "$ref": "../common/path-schema.json"

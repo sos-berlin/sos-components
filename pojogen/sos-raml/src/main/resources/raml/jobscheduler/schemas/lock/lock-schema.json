@@ -7,9 +7,6 @@
     "com.sos.joc.model.common.IConfigurationObject",
     "com.sos.joc.model.common.IDeployObject"
   ],
-  "required": [
-    "path"
-  ],
   "propertyOrder": [
     "TYPE",
     "path",

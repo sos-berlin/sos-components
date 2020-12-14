@@ -16,9 +16,6 @@
     },
     "compact": {
       "$ref": "../common/compactParam-schema.json"
-    },
-    "suppressNotExistException": {
-      "$ref": "../common/suppressNotExistExceptionParam-schema.json"
     }
   }
 }

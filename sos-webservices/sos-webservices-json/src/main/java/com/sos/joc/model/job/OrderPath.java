@@ -27,11 +27,11 @@ public class OrderPath {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("workflowPath")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String workflowPath;
     /**
      * if orderId undefined or empty then all orders of specified job chain are requested
@@ -46,7 +46,7 @@ public class OrderPath {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("workflowPath")
@@ -57,7 +57,7 @@ public class OrderPath {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("workflowPath")

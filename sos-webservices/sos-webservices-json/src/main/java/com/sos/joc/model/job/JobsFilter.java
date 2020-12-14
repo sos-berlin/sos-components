@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.HistoryStateText;
+import com.sos.joc.model.inventory.common.JobCriticality;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -103,7 +104,7 @@ public class JobsFilter {
     @JsonProperty("historyStates")
     private List<HistoryStateText> historyStates = new ArrayList<HistoryStateText>();
     @JsonProperty("criticalities")
-    private List<JobCriticalities> criticalities = new ArrayList<JobCriticalities>();
+    private List<JobCriticality> criticalities = new ArrayList<JobCriticality>();
     @JsonProperty("taskIds")
     private List<Long> taskIds = new ArrayList<Long>();
     @JsonProperty("historyIds")
@@ -302,12 +303,12 @@ public class JobsFilter {
     }
 
     @JsonProperty("criticalities")
-    public List<JobCriticalities> getCriticalities() {
+    public List<JobCriticality> getCriticalities() {
         return criticalities;
     }
 
     @JsonProperty("criticalities")
-    public void setCriticalities(List<JobCriticalities> criticalities) {
+    public void setCriticalities(List<JobCriticality> criticalities) {
         this.criticalities = criticalities;
     }
 

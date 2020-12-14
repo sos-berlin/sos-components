@@ -69,9 +69,9 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
                 calendarsFilter.setRegex(null);
                 dbCalendars = dbLayer.getReleasedConfigurations(calendarsFilter.getCalendarIds());
 
-            } else if (calendarsFilter.getCalendars() != null && !calendarsFilter.getCalendars().isEmpty()) {
+            } else if (calendarsFilter.getCalendarPaths() != null && !calendarsFilter.getCalendarPaths().isEmpty()) {
                 calendarsFilter.setRegex(null);
-                dbCalendars = dbLayer.getConfigurations(calendarsFilter.getCalendars().stream(), Arrays.asList(CalendarType.WORKINGDAYSCALENDAR
+                dbCalendars = dbLayer.getConfigurations(calendarsFilter.getCalendarPaths().stream(), Arrays.asList(CalendarType.WORKINGDAYSCALENDAR
                         .intValue(), CalendarType.NONWORKINGDAYSCALENDAR.intValue()));
 
             } else if (withFolderFilter && (folders == null || folders.isEmpty())) {

@@ -1,4 +1,4 @@
-<tr><td>``historyIds``</td><td>optional, array</td>
+<tr><td>``historyIds``</td><td>optional, array[object]</td>
 <td>Filtered response by a collection of order's historyId and position.<br/>
 It determines the current or last taskId.<br/>
 If "historyIds" is specified then all other optional parameters except ``controllerId`` and ``taskIds`` are ignored.</td>

@@ -67,7 +67,7 @@
     "criticalities": {
       "type": "array",
       "items": {
-        "$ref": "criticality-schema.json"
+        "$ref": "../inventory/common/jobCriticality-schema.json"
       }
     },
     "taskIds": {

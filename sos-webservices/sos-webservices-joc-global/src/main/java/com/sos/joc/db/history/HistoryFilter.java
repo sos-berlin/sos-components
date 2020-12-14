@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.HistoryStateText;
-import com.sos.joc.model.job.JobCriticalities;
+import com.sos.joc.model.inventory.common.JobCriticality;
 
 public class HistoryFilter {
     
@@ -119,7 +119,7 @@ public class HistoryFilter {
         return states;
     }
     
-    public void setCriticalities(Collection<JobCriticalities> criticalities) {
+    public void setCriticalities(Collection<JobCriticality> criticalities) {
         if (criticalities != null) {
             this.criticalities = criticalities.stream().map(c -> c.value().toLowerCase()).collect(Collectors.toSet());
         } else {

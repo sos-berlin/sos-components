@@ -8,7 +8,6 @@
     "com.sos.joc.model.common.IDeployObject"
   ],
   "required": [
-    "path",
     "instructions",
     "jobs"
   ],

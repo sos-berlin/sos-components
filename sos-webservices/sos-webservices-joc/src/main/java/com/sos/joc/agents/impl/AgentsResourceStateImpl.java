@@ -75,7 +75,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                 return jocDefaultResponse;
             }
 
-            checkRequiredParameter("controllerId", controllerId);
+            //checkRequiredParameter("controllerId", controllerId);
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);

@@ -1,1 +1,0 @@
-<tr><td>``newPath``</td><td>required, string</td><td>New path of the calendar</td><td></td><td></td></tr>
