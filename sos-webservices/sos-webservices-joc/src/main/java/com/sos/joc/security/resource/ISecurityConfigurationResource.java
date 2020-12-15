@@ -14,13 +14,13 @@ public interface ISecurityConfigurationResourceRead
 {
 
     @POST
-    @Path("read")
+    @Path("shiro")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postSecurityConfigurationRead(@HeaderParam("X-Access-Token") String xAccessToken,@HeaderParam("access_token") String accessToken) throws Exception;
+    public JOCDefaultResponse postShiroRead(@HeaderParam("X-Access-Token") String xAccessToken,@HeaderParam("access_token") String accessToken) throws Exception;
     
     @POST
-    @Path("write")
+    @Path("shiro/store")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postSecurityConfigurationWrite(@HeaderParam("X-Access-Token") String xAccessToken,@HeaderParam("access_token") String accessToken, SecurityConfiguration securityConfiguration) throws Exception;
+    public JOCDefaultResponse postShiroStore(@HeaderParam("X-Access-Token") String xAccessToken,@HeaderParam("access_token") String accessToken, SecurityConfiguration securityConfiguration) throws Exception;
 
 }

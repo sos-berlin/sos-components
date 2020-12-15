@@ -17,14 +17,14 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.security.SecurityConfiguration;
 import com.sos.joc.security.resource.ISecurityConfigurationResourceRead;
 
-@Path("security_configuration")
+@Path("authentication")
 public class SecurityConfigurationResourceImpl extends JOCResourceImpl implements ISecurityConfigurationResourceRead {
 
-	private static final String API_CALL_READ = "./security_configuration/read";
-	private static final String API_CALL_WRITE = "./security_configuration/write";
+	private static final String API_CALL_READ = "./authentication/shiro";
+	private static final String API_CALL_WRITE = "./authentication/store";
 
 	@Override
-	public JOCDefaultResponse postSecurityConfigurationRead(String xAccessToken, String accessToken) throws Exception {
+	public JOCDefaultResponse postShiroRead(String xAccessToken, String accessToken) throws Exception {
 		return postSecurityConfigurationRead(getAccessToken(xAccessToken, accessToken));
 	}
 
@@ -68,7 +68,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 	}
 
 	@Override
-	public JOCDefaultResponse postSecurityConfigurationWrite(String xAccessToken, String accessToken,
+	public JOCDefaultResponse postShiroStore(String xAccessToken, String accessToken,
 			SecurityConfiguration securityConfiguration) throws Exception {
 		return postSecurityConfigurationWrite(getAccessToken(xAccessToken, accessToken), securityConfiguration);
 	}
