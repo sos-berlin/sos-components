@@ -74,7 +74,7 @@ public class WorkflowSearcher {
         if (agentRefRegex == null) {
             return getJobs();
         }
-        return toWorkflowJobList(getJobsStream().filter(e -> e.getValue().getAgentName() != null && e.getValue().getAgentName().matches(
+        return toWorkflowJobList(getJobsStream().filter(e -> e.getValue().getAgentId() != null && e.getValue().getAgentId().matches(
                 agentRefRegex)));
     }
 

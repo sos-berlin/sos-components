@@ -759,10 +759,10 @@ public abstract class PublishUtils {
                 Workflow workflow = om.readValue(json, Workflow.class);
                 workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
                     Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-                    String agentName = job.getAgentName();
+                    String agentName = job.getAgentId();
                     String agentId = dbLayer.getAgentIdFromAgentName(agentName, controllerId, workflow.getPath(), jobname);
                     update.add(
-                            new UpdateableWorkflowJobAgentName(workflow.getPath(), jobname, job.getAgentName(), agentId, controllerId));
+                            new UpdateableWorkflowJobAgentName(workflow.getPath(), jobname, job.getAgentId(), agentId, controllerId));
                 });
             }
         } catch (IOException e) {
@@ -1542,7 +1542,7 @@ public abstract class PublishUtils {
                 .filter(item -> item.getWorkflowPath().equals(draft.getPath())).collect(Collectors.toSet());
         workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
             Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-            job.setAgentName(filteredUpdateables.stream()
+            job.setAgentId(filteredUpdateables.stream()
                     .filter(item -> item.getJobName().equals(jobname) && controllerId.equals(item.getControllerId()))
                     .findFirst().get().getAgentId());
         });
@@ -1555,7 +1555,7 @@ public abstract class PublishUtils {
                 .filter(item -> item.getWorkflowPath().equals(workflow.getPath())).collect(Collectors.toSet());
         workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
             Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-            job.setAgentName(filteredUpdateables.stream()
+            job.setAgentId(filteredUpdateables.stream()
                     .filter(item -> item.getJobName().equals(jobname) && controllerId.equals(item.getControllerId()))
                     .findFirst().get().getAgentId());
         });
@@ -1576,7 +1576,7 @@ public abstract class PublishUtils {
                 .collect(Collectors.toSet());
         workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
             Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-            job.setAgentName(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname)).findFirst().get().getAgentName());
+            job.setAgentId(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname)).findFirst().get().getAgentName());
         });
         return om.writeValueAsString(workflow);
     }

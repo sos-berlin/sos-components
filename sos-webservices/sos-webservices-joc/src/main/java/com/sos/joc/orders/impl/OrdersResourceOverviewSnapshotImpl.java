@@ -30,7 +30,7 @@ import com.sos.joc.model.workflow.WorkflowsFilter;
 import com.sos.joc.orders.resource.IOrdersResourceOverviewSnapshot;
 import com.sos.schema.JsonValidator;
 
-import js7.data.item.ItemId;
+import js7.data.item.VersionedItemId;
 import js7.data.order.Order;
 import js7.data.workflow.WorkflowPath;
 import js7.proxy.javaapi.data.controller.JControllerState;
@@ -74,7 +74,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
 
     }
 
-    private static OrdersSnapshot getSnapshot(JControllerState controllerState, Set<ItemId<WorkflowPath>> workflowIds, Set<Folder> permittedFolders,
+    private static OrdersSnapshot getSnapshot(JControllerState controllerState, Set<VersionedItemId<WorkflowPath>> workflowIds, Set<Folder> permittedFolders,
             boolean withWorkFlowFilter) {
 
         final long nowMillis = controllerState.eventId() / 1000;
@@ -154,8 +154,8 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
         return entity;
     }
 
-    private static Set<ItemId<WorkflowPath>> checkFolderPermission(List<WorkflowId> workflowIds, Set<Folder> permittedFolders) {
-        Set<ItemId<WorkflowPath>> wIds = new HashSet<>();
+    private static Set<VersionedItemId<WorkflowPath>> checkFolderPermission(List<WorkflowId> workflowIds, Set<Folder> permittedFolders) {
+        Set<VersionedItemId<WorkflowPath>> wIds = new HashSet<>();
         if (workflowIds != null) {
             if (permittedFolders != null && !permittedFolders.isEmpty()) {
                 wIds = workflowIds.stream().filter(w -> folderIsPermitted(w.getPath(), permittedFolders)).map(w -> JWorkflowId.of(w.getPath(), w

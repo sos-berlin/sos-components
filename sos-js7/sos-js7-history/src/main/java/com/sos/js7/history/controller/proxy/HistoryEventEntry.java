@@ -17,7 +17,7 @@ import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.controller.data.events.AgentRefStateEvent.AgentReady;
 import js7.controller.data.events.ControllerEvent.ControllerReady;
-import js7.data.agent.AgentName;
+import js7.data.agent.AgentId;
 import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
@@ -358,8 +358,8 @@ public class HistoryEventEntry {
                         throw new Exception(String.format("[%s][%s]missing JOrder", eventId, orderId));
                     }
 
-                    Either<Problem, AgentName> pa = order.attached();
-                    AgentName arp = getFromEither(pa);
+                    Either<Problem, AgentId> pa = order.attached();
+                    AgentId arp = getFromEither(pa);
                     agentPath = arp.string();
                 }
                 return agentPath;
@@ -462,10 +462,10 @@ public class HistoryEventEntry {
         public HistoryAgentReady() throws FatEventProblemException {
             timezone = ((AgentReady) event).timezone();
 
-            AgentName arp = (AgentName) keyedEvent.key();
+            AgentId arp = (AgentId) keyedEvent.key();
             path = arp.string();
 
-            Either<Problem, JAgentRef> pa = eventAndState.state().nameToAgentRef(arp);
+            Either<Problem, JAgentRef> pa = eventAndState.state().idToAgentRef(arp);
             JAgentRef ar = getFromEither(pa);
             if (ar != null) {
                 uri = ar.uri().toString();

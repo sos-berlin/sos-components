@@ -161,8 +161,8 @@ public class WorkflowConverter {
                 if (!SOSString.isEmpty(job.getTitle())) {
                     titels.add(job.getTitle());
                 }
-                if (!SOSString.isEmpty(job.getAgentName())) {
-                    agentRefs.add(job.getAgentName());
+                if (!SOSString.isEmpty(job.getAgentId())) {
+                    agentRefs.add(job.getAgentId());
                 }
                 if (!SOSString.isEmpty(job.getJobClass())) {
                     jobClasses.add(job.getJobClass());

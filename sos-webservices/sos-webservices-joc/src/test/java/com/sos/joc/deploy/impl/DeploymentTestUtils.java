@@ -206,7 +206,7 @@ public class DeploymentTestUtils {
 
     public static Job createJob(String agentRef, String script) {
         Job job = new Job();
-        job.setAgentName(agentRef);
+        job.setAgentId(agentRef);
         job.setTaskLimit(5);
         ExecutableScript executableScript = new ExecutableScript();
         executableScript.setScript(script);

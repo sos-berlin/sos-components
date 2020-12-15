@@ -31,7 +31,7 @@ import com.sos.schema.exception.SOSJsonSchemaException;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
-import js7.data.item.ItemId;
+import js7.data.item.VersionedItemId;
 import js7.data.order.Order;
 import js7.data.order.OrderId;
 import js7.data.workflow.WorkflowPath;
@@ -143,7 +143,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             if (orders != null && !orders.isEmpty()) {
                 orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()) && orderIsPermitted(o, permittedFolders)).map(JOrder::id);
             } else if (workflowIds != null && !workflowIds.isEmpty()) {
-                Set<ItemId<WorkflowPath>> workflowPaths = workflowIds.stream().map(w -> JWorkflowId.of(w.getPath(), w.getVersionId()).asScala()).collect(
+                Set<VersionedItemId<WorkflowPath>> workflowPaths = workflowIds.stream().map(w -> JWorkflowId.of(w.getPath(), w.getVersionId()).asScala()).collect(
                         Collectors.toSet());
                 orderStream = currentState.ordersBy(o -> workflowPaths.contains(o.workflowId()) && orderIsPermitted(o, permittedFolders)).map(JOrder::id);
             }
@@ -182,6 +182,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         case RESUME:
             //TODO missing parameter!
             // resumeOrder
+//            if (oIds.size() == 1) {
+//                return ControllerApi.of(modifyOrders.getControllerId()).resumeOrder(oIds.iterator().next(), position, ..);
+//            }
             return ControllerApi.of(modifyOrders.getControllerId()).resumeOrders(oIds);
         case SUSPEND:
             //TODO position! Why JWorkflowPosition instead JPosition?

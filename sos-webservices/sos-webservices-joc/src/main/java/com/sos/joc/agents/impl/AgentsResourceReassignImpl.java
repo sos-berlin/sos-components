@@ -19,6 +19,8 @@ import com.sos.joc.model.jobscheduler.UrlParameter;
 import com.sos.schema.JsonValidator;
 
 import js7.proxy.javaapi.data.agent.JAgentRef;
+import js7.proxy.javaapi.data.item.JUpdateItemOperation;
+import reactor.core.publisher.Flux;
 
 @Path("agents")
 public class AgentsResourceReassignImpl extends JOCResourceImpl implements IAgentsResourceReassign {
@@ -48,7 +50,7 @@ public class AgentsResourceReassignImpl extends JOCResourceImpl implements IAgen
             
             List<JAgentRef> agents = Proxies.getAgents(controllerId, null);
             if (!agents.isEmpty()) {
-                ControllerApi.of(controllerId).updateAgentRefs(agents)
+                ControllerApi.of(controllerId).updateItems(Flux.fromStream(agents.stream().map(JUpdateItemOperation::addOrReplace)))
                     .thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
             }
             

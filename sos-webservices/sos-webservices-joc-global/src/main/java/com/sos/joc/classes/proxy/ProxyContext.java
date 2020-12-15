@@ -34,7 +34,10 @@ import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.JProxyContext;
 import js7.proxy.javaapi.data.agent.JAgentRef;
+import js7.proxy.javaapi.data.item.JSimpleItem;
+import js7.proxy.javaapi.data.item.JUpdateItemOperation;
 import js7.proxy.javaapi.eventbus.JStandardEventBus;
+import reactor.core.publisher.Flux;
 
 public class ProxyContext {
 
@@ -163,9 +166,9 @@ public class ProxyContext {
             try {
                 List<JAgentRef> agents = Proxies.getAgents(credentials.getControllerId(), null);
                 if (!agents.isEmpty()) {
-                    if (p.currentState().nameToAgentRef(agents.get(0).name()).isLeft()) { // Agents doesn't exists
+                    if (p.currentState().idToAgentRef(agents.get(0).id()).isLeft()) { // Agents doesn't exists
                         LOGGER.info(toString() + ": Redeploy Agents");
-                        p.api().updateAgentRefs(agents).thenAccept(e -> {
+                        p.api().updateItems(Flux.fromStream(agents.stream().map(JUpdateItemOperation::addOrReplace))).thenAccept(e -> {
                             if (e.isLeft()) {
                                 LOGGER.error(ProblemHelper.getErrorMessage(e.getLeft()));
                             }

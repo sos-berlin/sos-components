@@ -61,9 +61,11 @@ import com.sos.joc.model.security.SecurityConfigurationMaster;
 import com.sos.schema.JsonValidator;
 
 import js7.base.web.Uri;
-import js7.data.agent.AgentName;
+import js7.data.agent.AgentId;
 import js7.data.agent.AgentRef;
 import js7.proxy.javaapi.data.agent.JAgentRef;
+import js7.proxy.javaapi.data.item.JUpdateItemOperation;
+import reactor.core.publisher.Flux;
 
 @Path("controller")
 public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJobSchedulerEditResource {
@@ -295,7 +297,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     agentDBLayer.saveAgent(dbAgent);
                 }
                 if (updateAgentRequired) {
-                    agentRefs.add(JAgentRef.apply(AgentRef.apply(AgentName.of(clusterWatcher.getAgentId()), Uri.of(clusterWatcher.getUrl()))));
+                    agentRefs.add(JAgentRef.apply(AgentRef.apply(AgentId.of(clusterWatcher.getAgentId()), Uri.of(clusterWatcher.getUrl()))));
                 }
             }
             
@@ -316,8 +318,8 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             
             if (!agentRefs.isEmpty()) {
                 final String cId = controllerId;
-                ControllerApi.of(controllerId).updateAgentRefs(agentRefs).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(),
-                        getJocError(), cId));
+                ControllerApi.of(controllerId).updateItems(Flux.fromStream(agentRefs.stream().map(JUpdateItemOperation::addOrReplace))).thenAccept(
+                        e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), cId));
             }
             
             storeAuditLogEntry(jobSchedulerAudit);

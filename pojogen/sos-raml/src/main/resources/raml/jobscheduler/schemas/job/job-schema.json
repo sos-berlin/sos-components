@@ -7,12 +7,12 @@
     "com.sos.joc.model.common.IConfigurationObject"
   ],
   "required": [
-    "agentName",
+    "agentId",
     "executable",
     "taskLimit"
   ],
   "properties": {
-    "agentName": {
+    "agentId": {
 	  "$ref": "../../../joc/schemas/common/string255-schema.json"
 	},
 	"executable": {

@@ -32,9 +32,11 @@ import com.sos.joc.model.agent.StoreAgents;
 import com.sos.schema.JsonValidator;
 
 import js7.base.web.Uri;
-import js7.data.agent.AgentName;
+import js7.data.agent.AgentId;
 import js7.data.agent.AgentRef;
 import js7.proxy.javaapi.data.agent.JAgentRef;
+import js7.proxy.javaapi.data.item.JUpdateItemOperation;
+import reactor.core.publisher.Flux;
 
 @Path("agents")
 public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsResourceStore {
@@ -111,7 +113,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                         agentDBLayer.updateAgent(dbAgent);
                     }
                     if (controllerUpdateRequired) {
-                        agentRefs.add(JAgentRef.apply(AgentRef.apply(AgentName.of(dbAgent.getAgentId()), Uri.of(dbAgent.getUri()))));
+                        agentRefs.add(JAgentRef.apply(AgentRef.apply(AgentId.of(dbAgent.getAgentId()), Uri.of(dbAgent.getUri()))));
                     }
 
                     updateAliases(connection, agent, allAliases.get(agent.getAgentId()));
@@ -138,7 +140,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                 agentDBLayer.saveAgent(dbAgent);
 
                 if (controllerUpdateRequired) {
-                    agentRefs.add(JAgentRef.apply(AgentRef.apply(AgentName.of(dbAgent.getAgentId()), Uri.of(dbAgent.getUri()))));
+                    agentRefs.add(JAgentRef.apply(AgentRef.apply(AgentId.of(dbAgent.getAgentId()), Uri.of(dbAgent.getUri()))));
                 }
 
                 updateAliases(connection, agent, allAliases.get(agent.getAgentId()));
@@ -146,8 +148,8 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
 
             // List<JAgentRef> agentRefs = Proxies.getAgents(controllerId, agentDBLayer);
             if (!agentRefs.isEmpty()) {
-                ControllerApi.of(controllerId).updateAgentRefs(agentRefs).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(),
-                        getJocError(), controllerId));
+                ControllerApi.of(controllerId).updateItems(Flux.fromStream(agentRefs.stream().map(JUpdateItemOperation::addOrReplace))).thenAccept(
+                        e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId));
             }
 
             // ask for cluster

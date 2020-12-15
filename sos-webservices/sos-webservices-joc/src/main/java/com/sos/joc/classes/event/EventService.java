@@ -34,13 +34,13 @@ import com.sos.joc.model.event.EventType;
 
 import js7.controller.data.events.AgentRefStateEvent;
 import js7.controller.data.events.ControllerEvent;
-import js7.data.agent.AgentName;
-import js7.data.agent.AgentRefEvent;
+import js7.data.agent.AgentId;
 import js7.data.cluster.ClusterEvent;
 import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
-import js7.data.item.RepoEvent.ItemEvent;
+import js7.data.item.SimpleItemEvent;
+import js7.data.item.VersionedEvent.VersionedItemEvent;
 import js7.data.order.OrderEvent;
 import js7.data.order.OrderEvent.OrderAdded;
 import js7.data.order.OrderEvent.OrderBroken;
@@ -65,9 +65,9 @@ public class EventService {
     // OrderAdded, OrderProcessed, OrderProcessingStarted$ extends OrderCoreEvent
     // OrderStarted, OrderProcessingKilled$, OrderFailed, OrderFailedInFork, OrderRetrying, OrderBroken extends OrderActorEvent
     // OrderFinished, OrderCancelled, OrderRemoved$ extends OrderTerminated
-    private static List<Class<? extends Event>> eventsOfController = Arrays.asList(ControllerEvent.class, ClusterEvent.class, AgentRefEvent.class,
+    private static List<Class<? extends Event>> eventsOfController = Arrays.asList(ControllerEvent.class, ClusterEvent.class,
             AgentRefStateEvent.class, OrderStarted$.class, OrderProcessingKilled$.class, OrderFailed.class, OrderFailedInFork.class, OrderRetrying.class, OrderBroken.class,
-            OrderTerminated.class, OrderCoreEvent.class, OrderAdded.class, OrderProcessed.class, OrderProcessingStarted$.class, ItemEvent.class);
+            OrderTerminated.class, OrderCoreEvent.class, OrderAdded.class, OrderProcessed.class, OrderProcessingStarted$.class, VersionedItemEvent.class, SimpleItemEvent.class);
     private String controllerId;
     private volatile CopyOnWriteArraySet<EventSnapshot> events = new CopyOnWriteArraySet<>();
     private AtomicBoolean isCurrentController = new AtomicBoolean(false);
@@ -179,8 +179,8 @@ public class EventService {
                 eventSnapshot.setEventType("ControllerStateChanged");
                 eventSnapshot.setObjectType(EventType.CONTROLLER);
                 
-            } else if (evt instanceof ItemEvent) {
-                final String p = ((ItemEvent) evt).path().string();
+            } else if (evt instanceof VersionedItemEvent) {
+                final String p = ((VersionedItemEvent) evt).path().string();
                 String[] pathParts = p.split(":", 2);
                 eventSnapshot.setEventType(evt.getClass().getSimpleName()); // ItemAdded and ItemUpdated etc.
                 eventSnapshot.setPath(pathParts[1]);
@@ -190,14 +190,25 @@ public class EventService {
                     //
                 }
                 
-            } else if (evt instanceof AgentRefEvent.AgentAdded || evt instanceof AgentRefEvent.AgentUpdated) {
-                eventSnapshot.setEventType(evt.getClass().getSimpleName());
-                eventSnapshot.setPath(((AgentName) key).string());
-                eventSnapshot.setObjectType(EventType.AGENT);
+            }  else if (evt instanceof SimpleItemEvent) {
+                final String p = ((SimpleItemEvent) evt).id().string(); //type
+                String[] pathParts = p.split(":", 2);
+                eventSnapshot.setEventType(evt.getClass().getSimpleName()); // SimpleItemAdded SimpleItemAddedAndChanged SimpleItemDeleted and SimpleItemChanged etc.
+                eventSnapshot.setPath(pathParts[1]);
+                try {
+                    eventSnapshot.setObjectType(EventType.fromValue(pathParts[0].toUpperCase()));
+                } catch (Exception e) {
+                    //
+                }
                 
+//            } else if (evt instanceof AgentRefEvent.AgentAdded || evt instanceof AgentRefEvent.AgentUpdated) {
+//                eventSnapshot.setEventType(evt.getClass().getSimpleName());
+//                eventSnapshot.setPath(((AgentId) key).string());
+//                eventSnapshot.setObjectType(EventType.AGENT);
+//                
             } else if (evt instanceof AgentRefStateEvent && !(evt instanceof AgentRefStateEvent.AgentEventsObserved)) {
                 eventSnapshot.setEventType("AgentStateChanged");
-                eventSnapshot.setPath(((AgentName) key).string());
+                eventSnapshot.setPath(((AgentId) key).string());
                 eventSnapshot.setObjectType(EventType.AGENT);
             }
 

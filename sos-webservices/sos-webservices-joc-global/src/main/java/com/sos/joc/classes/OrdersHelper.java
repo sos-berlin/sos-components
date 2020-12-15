@@ -20,7 +20,7 @@ import com.sos.joc.model.order.OrderV;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
-import js7.data.agent.AgentName;
+import js7.data.agent.AgentId;
 import js7.data.order.Order;
 import js7.proxy.javaapi.data.order.JOrder;
 
@@ -155,7 +155,7 @@ public class OrdersHelper {
         if (compact != Boolean.TRUE) {
             o.setHistoricOutcome(outcomes);
         }
-        Either<Problem, AgentName> opt = jOrder.attached();
+        Either<Problem, AgentId> opt = jOrder.attached();
         if (opt.isRight()) {
            o.setAgentId(opt.get().string()); 
         }

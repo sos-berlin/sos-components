@@ -36,7 +36,7 @@ import com.sos.schema.JsonValidator;
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.controller.data.agent.AgentRefState;
-import js7.data.agent.AgentName;
+import js7.data.agent.AgentId;
 import js7.data.order.Order;
 import js7.proxy.javaapi.data.agent.JAgentRefState;
 import js7.proxy.javaapi.data.controller.JControllerState;
@@ -110,7 +110,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                 }
 
                 agentsList.addAll(dbAgents.stream().map(dbAgent -> {
-                    Either<Problem, JAgentRefState> either = currentState.nameToAgentRefState(AgentName.of(dbAgent.getAgentId()));
+                    Either<Problem, JAgentRefState> either = currentState.idToAgentRefState(AgentId.of(dbAgent.getAgentId()));
                     AgentV agent = new AgentV();
                     AgentStateText stateText = AgentStateText.UNKNOWN;
                     if (either.isRight()) {

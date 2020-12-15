@@ -10,7 +10,9 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import javax.ws.rs.Path;
+
 import com.sos.jobscheduler.model.workflow.WorkflowId;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -27,7 +29,7 @@ import com.sos.joc.orders.resource.IOrdersResource;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
-import js7.data.item.ItemId;
+import js7.data.item.VersionedItemId;
 import js7.data.order.Order;
 import js7.data.workflow.WorkflowPath;
 import js7.proxy.javaapi.data.controller.JControllerState;
@@ -64,7 +66,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()) && orderIsPermitted(o, folders));
             } else if (workflowIds != null && !workflowIds.isEmpty()) {
                 ordersFilter.setRegex(null);
-                Set<ItemId<WorkflowPath>> workflowPaths = workflowIds.stream().map(w -> JWorkflowId.of(w.getPath(), w.getVersionId()).asScala())
+                Set<VersionedItemId<WorkflowPath>> workflowPaths = workflowIds.stream().map(w -> JWorkflowId.of(w.getPath(), w.getVersionId()).asScala())
                         .collect(Collectors.toSet());
                 orderStream = currentState.ordersBy(o -> workflowPaths.contains(o.workflowId()) && orderIsPermitted(o, folders));
             } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
