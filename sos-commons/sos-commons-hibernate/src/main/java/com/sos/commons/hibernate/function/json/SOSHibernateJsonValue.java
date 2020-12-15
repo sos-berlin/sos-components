@@ -78,7 +78,7 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
             return r.toString();
         } else if (Dbms.H2.equals(dbms)) {
             // TODO
-            return property;
+            return com.sos.commons.hibernate.function.json.h2.Function.NAME + "(" + property + "," + path + ")";
         }
         return NAME;
     }

@@ -2,6 +2,7 @@ package com.sos.commons.hibernate;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -10,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.exception.SOSHibernateSQLCommandExtractorException;
-
 import com.sos.commons.util.SOSString;
 
 public class SOSSQLCommandExtractor {
@@ -40,6 +40,10 @@ public class SOSSQLCommandExtractor {
         if (isTraceEnabled) {
             LOGGER.trace(String.format("[%s][content]%s", method, content));
         }
+        if (SOSHibernateFactory.Dbms.H2.equals(dbms) && content.startsWith("DROP ALIAS")) {// TODO
+            return extractH2Aliases(content);
+        }
+
         List<String> commands = new ArrayList<String>();
         Preparer preparer = new Preparer(dbms, majorVersion, minorVersion, content);
         preparer.prepare();
@@ -74,6 +78,56 @@ public class SOSSQLCommandExtractor {
 
         }
         return commands;
+    }
+
+    // DROP ALIAS IF EXISTS SOS_XXX;
+    // CREATE ALIAS SOS_XXX AS $$
+    // ...
+    private List<String> extractH2Aliases(String content) {
+        Scanner s = new Scanner(content);
+        List<String> commands = new ArrayList<String>();
+        StringBuilder sb = null;
+        String newLine = "\n";
+        try {
+            s.useDelimiter("(\r\n|\n)");
+            while (s.hasNext()) {
+                String line = s.next().trim();
+                if (line.startsWith("DROP ALIAS")) { // TODO
+                    handleH2Command(commands, sb);
+                    sb = null;
+
+                    commands.add(line.trim().substring(0, line.length() - 1));
+                } else if (line.startsWith("CREATE ALIAS")) { // TODO
+                    handleH2Command(commands, sb);
+
+                    sb = new StringBuilder(line).append(newLine);
+                } else if (line.startsWith("$$;")) {
+                    if (sb != null) {
+                        commands.add(sb.append("$$").toString());
+                        sb = null;
+                    }
+                } else {
+                    if (sb != null) {
+                        sb.append(line).append(newLine);
+                    }
+                }
+            }
+        } catch (Throwable e) {
+            throw e;
+        } finally {
+            if (s != null) {
+                s.close();
+            }
+        }
+        handleH2Command(commands, sb);
+        return commands;
+    }
+
+    private void handleH2Command(List<String> commands, StringBuilder sb) {
+        if (sb != null && sb.length() > 0) {
+            String command = sb.toString().trim();
+            commands.add(command.endsWith(";") ? command.substring(0, command.length() - 1) : command);
+        }
     }
 
     private boolean endsWithEnd(String statement) {
