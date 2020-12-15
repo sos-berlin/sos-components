@@ -219,6 +219,62 @@ traits:
 #        jsObjectParam: calendar
 #        jsObject: Calendar
 
+
+/authentication:
+  description: This is not an API call. Use child urls instead!
+  
+  /joc_cockpit_permissions:
+    type:
+      postOnlyId:
+        description: Returns list of user's permissions
+        description200: " "
+        example200: !include joc/examples/user/permissions-example.json
+        schema200: !include joc/schemas/user/permissions-schema.json
+  
+  /login:
+    type: login
+    
+  /logout:
+    type: logout 
+      
+  /shiro:
+    type: error
+    post:
+      description: <h2>Reads security configuration from shiro.ini</h2>
+      responses:
+        200:
+          body:
+            application/json:
+              schema: !include joc/schemas/security/security-configuration-schema.json
+        420:
+          body:
+            application/json:
+        440:
+          body:
+            application/json:
+      
+  /shiro/store:
+    type:
+      postJSONWithoutJSId:
+        description: Writes security configuration into shiro.ini
+        description1: !include joc/documentation/security/main.md
+        description2: !include joc/documentation/security/users.md
+        description3: !include joc/documentation/security/roles.md
+        description4: " "
+        description5: " "
+        description6: " "
+        description7: " "
+        description8: " "
+        description9: " "
+        description10: " "
+        description200: " "
+        schema200: !include joc/schemas/security/security-configuration-schema.json
+        example200: " "
+        schema: !include joc/schemas/security/security-configuration-schema.json
+        example: " "    
+    
+    
+
 /calendar/dates:
   type:
     postJSONWithoutJSId:
@@ -1936,61 +1992,8 @@ traits:
 
 
 
-/authentication:
-  description: This is not an API call. Use child urls instead!
-  
-  /joc_cockpit_permissions:
-    type:
-      postOnlyId:
-        description: Returns list of user's permissions
-        description200: " "
-        example200: !include joc/examples/user/permissions-example.json
-        schema200: !include joc/schemas/user/permissions-schema.json
-  
-  /login:
-    type: login
-    
-  /logout:
-    type: logout 
 
-/security_configuration:
-  description: This is not an API call. Use child urls instead!
-  
-  /read:
-    type: error
-    post:
-      description: <h2>Reads security configuration from shiro.ini</h2>
-      responses:
-        200:
-          body:
-            application/json:
-              schema: !include joc/schemas/security/security-configuration-schema.json
-        420:
-          body:
-            application/json:
-        440:
-          body:
-            application/json:
-      
-  /write:
-    type:
-      postJSONWithoutJSId:
-        description: Writes security configuration into shiro.ini
-        description1: !include joc/documentation/security/main.md
-        description2: !include joc/documentation/security/users.md
-        description3: !include joc/documentation/security/roles.md
-        description4: " "
-        description5: " "
-        description6: " "
-        description7: " "
-        description8: " "
-        description9: " "
-        description10: " "
-        description200: " "
-        schema200: !include joc/schemas/security/security-configuration-schema.json
-        example200: " "
-        schema: !include joc/schemas/security/security-configuration-schema.json
-        example: " "
+
 
 /task/log:
   type:
