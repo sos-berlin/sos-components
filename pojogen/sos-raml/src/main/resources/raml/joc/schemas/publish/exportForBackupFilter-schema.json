@@ -1,0 +1,24 @@
+{
+	"title": "ExportForBackupFilter",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"javaType": "com.sos.joc.model.publish.ExportForBackup",
+	"type": "object",
+  "anyOf": [{
+    "required": [
+        "deployables"
+      ]
+    }, {
+      "required": [
+        "releasables"
+      ]
+    }
+  ],
+ 	"properties": {
+    "deployables": {
+        "$ref": "exportDeployables-schema.json"
+    },
+    "releasables": {
+        "$ref": "exportReleasables-schema.json"
+    }
+	}
+}

@@ -16,6 +16,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.model.deploy.DeployType;
+import com.sos.jobscheduler.model.jobclass.JobClass;
+import com.sos.jobscheduler.model.junction.Junction;
+import com.sos.jobscheduler.model.lock.Lock;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -32,7 +35,10 @@ import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.model.publish.ExportFilter;
+import com.sos.joc.model.publish.ExportForBackup;
+import com.sos.joc.model.publish.ExportForSigning;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
@@ -49,13 +55,13 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
     private ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
     
     @Override
-    public JOCDefaultResponse getExportConfiguration(String xAccessToken, String accessToken, String filename, String exportFilter)
+    public JOCDefaultResponse getExportConfiguration(String xAccessToken, String accessToken, String exportFilter)
             throws Exception {
-        return postExportConfiguration(getAccessToken(xAccessToken, accessToken), filename, exportFilter.getBytes());
+        return postExportConfiguration(getAccessToken(xAccessToken, accessToken), exportFilter.getBytes());
     }
         
 	@Override
-	public JOCDefaultResponse postExportConfiguration(String xAccessToken, String filename, byte[] exportFilter) throws Exception {
+	public JOCDefaultResponse postExportConfiguration(String xAccessToken, byte[] exportFilter) throws Exception {
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, exportFilter, xAccessToken);
@@ -66,45 +72,47 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            String commitId = null;
-            String controllerId = null;
-            boolean forSigning = filter.getForSigning();
-            if (forSigning) {
-                commitId = UUID.randomUUID().toString();
-                controllerId = filter.getControllerId();
-            } 
-            // TODO: create time restricted token to export, too
-            // TODO: get JOC Version and Schema Version for later appliance of transformation rules (import)
             String account = Globals.getDefaultProfileUserAccount();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
-            Set<JSObject> deployables = getDeployableObjectsFromDB(filter, dbLayer, commitId);
+
+            ExportForSigning forSigning = filter.getForSigning();
+            ExportForBackup forBackup = filter.getForBackup();
+            
+            Set<JSObject> deployables = null;
             Set<ConfigurationObject> releasables = null;
             final Set<UpdateableWorkflowJobAgentName> updateableAgentNames = new HashSet<UpdateableWorkflowJobAgentName>();
-            if (deployables != null && forSigning) {
-                final String usedControllerId = controllerId;
+            String commitId = null;
+            String controllerId = null;
+            if (forSigning != null) {
+                commitId = UUID.randomUUID().toString();
+                controllerId = forSigning.getControllerId();
+                deployables = getDeployableObjectsFromDB(forSigning, dbLayer, commitId);
+                final String controllerIdUsed = controllerId;
                 deployables.stream()
-                        .forEach(deployable -> {
-                            if (DeployType.WORKFLOW.equals(deployable.getObjectType())) {
-                                Workflow workflow = (Workflow)deployable.getContent();
-                                try {
-                                    updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(om.writeValueAsString(workflow), 
-                                            ConfigurationType.WORKFLOW, usedControllerId, dbLayer));
-                                } catch (JsonProcessingException e) {}   
-                            }
-                        });
+                .forEach(deployable -> {
+                    if (DeployType.WORKFLOW.equals(deployable.getObjectType())) {
+                        Workflow workflow = (Workflow)deployable.getContent();
+                        try {
+                            updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(om.writeValueAsString(workflow), 
+                                    ConfigurationType.WORKFLOW, controllerIdUsed, dbLayer));
+                        } catch (JsonProcessingException e) {}   
+                    }
+                });
+            } else {
+                deployables = getDeployableObjectsFromDB(forBackup, dbLayer);
+                releasables = getReleasableObjectsFromDB(forBackup, dbLayer);
             }
-            if (!forSigning) {
-                releasables = getReleasableObjectsFromDB(filter, dbLayer);
-            }
+            // TODO: create time restricted token to export, too
+            // TODO: get JOC Version and Schema Version for later appliance of transformation rules (import)
             StreamingOutput stream = null;
-            if (filename == null || filename.isEmpty()) {
-                throw new JocMissingRequiredParameterException("The header parameter filename is required!");
-            }
-            if (filename.endsWith("tar.gz") || filename.endsWith("gzip")) {
+            String filename = null;
+            if (filter.getExportFile().getFormat().equals(ArchiveFormat.TAR_GZ)) {
                 stream = PublishUtils.writeTarGzipFile(deployables, releasables, updateableAgentNames, commitId, controllerId, dbLayer);
+                filename = filter.getExportFile().getName() + ".tar.gz";
             } else {
                 stream = PublishUtils.writeZipFile(deployables, releasables, updateableAgentNames, commitId, controllerId, dbLayer);
+                filename = filter.getExportFile().getName() + ".zip";
             }
             ExportAudit audit = null;
             if (controllerId != null) {
@@ -127,7 +135,7 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
         }
 	}
 
-    private Set<JSObject> getDeployableObjectsFromDB(ExportFilter filter, DBLayerDeploy dbLayer, String commitId) 
+    private Set<JSObject> getDeployableObjectsFromDB(ExportForSigning filter, DBLayerDeploy dbLayer, String commitId) 
             throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
             IOException, SOSHibernateException {
         Set<JSObject> allObjects = new HashSet<JSObject>();
@@ -154,7 +162,28 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
         return allObjects;
     }
     
-    private Set<ConfigurationObject> getReleasableObjectsFromDB(ExportFilter filter, DBLayerDeploy dbLayer) 
+    private Set<JSObject> getDeployableObjectsFromDB(ExportForBackup filter, DBLayerDeploy dbLayer) 
+            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
+            IOException, SOSHibernateException {
+        Set<JSObject> allObjects = new HashSet<JSObject>();
+        if (filter.getDeployables() != null) {
+            if (filter.getDeployables().getDeployConfigurations() != null && !filter.getDeployables().getDeployConfigurations().isEmpty()) {
+                List<DBItemDeploymentHistory> deploymentDbItems = dbLayer.getFilteredDeployments(filter);
+                for (DBItemDeploymentHistory deployment : deploymentDbItems) {
+                    allObjects.add(getJSObjectFromDBItem(deployment));
+                }
+            }
+            if (filter.getDeployables().getDraftConfigurations() != null && !filter.getDeployables().getDraftConfigurations().isEmpty()) {
+                List<DBItemInventoryConfiguration> configurationDbItems = dbLayer.getFilteredDeployableConfigurations(filter);
+                for (DBItemInventoryConfiguration configuration : configurationDbItems) {
+                    allObjects.add(mapInvConfigToJSObject(configuration));
+                }
+            } 
+        }
+        return allObjects;
+    }
+    
+    private Set<ConfigurationObject> getReleasableObjectsFromDB(ExportForBackup filter, DBLayerDeploy dbLayer) 
             throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
             IOException, SOSHibernateException {
         Set<ConfigurationObject> allObjects = new HashSet<ConfigurationObject>();
@@ -175,6 +204,11 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
         return allObjects;
     }
     
+    private JSObject mapInvConfigToJSObject (DBItemInventoryConfiguration item) throws JsonParseException, 
+    JsonMappingException, IOException {
+        return mapInvConfigToJSObject(item, null);
+    }
+    
     private JSObject mapInvConfigToJSObject (DBItemInventoryConfiguration item, String commitId) throws JsonParseException, 
             JsonMappingException, IOException {
         JSObject jsObject = new JSObject();
@@ -182,27 +216,45 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
         jsObject.setPath(item.getPath());
         jsObject.setObjectType(PublishUtils.mapConfigurationType(ConfigurationType.fromValue(item.getType())));
         switch (jsObject.getObjectType()) {
-            case WORKFLOW:
-                Workflow workflow = om.readValue(item.getContent().getBytes(), Workflow.class);
-                if (commitId != null) {
-                    workflow.setVersionId(commitId);
-                }
-                jsObject.setContent(workflow);
-                break;
-            case LOCK:
-                // TODO: 
-                break;
-            case JUNCTION:
-                // TODO: 
-                break;
-            default:
-                break;
+        case WORKFLOW:
+            Workflow workflow = om.readValue(item.getContent().getBytes(), Workflow.class);
+            if (commitId != null) {
+                workflow.setVersionId(commitId);
+            }
+            jsObject.setContent(workflow);
+            break;
+        case LOCK:
+            Lock lock = om.readValue(item.getContent().getBytes(), Lock.class);
+            if (commitId != null) {
+                lock.setVersionId(commitId);
+            }
+            jsObject.setContent(lock);
+            break;
+        case JUNCTION:
+            Junction junction = om.readValue(item.getContent().getBytes(), Junction.class);
+            if (commitId != null) {
+                junction.setVersionId(commitId);
+            }
+            jsObject.setContent(junction);
+            break;
+        case JOBCLASS:
+            JobClass jobClass = om.readValue(item.getContent().getBytes(), JobClass.class);
+            if (commitId != null) {
+                jobClass.setVersionId(commitId);
+            }
+            jsObject.setContent(jobClass);
+            break;
         }
         jsObject.setAccount(Globals.defaultProfileAccount);
         // TODO: setVersion
 //        jsObject.setVersion(item.getVersion());
         jsObject.setModified(item.getModified());
         return jsObject;
+    }
+
+    private JSObject getJSObjectFromDBItem (DBItemDeploymentHistory item)
+            throws JsonParseException, JsonMappingException, IOException {
+        return getJSObjectFromDBItem(item, null);
     }
 
     private JSObject getJSObjectFromDBItem (DBItemDeploymentHistory item, String commitId)
@@ -212,24 +264,36 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
         jsObject.setPath(item.getPath());
         jsObject.setObjectType(DeployType.fromValue(item.getType()));
         switch (jsObject.getObjectType()) {
-            case WORKFLOW:
-                Workflow workflow = om.readValue(item.getContent().getBytes(), Workflow.class);
-                if (commitId != null) {
-                    workflow.setVersionId(commitId);
-                }
-                jsObject.setContent(workflow);
-                break;
-            case JOBCLASS:
-                // TODO: 
-                break;
-            case LOCK:
-                // TODO: 
-                break;
-            case JUNCTION:
-                // TODO: 
-                break;
+        case WORKFLOW:
+            Workflow workflow = om.readValue(item.getInvContent().getBytes(), Workflow.class);
+            if (commitId != null) {
+                workflow.setVersionId(commitId);
+            }
+            jsObject.setContent(workflow);
+            break;
+        case JOBCLASS:
+            JobClass jobClass = om.readValue(item.getInvContent().getBytes(), JobClass.class);
+            if (commitId != null) {
+                jobClass.setVersionId(commitId);
+            }
+            jsObject.setContent(jobClass);
+            break;
+        case LOCK:
+            Lock lock = om.readValue(item.getInvContent().getBytes(), Lock.class);
+            if (commitId != null) {
+                lock.setVersionId(commitId);
+            }
+            jsObject.setContent(lock);
+            break;
+        case JUNCTION:
+            Junction junction = om.readValue(item.getInvContent().getBytes(), Junction.class);
+            if (commitId != null) {
+                junction.setVersionId(commitId);
+            }
+            jsObject.setContent(junction);
+            break;
         }
-//        jsObject.setVersion(item.getVersion());
+        jsObject.setVersion(item.getVersion());
         jsObject.setAccount(Globals.defaultProfileAccount);
         return jsObject;
     }

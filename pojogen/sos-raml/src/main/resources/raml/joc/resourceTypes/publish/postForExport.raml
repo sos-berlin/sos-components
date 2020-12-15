@@ -6,18 +6,12 @@ get?:
     <h2><<description>></h2>
     ___
   queryParameters:
-    filename:
-      type: string
-      description: |
-        Name of the file to download.
-      example: joc-configuration-bundle.zip
-      required: true
     exportFilter:
       type: string
       description: |
         URL encoded json string of the export filter. Line breaks and spaces are stripped from the json string. See also POST example.
       example: |
-        {"forSigning":false, "deployables":{"draftConfigurations":[{"draftConfiguration":{"path":"/myWorkflows/ifElseWorkflow/workflow_10", "objectType":"WORKFLOW"}}, {"draftConfiguration":{"path":"/myWorkflows/ifElseWorkflow/workflow_16", "objectType":"WORKFLOW"}}], "deployConfigurations":[{"deployConfiguration":{"path":"/myWorkflows/ifElseWorkflow/workflow_12", "objectType":"WORKFLOW", "commitId":"4273b6c6-c354-4fcd-afdb-2758088abe4a"}}]}, "releasables":{"draftConfigurations":[{"draftConfiguration":{"path":"mySchedules/newSchedules/mySchedule", "objectType":"SCHEDULE"}}], "releasedConfigurations":[{"releasedConfiguration":{"path":"/myCalendars/newCalendars/myCalendar", "objectType":"WORKINGDAYSCALENDAR"}}]}}
+        {"forBackup":{"deployables":{"draftConfigurations":[{"draftConfiguration":{"path":"/myWorkflows/ifElseWorkflow/workflow_10", "objectType":"WORKFLOW"}}, {"draftConfiguration":{"path":"/myWorkflows/ifElseWorkflow/workflow_16", "objectType":"WORKFLOW"}}], "deployConfigurations":[{"deployConfiguration":{"path":"/myWorkflows/ifElseWorkflow/workflow_12", "objectType":"WORKFLOW", "commitId":"4273b6c6-c354-4fcd-afdb-2758088abe4a"}}]}, "releasables":{"draftConfigurations":[{"draftConfiguration":{"path":"mySchedules/newSchedules/mySchedule", "objectType":"SCHEDULE"}}], "releasedConfigurations":[{"releasedConfiguration":{"path":"/myCalendars/newCalendars/myCalendar", "objectType":"WORKINGDAYSCALENDAR"}}]}}, "exportFile":{"name":"test_export", "format":"ZIP"}}
       required: true
     comment:
       type: string
@@ -69,11 +63,6 @@ post:
       type: string
       required: true
       example: 550e8400-e29b-11d4-a716-446655440000
-    Filename:
-      description: Desired Filename for the exported file!
-      type: string
-      required: true
-      example: my_export.zip
   body:
     application/json:
       schema: <<schema>>

@@ -15,13 +15,11 @@ public interface IExportResource {
     @Path("export")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public JOCDefaultResponse postExportConfiguration(@HeaderParam("X-Access-Token") String xAccessToken, @HeaderParam("filename") 
-            String filename, byte[] filter) throws Exception;
+    public JOCDefaultResponse postExportConfiguration(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filter) throws Exception;
 
     @Path("export")
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     public JOCDefaultResponse getExportConfiguration(@HeaderParam("X-Access-Token") String xAccessToken,
-            @QueryParam("accessToken") String accessToken, @QueryParam("filename") String filename, 
-            @QueryParam("exportFilter") String exportFilter) throws Exception;
+            @QueryParam("accessToken") String accessToken, @QueryParam("exportFilter") String exportFilter) throws Exception;
 }

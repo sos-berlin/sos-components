@@ -3,31 +3,27 @@
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.joc.model.publish.ExportFilter",
 	"type": "object",
-  "anyOf": [{
+  "oneOf": [{
     "required": [
         "forSigning",
-        "deployables"
+        "exportFile"
       ]
     }, {
       "required": [
-        "forSigning",
-        "releasables"
+        "forBackup",
+        "exportFile"
       ]
     }
   ],
  	"properties": {
     "forSigning": {
-      "description": "decides if the export is meant for signing the exported objects [default=false]",
-      "type" : "boolean"
+      "$ref": "exportForSigningFilter-schema.json"
     },
-    "controllerId": {
-      "$ref": "../common/string255-schema.json"
+    "forBackup": {
+      "$ref": "exportForBackupFilter-schema.json"
     },
-    "deployables": {
-        "$ref": "exportDeployables-schema.json"
-    },
-    "releasables": {
-        "$ref": "exportReleasables-schema.json"
+    "exportFile": {
+      "$ref": "exportFile-schema.json"
     },
     "auditLog": {
       "$ref": "../audit/auditParams-schema.json"

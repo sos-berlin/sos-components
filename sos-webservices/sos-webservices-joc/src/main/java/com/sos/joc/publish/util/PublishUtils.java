@@ -1256,14 +1256,12 @@ public abstract class PublishUtils {
                     zipOut = new ZipOutputStream(new BufferedOutputStream(output), StandardCharsets.UTF_8);
                     String content = null;
                     if (deployables != null && !deployables.isEmpty()) {
-                        for (JSObject jsObject : deployables) {
+                        for (JSObject deployable : deployables) {
                             String extension = null;
-                            String signatureExtension = null;
-                            switch (jsObject.getObjectType()) {
+                            switch (deployable.getObjectType()) {
                             case WORKFLOW:
                                 extension = JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
-                                signatureExtension = JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.toString();
-                                Workflow workflow = (Workflow) jsObject.getContent();
+                                Workflow workflow = (Workflow) deployable.getContent();
                                 // determine agent names to be replaced
                                 workflow.setVersionId(commitId);
                                 if (controllerId != null && updateableAgentNames != null) {
@@ -1273,32 +1271,28 @@ public abstract class PublishUtils {
                                 break;
                             case LOCK:
                                 extension = JSObjectFileExtension.LOCK_FILE_EXTENSION.toString();
-                                signatureExtension = JSObjectFileExtension.LOCK_SIGNATURE_FILE_EXTENSION.toString();
-                                // TODO:
-                                content = om.writeValueAsString((Lock) jsObject.getContent());
+                                Lock lock = (Lock) deployable.getContent();
+                                lock.setVersionId(commitId);
+                                content = om.writeValueAsString(lock);
                                 break;
                             case JUNCTION:
                                 extension = JSObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
-                                signatureExtension = JSObjectFileExtension.JUNCTION_SIGNATURE_FILE_EXTENSION.toString();
-                                // TODO:
-                                content = om.writeValueAsString((Junction) jsObject.getContent());
+                                Junction junction = (Junction) deployable.getContent();
+                                junction.setVersionId(commitId);
+                                content = om.writeValueAsString(junction);
                                 break;
-                            default:
-                                extension = JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
-                                signatureExtension = JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.toString();
+                            case JOBCLASS:
+                                extension = JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
+                                JobClass jobClass = (JobClass) deployable.getContent();
+                                jobClass.setVersionId(commitId);
+                                content = om.writeValueAsString(jobClass);
+                                break;
                             }
-                            String zipEntryName = jsObject.getPath().substring(1).concat(extension);
+                            String zipEntryName = deployable.getPath().substring(1).concat(extension);
                             ZipEntry entry = new ZipEntry(zipEntryName);
                             zipOut.putNextEntry(entry);
                             zipOut.write(content.getBytes());
                             zipOut.closeEntry();
-                            if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {
-                                String signatureZipEntryName = jsObject.getPath().substring(1).concat(signatureExtension);
-                                ZipEntry signatureEntry = new ZipEntry(signatureZipEntryName);
-                                zipOut.putNextEntry(signatureEntry);
-                                zipOut.write(jsObject.getSignedContent().getBytes());
-                                zipOut.closeEntry();
-                            }
                         } 
                     }
                     if (releasables != null && !releasables.isEmpty()) {
@@ -1355,11 +1349,9 @@ public abstract class PublishUtils {
                     if (deployables != null && !deployables.isEmpty()) {
                         for (JSObject deployable : deployables) {
                             String extension = null;
-                            String signatureExtension = null;
                             switch (deployable.getObjectType()) {
                             case WORKFLOW:
                                 extension = JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
-                                signatureExtension = JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.toString();
                                 Workflow workflow = (Workflow) deployable.getContent();
                                 workflow.setVersionId(commitId);
                                 if (controllerId != null && updateableAgentNames != null) {
@@ -1369,19 +1361,22 @@ public abstract class PublishUtils {
                                 break;
                             case LOCK:
                                 extension = JSObjectFileExtension.LOCK_FILE_EXTENSION.toString();
-                                signatureExtension = JSObjectFileExtension.LOCK_SIGNATURE_FILE_EXTENSION.toString();
-                                // TODO:
-                                //                            content = om.writeValueAsString((Lock)jsObject.getContent());
+                                Lock lock = (Lock) deployable.getContent();
+                                lock.setVersionId(commitId);
+                                content = om.writeValueAsString(lock);
                                 break;
                             case JUNCTION:
                                 extension = JSObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
-                                signatureExtension = JSObjectFileExtension.JUNCTION_SIGNATURE_FILE_EXTENSION.toString();
-                                // TODO:
-                                //                            content = om.writeValueAsString((Junction)jsObject.getContent());
+                                Junction junction = (Junction) deployable.getContent();
+                                junction.setVersionId(commitId);
+                                content = om.writeValueAsString(junction);
                                 break;
-                            default:
-                                extension = JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
-                                signatureExtension = JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.toString();
+                            case JOBCLASS:
+                                extension = JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
+                                JobClass jobClass = (JobClass) deployable.getContent();
+                                jobClass.setVersionId(commitId);
+                                content = om.writeValueAsString(jobClass);
+                                break;
                             }
                             String zipEntryName = deployable.getPath().substring(1).concat(extension);
                             TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
@@ -1390,13 +1385,6 @@ public abstract class PublishUtils {
                             tarOut.putArchiveEntry(entry);
                             tarOut.write(contentBytes);
                             tarOut.closeArchiveEntry();
-                            if (deployable.getSignedContent() != null && !deployable.getSignedContent().isEmpty()) {
-                                String signatureZipEntryName = deployable.getPath().substring(1).concat(signatureExtension);
-                                TarArchiveEntry signatureEntry = new TarArchiveEntry(signatureZipEntryName);
-                                tarOut.putArchiveEntry(signatureEntry);
-                                tarOut.write(deployable.getSignedContent().getBytes());
-                                tarOut.closeArchiveEntry();
-                            }
                         } 
                     }
                     if (releasables != null && !releasables.isEmpty()) {

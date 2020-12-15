@@ -1,71 +1,81 @@
 {
   "examples": [{
       "example1": {
-        "forSigning": true,
-        "controllerId" : "testsuite",
-        "deployables": {
-          "draftConfigurations": [{
-              "draftConfiguration": {
-                "path": "/myWorkflows/ifElseWorkflow/workflow_10",
-                "objectType": "WORKFLOW"
+        "forSigning": {
+          "controllerId": "testsuite",
+          "deployables": {
+            "draftConfigurations": [{
+                "draftConfiguration": {
+                  "path": "/myWorkflows/ifElseWorkflow/workflow_10",
+                  "objectType": "WORKFLOW"
+                }
+              }, {
+                "draftConfiguration": {
+                  "path": "/myWorkflows/ifElseWorkflow/workflow_16",
+                  "objectType": "WORKFLOW"
+                }
               }
-            }, {
-              "draftConfiguration": {
-                "path": "/myWorkflows/ifElseWorkflow/workflow_16",
-                "objectType": "WORKFLOW"
+            ],
+            "deployConfigurations": [{
+                "deployConfiguration": {
+                  "path": "/myWorkflows/ifElseWorkflow/workflow_12",
+                  "objectType": "WORKFLOW",
+                  "commitId": "4273b6c6-c354-4fcd-afdb-2758088abe4a"
+                }
               }
-            }
-          ],
-          "deployConfigurations": [{
-              "deployConfiguration": {
-                "path": "/myWorkflows/ifElseWorkflow/workflow_12",
-                "objectType": "WORKFLOW",
-                "commitId": "4273b6c6-c354-4fcd-afdb-2758088abe4a"
-              }
-            }
-          ]
+            ]
+          }
+        },
+        "exportFile": {
+          "name": "test_export",
+          "format": "ZIP"
         }
       }
     }, {
       "example2": {
-        "forSigning": false,
-        "deployables": {
-          "draftConfigurations": [{
-              "draftConfiguration": {
-                "path": "/myWorkflows/ifElseWorkflow/workflow_10",
-                "objectType": "WORKFLOW"
+        "forBackup": {
+          "deployables": {
+            "draftConfigurations": [{
+                "draftConfiguration": {
+                  "path": "/myWorkflows/ifElseWorkflow/workflow_10",
+                  "objectType": "WORKFLOW"
+                }
+              }, {
+                "draftConfiguration": {
+                  "path": "/myWorkflows/ifElseWorkflow/workflow_16",
+                  "objectType": "WORKFLOW"
+                }
               }
-            }, {
-              "draftConfiguration": {
-                "path": "/myWorkflows/ifElseWorkflow/workflow_16",
-                "objectType": "WORKFLOW"
+            ],
+            "deployConfigurations": [{
+                "deployConfiguration": {
+                  "path": "/myWorkflows/ifElseWorkflow/workflow_12",
+                  "objectType": "WORKFLOW",
+                  "commitId": "4273b6c6-c354-4fcd-afdb-2758088abe4a"
+                }
               }
-            }
-          ],
-          "deployConfigurations": [{
-              "deployConfiguration": {
-                "path": "/myWorkflows/ifElseWorkflow/workflow_12",
-                "objectType": "WORKFLOW",
-                "commitId": "4273b6c6-c354-4fcd-afdb-2758088abe4a"
+            ]
+          },
+          "releasables": {
+            "draftConfigurations": [{
+                "draftConfiguration": {
+                  "path": "mySchedules/newSchedules/mySchedule",
+                  "objectType": "SCHEDULE"
+                }
               }
-            }
-          ]
+            ],
+            "releasedConfigurations": [{
+                "releasedConfiguration": {
+                  "path": "/myCalendars/newCalendars/myCalendar",
+                  "objectType": "WORKINGDAYSCALENDAR"
+                }
+              }
+            ]
+          }
         },
-        "releasables": {
-          "draftConfigurations": [{
-              "draftConfiguration": {
-                "path": "mySchedules/newSchedules/mySchedule",
-                "objectType": "SCHEDULE"
-              }
-            }
-          ],
-          "releasedConfigurations": [{
-              "releasedConfiguration": {
-                "path": "/myCalendars/newCalendars/myCalendar",
-                "objectType": "WORKINGDAYSCALENDAR"
-              }
-            }
-          ]
+        "exportFile": {
+          "name": "test_export",
+          "format": "ZIP"
         }
       }
     }

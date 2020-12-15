@@ -34,6 +34,8 @@ import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDepVersions;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.deployment.DBItemDeploymentSubmission;
+import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
+import com.sos.joc.db.inventory.DBItemInventoryAgentName;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
@@ -51,6 +53,8 @@ import com.sos.joc.model.publish.DeployConfiguration;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.ExcludeConfiguration;
 import com.sos.joc.model.publish.ExportFilter;
+import com.sos.joc.model.publish.ExportForBackup;
+import com.sos.joc.model.publish.ExportForSigning;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.RedeployFilter;
@@ -390,13 +394,36 @@ public class DBLayerDeploy {
 
     public List<DBItemInventoryConfiguration> getFilteredDeployableConfigurations(ExportFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        return getFilteredInventoryConfiguration(
-            filter.getDeployables().getDraftConfigurations().stream()
-            .map(item -> item.getDraftConfiguration())
-            .collect(Collectors.toList()));
+        if (filter.getForSigning() != null) {
+            return getFilteredInventoryConfiguration(
+                    filter.getForSigning().getDeployables().getDraftConfigurations().stream()
+                    .map(item -> item.getDraftConfiguration())
+                    .collect(Collectors.toList()));
+        } else {
+            return getFilteredInventoryConfiguration(
+                    filter.getForBackup().getDeployables().getDraftConfigurations().stream()
+                    .map(item -> item.getDraftConfiguration())
+                    .collect(Collectors.toList()));
+        }
     }
 
-    public List<DBItemInventoryConfiguration> getFilteredReleasableConfigurations(ExportFilter filter) throws DBConnectionRefusedException,
+    public List<DBItemInventoryConfiguration> getFilteredDeployableConfigurations(ExportForBackup filter) throws DBConnectionRefusedException,
+    DBInvalidDataException {
+        return getFilteredInventoryConfiguration(
+                filter.getDeployables().getDraftConfigurations().stream()
+                .map(item -> item.getDraftConfiguration())
+                .collect(Collectors.toList()));
+    }
+    
+    public List<DBItemInventoryConfiguration> getFilteredDeployableConfigurations(ExportForSigning filter) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        return getFilteredInventoryConfiguration(
+                filter.getDeployables().getDraftConfigurations().stream()
+                .map(item -> item.getDraftConfiguration())
+                .collect(Collectors.toList()));
+    }
+    
+    public List<DBItemInventoryConfiguration> getFilteredReleasableConfigurations(ExportForBackup filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
         return getFilteredInventoryConfiguration(
                 filter.getReleasables().getDraftConfigurations().stream()
@@ -404,7 +431,7 @@ public class DBLayerDeploy {
                 .collect(Collectors.toList()));
     }
 
-    public List<DBItemInventoryReleasedConfiguration> getFilteredReleasedConfigurations(ExportFilter filter) throws DBConnectionRefusedException,
+    public List<DBItemInventoryReleasedConfiguration> getFilteredReleasedConfigurations(ExportForBackup filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
         return getFilteredReleasedConfiguration(
                 filter.getReleasables().getReleasedConfigurations().stream()
@@ -412,12 +439,35 @@ public class DBLayerDeploy {
                 .collect(Collectors.toList()));
     }
 
-    public List<DBItemDeploymentHistory> getFilteredDeployments(ExportFilter filter) throws DBConnectionRefusedException,
-            DBInvalidDataException {
+    public List<DBItemDeploymentHistory> getFilteredDeployments(ExportForSigning filter) throws DBConnectionRefusedException,
+    DBInvalidDataException {
         return getFilteredDeploymentHistory(
                 filter.getDeployables().getDeployConfigurations().stream()
                 .map(item -> item.getDeployConfiguration())
                 .collect(Collectors.toList()));
+    }
+
+    public List<DBItemDeploymentHistory> getFilteredDeployments(ExportForBackup filter) throws DBConnectionRefusedException,
+    DBInvalidDataException {
+        return getFilteredDeploymentHistory(
+                filter.getDeployables().getDeployConfigurations().stream()
+                .map(item -> item.getDeployConfiguration())
+                .collect(Collectors.toList()));
+    }
+
+    public List<DBItemDeploymentHistory> getFilteredDeployments(ExportFilter filter) throws DBConnectionRefusedException,
+    DBInvalidDataException {
+        if (filter.getForSigning() != null) {
+            return getFilteredDeploymentHistory(
+                    filter.getForSigning().getDeployables().getDeployConfigurations().stream()
+                    .map(item -> item.getDeployConfiguration())
+                    .collect(Collectors.toList()));
+        } else {
+            return getFilteredDeploymentHistory(
+                    filter.getForSigning().getDeployables().getDeployConfigurations().stream()
+                    .map(item -> item.getDeployConfiguration())
+                    .collect(Collectors.toList()));
+        }
     }
 
     public List<DBItemDeploymentHistory> getFilteredDeployments(SetVersionFilter filter) throws DBConnectionRefusedException,
@@ -1186,17 +1236,17 @@ public class DBLayerDeploy {
         }
     }
 
-    public void storeCommitIdForLaterUsage(DBItemInventoryConfiguration config, String versionId) throws SOSHibernateException {
+    public void storeCommitIdForLaterUsage(DBItemInventoryConfiguration config, String commitId) throws SOSHibernateException {
         DBItemDepCommitIds dbCommitId = new DBItemDepCommitIds();
-        dbCommitId.setCommitId(versionId);
+        dbCommitId.setCommitId(commitId);
         dbCommitId.setConfigPath(config.getPath());
         dbCommitId.setInvConfigurationId(config.getId());
         session.save(dbCommitId);
     }
 
-    public void storeCommitIdForLaterUsage(DBItemDeploymentHistory depHistory, String versionId) throws SOSHibernateException {
+    public void storeCommitIdForLaterUsage(DBItemDeploymentHistory depHistory, String commitId) throws SOSHibernateException {
         DBItemDepCommitIds dbCommitId = new DBItemDepCommitIds();
-        dbCommitId.setCommitId(versionId);
+        dbCommitId.setCommitId(commitId);
         dbCommitId.setConfigPath(depHistory.getPath());
         dbCommitId.setInvConfigurationId(depHistory.getInventoryConfigurationId());
         dbCommitId.setDepHistoryId(depHistory.getId());
@@ -1504,4 +1554,5 @@ public class DBLayerDeploy {
             throw new JocSosHibernateException(e);
         } 
     }
+    
 }

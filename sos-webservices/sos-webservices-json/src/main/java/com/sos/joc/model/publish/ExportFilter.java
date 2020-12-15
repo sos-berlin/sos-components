@@ -3,7 +3,6 @@ package com.sos.joc.model.publish;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -20,44 +19,36 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "forSigning",
-    "controllerId",
-    "deployables",
-    "releasables",
+    "forBackup",
+    "exportFile",
     "auditLog"
 })
 public class ExportFilter {
 
     /**
-     * decides if the export is meant for signing the exported objects [default=false]
+     * ExportForSigningFilter
+     * <p>
+     * 
      * 
      */
     @JsonProperty("forSigning")
-    @JsonPropertyDescription("decides if the export is meant for signing the exported objects [default=false]")
-    private Boolean forSigning;
+    private ExportForSigning forSigning;
     /**
-     * string without < and >
+     * ExportForBackupFilter
      * <p>
      * 
      * 
      */
-    @JsonProperty("controllerId")
-    private String controllerId;
+    @JsonProperty("forBackup")
+    private ExportForBackup forBackup;
     /**
-     * Export Deployables
+     * ExportFile
      * <p>
      * 
      * 
      */
-    @JsonProperty("deployables")
-    private ExportDeployables deployables;
-    /**
-     * Export Releasables
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("releasables")
-    private ExportReleasables releasables;
+    @JsonProperty("exportFile")
+    private ExportFile exportFile;
     /**
      * auditParams
      * <p>
@@ -68,87 +59,69 @@ public class ExportFilter {
     private AuditParams auditLog;
 
     /**
-     * decides if the export is meant for signing the exported objects [default=false]
+     * ExportForSigningFilter
+     * <p>
+     * 
      * 
      */
     @JsonProperty("forSigning")
-    public Boolean getForSigning() {
+    public ExportForSigning getForSigning() {
         return forSigning;
     }
 
     /**
-     * decides if the export is meant for signing the exported objects [default=false]
+     * ExportForSigningFilter
+     * <p>
+     * 
      * 
      */
     @JsonProperty("forSigning")
-    public void setForSigning(Boolean forSigning) {
+    public void setForSigning(ExportForSigning forSigning) {
         this.forSigning = forSigning;
     }
 
     /**
-     * string without < and >
+     * ExportForBackupFilter
      * <p>
      * 
      * 
      */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
+    @JsonProperty("forBackup")
+    public ExportForBackup getForBackup() {
+        return forBackup;
     }
 
     /**
-     * string without < and >
+     * ExportForBackupFilter
      * <p>
      * 
      * 
      */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
+    @JsonProperty("forBackup")
+    public void setForBackup(ExportForBackup forBackup) {
+        this.forBackup = forBackup;
     }
 
     /**
-     * Export Deployables
+     * ExportFile
      * <p>
      * 
      * 
      */
-    @JsonProperty("deployables")
-    public ExportDeployables getDeployables() {
-        return deployables;
+    @JsonProperty("exportFile")
+    public ExportFile getExportFile() {
+        return exportFile;
     }
 
     /**
-     * Export Deployables
+     * ExportFile
      * <p>
      * 
      * 
      */
-    @JsonProperty("deployables")
-    public void setDeployables(ExportDeployables deployables) {
-        this.deployables = deployables;
-    }
-
-    /**
-     * Export Releasables
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("releasables")
-    public ExportReleasables getReleasables() {
-        return releasables;
-    }
-
-    /**
-     * Export Releasables
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("releasables")
-    public void setReleasables(ExportReleasables releasables) {
-        this.releasables = releasables;
+    @JsonProperty("exportFile")
+    public void setExportFile(ExportFile exportFile) {
+        this.exportFile = exportFile;
     }
 
     /**
@@ -175,12 +148,12 @@ public class ExportFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("forSigning", forSigning).append("controllerId", controllerId).append("deployables", deployables).append("releasables", releasables).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("forSigning", forSigning).append("forBackup", forBackup).append("exportFile", exportFile).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deployables).append(forSigning).append(controllerId).append(auditLog).append(releasables).toHashCode();
+        return new HashCodeBuilder().append(forBackup).append(exportFile).append(forSigning).append(auditLog).toHashCode();
     }
 
     @Override
@@ -192,7 +165,7 @@ public class ExportFilter {
             return false;
         }
         ExportFilter rhs = ((ExportFilter) other);
-        return new EqualsBuilder().append(deployables, rhs.deployables).append(forSigning, rhs.forSigning).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(releasables, rhs.releasables).isEquals();
+        return new EqualsBuilder().append(forBackup, rhs.forBackup).append(exportFile, rhs.exportFile).append(forSigning, rhs.forSigning).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

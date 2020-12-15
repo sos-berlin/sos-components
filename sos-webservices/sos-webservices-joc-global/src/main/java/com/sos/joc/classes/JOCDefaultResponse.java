@@ -1,5 +1,7 @@
 package com.sos.joc.classes;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -95,9 +97,20 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
     }
     
     public static JOCDefaultResponse responseOctetStreamDownloadStatus200(Object entity, String filename) {
-        Response.ResponseBuilder responseBuilder = Response.status(200).header("Content-Type", MediaType.APPLICATION_OCTET_STREAM).header(
-                "Content-Disposition", "attachment; filename=" + filename).cacheControl(setNoCaching());
-        responseBuilder.entity(entity);
+        return responseOctetStreamDownloadStatus200(entity, filename, null);
+    }
+
+    public static JOCDefaultResponse responseOctetStreamDownloadStatus200(Object entity, String filename, Long uncompressedLength) {
+        try {
+            filename = URLEncoder.encode(filename, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+        }
+        Response.ResponseBuilder responseBuilder = Response.ok(entity, MediaType.APPLICATION_OCTET_STREAM).header("Content-Disposition",
+                "attachment; filename*=UTF-8''" + filename).cacheControl(setNoCaching());
+
+        if (uncompressedLength != null) {
+            responseBuilder.header("X-Uncompressed-Length", uncompressedLength);
+        }
         return new JOCDefaultResponse(responseBuilder.build());
     }
 
@@ -126,15 +139,6 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         Response.ResponseBuilder responseBuilder = Response.ok(entity, MediaType.TEXT_PLAIN + "; charset=UTF-8").header(
                 "Content-Disposition", "attachment; filename=" + filename).cacheControl(setNoCaching());
         responseBuilder.entity(entity);
-        return new JOCDefaultResponse(responseBuilder.build());
-    }
-    
-    public static JOCDefaultResponse responseOctetStreamDownloadStatus200(Object entity, String filename, Long uncompressedLength) {
-        Response.ResponseBuilder responseBuilder = Response.ok(entity, MediaType.APPLICATION_OCTET_STREAM).header(
-                "Content-Disposition", "attachment; filename=" + filename).cacheControl(setNoCaching());
-        if (uncompressedLength != null) {
-            responseBuilder.header("X-Uncompressed-Length", uncompressedLength);
-        }
         return new JOCDefaultResponse(responseBuilder.build());
     }
     
