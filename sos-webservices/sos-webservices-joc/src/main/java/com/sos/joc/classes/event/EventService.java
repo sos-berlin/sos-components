@@ -39,8 +39,11 @@ import js7.data.cluster.ClusterEvent;
 import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
+import js7.data.item.ItemPath;
 import js7.data.item.SimpleItemEvent;
+import js7.data.item.SimpleItemId;
 import js7.data.item.VersionedEvent.VersionedItemEvent;
+import js7.data.lock.LockId;
 import js7.data.order.OrderEvent;
 import js7.data.order.OrderEvent.OrderAdded;
 import js7.data.order.OrderEvent.OrderBroken;
@@ -54,6 +57,7 @@ import js7.data.order.OrderEvent.OrderRetrying;
 import js7.data.order.OrderEvent.OrderStarted$;
 import js7.data.order.OrderEvent.OrderTerminated;
 import js7.data.order.OrderId;
+import js7.data.workflow.WorkflowPath;
 import js7.proxy.javaapi.data.controller.JControllerState;
 import js7.proxy.javaapi.data.order.JOrder;
 import js7.proxy.javaapi.data.workflow.JWorkflowId;
@@ -180,32 +184,25 @@ public class EventService {
                 eventSnapshot.setObjectType(EventType.CONTROLLER);
                 
             } else if (evt instanceof VersionedItemEvent) {
-                final String p = ((VersionedItemEvent) evt).path().string();
-                String[] pathParts = p.split(":", 2);
-                eventSnapshot.setEventType(evt.getClass().getSimpleName()); // ItemAdded and ItemUpdated etc.
-                eventSnapshot.setPath(pathParts[1]);
-                try {
-                    eventSnapshot.setObjectType(EventType.fromValue(pathParts[0].toUpperCase()));
-                } catch (Exception e) {
-                    //
+                eventSnapshot.setEventType(evt.getClass().getSimpleName().replaceFirst("Versioned", "")); // VersionedItemAdded and VersionedItemChanged etc.
+                ItemPath path = ((VersionedItemEvent) evt).path();
+                eventSnapshot.setPath(path.string());
+                if (path instanceof WorkflowPath) {
+                    eventSnapshot.setObjectType(EventType.WORKFLOW);
+                } else {
+                    // TODO other versioned objects
                 }
                 
             }  else if (evt instanceof SimpleItemEvent) {
-                final String p = ((SimpleItemEvent) evt).id().string(); //type
-                String[] pathParts = p.split(":", 2);
-                eventSnapshot.setEventType(evt.getClass().getSimpleName()); // SimpleItemAdded SimpleItemAddedAndChanged SimpleItemDeleted and SimpleItemChanged etc.
-                eventSnapshot.setPath(pathParts[1]);
-                try {
-                    eventSnapshot.setObjectType(EventType.fromValue(pathParts[0].toUpperCase()));
-                } catch (Exception e) {
-                    //
+                eventSnapshot.setEventType(evt.getClass().getSimpleName().replaceFirst("Simple", "")); // SimpleItemAdded SimpleItemAddedAndChanged SimpleItemDeleted and SimpleItemChanged etc.
+                SimpleItemId itemId = ((SimpleItemEvent) evt).id();
+                eventSnapshot.setPath(itemId.string());
+                if (itemId instanceof AgentId) {
+                    eventSnapshot.setObjectType(EventType.AGENT);
+                } else if (itemId instanceof LockId) {
+                    //eventSnapshot.setObjectType(EventType.LOCK);
                 }
                 
-//            } else if (evt instanceof AgentRefEvent.AgentAdded || evt instanceof AgentRefEvent.AgentUpdated) {
-//                eventSnapshot.setEventType(evt.getClass().getSimpleName());
-//                eventSnapshot.setPath(((AgentId) key).string());
-//                eventSnapshot.setObjectType(EventType.AGENT);
-//                
             } else if (evt instanceof AgentRefStateEvent && !(evt instanceof AgentRefStateEvent.AgentEventsObserved)) {
                 eventSnapshot.setEventType("AgentStateChanged");
                 eventSnapshot.setPath(((AgentId) key).string());
