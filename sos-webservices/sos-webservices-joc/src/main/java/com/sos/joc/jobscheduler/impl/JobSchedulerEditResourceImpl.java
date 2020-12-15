@@ -318,7 +318,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             
             if (!agentRefs.isEmpty()) {
                 final String cId = controllerId;
-                ControllerApi.of(controllerId).updateItems(Flux.fromStream(agentRefs.stream().map(JUpdateItemOperation::addOrReplace))).thenAccept(
+                ControllerApi.of(controllerId).updateItems(Flux.fromIterable(agentRefs).map(JUpdateItemOperation::addOrReplace)).thenAccept(
                         e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), cId));
             }
             

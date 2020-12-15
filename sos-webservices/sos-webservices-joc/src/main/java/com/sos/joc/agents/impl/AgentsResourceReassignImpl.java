@@ -50,7 +50,7 @@ public class AgentsResourceReassignImpl extends JOCResourceImpl implements IAgen
             
             List<JAgentRef> agents = Proxies.getAgents(controllerId, null);
             if (!agents.isEmpty()) {
-                ControllerApi.of(controllerId).updateItems(Flux.fromStream(agents.stream().map(JUpdateItemOperation::addOrReplace)))
+                ControllerApi.of(controllerId).updateItems(Flux.fromIterable(agents).map(JUpdateItemOperation::addOrReplace))
                     .thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
             }
             

@@ -168,7 +168,7 @@ public class ProxyContext {
                 if (!agents.isEmpty()) {
                     if (p.currentState().idToAgentRef(agents.get(0).id()).isLeft()) { // Agents doesn't exists
                         LOGGER.info(toString() + ": Redeploy Agents");
-                        p.api().updateItems(Flux.fromStream(agents.stream().map(JUpdateItemOperation::addOrReplace))).thenAccept(e -> {
+                        p.api().updateItems(Flux.fromIterable(agents).map(JUpdateItemOperation::addOrReplace)).thenAccept(e -> {
                             if (e.isLeft()) {
                                 LOGGER.error(ProblemHelper.getErrorMessage(e.getLeft()));
                             }
