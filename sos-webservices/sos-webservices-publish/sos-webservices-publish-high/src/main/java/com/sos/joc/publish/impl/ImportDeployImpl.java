@@ -42,6 +42,7 @@ import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.keys.db.DBLayerKeys;
@@ -161,6 +162,11 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             final String versionIdForUpdate = versionId;
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
             JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.HIGH);
+            if (keyPair == null) {
+                throw new JocMissingKeyException(
+                        "No public key or X.509 Certificate found for signature verification! - "
+                        + "Please check your key from the key management section in your profile.");
+            }
             List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkPathRenamingForUpdate(
                     importedObjects.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm());
             // and subsequently call delete for the object with the previous path before committing the update 

@@ -37,6 +37,7 @@ import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.JocSecurityLevel;
@@ -134,6 +135,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             // call UpdateRepo for all provided Controllers and all objects to update
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
             JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.MEDIUM);
+            if (keyPair == null) {
+                throw new JocMissingKeyException(
+                        "No private key found for signing! - Please check your private key from the key management section in your profile.");
+            }
             // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename 
             for (String controllerId : controllerIds) {
                 // sign deployed configurations with new versionId

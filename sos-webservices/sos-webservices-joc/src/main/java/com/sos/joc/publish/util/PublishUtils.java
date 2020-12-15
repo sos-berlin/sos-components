@@ -222,7 +222,7 @@ public abstract class PublishUtils {
         Map<DBItemInventoryConfiguration, DBItemDepSignatures> signedDrafts = new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
         if (keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
             throw new JocMissingKeyException(
-                    "No private key found fo signing! - Please check your private key from the key management section in your profile.");
+                    "No private key found for signing! - Please check your private key from the key management section in your profile.");
         } else {
             DBItemDepSignatures sig = null;
             Set<DBItemInventoryConfiguration> unsignedDraftsUpdated = unsignedDrafts.stream()

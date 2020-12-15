@@ -37,6 +37,7 @@ import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.JocSecurityLevel;
@@ -156,6 +157,11 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             final String versionIdForUpdate = versionId;
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
             JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.HIGH);
+            if (keyPair == null) {
+                throw new JocMissingKeyException(
+                        "No public key or X.509 Certificate found for signature verification! - "
+                        + "Please check your key from the key management section in your profile.");
+            }
             // call UpdateRepo for all provided Controllers
             // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename
             for (String controllerId : allControllers.keySet()) {
