@@ -11,6 +11,12 @@
 		"controllerId": {
 			"type": "string"
 		},
+		"overwrite": {
+			"$ref": "overwriteParam-schema.json"
+		},
+		"withSubmit": {
+			"$ref": "withSubmitParam-schema.json"
+		},
 		"filter": {
 			"$ref": "dailyPlanOrdersFilterDef-schema.json"
 		}

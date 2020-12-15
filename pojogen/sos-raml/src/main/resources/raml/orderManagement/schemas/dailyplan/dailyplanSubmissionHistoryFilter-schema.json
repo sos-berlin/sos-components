@@ -10,7 +10,7 @@
 		"controllerId": {
 			"type": "string"
 		},
-		"selector": {
+		"filter": {
 			"$ref": "dailyPlanSubmissionsFilterDef-schema.json"
 		},	
 		"timeZone": {
