@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -20,7 +21,13 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.exceptions.DBConnectionRefusedException;
+import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.exceptions.DBMissingDataException;
+import com.sos.joc.exceptions.DBOpenSessionException;
+import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
+import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderStateText;
@@ -59,8 +66,8 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             boolean withWorkFlowFilter = body.getWorkflowIds() != null && !body.getWorkflowIds().isEmpty();
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
 
-            return JOCDefaultResponse.responseStatus200(getSnapshot(Proxy.of(body.getControllerId()).currentState(), checkFolderPermission(body
-                    .getWorkflowIds(), permittedFolders), permittedFolders, withWorkFlowFilter));
+            return JOCDefaultResponse.responseStatus200(getSnapshot(body.getControllerId(), checkFolderPermission(body.getWorkflowIds(),
+                    permittedFolders), permittedFolders, withWorkFlowFilter));
 
         } catch (JobSchedulerConnectionResetException e) {
             e.addErrorMetaInfo(getJocError());
@@ -74,83 +81,89 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
 
     }
 
-    private static OrdersSnapshot getSnapshot(JControllerState controllerState, Set<VersionedItemId<WorkflowPath>> workflowIds, Set<Folder> permittedFolders,
-            boolean withWorkFlowFilter) {
-
-        final long nowMillis = controllerState.eventId() / 1000;
-        final Instant now = Instant.ofEpochMilli(nowMillis);
-        Map<Class<? extends Order.State>, Integer> orderStates = null;
-        int suspendedOrders = 0;
-        Stream<JOrder> blockedOrders = null;
-
-        if (withWorkFlowFilter) {
-            if (!workflowIds.isEmpty()) {
-
-                orderStates = controllerState.orderStateToCount(o -> !o.isSuspended() && workflowIds.contains(o.workflowId()));
-                if (orderStates.getOrDefault(Order.Fresh.class, 0) > 0) {
-                    blockedOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh.class)).filter(o -> !o.asScala().isSuspended()
-                            && workflowIds.contains(o.workflowId()));
-                }
-                suspendedOrders = controllerState.ordersBy(o -> o.isSuspended() && workflowIds.contains(o.workflowId())).mapToInt(e -> 1).sum();
-            } else {
-                // no folder permissions
-                orderStates = Collections.emptyMap();
-            }
-        } else if (permittedFolders != null && !permittedFolders.isEmpty()) {
-            orderStates = controllerState.orderStateToCount(o -> !o.isSuspended() && orderIsPermitted(o.workflowId().path().string(),
-                    permittedFolders));
-            if (orderStates.getOrDefault(Order.Fresh.class, 0) > 0) {
-                blockedOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh.class)).filter(o -> !o.asScala().isSuspended()
-                        && orderIsPermitted(o.workflowId().path().string(), permittedFolders));
-            }
-            suspendedOrders = controllerState.ordersBy(o -> o.isSuspended() && orderIsPermitted(o.workflowId().path().string(), permittedFolders))
-                    .mapToInt(e -> 1).sum();
-        } else {
-            orderStates = controllerState.orderStateToCount(o -> !o.isSuspended());
-            if (orderStates.getOrDefault(Order.Fresh.class, 0) > 0) {
-                blockedOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh.class)).filter(o -> !o.asScala().isSuspended());
-            }
-            suspendedOrders = controllerState.ordersBy(o -> o.isSuspended()).mapToInt(e -> 1).sum();
-        }
-
-        int numOfBlockedOrders = 0;
-        if (blockedOrders != null) {
-            // numOfBlockedOrders = blockedOrders.map(o -> {
-            // try {
-            // OrderItem item = Globals.objectMapper.readValue(o.toJson(), OrderItem.class);
-            // if (item.getState().getScheduledFor() != null) {
-            // return item.getState().getScheduledFor();
-            // } else {
-            // return null;
-            // }
-            // } catch (Exception e1) {
-            // return null;
-            // }
-            // }).filter(tstamp -> tstamp != null && tstamp < nowMillis).mapToInt(e -> 1).sum();
-
-            numOfBlockedOrders = blockedOrders.map(order -> order.asScala().state().maybeDelayedUntil()).filter(tstamp -> !tstamp.isEmpty() && tstamp
-                    .get().toInstant().isBefore(now)).mapToInt(item -> 1).sum();
-        }
-
-        final Map<OrderStateText, Integer> map = orderStates.entrySet().stream().collect(Collectors.groupingBy(
-                entry -> OrdersHelper.groupByStateClasses.get(entry.getKey()), Collectors.summingInt(entry -> entry.getValue())));
-        map.put(OrderStateText.BLOCKED, numOfBlockedOrders);
-        OrdersHelper.groupByStateClasses.values().stream().distinct().forEach(state -> map.putIfAbsent(state, 0));
+    private static OrdersSnapshot getSnapshot(String controllerid, Set<VersionedItemId<WorkflowPath>> workflowIds, Set<Folder> permittedFolders,
+            boolean withWorkFlowFilter) throws JobSchedulerConnectionResetException, DBMissingDataException, JocConfigurationException,
+            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
 
         OrdersSummary summary = new OrdersSummary();
-        summary.setBlocked(map.getOrDefault(OrderStateText.BLOCKED, 0));
-        summary.setPending(map.getOrDefault(OrderStateText.PENDING, 0) - map.getOrDefault(OrderStateText.BLOCKED, 0));
-        summary.setInProgress(map.getOrDefault(OrderStateText.INPROGRESS, 0));
-        summary.setRunning(map.getOrDefault(OrderStateText.RUNNING, 0));
-        summary.setFailed(map.getOrDefault(OrderStateText.FAILED, 0));
-        summary.setSuspended(suspendedOrders);
-        summary.setWaiting(map.getOrDefault(OrderStateText.WAITING, 0));
+        summary.setBlocked(0);
+        summary.setPending(0);
+        summary.setInProgress(0);
+        summary.setRunning(0);
+        summary.setFailed(0);
+        summary.setSuspended(0);
+        summary.setWaiting(0);
         summary.setCalling(0);
-
+        
         OrdersSnapshot entity = new OrdersSnapshot();
-        entity.setSurveyDate(Date.from(now));
+        
+        try {
+            JControllerState controllerState = Proxy.of(controllerid).currentState();
+            final long nowMillis = controllerState.eventId() / 1000;
+            final Instant now = Instant.ofEpochMilli(nowMillis);
+            Map<Class<? extends Order.State>, Integer> orderStates = null;
+            int suspendedOrders = 0;
+            Stream<JOrder> blockedOrders = null;
+
+            if (withWorkFlowFilter) {
+                if (!workflowIds.isEmpty()) {
+
+                    orderStates = controllerState.orderStateToCount(o -> !o.isSuspended() && workflowIds.contains(o.workflowId()));
+                    if (orderStates.getOrDefault(Order.Fresh.class, 0) > 0) {
+                        blockedOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh.class)).filter(o -> !o.asScala().isSuspended()
+                                && workflowIds.contains(o.workflowId()));
+                    }
+                    suspendedOrders = controllerState.ordersBy(o -> o.isSuspended() && workflowIds.contains(o.workflowId())).mapToInt(e -> 1).sum();
+                } else {
+                    // no folder permissions
+                    orderStates = Collections.emptyMap();
+                }
+            } else if (permittedFolders != null && !permittedFolders.isEmpty()) {
+                orderStates = controllerState.orderStateToCount(o -> !o.isSuspended() && orderIsPermitted(o.workflowId().path().string(),
+                        permittedFolders));
+                if (orderStates.getOrDefault(Order.Fresh.class, 0) > 0) {
+                    blockedOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh.class)).filter(o -> !o.asScala().isSuspended()
+                            && orderIsPermitted(o.workflowId().path().string(), permittedFolders));
+                }
+                suspendedOrders = controllerState.ordersBy(o -> o.isSuspended() && orderIsPermitted(o.workflowId().path().string(), permittedFolders))
+                        .mapToInt(e -> 1).sum();
+            } else {
+                orderStates = controllerState.orderStateToCount(o -> !o.isSuspended());
+                if (orderStates.getOrDefault(Order.Fresh.class, 0) > 0) {
+                    blockedOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh.class)).filter(o -> !o.asScala().isSuspended());
+                }
+                suspendedOrders = controllerState.ordersBy(o -> o.isSuspended()).mapToInt(e -> 1).sum();
+            }
+            
+            int numOfBlockedOrders = 0;
+            if (blockedOrders != null) {
+                numOfBlockedOrders = blockedOrders.map(order -> order.asScala().state().maybeDelayedUntil()).filter(tstamp -> !tstamp.isEmpty() && tstamp
+                        .get().toInstant().isBefore(now)).mapToInt(item -> 1).sum();
+            }
+            
+            final Map<OrderStateText, Integer> map = orderStates.entrySet().stream().collect(Collectors.groupingBy(
+                    entry -> OrdersHelper.groupByStateClasses.get(entry.getKey()), Collectors.summingInt(entry -> entry.getValue())));
+            map.put(OrderStateText.BLOCKED, numOfBlockedOrders);
+            OrdersHelper.groupByStateClasses.values().stream().distinct().forEach(state -> map.putIfAbsent(state, 0));
+            
+            summary.setBlocked(map.getOrDefault(OrderStateText.BLOCKED, 0));
+            summary.setPending(map.getOrDefault(OrderStateText.PENDING, 0) - map.getOrDefault(OrderStateText.BLOCKED, 0));
+            summary.setInProgress(map.getOrDefault(OrderStateText.INPROGRESS, 0));
+            summary.setRunning(map.getOrDefault(OrderStateText.RUNNING, 0));
+            summary.setFailed(map.getOrDefault(OrderStateText.FAILED, 0));
+            summary.setSuspended(suspendedOrders);
+            summary.setWaiting(map.getOrDefault(OrderStateText.WAITING, 0));
+            summary.setCalling(0);
+            
+            entity.setSurveyDate(Date.from(now));
+            entity.setDeliveryDate(Date.from(Instant.now()));
+            
+        } catch (JobSchedulerConnectionRefusedException e) {
+            entity.setDeliveryDate(Date.from(Instant.now()));
+            entity.setSurveyDate(entity.getDeliveryDate());
+        }
+
         entity.setOrders(summary);
-        entity.setDeliveryDate(Date.from(Instant.now()));
         return entity;
     }
 

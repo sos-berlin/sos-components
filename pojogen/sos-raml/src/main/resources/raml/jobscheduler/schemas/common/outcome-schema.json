@@ -5,8 +5,7 @@
   "type": "object",
   "properties": {
   	"required": [
-  		"TYPE",
-  		"returnCode"
+  		"TYPE"
   	],
   	"TYPE": {
   		"description": "Succeeded or Failed",

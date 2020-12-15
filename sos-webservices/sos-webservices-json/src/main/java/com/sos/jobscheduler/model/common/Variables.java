@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -19,10 +21,41 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({
+    "returnCode"
+})
 public class Variables {
 
+    @JsonProperty("returnCode")
+    private Integer returnCode;
     @JsonIgnore
     private Map<String, String> additionalProperties = new HashMap<String, String>();
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public Variables() {
+    }
+
+    /**
+     * 
+     * @param returnCode
+     */
+    public Variables(Integer returnCode) {
+        super();
+        this.returnCode = returnCode;
+    }
+
+    @JsonProperty("returnCode")
+    public Integer getReturnCode() {
+        return returnCode;
+    }
+
+    @JsonProperty("returnCode")
+    public void setReturnCode(Integer returnCode) {
+        this.returnCode = returnCode;
+    }
 
     @JsonAnyGetter
     public Map<String, String> getAdditionalProperties() {
@@ -36,12 +69,12 @@ public class Variables {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("returnCode", returnCode).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(returnCode).append(additionalProperties).toHashCode();
     }
 
     @Override
@@ -53,7 +86,7 @@ public class Variables {
             return false;
         }
         Variables rhs = ((Variables) other);
-        return new EqualsBuilder().append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(returnCode, rhs.returnCode).append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 
 }

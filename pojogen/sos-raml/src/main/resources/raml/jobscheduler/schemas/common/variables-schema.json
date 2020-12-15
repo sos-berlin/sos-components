@@ -4,8 +4,10 @@
   "description": "a map for arbitrary key-value pairs",
   "javaType": "com.sos.jobscheduler.model.common.Variables",
   "type": "object",
-  "returnCode": {
-  	"type": "integer"
+  "properties": {
+  	"returnCode": {
+  		"type": "integer"
+  	}
   },
   "additionalProperties": {
     "type": "string"

@@ -157,6 +157,7 @@ public class EventService {
             EventSnapshot eventSnapshot = new EventSnapshot();
 
             if (evt instanceof OrderEvent) {
+                LOGGER.info("OrderEvent received: " + evt.getClass().getSimpleName());
                 final OrderId orderId = (OrderId) key;
                 Optional<JOrder> opt = currentState.idToOrder(orderId);
                 if (opt.isPresent()) {
@@ -169,6 +170,11 @@ public class EventService {
                 }
                 eventSnapshot.setObjectType(EventType.ORDER);
                 eventSnapshot.setEventType("OrderStateChanged");
+                LOGGER.info("OrderEvent is OrderAdded: " + (evt instanceof OrderAdded));
+                LOGGER.info("OrderEvent is OrderTerminated: " + (evt instanceof OrderTerminated));
+                LOGGER.info("OrderEvent is OrderProcessingStarted: " + (evt instanceof OrderProcessingStarted$));
+                LOGGER.info("OrderEvent is OrderProcessed: " + (evt instanceof OrderProcessed));
+                LOGGER.info("OrderEvent is OrderProcessingKilled: " + (evt instanceof OrderProcessingKilled$));
                 if (evt instanceof OrderAdded) {
                     eventSnapshot.setEventType("OrderAdded");
                 } else if (evt instanceof OrderTerminated) {
@@ -198,9 +204,10 @@ public class EventService {
                 SimpleItemId itemId = ((SimpleItemEvent) evt).id();
                 eventSnapshot.setPath(itemId.string());
                 if (itemId instanceof AgentId) {
+                    eventSnapshot.setEventType(evt.getClass().getSimpleName().replaceFirst("SimpleItem", "Agent")); // SimpleItemAdded SimpleItemAddedAndChanged SimpleItemDeleted and SimpleItemChanged etc.
                     eventSnapshot.setObjectType(EventType.AGENT);
                 } else if (itemId instanceof LockId) {
-                    //eventSnapshot.setObjectType(EventType.LOCK);
+                    eventSnapshot.setObjectType(EventType.LOCK);
                 }
                 
             } else if (evt instanceof AgentRefStateEvent && !(evt instanceof AgentRefStateEvent.AgentEventsObserved)) {

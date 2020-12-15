@@ -246,12 +246,6 @@ traits:
           body:
             application/json:
               schema: !include joc/schemas/security/security-configuration-schema.json
-        420:
-          body:
-            application/json:
-        440:
-          body:
-            application/json:
       
   /shiro/store:
     type:
@@ -335,177 +329,179 @@ traits:
 #        example: " "
 #        example200: " "
         
-/configuration:
-  type:
-     postJSON:
-       description: Responds a configuration from the server (database)
-#       description1: !include joc/documentation/configuration/userRequiredParam.md
-#       description2: !include joc/documentation/configuration/configurationTypeRequiredParam.md
-#       description3: !include joc/documentation/configuration/objectTypeRequiredParam.md
-#       description4: !include joc/documentation/configuration/nameParam.md
-       description1: " "
-       description2: " "
-       description3: " "
-       description4: " "
-       description5: !include joc/documentation/configuration/configurationIdRequiredParam.md
-       description6: " "
-       description7: " "
-       description8: " "
-       description9: " "
-       description10: " "
-       description200: " "
-       schema: !include joc/schemas/configuration/configuration-schema.json
-       schema200: !include joc/schemas/configuration/configuration200-schema.json
-       example: " "
-       example200: " "
-  /delete:
-    type:
-       postJSON:
-         description: Deletes a configuration on the server (database)
-#         description1: !include joc/documentation/configuration/userRequiredParam.md
-#         description2: !include joc/documentation/configuration/configurationTypeRequiredParam.md
-#         description3: !include joc/documentation/configuration/objectTypeRequiredParam.md
-#         description4: !include joc/documentation/configuration/nameParam.md
-         description1: " "
-         description2: " "
-         description3: " "
-         description4: " "
-         description5: !include joc/documentation/configuration/configurationIdRequiredParam.md
-         description6: " "
-         description7: " "
-         description8: " "
-         description9: " "
-         description10: " "
-         description200: " "
-         schema: !include joc/schemas/configuration/configuration-schema.json
-         schema200: !include joc/schemas/configuration/configurationOk-schema.json
-         example: " "
-         example200: |
-           {
-             "deliveryDate":"2016-05-05T21:13:35Z",
-             "id":4711
-           }
-  /make_private:
-    type:
-       postJSON:
-         description: set a configuration as unshared
-#         description1: !include joc/documentation/configuration/userRequiredParam.md
-#         description2: !include joc/documentation/configuration/configurationTypeRequiredParam.md
-#         description3: !include joc/documentation/configuration/objectTypeRequiredParam.md
-#         description4: !include joc/documentation/configuration/nameParam.md
-         description1: " "
-         description2: " "
-         description3: " "
-         description4: " "
-         description5: !include joc/documentation/configuration/configurationIdRequiredParam.md
-         description6: " "
-         description7: " "
-         description8: " "
-         description9: " "
-         description10: " "
-         description200: " "
-         schema: !include joc/schemas/configuration/configuration-schema.json
-         schema200: !include joc/schemas/configuration/configurationOk-schema.json
-         example: " "
-         example200: |
-           {
-             "deliveryDate":"2016-05-05T21:13:35Z",
-             "id":4711
-           }
-  /login:
-    type: loginConfiguration
-  
-  /save:
-    type:
-       postJSON:
-         description: Stores a configuration on the server (database)
-         description1: !include joc/documentation/configuration/userRequiredParam.md
-         description2: !include joc/documentation/configuration/configurationTypeRequiredParam.md
-         description3: !include joc/documentation/configuration/objectTypeRequiredParam.md
-         description4: !include joc/documentation/configuration/nameParam.md
-         description5: !include joc/documentation/configuration/sharedParam.md
-         description6: !include joc/documentation/configuration/itemParam.md
-         description7: !include joc/documentation/configuration/configurationIdRequiredParam.md
-         description8: " "
-         description9: " "
-         description10: " "
-         description200: |
-             *Response contains the ``id`` of the customization.*<br/>
-             It seems to be unnecessary but if a new customization is saved
-             (with ``id=0`` in the request) then you get the new id.
-         schema: !include joc/schemas/configuration/configuration-schema.json
-         schema200: !include joc/schemas/configuration/configurationOk-schema.json
-         example: " "
-         example200: |
-           {
-             "deliveryDate":"2016-05-05T21:13:35Z",
-             "id":4711
-           }
-  /share:
-    type:
-       postJSON:
-         description: set a configuration as shared
-#         description1: !include joc/documentation/configuration/userRequiredParam.md
-#         description2: !include joc/documentation/configuration/configurationTypeRequiredParam.md
-#         description3: !include joc/documentation/configuration/objectTypeRequiredParam.md
-#         description4: !include joc/documentation/configuration/nameParam.md
-         description1: " "
-         description2: " "
-         description3: " "
-         description4: " "
-         description5: !include joc/documentation/configuration/configurationIdRequiredParam.md
-         description6: " "
-         description7: " "
-         description8: " "
-         description9: " "
-         description10: " "
-         description200: " "
-         schema: !include joc/schemas/configuration/configuration-schema.json
-         schema200: !include joc/schemas/configuration/configurationOk-schema.json
-         example: " "
-         example200: |
-           {
-             "deliveryDate":"2016-05-05T21:13:35Z",
-             "id":4711
-           }
-  
-/configurations:
-  type:
-     postJSON:
-       description: Get collection of configuration items
-       description1: !include joc/documentation/configuration/userParam.md
-       description2: !include joc/documentation/configuration/configurationTypeParam.md
-       description3: !include joc/documentation/configuration/objectTypeParam.md
-       description4: !include joc/documentation/configuration/sharedParam.md
-       description5: " "
-       description6: " "
-       description7: " "
-       description8: " "
-       description9: " "
-       description10: " "
-       description200: " "
-       schema: !include joc/schemas/configuration/configurationsFilter-schema.json
-       schema200: !include joc/schemas/configuration/configurations-schema.json
-       example: " "
-       example200: " "
-  /delete:
-    type:
-      postJSONWithOkWithoutJSId:
-        description: Deletes all configuration items (profile, settings, customizations, ignore lists) of specified accounts 
-        description1: !include joc/documentation/configuration/usersParam.md
-        description2: " "
-        description3: " "
-        description4: " "
-        description5: " "
-        schema: !include joc/schemas/configuration/configurationsDeleteFilter-schema.json
-        example: " "
-#  /shared:
+# moved to api-internal.raml
+#/configuration:
+#  type:
+#     postJSON:
+#       description: Responds a configuration from the server (database)
+##       description1: !include joc/documentation/configuration/userRequiredParam.md
+##       description2: !include joc/documentation/configuration/configurationTypeRequiredParam.md
+##       description3: !include joc/documentation/configuration/objectTypeRequiredParam.md
+##       description4: !include joc/documentation/configuration/nameParam.md
+#       description1: " "
+#       description2: " "
+#       description3: " "
+#       description4: " "
+#       description5: !include joc/documentation/configuration/configurationIdRequiredParam.md
+#       description6: " "
+#       description7: " "
+#       description8: " "
+#       description9: " "
+#       description10: " "
+#       description200: " "
+#       schema: !include joc/schemas/configuration/configuration-schema.json
+#       schema200: !include joc/schemas/configuration/configuration200-schema.json
+#       example: " "
+#       example200: " "
+#  /delete:
 #    type:
-#       postOnlyId:
-#         description: Sends collection of all shared configuration items
+#       postJSON:
+#         description: Deletes a configuration on the server (database)
+##         description1: !include joc/documentation/configuration/userRequiredParam.md
+##         description2: !include joc/documentation/configuration/configurationTypeRequiredParam.md
+##         description3: !include joc/documentation/configuration/objectTypeRequiredParam.md
+##         description4: !include joc/documentation/configuration/nameParam.md
+#         description1: " "
+#         description2: " "
+#         description3: " "
+#         description4: " "
+#         description5: !include joc/documentation/configuration/configurationIdRequiredParam.md
+#         description6: " "
+#         description7: " "
+#         description8: " "
+#         description9: " "
+#         description10: " "
 #         description200: " "
-#         schema200: !include joc/schemas/configuration/configurations-schema.json
-#         example200: " "
+#         schema: !include joc/schemas/configuration/configuration-schema.json
+#         schema200: !include joc/schemas/configuration/configurationOk-schema.json
+#         example: " "
+#         example200: |
+#           {
+#             "deliveryDate":"2016-05-05T21:13:35Z",
+#             "id":4711
+#           }
+#  /make_private:
+#    type:
+#       postJSON:
+#         description: set a configuration as unshared
+##         description1: !include joc/documentation/configuration/userRequiredParam.md
+##         description2: !include joc/documentation/configuration/configurationTypeRequiredParam.md
+##         description3: !include joc/documentation/configuration/objectTypeRequiredParam.md
+##         description4: !include joc/documentation/configuration/nameParam.md
+#         description1: " "
+#         description2: " "
+#         description3: " "
+#         description4: " "
+#         description5: !include joc/documentation/configuration/configurationIdRequiredParam.md
+#         description6: " "
+#         description7: " "
+#         description8: " "
+#         description9: " "
+#         description10: " "
+#         description200: " "
+#         schema: !include joc/schemas/configuration/configuration-schema.json
+#         schema200: !include joc/schemas/configuration/configurationOk-schema.json
+#         example: " "
+#         example200: |
+#           {
+#             "deliveryDate":"2016-05-05T21:13:35Z",
+#             "id":4711
+#           }
+#  /login:
+#    type: loginConfiguration
+#  
+#  /save:
+#    type:
+#       postJSON:
+#         description: Stores a configuration on the server (database)
+#         description1: !include joc/documentation/configuration/userRequiredParam.md
+#         description2: !include joc/documentation/configuration/configurationTypeRequiredParam.md
+#         description3: !include joc/documentation/configuration/objectTypeRequiredParam.md
+#         description4: !include joc/documentation/configuration/nameParam.md
+#         description5: !include joc/documentation/configuration/sharedParam.md
+#         description6: !include joc/documentation/configuration/itemParam.md
+#         description7: !include joc/documentation/configuration/configurationIdRequiredParam.md
+#         description8: " "
+#         description9: " "
+#         description10: " "
+#         description200: |
+#             *Response contains the ``id`` of the customization.*<br/>
+#             It seems to be unnecessary but if a new customization is saved
+#             (with ``id=0`` in the request) then you get the new id.
+#         schema: !include joc/schemas/configuration/configuration-schema.json
+#         schema200: !include joc/schemas/configuration/configurationOk-schema.json
+#         example: " "
+#         example200: |
+#           {
+#             "deliveryDate":"2016-05-05T21:13:35Z",
+#             "id":4711
+#           }
+#  /share:
+#    type:
+#       postJSON:
+#         description: set a configuration as shared
+##         description1: !include joc/documentation/configuration/userRequiredParam.md
+##         description2: !include joc/documentation/configuration/configurationTypeRequiredParam.md
+##         description3: !include joc/documentation/configuration/objectTypeRequiredParam.md
+##         description4: !include joc/documentation/configuration/nameParam.md
+#         description1: " "
+#         description2: " "
+#         description3: " "
+#         description4: " "
+#         description5: !include joc/documentation/configuration/configurationIdRequiredParam.md
+#         description6: " "
+#         description7: " "
+#         description8: " "
+#         description9: " "
+#         description10: " "
+#         description200: " "
+#         schema: !include joc/schemas/configuration/configuration-schema.json
+#         schema200: !include joc/schemas/configuration/configurationOk-schema.json
+#         example: " "
+#         example200: |
+#           {
+#             "deliveryDate":"2016-05-05T21:13:35Z",
+#             "id":4711
+#           }
+#  
+# moved to api-internal.raml
+#/configurations:
+#  type:
+#     postJSON:
+#       description: Get collection of configuration items
+#       description1: !include joc/documentation/configuration/userParam.md
+#       description2: !include joc/documentation/configuration/configurationTypeParam.md
+#       description3: !include joc/documentation/configuration/objectTypeParam.md
+#       description4: !include joc/documentation/configuration/sharedParam.md
+#       description5: " "
+#       description6: " "
+#       description7: " "
+#       description8: " "
+#       description9: " "
+#       description10: " "
+#       description200: " "
+#       schema: !include joc/schemas/configuration/configurationsFilter-schema.json
+#       schema200: !include joc/schemas/configuration/configurations-schema.json
+#       example: " "
+#       example200: " "
+#  /delete:
+#    type:
+#      postJSONWithOkWithoutJSId:
+#        description: Deletes all configuration items (profile, settings, customizations, ignore lists) of specified accounts 
+#        description1: !include joc/documentation/configuration/usersParam.md
+#        description2: " "
+#        description3: " "
+#        description4: " "
+#        description5: " "
+#        schema: !include joc/schemas/configuration/configurationsDeleteFilter-schema.json
+#        example: " "
+##  /shared:
+##    type:
+##       postOnlyId:
+##         description: Sends collection of all shared configuration items
+##         description200: " "
+##         schema200: !include joc/schemas/configuration/configurations-schema.json
+##         example200: " "
 
 
 /controller:
@@ -531,65 +527,6 @@ traits:
         failover: !include joc/documentation/jobscheduler/failover.md
         audit: !include joc/documentation/audit/auditLog.md
   
-#TODO
-#  /agents:
-#    type:
-#      postJSON:
-#        description: Collection of JobScheduler Agents with volatile information.
-#        description1: !include joc/documentation/jobscheduler/agentsParam.md
-#        description2: " "
-#        description3: " "
-#        description4: " "
-#        description5: " "
-#        description6: " "
-#        description7: " "
-#        description8: " "
-#        description9: " "
-#        description10: " "
-#        schema: !include joc/schemas/jobscheduler/agentFilter-schema.json
-#        description200: !include joc/documentation/jobscheduler/agents_v.md
-#        schema200: !include joc/schemas/jobscheduler/agents_v-schema.json
-#        example: !include joc/examples/jobscheduler/jobschedulerParam-example.json
-#        example200: !include joc/examples/jobscheduler/agents_v-example.json
-#    /p:
-#      type:
-#        postJSON:
-#          description: Collection of JobScheduler Agents with general permanent information
-#          description1: !include joc/documentation/jobscheduler/agentsParam.md
-#          description2: " "
-#          description3: " "
-#          description4: " "
-#          description5: " "
-#          description6: " "
-#          description7: " "
-#          description8: " "
-#          description9: " "
-#          description10: " "
-#          schema: !include joc/schemas/jobscheduler/agentFilter-schema.json
-#          description200: !include joc/documentation/jobscheduler/agents_p.md
-#          schema200: !include joc/schemas/jobscheduler/agents_p-schema.json
-#          example: !include joc/examples/jobscheduler/jobschedulerParam-example.json
-#          example200: !include joc/examples/jobscheduler/agents_p-example.json
-#  /agent_clusters:
-#    type:
-#      postJSON:
-#        description: Collection of JobScheduler Agent Clusters with volatile information
-#        description1: !include joc/documentation/common/compact.md
-#        description2: !include joc/documentation/jobscheduler/agentClustersParam.md
-#        description3: !include joc/documentation/jobscheduler/state.md
-#        description4: !include joc/documentation/jobscheduler/regex.md
-#        description5: !include joc/documentation/common/folders.md
-#        description6: " "
-#        description7: " "
-#        description8: " "
-#        description9: " "
-#        description10: " "
-#        description200: !include joc/documentation/jobscheduler/agentCluster_v.md
-#        schema: !include joc/schemas/jobscheduler/agentClusterFilter-schema.json
-#        schema200: !include joc/schemas/jobscheduler/agentClusters-schema.json
-#        example: !include joc/examples/jobscheduler/filteredByAgentCluster-example.json
-#        example200: !include joc/examples/jobscheduler/agentClusters_v-example.json
-#
   /cleanup:
     type:
       postWithOkResponse:
@@ -981,14 +918,15 @@ traits:
 #        example: " "
 #        example200: " "
 
-/events:
-  type:
-    postEvent:
-      description200: TODO
-      schema: !include joc/schemas/event/register-schema.json
-      schema200: !include joc/schemas/event/events-schema.json
-      example: TODO
-      example200: TODO
+# moved to api-internal.raml
+#/events:
+#  type:
+#    postEvent:
+#      description200: TODO
+#      schema: !include joc/schemas/event/register-schema.json
+#      schema200: !include joc/schemas/event/events-schema.json
+#      example: TODO
+#      example200: TODO
 
 /inventory:
   description: This is not an API call. Use its children!!
@@ -2068,25 +2006,26 @@ traits:
               }
             schema: ok
 
-/tree:
-  type:
-    postJSON:
-      description: Collections of specified object with folders information in a tree structure
-      description1: " "
-      description2: " "
-      description3: " "
-      description4: " "
-      description5: " "
-      description6: !include joc/documentation/common/folders.md
-      description7: !include joc/documentation/common/typesParam.md
-      description8: !include joc/documentation/inventory/onlyValidObjects.md
-      description9: " "
-      description10: " "
-      description200: !include joc/documentation/tree/tree.md
-      schema: !include joc/schemas/tree/treeFilter-schema.json
-      schema200: !include joc/schemas/tree/treeView-schema.json
-      example: !include joc/examples/tree/filteredtree-example.json
-      example200: !include joc/examples/tree/tree-example.json
+# moved to api-internal.raml
+#/tree:
+#  type:
+#    postJSON:
+#      description: Collections of specified object with folders information in a tree structure
+#      description1: " "
+#      description2: " "
+#      description3: " "
+#      description4: " "
+#      description5: " "
+#      description6: !include joc/documentation/common/folders.md
+#      description7: !include joc/documentation/common/typesParam.md
+#      description8: !include joc/documentation/inventory/onlyValidObjects.md
+#      description9: " "
+#      description10: " "
+#      description200: !include joc/documentation/tree/tree.md
+#      schema: !include joc/schemas/tree/treeFilter-schema.json
+#      schema200: !include joc/schemas/tree/treeView-schema.json
+#      example: !include joc/examples/tree/filteredtree-example.json
+#      example200: !include joc/examples/tree/tree-example.json
 
 /workflow:
   type:

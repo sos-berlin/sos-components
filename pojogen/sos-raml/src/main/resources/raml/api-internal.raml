@@ -1,0 +1,305 @@
+#%RAML 0.8
+title: JOC API Internal
+version: 2.0.0
+protocols: [ HTTP, HTTPS ]
+#baseUri: http://test.sos-berlin.com:3001/joc/api
+#mediaType: application/json
+
+#documentation:
+# TODO VERSIONS file for internal API
+#  - title: VERSIONS
+#    content: !include joc/documentation/common/versions.md
+
+
+schemas:
+  - errors: !include joc/schemas/common/errors-schema.json
+  - error420: !include joc/schemas/common/error420-schema.json
+  - ok: !include joc/schemas/common/ok-schema.json
+  - orders: !include joc/schemas/order/orders_v-schema.json
+  - jsFilter: !include joc/schemas/common/controllerId-schema.json
+  - jsFilterWithTimeout: !include joc/schemas/jobscheduler/urlParam-schema.json
+  - jsFilterWithUrl: !include joc/schemas/jobscheduler/urlParam-schema.json
+  - jsRegister: !include joc/schemas/jobscheduler/registerParam-schema.json
+  - taskFilter: !include joc/schemas/job/taskFilter-schema.json
+  - orderHistoryFilter: !include joc/schemas/order/orderHistoryFilter-schema.json
+  - addOrders: !include joc/schemas/order/addOrders-schema.json
+  - orderIds: !include joc/schemas/order/orderIds-schema.json
+  - modifyOrders: !include joc/schemas/order/modifyOrders-schema.json
+  - modifyCalendars: !include joc/schemas/calendar/calendarsFilter-schema.json
+  - security: !include joc/schemas/user/security-schema.json
+  - loginConfiguration: !include joc/schemas/configuration/login-schema.json
+
+
+resourceTypes:
+  - error: !include joc/resourceTypes/common/error.raml
+  - postWithPlainResponse: !include joc/resourceTypes/joc/postWithPlainResponse.raml
+  - postCalendarWithOkResponse: !include joc/resourceTypes/calendar/postJSONWithOkResponse.raml
+  - postDocuWithOkResponse: !include joc/resourceTypes/docu/postJSONWithOkResponse.raml
+  - postTimeoutWithOkResponse: !include joc/resourceTypes/common/postTimeoutWithOkResponse.raml
+  - postWithOkResponse: !include joc/resourceTypes/jobscheduler/postWithOkResponse.raml
+  - registerControllerWithOkResponse: !include joc/resourceTypes/jobscheduler/registerControllerWithOkResponse.raml
+  - postURLWithPlainResponse: !include joc/resourceTypes/jobscheduler/postWithPlainResponse.raml
+  - postStateResponse: !include joc/resourceTypes/jobscheduler/postStateResponse.raml
+  - postJSON: !include joc/resourceTypes/common/postJSON.raml
+  - postJSONWithOptionalJSId: !include joc/resourceTypes/common/postJSONWithOptionalJSId.raml
+  - postJSONWithOkAndOnlyOptionalIdResponse: !include joc/resourceTypes/common/postJSONWithOkAndOnlyOptionalIdResponse.raml
+  - postJSONWithoutJSId: !include joc/resourceTypes/common/postJSONWithoutJSId.raml
+  - postWithoutJSONandJSId: !include joc/resourceTypes/common/postWithoutJSONandJSId.raml
+  - postJSONWithOkWithoutJSId: !include joc/resourceTypes/common/postJSONWithOkWithoutJSId.raml
+  - postJSON18: !include joc/resourceTypes/common/postJSON18.raml
+  - postYADEJSONWithOkResponse: !include joc/resourceTypes/yade/postJSONWithOkResponse.raml
+  - postOnlyAccessToken: !include joc/resourceTypes/common/postOnlyAccessToken.raml
+  - postOnlyId: !include joc/resourceTypes/common/postOnlyId.raml
+  - postOnlyOptionalId: !include joc/resourceTypes/common/postOnlyOptionalId.raml
+  - postJSONWithOkResponse: !include joc/resourceTypes/common/postJSONWithOkResponse.raml
+  - postJSONWithoutExample: !include joc/resourceTypes/common/postJSONWithoutExample.raml
+  - postForDownload: !include joc/resourceTypes/common/postForDownload.raml
+  - postForUpload: !include joc/resourceTypes/common/postForUpload.raml
+  - postLog: !include joc/resourceTypes/common/postLog.raml
+  - postDocu: !include joc/resourceTypes/docu/postDocu.raml
+  - getDocu: !include joc/resourceTypes/docu/getDocu.raml
+  - login: !include joc/resourceTypes/user/login.raml
+  - logout: !include joc/resourceTypes/user/logout.raml
+  - postEvent: !include joc/resourceTypes/common/postEvent.raml
+  - postTaskLogWithPlainResponse: !include joc/resourceTypes/job/postWithPlainResponse.raml
+  - modifyOrder: !include joc/resourceTypes/order/modify.raml
+  - addOrder: !include joc/resourceTypes/order/add.raml
+  - postOrderLogWithPlainResponse: !include joc/resourceTypes/order/postWithPlainResponse.raml
+  - modifyCalendar: !include joc/resourceTypes/calendar/modify.raml
+  - loginConfiguration: !include joc/resourceTypes/configuration/login.raml
+  - postForDownloadUnsigned: !include joc/resourceTypes/publish/postForDownloadUnsigned.raml
+  - postForUploadSigned: !include joc/resourceTypes/publish/postForUploadSigned.raml
+  - postForUploadUnsigned: !include joc/resourceTypes/publish/postForUploadUnsigned.raml
+  - postForGenerateKey: !include joc/resourceTypes/publish/postForGenerateKey.raml
+  - postForExport: !include joc/resourceTypes/publish/postForExport.raml
+  - postForImportDeploy: !include joc/resourceTypes/publish/postForImportDeploy.raml
+  - postForShowDepHistory: !include joc/resourceTypes/publish/postForShowDepHistory.raml
+  
+
+traits:
+  - jobschedulerController: !include joc/traits/jobschedulerController.raml
+  - filteredByPath: !include joc/traits/filteredByPath.raml
+  - filteredByOrderId: !include joc/traits/filteredByOrderId.raml
+  - filteredByJSType: !include joc/traits/filteredByJSType.raml
+  - filteredByTransferFileId: !include joc/traits/filteredByTransferFileId.raml
+  - accessToken: !include joc/traits/accessToken.raml
+  - filename: !include joc/traits/filename.raml
+
+       
+/configuration:
+  type:
+     postJSON:
+       description: Responds a configuration from the server (database)
+#       description1: !include joc/documentation/configuration/userRequiredParam.md
+#       description2: !include joc/documentation/configuration/configurationTypeRequiredParam.md
+#       description3: !include joc/documentation/configuration/objectTypeRequiredParam.md
+#       description4: !include joc/documentation/configuration/nameParam.md
+       description1: " "
+       description2: " "
+       description3: " "
+       description4: " "
+       description5: !include joc/documentation/configuration/configurationIdRequiredParam.md
+       description6: " "
+       description7: " "
+       description8: " "
+       description9: " "
+       description10: " "
+       description200: " "
+       schema: !include joc/schemas/configuration/configuration-schema.json
+       schema200: !include joc/schemas/configuration/configuration200-schema.json
+       example: " "
+       example200: " "
+  /delete:
+    type:
+       postJSON:
+         description: Deletes a configuration on the server (database)
+#         description1: !include joc/documentation/configuration/userRequiredParam.md
+#         description2: !include joc/documentation/configuration/configurationTypeRequiredParam.md
+#         description3: !include joc/documentation/configuration/objectTypeRequiredParam.md
+#         description4: !include joc/documentation/configuration/nameParam.md
+         description1: " "
+         description2: " "
+         description3: " "
+         description4: " "
+         description5: !include joc/documentation/configuration/configurationIdRequiredParam.md
+         description6: " "
+         description7: " "
+         description8: " "
+         description9: " "
+         description10: " "
+         description200: " "
+         schema: !include joc/schemas/configuration/configuration-schema.json
+         schema200: !include joc/schemas/configuration/configurationOk-schema.json
+         example: " "
+         example200: |
+           {
+             "deliveryDate":"2016-05-05T21:13:35Z",
+             "id":4711
+           }
+  /make_private:
+    type:
+       postJSON:
+         description: set a configuration as unshared
+#         description1: !include joc/documentation/configuration/userRequiredParam.md
+#         description2: !include joc/documentation/configuration/configurationTypeRequiredParam.md
+#         description3: !include joc/documentation/configuration/objectTypeRequiredParam.md
+#         description4: !include joc/documentation/configuration/nameParam.md
+         description1: " "
+         description2: " "
+         description3: " "
+         description4: " "
+         description5: !include joc/documentation/configuration/configurationIdRequiredParam.md
+         description6: " "
+         description7: " "
+         description8: " "
+         description9: " "
+         description10: " "
+         description200: " "
+         schema: !include joc/schemas/configuration/configuration-schema.json
+         schema200: !include joc/schemas/configuration/configurationOk-schema.json
+         example: " "
+         example200: |
+           {
+             "deliveryDate":"2016-05-05T21:13:35Z",
+             "id":4711
+           }
+  /login:
+    type: loginConfiguration
+  
+  /save:
+    type:
+       postJSON:
+         description: Stores a configuration on the server (database)
+         description1: !include joc/documentation/configuration/userRequiredParam.md
+         description2: !include joc/documentation/configuration/configurationTypeRequiredParam.md
+         description3: !include joc/documentation/configuration/objectTypeRequiredParam.md
+         description4: !include joc/documentation/configuration/nameParam.md
+         description5: !include joc/documentation/configuration/sharedParam.md
+         description6: !include joc/documentation/configuration/itemParam.md
+         description7: !include joc/documentation/configuration/configurationIdRequiredParam.md
+         description8: " "
+         description9: " "
+         description10: " "
+         description200: |
+             *Response contains the ``id`` of the customization.*<br/>
+             It seems to be unnecessary but if a new customization is saved
+             (with ``id=0`` in the request) then you get the new id.
+         schema: !include joc/schemas/configuration/configuration-schema.json
+         schema200: !include joc/schemas/configuration/configurationOk-schema.json
+         example: " "
+         example200: |
+           {
+             "deliveryDate":"2016-05-05T21:13:35Z",
+             "id":4711
+           }
+  /share:
+    type:
+       postJSON:
+         description: set a configuration as shared
+#         description1: !include joc/documentation/configuration/userRequiredParam.md
+#         description2: !include joc/documentation/configuration/configurationTypeRequiredParam.md
+#         description3: !include joc/documentation/configuration/objectTypeRequiredParam.md
+#         description4: !include joc/documentation/configuration/nameParam.md
+         description1: " "
+         description2: " "
+         description3: " "
+         description4: " "
+         description5: !include joc/documentation/configuration/configurationIdRequiredParam.md
+         description6: " "
+         description7: " "
+         description8: " "
+         description9: " "
+         description10: " "
+         description200: " "
+         schema: !include joc/schemas/configuration/configuration-schema.json
+         schema200: !include joc/schemas/configuration/configurationOk-schema.json
+         example: " "
+         example200: |
+           {
+             "deliveryDate":"2016-05-05T21:13:35Z",
+             "id":4711
+           }
+  
+/configurations:
+  type:
+     postJSON:
+       description: Get collection of configuration items
+       description1: !include joc/documentation/configuration/userParam.md
+       description2: !include joc/documentation/configuration/configurationTypeParam.md
+       description3: !include joc/documentation/configuration/objectTypeParam.md
+       description4: !include joc/documentation/configuration/sharedParam.md
+       description5: " "
+       description6: " "
+       description7: " "
+       description8: " "
+       description9: " "
+       description10: " "
+       description200: " "
+       schema: !include joc/schemas/configuration/configurationsFilter-schema.json
+       schema200: !include joc/schemas/configuration/configurations-schema.json
+       example: " "
+       example200: " "
+  /delete:
+    type:
+      postJSONWithOkWithoutJSId:
+        description: Deletes all configuration items (profile, settings, customizations, ignore lists) of specified accounts 
+        description1: !include joc/documentation/configuration/usersParam.md
+        description2: " "
+        description3: " "
+        description4: " "
+        description5: " "
+        schema: !include joc/schemas/configuration/configurationsDeleteFilter-schema.json
+        example: " "
+#  /shared:
+#    type:
+#       postOnlyId:
+#         description: Sends collection of all shared configuration items
+#         description200: " "
+#         schema200: !include joc/schemas/configuration/configurations-schema.json
+#         example200: " "
+
+/events:
+  type:
+    postEvent:
+      description200: TODO
+      schema: !include joc/schemas/event/register-schema.json
+      schema200: !include joc/schemas/event/events-schema.json
+      example: TODO
+      example200: TODO
+
+      
+/joc/properties:
+  type:
+    postOnlyAccessToken:
+      description: |
+        Response contains some settings from joc.properties file such as 
+        * pre-defined audit log comments
+        * flag to force audit log comments
+        * show/hide views 
+      description200: " "
+      schema200: !include joc/schemas/joc/properties-schema.json
+      example200: !include joc/examples/joc/properties-example.json
+
+
+/tree:
+  type:
+    postJSON:
+      description: Collections of specified object with folders information in a tree structure
+      description1: " "
+      description2: " "
+      description3: " "
+      description4: " "
+      description5: " "
+      description6: !include joc/documentation/common/folders.md
+      description7: !include joc/documentation/common/typesParam.md
+      description8: !include joc/documentation/inventory/onlyValidObjects.md
+      description9: " "
+      description10: " "
+      description200: !include joc/documentation/tree/tree.md
+      schema: !include joc/schemas/tree/treeFilter-schema.json
+      schema200: !include joc/schemas/tree/treeView-schema.json
+      example: !include joc/examples/tree/filteredtree-example.json
+      example200: !include joc/examples/tree/tree-example.json
+
+
+        

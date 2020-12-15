@@ -11,6 +11,7 @@
     "PROBLEM",
     "WORKFLOW",
     "ORDER",
+    "LOCK",
     "JOB",
     "JUNCTION",
     "JOBCLASS",

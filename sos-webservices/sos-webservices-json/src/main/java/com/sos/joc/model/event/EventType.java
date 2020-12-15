@@ -15,6 +15,7 @@ public enum EventType {
     PROBLEM("PROBLEM"),
     WORKFLOW("WORKFLOW"),
     ORDER("ORDER"),
+    LOCK("LOCK"),
     JOB("JOB"),
     JUNCTION("JUNCTION"),
     JOBCLASS("JOBCLASS"),
