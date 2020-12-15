@@ -250,7 +250,7 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
             stmt = "show server_version";
         } else if (dbms == SOSHibernateFactory.Dbms.H2) {
             db.setDbms("H2");
-            stmt = "show h2version()";
+            stmt = "select h2version()";
         }
 
         if (stmt != null) {
