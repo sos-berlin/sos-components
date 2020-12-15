@@ -15,10 +15,10 @@ import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.security.SecurityConfiguration;
-import com.sos.joc.security.resource.ISecurityConfigurationResourceRead;
+import com.sos.joc.security.resource.ISecurityConfigurationResource;
 
 @Path("authentication")
-public class SecurityConfigurationResourceImpl extends JOCResourceImpl implements ISecurityConfigurationResourceRead {
+public class SecurityConfigurationResourceImpl extends JOCResourceImpl implements ISecurityConfigurationResource {
 
 	private static final String API_CALL_READ = "./authentication/shiro";
 	private static final String API_CALL_WRITE = "./authentication/store";
