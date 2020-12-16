@@ -47,7 +47,6 @@ import js7.data.lock.LockId;
 import js7.data.order.OrderEvent;
 import js7.data.order.OrderEvent.OrderAdded;
 import js7.data.order.OrderEvent.OrderBroken;
-import js7.data.order.OrderEvent.OrderCoreEvent;
 import js7.data.order.OrderEvent.OrderFailed;
 import js7.data.order.OrderEvent.OrderFailedInFork;
 import js7.data.order.OrderEvent.OrderProcessed;
@@ -71,7 +70,7 @@ public class EventService {
     // OrderFinished, OrderCancelled, OrderRemoved$ extends OrderTerminated
     private static List<Class<? extends Event>> eventsOfController = Arrays.asList(ControllerEvent.class, ClusterEvent.class,
             AgentRefStateEvent.class, OrderStarted$.class, OrderProcessingKilled$.class, OrderFailed.class, OrderFailedInFork.class, OrderRetrying.class, OrderBroken.class,
-            OrderTerminated.class, OrderCoreEvent.class, OrderAdded.class, OrderProcessed.class, OrderProcessingStarted$.class, VersionedItemEvent.class, SimpleItemEvent.class);
+            OrderTerminated.class, OrderAdded.class, OrderProcessed.class, OrderProcessingStarted$.class, VersionedItemEvent.class, SimpleItemEvent.class);
     private String controllerId;
     private volatile CopyOnWriteArraySet<EventSnapshot> events = new CopyOnWriteArraySet<>();
     private AtomicBoolean isCurrentController = new AtomicBoolean(false);
@@ -160,6 +159,7 @@ public class EventService {
                 LOGGER.info("OrderEvent received: " + evt.getClass().getSimpleName());
                 final OrderId orderId = (OrderId) key;
                 Optional<JOrder> opt = currentState.idToOrder(orderId);
+                LOGGER.info("JOrder is present");
                 if (opt.isPresent()) {
                     WorkflowId w = mapWorkflowId(opt.get().workflowId());
                     addEvent(createWorkflowEventOfOrder(eventId, w));
@@ -170,11 +170,6 @@ public class EventService {
                 }
                 eventSnapshot.setObjectType(EventType.ORDER);
                 eventSnapshot.setEventType("OrderStateChanged");
-                LOGGER.info("OrderEvent is OrderAdded: " + (evt instanceof OrderAdded));
-                LOGGER.info("OrderEvent is OrderTerminated: " + (evt instanceof OrderTerminated));
-                LOGGER.info("OrderEvent is OrderProcessingStarted: " + (evt instanceof OrderProcessingStarted$));
-                LOGGER.info("OrderEvent is OrderProcessed: " + (evt instanceof OrderProcessed));
-                LOGGER.info("OrderEvent is OrderProcessingKilled: " + (evt instanceof OrderProcessingKilled$));
                 if (evt instanceof OrderAdded) {
                     eventSnapshot.setEventType("OrderAdded");
                 } else if (evt instanceof OrderTerminated) {
@@ -251,8 +246,9 @@ public class EventService {
     }
 
     private void addEvent(EventSnapshot eventSnapshot) {
+        LOGGER.info("try add event for " + controllerId + ": " + eventSnapshot.toString());
         if (events.add(eventSnapshot)) {
-            LOGGER.debug("addEvent for " + controllerId + ": " + eventSnapshot.toString());
+            LOGGER.info("add event for " + controllerId + ": " + eventSnapshot.toString());
             try {
                 if (atLeastOneConditionIsHold.get() && EventServiceFactory.lock.tryLock(200L, TimeUnit.MILLISECONDS)) {
                     try {
