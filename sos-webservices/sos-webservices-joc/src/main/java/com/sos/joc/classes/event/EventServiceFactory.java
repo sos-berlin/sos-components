@@ -118,10 +118,14 @@ public class EventServiceFactory {
                     TimeUnit.SECONDS.sleep(2);
                 } catch (InterruptedException e1) {
                 }
+                LOGGER.info("EventId from request for " + controllerId + ": " + eventId);
                 LOGGER.info("All events for " + controllerId + ": " + service.getEvents().toString());
                 service.getEvents().iterator().forEachRemaining(e -> {
+                    LOGGER.info("event for " + controllerId + ": " + e.toString());
                     if (e.getEventId() != null && eventId < e.getEventId()) {
+                        LOGGER.info("collect event for " + controllerId + ": " + e.toString());
                         evt.add(e);
+                        LOGGER.info("collected events for " + controllerId + ": " + evt.toString());
                     }
                 });
             } else if (mode == Mode.IMMEDIATLY) {
