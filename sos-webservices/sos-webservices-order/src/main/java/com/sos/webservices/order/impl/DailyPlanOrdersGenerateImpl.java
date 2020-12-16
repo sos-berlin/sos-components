@@ -14,20 +14,18 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.DailyPlanAudit;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderSelector;
 import com.sos.js7.order.initiator.OrderInitiatorRunner;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
 import com.sos.js7.order.initiator.ScheduleSource;
 import com.sos.js7.order.initiator.ScheduleSourceDB;
-import com.sos.js7.order.initiator.ScheduleSourceList;
 import com.sos.webservices.order.resource.IDailyPlanOrdersGenerateResource;
 
 @Path("daily_plan")
-public class DailyPlanOrdersGenerate extends JOCResourceImpl implements IDailyPlanOrdersGenerateResource {
+public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDailyPlanOrdersGenerateResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanOrdersGenerate.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanOrdersGenerateImpl.class);
     private static final String API_CALL = "./daily_plan/orders/generate";
 
     @Override
@@ -86,12 +84,12 @@ public class DailyPlanOrdersGenerate extends JOCResourceImpl implements IDailyPl
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
         } catch (JocException e) {
-            LOGGER.error(getJocError().getMessage(), e);
+            //LOGGER.error(getJocError().getMessage(), e);
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            e.printStackTrace();
-            LOGGER.error(getJocError().getMessage(), e);
+            //e.printStackTrace();
+            //LOGGER.error(getJocError().getMessage(), e);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
 

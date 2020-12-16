@@ -23,9 +23,9 @@ import com.sos.webservices.order.initiator.model.SchedulesList;
 import com.sos.webservices.order.resource.ISchedulesResource;
 
 @Path("schedules")
-public class Schedules extends JOCResourceImpl implements ISchedulesResource {
+public class SchedulesImpl extends JOCResourceImpl implements ISchedulesResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Schedules.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SchedulesImpl.class);
     private static final String API_CALL = "./schedules";
 
     private boolean isEmpty(List<?> l) {
@@ -73,12 +73,12 @@ public class Schedules extends JOCResourceImpl implements ISchedulesResource {
             return JOCDefaultResponse.responseStatus200(schedulesList);
 
         } catch (JocException e) {
-            LOGGER.error(getJocError().getMessage(), e);
+            //LOGGER.error(getJocError().getMessage(), e);
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            e.printStackTrace();
-            LOGGER.error(getJocError().getMessage(), e);
+            //e.printStackTrace();
+            //LOGGER.error(getJocError().getMessage(), e);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.disconnect(sosHibernateSession);
