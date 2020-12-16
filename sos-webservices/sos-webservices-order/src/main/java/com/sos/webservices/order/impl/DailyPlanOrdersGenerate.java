@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.audit.DailyPlanAudit;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Folder;
@@ -75,6 +76,11 @@ public class DailyPlanOrdersGenerate extends JOCResourceImpl implements IDailyPl
                 scheduleSource = new ScheduleSourceDB(dailyPlanOrderSelector);
                 orderInitiatorRunner.readTemplates(scheduleSource);
                 orderInitiatorRunner.generateDailyPlan(dailyPlanOrderSelector.getDailyPlanDate(), dailyPlanOrderSelector.getWithSubmit());
+                
+                DailyPlanAudit orderAudit = new DailyPlanAudit(controllerId,dailyPlanOrderSelector.getAuditLog());
+                logAuditMessage(orderAudit);
+                storeAuditLogEntry(orderAudit);
+
             }
 
             return JOCDefaultResponse.responseStatusJSOk(new Date());

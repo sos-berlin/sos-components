@@ -23,6 +23,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.audit.DailyPlanAudit;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -131,6 +132,10 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
             }
 
             submitOrdersToController(dailyPlanOrderFilter);
+            
+            DailyPlanAudit orderAudit = new DailyPlanAudit(dailyPlanOrderFilter.getControllerId(), dailyPlanOrderFilter.getAuditLog());
+            logAuditMessage(orderAudit);
+            storeAuditLogEntry(orderAudit);
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
         } catch (JocException e) {

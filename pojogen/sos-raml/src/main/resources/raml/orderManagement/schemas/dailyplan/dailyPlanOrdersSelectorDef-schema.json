@@ -17,7 +17,7 @@
 		"workflowPaths": {
 			"type": "array",
 			"items": {
-				"$ref": "../../../joc/schemas/audit/auditParams-schema.json"
+				"$ref": "../../../joc/schemas/common/path-schema.json"
 			}
 		}
 	}

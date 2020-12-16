@@ -22,6 +22,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.OrderHelper;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.audit.AddOrderAudit;
+import com.sos.joc.classes.audit.DailyPlanAudit;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -76,11 +77,13 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
             FilterDailyPlannedOrders filter = getFilter(dailyPlanOrderFilter);
             filter.addState(OrderStateText.PLANNED);
             dbLayerDailyPlannedOrders.delete(filter);
-
             Globals.commit(sosHibernateSession);
-        } finally
 
-        {
+            DailyPlanAudit orderAudit = new DailyPlanAudit(filter.getControllerId(), dailyPlanOrderFilter.getAuditLog());
+            logAuditMessage(orderAudit);
+            storeAuditLogEntry(orderAudit);
+
+        } finally {
             Globals.disconnect(sosHibernateSession);
         }
     }
@@ -105,10 +108,14 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
                 OrderHelper.removeFromJobSchedulerControllerWithHistory(dailyPlanOrderFilter.getControllerId(), listOfPlannedOrdersWithHistory);
                 filter.setSubmitted(false);
                 dbLayerDailyPlannedOrders.setSubmitted(filter);
+                
+                DailyPlanAudit orderAudit = new DailyPlanAudit(dailyPlanOrderFilter.getControllerId(), dailyPlanOrderFilter.getAuditLog());
+                logAuditMessage(orderAudit);
+                storeAuditLogEntry(orderAudit);
             } catch (JobSchedulerObjectNotExistException e) {
                 LOGGER.warn("Order unknown in JS7 Controller");
             }
-            dbLayerDailyPlannedOrders.delete(filter);
+            
 
             Globals.commit(sosHibernateSession);
         } finally
