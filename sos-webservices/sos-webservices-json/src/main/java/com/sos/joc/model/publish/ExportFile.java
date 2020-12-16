@@ -17,7 +17,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "name",
+    "filename",
     "format"
 })
 public class ExportFile {
@@ -29,8 +29,8 @@ public class ExportFile {
      * (Required)
      * 
      */
-    @JsonProperty("name")
-    private String name;
+    @JsonProperty("filename")
+    private String filename;
     /**
      * Archive Format of the archive file
      * <p>
@@ -48,9 +48,9 @@ public class ExportFile {
      * (Required)
      * 
      */
-    @JsonProperty("name")
-    public String getName() {
-        return name;
+    @JsonProperty("filename")
+    public String getFilename() {
+        return filename;
     }
 
     /**
@@ -60,9 +60,9 @@ public class ExportFile {
      * (Required)
      * 
      */
-    @JsonProperty("name")
-    public void setName(String name) {
-        this.name = name;
+    @JsonProperty("filename")
+    public void setFilename(String filename) {
+        this.filename = filename;
     }
 
     /**
@@ -91,12 +91,12 @@ public class ExportFile {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("name", name).append("format", format).toString();
+        return new ToStringBuilder(this).append("filename", filename).append("format", format).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(format).toHashCode();
+        return new HashCodeBuilder().append(format).append(filename).toHashCode();
     }
 
     @Override
@@ -108,7 +108,7 @@ public class ExportFile {
             return false;
         }
         ExportFile rhs = ((ExportFile) other);
-        return new EqualsBuilder().append(name, rhs.name).append(format, rhs.format).isEquals();
+        return new EqualsBuilder().append(format, rhs.format).append(filename, rhs.filename).isEquals();
     }
 
 }

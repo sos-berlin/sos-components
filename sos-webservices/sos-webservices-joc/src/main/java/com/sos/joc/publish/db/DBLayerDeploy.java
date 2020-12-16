@@ -34,8 +34,6 @@ import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDepVersions;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.deployment.DBItemDeploymentSubmission;
-import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
-import com.sos.joc.db.inventory.DBItemInventoryAgentName;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
@@ -47,9 +45,8 @@ import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.inventory.impl.ValidateResourceImpl;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.publish.ConfigurationFilter;
-import com.sos.joc.model.publish.DeployConfigDelete;
-import com.sos.joc.model.publish.DeployConfiguration;
+import com.sos.joc.model.publish.Config;
+import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.ExcludeConfiguration;
 import com.sos.joc.model.publish.ExportFilter;
@@ -223,7 +220,7 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemInventoryConfiguration> getFilteredInventoryConfiguration(List<ConfigurationFilter> configurations)
+    public List<DBItemInventoryConfiguration> getFilteredInventoryConfiguration(List<Configuration> configurations)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
@@ -251,7 +248,7 @@ public class DBLayerDeploy {
         }
     }
     
-    public List<DBItemInventoryReleasedConfiguration> getFilteredReleasedConfiguration(List<ConfigurationFilter> configurations)
+    public List<DBItemInventoryReleasedConfiguration> getFilteredReleasedConfiguration(List<Configuration> configurations)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
@@ -299,7 +296,7 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemDeploymentHistory> getFilteredDeploymentHistory(List<DeployConfiguration> deployConfigurations)
+    public List<DBItemDeploymentHistory> getFilteredDeploymentHistory(List<Configuration> deployConfigurations)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
@@ -330,7 +327,7 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemDeploymentHistory> getFilteredDeploymentHistoryToDelete(List<ConfigurationFilter> deployConfigurations)
+    public List<DBItemDeploymentHistory> getFilteredDeploymentHistoryToDelete(List<Configuration> deployConfigurations)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
@@ -397,12 +394,12 @@ public class DBLayerDeploy {
         if (filter.getForSigning() != null) {
             return getFilteredInventoryConfiguration(
                     filter.getForSigning().getDeployables().getDraftConfigurations().stream()
-                    .map(item -> item.getDraftConfiguration())
+                    .map(item -> item.getConfiguration())
                     .collect(Collectors.toList()));
         } else {
             return getFilteredInventoryConfiguration(
                     filter.getForBackup().getDeployables().getDraftConfigurations().stream()
-                    .map(item -> item.getDraftConfiguration())
+                    .map(item -> item.getConfiguration())
                     .collect(Collectors.toList()));
         }
     }
@@ -411,7 +408,7 @@ public class DBLayerDeploy {
     DBInvalidDataException {
         return getFilteredInventoryConfiguration(
                 filter.getDeployables().getDraftConfigurations().stream()
-                .map(item -> item.getDraftConfiguration())
+                .map(item -> item.getConfiguration())
                 .collect(Collectors.toList()));
     }
     
@@ -419,7 +416,7 @@ public class DBLayerDeploy {
             DBInvalidDataException {
         return getFilteredInventoryConfiguration(
                 filter.getDeployables().getDraftConfigurations().stream()
-                .map(item -> item.getDraftConfiguration())
+                .map(item -> item.getConfiguration())
                 .collect(Collectors.toList()));
     }
     
@@ -427,7 +424,7 @@ public class DBLayerDeploy {
             DBInvalidDataException {
         return getFilteredInventoryConfiguration(
                 filter.getReleasables().getDraftConfigurations().stream()
-                .map(item -> item.getDraftConfiguration())
+                .map(item -> item.getConfiguration())
                 .collect(Collectors.toList()));
     }
 
@@ -435,7 +432,7 @@ public class DBLayerDeploy {
             DBInvalidDataException {
         return getFilteredReleasedConfiguration(
                 filter.getReleasables().getReleasedConfigurations().stream()
-                .map(item -> item.getReleasedConfiguration())
+                .map(item -> item.getConfiguration())
                 .collect(Collectors.toList()));
     }
 
@@ -443,7 +440,7 @@ public class DBLayerDeploy {
     DBInvalidDataException {
         return getFilteredDeploymentHistory(
                 filter.getDeployables().getDeployConfigurations().stream()
-                .map(item -> item.getDeployConfiguration())
+                .map(item -> item.getConfiguration())
                 .collect(Collectors.toList()));
     }
 
@@ -451,7 +448,7 @@ public class DBLayerDeploy {
     DBInvalidDataException {
         return getFilteredDeploymentHistory(
                 filter.getDeployables().getDeployConfigurations().stream()
-                .map(item -> item.getDeployConfiguration())
+                .map(item -> item.getConfiguration())
                 .collect(Collectors.toList()));
     }
 
@@ -460,12 +457,12 @@ public class DBLayerDeploy {
         if (filter.getForSigning() != null) {
             return getFilteredDeploymentHistory(
                     filter.getForSigning().getDeployables().getDeployConfigurations().stream()
-                    .map(item -> item.getDeployConfiguration())
+                    .map(item -> item.getConfiguration())
                     .collect(Collectors.toList()));
         } else {
             return getFilteredDeploymentHistory(
                     filter.getForSigning().getDeployables().getDeployConfigurations().stream()
-                    .map(item -> item.getDeployConfiguration())
+                    .map(item -> item.getConfiguration())
                     .collect(Collectors.toList()));
         }
     }
@@ -474,7 +471,7 @@ public class DBLayerDeploy {
             DBInvalidDataException {
         return getFilteredDeploymentHistory(
                 filter.getDeployConfigurations().stream()
-                .map(item -> item.getDeployConfiguration())
+                .map(item -> item.getConfiguration())
                 .collect(Collectors.toList()));
     }
 
@@ -482,7 +479,7 @@ public class DBLayerDeploy {
             DBInvalidDataException {
         return getFilteredDeploymentHistory(
                 filter.getDeployConfigurations().stream()
-                .map(item -> item.getDeployConfiguration())
+                .map(item -> item.getConfiguration())
                 .collect(Collectors.toList()));
     }
 
@@ -819,7 +816,7 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemDeploymentHistory> getLatestDepHistoryItems (List<DeployConfigDelete> depConfigsToDelete) {
+    public List<DBItemDeploymentHistory> getLatestDepHistoryItems (List<Config> depConfigsToDelete) {
         try {
             StringBuilder hql = new StringBuilder("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
             hql.append(" where dep.id = (select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
@@ -839,9 +836,9 @@ public class DBLayerDeploy {
             Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
              for (Integer i=0; i < depConfigsToDelete.size(); i++) {
                  query.setParameter("path" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), 
-                         depConfigsToDelete.get(i).getDeployConfiguration().getPath());
+                         depConfigsToDelete.get(i).getConfiguration().getPath());
                  query.setParameter("type" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), 
-                         depConfigsToDelete.get(i).getDeployConfiguration().getObjectType().intValue());
+                         depConfigsToDelete.get(i).getConfiguration().getObjectType().intValue());
              }
              return query.getResultList();
         } catch (SOSHibernateException e) {
@@ -962,7 +959,7 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemDeploymentHistory> getLatestActiveDepHistoryItems (List<DeployConfigDelete> depConfigsToDelete) {
+    public List<DBItemDeploymentHistory> getLatestActiveDepHistoryItems (List<Config> depConfigsToDelete) {
         try {
             StringBuilder hql = new StringBuilder("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
             hql.append(" where dep.id = (select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
@@ -983,9 +980,9 @@ public class DBLayerDeploy {
             Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
              for (Integer i=0; i < depConfigsToDelete.size(); i++) {
                  query.setParameter("path" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), 
-                         depConfigsToDelete.get(i).getDeployConfiguration().getPath());
+                         depConfigsToDelete.get(i).getConfiguration().getPath());
                  query.setParameter("type" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), 
-                         depConfigsToDelete.get(i).getDeployConfiguration().getObjectType().intValue());
+                         depConfigsToDelete.get(i).getConfiguration().getObjectType().intValue());
              }
              return query.getResultList();
         } catch (SOSHibernateException e) {

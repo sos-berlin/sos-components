@@ -27,7 +27,7 @@
           }
         },
         "exportFile": {
-          "name": "test_export",
+          "filename": "test_export.zip",
           "format": "ZIP"
         }
       }
@@ -74,7 +74,7 @@
           }
         },
         "exportFile": {
-          "name": "test_export",
+          "filename": "test_export.zip",
           "format": "ZIP"
         }
       }

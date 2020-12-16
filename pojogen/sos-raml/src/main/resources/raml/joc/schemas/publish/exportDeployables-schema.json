@@ -17,17 +17,14 @@
     "draftConfigurations": {
       "type" : "array",
       "items" : {
-        "$ref": "draftConfig-schema.json"
+        "$ref": "config-schema.json"
       }
     },
     "deployConfigurations": {
       "type" : "array",
       "items" : {
-        "$ref": "deployConfig-schema.json"
+        "$ref": "config-schema.json"
       }
-    },
-    "auditLog": {
-      "$ref": "../audit/auditParams-schema.json"
     }
 	}
 }

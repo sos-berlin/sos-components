@@ -63,9 +63,9 @@ public class SetVersionsImpl extends JOCResourceImpl implements ISetVersions {
             DBItemDepVersions newVersion = new DBItemDepVersions();
             newVersion.setInvConfigurationId(item.getInventoryConfigurationId());
             DeploymentVersion version = filter.getDeployConfigurations().stream()
-                    .filter(versionItem -> versionItem.getDeployConfiguration().getPath().equals(item.getPath()))
+                    .filter(versionItem -> versionItem.getConfiguration().getPath().equals(item.getPath()))
                     .collect(Collectors.toList()).get(0);
-            versionWithPaths.put(version.getVersion(), version.getDeployConfiguration().getPath());
+            versionWithPaths.put(version.getVersion(), version.getConfiguration().getPath());
             newVersion.setDepHistoryId(item.getId());
             newVersion.setVersion(version.getVersion());
             newVersion.setModified(Date.from(Instant.now()));

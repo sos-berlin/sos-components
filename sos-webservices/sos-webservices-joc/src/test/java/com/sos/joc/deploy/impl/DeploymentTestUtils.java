@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import org.bouncycastle.bcpg.sig.Exportable;
-
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.instruction.ForkJoin;
 import com.sos.jobscheduler.model.instruction.IfElse;
@@ -25,20 +23,15 @@ import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.ArchiveFormat;
-import com.sos.joc.model.publish.ConfigurationFilter;
+import com.sos.joc.model.publish.Config;
+import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.ControllerId;
 import com.sos.joc.model.publish.DepHistory;
-import com.sos.joc.model.publish.DeployConfig;
-import com.sos.joc.model.publish.DeployConfigDelete;
-import com.sos.joc.model.publish.DeployConfiguration;
-import com.sos.joc.model.publish.DeployConfigurationDelete;
 import com.sos.joc.model.publish.DeployDelete;
 import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.DeployableObjects;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.DeploymentVersion;
-import com.sos.joc.model.publish.DraftConfig;
-import com.sos.joc.model.publish.DraftConfiguration;
 import com.sos.joc.model.publish.ExcludeConfiguration;
 import com.sos.joc.model.publish.ExportDeployables;
 import com.sos.joc.model.publish.ExportFile;
@@ -49,8 +42,6 @@ import com.sos.joc.model.publish.ExportReleasables;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.RedeployFilter;
-import com.sos.joc.model.publish.ReleasableConfig;
-import com.sos.joc.model.publish.ReleasedConfig;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.model.publish.SetVersionsFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
@@ -443,34 +434,34 @@ public class DeploymentTestUtils {
         filter.getControllerIds().add(js7Cluster);
         filter.getControllerIds().add(standalone);
         
-        DraftConfig workflow10DraftConfig = new DraftConfig();
-        ConfigurationFilter workflow10draft = new ConfigurationFilter();
+        Config workflow10DraftConfig = new Config();
+        Configuration workflow10draft = new Configuration();
         workflow10draft.setPath("/myWorkflows/ifElseWorkflow/workflow_10");
         workflow10draft.setObjectType(ConfigurationType.WORKFLOW);
-        workflow10DraftConfig.setDraftConfiguration(workflow10draft);
+        workflow10DraftConfig.setConfiguration(workflow10draft);
 
-        DraftConfig workflow16DraftConfig = new DraftConfig();
-        ConfigurationFilter workflow16draft = new ConfigurationFilter();
+        Config workflow16DraftConfig = new Config();
+        Configuration workflow16draft = new Configuration();
         workflow16draft.setPath("/myWorkflows/ifElseWorkflow/workflow_16");
         workflow16draft.setObjectType(ConfigurationType.WORKFLOW);
-        workflow16DraftConfig.setDraftConfiguration(workflow16draft);
+        workflow16DraftConfig.setConfiguration(workflow16draft);
         
         toStore.getDraftConfigurations().add(workflow10DraftConfig);
         toStore.getDraftConfigurations().add(workflow16DraftConfig);
         
-        DeployConfig workflow12deployConfig = new DeployConfig();
-        DeployConfiguration workflow12deployed = new DeployConfiguration();
+        Config workflow12deployConfig = new Config();
+        Configuration workflow12deployed = new Configuration();
         workflow12deployed.setPath("/myWorkflows/ifElseWorkflow/workflow_12");
         workflow12deployed.setObjectType(ConfigurationType.WORKFLOW);
         workflow12deployed.setCommitId("4273b6c6-c354-4fcd-afdb-2758088abe4a");
-        workflow12deployConfig.setDeployConfiguration(workflow12deployed);
+        workflow12deployConfig.setConfiguration(workflow12deployed);
         toStore.getDeployConfigurations().add(workflow12deployConfig);
         
-        DeployConfigDelete toDeleteConfig = new DeployConfigDelete();
-        ConfigurationFilter toDelete = new ConfigurationFilter();
+        Config toDeleteConfig = new Config();
+        Configuration toDelete = new Configuration();
         toDelete.setPath("/myWorkflows/forkJoinWorkflows/workflow_88");
         toDelete.setObjectType(ConfigurationType.WORKFLOW);
-        toDeleteConfig.setDeployConfiguration(toDelete);
+        toDeleteConfig.setConfiguration(toDelete);
         delete.getDeployConfigurations().add(toDeleteConfig);
         
         return filter;
@@ -478,45 +469,45 @@ public class DeploymentTestUtils {
 
     public static ExportFilter createExampleExportFilter (boolean forSigning) {
         ExportFilter filter = new ExportFilter();
-
+        
         ExportFile exportFile = new ExportFile();
-        exportFile.setName("test_export");
+        exportFile.setFilename("test_export.zip");
         exportFile.setFormat(ArchiveFormat.ZIP);
         filter.setExportFile(exportFile);
 
         ExportDeployables exportDeployables = new ExportDeployables();
-        DraftConfig workflow10DraftConfig = new DraftConfig();
-        ConfigurationFilter workflow10draft = new ConfigurationFilter();
+        Config workflow10DraftConfig = new Config();
+        Configuration workflow10draft = new Configuration();
         workflow10draft.setPath("/myWorkflows/ifElseWorkflow/workflow_10");
         workflow10draft.setObjectType(ConfigurationType.WORKFLOW);
-        workflow10DraftConfig.setDraftConfiguration(workflow10draft);
+        workflow10DraftConfig.setConfiguration(workflow10draft);
         exportDeployables.getDraftConfigurations().add(workflow10DraftConfig);
-        DraftConfig workflow16DraftConfig = new DraftConfig();
-        ConfigurationFilter workflow16draft = new ConfigurationFilter();
+        Config workflow16DraftConfig = new Config();
+        Configuration workflow16draft = new Configuration();
         workflow16draft.setPath("/myWorkflows/ifElseWorkflow/workflow_16");
         workflow16draft.setObjectType(ConfigurationType.WORKFLOW);
-        workflow16DraftConfig.setDraftConfiguration(workflow16draft);
+        workflow16DraftConfig.setConfiguration(workflow16draft);
         exportDeployables.getDraftConfigurations().add(workflow16DraftConfig);
-        DeployConfig workflow12deployConfig = new DeployConfig();
-        DeployConfiguration workflow12deployed = new DeployConfiguration();
+        Config workflow12deployConfig = new Config();
+        Configuration workflow12deployed = new Configuration();
         workflow12deployed.setPath("/myWorkflows/ifElseWorkflow/workflow_12");
         workflow12deployed.setObjectType(ConfigurationType.WORKFLOW);
         workflow12deployed.setCommitId("4273b6c6-c354-4fcd-afdb-2758088abe4a");
-        workflow12deployConfig.setDeployConfiguration(workflow12deployed);
+        workflow12deployConfig.setConfiguration(workflow12deployed);
         exportDeployables.getDeployConfigurations().add(workflow12deployConfig);
         
         ExportReleasables exportReleasables = new ExportReleasables();
-        ReleasableConfig scheduleCfg = new ReleasableConfig();
-        ConfigurationFilter schedule = new ConfigurationFilter();
+        Config scheduleCfg = new Config();
+        Configuration schedule = new Configuration();
         schedule.setPath("/mySchedules/newSchedules/mySchedule");
         schedule.setObjectType(ConfigurationType.SCHEDULE);
-        scheduleCfg.setDraftConfiguration(schedule);
+        scheduleCfg.setConfiguration(schedule);
         exportReleasables.getDraftConfigurations().add(scheduleCfg);
-        ReleasedConfig calendarCfg = new ReleasedConfig();
-        ConfigurationFilter calendar = new ConfigurationFilter();
+        Config calendarCfg = new Config();
+        Configuration calendar = new Configuration();
         calendar.setPath("/myCalendars/newCalendars/myCalendar");
         calendar.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
-        calendarCfg.setReleasedConfiguration(calendar);
+        calendarCfg.setConfiguration(calendar);
         exportReleasables.getReleasedConfigurations().add(calendarCfg);
 
         if (forSigning) {
@@ -536,44 +527,44 @@ public class DeploymentTestUtils {
     public static SetVersionFilter createExampleSetVersionFilter () {
         SetVersionFilter filter = new SetVersionFilter();
 
-        DeployConfig workflow10deployConfig = new DeployConfig();
-        DeployConfiguration workflow10deployed = new DeployConfiguration();
+        Config workflow10deployConfig = new Config();
+        Configuration workflow10deployed = new Configuration();
         workflow10deployed.setPath("/myWorkflows/ifElseWorkflow/workflow_10");
         workflow10deployed.setObjectType(ConfigurationType.WORKFLOW);
         workflow10deployed.setCommitId("4273b6c6-c354-4fcd-afdb-2758088abe4a");
-        workflow10deployConfig.setDeployConfiguration(workflow10deployed);
+        workflow10deployConfig.setConfiguration(workflow10deployed);
         filter.getDeployConfigurations().add(workflow10deployConfig);
         
-        DeployConfig workflow12deployConfig = new DeployConfig();
-        DeployConfiguration workflow12deployed = new DeployConfiguration();
+        Config workflow12deployConfig = new Config();
+        Configuration workflow12deployed = new Configuration();
         workflow12deployed.setPath("/myWorkflows/ifElseWorkflow/workflow_12");
         workflow12deployed.setObjectType(ConfigurationType.WORKFLOW);
         workflow12deployed.setCommitId("4273b6c6-c354-4fcd-afdb-2758088abe4a");
-        workflow12deployConfig.setDeployConfiguration(workflow12deployed);
+        workflow12deployConfig.setConfiguration(workflow12deployed);
         filter.getDeployConfigurations().add(workflow12deployConfig);
 
-        DeployConfig workflow14deployConfig = new DeployConfig();
-        DeployConfiguration workflow14deployed = new DeployConfiguration();
+        Config workflow14deployConfig = new Config();
+        Configuration workflow14deployed = new Configuration();
         workflow14deployed.setPath("/myWorkflows/ifElseWorkflow/workflow_14");
         workflow14deployed.setObjectType(ConfigurationType.WORKFLOW);
         workflow14deployed.setCommitId("4273b6c6-c354-4fcd-afdb-2758088abe4a");
-        workflow14deployConfig.setDeployConfiguration(workflow14deployed);
+        workflow14deployConfig.setConfiguration(workflow14deployed);
         filter.getDeployConfigurations().add(workflow14deployConfig);
 
-        DeployConfig workflow16deployConfig = new DeployConfig();
-        DeployConfiguration workflow16deployed = new DeployConfiguration();
+        Config workflow16deployConfig = new Config();
+        Configuration workflow16deployed = new Configuration();
         workflow16deployed.setPath("/myWorkflows/ifElseWorkflow/workflow_16");
         workflow16deployed.setObjectType(ConfigurationType.WORKFLOW);
         workflow16deployed.setCommitId("4273b6c6-c354-4fcd-afdb-2758088abe4a");
-        workflow16deployConfig.setDeployConfiguration(workflow16deployed);
+        workflow16deployConfig.setConfiguration(workflow16deployed);
         filter.getDeployConfigurations().add(workflow16deployConfig);
 
-        DeployConfig workflow18deployConfig = new DeployConfig();
-        DeployConfiguration workflow18deployed = new DeployConfiguration();
+        Config workflow18deployConfig = new Config();
+        Configuration workflow18deployed = new Configuration();
         workflow18deployed.setPath("/myWorkflows/ifElseWorkflow/workflow_18");
         workflow18deployed.setObjectType(ConfigurationType.WORKFLOW);
         workflow18deployed.setCommitId("4273b6c6-c354-4fcd-afdb-2758088abe4a");
-        workflow18deployConfig.setDeployConfiguration(workflow18deployed);
+        workflow18deployConfig.setConfiguration(workflow18deployed);
         filter.getDeployConfigurations().add(workflow18deployConfig);
         filter.setVersion("myTestVersion-1.0.0");
         return filter;
@@ -583,47 +574,47 @@ public class DeploymentTestUtils {
         SetVersionsFilter filter = new SetVersionsFilter();
 
         DeploymentVersion dvWf10 = new DeploymentVersion();
-        DeployConfiguration workflow10 = new DeployConfiguration();
+        Configuration workflow10 = new Configuration();
         workflow10.setPath("/myWorkflows/ifElseWorkflow/workflow_10");
         workflow10.setObjectType(ConfigurationType.WORKFLOW);
         workflow10.setCommitId("4273b6c6-c354-4fcd-afdb-2758088abe4a");
-        dvWf10.setDeployConfiguration(workflow10);
+        dvWf10.setConfiguration(workflow10);
         dvWf10.setVersion("myTestVersion-1.0.0");
         filter.getDeployConfigurations().add(dvWf10);
         
         DeploymentVersion dvWf12 = new DeploymentVersion();
-        DeployConfiguration workflow12 = new DeployConfiguration();
+        Configuration workflow12 = new Configuration();
         workflow12.setPath("/myWorkflows/ifElseWorkflow/workflow_12");
         workflow12.setObjectType(ConfigurationType.WORKFLOW);
         workflow12.setCommitId("4273b6c6-c354-4fcd-afdb-2758088abe4a");
-        dvWf12.setDeployConfiguration(workflow12);
+        dvWf12.setConfiguration(workflow12);
         dvWf12.setVersion("myTestVersion-1.0.0");
         filter.getDeployConfigurations().add(dvWf12);
         
         DeploymentVersion dvWf14 = new DeploymentVersion();
-        DeployConfiguration workflow14 = new DeployConfiguration();
+        Configuration workflow14 = new Configuration();
         workflow14.setPath("/myWorkflows/ifElseWorkflow/workflow_14");
         workflow14.setObjectType(ConfigurationType.WORKFLOW);
         workflow14.setCommitId("2a6487a7-091c-446a-b799-67c87b4db6c2");
-        dvWf14.setDeployConfiguration(workflow14);
+        dvWf14.setConfiguration(workflow14);
         dvWf14.setVersion("myTestVersion-1.1.0");
         filter.getDeployConfigurations().add(dvWf14);
         
         DeploymentVersion dvWf16 = new DeploymentVersion();
-        DeployConfiguration workflow16 = new DeployConfiguration();
+        Configuration workflow16 = new Configuration();
         workflow16.setPath("/myWorkflows/ifElseWorkflow/workflow_16");
         workflow16.setObjectType(ConfigurationType.WORKFLOW);
         workflow16.setCommitId("2a6487a7-091c-446a-b799-67c87b4db6c2");
-        dvWf16.setDeployConfiguration(workflow16);
+        dvWf16.setConfiguration(workflow16);
         dvWf16.setVersion("myTestVersion-1.1.0");
         filter.getDeployConfigurations().add(dvWf16);
         
         DeploymentVersion dvWf18 = new DeploymentVersion();
-        DeployConfiguration workflow18 = new DeployConfiguration();
+        Configuration workflow18 = new Configuration();
         workflow18.setPath("/myWorkflows/ifElseWorkflow/workflow_18");
         workflow18.setObjectType(ConfigurationType.WORKFLOW);
         workflow18.setCommitId("17cd67d9-37cb-4d28-8596-c88eab6a755d");
-        dvWf18.setDeployConfiguration(workflow18);
+        dvWf18.setConfiguration(workflow18);
         dvWf18.setVersion("myTestVersion-1.1.12");
         filter.getDeployConfigurations().add(dvWf18);
         

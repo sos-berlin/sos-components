@@ -1,12 +1,11 @@
 {
-	"title": "DeployConfiguration",
+	"title": "Configuration Filter. Identifies a configuration by its path and objectType",
 	"$schema": "http://json-schema.org/draft-04/schema#",
-	"javaType": "com.sos.joc.model.publish.DeployConfiguration",
+	"javaType": "com.sos.joc.model.publish.Configuration",
 	"type": "object",
   "required": [
     "path",
-    "objectType",
-    "commitId"
+    "objectType"
   ],
   "properties": {
     "path": {

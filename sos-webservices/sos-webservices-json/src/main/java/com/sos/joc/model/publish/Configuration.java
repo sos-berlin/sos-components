@@ -12,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * DeployConfiguration
+ * Configuration Filter. Identifies a configuration by its path and objectType
  * <p>
  * 
  * 
@@ -20,19 +20,20 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "path",
-    "objectType"
+    "objectType",
+    "commitId"
 })
-public class DeployConfigurationDelete {
+public class Configuration {
 
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String path;
     /**
      * configuration types
@@ -43,11 +44,19 @@ public class DeployConfigurationDelete {
      */
     @JsonProperty("objectType")
     private ConfigurationType objectType;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("commitId")
+    private String commitId;
 
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
@@ -59,7 +68,7 @@ public class DeployConfigurationDelete {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
@@ -92,14 +101,36 @@ public class DeployConfigurationDelete {
         this.objectType = objectType;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("commitId")
+    public String getCommitId() {
+        return commitId;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("commitId")
+    public void setCommitId(String commitId) {
+        this.commitId = commitId;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("objectType", objectType).toString();
+        return new ToStringBuilder(this).append("path", path).append("objectType", objectType).append("commitId", commitId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(path).append(commitId).append(objectType).toHashCode();
     }
 
     @Override
@@ -107,11 +138,11 @@ public class DeployConfigurationDelete {
         if (other == this) {
             return true;
         }
-        if ((other instanceof DeployConfigurationDelete) == false) {
+        if ((other instanceof Configuration) == false) {
             return false;
         }
-        DeployConfigurationDelete rhs = ((DeployConfigurationDelete) other);
-        return new EqualsBuilder().append(path, rhs.path).append(objectType, rhs.objectType).isEquals();
+        Configuration rhs = ((Configuration) other);
+        return new EqualsBuilder().append(path, rhs.path).append(commitId, rhs.commitId).append(objectType, rhs.objectType).isEquals();
     }
 
 }

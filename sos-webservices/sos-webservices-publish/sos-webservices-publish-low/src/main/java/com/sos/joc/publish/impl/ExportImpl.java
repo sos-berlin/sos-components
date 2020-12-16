@@ -106,25 +106,23 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             // TODO: create time restricted token to export, too
             // TODO: get JOC Version and Schema Version for later appliance of transformation rules (import)
             StreamingOutput stream = null;
-            String filename = null;
             if (filter.getExportFile().getFormat().equals(ArchiveFormat.TAR_GZ)) {
                 stream = PublishUtils.writeTarGzipFile(deployables, releasables, updateableAgentNames, commitId, controllerId, dbLayer);
-                filename = filter.getExportFile().getName() + ".tar.gz";
             } else {
                 stream = PublishUtils.writeZipFile(deployables, releasables, updateableAgentNames, commitId, controllerId, dbLayer);
-                filename = filter.getExportFile().getName() + ".zip";
             }
             ExportAudit audit = null;
             if (controllerId != null) {
                 audit = new ExportAudit(filter, 
-                        String.format("objects exported for controller <%1$s> to file <%2$s> with profile <%3$s>.", controllerId, filename, account));
+                        String.format("objects exported for controller <%1$s> to file <%2$s> with profile <%3$s>.", 
+                                controllerId, filter.getExportFile().getFilename(), account));
             } else {
                 audit = new ExportAudit(filter, 
-                        String.format("objects exported to file <%1$s> with profile <%2$s>.", filename, account));
+                        String.format("objects exported to file <%1$s> with profile <%2$s>.", filter.getExportFile().getFilename(), account));
             }
             logAuditMessage(audit);
             storeAuditLogEntry(audit);
-            return JOCDefaultResponse.responseOctetStreamDownloadStatus200(stream, filename);
+            return JOCDefaultResponse.responseOctetStreamDownloadStatus200(stream, filter.getExportFile().getFilename());
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
