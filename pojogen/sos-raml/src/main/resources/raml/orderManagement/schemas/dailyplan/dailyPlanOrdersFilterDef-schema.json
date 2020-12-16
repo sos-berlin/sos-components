@@ -38,6 +38,15 @@
 				"type": "string"
 			}
 		},
+		"states": {
+			"type": "array",
+			"items": {
+				"$ref": "../../../joc/schemas/order/orderStateText-schema.json"
+			}
+		},
+		"late": {
+			"type": "boolean"
+		},
 		"dailyPlanDate": {
 			"$ref": "../../../joc/schemas/common/date-schema.json"
 		},

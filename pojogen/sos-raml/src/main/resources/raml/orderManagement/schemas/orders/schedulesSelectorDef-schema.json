@@ -17,6 +17,12 @@
 				"$ref": "../../../joc/schemas/common/path-schema.json"
 			}
 		},
+		"workflowPaths": {
+			"type": "array",
+			"items": {
+				"$ref": "../../../joc/schemas/common/path-schema.json"
+			}
+		},
 		"folders": {
 			"$ref": "../../../joc/schemas/common/folders-schema.json"
 		}
