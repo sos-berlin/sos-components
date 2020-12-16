@@ -311,7 +311,7 @@ public class MappingTest {
     }
 
     @Test
-    public void test12MapExportFilter () throws JsonProcessingException {
+    public void test12MapExportForBackupFilter () throws JsonProcessingException {
         LOGGER.info("ExportFilter forSigning=false Example");
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleExportFilter(false)));

@@ -41,7 +41,7 @@ public class SetVersionFilter {
      * 
      */
     @JsonProperty("deployConfigurations")
-    private List<DeployConfig> deployConfigurations = new ArrayList<DeployConfig>();
+    private List<Config> deployConfigurations = new ArrayList<Config>();
     /**
      * auditParams
      * <p>
@@ -81,7 +81,7 @@ public class SetVersionFilter {
      * 
      */
     @JsonProperty("deployConfigurations")
-    public List<DeployConfig> getDeployConfigurations() {
+    public List<Config> getDeployConfigurations() {
         return deployConfigurations;
     }
 
@@ -91,7 +91,7 @@ public class SetVersionFilter {
      * 
      */
     @JsonProperty("deployConfigurations")
-    public void setDeployConfigurations(List<DeployConfig> deployConfigurations) {
+    public void setDeployConfigurations(List<Config> deployConfigurations) {
         this.deployConfigurations = deployConfigurations;
     }
 

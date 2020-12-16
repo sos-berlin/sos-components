@@ -25,27 +25,27 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class DeployableObjects {
 
     @JsonProperty("draftConfigurations")
-    private List<DraftConfig> draftConfigurations = new ArrayList<DraftConfig>();
+    private List<Config> draftConfigurations = new ArrayList<Config>();
     @JsonProperty("deployConfigurations")
-    private List<DeployConfig> deployConfigurations = new ArrayList<DeployConfig>();
+    private List<Config> deployConfigurations = new ArrayList<Config>();
 
     @JsonProperty("draftConfigurations")
-    public List<DraftConfig> getDraftConfigurations() {
+    public List<Config> getDraftConfigurations() {
         return draftConfigurations;
     }
 
     @JsonProperty("draftConfigurations")
-    public void setDraftConfigurations(List<DraftConfig> draftConfigurations) {
+    public void setDraftConfigurations(List<Config> draftConfigurations) {
         this.draftConfigurations = draftConfigurations;
     }
 
     @JsonProperty("deployConfigurations")
-    public List<DeployConfig> getDeployConfigurations() {
+    public List<Config> getDeployConfigurations() {
         return deployConfigurations;
     }
 
     @JsonProperty("deployConfigurations")
-    public void setDeployConfigurations(List<DeployConfig> deployConfigurations) {
+    public void setDeployConfigurations(List<Config> deployConfigurations) {
         this.deployConfigurations = deployConfigurations;
     }
 

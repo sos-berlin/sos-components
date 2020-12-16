@@ -17,20 +17,20 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "deployConfiguration",
+    "configuration",
     "version"
 })
 public class DeploymentVersion {
 
     /**
-     * DeployConfiguration
+     * Configuration Filter. Identifies a configuration by its path and objectType
      * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("deployConfiguration")
-    private DeployConfiguration deployConfiguration;
+    @JsonProperty("configuration")
+    private Configuration configuration;
     /**
      * string without < and >
      * <p>
@@ -42,27 +42,27 @@ public class DeploymentVersion {
     private String version;
 
     /**
-     * DeployConfiguration
+     * Configuration Filter. Identifies a configuration by its path and objectType
      * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("deployConfiguration")
-    public DeployConfiguration getDeployConfiguration() {
-        return deployConfiguration;
+    @JsonProperty("configuration")
+    public Configuration getConfiguration() {
+        return configuration;
     }
 
     /**
-     * DeployConfiguration
+     * Configuration Filter. Identifies a configuration by its path and objectType
      * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("deployConfiguration")
-    public void setDeployConfiguration(DeployConfiguration deployConfiguration) {
-        this.deployConfiguration = deployConfiguration;
+    @JsonProperty("configuration")
+    public void setConfiguration(Configuration configuration) {
+        this.configuration = configuration;
     }
 
     /**
@@ -91,12 +91,12 @@ public class DeploymentVersion {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deployConfiguration", deployConfiguration).append("version", version).toString();
+        return new ToStringBuilder(this).append("configuration", configuration).append("version", version).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(version).append(deployConfiguration).toHashCode();
+        return new HashCodeBuilder().append(configuration).append(version).toHashCode();
     }
 
     @Override
@@ -108,7 +108,7 @@ public class DeploymentVersion {
             return false;
         }
         DeploymentVersion rhs = ((DeploymentVersion) other);
-        return new EqualsBuilder().append(version, rhs.version).append(deployConfiguration, rhs.deployConfiguration).isEquals();
+        return new EqualsBuilder().append(configuration, rhs.configuration).append(version, rhs.version).isEquals();
     }
 
 }

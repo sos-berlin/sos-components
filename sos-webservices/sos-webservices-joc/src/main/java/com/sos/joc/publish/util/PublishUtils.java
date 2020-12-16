@@ -92,7 +92,7 @@ import com.sos.joc.model.inventory.common.CalendarType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.pgp.JocKeyType;
-import com.sos.joc.model.publish.DeployConfigDelete;
+import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
@@ -1609,51 +1609,54 @@ public abstract class PublishUtils {
         return unsignedDraftUpdated;
     }
 
-    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolder(DeployConfigDelete folder, DBLayerDeploy dbLayer) {
+    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolder(Config folder, DBLayerDeploy dbLayer) {
         List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
         entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(
-                folder.getDeployConfiguration().getPath()));
+                folder.getConfiguration().getPath()));
         return entries.stream()
                 .filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
     }
     
-    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolder(DeployConfigDelete folder, String controllerId,
+    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolder(Config folder, String controllerId,
             DBLayerDeploy dbLayer) {
         List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
         entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(
-                folder.getDeployConfiguration().getPath(), controllerId));
+                folder.getConfiguration().getPath(), controllerId));
         return entries.stream()
                 .filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
     }
     
-    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolders(List<DeployConfigDelete> foldersToDelete, DBLayerDeploy dbLayer) {
+    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolders(List<Config> foldersToDelete, DBLayerDeploy dbLayer) {
         List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
         foldersToDelete.stream()
-            .map(item -> item.getDeployConfiguration().getPath())
+            .map(item -> item.getConfiguration().getPath())
             .forEach(item -> entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(item)));
         return entries.stream()
                 .filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
     }
     
-    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolders(List<DeployConfigDelete> foldersToDelete, String controllerId, DBLayerDeploy dbLayer) {
+    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolders(List<Config> foldersToDelete, String controllerId,
+            DBLayerDeploy dbLayer) {
         List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
         foldersToDelete.stream()
-            .map(item -> item.getDeployConfiguration().getPath())
+            .map(item -> item.getConfiguration().getPath())
             .forEach(item -> entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(item, controllerId)));
         return entries.stream()
                 .filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
     }
     
-    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesDeleteForFolder(DeployConfigDelete folder, String controllerId, DBLayerDeploy dbLayer) {
+    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesDeleteForFolder(Config folder, String controllerId,
+            DBLayerDeploy dbLayer) {
         List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
-        entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(folder.getDeployConfiguration().getPath(), controllerId));
+        entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(folder.getConfiguration().getPath(), controllerId));
         return entries.stream().filter(item -> item.getOperation().equals(OperationType.DELETE.value())).collect(Collectors.toSet());
     }
     
-    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesDeleteForFolders(List<DeployConfigDelete> foldersToDelete, String controllerId, DBLayerDeploy dbLayer) {
+    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesDeleteForFolders(List<Config> foldersToDelete, String controllerId,
+            DBLayerDeploy dbLayer) {
         List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
         foldersToDelete.stream()
-            .map(item -> item.getDeployConfiguration().getPath())
+            .map(item -> item.getConfiguration().getPath())
             .forEach(item -> entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(item, controllerId)));
         return entries.stream().filter(item -> item.getOperation().equals(OperationType.DELETE.value())).collect(Collectors.toSet());
     }

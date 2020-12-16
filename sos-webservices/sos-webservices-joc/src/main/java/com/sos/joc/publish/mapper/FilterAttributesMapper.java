@@ -8,7 +8,7 @@ import org.hibernate.criterion.MatchMode;
 import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.publish.DeployConfigurationDelete;
+import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.RedeployFilter;
@@ -127,7 +127,7 @@ public abstract class FilterAttributesMapper {
         return null;
     }
     
-    public static Set<String> getAttributesfromObject(DeployConfigurationDelete depCfgToDelete) {
+    public static Set<String> getAttributesfromObject(Configuration depCfgToDelete) {
         Set<String> filterAttributes = new HashSet<String>();
         if (depCfgToDelete.getPath() != null) {
             filterAttributes.add("path");
@@ -138,7 +138,7 @@ public abstract class FilterAttributesMapper {
         return filterAttributes;
     }
     
-    public static Object getValueByObjectAttribute (DeployConfigurationDelete depCfgToDelete, String attribute) {
+    public static Object getValueByObjectAttribute (Configuration depCfgToDelete, String attribute) {
         switch(attribute) {
         case "path":
             return depCfgToDelete.getPath();

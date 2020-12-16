@@ -43,13 +43,10 @@ import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.pgp.JocKeyPair;
-import com.sos.joc.model.publish.ConfigurationFilter;
+import com.sos.joc.model.publish.Config;
+import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.ControllerId;
-import com.sos.joc.model.publish.DeployConfig;
-import com.sos.joc.model.publish.DeployConfigDelete;
-import com.sos.joc.model.publish.DeployConfiguration;
 import com.sos.joc.model.publish.DeployFilter;
-import com.sos.joc.model.publish.DraftConfig;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
@@ -89,19 +86,19 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     dbLayer.getAllControllers().stream().collect(Collectors.groupingBy(DBItemInventoryJSInstance::getControllerId));
             // process filter
             Set<String> controllerIds = getControllerIdsFromFilter(deployFilter);
-            List<ConfigurationFilter> draftConfigsToStore = getDraftConfigurationsToStoreFromFilter(deployFilter);
+            List<Configuration> draftConfigsToStore = getDraftConfigurationsToStoreFromFilter(deployFilter);
             /* TODO: 
              * - check for configurationIds with -marked-for-delete- set
              * - get all deployments from history related to the given configurationId
              * - get all controllers from those deployments
              * - delete all those existing deployments from all determined controllers
             **/
-            List<DeployConfiguration> deployConfigsToStoreAgain = getDeployConfigurationsToStoreFromFilter(deployFilter);
-            List<ConfigurationFilter> deployConfigsToDelete = getDeployConfigurationsToDeleteFromFilter(deployFilter);
-            List<DeployConfigDelete> foldersToDelete = null;
+            List<Configuration> deployConfigsToStoreAgain = getDeployConfigurationsToStoreFromFilter(deployFilter);
+            List<Configuration> deployConfigsToDelete = getDeployConfigurationsToDeleteFromFilter(deployFilter);
+            List<Config> foldersToDelete = null;
             if (deployFilter.getDelete() != null) {
                 foldersToDelete = deployFilter.getDelete().getDeployConfigurations().stream()
-                .filter(item -> item.getDeployConfiguration().getObjectType().equals(ConfigurationType.FOLDER)).collect(Collectors.toList());
+                .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER)).collect(Collectors.toList());
             }
 
             // read all objects provided in the filter from the database
@@ -152,7 +149,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
 
                 if(foldersToDelete != null && !foldersToDelete.isEmpty()) {
                     foldersToDelete.stream()
-                        .map(DeployConfigDelete::getDeployConfiguration)
+                        .map(Config::getConfiguration)
                         .map(item -> dbLayer.getLatestDepHistoryItemsFromFolder(item.getPath(), controllerId))
                             .forEach(item -> itemsFromFolderToDelete.addAll(item));
                 }
@@ -240,7 +237,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                                     && !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation())))
                             .collect(Collectors.toList()));
                 }
-                final List<DeployConfigDelete> folders = foldersToDelete;
+                final List<Config> folders = foldersToDelete;
                 PublishUtils.updateRepoDelete(versionIdForDelete, itemsToDelete, controllerId, dbLayer, 
                         keyPair.getKeyAlgorithm()).thenAccept(either -> {
                         processAfterDelete(either, itemsToDelete, folders, controllerId, account, versionIdForDelete, deployFilter);
@@ -274,33 +271,33 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         return deployFilter.getControllerIds().stream().map(ControllerId::getControllerId).filter(Objects::nonNull).collect(Collectors.toSet());
     }
     
-    private List<ConfigurationFilter> getDraftConfigurationsToStoreFromFilter (DeployFilter deployFilter) {
+    private List<Configuration> getDraftConfigurationsToStoreFromFilter (DeployFilter deployFilter) {
         if (deployFilter.getStore() != null) {
             return deployFilter.getStore().getDraftConfigurations().stream()
-                    .filter(item -> !item.getDraftConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                    .map(DraftConfig::getDraftConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
+                    .filter(item -> !item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+                    .map(Config::getConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
         } else {
-            return new ArrayList<ConfigurationFilter>();
+            return new ArrayList<Configuration>();
         }
    }
     
-    private List<DeployConfiguration> getDeployConfigurationsToStoreFromFilter (DeployFilter deployFilter) {
+    private List<Configuration> getDeployConfigurationsToStoreFromFilter (DeployFilter deployFilter) {
         if (deployFilter.getStore() != null) {
             return deployFilter.getStore().getDeployConfigurations().stream()
-                    .filter(item -> !item.getDeployConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                    .map(DeployConfig::getDeployConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
+                    .filter(item -> !item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+                    .map(Config::getConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
         } else {
-            return new ArrayList<DeployConfiguration>();
+            return new ArrayList<Configuration>();
         }
     }
     
-    private List<ConfigurationFilter> getDeployConfigurationsToDeleteFromFilter (DeployFilter deployFilter) {
+    private List<Configuration> getDeployConfigurationsToDeleteFromFilter (DeployFilter deployFilter) {
         if (deployFilter.getDelete() != null) {
             return deployFilter.getDelete().getDeployConfigurations().stream()
-                    .filter(item -> !item.getDeployConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                    .map(DeployConfigDelete::getDeployConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
+                    .filter(item -> !item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+                    .map(Config::getConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
         } else {
-          return new ArrayList<ConfigurationFilter>();
+          return new ArrayList<Configuration>();
         }
     }
     
@@ -360,7 +357,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     private void processAfterDelete (
             Either<Problem, Void> either, 
             List<DBItemDeploymentHistory> itemsToDelete, 
-            List<DeployConfigDelete> foldersToDelete,
+            List<Config> foldersToDelete,
             String controllerId, 
             String account, 
             String versionIdForDelete,
@@ -379,15 +376,15 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 JocInventory.deleteConfigurations(configurationIdsToDelete);
                 JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);
                 if (foldersToDelete != null && !foldersToDelete.isEmpty()) {
-                    for (DeployConfigDelete folder : foldersToDelete) {
+                    for (Config folder : foldersToDelete) {
                         // check if deployable objects still exist in the folder
                         Set<DBItemDeploymentHistory> stillActiveDeployments = 
                                 PublishUtils.getLatestDepHistoryEntriesActiveForFolder(folder, dbLayer);
                         // check if releasable objects still exist in the folder
                         List<DBItemInventoryReleasedConfiguration> stillActiveReleased = dbLayer.
-                                getReleasedConfigurations(folder.getDeployConfiguration().getPath());
+                                getReleasedConfigurations(folder.getConfiguration().getPath());
                         List<DBItemInventoryConfiguration> stillActiveReleasables = dbLayer
-                                .getReleasableConfigurations(folder.getDeployConfiguration().getPath());
+                                .getReleasableConfigurations(folder.getConfiguration().getPath());
                         if (checkAnyItemsStillExist(
                                 stillActiveDeployments, 
                                 stillActiveReleased, 
@@ -395,23 +392,23 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                             if (checkDeploymentItemsStillExist(stillActiveDeployments)) {
                                 LOGGER.warn(String
                                         .format("removed folder \"%1$s\" can´t be deleted from inventory. Deployments still exist on controller %1$s.", 
-                                                folder.getDeployConfiguration().getPath(), controllerId));
+                                                folder.getConfiguration().getPath(), controllerId));
                             }
                             if (checkReleasedItemsStillExist(stillActiveReleased)) {
                                 LOGGER.warn(String
                                         .format("removed folder \"%1$s\" can´t be deleted from inventory, released objects still exist.", 
-                                                folder.getDeployConfiguration().getPath()));
+                                                folder.getConfiguration().getPath()));
                             }
                             if (checkReleaseablesItemsStillExist(stillActiveReleasables)) {
                                 LOGGER.warn(String
                                         .format("removed folder \"%1$s\" can´t be deleted from inventory, releasable objects still exist.", 
-                                                folder.getDeployConfiguration().getPath()));
+                                                folder.getConfiguration().getPath()));
                             }
                         } else {
                             // no active items still exist in dep history, inv configurations and inv released configurations
                             // folder can be safely deleted from inventory
                             DBItemInventoryConfiguration folderConfig = dbLayer
-                                    .getInvConfigurationFolder(folder.getDeployConfiguration().getPath());
+                                    .getInvConfigurationFolder(folder.getConfiguration().getPath());
                             if(folderConfig != null) {
                                 JocInventory.deleteConfigurations(
                                         new HashSet<Long>(Arrays.asList(folderConfig.getId())));
