@@ -118,6 +118,7 @@ public class EventServiceFactory {
                     TimeUnit.SECONDS.sleep(2);
                 } catch (InterruptedException e1) {
                 }
+                LOGGER.info("All events for " + controllerId + ": " + service.getEvents().toString());
                 service.getEvents().iterator().forEachRemaining(e -> {
                     if (e.getEventId() != null && eventId < e.getEventId()) {
                         evt.add(e);
@@ -133,8 +134,8 @@ public class EventServiceFactory {
             if (evt.isEmpty()) {
                 //events.setEventSnapshots(null);
             } else {
+                LOGGER.info("Events for " + controllerId + ": " + evt.toString());
                 events.setEventId(evt.last().getEventId());
-                LOGGER.info("Events for " + controllerId + ": " + evt);
                 events.setEventSnapshots(evt.stream().map(e -> cloneEvent(e)).distinct().collect(Collectors.toList()));
                 //events.setEventSnapshots(evt.stream().collect(Collectors.toList()));
             }
@@ -155,6 +156,7 @@ public class EventServiceFactory {
     }
     
     private static EventSnapshot cloneEvent(EventSnapshot e) {
+        LOGGER.info("Clone events for " + e.toString());
         EventSnapshot es = new EventSnapshot();
         es.setAccessToken(e.getAccessToken());
         es.setEventId(null);

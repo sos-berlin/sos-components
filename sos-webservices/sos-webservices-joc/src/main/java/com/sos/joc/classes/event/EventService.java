@@ -156,10 +156,9 @@ public class EventService {
             EventSnapshot eventSnapshot = new EventSnapshot();
 
             if (evt instanceof OrderEvent) {
-                LOGGER.info("OrderEvent received: " + evt.getClass().getSimpleName());
+                LOGGER.debug("OrderEvent received: " + evt.getClass().getSimpleName());
                 final OrderId orderId = (OrderId) key;
                 Optional<JOrder> opt = currentState.idToOrder(orderId);
-                LOGGER.info("JOrder is present");
                 if (opt.isPresent()) {
                     WorkflowId w = mapWorkflowId(opt.get().workflowId());
                     addEvent(createWorkflowEventOfOrder(eventId, w));
@@ -246,9 +245,9 @@ public class EventService {
     }
 
     private void addEvent(EventSnapshot eventSnapshot) {
-        LOGGER.info("try add event for " + controllerId + ": " + eventSnapshot.toString());
+        LOGGER.debug("try add event for " + controllerId + ": " + eventSnapshot.toString());
         if (events.add(eventSnapshot)) {
-            LOGGER.info("add event for " + controllerId + ": " + eventSnapshot.toString());
+            LOGGER.debug("add event for " + controllerId + ": " + eventSnapshot.toString());
             try {
                 if (atLeastOneConditionIsHold.get() && EventServiceFactory.lock.tryLock(200L, TimeUnit.MILLISECONDS)) {
                     try {
