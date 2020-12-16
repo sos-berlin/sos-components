@@ -36,11 +36,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class PlannedOrdersFilter {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("controllerId")
     private String controllerId;
     /**
@@ -90,21 +85,11 @@ public class PlannedOrdersFilter {
     @JsonProperty("orderId")
     private String orderId;
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("controllerId")
     public String getControllerId() {
         return controllerId;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("controllerId")
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;

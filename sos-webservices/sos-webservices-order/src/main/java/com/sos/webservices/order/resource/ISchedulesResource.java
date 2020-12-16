@@ -7,11 +7,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.webservices.order.initiator.model.ScheduleFilter;
+import com.sos.webservices.order.initiator.model.ScheduleSelector;
  
 public interface ISchedulesResource {
 
     @POST
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postSchedules(@HeaderParam("X-Access-Token") String accessToken, ScheduleFilter scheduleFilter);
+    public JOCDefaultResponse postSchedules(@HeaderParam("X-Access-Token") String accessToken, ScheduleSelector scheduleSelector);
 }

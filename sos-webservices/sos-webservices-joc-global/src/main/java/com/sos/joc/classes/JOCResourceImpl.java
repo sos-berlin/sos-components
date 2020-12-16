@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.auth.rest.SOSPermissionsCreator;
+import com.sos.auth.rest.SOSShiroCurrentUser;
 import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.auth.rest.SOSShiroSession;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
@@ -362,6 +363,24 @@ public class JOCResourceImpl {
         } catch (Exception e) {
             return null;
         }
+    }
+    
+    public String getControllerId(String accessToken, String controllerId) {
+        String resultControllerId;
+        this.accessToken = accessToken;
+        if (jobschedulerUser == null) {
+            jobschedulerUser = new JobSchedulerUser(accessToken);
+        }
+        SOSShiroCurrentUser shiroUser = jobschedulerUser.getSosShiroCurrentUser();
+
+        JOCPreferences jocPreferences = new JOCPreferences(shiroUser.getUsername());
+        if (!"".equals(controllerId) && controllerId != null){
+            resultControllerId = controllerId;
+        }else {
+            resultControllerId = jocPreferences.get(WebserviceConstants.SELECTED_INSTANCE, "");
+        }
+        return resultControllerId;
+
     }
 
 }

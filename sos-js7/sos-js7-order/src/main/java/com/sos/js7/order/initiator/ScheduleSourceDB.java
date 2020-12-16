@@ -4,28 +4,28 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
-import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
+import com.sos.joc.model.dailyplan.DailyPlanOrderSelector;
 import com.sos.js7.order.initiator.db.DBLayerSchedules;
 import com.sos.js7.order.initiator.db.FilterSchedules;
 import com.sos.webservices.order.initiator.model.Schedule;
 
 public class ScheduleSourceDB extends ScheduleSource {
 
-    private DailyPlanOrderFilter dailyPlanOrderFilter;
-
- 
+    private DailyPlanOrderSelector dailyPlanOrderSelector;
 
     public ScheduleSourceDB(String controllerId) {
-        dailyPlanOrderFilter = new DailyPlanOrderFilter();
-        dailyPlanOrderFilter.setControllerIds(new ArrayList<String>());
-        dailyPlanOrderFilter.getControllerIds().add(controllerId);
+        dailyPlanOrderSelector = new DailyPlanOrderSelector();
+        dailyPlanOrderSelector.setControllerIds(new ArrayList<String>());
+        dailyPlanOrderSelector.getControllerIds().add(controllerId);
+    }
+
+    public ScheduleSourceDB(DailyPlanOrderSelector dailyPlanOrderSelector) {
+        this.dailyPlanOrderSelector = dailyPlanOrderSelector;
     }
 
     @Override
@@ -35,8 +35,10 @@ public class ScheduleSourceDB extends ScheduleSource {
         List<Schedule> listOfSchedules = new ArrayList<Schedule>();
         DBLayerSchedules dbLayerSchedules = new DBLayerSchedules(sosHibernateSession);
 
-        filterSchedules.setListOfControllerIds(dailyPlanOrderFilter.getControllerIds());
-        filterSchedules.setListOfFolders(dailyPlanOrderFilter.getFolders());
+        filterSchedules.setListOfControllerIds(dailyPlanOrderSelector.getControllerIds());
+        filterSchedules.setListOfFolders(dailyPlanOrderSelector.getSelector().getFolders());
+        filterSchedules.setListOfWorkflowPaths(dailyPlanOrderSelector.getSelector().getWorkflowPaths());
+        filterSchedules.setListOfSchedules(dailyPlanOrderSelector.getSelector().getSchedulePaths());
 
         List<DBItemInventoryReleasedConfiguration> listOfSchedulesDbItems = dbLayerSchedules.getSchedules(filterSchedules, 0);
         for (DBItemInventoryReleasedConfiguration dbItemInventoryConfiguration : listOfSchedulesDbItems) {

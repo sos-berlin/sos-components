@@ -43,39 +43,41 @@ public class DBLayerSchedules {
 
     private String getWhere(FilterSchedules filter) {
         String where = " type = " + ConfigurationType.SCHEDULE.intValue();
-        String and = " and ";
+        String and = " and (";
+        String kzu ="";
 
         if (filter.getListOfSchedules() != null && filter.getListOfSchedules().size() > 0) {
             where += and + SearchStringHelper.getStringListSql(filter.getListOfSchedules(), "path");
-            and = " and ";
-        } else {
-            if (filter.getListOfFolders() != null && filter.getListOfFolders().size() > 0) {
-                where += and + "(";
-                for (Folder filterFolder : filter.getListOfFolders()) {
-                    if (filterFolder.getRecursive()) {
-                        String likeFolder = (filterFolder.getFolder() + "/%").replaceAll("//+", "/");
-                        where += " ( folder ='" + filterFolder.getFolder() + "' or folder like '" + likeFolder + "') ";
-                    } else {
-                        where += String.format(" folder %s '" + filterFolder.getFolder() + "'", SearchStringHelper.getSearchOperator(filterFolder
-                                .getFolder()));
-                    }
-                    where += " or ";
-                }
-                where += " 0=1)";
-                and = " and ";
-            }
+            and = " or ";
+            kzu = ")";
         }
 
-        if (!"".equals(where.trim()))
+        if (filter.getListOfFolders() != null && filter.getListOfFolders().size() > 0) {
+            where += and + "(";
+            kzu = ")";
+            for (Folder filterFolder : filter.getListOfFolders()) {
+                if (filterFolder.getRecursive()) {
+                    String likeFolder = (filterFolder.getFolder() + "/%").replaceAll("//+", "/");
+                    where += " ( folder ='" + filterFolder.getFolder() + "' or folder like '" + likeFolder + "') ";
+                } else {
+                    where += String.format(" folder %s '" + filterFolder.getFolder() + "'", SearchStringHelper.getSearchOperator(filterFolder
+                            .getFolder()));
+                }
+                where += " or ";
+            }
+            where += " 0=1)";
+            and = " or ";
+        }
 
-        {
-            where = " where " + where;
+        if (!"".equals(where.trim())) {
+            where = " where " + where + kzu;
         }
         return where;
     }
 
-    public List<DBItemInventoryReleasedConfiguration> getSchedules(FilterSchedules filter, final int limit) throws SOSHibernateException, JsonParseException, JsonMappingException, IOException {
- 
+    public List<DBItemInventoryReleasedConfiguration> getSchedules(FilterSchedules filter, final int limit) throws SOSHibernateException,
+            JsonParseException, JsonMappingException, IOException {
+
         String q = "from " + DBItemInventoryReleasedConfiguration + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
         Query<DBItemInventoryReleasedConfiguration> query = sosHibernateSession.createQuery(q);
 
@@ -83,13 +85,34 @@ public class DBLayerSchedules {
             query.setMaxResults(limit);
         }
         List<DBItemInventoryReleasedConfiguration> filteredResultset = new ArrayList<DBItemInventoryReleasedConfiguration>();
-        List<DBItemInventoryReleasedConfiguration> resultset = sosHibernateSession.getResultList(query);       
+        List<DBItemInventoryReleasedConfiguration> resultset = sosHibernateSession.getResultList(query);
 
-    
-        
         ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         Set<String> setOfWorkflows = new LinkedHashSet<String>();
-        boolean filteredByControllerIds=(filter.getListOfControllerIds() != null && filter.getListOfControllerIds().size() > 0);
+        boolean filteredByControllerIds = (filter.getListOfControllerIds() != null && filter.getListOfControllerIds().size() > 0);
+        boolean selectedByWorkflowPaths = (filter.getListOfWorkflowPaths() != null && filter.getListOfWorkflowPaths().size() > 0);
+
+        if (selectedByWorkflowPaths) {
+            FilterSchedules filterSelectByWorkflowPaths = new FilterSchedules();
+
+            q = "from " + DBItemInventoryReleasedConfiguration + getWhere(filterSelectByWorkflowPaths) + filter.getOrderCriteria() + filter
+                    .getSortMode();
+            query = sosHibernateSession.createQuery(q);
+
+            if (limit > 0) {
+                query.setMaxResults(limit);
+            }
+            List<DBItemInventoryReleasedConfiguration> resultsetByWorkflowPaths = sosHibernateSession.getResultList(query);
+            for (DBItemInventoryReleasedConfiguration dbItemInventoryConfiguration : resultsetByWorkflowPaths) {
+                Schedule schedule = objectMapper.readValue(dbItemInventoryConfiguration.getContent(), Schedule.class);
+
+                if (filter.getListOfWorkflowPaths().contains(schedule.getWorkflowPath())) {
+                    dbItemInventoryConfiguration.setSchedule(schedule);
+                    resultset.add(dbItemInventoryConfiguration);
+                }
+            }
+
+        }
 
         if (filteredByControllerIds) {
             FilterDeployHistory filterDeployHistory = new FilterDeployHistory();
@@ -100,18 +123,25 @@ public class DBLayerSchedules {
             DBLayerDeployHistory dbLayerDeploy = new DBLayerDeployHistory(sosHibernateSession);
             List<DBItemDeploymentHistory> listOfWorkflows = dbLayerDeploy.getDeployments(filterDeployHistory, 0);
 
-            for (DBItemDeploymentHistory dbItemDeploymentHistory: listOfWorkflows) {
+            for (DBItemDeploymentHistory dbItemDeploymentHistory : listOfWorkflows) {
                 setOfWorkflows.add(dbItemDeploymentHistory.getPath());
             }
         }
-        for (DBItemInventoryReleasedConfiguration dbItemInventoryConfiguration: resultset) {
-            Schedule schedule = objectMapper.readValue(dbItemInventoryConfiguration.getContent(), Schedule.class);
-            
+
+        for (DBItemInventoryReleasedConfiguration dbItemInventoryConfiguration : resultset) {
+            Schedule schedule;
+            if (dbItemInventoryConfiguration.getSchedule() != null) {
+                schedule = dbItemInventoryConfiguration.getSchedule();
+            } else {
+                schedule = objectMapper.readValue(dbItemInventoryConfiguration.getContent(), Schedule.class);
+            }
+
             if (!filteredByControllerIds || setOfWorkflows.contains(schedule.getWorkflowPath())) {
                 dbItemInventoryConfiguration.setSchedule(schedule);
                 filteredResultset.add(dbItemInventoryConfiguration);
             }
         }
+
         return filteredResultset;
     }
 

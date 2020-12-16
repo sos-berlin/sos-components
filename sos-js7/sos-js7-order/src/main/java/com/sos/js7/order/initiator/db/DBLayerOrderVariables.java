@@ -34,8 +34,8 @@ public class DBLayerOrderVariables {
         } else {
             where = "v.plannedOrderId = p.id";
             and = " and ";
-            if (filter.getPlannedOrderKey() != null && !filter.getPlannedOrderKey().isEmpty()) {
-                where += and + " p.orderId = :plannedOrderKey";
+            if (filter.getOrderId() != null && !filter.getOrderId().isEmpty()) {
+                where += and + " p.orderId = :orderId";
                 and = " and ";
             }
         }
@@ -46,11 +46,11 @@ public class DBLayerOrderVariables {
     }
 
     private <T> Query<T> bindParameters(FilterOrderVariables filter, Query<T> query) {
-        if (filter.getPlannedOrderKey() != null) {
-            query.setParameter("plannedOrderKey", filter.getPlannedOrderKey());
+        if (filter.getOrderId() != null) {
+            query.setParameter("orderId", filter.getOrderId());
         }
         if (filter.getPlannedOrderId() != null) {
-            query.setParameter("plannedOrderId", filter.getPlannedOrderKey());
+            query.setParameter("plannedOrderId", filter.getPlannedOrderId());
         }
         return query;
     }

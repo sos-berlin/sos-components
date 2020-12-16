@@ -20,6 +20,7 @@ import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.joc.model.dailyplan.Period;
 import com.sos.joc.model.dailyplan.PlannedOrderItem;
 import com.sos.joc.model.dailyplan.PlannedOrders;
@@ -79,39 +80,43 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
     }
 
     @Override
-    public JOCDefaultResponse postDailyPlan(String xAccessToken, PlannedOrdersFilter plannedOrdersFilter) throws JocException {
+    public JOCDefaultResponse postDailyPlan(String xAccessToken, DailyPlanOrderFilter dailyPlanOrderFilter) throws JocException {
         SOSHibernateSession sosHibernateSession = null;
-        LOGGER.debug("Reading the daily plan for day " + plannedOrdersFilter.getDailyPlanDate());
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, plannedOrdersFilter, xAccessToken, plannedOrdersFilter.getControllerId(),
-                    getPermissonsJocCockpit(plannedOrdersFilter.getControllerId(), xAccessToken).getDailyPlan().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, dailyPlanOrderFilter, xAccessToken, dailyPlanOrderFilter.getControllerId(),
+                    getPermissonsJocCockpit(getControllerId(xAccessToken,dailyPlanOrderFilter.getControllerId()), xAccessToken).getDailyPlan().getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            this.checkRequiredParameter("dailyPlanDate", plannedOrdersFilter.getDailyPlanDate());
+            
+            this.checkRequiredParameter("filter", dailyPlanOrderFilter.getFilter());
+            this.checkRequiredParameter("dailyPlanDate", dailyPlanOrderFilter.getFilter().getDailyPlanDate());
+
+            LOGGER.debug("Reading the daily plan for day " + dailyPlanOrderFilter.getFilter().getDailyPlanDate());
+
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
 
             DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
-            boolean withFolderFilter = plannedOrdersFilter.getFolders() != null && !plannedOrdersFilter.getFolders().isEmpty();
+            boolean withFolderFilter = dailyPlanOrderFilter.getFilter().getFolders() != null && !dailyPlanOrderFilter.getFilter().getFolders().isEmpty();
             boolean hasPermission = true;
-            Set<Folder> folders = addPermittedFolder(plannedOrdersFilter.getFolders());
+            Set<Folder> folders = addPermittedFolder(dailyPlanOrderFilter.getFilter().getFolders());
 
             Globals.beginTransaction(sosHibernateSession);
 
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-            filter.setControllerId(plannedOrdersFilter.getControllerId());
-            filter.setListOfWorkflowPaths(plannedOrdersFilter.getWorkflowPaths());
-            filter.setListOfSubmissionIds(plannedOrdersFilter.getDailyPlanSubmissionHistoryIds());
-            filter.setCalendarId(plannedOrdersFilter.getCalendarId());
-            filter.setListOfSchedules(plannedOrdersFilter.getSchedulePaths());
+            filter.setControllerId(dailyPlanOrderFilter.getControllerId());
+            filter.setListOfWorkflowPaths(dailyPlanOrderFilter.getFilter().getWorkflowPaths());
+            filter.setListOfSubmissionIds(dailyPlanOrderFilter.getFilter().getDailyPlanSubmissionHistoryIds());
+            filter.setListOfSchedules(dailyPlanOrderFilter.getFilter().getSchedulePaths());
+            filter.setListOfOrders(dailyPlanOrderFilter.getFilter().getOrderIds());
 
-            filter.setDailyPlanDate(plannedOrdersFilter.getDailyPlanDate());
+            filter.setDailyPlanDate(dailyPlanOrderFilter.getFilter().getDailyPlanDate());
 
-            filter.setLate(plannedOrdersFilter.getLate());
+            filter.setLate(dailyPlanOrderFilter.getFilter().getLate());
 
-            if (plannedOrdersFilter.getStates() != null) {
-                for (OrderStateText state : plannedOrdersFilter.getStates()) {
+            if (dailyPlanOrderFilter.getFilter().getStates() != null) {
+                for (OrderStateText state : dailyPlanOrderFilter.getFilter().getStates()) {
                     filter.addState(state);
                 }
             }

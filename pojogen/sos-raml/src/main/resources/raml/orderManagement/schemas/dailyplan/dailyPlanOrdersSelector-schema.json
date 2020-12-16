@@ -4,9 +4,7 @@
 	"javaType": "com.sos.joc.model.dailyplan.DailyPlanOrderSelector",
 	"type": "object",
 	"description": "To generate orders for the daily plan",
-	"required": [
-		"controllerId"
-	],
+	
 	"properties": {
 		"controllerId": {
 			"type": "string"
@@ -28,6 +26,9 @@
 		},
 		"selector": {
 			"$ref": "dailyPlanOrdersSelectorDef-schema.json"
+		},
+		"auditLog": {
+			"$ref": "../../../joc/schemas/audit/auditParams-schema.json"
 		}
 	}
 }

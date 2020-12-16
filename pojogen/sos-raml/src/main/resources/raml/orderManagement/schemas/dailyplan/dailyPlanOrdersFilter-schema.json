@@ -4,9 +4,7 @@
 	"javaType": "com.sos.joc.model.dailyplan.DailyPlanOrderFilter",
 	"type": "object",
 	"description": "To get orders from the daily plan",
-	"required": [
-		"controllerId"
-	],
+	
 	"properties": {
 		"controllerId": {
 			"type": "string"
@@ -19,6 +17,9 @@
 		},
 		"filter": {
 			"$ref": "dailyPlanOrdersFilterDef-schema.json"
+		},
+		"auditLog": {
+			"$ref": "../../../joc/schemas/audit/auditParams-schema.json"
 		}
 	}
 }

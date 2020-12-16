@@ -67,7 +67,7 @@ public class DBLayerDailyPlannedOrders {
 
     public int delete(FilterDailyPlannedOrders filter) throws SOSHibernateException {
         deleteVariables(filter);
-        String hql = "delete from " + DBItemDailyPlannedOrders + " p " + getWhere(filter);
+        String hql = "delete from " + DBItemDailyPlannedOrders + " p " + getWhere(filter,"p.schedulePath");
         Query<DBItemDailyPlanSubmissionHistory> query = sosHibernateSession.createQuery(hql);
         bindParameters(filter, query);
         int row = sosHibernateSession.executeUpdate(query);
@@ -75,7 +75,7 @@ public class DBLayerDailyPlannedOrders {
     }
 
     public long deleteInterval(FilterDailyPlannedOrders filter) throws SOSHibernateException {
-        String hql = "delete from " + DBItemDailyPlannedOrders + " p " + getWhere(filter);
+        String hql = "delete from " + DBItemDailyPlannedOrders + " p " + getWhere(filter,"p.schedulePath");
         int row = 0;
         Query<DBItemDailyPlanSubmissionHistory> query = sosHibernateSession.createQuery(hql);
 
@@ -254,7 +254,7 @@ public class DBLayerDailyPlannedOrders {
     }
 
     public List<DBItemDailyPlanOrders> getDailyPlanList(FilterDailyPlannedOrders filter, final int limit) throws SOSHibernateException {
-        String q = "from " + DBItemDailyPlannedOrders + " p " + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
+        String q = "from " + DBItemDailyPlannedOrders + " p " + getWhere(filter,"p.schedulePath") + filter.getOrderCriteria() + filter.getSortMode();
         Query<DBItemDailyPlanOrders> query = sosHibernateSession.createQuery(q);
         query = bindParameters(filter, query);
 
