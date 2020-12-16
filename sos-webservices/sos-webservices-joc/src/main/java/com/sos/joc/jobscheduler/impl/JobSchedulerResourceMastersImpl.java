@@ -21,7 +21,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.jobscheduler.ControllerAnswer;
 import com.sos.joc.classes.jobscheduler.ControllerCallable;
-import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
@@ -120,8 +119,8 @@ public class JobSchedulerResourceMastersImpl extends JOCResourceImpl implements 
     public static List<ControllerAnswer> getControllerAnswers(String jobSchedulerId, String accessToken, SOSHibernateSession connection, boolean onlyDb,
             SOSShiroCurrentUser user) throws InterruptedException, JocException, Exception {
         InventoryInstancesDBLayer instanceLayer = new InventoryInstancesDBLayer(connection);
-        List<DBItemInventoryJSInstance> schedulerInstances = Proxies.getControllerDbInstances().get(jobSchedulerId);
-        //List<DBItemInventoryJSInstance> schedulerInstances = instanceLayer.getInventoryInstancesByControllerId(jobSchedulerId);
+        //List<DBItemInventoryJSInstance> schedulerInstances = Proxies.getControllerDbInstances().get(jobSchedulerId);
+        List<DBItemInventoryJSInstance> schedulerInstances = instanceLayer.getInventoryInstancesByControllerId(jobSchedulerId);
         List<ControllerAnswer> masters = new ArrayList<ControllerAnswer>();
         if (schedulerInstances != null) {
             InventoryOperatingSystemsDBLayer osDBLayer = new InventoryOperatingSystemsDBLayer(connection);

@@ -2,7 +2,9 @@ package com.sos.joc.classes.event;
 
 import java.time.Instant;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -97,7 +99,8 @@ public class EventServiceFactory {
             service = getEventService(controllerId);
             service.addCondition(eventArrived);
             //service.setIsCurrentController(isCurrentController);
-            SortedSet<EventSnapshot> evt = new TreeSet<>(Comparator.comparing(EventSnapshot::getEventId));
+            SortedSet<Long> evtIds = new TreeSet<>(Comparator.comparing(Long::longValue));
+            Set<EventSnapshot> evt = new HashSet<>();
             Mode mode = service.hasOldEvent(eventId, eventArrived);
             if (mode == Mode.FALSE) {
                 long delay = Math.min(cleanupPeriodInMillis - 1000, getSessionTimeout(session));
@@ -125,6 +128,7 @@ public class EventServiceFactory {
                     if (e.getEventId() != null && eventId < e.getEventId()) {
                         LOGGER.info("collect event for " + controllerId + ": " + e.toString());
                         evt.add(e);
+                        evtIds.add(e.getEventId());
                         LOGGER.info("collected events for " + controllerId + ": " + evt.toString());
                     }
                 });
@@ -132,6 +136,7 @@ public class EventServiceFactory {
                 service.getEvents().iterator().forEachRemaining(e -> {
                     if (e.getEventId() != null && eventId < e.getEventId()) {
                         evt.add(e);
+                        evtIds.add(e.getEventId());
                     }
                 });
             }
@@ -139,7 +144,7 @@ public class EventServiceFactory {
                 //events.setEventSnapshots(null);
             } else {
                 LOGGER.info("Events for " + controllerId + ": " + evt.toString());
-                events.setEventId(evt.last().getEventId());
+                events.setEventId(evtIds.last());
                 events.setEventSnapshots(evt.stream().map(e -> cloneEvent(e)).distinct().collect(Collectors.toList()));
                 //events.setEventSnapshots(evt.stream().collect(Collectors.toList()));
             }
