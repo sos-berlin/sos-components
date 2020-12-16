@@ -55,7 +55,7 @@ public class TreePermanent {
                     types.add(TreeType.JOBCLASS);
                     types.add(TreeType.LOCK);
                     types.add(TreeType.JUNCTION);
-                    types.add(TreeType.ORDERTEMPLATE);
+                    types.add(TreeType.SCHEDULE);
                     types.add(TreeType.WORKINGDAYSCALENDAR);
                     types.add(TreeType.NONWORKINGDAYSCALENDAR);
                 }
@@ -115,7 +115,7 @@ public class TreePermanent {
                     // }
                 }
                 break;
-            case ORDERTEMPLATE:
+            case SCHEDULE:
                 // OrderTemplate always inventory objects
                 if (sosPermission.getInventory().getConfigurations().isView()) {
                     types.add(type);
@@ -220,7 +220,7 @@ public class TreePermanent {
             throws JocException {
         
         boolean withDocus = false;
-        List<TreeType> possibleInventoryTypes = Arrays.asList(TreeType.ORDERTEMPLATE, TreeType.WORKINGDAYSCALENDAR, TreeType.NONWORKINGDAYSCALENDAR);
+        List<TreeType> possibleInventoryTypes = Arrays.asList(TreeType.SCHEDULE, TreeType.WORKINGDAYSCALENDAR, TreeType.NONWORKINGDAYSCALENDAR);
         Set<Integer> possibleDeployIntTypes = Arrays.asList(DeployType.values()).stream().map(DeployType::intValue).collect(Collectors.toSet());
         Set<Integer> deployTypes = new HashSet<>();
         Set<Integer> inventoryTypes = new HashSet<>();
