@@ -164,6 +164,7 @@ public class HistoryModel {
         int counterTotal = list.size();
         int counterProcessed = 0;
         int counterSkipped = 0;
+        int counterFailed = 0;
 
         if (isDebugEnabled) {
             LOGGER.debug(String.format("[%s][%s][start][%s][%s]%s total", identifier, method, storedEventId, start, counterTotal));
@@ -213,67 +214,75 @@ public class HistoryModel {
 
                 transactionCounter++;
 
-                switch (entry.getType()) {
-                case ControllerReady:
-                    controllerReady(dbLayer, (FatEventControllerReady) entry);
-                    break;
-                case AgentReady:
-                    agentReady(dbLayer, (FatEventAgentReady) entry);
-                    break;
-                case OrderAdded:
-                    orderAdded(dbLayer, (FatEventOrderAdded) entry);
-                    break;
-                case OrderResumed:
-                    orderResumed(dbLayer, (FatEventOrderResumed) entry);
-                    break;
-                case OrderResumeMarked:
-                    orderResumeMarked(dbLayer, (FatEventOrderResumeMarked) entry);
-                    break;
-                case OrderForked:
-                    orderForked(dbLayer, (FatEventOrderForked) entry);
-                    break;
-                case OrderJoined:
-                    orderJoined(dbLayer, (FatEventOrderJoined) entry, endedOrderSteps);
-                    break;
-                case OrderStepStarted:
-                    orderStepStarted(dbLayer, (FatEventOrderStepStarted) entry);
-                    break;
-                case OrderStepStdoutWritten:
-                    orderStepStd(dbLayer, (FatEventOrderStepStdWritten) entry, EventType.OrderStdoutWritten);
-                    break;
-                case OrderStepStderrWritten:
-                    orderStepStd(dbLayer, (FatEventOrderStepStdWritten) entry, EventType.OrderStderrWritten);
-                    break;
-                case OrderStepProcessed:
-                    orderStepProcessed(dbLayer, (FatEventOrderStepProcessed) entry, endedOrderSteps);
-                    break;
-                case OrderFailed:
-                    orderNotCompleted(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderFailed, endedOrderSteps);
-                    break;
-                case OrderSuspended:
-                    orderNotCompleted(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderSuspended, endedOrderSteps);
-                    break;
-                case OrderSuspendMarked:
-                    orderNotCompleted(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderSuspendMarked, endedOrderSteps);
-                    break;
-                case OrderCancelled:
-                    orderProcessed(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderCancelled, endedOrderSteps);
-                    break;
-                case OrderBroken:
-                    // TODO update main order when a child is broken
-                    orderProcessed(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderBroken, endedOrderSteps);
-                    break;
-                case OrderFinished:
-                    orderProcessed(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderFinished, endedOrderSteps);
-                    break;
-                case EventWithProblem:
-                    FatEventWithProblem ep = (FatEventWithProblem) entry;
-                    LOGGER.warn(String.format("[entry]%s", SOSString.toString(ep.getEntry())));
-                    LOGGER.error(ep.getError().toString(), ep.getError());
-                    break;
+                try {
+                    switch (entry.getType()) {
+                    case ControllerReady:
+                        controllerReady(dbLayer, (FatEventControllerReady) entry);
+                        break;
+                    case AgentReady:
+                        agentReady(dbLayer, (FatEventAgentReady) entry);
+                        break;
+                    case OrderAdded:
+                        orderAdded(dbLayer, (FatEventOrderAdded) entry);
+                        break;
+                    case OrderResumed:
+                        orderResumed(dbLayer, (FatEventOrderResumed) entry);
+                        break;
+                    case OrderResumeMarked:
+                        orderResumeMarked(dbLayer, (FatEventOrderResumeMarked) entry);
+                        break;
+                    case OrderForked:
+                        orderForked(dbLayer, (FatEventOrderForked) entry);
+                        break;
+                    case OrderJoined:
+                        orderJoined(dbLayer, (FatEventOrderJoined) entry, endedOrderSteps);
+                        break;
+                    case OrderStepStarted:
+                        orderStepStarted(dbLayer, (FatEventOrderStepStarted) entry);
+                        break;
+                    case OrderStepStdoutWritten:
+                        orderStepStd(dbLayer, (FatEventOrderStepStdWritten) entry, EventType.OrderStdoutWritten);
+                        break;
+                    case OrderStepStderrWritten:
+                        orderStepStd(dbLayer, (FatEventOrderStepStdWritten) entry, EventType.OrderStderrWritten);
+                        break;
+                    case OrderStepProcessed:
+                        orderStepProcessed(dbLayer, (FatEventOrderStepProcessed) entry, endedOrderSteps);
+                        break;
+                    case OrderFailed:
+                        orderNotCompleted(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderFailed, endedOrderSteps);
+                        break;
+                    case OrderSuspended:
+                        orderNotCompleted(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderSuspended, endedOrderSteps);
+                        break;
+                    case OrderSuspendMarked:
+                        orderNotCompleted(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderSuspendMarked, endedOrderSteps);
+                        break;
+                    case OrderCancelled:
+                        orderProcessed(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderCancelled, endedOrderSteps);
+                        break;
+                    case OrderBroken:
+                        // TODO update main order when a child is broken
+                        orderProcessed(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderBroken, endedOrderSteps);
+                        break;
+                    case OrderFinished:
+                        orderProcessed(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderFinished, endedOrderSteps);
+                        break;
+                    case EventWithProblem:
+                        FatEventWithProblem ep = (FatEventWithProblem) entry;
+                        LOGGER.warn(String.format("[entry]%s", SOSString.toString(ep.getEntry())));
+                        LOGGER.error(ep.getError().toString(), ep.getError());
+                        break;
+                    }
+                    counterProcessed++;
+                    lastSuccessEventId = eventId;
+                } catch (FatEventOrderNotFoundException | FatEventOrderStepNotFoundException e) { // TODO ask proxy
+                    LOGGER.warn(String.format("[%s][%s][%s][failed]%s[%s]", identifier, method, entry.getType(), e.toString(), SOSString.toString(
+                            entry)));
+                    counterProcessed++;
+                    lastSuccessEventId = eventId;
+                    counterFailed++;
                 }
-                counterProcessed++;
-                lastSuccessEventId = eventId;
             }
         } catch (Throwable e) {
             throw new Exception(String.format("[%s][%s][end]%s", identifier, method, e.toString()), e);
@@ -285,51 +294,66 @@ public class HistoryModel {
                         e1.toString()), e1);
             }
             dbLayer.close();
-            showSummary(startEventId, firstEventId, start, counterTotal, counterProcessed, counterSkipped);
+            showSummary(startEventId, firstEventId, start, counterTotal, counterProcessed, counterSkipped, counterFailed);
             transactionCounter = 0L;
         }
 
         return storedEventId;
     }
 
-    private Duration showSummary(Long startEventId, Long firstEventId, Instant start, int counterTotal, int counterProcessed, int counterSkipped) {
+    private Duration showSummary(Long startEventId, Long firstEventId, Instant start, int counterTotal, int counterProcessed, int counterSkipped,
+            int counterFailed) {
         String startEventIdAsTime = startEventId.equals(new Long(0L)) ? "0" : SOSDate.getTime(EventMeta.eventId2Instant(startEventId));
         String endEventIdAsTime = storedEventId.equals(new Long(0L)) ? "0" : SOSDate.getTime(EventMeta.eventId2Instant(storedEventId));
         String firstEventIdAsTime = firstEventId.equals(new Long(0L)) ? "0" : SOSDate.getTime(EventMeta.eventId2Instant(firstEventId));
         Instant end = Instant.now();
         Duration duration = Duration.between(start, end);
-        String skipped = counterSkipped == 0 ? "" : "(skipped=" + counterSkipped + ")";
-        LOGGER.info(String.format("[%s][%s(%s)-%s][%s(%s)-%s][%s-%s][%s][total=%s][processed=%s%s]", identifier, startEventId, firstEventId,
+        StringBuilder addition = new StringBuilder();
+        if (counterSkipped > 0 || counterFailed > 0) {
+            addition.append("(");
+            if (counterSkipped > 0) {
+                addition.append("skipped=").append(counterSkipped);
+            }
+            if (counterFailed > 0) {
+                if (counterSkipped > 0) {
+                    addition.append(", ");
+                }
+                addition.append("failed=").append(counterFailed);
+            }
+            addition.append(")");
+        }
+        LOGGER.info(String.format("[%s][%s(%s)-%s][%s(%s)-%s][%s-%s][%s][total=%s][processed=%s%s]%s", identifier, startEventId, firstEventId,
                 storedEventId, startEventIdAsTime, firstEventIdAsTime, endEventIdAsTime, SOSDate.getTime(start), SOSDate.getTime(end), SOSDate
-                        .getDuration(duration), counterTotal, counterProcessed, skipped));
-        showCachedSummary();
+                        .getDuration(duration), counterTotal, counterProcessed, addition.toString(), getCachedSummary()));
         return duration;
     }
 
-    private void showCachedSummary() {
+    private String getCachedSummary() {
         // TODO remove cached items - dependent of the created time
         int coSize = cachedOrders.size();
         int cosSize = cachedOrderSteps.size();
+        StringBuilder sb = new StringBuilder();
         if (isDebugEnabled) {
             LOGGER.debug(String.format("[cachedAgents=%s][cachedOrders=%s][cachedOrderSteps=%s]", cachedAgents.size(), coSize, cosSize));
-            if (cachedAgents.size() > 0) {
-                LOGGER.debug(SOSString.mapToString(cachedAgents, true));
-            }
         }
         if (coSize >= 1_000) {
-            LOGGER.warn(SOSString.mapToString(cachedOrders, true));
+            sb.append("cachedOrders=").append(coSize);
         } else {
             if (isDebugEnabled && coSize > 0) {
-                LOGGER.debug(SOSString.mapToString(cachedOrders, true));
+                // LOGGER.debug(SOSString.mapToString(cachedOrders, true));
             }
         }
         if (cosSize >= 1_000) {
-            LOGGER.warn(SOSString.mapToString(cachedOrderSteps, true));
+            if (sb.length() > 0) {
+                sb.append(", ");
+            }
+            sb.append("cachedOrderSteps=").append(cosSize);
         } else {
             if (isDebugEnabled && cosSize > 0) {
-                LOGGER.debug(SOSString.mapToString(cachedOrderSteps, true));
+                // LOGGER.debug(SOSString.mapToString(cachedOrderSteps, true));
             }
         }
+        return sb.toString();
     }
 
     private void initCache() {

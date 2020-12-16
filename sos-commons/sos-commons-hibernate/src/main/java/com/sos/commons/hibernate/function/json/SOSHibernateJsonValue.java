@@ -44,7 +44,7 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
 
         Enum<SOSHibernateFactory.Dbms> dbms = this.factory.getDbms();
         if (Dbms.MYSQL.equals(dbms)) {
-            // arguments(1) = '$.ports.usb' -> '$.ports.usb'
+            // path = '$.ports.usb' -> '$.ports.usb'
             String extract = "JSON_EXTRACT(" + property + "," + path + ")";
             // if (returnType.equals(ReturnType.SCALAR)) {
             // return "JSON_UNQUOTE(" + extract + ")";
@@ -61,9 +61,9 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
                 return "JSON_QUERY(" + property + "," + path + ")";
             }
         } else if (Dbms.PGSQL.equals(dbms)) {
-            // arguments(1) = '$.ports.usb' -> 'ports'->>'usb'
+            // path = '$.ports.usb' -> 'ports'->>'usb'
             // '<column>->'ports'->>'usb'
-            // arguments(1) = '$.arg' -> 'arg'
+            // path = '$.arg' -> 'arg'
             // '<column>->>'arg'
 
             StringBuilder r = new StringBuilder(property.toString());
@@ -77,7 +77,7 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
             }
             return r.toString();
         } else if (Dbms.H2.equals(dbms)) {
-            // TODO
+            // path = '$.ports.usb' -> '$.ports.usb'
             return com.sos.commons.hibernate.function.json.h2.Function.NAME + "(" + property + "," + path + ")";
         }
         return NAME;

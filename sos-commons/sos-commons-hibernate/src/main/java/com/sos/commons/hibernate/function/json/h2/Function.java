@@ -17,6 +17,7 @@ public class Function {
 
     public static final String NAME = "SOS_JSON_VALUE";
 
+    /** @param path ,e.g. '$.ports.usb' */
     public static String jsonValue(final String jsonValue, final String path) {
         JsonStructure jsonStruct;
         try {
