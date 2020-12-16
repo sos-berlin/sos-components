@@ -65,6 +65,7 @@ import js7.proxy.javaapi.eventbus.JControllerEventBus;
 public class EventService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EventService.class);
+    private static boolean isDebugEnabled = LOGGER.isDebugEnabled();
     // OrderAdded, OrderProcessed, OrderProcessingStarted$ extends OrderCoreEvent
     // OrderStarted, OrderProcessingKilled$, OrderFailed, OrderFailedInFork, OrderRetrying, OrderBroken extends OrderActorEvent
     // OrderFinished, OrderCancelled, OrderRemoved$ extends OrderTerminated
@@ -156,7 +157,7 @@ public class EventService {
             EventSnapshot eventSnapshot = new EventSnapshot();
 
             if (evt instanceof OrderEvent) {
-                LOGGER.debug("OrderEvent received: " + evt.getClass().getSimpleName());
+                //LOGGER.debug("OrderEvent received: " + evt.getClass().getSimpleName());
                 final OrderId orderId = (OrderId) key;
                 Optional<JOrder> opt = currentState.idToOrder(orderId);
                 if (opt.isPresent()) {
@@ -245,9 +246,10 @@ public class EventService {
     }
 
     private void addEvent(EventSnapshot eventSnapshot) {
-        LOGGER.debug("try add event for " + controllerId + ": " + eventSnapshot.toString());
         if (events.add(eventSnapshot)) {
-            LOGGER.debug("add event for " + controllerId + ": " + eventSnapshot.toString());
+            if (isDebugEnabled) {
+                LOGGER.debug("add event for " + controllerId + ": " + eventSnapshot.toString());
+            }
             try {
                 if (atLeastOneConditionIsHold.get() && EventServiceFactory.lock.tryLock(200L, TimeUnit.MILLISECONDS)) {
                     try {
@@ -267,7 +269,9 @@ public class EventService {
 
     protected EventServiceFactory.Mode hasOldEvent(Long eventId, Condition eventArrived) {
         if (events.stream().parallel().anyMatch(e -> eventId < e.getEventId())) {
-            LOGGER.debug("has old Event for " + controllerId + ": true");
+            if (isDebugEnabled) {
+                LOGGER.debug("has old Event for " + controllerId + ": true");
+            }
 //            if (isCurrentController.get() && events.stream().parallel().anyMatch(e -> EventType.PROBLEM.equals(e.getObjectType()))) {
 //                LOGGER.info("hasProblemEvent for " + controllerId + ": true");
 //                EventServiceFactory.signalEvent(eventArrived);
@@ -277,7 +281,9 @@ public class EventService {
             atLeastOneConditionIsHold.set(false);
             return EventServiceFactory.Mode.TRUE;
         }
-        LOGGER.debug("has old Event for " + controllerId + ": false");
+        if (isDebugEnabled) {
+            LOGGER.debug("has old Event for " + controllerId + ": false");
+        }
         return EventServiceFactory.Mode.FALSE;
     }
 

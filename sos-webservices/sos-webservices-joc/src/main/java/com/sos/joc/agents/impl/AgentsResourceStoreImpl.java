@@ -148,7 +148,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
 
             // List<JAgentRef> agentRefs = Proxies.getAgents(controllerId, agentDBLayer);
             if (!agentRefs.isEmpty()) {
-                ControllerApi.of(controllerId).updateItems(Flux.fromIterable(agentRefs).map(JUpdateItemOperation::addOrReplace)).thenAccept(
+                ControllerApi.of(controllerId).updateItems(Flux.fromIterable(agentRefs).map(JUpdateItemOperation::addOrChange)).thenAccept(
                         e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId));
             }
 

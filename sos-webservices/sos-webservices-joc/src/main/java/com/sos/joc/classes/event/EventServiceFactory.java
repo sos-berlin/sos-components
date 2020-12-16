@@ -39,6 +39,7 @@ import com.sos.joc.model.event.Event;
 public class EventServiceFactory {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(EventServiceFactory.class);
+    private static boolean isDebugEnabled = LOGGER.isDebugEnabled();
     private static EventServiceFactory eventServiceFactory;
     private volatile Map<String, EventService> eventServices = new ConcurrentHashMap<>();
     private final static long cleanupPeriodInMillis = TimeUnit.MINUTES.toMillis(6);
@@ -104,32 +105,37 @@ public class EventServiceFactory {
             Mode mode = service.hasOldEvent(eventId, eventArrived);
             if (mode == Mode.FALSE) {
                 long delay = Math.min(cleanupPeriodInMillis - 1000, getSessionTimeout(session));
-                LOGGER.debug("waiting for Events for " + controllerId + ": maxdelay " + delay + "ms");
+                if (isDebugEnabled) {
+                    LOGGER.debug("waiting for Events for " + controllerId + ": maxdelay " + delay + "ms");
+                }
                 ScheduledFuture<Void> watchdog = startWatchdog(delay, eventArrived);
                 mode = service.hasEvent(eventArrived);
                 if (!watchdog.isDone()) {
-                    LOGGER.debug("Event for " + controllerId + " arrived");
                     watchdog.cancel(false);
-                    LOGGER.debug("event watchdog is cancelled");
-                } else {
+                    if (isDebugEnabled) {
+                        LOGGER.debug("event watchdog is cancelled");
+                    }
+                } else if (isDebugEnabled) {
                     LOGGER.debug("watchdog has stopped waiting events for " + controllerId);
                 }
             }
-            LOGGER.debug("received Events for " + controllerId + ": mode " + mode.name());
+            if (isDebugEnabled) {
+                LOGGER.debug("received Events for " + controllerId + ": mode " + mode.name());
+            }
             if (mode == Mode.TRUE) {
                 try {
                     TimeUnit.SECONDS.sleep(2);
                 } catch (InterruptedException e1) {
                 }
-                LOGGER.info("EventId from request for " + controllerId + ": " + eventId);
-                LOGGER.info("All events for " + controllerId + ": " + service.getEvents().toString());
+                //LOGGER.info("EventId from request for " + controllerId + ": " + eventId);
+                //LOGGER.info("All events for " + controllerId + ": " + service.getEvents().toString());
                 service.getEvents().iterator().forEachRemaining(e -> {
-                    LOGGER.info("event for " + controllerId + ": " + e.toString());
+                    //LOGGER.info("event for " + controllerId + ": " + e.toString());
                     if (e.getEventId() != null && eventId < e.getEventId()) {
-                        LOGGER.info("collect event for " + controllerId + ": " + e.toString());
+                        //LOGGER.info("collect event for " + controllerId + ": " + e.toString());
                         evt.add(e);
                         evtIds.add(e.getEventId());
-                        LOGGER.info("collected events for " + controllerId + ": " + evt.toString());
+                        //LOGGER.info("collected events for " + controllerId + ": " + evt.toString());
                     }
                 });
             } else if (mode == Mode.IMMEDIATLY) {
@@ -143,7 +149,9 @@ public class EventServiceFactory {
             if (evt.isEmpty()) {
                 //events.setEventSnapshots(null);
             } else {
-                LOGGER.info("Events for " + controllerId + ": " + evt.toString());
+                if (isDebugEnabled) {
+                    LOGGER.debug("Events for " + controllerId + ": " + evt.toString());
+                }
                 events.setEventId(evtIds.last());
                 events.setEventSnapshots(evt.stream().map(e -> cloneEvent(e)).distinct().collect(Collectors.toList()));
                 //events.setEventSnapshots(evt.stream().collect(Collectors.toList()));
@@ -165,7 +173,7 @@ public class EventServiceFactory {
     }
     
     private static EventSnapshot cloneEvent(EventSnapshot e) {
-        LOGGER.info("Clone events for " + e.toString());
+        //LOGGER.info("Clone events for " + e.toString());
         EventSnapshot es = new EventSnapshot();
         es.setAccessToken(e.getAccessToken());
         es.setEventId(null);
@@ -209,7 +217,9 @@ public class EventServiceFactory {
     
     private static ScheduledFuture<Void> startWatchdog(long maxDelay, Condition eventArrived) {
         return Executors.newScheduledThreadPool(1).schedule(() -> {
-            LOGGER.debug("start watchdog which stops waiting after for " + maxDelay + "ms");
+            if (isDebugEnabled) {
+                LOGGER.debug("start watchdog which stops waiting after for " + maxDelay + "ms");
+            }
             signalEvent(eventArrived);
             return null;
         }, maxDelay, TimeUnit.MILLISECONDS);
