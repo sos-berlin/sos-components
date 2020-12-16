@@ -3,8 +3,11 @@ package com.sos.webservices.order.impl;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -29,6 +32,7 @@ import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.js7.order.initiator.OrderInitiatorRunner;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
@@ -48,9 +52,8 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
             URISyntaxException, InterruptedException, ExecutionException, TimeoutException {
         OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
         orderInitiatorSettings.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
-        orderInitiatorSettings.setControllerId(dailyPlanOrderFilter.getControllerId());
-        orderInitiatorSettings.setOverwrite(dailyPlanOrderFilter.getOverwrite());
-        orderInitiatorSettings.setSubmit(dailyPlanOrderFilter.getWithSubmit());
+        orderInitiatorSettings.setOverwrite(false);
+        orderInitiatorSettings.setSubmit(true);
 
         orderInitiatorSettings.setTimeZone(Globals.sosCockpitProperties.getProperty("daily_plan_timezone", Globals.DEFAULT_TIMEZONE_DAILY_PLAN));
         orderInitiatorSettings.setPeriodBegin(Globals.sosCockpitProperties.getProperty("daily_plan_period_begin", Globals.DEFAULT_PERIOD_DAILY_PLAN));
@@ -62,19 +65,51 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
             sosHibernateSession.setAutoCommit(false);
+            FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+
             Globals.beginTransaction(sosHibernateSession);
 
-            FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-            filter.setListOfOrders(dailyPlanOrderFilter.getOrderIds());
-            filter.setSubmitted(false);
-            filter.setControllerId(dailyPlanOrderFilter.getControllerId());
-            filter.setDailyPlanDate(dailyPlanOrderFilter.getDailyPlanDate());
-            filter.setListOfSchedules(dailyPlanOrderFilter.getSchedulePaths());
-           
+            boolean hasPermission = true;
+            boolean withFolderFilter = dailyPlanOrderFilter.getFilter().getFolders() != null && !dailyPlanOrderFilter.getFilter().getFolders()
+                    .isEmpty();
 
-            List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
-            Globals.commit(sosHibernateSession);
-            orderInitiatorRunner.submitOrders(listOfPlannedOrders);
+            Set<Folder> folders = addPermittedFolder(dailyPlanOrderFilter.getFilter().getFolders());
+
+            if (withFolderFilter && (folders == null || folders.isEmpty())) {
+                hasPermission = false;
+            } else if (folders != null && !folders.isEmpty()) {
+                filter.addFolderPaths(new HashSet<Folder>(folders));
+            }
+
+            if (hasPermission) {
+
+                if (dailyPlanOrderFilter.getFilter().getControllerIds() == null) {
+                    dailyPlanOrderFilter.getFilter().setControllerIds(new ArrayList<String>());
+                    dailyPlanOrderFilter.getFilter().getControllerIds().add(dailyPlanOrderFilter.getControllerId());
+                } else {
+                    if (!dailyPlanOrderFilter.getFilter().getControllerIds().contains(dailyPlanOrderFilter.getControllerId())) {
+                        dailyPlanOrderFilter.getFilter().getControllerIds().add(dailyPlanOrderFilter.getControllerId());
+                    }
+                }
+
+                filter.setListOfOrders(dailyPlanOrderFilter.getFilter().getOrderIds());
+                filter.setSubmitted(false);
+                filter.setDailyPlanDate(dailyPlanOrderFilter.getFilter().getDailyPlanDate());
+                filter.setListOfOrders(dailyPlanOrderFilter.getFilter().getOrderIds());
+                filter.setListOfSubmissionIds(dailyPlanOrderFilter.getFilter().getDailyPlanSubmissionHistoryIds());
+                filter.setListOfWorkflowPaths(dailyPlanOrderFilter.getFilter().getWorkflowPaths());
+                filter.setListOfSchedules(dailyPlanOrderFilter.getFilter().getSchedulePaths());
+
+                for (String controllerId : dailyPlanOrderFilter.getFilter().getControllerIds()) {
+
+                    filter.setControllerId(controllerId);
+                    orderInitiatorSettings.setControllerId(controllerId);
+
+                    List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
+                    Globals.commit(sosHibernateSession);
+                    orderInitiatorRunner.submitOrders(listOfPlannedOrders);
+                }
+            }
         } finally
 
         {
@@ -88,7 +123,8 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
         LOGGER.debug("Submit orders to JS7 controller");
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, dailyPlanOrderFilter, xAccessToken, dailyPlanOrderFilter.getControllerId(),
-                    getPermissonsJocCockpit(dailyPlanOrderFilter.getControllerId(), xAccessToken).getDailyPlan().getView().isStatus());
+                    getPermissonsJocCockpit(this.getControllerId(xAccessToken, dailyPlanOrderFilter.getControllerId()), xAccessToken).getDailyPlan()
+                            .getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

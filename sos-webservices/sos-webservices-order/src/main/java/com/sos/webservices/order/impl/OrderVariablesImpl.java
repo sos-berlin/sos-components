@@ -34,7 +34,7 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
         SOSHibernateSession sosHibernateSession = null;
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, "", xAccessToken, orderFilter.getControllerId(), getPermissonsJocCockpit(
-                    orderFilter.getControllerId(), xAccessToken).getOrder().getView().isStatus());
+                    getControllerId(xAccessToken,orderFilter.getControllerId()), xAccessToken).getOrder().getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -46,7 +46,7 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
             DBLayerOrderVariables dbLayerOrderVariables = new DBLayerOrderVariables(sosHibernateSession);
             FilterOrderVariables filterOrderVariables = new FilterOrderVariables();
              
-            filterOrderVariables.setPlannedOrderKey(orderFilter.getOrderId());
+            filterOrderVariables.setOrderId(orderFilter.getOrderId());
             OrderVariables variables = new OrderVariables();
             List<DBItemDailyPlanVariables> listOfOrderVariables = dbLayerOrderVariables.getOrderVariables(filterOrderVariables, 0);
             variables.setDeliveryDate(new Date());

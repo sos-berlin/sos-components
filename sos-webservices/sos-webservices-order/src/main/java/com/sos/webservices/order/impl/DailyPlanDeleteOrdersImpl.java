@@ -12,12 +12,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.sos.auth.rest.SOSShiroCurrentUser;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.classes.JOCPreferences;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.OrderHelper;
+import com.sos.joc.classes.WebserviceConstants;
+import com.sos.joc.classes.audit.AddOrderAudit;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -37,6 +41,8 @@ import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.webservices.order.resource.IDailyPlanDeleteOrderResource;
 
+import io.vavr.control.Either;
+
 @Path("daily_plan")
 public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDailyPlanDeleteOrderResource {
 
@@ -46,12 +52,12 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
 
     private FilterDailyPlannedOrders getFilter(DailyPlanOrderFilter dailyPlanOrderFilter) {
         FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-        filter.setListOfOrders(dailyPlanOrderFilter.getOrderIds());
+        filter.setListOfOrders(dailyPlanOrderFilter.getFilter().getOrderIds());
         filter.setControllerId(dailyPlanOrderFilter.getControllerId());
-        filter.setDailyPlanDate(dailyPlanOrderFilter.getDailyPlanDate());
-        filter.setListOfSubmissionIds(dailyPlanOrderFilter.getDailyPlanSubmissionHistoryIds());
-        filter.setListOfWorkflowPaths(dailyPlanOrderFilter.getWorkflowPaths());
-        filter.setListOfSchedules(dailyPlanOrderFilter.getSchedulePaths());
+        filter.setDailyPlanDate(dailyPlanOrderFilter.getFilter().getDailyPlanDate());
+        filter.setListOfSubmissionIds(dailyPlanOrderFilter.getFilter().getDailyPlanSubmissionHistoryIds());
+        filter.setListOfWorkflowPaths(dailyPlanOrderFilter.getFilter().getWorkflowPaths());
+        filter.setListOfSchedules(dailyPlanOrderFilter.getFilter().getSchedulePaths());
         return filter;
     }
 
@@ -94,12 +100,11 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
             FilterDailyPlannedOrders filter = getFilter(dailyPlanOrderFilter);
             filter.addState(OrderStateText.PENDING);
             List<DBItemDailyPlanWithHistory> listOfPlannedOrdersWithHistory = dbLayerDailyPlannedOrders.getDailyPlanWithHistoryList(filter, 0);
-       
-             try {
+
+            try {
                 OrderHelper.removeFromJobSchedulerControllerWithHistory(dailyPlanOrderFilter.getControllerId(), listOfPlannedOrdersWithHistory);
                 filter.setSubmitted(false);
                 dbLayerDailyPlannedOrders.setSubmitted(filter);
-
             } catch (JobSchedulerObjectNotExistException e) {
                 LOGGER.warn("Order unknown in JS7 Controller");
             }
@@ -117,12 +122,15 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
     public JOCDefaultResponse postDeleteOrders(String xAccessToken, DailyPlanOrderFilter dailyPlanOrderFilter) throws JocException {
         LOGGER.debug("Delete orders from the daily plan");
         try {
+            
             JOCDefaultResponse jocDefaultResponse = init(API_CALL_DELETE, dailyPlanOrderFilter, xAccessToken, dailyPlanOrderFilter.getControllerId(),
-                    getPermissonsJocCockpit(dailyPlanOrderFilter.getControllerId(), xAccessToken).getDailyPlan().getView().isStatus());
+                    getPermissonsJocCockpit(getControllerId(xAccessToken,dailyPlanOrderFilter.getControllerId()), xAccessToken).getDailyPlan().getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            this.checkRequiredParameter("dailyPlanDate", dailyPlanOrderFilter.getFilter().getDailyPlanDate());
+            this.checkRequiredParameter("filter", dailyPlanOrderFilter.getFilter());
 
             deleteOrdersFromPlan(dailyPlanOrderFilter);
             return JOCDefaultResponse.responseStatusJSOk(new Date());

@@ -25,12 +25,12 @@ public class AssignedCalendars {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
     @JsonProperty("calendarPath")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String calendarPath;
     @JsonProperty("timeZone")
     private String timeZone = "Etc/UTC";
@@ -61,7 +61,7 @@ public class AssignedCalendars {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
@@ -73,7 +73,7 @@ public class AssignedCalendars {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */

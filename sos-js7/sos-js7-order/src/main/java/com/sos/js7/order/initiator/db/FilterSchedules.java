@@ -13,6 +13,7 @@ public class FilterSchedules extends SOSFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterSchedules.class);
     private List<String> listOfControllerIds;
+    private List<String> listOfWorkflowPaths;
     private List<Folder> listOfFolders;
     private Boolean released;
     private Boolean deleted;
@@ -72,6 +73,21 @@ public class FilterSchedules extends SOSFilter {
 
     public void setListOfSchedules(List<String> listOfSchedules) {
         this.listOfSchedules = listOfSchedules;
+    }
+
+    public List<String> getListOfWorkflowPaths() {
+        return listOfWorkflowPaths;
+    }
+
+    public void setListOfWorkflowPaths(List<String> listOfWorkflowPaths) {
+        this.listOfWorkflowPaths = listOfWorkflowPaths;
+    }
+
+    public void addWorkflowPath(String workflowPath) {
+        if (listOfWorkflowPaths == null) {
+            listOfWorkflowPaths = new ArrayList<String>();
+        }
+        listOfWorkflowPaths.add(workflowPath);
     }
 
 }

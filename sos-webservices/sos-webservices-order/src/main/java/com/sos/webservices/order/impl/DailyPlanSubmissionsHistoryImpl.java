@@ -36,13 +36,17 @@ public class DailyPlanSubmissionsHistoryImpl extends JOCResourceImpl implements 
             throws JocException {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, dailyPlanSubmissionHistoryFilter, xAccessToken, dailyPlanSubmissionHistoryFilter
-                    .getControllerId(), getPermissonsJocCockpit(dailyPlanSubmissionHistoryFilter.getControllerId(), xAccessToken).getDailyPlan()
-                            .getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, dailyPlanSubmissionHistoryFilter, xAccessToken, getControllerId(xAccessToken,
+                    dailyPlanSubmissionHistoryFilter.getControllerId()), getPermissonsJocCockpit(dailyPlanSubmissionHistoryFilter.getControllerId(),
+                            xAccessToken).getDailyPlan().getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+
+            this.checkRequiredParameter("filter", dailyPlanSubmissionHistoryFilter.getFilter());
+            this.checkRequiredParameter("dateTo", dailyPlanSubmissionHistoryFilter.getFilter().getDateTo());
+
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
 
             DBLayerDailyPlanSubmissionHistory dbLayerDailyPlan = new DBLayerDailyPlanSubmissionHistory(sosHibernateSession);
@@ -51,13 +55,13 @@ public class DailyPlanSubmissionsHistoryImpl extends JOCResourceImpl implements 
 
             FilterDailyPlanSubmissionHistory filter = new FilterDailyPlanSubmissionHistory();
             filter.setControllerId(dailyPlanSubmissionHistoryFilter.getControllerId());
-            if (dailyPlanSubmissionHistoryFilter.getDateFrom() != null) {
-                Date fromDate = JobSchedulerDate.getDateFrom(dailyPlanSubmissionHistoryFilter.getDateFrom(), dailyPlanSubmissionHistoryFilter
-                        .getTimeZone());
+            if (dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom() != null) {
+                Date fromDate = JobSchedulerDate.getDateFrom(dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom(),
+                        dailyPlanSubmissionHistoryFilter.getTimeZone());
                 filter.setDateFrom(fromDate);
             }
-            if (dailyPlanSubmissionHistoryFilter.getDateTo() != null) {
-                Date toDate = JobSchedulerDate.getDateTo(dailyPlanSubmissionHistoryFilter.getDateTo(), dailyPlanSubmissionHistoryFilter
+            if (dailyPlanSubmissionHistoryFilter.getFilter().getDateTo() != null) {
+                Date toDate = JobSchedulerDate.getDateTo(dailyPlanSubmissionHistoryFilter.getFilter().getDateTo(), dailyPlanSubmissionHistoryFilter
                         .getTimeZone());
                 filter.setDateTo(toDate);
             }

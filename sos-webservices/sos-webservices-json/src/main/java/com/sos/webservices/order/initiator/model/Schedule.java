@@ -37,22 +37,22 @@ public class Schedule implements IConfigurationObject, IReleaseObject
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String path;
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
     @JsonProperty("workflowPath")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String workflowPath;
     /**
      * string without < and >
@@ -103,7 +103,7 @@ public class Schedule implements IConfigurationObject, IReleaseObject
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
@@ -115,7 +115,7 @@ public class Schedule implements IConfigurationObject, IReleaseObject
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
@@ -127,7 +127,7 @@ public class Schedule implements IConfigurationObject, IReleaseObject
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
@@ -139,7 +139,7 @@ public class Schedule implements IConfigurationObject, IReleaseObject
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */

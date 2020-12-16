@@ -12,31 +12,26 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Order Template Filter
+ * Daily Plan  Order Filter Definition
  * <p>
- * The filter for the list of order template for scheduling orders to JobScheduler
+ * Define the selector to get schedules
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
     "controllerIds",
     "schedulePaths",
+    "workflowPaths",
     "folders"
 })
-public class ScheduleFilter {
+public class SchedulesSelector {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
     @JsonProperty("controllerIds")
     private List<String> controllerIds = null;
     @JsonProperty("schedulePaths")
     private List<String> schedulePaths = null;
+    @JsonProperty("workflowPaths")
+    private List<String> workflowPaths = null;
     /**
      * folders
      * <p>
@@ -45,26 +40,6 @@ public class ScheduleFilter {
      */
     @JsonProperty("folders")
     private List<Folder> folders = null;
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
 
     @JsonProperty("controllerIds")
     public List<String> getControllerIds() {
@@ -84,6 +59,16 @@ public class ScheduleFilter {
     @JsonProperty("schedulePaths")
     public void setSchedulePaths(List<String> schedulePaths) {
         this.schedulePaths = schedulePaths;
+    }
+
+    @JsonProperty("workflowPaths")
+    public List<String> getWorkflowPaths() {
+        return workflowPaths;
+    }
+
+    @JsonProperty("workflowPaths")
+    public void setWorkflowPaths(List<String> workflowPaths) {
+        this.workflowPaths = workflowPaths;
     }
 
     /**
@@ -110,12 +95,12 @@ public class ScheduleFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("controllerIds", controllerIds).append("schedulePaths", schedulePaths).append("folders", folders).toString();
+        return new ToStringBuilder(this).append("controllerIds", controllerIds).append("schedulePaths", schedulePaths).append("workflowPaths", workflowPaths).append("folders", folders).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(schedulePaths).append(folders).append(controllerId).append(controllerIds).toHashCode();
+        return new HashCodeBuilder().append(schedulePaths).append(workflowPaths).append(folders).append(controllerIds).toHashCode();
     }
 
     @Override
@@ -123,11 +108,11 @@ public class ScheduleFilter {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ScheduleFilter) == false) {
+        if ((other instanceof SchedulesSelector) == false) {
             return false;
         }
-        ScheduleFilter rhs = ((ScheduleFilter) other);
-        return new EqualsBuilder().append(schedulePaths, rhs.schedulePaths).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(controllerIds, rhs.controllerIds).isEquals();
+        SchedulesSelector rhs = ((SchedulesSelector) other);
+        return new EqualsBuilder().append(schedulePaths, rhs.schedulePaths).append(workflowPaths, rhs.workflowPaths).append(folders, rhs.folders).append(controllerIds, rhs.controllerIds).isEquals();
     }
 
 }

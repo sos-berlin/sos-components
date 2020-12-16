@@ -1,7 +1,6 @@
 
 package com.sos.joc.model.dailyplan;
 
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -20,26 +19,22 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "dailyPlanSubmissionHistoryIds",
-    "dateFrom",
-    "dateTo",
+    "filter",
     "timeZone"
 })
 public class DailyPlanSubmissionHistoryFilter {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("controllerId")
     private String controllerId;
-    @JsonProperty("dailyPlanSubmissionHistoryIds")
-    private List<Long> dailyPlanSubmissionHistoryIds = null;
-    @JsonProperty("dateFrom")
-    private String dateFrom;
-    @JsonProperty("dateTo")
-    private String dateTo;
+    /**
+     * Daily Plan  Submissions Filter Definition
+     * <p>
+     * Define the filter To get submissions from the daily plan
+     * 
+     */
+    @JsonProperty("filter")
+    @JsonPropertyDescription("Define the filter To get submissions from the daily plan")
+    private DailyPlanSubmissionsFilterDef filter;
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
@@ -48,54 +43,36 @@ public class DailyPlanSubmissionHistoryFilter {
     @JsonPropertyDescription("see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
     private String timeZone;
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("controllerId")
     public String getControllerId() {
         return controllerId;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("controllerId")
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
     }
 
-    @JsonProperty("dailyPlanSubmissionHistoryIds")
-    public List<Long> getDailyPlanSubmissionHistoryIds() {
-        return dailyPlanSubmissionHistoryIds;
+    /**
+     * Daily Plan  Submissions Filter Definition
+     * <p>
+     * Define the filter To get submissions from the daily plan
+     * 
+     */
+    @JsonProperty("filter")
+    public DailyPlanSubmissionsFilterDef getFilter() {
+        return filter;
     }
 
-    @JsonProperty("dailyPlanSubmissionHistoryIds")
-    public void setDailyPlanSubmissionHistoryIds(List<Long> dailyPlanSubmissionHistoryIds) {
-        this.dailyPlanSubmissionHistoryIds = dailyPlanSubmissionHistoryIds;
-    }
-
-    @JsonProperty("dateFrom")
-    public String getDateFrom() {
-        return dateFrom;
-    }
-
-    @JsonProperty("dateFrom")
-    public void setDateFrom(String dateFrom) {
-        this.dateFrom = dateFrom;
-    }
-
-    @JsonProperty("dateTo")
-    public String getDateTo() {
-        return dateTo;
-    }
-
-    @JsonProperty("dateTo")
-    public void setDateTo(String dateTo) {
-        this.dateTo = dateTo;
+    /**
+     * Daily Plan  Submissions Filter Definition
+     * <p>
+     * Define the filter To get submissions from the daily plan
+     * 
+     */
+    @JsonProperty("filter")
+    public void setFilter(DailyPlanSubmissionsFilterDef filter) {
+        this.filter = filter;
     }
 
     /**
@@ -118,12 +95,12 @@ public class DailyPlanSubmissionHistoryFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("dailyPlanSubmissionHistoryIds", dailyPlanSubmissionHistoryIds).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("filter", filter).append("timeZone", timeZone).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dateTo).append(timeZone).append(dailyPlanSubmissionHistoryIds).append(controllerId).append(dateFrom).toHashCode();
+        return new HashCodeBuilder().append(filter).append(timeZone).append(controllerId).toHashCode();
     }
 
     @Override
@@ -135,7 +112,7 @@ public class DailyPlanSubmissionHistoryFilter {
             return false;
         }
         DailyPlanSubmissionHistoryFilter rhs = ((DailyPlanSubmissionHistoryFilter) other);
-        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).append(dailyPlanSubmissionHistoryIds, rhs.dailyPlanSubmissionHistoryIds).append(controllerId, rhs.controllerId).append(dateFrom, rhs.dateFrom).isEquals();
+        return new EqualsBuilder().append(filter, rhs.filter).append(timeZone, rhs.timeZone).append(controllerId, rhs.controllerId).isEquals();
     }
 
 }
