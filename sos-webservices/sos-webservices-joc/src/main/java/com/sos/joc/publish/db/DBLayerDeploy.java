@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -49,9 +50,11 @@ import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.ExcludeConfiguration;
+import com.sos.joc.model.publish.ExportDeployables;
 import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.ExportForBackup;
 import com.sos.joc.model.publish.ExportForSigning;
+import com.sos.joc.model.publish.ExportReleasables;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.RedeployFilter;
@@ -200,6 +203,88 @@ public class DBLayerDeploy {
         return getFilteredDeployments(filter);
     }
 
+    public List<DBItemInventoryConfiguration> getInventoryConfigurationsByFolder(String folder) {
+        return getInventoryConfigurationsByFolder(folder, false, false, false);
+    }
+
+    public List<DBItemInventoryConfiguration> getDeployableInventoryConfigurationsByFolder(String folder) {
+        return getInventoryConfigurationsByFolder(folder, true, false, false);
+    }
+
+    public List<DBItemInventoryConfiguration> getDeployableInventoryConfigurationsByFolder(String folder, boolean recursive) {
+        return getInventoryConfigurationsByFolder(folder, true, false, recursive);
+    }
+
+    public List<DBItemInventoryConfiguration> getReleasableInventoryConfigurationsByFolder(String folder) {
+        return getInventoryConfigurationsByFolder(folder, false, true, false);
+    }
+
+    public List<DBItemInventoryConfiguration> getReleasableInventoryConfigurationsByFolder(String folder, boolean recursive) {
+        return getInventoryConfigurationsByFolder(folder, false, true, recursive);
+    }
+
+    public List<DBItemInventoryReleasedConfiguration> getReleasedInventoryConfigurationsByFolder(String folder) {
+        return getReleasedInventoryConfigurationsByFolder(folder, false);
+    }
+
+    public List<DBItemInventoryReleasedConfiguration> getReleasedInventoryConfigurationsByFolder(String folder, boolean recursive) {
+        try {
+            StringBuilder hql = new StringBuilder();
+            hql.append(" from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+            if (recursive) {
+                hql.append(" where folder = :folder");
+            } else {
+                hql.append(" where folder like :folder");
+            }
+            Query<DBItemInventoryReleasedConfiguration> query = session.createQuery(hql.toString());
+            if (recursive) {
+                query.setParameter("folder", MatchMode.START.toMatchString(folder));
+            } else {
+                query.setParameter("folder", folder);
+            }
+            return session.getResultList(query);
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        } 
+    }
+        
+    private List<DBItemInventoryConfiguration> getInventoryConfigurationsByFolder(String folder, boolean onlyDeployables, boolean onlyReleasables,
+            boolean recursive) {
+        try {
+            StringBuilder hql = new StringBuilder();
+            hql.append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            if (recursive) {
+                hql.append(" where folder = :folder");
+            } else {
+                hql.append(" where folder like :folder");
+            }
+            if (onlyDeployables || onlyReleasables) {
+              hql.append(" and type in (:types)");  
+            } 
+            Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
+            if (recursive) {
+                query.setParameter("folder", MatchMode.START.toMatchString(folder));
+            } else {
+                query.setParameter("folder", folder);
+            }
+            if (onlyDeployables) {
+                query.setParameterList("types", Arrays.asList(new Integer[] {
+                        ConfigurationType.WORKFLOW.intValue(), 
+                        ConfigurationType.JUNCTION.intValue(),
+                        ConfigurationType.JOBCLASS.intValue(),
+                        ConfigurationType.LOCK.intValue()}));
+            } else if (onlyReleasables) {
+                query.setParameterList("types", Arrays.asList(new Integer[] {
+                        ConfigurationType.SCHEDULE.intValue(), 
+                        ConfigurationType.WORKINGDAYSCALENDAR.intValue(),
+                        ConfigurationType.NONWORKINGDAYSCALENDAR.intValue()}));
+            }
+            return session.getResultList(query);
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        } 
+    }
+        
     public List<DBItemInventoryConfiguration> getFilteredInventoryConfigurationsByPaths(List<String> paths) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
@@ -389,81 +474,52 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemInventoryConfiguration> getFilteredDeployableConfigurations(ExportFilter filter) throws DBConnectionRefusedException,
+    public List<DBItemInventoryConfiguration> getFilteredDeployableConfigurations(ExportDeployables filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        if (filter.getForSigning() != null) {
-            return getFilteredInventoryConfiguration(
-                    filter.getForSigning().getDeployables().getDraftConfigurations().stream()
-                    .map(item -> item.getConfiguration())
-                    .collect(Collectors.toList()));
+        List<Configuration> configurations = filter.getDraftConfigurations().stream()
+                .map(item -> item.getConfiguration())
+                .collect(Collectors.toList());
+        if(!configurations.isEmpty()) {
+            return getFilteredInventoryConfiguration(configurations);
         } else {
-            return getFilteredInventoryConfiguration(
-                    filter.getForBackup().getDeployables().getDraftConfigurations().stream()
-                    .map(item -> item.getConfiguration())
-                    .collect(Collectors.toList()));
+            return new ArrayList<DBItemInventoryConfiguration>();
         }
     }
 
-    public List<DBItemInventoryConfiguration> getFilteredDeployableConfigurations(ExportForBackup filter) throws DBConnectionRefusedException,
-    DBInvalidDataException {
-        return getFilteredInventoryConfiguration(
-                filter.getDeployables().getDraftConfigurations().stream()
-                .map(item -> item.getConfiguration())
-                .collect(Collectors.toList()));
-    }
-    
-    public List<DBItemInventoryConfiguration> getFilteredDeployableConfigurations(ExportForSigning filter) throws DBConnectionRefusedException,
+    public List<DBItemInventoryConfiguration> getFilteredReleasableConfigurations(ExportReleasables filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        return getFilteredInventoryConfiguration(
-                filter.getDeployables().getDraftConfigurations().stream()
+        List<Configuration> configurations = filter.getDraftConfigurations().stream()
                 .map(item -> item.getConfiguration())
-                .collect(Collectors.toList()));
-    }
-    
-    public List<DBItemInventoryConfiguration> getFilteredReleasableConfigurations(ExportForBackup filter) throws DBConnectionRefusedException,
-            DBInvalidDataException {
-        return getFilteredInventoryConfiguration(
-                filter.getReleasables().getDraftConfigurations().stream()
-                .map(item -> item.getConfiguration())
-                .collect(Collectors.toList()));
-    }
-
-    public List<DBItemInventoryReleasedConfiguration> getFilteredReleasedConfigurations(ExportForBackup filter) throws DBConnectionRefusedException,
-            DBInvalidDataException {
-        return getFilteredReleasedConfiguration(
-                filter.getReleasables().getReleasedConfigurations().stream()
-                .map(item -> item.getConfiguration())
-                .collect(Collectors.toList()));
-    }
-
-    public List<DBItemDeploymentHistory> getFilteredDeployments(ExportForSigning filter) throws DBConnectionRefusedException,
-    DBInvalidDataException {
-        return getFilteredDeploymentHistory(
-                filter.getDeployables().getDeployConfigurations().stream()
-                .map(item -> item.getConfiguration())
-                .collect(Collectors.toList()));
-    }
-
-    public List<DBItemDeploymentHistory> getFilteredDeployments(ExportForBackup filter) throws DBConnectionRefusedException,
-    DBInvalidDataException {
-        return getFilteredDeploymentHistory(
-                filter.getDeployables().getDeployConfigurations().stream()
-                .map(item -> item.getConfiguration())
-                .collect(Collectors.toList()));
-    }
-
-    public List<DBItemDeploymentHistory> getFilteredDeployments(ExportFilter filter) throws DBConnectionRefusedException,
-    DBInvalidDataException {
-        if (filter.getForSigning() != null) {
-            return getFilteredDeploymentHistory(
-                    filter.getForSigning().getDeployables().getDeployConfigurations().stream()
-                    .map(item -> item.getConfiguration())
-                    .collect(Collectors.toList()));
+                .collect(Collectors.toList());
+        if (!configurations.isEmpty()) {
+            return getFilteredInventoryConfiguration(configurations);
         } else {
-            return getFilteredDeploymentHistory(
-                    filter.getForSigning().getDeployables().getDeployConfigurations().stream()
-                    .map(item -> item.getConfiguration())
-                    .collect(Collectors.toList()));
+            return new ArrayList<DBItemInventoryConfiguration>();
+        }
+    }
+
+    public List<DBItemInventoryReleasedConfiguration> getFilteredReleasedConfigurations(ExportReleasables filter) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        List<Configuration> configurations = filter.getReleasedConfigurations().stream()
+                .map(item -> item.getConfiguration())
+                .collect(Collectors.toList());
+        if (!configurations.isEmpty()) {
+            return getFilteredReleasedConfiguration(configurations);
+        } else {
+            return new ArrayList<DBItemInventoryReleasedConfiguration>();
+        }
+    }
+
+    public List<DBItemDeploymentHistory> getFilteredDeployments(ExportDeployables filter) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        List<Configuration> configurations = filter.getDeployConfigurations().stream()
+                .filter(item -> !item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+                .map(item -> item.getConfiguration())
+                .collect(Collectors.toList());
+        if (!configurations.isEmpty()) {
+            return getFilteredDeploymentHistory(configurations);
+        } else {
+            return new ArrayList<DBItemDeploymentHistory>();
         }
     }
 
@@ -914,19 +970,31 @@ public class DBLayerDeploy {
     }
 
     public List<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolder (String folder) {
+        return getLatestDepHistoryItemsFromFolder(folder, false);
+    }
+
+    public List<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolder (String folder, boolean recursive) {
         try {
             StringBuilder hql = new StringBuilder("select dep from ")
                     .append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
             hql.append(" where dep.id = (")
                 .append("select max(history.id) from ")
                 .append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
-            hql.append(" where history.folder = :folder")
-                .append(" and history.controllerId = dep.controllerId")
+            if (recursive) {
+                hql.append(" where history.folder like :folder");
+            } else {
+                hql.append(" where history.folder = :folder");
+            }
+            hql.append(" and history.controllerId = dep.controllerId")
                 .append(" and history.state = 0")
                 .append(" and history.path = dep.path group by history.path")
                 .append(")");
             Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
-            query.setParameter("folder", folder);
+            if (recursive) {
+                query.setParameter("folder", MatchMode.START.toMatchString(folder));
+            } else {
+                query.setParameter("folder", folder);
+            }
             return session.getResultList(query);
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
@@ -1233,21 +1301,29 @@ public class DBLayerDeploy {
         }
     }
 
-    public void storeCommitIdForLaterUsage(DBItemInventoryConfiguration config, String commitId) throws SOSHibernateException {
-        DBItemDepCommitIds dbCommitId = new DBItemDepCommitIds();
-        dbCommitId.setCommitId(commitId);
-        dbCommitId.setConfigPath(config.getPath());
-        dbCommitId.setInvConfigurationId(config.getId());
-        session.save(dbCommitId);
+    public void storeCommitIdForLaterUsage(DBItemInventoryConfiguration config, String commitId) {
+        try {
+            DBItemDepCommitIds dbCommitId = new DBItemDepCommitIds();
+            dbCommitId.setCommitId(commitId);
+            dbCommitId.setConfigPath(config.getPath());
+            dbCommitId.setInvConfigurationId(config.getId());
+            session.save(dbCommitId);
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
     }
 
-    public void storeCommitIdForLaterUsage(DBItemDeploymentHistory depHistory, String commitId) throws SOSHibernateException {
-        DBItemDepCommitIds dbCommitId = new DBItemDepCommitIds();
-        dbCommitId.setCommitId(commitId);
-        dbCommitId.setConfigPath(depHistory.getPath());
-        dbCommitId.setInvConfigurationId(depHistory.getInventoryConfigurationId());
-        dbCommitId.setDepHistoryId(depHistory.getId());
-        session.save(dbCommitId);
+    public void storeCommitIdForLaterUsage(DBItemDeploymentHistory depHistory, String commitId) {
+        try {
+            DBItemDepCommitIds dbCommitId = new DBItemDepCommitIds();
+            dbCommitId.setCommitId(commitId);
+            dbCommitId.setConfigPath(depHistory.getPath());
+            dbCommitId.setInvConfigurationId(depHistory.getInventoryConfigurationId());
+            dbCommitId.setDepHistoryId(depHistory.getId());
+            session.save(dbCommitId);
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
     }
 
     public String getVersionId (DBItemInventoryConfiguration config) throws SOSHibernateException {

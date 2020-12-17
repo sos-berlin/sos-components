@@ -1081,19 +1081,6 @@ traits:
           schema: !include joc/schemas/publish/importDeployFilter-schema.json
           example: !include joc/examples/publish/publishImportDeploy-example.json
 
-    /redeploy:
-      type:
-        postJSONWithOkWithoutJSId:
-          description: Redeploys an already signed Object to the given Controller
-          description1: !include joc/documentation/publish/redeploy.md
-          description2: " "
-          description3: " "
-          description4: " "
-          description5: " "
-          audit: !include joc/documentation/audit/auditLog.md
-          schema: !include joc/schemas/publish/redeploy-schema.json
-          example: !include joc/examples/publish/redeploy-example.json
-
     /set_version:
       type:
         postJSONWithOkWithoutJSId:
@@ -1124,7 +1111,7 @@ traits:
     get:
     type:
       postForExport:
-        description: provides archive file (zip, tar.gz, gz) to download unsigned JSON files
+        description: provides archive file (zip or tar.gz) to download unsigned JSON files
         description1: !include joc/documentation/publish/exportFilterPost.md
         schema: !include joc/schemas/publish/exportFilter-schema.json
         example: !include joc/examples/publish/publishExport-example.json
@@ -1132,7 +1119,7 @@ traits:
   /import:
     type:
       postForUploadUnsigned:
-        description: uploads archive file (zip, tar.gz, gz) with unsigned JSON files of deployable and releasable objects  
+        description: uploads archive file (zip, tar.gz) of unsigned JSON files of deployable and releasable objects  
         schema: !include joc/schemas/publish/importFilter-schema.json
         example: !include joc/examples/publish/publishImport-example.json
 

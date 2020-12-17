@@ -16,6 +16,10 @@
     },
     "commitId": {
       "$ref": "../common/string255-schema.json"
+    },
+    "recursive": {
+      "type": "boolean",
+      "default": false
     }
   }
 }

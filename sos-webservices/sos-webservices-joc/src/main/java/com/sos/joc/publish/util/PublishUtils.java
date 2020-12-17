@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -67,17 +68,22 @@ import com.sos.jobscheduler.model.lock.Lock;
 import com.sos.jobscheduler.model.lock.LockEdit;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.jobscheduler.model.workflow.WorkflowEdit;
+import com.sos.joc.Globals;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
+import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
+import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingKeyException;
+import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.exceptions.JocSignatureVerificationException;
 import com.sos.joc.exceptions.JocSosHibernateException;
@@ -93,7 +99,12 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.pgp.JocKeyType;
 import com.sos.joc.model.publish.Config;
+import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.DeploymentState;
+import com.sos.joc.model.publish.ExportDeployables;
+import com.sos.joc.model.publish.ExportForBackup;
+import com.sos.joc.model.publish.ExportForSigning;
+import com.sos.joc.model.publish.ExportReleasables;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.Signature;
@@ -1644,6 +1655,32 @@ public abstract class PublishUtils {
         return entries.stream()
                 .filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
     }
+ 
+    public static Set<DBItemInventoryConfiguration> getDeployableInventoryConfigurationsfromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
+        List<DBItemInventoryConfiguration> entries = new ArrayList<DBItemInventoryConfiguration>();
+        folders.stream().forEach(item -> entries.addAll(dbLayer.getDeployableInventoryConfigurationsByFolder(item.getPath(), item.getRecursive())));
+        return entries.stream().collect(Collectors.toSet());
+    }
+    
+    public static Set<DBItemInventoryConfiguration> getReleasableInventoryConfigurationsfromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
+        List<DBItemInventoryConfiguration> entries = new ArrayList<DBItemInventoryConfiguration>();
+        folders.stream().forEach(item -> entries.addAll(dbLayer.getReleasableInventoryConfigurationsByFolder(item.getPath(), item.getRecursive())));
+        return entries.stream().collect(Collectors.toSet());
+    }
+    
+    public static Set<DBItemInventoryReleasedConfiguration> getReleasedInventoryConfigurationsfromFolders(List<Configuration> folders, 
+            DBLayerDeploy dbLayer) {
+        List<DBItemInventoryReleasedConfiguration> entries = new ArrayList<DBItemInventoryReleasedConfiguration>();
+        folders.stream().forEach(item -> entries.addAll(dbLayer.getReleasedInventoryConfigurationsByFolder(item.getPath(), item.getRecursive())));
+        return entries.stream().collect(Collectors.toSet());
+    }
+    
+    public static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesFromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
+        List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
+        folders.stream().forEach(item -> entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(item.getPath(), item.getRecursive())));
+        return entries.stream()
+                .filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
+    }
     
     public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesDeleteForFolder(Config folder, String controllerId,
             DBLayerDeploy dbLayer) {
@@ -1661,4 +1698,266 @@ public abstract class PublishUtils {
         return entries.stream().filter(item -> item.getOperation().equals(OperationType.DELETE.value())).collect(Collectors.toSet());
     }
     
+    public static Set<JSObject> getDeployableObjectsFromDB(ExportDeployables filter, DBLayerDeploy dbLayer) 
+            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
+            IOException, SOSHibernateException {
+        return getDeployableObjectsFromDB(filter, dbLayer, null);
+    }
+
+    public static Set<JSObject> getDeployableObjectsFromDB(ExportDeployables filter, DBLayerDeploy dbLayer, String commitId) 
+            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
+            IOException, SOSHibernateException {
+        Set<JSObject> allObjects = new HashSet<JSObject>();
+        if (filter != null) {
+            if (filter.getDeployConfigurations() != null && !filter.getDeployConfigurations().isEmpty()) {
+                List<Configuration> depFolders = filter.getDeployConfigurations().stream()
+                        .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+                        .map(item -> item.getConfiguration())
+                        .collect(Collectors.toList());
+                Set<DBItemDeploymentHistory> allItems = new HashSet<DBItemDeploymentHistory>();
+                if (depFolders != null && !depFolders.isEmpty()) {
+                    allItems.addAll(getLatestActiveDepHistoryEntriesFromFolders(depFolders, dbLayer));
+                }
+                List<DBItemDeploymentHistory> deploymentDbItems = dbLayer.getFilteredDeployments(filter);
+                if (deploymentDbItems != null && !deploymentDbItems.isEmpty()) {
+                    allItems.addAll(deploymentDbItems);
+                }
+                if (!allItems.isEmpty()) {
+                    allItems.stream()
+                        .filter(Objects::nonNull)
+                        .filter(item -> !item.getType().equals(ConfigurationType.FOLDER.intValue()))
+                        .forEach(item -> {
+                            if (commitId != null) {
+                                dbLayer.storeCommitIdForLaterUsage(item, commitId);
+                            }
+                            allObjects.add(getJSObjectFromDBItem(item, commitId));
+                        });
+                }
+            }
+            if (filter.getDraftConfigurations() != null && !filter.getDraftConfigurations().isEmpty()) {
+                List<Configuration> draftFolders = filter.getDraftConfigurations().stream()
+                        .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+                        .map(item -> item.getConfiguration())
+                        .collect(Collectors.toList());
+                Set<DBItemInventoryConfiguration> allItems = new HashSet<DBItemInventoryConfiguration>();
+                if (draftFolders != null && !draftFolders.isEmpty()) {
+                    allItems.addAll(getDeployableInventoryConfigurationsfromFolders(draftFolders, dbLayer));
+                }
+                List<DBItemInventoryConfiguration> configurationDbItems = dbLayer.getFilteredDeployableConfigurations(filter);
+                if (configurationDbItems != null && !configurationDbItems.isEmpty()) {
+                    allItems.addAll(configurationDbItems);
+                }
+                if (!allItems.isEmpty()) {
+                    allItems.stream()
+                        .filter(Objects::nonNull)
+                        .filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
+                        .forEach(item -> {
+                            if (commitId != null) {
+                                dbLayer.storeCommitIdForLaterUsage(item, commitId);
+                            }
+                            allObjects.add(mapInvConfigToJSObject(item));
+                        });
+                }
+            } 
+        }
+        return allObjects;
+    }
+    
+    public static Set<ConfigurationObject> getReleasableObjectsFromDB(ExportReleasables filter, DBLayerDeploy dbLayer) 
+            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
+            IOException, SOSHibernateException {
+        Set<ConfigurationObject> allObjects = new HashSet<ConfigurationObject>();
+        if (filter != null) {
+            if (filter.getReleasedConfigurations() != null && !filter.getReleasedConfigurations().isEmpty()) {
+                List<Configuration> releasedFolders = filter.getReleasedConfigurations().stream()
+                        .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+                        .map(item -> item.getConfiguration())
+                        .collect(Collectors.toList());
+                Set<DBItemInventoryReleasedConfiguration> allItems = new HashSet<DBItemInventoryReleasedConfiguration>();
+                if (releasedFolders != null && !releasedFolders.isEmpty()) {
+                    allItems.addAll(getReleasedInventoryConfigurationsfromFolders(releasedFolders, dbLayer));
+                }
+                List<DBItemInventoryReleasedConfiguration> configurationDbItems = dbLayer.getFilteredReleasedConfigurations(filter);
+                if (configurationDbItems != null && !configurationDbItems.isEmpty()) {
+                    allItems.addAll(configurationDbItems);
+                }
+                if (!allItems.isEmpty()) {
+                    allItems.stream()
+                        .filter(Objects::nonNull)
+                        .filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
+                        .forEach(item -> allObjects.add(getConfigurationObjectFromDBItem(item)));
+                }
+            }
+            if (filter.getDraftConfigurations() != null && !filter.getDraftConfigurations().isEmpty()) {
+                List<Configuration> draftFolders = filter.getDraftConfigurations().stream()
+                        .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+                        .map(item -> item.getConfiguration())
+                        .collect(Collectors.toList());
+                Set<DBItemInventoryConfiguration> allItems = new HashSet<DBItemInventoryConfiguration>();
+                if (draftFolders != null && !draftFolders.isEmpty()) {
+                    allItems.addAll(getReleasableInventoryConfigurationsfromFolders(draftFolders, dbLayer));
+                }
+                List<DBItemInventoryConfiguration> configurationDbItems = dbLayer.getFilteredReleasableConfigurations(filter);
+                if (configurationDbItems != null && !configurationDbItems.isEmpty()) {
+                    allItems.addAll(configurationDbItems);
+                }
+                if (!allItems.isEmpty()) {
+                    allItems.stream()
+                    .filter(Objects::nonNull)
+                    .filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
+                    .forEach(item -> allObjects.add(getConfigurationObjectFromDBItem(item)));
+                }
+            } 
+        }
+        return allObjects;
+    }
+    
+    private static JSObject mapInvConfigToJSObject (DBItemInventoryConfiguration item) {
+        return mapInvConfigToJSObject(item, null);
+    }
+    
+    private static JSObject mapInvConfigToJSObject (DBItemInventoryConfiguration item, String commitId) {
+        try {
+            JSObject jsObject = new JSObject();
+//            jsObject.setId(item.getId());
+            jsObject.setPath(item.getPath());
+            jsObject.setObjectType(PublishUtils.mapConfigurationType(ConfigurationType.fromValue(item.getType())));
+            switch (jsObject.getObjectType()) {
+            case WORKFLOW:
+                Workflow workflow = om.readValue(item.getContent().getBytes(), Workflow.class);
+                if (commitId != null) {
+                    workflow.setVersionId(commitId);
+                }
+                jsObject.setContent(workflow);
+                break;
+            case LOCK:
+                Lock lock = om.readValue(item.getContent().getBytes(), Lock.class);
+                if (commitId != null) {
+                    lock.setVersionId(commitId);
+                }
+                jsObject.setContent(lock);
+                break;
+            case JUNCTION:
+                Junction junction = om.readValue(item.getContent().getBytes(), Junction.class);
+                if (commitId != null) {
+                    junction.setVersionId(commitId);
+                }
+                jsObject.setContent(junction);
+                break;
+            case JOBCLASS:
+                JobClass jobClass = om.readValue(item.getContent().getBytes(), JobClass.class);
+                if (commitId != null) {
+                    jobClass.setVersionId(commitId);
+                }
+                jsObject.setContent(jobClass);
+                break;
+            }
+            jsObject.setAccount(Globals.defaultProfileAccount);
+            // TODO: setVersion
+//        jsObject.setVersion(item.getVersion());
+            jsObject.setModified(item.getModified());
+            return jsObject;
+        } catch (IOException e) {
+            throw new JocException(e);
+        }
+    }
+
+    private static JSObject getJSObjectFromDBItem (DBItemDeploymentHistory item) {
+        return getJSObjectFromDBItem(item, null);
+    }
+
+    private static JSObject getJSObjectFromDBItem (DBItemDeploymentHistory item, String commitId) {
+        try {
+            JSObject jsObject = new JSObject();
+//            jsObject.setId(item.getId());
+            jsObject.setPath(item.getPath());
+            jsObject.setObjectType(DeployType.fromValue(item.getType()));
+            switch (jsObject.getObjectType()) {
+            case WORKFLOW:
+                Workflow workflow = om.readValue(item.getInvContent().getBytes(), Workflow.class);
+                if (commitId != null) {
+                    workflow.setVersionId(commitId);
+                }
+                jsObject.setContent(workflow);
+                break;
+            case JOBCLASS:
+                JobClass jobClass = om.readValue(item.getInvContent().getBytes(), JobClass.class);
+                if (commitId != null) {
+                    jobClass.setVersionId(commitId);
+                }
+                jsObject.setContent(jobClass);
+                break;
+            case LOCK:
+                Lock lock = om.readValue(item.getInvContent().getBytes(), Lock.class);
+                if (commitId != null) {
+                    lock.setVersionId(commitId);
+                }
+                jsObject.setContent(lock);
+                break;
+            case JUNCTION:
+                Junction junction = om.readValue(item.getInvContent().getBytes(), Junction.class);
+                if (commitId != null) {
+                    junction.setVersionId(commitId);
+                }
+                jsObject.setContent(junction);
+                break;
+            }
+            jsObject.setVersion(item.getVersion());
+            jsObject.setAccount(Globals.defaultProfileAccount);
+            return jsObject;
+        } catch (IOException e) {
+            throw new JocException(e);
+        }
+    }
+    
+    private static ConfigurationObject getConfigurationObjectFromDBItem(DBItemInventoryConfiguration item) {
+        try {
+            ConfigurationObject configuration = new ConfigurationObject();
+//            configuration.setId(item.getId());
+            configuration.setPath(item.getPath());
+            configuration.setObjectType(ConfigurationType.fromValue(item.getType()));
+            switch (configuration.getObjectType()) {
+            case WORKINGDAYSCALENDAR:
+            case NONWORKINGDAYSCALENDAR:
+                Calendar calendar = om.readValue(item.getContent().getBytes(), Calendar.class);
+                configuration.setConfiguration(calendar);
+                break;
+            case SCHEDULE:
+                Schedule schedule = om.readValue(item.getContent(), Schedule.class);
+                configuration.setConfiguration(schedule);
+                break;
+            default:
+                break;
+            }
+            return configuration;
+        } catch (IOException e) {
+            throw new JocException(e);
+        }
+    }
+
+    private static ConfigurationObject getConfigurationObjectFromDBItem(DBItemInventoryReleasedConfiguration item) {
+        try {
+            ConfigurationObject configuration = new ConfigurationObject();
+//            configuration.setId(item.getId());
+            configuration.setPath(item.getPath());
+            configuration.setObjectType(ConfigurationType.fromValue(item.getType()));
+            switch (configuration.getObjectType()) {
+            case WORKINGDAYSCALENDAR:
+            case NONWORKINGDAYSCALENDAR:
+                Calendar calendar = om.readValue(item.getContent().getBytes(), Calendar.class);
+                configuration.setConfiguration(calendar);
+                break;
+            case SCHEDULE:
+                Schedule schedule = om.readValue(item.getContent(), Schedule.class);
+                configuration.setConfiguration(schedule);
+                break;
+            default:
+                break;
+            }
+            return configuration;
+        } catch (IOException e) {
+            throw new JocException(e);
+        }
+    }
+
 }

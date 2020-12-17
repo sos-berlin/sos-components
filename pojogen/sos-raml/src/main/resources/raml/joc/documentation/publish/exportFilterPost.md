@@ -51,15 +51,15 @@
 <tr>
 <td style="padding-left:40px;">``draftConfigurations``</td>
 <td>required anyOf(``draftConfigurations``, ``deployConfigurations``), array</td>
-<td>An array of draft configuration objects.</td>
+<td>An array of draft configuration of deployable objects.</td>
 <td></td>
 <td></td>
 </tr>
 <tr>
-<td style="padding-left:60px;">``draftConfiguration``</td>
+<td style="padding-left:60px;">``configuration``</td>
 <td>required, object</td>
-<td>A draft configuration or a Folder specified by its ``path`` and ``objectType``. If draft configurations are specified by a folder, all draft items from the folder will be processed.</td>
-<td><div style="padding-left:10px;">"draftConfiguration" : {</div>
+<td>A configuration or a Folder specified by its ``path`` and ``objectType``. If draft configurations are specified by a folder, all draft items from the folder will be processed.</td>
+<td><div style="padding-left:10px;">"configuration" : {</div>
 <div style="padding-left:20px;">"path" : "/myWorkflows/ifElseWorkflow/workflow_10",</div>
 <div style="padding-left:20px;">"objectType" : "WORKFLOW"</div>
 <div style="padding-left:10px;">}</div>
@@ -81,6 +81,13 @@
 <td></td>
 </tr>
 <tr>
+<td style="padding-left:80px;">``recursive``</td>
+<td>optional, boolean</td>
+<td>Decides if a given folder should be processed recursively.</td>
+<td>"recursive" : true</td>
+<td>false</td>
+</tr>
+<tr>
 <td style="padding-left:40px;">``deployConfigurations``</td>
 <td>required anyOf(``draftConfigurations``, ``deployConfigurations``), array</td>
 <td>An array of already deployed configuration objects.</td>
@@ -88,10 +95,10 @@
 <td></td>
 </tr>
 <tr>
-<td style="padding-left:60px;">``deployConfiguration``</td>
+<td style="padding-left:60px;">``configuration``</td>
 <td>required, object</td>
 <td>An already deployed configuration specified by its ``path``, ``objectType`` and ``commitId`` OR a folder specified by ``path`` and ``objectType`` only. If already deployed configurations are specified by a folder, all latest deployments of the items from the folder will be processed.</td>
-<td><div style="padding-left:10px;">"deployConfiguration" : {</div>
+<td><div style="padding-left:10px;">"configuration" : {</div>
 <div style="padding-left:20px;">"path" : "/myWorkflows/ifElseWorkflow/workflow_12",</div>
 <div style="padding-left:20px;">"objectType" : "WORKFLOW",</div>
 <div style="padding-left:20px;">"commitId" : "4273b6c6-c354-4fcd-afdb-2758088abe4a"</div>
@@ -115,10 +122,17 @@
 </tr>
 <tr>
 <td style="padding-left:80px;">``commitId``</td>
-<td>required, string</td>
-<td>The ``commitId`` of the deployment of the already deployed configuration.</td>
+<td>optional, string</td>
+<td>The ``commitId`` of the deployment of the already deployed configuration. If no commitId is set the latest deployment of the configuration will be processed.</td>
 <td>"commitId" : "4273b6c6-c354-4fcd-afdb-2758088abe4a"</td>
 <td></td>
+</tr>
+<tr>
+<td style="padding-left:80px;">``recursive``</td>
+<td>optional, boolean</td>
+<td>see above.</td>
+<td>"recursive" : true</td>
+<td>false</td>
 </tr>
 <tr>
 <td>``forBackup``</td>
@@ -151,15 +165,15 @@
 <tr>
 <td style="padding-left:40px;">``draftConfigurations``</td>
 <td>required anyOf(``draftConfigurations``, ``releasedConfigurations``), array</td>
-<td>An array of draft configuration objects.</td>
+<td>An array of draft configuration of releasable objects.</td>
 <td></td>
 <td></td>
 </tr>
 <tr>
-<td style="padding-left:60px;">``draftConfiguration``</td>
+<td style="padding-left:60px;">``configuration``</td>
 <td>required, object</td>
 <td>A draft configuration specified by its ``path`` and ``objectType``. If draft configurations are specified by a folder, all draft items from the folder will be processed.</td>
-<td><div style="padding-left:10px;">"draftConfiguration" : {</div>
+<td><div style="padding-left:10px;">"configuration" : {</div>
 <div style="padding-left:20px;">"path" : "/mySchedules/newSchedules/mySchedule",</div>
 <div style="padding-left:20px;">"objectType" : "SCHEDULE"</div>
 <div style="padding-left:10px;">}</div>
@@ -181,17 +195,24 @@
 <td></td>
 </tr>
 <tr>
+<td style="padding-left:80px;">``recursive``</td>
+<td>optional, boolean</td>
+<td>see above.</td>
+<td>"recursive" : true</td>
+<td>false</td>
+</tr>
+<tr>
 <td style="padding-left:40px;">``releasedConfigurations``</td>
 <td>required anyOf(``draftConfigurations``, ``releasedConfigurations``), array</td>
-<td>An array of already released configuration objects.</td>
+<td>An array of configuration of already released objects.</td>
 <td></td>
 <td></td>
 </tr>
 <tr>
-<td style="padding-left:60px;">``releasedConfiguration``</td>
+<td style="padding-left:60px;">``configuration``</td>
 <td>required, object</td>
 <td>An already released configuration specified by its ``path`` and ``objectType``. If already released configurations are specified by a folder, all released items from the folder will be processed.</td>
-<td><div style="padding-left:10px;">"releasedConfiguration" : {</div>
+<td><div style="padding-left:10px;">"configuration" : {</div>
 <div style="padding-left:20px;">"path" : "/myCalendars/newCalendars/myCalendar",</div>
 <div style="padding-left:20px;">"objectType" : "WORKINGDAYSCALENDAR"</div>
 <div style="padding-left:10px;">}</div>
@@ -211,6 +232,13 @@
 <td>see above.</td>
 <td>"objectType" : "WORKINGDAYSCALENDAR"</td>
 <td></td>
+</tr>
+<tr>
+<td style="padding-left:80px;">``recursive``</td>
+<td>optional, boolean</td>
+<td>see above.</td>
+<td>"recursive" : true</td>
+<td>false</td>
 </tr>
 <tr>
 <td>``auditLog``</td>

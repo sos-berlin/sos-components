@@ -21,7 +21,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "path",
     "objectType",
-    "commitId"
+    "commitId",
+    "recursive"
 })
 public class Configuration {
 
@@ -52,6 +53,8 @@ public class Configuration {
      */
     @JsonProperty("commitId")
     private String commitId;
+    @JsonProperty("recursive")
+    private Boolean recursive = false;
 
     /**
      * path
@@ -123,14 +126,24 @@ public class Configuration {
         this.commitId = commitId;
     }
 
+    @JsonProperty("recursive")
+    public Boolean getRecursive() {
+        return recursive;
+    }
+
+    @JsonProperty("recursive")
+    public void setRecursive(Boolean recursive) {
+        this.recursive = recursive;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("objectType", objectType).append("commitId", commitId).toString();
+        return new ToStringBuilder(this).append("path", path).append("objectType", objectType).append("commitId", commitId).append("recursive", recursive).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(commitId).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(path).append(commitId).append(recursive).append(objectType).toHashCode();
     }
 
     @Override
@@ -142,7 +155,7 @@ public class Configuration {
             return false;
         }
         Configuration rhs = ((Configuration) other);
-        return new EqualsBuilder().append(path, rhs.path).append(commitId, rhs.commitId).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(commitId, rhs.commitId).append(recursive, rhs.recursive).append(objectType, rhs.objectType).isEquals();
     }
 
 }
