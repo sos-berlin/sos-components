@@ -15,11 +15,14 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
+import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.dailyplan.DailyPlanOrderSelectorDef;
 import com.sos.js7.order.initiator.db.DBLayerSchedules;
 import com.sos.js7.order.initiator.db.FilterSchedules;
 import com.sos.webservices.order.initiator.model.Schedule;
 import com.sos.webservices.order.initiator.model.ScheduleSelector;
 import com.sos.webservices.order.initiator.model.SchedulesList;
+import com.sos.webservices.order.initiator.model.SchedulesSelector;
 import com.sos.webservices.order.resource.ISchedulesResource;
 
 @Path("schedules")
@@ -38,19 +41,23 @@ public class SchedulesImpl extends JOCResourceImpl implements ISchedulesResource
         LOGGER.debug("reading list of schedules");
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, scheduleSelector, xAccessToken, scheduleSelector.getControllerId(),
-                    getPermissonsJocCockpit(getControllerId(xAccessToken,scheduleSelector.getControllerId()), xAccessToken).getWorkflow().getExecute()
-                            .isAddOrder());
+                    getPermissonsJocCockpit(getControllerId(xAccessToken, scheduleSelector.getControllerId()), xAccessToken).getWorkflow()
+                            .getExecute().isAddOrder());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            this.checkRequiredParameter("selector", scheduleSelector.getSelector());
-            if (isEmpty(scheduleSelector.getSelector().getWorkflowPaths()) && isEmpty(scheduleSelector.getSelector().getFolders()) && isEmpty(
-                    scheduleSelector.getSelector().getSchedulePaths())) {
-                throw new JocMissingRequiredParameterException("folders or schedulePaths or workflowPaths");
-
+            if (scheduleSelector.getSelector() == null) {
+                Folder root = new Folder();
+                root.setFolder("/");
+                root.setRecursive(true);
+                scheduleSelector.setSelector(new SchedulesSelector());
+                scheduleSelector.getSelector().setFolders(new ArrayList<Folder>());
+                scheduleSelector.getSelector().getFolders().add(root);
             }
+
+          
             SchedulesList schedulesList = new SchedulesList();
             schedulesList.setSchedules(new ArrayList<Schedule>());
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
@@ -73,12 +80,9 @@ public class SchedulesImpl extends JOCResourceImpl implements ISchedulesResource
             return JOCDefaultResponse.responseStatus200(schedulesList);
 
         } catch (JocException e) {
-            //LOGGER.error(getJocError().getMessage(), e);
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            //e.printStackTrace();
-            //LOGGER.error(getJocError().getMessage(), e);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.disconnect(sosHibernateSession);

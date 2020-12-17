@@ -118,7 +118,7 @@ public class JOCResourceImpl {
         return Date.from(fromEpochMilli);
     }
 
-    public JOCDefaultResponse init(String request, Object body, String accessToken, String schedulerId, boolean permission) throws JocException {
+    public JOCDefaultResponse init(String request, Object body, String accessToken, String controllerId, boolean permission) throws JocException {
         this.accessToken = accessToken;
         if (jobschedulerUser == null) {
             jobschedulerUser = new JobSchedulerUser(accessToken);
@@ -127,7 +127,7 @@ public class JOCResourceImpl {
         SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(null);
         sosPermissionsCreator.loginFromAccessToken(accessToken);
 
-        return initPermissions(schedulerId, permission);
+        return initPermissions(getControllerId(accessToken, controllerId), permission);
     }
 
     public String normalizePath(String path) {
@@ -296,18 +296,14 @@ public class JOCResourceImpl {
         jocError.addMetaInfoOnTop("\nREQUEST: " + request, "PARAMS: " + bodyStr, "USER: " + user);
     }
 
-    public JOCDefaultResponse initPermissions(String schedulerId, boolean permission) throws JocException {
+    public JOCDefaultResponse initPermissions(String controllerId, boolean permission) throws JocException {
         JOCDefaultResponse jocDefaultResponse = init401And440();
 
         if (!permission) {
             return accessDeniedResponse();
         }
-        // if (schedulerId == null) {
-        // throw new JocMissingRequiredParameterException("undefined 'controllerId'");
-        // } else {
         folderPermissions = jobschedulerUser.getSosShiroCurrentUser().getSosShiroFolderPermissions();
-        folderPermissions.setSchedulerId(schedulerId);
-        // }
+        folderPermissions.setSchedulerId(controllerId);
         return jocDefaultResponse;
     }
 
@@ -364,19 +360,19 @@ public class JOCResourceImpl {
             return null;
         }
     }
-    
+
     public String getControllerId(String accessToken, String controllerId) {
         String resultControllerId;
-        this.accessToken = accessToken;
-        if (jobschedulerUser == null) {
-            jobschedulerUser = new JobSchedulerUser(accessToken);
-        }
-        SOSShiroCurrentUser shiroUser = jobschedulerUser.getSosShiroCurrentUser();
-
-        JOCPreferences jocPreferences = new JOCPreferences(shiroUser.getUsername());
-        if (!"".equals(controllerId) && controllerId != null){
+        if (!"".equals(controllerId) && controllerId != null) {
             resultControllerId = controllerId;
-        }else {
+        } else {
+            this.accessToken = accessToken;
+            if (jobschedulerUser == null) {
+                jobschedulerUser = new JobSchedulerUser(accessToken);
+            }
+            SOSShiroCurrentUser shiroUser = jobschedulerUser.getSosShiroCurrentUser();
+
+            JOCPreferences jocPreferences = new JOCPreferences(shiroUser.getUsername());
             resultControllerId = jocPreferences.get(WebserviceConstants.SELECTED_INSTANCE, "");
         }
         return resultControllerId;

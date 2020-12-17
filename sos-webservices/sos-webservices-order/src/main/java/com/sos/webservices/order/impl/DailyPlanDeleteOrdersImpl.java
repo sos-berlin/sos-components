@@ -1,7 +1,6 @@
 package com.sos.webservices.order.impl;
 
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -12,18 +11,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.sos.auth.rest.SOSShiroCurrentUser;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JOCPreferences;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.OrderHelper;
-import com.sos.joc.classes.WebserviceConstants;
-import com.sos.joc.classes.audit.AddOrderAudit;
 import com.sos.joc.classes.audit.DailyPlanAudit;
-import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -37,12 +31,9 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.joc.model.order.OrderStateText;
-import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.webservices.order.resource.IDailyPlanDeleteOrderResource;
-
-import io.vavr.control.Either;
 
 @Path("daily_plan")
 public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDailyPlanDeleteOrderResource {
@@ -108,19 +99,16 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
                 OrderHelper.removeFromJobSchedulerControllerWithHistory(dailyPlanOrderFilter.getControllerId(), listOfPlannedOrdersWithHistory);
                 filter.setSubmitted(false);
                 dbLayerDailyPlannedOrders.setSubmitted(filter);
-                
+
                 DailyPlanAudit orderAudit = new DailyPlanAudit(dailyPlanOrderFilter.getControllerId(), dailyPlanOrderFilter.getAuditLog());
                 logAuditMessage(orderAudit);
                 storeAuditLogEntry(orderAudit);
             } catch (JobSchedulerObjectNotExistException e) {
                 LOGGER.warn("Order unknown in JS7 Controller");
             }
-            
 
             Globals.commit(sosHibernateSession);
-        } finally
-
-        {
+        } finally {
             Globals.disconnect(sosHibernateSession);
         }
     }
@@ -129,15 +117,16 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
     public JOCDefaultResponse postDeleteOrders(String xAccessToken, DailyPlanOrderFilter dailyPlanOrderFilter) throws JocException {
         LOGGER.debug("Delete orders from the daily plan");
         try {
-            
+
             JOCDefaultResponse jocDefaultResponse = init(API_CALL_DELETE, dailyPlanOrderFilter, xAccessToken, dailyPlanOrderFilter.getControllerId(),
-                    getPermissonsJocCockpit(getControllerId(xAccessToken,dailyPlanOrderFilter.getControllerId()), xAccessToken).getDailyPlan().getView().isStatus());
+                    getPermissonsJocCockpit(getControllerId(xAccessToken, dailyPlanOrderFilter.getControllerId()), xAccessToken).getDailyPlan()
+                            .getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            this.checkRequiredParameter("dailyPlanDate", dailyPlanOrderFilter.getFilter().getDailyPlanDate());
             this.checkRequiredParameter("filter", dailyPlanOrderFilter.getFilter());
+            this.checkRequiredParameter("dailyPlanDate", dailyPlanOrderFilter.getFilter().getDailyPlanDate());
 
             deleteOrdersFromPlan(dailyPlanOrderFilter);
             return JOCDefaultResponse.responseStatusJSOk(new Date());

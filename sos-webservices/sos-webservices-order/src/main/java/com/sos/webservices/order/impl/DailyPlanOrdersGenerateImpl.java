@@ -16,6 +16,7 @@ import com.sos.joc.classes.audit.DailyPlanAudit;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderSelector;
+import com.sos.joc.model.dailyplan.DailyPlanOrderSelectorDef;
 import com.sos.js7.order.initiator.OrderInitiatorRunner;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
 import com.sos.js7.order.initiator.ScheduleSource;
@@ -33,15 +34,24 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
         LOGGER.debug("Generate the orders for the daily plan");
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, dailyPlanOrderSelector, xAccessToken, dailyPlanOrderSelector.getControllerId(),
-                    getPermissonsJocCockpit(getControllerId(xAccessToken,dailyPlanOrderSelector.getControllerId()), xAccessToken).getDailyPlan().getView().isStatus());
+                    getPermissonsJocCockpit(getControllerId(xAccessToken, dailyPlanOrderSelector.getControllerId()), xAccessToken).getDailyPlan()
+                            .getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            this.checkRequiredParameter("selector", dailyPlanOrderSelector.getDailyPlanDate());
             this.checkRequiredParameter("dailyPlanDate", dailyPlanOrderSelector.getDailyPlanDate());
 
+            if (dailyPlanOrderSelector.getSelector() == null) {
+                Folder root = new Folder();
+                root.setFolder("/");
+                root.setRecursive(true);
+                dailyPlanOrderSelector.setSelector(new DailyPlanOrderSelectorDef());
+                dailyPlanOrderSelector.getSelector().setFolders(new ArrayList<Folder>());
+                dailyPlanOrderSelector.getSelector().getFolders().add(root);
+            }
+            
             Set<Folder> folders = addPermittedFolder(dailyPlanOrderSelector.getSelector().getFolders());
             dailyPlanOrderSelector.getSelector().setFolders(new ArrayList<Folder>());
             for (Folder folder : folders) {
@@ -74,8 +84,8 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
                 scheduleSource = new ScheduleSourceDB(dailyPlanOrderSelector);
                 orderInitiatorRunner.readTemplates(scheduleSource);
                 orderInitiatorRunner.generateDailyPlan(dailyPlanOrderSelector.getDailyPlanDate(), dailyPlanOrderSelector.getWithSubmit());
-                
-                DailyPlanAudit orderAudit = new DailyPlanAudit(controllerId,dailyPlanOrderSelector.getAuditLog());
+
+                DailyPlanAudit orderAudit = new DailyPlanAudit(controllerId, dailyPlanOrderSelector.getAuditLog());
                 logAuditMessage(orderAudit);
                 storeAuditLogEntry(orderAudit);
 

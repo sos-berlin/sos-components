@@ -15,6 +15,11 @@ public interface IDailyPlanSubmitOrderResource {
     @POST
     @Path("submit_orders")
     @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postSubmitOrders2(@HeaderParam("X-Access-Token") String accessToken,
+            DailyPlanOrderFilter dailyPlanOrderFilter) throws Exception;
+    @POST
+    @Path("orders/submit")
+    @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postSubmitOrders(@HeaderParam("X-Access-Token") String accessToken,
             DailyPlanOrderFilter dailyPlanOrderFilter) throws Exception;
 }

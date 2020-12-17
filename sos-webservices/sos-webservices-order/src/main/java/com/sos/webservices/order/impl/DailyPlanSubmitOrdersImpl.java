@@ -45,7 +45,7 @@ import com.sos.webservices.order.resource.IDailyPlanSubmitOrderResource;
 public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDailyPlanSubmitOrderResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanSubmitOrdersImpl.class);
-    private static final String API_CALL = "./daily_plan/submit_orders";
+    private static final String API_CALL = "./daily_plan/orders/submit";
 
     private void submitOrdersToController(DailyPlanOrderFilter dailyPlanOrderFilter) throws JsonParseException, JsonMappingException,
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
@@ -149,5 +149,10 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
         }
 
     }
+
+    @Override
+    public JOCDefaultResponse postSubmitOrders2(String accessToken, DailyPlanOrderFilter dailyPlanOrderFilter) throws Exception {
+        return  postSubmitOrders(accessToken, dailyPlanOrderFilter);
+     }
 
 }
