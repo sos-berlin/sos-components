@@ -28,9 +28,6 @@
 		"deployed": {
 			"type": "boolean"
 		},
-		"deploymentId": {
-			"$ref": "../../common/nonNegativeLong-schema.json"
-		},
 		"deployablesVersions": {
 			"type": "array",
 			"items": {

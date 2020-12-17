@@ -1017,15 +1017,15 @@ traits:
         description: Get deployable object
         description1: !include joc/documentation/inventory/idOrPathAndDeployableType.md
         description2: !include joc/documentation/inventory/onlyValidObjects.md
-        description3: !include joc/documentation/inventory/withVersions.md
+        description3: " "
         description4: " "
         description5: " "
         description6: " "
-        description7: " "
+        description7: !include joc/documentation/inventory/withDeployed.md
         description8: " "
         description9: " "
         description10: " "
-        description200: " "
+        description200: !include joc/documentation/inventory/deployable.md
         schema: !include joc/schemas/inventory/deploy/request-deployable-schema.json
         example: TODO
         schema200: !include joc/schemas/inventory/deploy/response-deployable-schema.json
@@ -1039,13 +1039,13 @@ traits:
         description2: !include joc/documentation/common/recursive.md
         description3: !include joc/documentation/inventory/deployableTypes.md
         description4: !include joc/documentation/inventory/onlyValidObjects.md
-        description5: !include joc/documentation/inventory/withVersions.md
-        description6: !include joc/documentation/inventory/withoutRemovedObjects.md
-        description7: " "
+        description5: " "
+        description6: !include joc/documentation/inventory/withRemovedObjects.md
+        description7: !include joc/documentation/inventory/withDeployed.md
         description8: " "
         description9: " "
         description10: " "
-        description200: " "
+        description200: !include joc/documentation/inventory/deployables.md
         schema: !include joc/schemas/inventory/deploy/request-deployables-schema.json
         example: !include joc/examples/inventory/deployables-request-example.json
         schema200: !include joc/schemas/inventory/deploy/response-deployables-schema.json
@@ -1114,7 +1114,7 @@ traits:
     get:
     type:
       postForExport:
-        description: provides archive file (zip or tar.gz) to download unsigned JSON files
+        description: provides archive file (zip, tar.gz, gz) to download unsigned JSON files
         description1: !include joc/documentation/publish/exportFilterPost.md
         schema: !include joc/schemas/publish/exportFilter-schema.json
         example: !include joc/examples/publish/publishExport-example.json
@@ -1122,7 +1122,7 @@ traits:
   /import:
     type:
       postForUploadUnsigned:
-        description: uploads archive file (zip, tar.gz) of unsigned JSON files of deployable and releasable objects  
+        description: uploads archive file (zip, tar.gz, gz) with unsigned JSON files of deployable and releasable objects  
         schema: !include joc/schemas/publish/importFilter-schema.json
         example: !include joc/examples/publish/publishImport-example.json
 
@@ -1197,12 +1197,12 @@ traits:
         description4: " "
         description5: " "
         description6: " "
-        description7: " "
+        description7: !include joc/documentation/inventory/withReleased.md
         description8: " "
         description9: " "
         description10: " "
-        description200: " "
-        schema: !include joc/schemas/inventory/deploy/request-deployable-schema.json
+        description200: !include joc/documentation/inventory/releasable.md
+        schema: !include joc/schemas/inventory/release/request-releasable-schema.json
         example: TODO
         schema200: !include joc/schemas/inventory/release/response-releasable-schema.json
         example200: TODO
@@ -1215,14 +1215,14 @@ traits:
         description2: !include joc/documentation/common/recursive.md
         description3: !include joc/documentation/inventory/releasableTypes.md
         description4: !include joc/documentation/inventory/onlyValidObjects.md
-        description5: !include joc/documentation/inventory/withoutRemovedObjects.md
-        description6: " "
-        description7: " "
+        description5: " "
+        description6: !include joc/documentation/inventory/withRemovedObjects.md
+        description7: !include joc/documentation/inventory/withReleased.md
         description8: " "
         description9: " "
         description10: " "
-        description200: " "
-        schema: !include joc/schemas/inventory/deploy/request-deployables-schema.json
+        description200: !include joc/documentation/inventory/releasables.md
+        schema: !include joc/schemas/inventory/release/request-releasables-schema.json
         example: TODO
         schema200: !include joc/schemas/inventory/release/response-releasables-schema.json
         example200: TODO

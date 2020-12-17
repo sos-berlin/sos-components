@@ -27,6 +27,9 @@
 		},
 		"released": {
 			"type": "boolean"
+		},
+		"releasableVersions": {
+			"$ref": "response-releasableVersion-schema.json"
 		}
 	}
 }

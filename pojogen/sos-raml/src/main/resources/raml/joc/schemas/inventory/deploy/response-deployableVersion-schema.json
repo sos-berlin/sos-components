@@ -3,7 +3,6 @@
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.joc.model.inventory.deploy.ResponseDeployableVersion",
 	"type": "object",
-	"description": "",
 	"properties": {
 		"id": {
 			"$ref": "../../common/nonNegativeLong-schema.json"
