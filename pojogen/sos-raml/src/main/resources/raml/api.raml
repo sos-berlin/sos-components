@@ -704,14 +704,14 @@ traits:
           description6: !include joc/documentation/dailyplan/generate/controllerIds.md
           description7: !include joc/documentation/dailyplan/generate/overwrite.md
           description8: !include joc/documentation/dailyplan/generate/withSubmit.md
-          description9: " "
           description10: " "
+          audit: !include joc/documentation/audit/auditLog.md
           description200: " "
           schema: !include orderManagement/schemas/dailyplan/dailyPlanOrdersSelector-schema.json
           schema200: ok
           example: " "
           example200: " "
-    /submit_orders:
+    /submit:
       type:
         postJSON:
           description: Submit planned orders for a given daily plan. The orders to be submitted will be read with the given filter.
@@ -725,6 +725,7 @@ traits:
           description8: !include joc/documentation/dailyplan/orders/orderIds.md
           description9: " "
           description10: " "
+          audit: !include joc/documentation/audit/auditLog.md
           description200: " "
           schema: !include orderManagement/schemas/dailyplan/dailyPlanOrdersFilter-schema.json
           schema200: ok
@@ -744,6 +745,7 @@ traits:
           description8: !include joc/documentation/dailyplan/orders/controllerIds.md
           description9: !include joc/documentation/dailyplan/orders/orderIds.md
           description10: " "
+          audit: !include joc/documentation/audit/auditLog.md
           description200: " "
           schema: !include orderManagement/schemas/dailyplan/dailyPlanOrdersFilter-schema.json
           schema200: ok
@@ -762,6 +764,7 @@ traits:
           description7: !include joc/documentation/dailyplan/cancel/states.md
           description9: !include joc/documentation/dailyplan/orders/controllerIds.md
           description10: !include joc/documentation/dailyplan/orders/orderIds.md
+          audit: !include joc/documentation/audit/auditLog.md
           description200: " "
           schema: !include orderManagement/schemas/dailyplan/dailyPlanOrdersFilter-schema.json
           schema200: ok
@@ -1933,7 +1936,6 @@ traits:
         schema200: !include orderManagement/schemas/orders/schedulesList-schema.json
         example: " "
         example200: " "
-
 
 
 

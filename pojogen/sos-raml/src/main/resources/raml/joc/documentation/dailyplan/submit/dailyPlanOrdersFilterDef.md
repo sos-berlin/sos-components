@@ -1,5 +1,5 @@
 <tr>
-<td>``filter``</td><td>optional</td>
+<td>``filter``</td><td>required</td>
 <td>
 Specify the filters elements to filter the orders that should be considered. Only planned orders will be considered and submitted to the controller.
 All filter elements will be combined with "and". The elements in the lists schedulePaths, folders, workflowPaths, states will be combined with "or"

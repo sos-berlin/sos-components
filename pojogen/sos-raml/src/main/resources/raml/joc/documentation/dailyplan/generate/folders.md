@@ -10,6 +10,6 @@ Depending on the value for "recursive" also in one of the subfolders recursivly.
   <div style="padding-left:10px;">"recursive": true</div>
   }]
   </td>
-<td></td>
+<td>If no selector is specified then "folder":"/", "recursive":true </td>
 	
 </tr>
