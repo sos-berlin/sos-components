@@ -223,8 +223,8 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         return orderId;
     }
 
-    public void setOrderId(String orderKey) {
-        this.orderId = orderKey;
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
     }
 
     public Boolean getSubmitted() {
