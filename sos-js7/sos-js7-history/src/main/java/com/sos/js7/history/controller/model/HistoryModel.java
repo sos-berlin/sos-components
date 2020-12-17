@@ -162,10 +162,7 @@ public class HistoryModel {
         Long startEventId = storedEventId;
         Long firstEventId = new Long(0L);
         Long lastSuccessEventId = new Long(0L);
-        // int counterTotal = list.size();
-        // int counterProcessed = 0;
-        // int counterSkipped = 0;
-        // int counterFailed = 0;
+
         Counter counter = new Counter();
         counter.setTotal(list.size());
 
