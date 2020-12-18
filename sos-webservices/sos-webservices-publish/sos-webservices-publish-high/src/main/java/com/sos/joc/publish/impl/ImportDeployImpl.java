@@ -174,7 +174,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 // set new versionId for second round (delete items)
                 final String versionIdForDeleteRenamed = UUID.randomUUID().toString();
                     // call updateRepo command via Proxy of given controllers
-                    PublishUtils.updateRepoDelete(versionIdForDeleteRenamed, toDelete, controllerId, dbLayer, 
+                    PublishUtils.updateItemsDelete(versionIdForDeleteRenamed, toDelete, controllerId, dbLayer, 
                             keyPair.getKeyAlgorithm()).thenAccept(either -> {
                             processAfterDelete(either, toDelete, controllerId, account, versionIdForDeleteRenamed, null);
                     }).get();
@@ -185,7 +185,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 X509Certificate cert = null;
                 switch(keyPair.getKeyAlgorithm()) {
                 case SOSKeyConstants.PGP_ALGORITHM_NAME:
-                    PublishUtils.updateRepoAddOrUpdatePGP(versionIdForUpdate, importedObjects, null, controllerId, dbLayer)
+                    PublishUtils.updateItemsAddOrUpdatePGP(versionIdForUpdate, importedObjects, null, controllerId, dbLayer)
                         .thenAccept(either -> {
                             processAfterAdd(either, importedObjects, null, account, versionIdForUpdate, controllerId, deploymentDate, filter);
                     }).get();
@@ -193,7 +193,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 case SOSKeyConstants.RSA_ALGORITHM_NAME:
                     cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                     signerDN = cert.getSubjectDN().getName();
-                    PublishUtils.updateRepoAddOrUpdateWithX509(versionIdForUpdate, importedObjects, null, controllerId, dbLayer,
+                    PublishUtils.updateItemsAddOrUpdateWithX509(versionIdForUpdate, importedObjects, null, controllerId, dbLayer,
                             SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
                                 processAfterAdd(either, importedObjects, null, account, versionIdForUpdate, controllerId, deploymentDate, filter);
                     }).get();
@@ -201,7 +201,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
                     cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                     signerDN = cert.getSubjectDN().getName();
-                    PublishUtils.updateRepoAddOrUpdateWithX509(versionIdForUpdate, importedObjects, null, controllerId, dbLayer,
+                    PublishUtils.updateItemsAddOrUpdateWithX509(versionIdForUpdate, importedObjects, null, controllerId, dbLayer,
                             SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
                                 processAfterAdd(either, importedObjects, null, account, versionIdForUpdate, controllerId, deploymentDate, filter);
                     }).get();

@@ -85,7 +85,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                 if (versionId != null) {
                     switch(keyPair.getKeyAlgorithm()) {
                     case SOSKeyConstants.PGP_ALGORITHM_NAME:
-                        PublishUtils.updateRepoAddOrUpdatePGP(
+                        PublishUtils.updateItemsAddOrUpdatePGP(
                                 versionId,  
                                 reDeployables.stream()
                                     .map(item -> {
@@ -103,7 +103,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                     case SOSKeyConstants.RSA_ALGORITHM_NAME:
                         cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                         signerDN = cert.getSubjectDN().getName();
-                        PublishUtils.updateRepoAddOrUpdateWithX509(
+                        PublishUtils.updateItemsAddOrUpdateWithX509(
                                 versionId,  
                                 reDeployables.stream()
                                     .map(item -> {
@@ -123,7 +123,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                     case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
                         cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                         signerDN = cert.getSubjectDN().getName();
-                        PublishUtils.updateRepoAddOrUpdateWithX509(
+                        PublishUtils.updateItemsAddOrUpdateWithX509(
                                 versionId,  
                                 reDeployables.stream().filter(item -> versionId.equals(item.getCommitId())).collect(Collectors.toList()),
                                 controllerId, 

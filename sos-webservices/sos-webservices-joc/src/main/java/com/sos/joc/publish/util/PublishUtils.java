@@ -102,8 +102,6 @@ import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.ExportDeployables;
-import com.sos.joc.model.publish.ExportForBackup;
-import com.sos.joc.model.publish.ExportForSigning;
 import com.sos.joc.model.publish.ExportReleasables;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
@@ -123,7 +121,7 @@ import js7.base.crypt.SignerId;
 import js7.base.problem.Problem;
 import js7.data.item.VersionId;
 import js7.data.workflow.WorkflowPath;
-import js7.proxy.javaapi.data.item.JUpdateRepoOperation;
+import js7.proxy.javaapi.data.item.JUpdateItemOperation;
 import reactor.core.publisher.Flux;
 
 public abstract class PublishUtils {
@@ -604,98 +602,99 @@ public abstract class PublishUtils {
         return verifiedDeployment;
     }
 
-    public static CompletableFuture<Either<Problem, Void>> updateRepoAddOrUpdatePGP(
-            String commitId,  Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, 
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer) 
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdatePGP(
+            String commitId,  Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts,
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer)
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
-        Set<JUpdateRepoOperation> updateRepoOperations = new HashSet<JUpdateRepoOperation>();
+        Set<JUpdateItemOperation> updateRepoOperations = new HashSet<JUpdateItemOperation>();
         updateRepoOperations.addAll(
                 drafts.keySet().stream().map(
-                        item -> JUpdateRepoOperation.addOrReplace(SignedString.of(
-                                item.getContent(), 
-                                SOSKeyConstants.PGP_ALGORITHM_NAME, 
+                        item -> JUpdateItemOperation.addOrChange(SignedString.of(
+                                item.getContent(),
+                                SOSKeyConstants.PGP_ALGORITHM_NAME,
                                 drafts.get(item).getSignature()))
                         ).collect(Collectors.toSet())
                 );
         updateRepoOperations.addAll(
                 alreadyDeployed.keySet().stream().map(
-                        item -> JUpdateRepoOperation.addOrReplace(SignedString.of(
-                                item.getContent(), 
-                                SOSKeyConstants.PGP_ALGORITHM_NAME, 
+                        item -> JUpdateItemOperation.addOrChange(SignedString.of(
+                                item.getContent(),
+                                SOSKeyConstants.PGP_ALGORITHM_NAME,
                                 alreadyDeployed.get(item).getSignature()))
                         ).collect(Collectors.toSet())
                 );
-        return ControllerApi.of(controllerId).updateRepo(VersionId.of(commitId), Flux.fromIterable(updateRepoOperations));
+        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId))),
+                Flux.fromIterable(updateRepoOperations)));
     }
 
-    public static CompletableFuture<Either<Problem, Void>> updateRepoAddOrUpdatePGP(
-            String commitId,  List<DBItemDeploymentHistory> alreadyDeployed, String controllerId) 
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdatePGP(
+            String commitId,  List<DBItemDeploymentHistory> alreadyDeployed, String controllerId)
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
-        return ControllerApi.of(controllerId).updateRepo(
-                VersionId.of(commitId), 
-                Flux.fromIterable(
-                        alreadyDeployed.stream().map(
-                                item -> JUpdateRepoOperation.addOrReplace(SignedString.of(
+        return ControllerApi.of(controllerId).updateItems(Flux.concat(
+                Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId))),
+                Flux.fromIterable(alreadyDeployed).map(
+                                item -> JUpdateItemOperation.addOrChange(SignedString.of(
                                         item.getContent(),
                                         SOSKeyConstants.PGP_ALGORITHM_NAME,
                                         item.getSignedContent()))
-                                ).collect(Collectors.toSet())
-                        )
-                );
+                                )
+                ));
     }
-
-    public static CompletableFuture<Either<Problem, Void>> updateRepoAddOrUpdateWithX509(
-            String commitId,  Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, 
+    
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509(
+            String commitId,  Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts,
             Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer,
-            String signatureAlgorithm, String signerDN) 
+            String signatureAlgorithm, String signerDN)
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
-        Set<JUpdateRepoOperation> updateRepoOperations = new HashSet<JUpdateRepoOperation>();
+        Set<JUpdateItemOperation> updateRepoOperations = new HashSet<JUpdateItemOperation>();
         updateRepoOperations.addAll(
                 drafts.keySet().stream().map(
-                        item -> JUpdateRepoOperation.addOrReplace(SignedString.x509WithSignedId(
-                                item.getContent(), 
-                                drafts.get(item).getSignature(), 
-                                signatureAlgorithm, 
+                        item -> JUpdateItemOperation.addOrChange(SignedString.x509WithSignedId(
+                                item.getContent(),
+                                drafts.get(item).getSignature(),
+                                signatureAlgorithm,
                                 SignerId.of(signerDN)))
                         ).collect(Collectors.toSet())
                 );
         updateRepoOperations.addAll(
                 alreadyDeployed.keySet().stream().map(
-                        item -> JUpdateRepoOperation.addOrReplace(SignedString.x509WithSignedId(
-                                item.getContent(), 
-                                alreadyDeployed.get(item).getSignature(), 
-                                signatureAlgorithm, 
+                        item -> JUpdateItemOperation.addOrChange(SignedString.x509WithSignedId(
+                                item.getContent(),
+                                alreadyDeployed.get(item).getSignature(),
+                                signatureAlgorithm,
                                 SignerId.of(signerDN)))
                         ).collect(Collectors.toSet())
                 );
-        return ControllerApi.of(controllerId).updateRepo(VersionId.of(commitId), Flux.fromIterable(updateRepoOperations));
+        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId))),
+                Flux.fromIterable(updateRepoOperations)));
     }
 
-    public static CompletableFuture<Either<Problem, Void>> updateRepoAddOrUpdateWithX509(
-            String commitId,  List<DBItemDeploymentHistory> alreadyDeployed, String controllerId, String signatureAlgorithm, String signerDN) 
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509(
+            String commitId,  List<DBItemDeploymentHistory> alreadyDeployed, String controllerId, String signatureAlgorithm, String signerDN)
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
-        Set<JUpdateRepoOperation> uro = alreadyDeployed.stream().map(
-                item -> JUpdateRepoOperation.addOrReplace(SignedString.x509WithSignedId(
-                        item.getContent(), 
-                        item.getSignedContent(), 
-                        signatureAlgorithm, 
+        Set<JUpdateItemOperation> uro = alreadyDeployed.stream().map(
+                item -> JUpdateItemOperation.addOrChange(SignedString.x509WithSignedId(
+                        item.getContent(),
+                        item.getSignedContent(),
+                        signatureAlgorithm,
                         SignerId.of(signerDN)))
                 ).collect(Collectors.toSet());
-        return ControllerApi.of(controllerId).updateRepo(VersionId.of(commitId), Flux.fromIterable(uro));
+        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId))),
+                Flux.fromIterable(uro)));
     }
 
-    public static CompletableFuture<Either<Problem, Void>> updateRepoDelete(String commitId,
-            List<DBItemDeploymentHistory> alreadyDeployedtoDelete, String controllerId, DBLayerDeploy dbLayer, String keyAlgorithm) 
+    public static CompletableFuture<Either<Problem, Void>> updateItemsDelete(String commitId,
+            List<DBItemDeploymentHistory> alreadyDeployedtoDelete, String controllerId, DBLayerDeploy dbLayer, String keyAlgorithm)
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         if ("RSA".equals(keyAlgorithm) || "ECDSA".equals(keyAlgorithm)) {
             keyAlgorithm = "X509";
         }
-        Set<JUpdateRepoOperation> updateRepoOperations = new HashSet<JUpdateRepoOperation>();
+        Set<JUpdateItemOperation> updateRepoOperations = new HashSet<JUpdateItemOperation>();
         if (alreadyDeployedtoDelete != null) {
             for (DBItemDeploymentHistory toDelete : alreadyDeployedtoDelete) {
                 switch (DeployType.fromValue(toDelete.getType())) {
                 case WORKFLOW:
-                    updateRepoOperations.add(JUpdateRepoOperation.delete(WorkflowPath.of(toDelete.getPath())));
+                    updateRepoOperations.add(JUpdateItemOperation.deleteItem(WorkflowPath.of(toDelete.getPath())));
                     break;
                 case JOBCLASS:
                     // TODO:
@@ -709,7 +708,8 @@ public abstract class PublishUtils {
                 }
             }
         }
-        return ControllerApi.of(controllerId).updateRepo(VersionId.of(commitId), Flux.fromIterable(updateRepoOperations));
+        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId))),
+                Flux.fromIterable(updateRepoOperations)));
     }
 
     private static void updateVersionIdOnDraftObject(DBItemInventoryConfiguration draft, String commitId)
