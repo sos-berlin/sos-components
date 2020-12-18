@@ -45,7 +45,6 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
-import com.sos.joc.model.publish.ControllerId;
 import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.publish.db.DBLayerDeploy;
@@ -84,7 +83,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             Map<String, List<DBItemInventoryJSInstance>> allControllers = dbLayer.getAllControllers().stream().collect(Collectors.groupingBy(
                     DBItemInventoryJSInstance::getControllerId));
             // process filter
-            Set<String> controllerIds = getControllerIdsFromFilter(deployFilter);
+            Set<String> controllerIds = new HashSet<String>(deployFilter.getControllerIds());
             List<Configuration> draftConfigsToStore = getDraftConfigurationsToStoreFromFilter(deployFilter);
             /* TODO: 
              * - check for configurationIds with -marked-for-delete- set
@@ -276,10 +275,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         } finally {
             Globals.disconnect(hibernateSession);
         }
-    }
-
-    private Set<String> getControllerIdsFromFilter(DeployFilter deployFilter) {
-        return deployFilter.getControllerIds().stream().map(ControllerId::getControllerId).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
     private List<Configuration> getDraftConfigurationsToStoreFromFilter(DeployFilter deployFilter) {

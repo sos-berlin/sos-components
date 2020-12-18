@@ -28,7 +28,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class DeployFilter {
 
     @JsonProperty("controllerIds")
-    private List<ControllerId> controllerIds = new ArrayList<ControllerId>();
+    private List<String> controllerIds = new ArrayList<String>();
     /**
      * Deployable Objects
      * <p>
@@ -55,12 +55,12 @@ public class DeployFilter {
     private AuditParams auditLog;
 
     @JsonProperty("controllerIds")
-    public List<ControllerId> getControllerIds() {
+    public List<String> getControllerIds() {
         return controllerIds;
     }
 
     @JsonProperty("controllerIds")
-    public void setControllerIds(List<ControllerId> controllerIds) {
+    public void setControllerIds(List<String> controllerIds) {
         this.controllerIds = controllerIds;
     }
 

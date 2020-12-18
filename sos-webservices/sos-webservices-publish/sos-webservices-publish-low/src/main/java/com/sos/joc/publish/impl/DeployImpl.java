@@ -85,7 +85,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             Map<String, List<DBItemInventoryJSInstance>> allControllers = dbLayer.getAllControllers().stream().collect(Collectors.groupingBy(
                     DBItemInventoryJSInstance::getControllerId));
             // process filter
-            Set<String> controllerIds = getControllerIdsFromFilter(deployFilter);
+            Set<String> controllerIds = new HashSet<String>(deployFilter.getControllerIds());
             List<Configuration> draftConfigsToStore = getDraftConfigurationsToStoreFromFilter(deployFilter);
             /*
              * TODO: - check for configurationIds with -marked-for-delete- set - get all deployments from history related to the given configurationId - get all
@@ -263,10 +263,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         } finally {
             Globals.disconnect(hibernateSession);
         }
-    }
-
-    private Set<String> getControllerIdsFromFilter(DeployFilter deployFilter) {
-        return deployFilter.getControllerIds().stream().map(ControllerId::getControllerId).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
     private List<Configuration> getDraftConfigurationsToStoreFromFilter(DeployFilter deployFilter) {

@@ -19,7 +19,7 @@
 		"controllerIds": {
 		  "type" : "array",
 	    "items": {
-        "$ref":  "controllerId-schema.json"
+        "type":  "string"
       }
 		},
 		"store": {
