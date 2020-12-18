@@ -17,7 +17,7 @@
 </tr>
 <tr>
 <td style="padding-left:20px;">``format``</td>
-<td>required, string</td>
+<td>required, enum</td>
 <td>The desired ``format`` of the export archive file. The enum archiveFormat for the value consist of ZIP and TAR_GZ</td>
 <td>"format" : "ZIP"</td>
 <td></td>
@@ -75,7 +75,7 @@
 </tr>
 <tr>
 <td style="padding-left:80px;">``objectType``</td>
-<td>required, string</td>
+<td>required, enum</td>
 <td>Subset of deployable objects from the enum ConfigurationType. The subset consist of WORKFLOW, JUNCTION, LOCK, JOBCLASS and FOLDER.</td>
 <td>"objectType" : "WORKFLOW"</td>
 <td></td>

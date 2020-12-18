@@ -1114,7 +1114,7 @@ traits:
     get:
     type:
       postForExport:
-        description: provides archive file (zip, tar.gz, gz) to download unsigned JSON files
+        description: provides archive file (zip, tar.gz) to download unsigned JSON files
         description1: !include joc/documentation/publish/exportFilterPost.md
         schema: !include joc/schemas/publish/exportFilter-schema.json
         example: !include joc/examples/publish/publishExport-example.json
@@ -1122,7 +1122,7 @@ traits:
   /import:
     type:
       postForUploadUnsigned:
-        description: uploads archive file (zip, tar.gz, gz) with unsigned JSON files of deployable and releasable objects  
+        description: uploads archive file (zip, tar.gz) with unsigned JSON files of deployable and releasable objects  
         schema: !include joc/schemas/publish/importFilter-schema.json
         example: !include joc/examples/publish/publishImport-example.json
 
