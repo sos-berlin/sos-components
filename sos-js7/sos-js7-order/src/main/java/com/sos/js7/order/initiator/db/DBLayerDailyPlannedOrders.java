@@ -359,9 +359,11 @@ public class DBLayerDailyPlannedOrders {
         filter.setStates(null);
         filter.setSubmitTime(null);
         if (filter.getSubmitted()) {
+            filter.setSubmitted(null);
             hql = "update  " + DBItemDailyPlannedOrders + " p set submitted=1,submitTime=:submitTime  " + getWhere(filter);
             filter.setSubmitTime(JobSchedulerDate.nowInUtc());
         } else {
+            filter.setSubmitted(null);
             hql = "update  " + DBItemDailyPlannedOrders + " p set submitted=0,submitTime=null  " + getWhere(filter);
         }
 

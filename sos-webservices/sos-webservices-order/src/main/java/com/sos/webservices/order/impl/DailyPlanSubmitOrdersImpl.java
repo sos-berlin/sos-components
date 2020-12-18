@@ -111,9 +111,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
                     orderInitiatorRunner.submitOrders(listOfPlannedOrders);
                 }
             }
-        } finally
-
-        {
+        } finally {
             Globals.disconnect(sosHibernateSession);
         }
 
@@ -132,7 +130,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
             }
 
             submitOrdersToController(dailyPlanOrderFilter);
-            
+
             DailyPlanAudit orderAudit = new DailyPlanAudit(dailyPlanOrderFilter.getControllerId(), dailyPlanOrderFilter.getAuditLog());
             logAuditMessage(orderAudit);
             storeAuditLogEntry(orderAudit);
@@ -147,12 +145,11 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
             LOGGER.error(getJocError().getMessage(), e);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
-
     }
 
     @Override
     public JOCDefaultResponse postSubmitOrders2(String accessToken, DailyPlanOrderFilter dailyPlanOrderFilter) throws Exception {
-        return  postSubmitOrders(accessToken, dailyPlanOrderFilter);
-     }
+        return postSubmitOrders(accessToken, dailyPlanOrderFilter);
+    }
 
 }

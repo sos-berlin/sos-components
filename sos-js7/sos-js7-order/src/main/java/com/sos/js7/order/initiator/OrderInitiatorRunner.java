@@ -100,8 +100,10 @@ public class OrderInitiatorRunner extends TimerTask {
         OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer();
         for (DBItemDailyPlanOrders dbItemDailyPlanOrders : listOfPlannedOrders) {
             PlannedOrder p = new PlannedOrder();
-            Schedule o = new Schedule();
-            o.setPath(dbItemDailyPlanOrders.getSchedulePath());
+            Schedule schedule = new Schedule();
+            schedule.setPath(dbItemDailyPlanOrders.getSchedulePath());
+            schedule.setWorkflowPath(dbItemDailyPlanOrders.getWorkflowPath());
+            schedule.setSubmitOrderToControllerWhenPlanned(true);
             p.setControllerId(dbItemDailyPlanOrders.getControllerId());
 
             FilterOrderVariables filterOrderVariables = new FilterOrderVariables();
@@ -116,12 +118,14 @@ public class OrderInitiatorRunner extends TimerTask {
                 variables.add(variable);
             }
 
-            o.setVariables(variables);
+            schedule.setVariables(variables);
 
-            FreshOrder freshOrder = buildFreshOrder(o, dbItemDailyPlanOrders.getPlannedStart().getTime());
-            p.setSchedule(o);
+            FreshOrder freshOrder = buildFreshOrder(schedule, dbItemDailyPlanOrders.getPlannedStart().getTime());
+            freshOrder.setId(dbItemDailyPlanOrders.getOrderId());
+            p.setSchedule(schedule);
             p.setFreshOrder(freshOrder);
             p.setCalendarId(dbItemDailyPlanOrders.getCalendarId());
+            p.setStoredInDb(true);
 
             orderListSynchronizer.add(p);
         }
@@ -202,7 +206,7 @@ public class OrderInitiatorRunner extends TimerTask {
         if (shortScheduleName.length() > 30) {
             shortScheduleName = shortScheduleName.substring(0, 30);
         }
-        return this.getDailyPlanDate(startTime) + "#P" + "<id" + startTime + ">-" + shortScheduleName;
+        return "#" + this.getDailyPlanDate(startTime) + "#P" + "<id" + startTime + ">-" + shortScheduleName;
     }
 
     private FreshOrder buildFreshOrder(Schedule o, Long startTime) {

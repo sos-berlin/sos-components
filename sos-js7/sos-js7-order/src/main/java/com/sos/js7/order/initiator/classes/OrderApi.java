@@ -64,7 +64,7 @@ public class OrderApi {
         orderInitiatorSettings.setTimeZone(Globals.sosCockpitProperties.getProperty("daily_plan_timezone", Globals.DEFAULT_TIMEZONE_DAILY_PLAN));
         orderInitiatorSettings.setPeriodBegin(Globals.sosCockpitProperties.getProperty("daily_plan_period_begin", Globals.DEFAULT_PERIOD_DAILY_PLAN));
         orderInitiatorSettings.setControllerId(startOrders.getControllerId());
-        
+
         OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer();
 
         for (AddOrder startOrder : startOrders.getOrders()) {
@@ -102,7 +102,7 @@ public class OrderApi {
         Map<String, Value> arguments = new HashMap<>();
         if (order.getArguments() != null) {
             Map<String, String> a = order.getArguments().getAdditionalProperties();
-            for(String key : a.keySet()) {
+            for (String key : a.keySet()) {
                 arguments.put(key, Value.of(a.get(key)));
             }
         }
@@ -112,7 +112,7 @@ public class OrderApi {
         }
         return JFreshOrder.of(orderId, WorkflowPath.of(order.getWorkflowPath()), scheduledFor, arguments);
     }
-    
+
     public static Set<PlannedOrder> addOrderToController(Set<PlannedOrder> orders) throws JobSchedulerConnectionResetException,
             JobSchedulerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, InterruptedException, ExecutionException {
