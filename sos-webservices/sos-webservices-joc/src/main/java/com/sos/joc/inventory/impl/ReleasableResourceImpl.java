@@ -7,6 +7,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
@@ -79,13 +80,26 @@ public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasab
                 config.setDeleted(true);
             }
             
-            ResponseReleasableTreeItem treeItem = getResponseReleasableTreeItem(config);
-            
             DBItemInventoryReleasedConfiguration releasedItem = dbLayer.getReleasedItemByConfigurationId(config.getId());
-            if (releasedItem == null && in.getOnlyValidObjects() && !config.getValid() && !config.getDeleted()) {
-                throw new JocDeployException(String.format("%s is neither valid nor already released: %s", type.value().toLowerCase(), config
+            
+            if (in.getWithoutDrafts() && releasedItem != null) {  // contains only drafts which are already released
+                throw new JocDeployException(String.format("%s is a draft without a released version: %s", type.value().toLowerCase(), config
                         .getPath()));
             }
+            if (in.getWithoutReleased() && config.getReleased()) {
+                throw new JocDeployException(String.format("%s is already released: %s", type.value().toLowerCase(), config
+                        .getPath()));
+            }
+            if (in.getWithoutReleased() && in.getOnlyValidObjects() && !config.getValid() && !config.getDeleted()) {
+                throw new JocDeployException(String.format("%s is not valid: %s", type.value().toLowerCase(), config
+                        .getPath()));
+            }
+            if (!in.getWithoutReleased() && releasedItem != null && in.getOnlyValidObjects() && !config.getValid() && !config.getDeleted()) {
+                throw new JocDeployException(String.format("%s is not valid: %s", type.value().toLowerCase(), config
+                        .getPath()));
+            }
+            
+            ResponseReleasableTreeItem treeItem = getResponseReleasableTreeItem(config);
             
             if (!in.getWithoutDrafts() || !in.getWithoutReleased()) {
                 Set<ResponseReleasableVersion> versions = new LinkedHashSet<>();
