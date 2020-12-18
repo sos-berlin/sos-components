@@ -5,13 +5,13 @@ import com.sos.joc.db.history.DBItemHistoryAgent;
 public class CachedAgent {
 
     private final Long id;
-    private final String path;
+    private final String agentId;
     private final String timezone;
     private String uri;
 
     public CachedAgent(final DBItemHistoryAgent item) {
         id = item.getId();
-        path = item.getPath();
+        agentId = item.getAgentId();
         timezone = item.getTimezone();
         uri = item.getUri();
     }
@@ -20,8 +20,8 @@ public class CachedAgent {
         return id;
     }
 
-    public String getPath() {
-        return path;
+    public String getAgentId() {
+        return agentId;
     }
 
     public String getTimezone() {

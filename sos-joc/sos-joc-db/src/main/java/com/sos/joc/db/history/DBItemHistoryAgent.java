@@ -26,11 +26,11 @@ public class DBItemHistoryAgent extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    @Column(name = "[JOBSCHEDULER_ID]", nullable = false)
-    private String jobSchedulerId; // HISTORY_TABLE_CONTROLLERS.JOBSCHEDULER_ID
+    @Column(name = "[CONTROLLER_ID]", nullable = false)
+    private String controllerId; // HISTORY_TABLE_CONTROLLERS.CONTROLLER_ID
 
-    @Column(name = "[PATH]", nullable = false)
-    private String path;
+    @Column(name = "[AGENT_ID]", nullable = false)
+    private String agentId;
 
     @Column(name = "[URI]", nullable = false)
     private String uri;
@@ -58,20 +58,20 @@ public class DBItemHistoryAgent extends DBItem {
         id = val;
     }
 
-    public String getJobSchedulerId() {
-        return jobSchedulerId;
+    public String getControllerId() {
+        return controllerId;
     }
 
-    public void setJobSchedulerId(String val) {
-        jobSchedulerId = val;
+    public void setControllerId(String val) {
+        controllerId = val;
     }
 
-    public String getPath() {
-        return path;
+    public String getAgentId() {
+        return agentId;
     }
 
-    public void setPath(String val) {
-        path = val;
+    public void setAgentId(String val) {
+        agentId = val;
     }
 
     public String getUri() {

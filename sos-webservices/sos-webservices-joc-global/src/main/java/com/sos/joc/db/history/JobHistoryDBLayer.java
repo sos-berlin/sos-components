@@ -255,7 +255,7 @@ public class JobHistoryDBLayer {
         String clause = "";
 
         if (filter.getSchedulerId() != null && !filter.getSchedulerId().isEmpty()) {
-            where += and + " jobSchedulerId = :jobschedulerId";
+            where += and + " controllerId = :controllerId";
             and = " and";
         }
 
@@ -403,7 +403,7 @@ public class JobHistoryDBLayer {
     private <T> Query<T> createQuery(String hql) throws SOSHibernateException {
         Query<T> query = session.createQuery(hql);
         if (filter.getSchedulerId() != null && !"".equals(filter.getSchedulerId())) {
-            query.setParameter("jobschedulerId", filter.getSchedulerId());
+            query.setParameter("controllerId", filter.getSchedulerId());
         }
         if (filter.getHistoryIds() != null && !filter.getHistoryIds().isEmpty()) {
             query.setParameterList("historyIds", filter.getHistoryIds());

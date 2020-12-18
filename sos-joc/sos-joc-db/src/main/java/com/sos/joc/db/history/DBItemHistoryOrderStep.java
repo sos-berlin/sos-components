@@ -30,8 +30,8 @@ public class DBItemHistoryOrderStep extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    @Column(name = "[JOBSCHEDULER_ID]", nullable = false)
-    private String jobSchedulerId;
+    @Column(name = "[CONTROLLER_ID]", nullable = false)
+    private String controllerId;
 
     @Column(name = "[ORDER_KEY]", nullable = false)
     private String orderKey;// event TODO redundant?
@@ -126,7 +126,7 @@ public class DBItemHistoryOrderStep extends DBItem {
     private Long logId;// db
 
     @Column(name = "[CONSTRAINT_HASH]", nullable = false)
-    private String constraintHash; // hash from jobSchedulerId, startEventId for db unique constraint
+    private String constraintHash; // hash from controllerId, startEventId for db unique constraint
 
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
@@ -145,12 +145,12 @@ public class DBItemHistoryOrderStep extends DBItem {
         id = val;
     }
 
-    public String getJobSchedulerId() {
-        return jobSchedulerId;
+    public String getControllerId() {
+        return controllerId;
     }
 
-    public void setJobSchedulerId(String val) {
-        jobSchedulerId = val;
+    public void setControllerId(String val) {
+        controllerId = val;
     }
 
     public String getOrderKey() {

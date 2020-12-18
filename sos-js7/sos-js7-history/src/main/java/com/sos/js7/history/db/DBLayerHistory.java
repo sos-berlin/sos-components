@@ -63,35 +63,35 @@ public class DBLayerHistory {
         return session.executeUpdate(query);
     }
 
-    public String getControllerTimezone(String jobSchedulerId) throws SOSHibernateException {
+    public String getControllerTimezone(String controllerId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select timezone from ");
         hql.append(DBLayer.DBITEM_HISTORY_CONTROLLER);
         hql.append(" where id = ");
         hql.append("(");
         hql.append("select max(id) from ");
         hql.append(DBLayer.DBITEM_HISTORY_CONTROLLER);
-        hql.append(" where jobSchedulerId=:jobSchedulerId");
+        hql.append(" where controllerId=:controllerId");
         hql.append(")");
 
         Query<String> query = session.createQuery(hql.toString());
-        query.setParameter("jobSchedulerId", jobSchedulerId);
+        query.setParameter("controllerId", controllerId);
         return session.getSingleResult(query);
     }
 
-    public DBItemHistoryAgent getAgent(String jobSchedulerId, String agentPath) throws SOSHibernateException {
+    public DBItemHistoryAgent getAgent(String controllerId, String agentId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ");
         hql.append(DBLayer.DBITEM_HISTORY_AGENT);
         hql.append(" where id = ");
         hql.append("(");
         hql.append("select max(id) from ");
         hql.append(DBLayer.DBITEM_HISTORY_AGENT);
-        hql.append(" where jobSchedulerId=:jobSchedulerId");
-        hql.append(" and path=:agentPath");
+        hql.append(" where controllerId=:controllerId");
+        hql.append(" and agentId=:agentId");
         hql.append(")");
 
         Query<DBItemHistoryAgent> query = session.createQuery(hql.toString());
-        query.setParameter("jobSchedulerId", jobSchedulerId);
-        query.setParameter("agentPath", agentPath);
+        query.setParameter("controllerId", controllerId);
+        query.setParameter("agentId", agentId);
         return session.getSingleResult(query);
     }
 
@@ -119,8 +119,8 @@ public class DBLayerHistory {
         return session.executeUpdate(query);
     }
 
-    public DBItemHistoryOrder getOrderByStateTime(String jobSchedulerId, String orderKey, Date stateTime) throws SOSHibernateException {
-        List<DBItemHistoryOrder> result = getOrder(jobSchedulerId, orderKey);
+    public DBItemHistoryOrder getOrderByStateTime(String controllerId, String orderKey, Date stateTime) throws SOSHibernateException {
+        List<DBItemHistoryOrder> result = getOrder(controllerId, orderKey);
         if (result != null) {
             switch (result.size()) {
             case 0:
@@ -141,8 +141,8 @@ public class DBLayerHistory {
         return null;
     }
 
-    public DBItemHistoryOrder getOrderBeforeCurrentEvent(String jobSchedulerId, String orderKey, Date currentEventTime) throws SOSHibernateException {
-        List<DBItemHistoryOrder> result = getOrder(jobSchedulerId, orderKey);
+    public DBItemHistoryOrder getOrderBeforeCurrentEvent(String controllerId, String orderKey, Date currentEventTime) throws SOSHibernateException {
+        List<DBItemHistoryOrder> result = getOrder(controllerId, orderKey);
         if (result != null) {
             switch (result.size()) {
             case 0:
@@ -167,13 +167,13 @@ public class DBLayerHistory {
         return null;
     }
 
-    private List<DBItemHistoryOrder> getOrder(String jobSchedulerId, String orderKey) throws SOSHibernateException {
+    private List<DBItemHistoryOrder> getOrder(String controllerId, String orderKey) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER).append(" ");
-        hql.append("where jobSchedulerId=:jobSchedulerId ");
+        hql.append("where controllerId=:controllerId ");
         hql.append("and orderKey=:orderKey ");
 
         Query<DBItemHistoryOrder> query = session.createQuery(hql.toString());
-        query.setParameter("jobSchedulerId", jobSchedulerId);
+        query.setParameter("controllerId", controllerId);
         query.setParameter("orderKey", orderKey);
         return session.getResultList(query);
     }
@@ -198,15 +198,15 @@ public class DBLayerHistory {
         return session.getSingleResult(query);
     }
 
-    public DBItemHistoryOrderStep getOrderStepLastBeforeCurrentEvent(String jobSchedulerId, String orderKey, Date currentEventTime,
-            Long currentEventId) throws SOSHibernateException {
+    public DBItemHistoryOrderStep getOrderStepLastBeforeCurrentEvent(String controllerId, String orderKey, Date currentEventTime, Long currentEventId)
+            throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(" ");
-        hql.append("where jobSchedulerId=:jobSchedulerId ");
+        hql.append("where controllerId=:controllerId ");
         hql.append("and orderKey=:orderKey ");
         hql.append("and startTime <=:startTime ");
 
         Query<DBItemHistoryOrderStep> query = session.createQuery(hql.toString());
-        query.setParameter("jobSchedulerId", jobSchedulerId);
+        query.setParameter("controllerId", controllerId);
         query.setParameter("orderKey", orderKey);
         query.setParameter("startTime", currentEventTime);
 
@@ -237,15 +237,15 @@ public class DBLayerHistory {
         return null;
     }
 
-    public DBItemHistoryOrderStep getOrderStepByStartTime(String jobSchedulerId, String orderKey, Date startTime, Long startEventId)
+    public DBItemHistoryOrderStep getOrderStepByStartTime(String controllerId, String orderKey, Date startTime, Long startEventId)
             throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(" ");
-        hql.append("where jobSchedulerId=:jobSchedulerId ");
+        hql.append("where controllerId=:controllerId ");
         hql.append("and orderKey=:orderKey ");
         hql.append("and startTime=:startTime ");
 
         Query<DBItemHistoryOrderStep> query = session.createQuery(hql.toString());
-        query.setParameter("jobSchedulerId", jobSchedulerId);
+        query.setParameter("controllerId", controllerId);
         query.setParameter("orderKey", orderKey);
         query.setParameter("startTime", startTime);
 

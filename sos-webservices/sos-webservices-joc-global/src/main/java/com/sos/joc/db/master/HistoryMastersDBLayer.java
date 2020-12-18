@@ -21,12 +21,12 @@ public class HistoryMastersDBLayer {
 		this.session = connection;
 	}
 
-	public DBItemHistoryController getLastHistoryItem(String jobSchedulerId, String hostname, Integer port, Date startedAt)
+	public DBItemHistoryController getLastHistoryItem(String controllerId, String hostname, Integer port, Date startedAt)
 			throws DBConnectionRefusedException, DBInvalidDataException {
 		try {
 			StringBuilder sql = new StringBuilder();
 			sql.append("from ").append(DBLayer.DBITEM_HISTORY_CONTROLLER);
-			sql.append(" where jobSchedulerId = :jobSchedulerId");
+			sql.append(" where controllerId = :controllerId");
 			sql.append(" and hostname = :hostname");
 			sql.append(" and port = :port");
 			if (startedAt != null) {
@@ -35,7 +35,7 @@ public class HistoryMastersDBLayer {
 			sql.append(" order by id desc");
 			Query<DBItemHistoryController> query = session.createQuery(sql.toString());
 			query.setMaxResults(1);
-			query.setParameter("jobSchedulerId", jobSchedulerId);
+			query.setParameter("controllerId", controllerId);
 			query.setParameter("hostname", hostname);
 			query.setParameter("port", port);
 			if (startedAt != null) {

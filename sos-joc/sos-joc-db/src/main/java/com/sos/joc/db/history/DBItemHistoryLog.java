@@ -28,8 +28,8 @@ public class DBItemHistoryLog extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    @Column(name = "[JOBSCHEDULER_ID]", nullable = false)
-    private String jobSchedulerId;
+    @Column(name = "[CONTROLLER_ID]", nullable = false)
+    private String controllerId;
 
     @Column(name = "[MAIN_ORDER_ID]", nullable = false)
     private Long mainOrderId;
@@ -71,12 +71,12 @@ public class DBItemHistoryLog extends DBItem {
         id = val;
     }
 
-    public String getJobSchedulerId() {
-        return jobSchedulerId;
+    public String getControllerId() {
+        return controllerId;
     }
 
-    public void setJobSchedulerId(String val) {
-        jobSchedulerId = val;
+    public void setControllerId(String val) {
+        controllerId = val;
     }
 
     public Long geMainOrdertId() {

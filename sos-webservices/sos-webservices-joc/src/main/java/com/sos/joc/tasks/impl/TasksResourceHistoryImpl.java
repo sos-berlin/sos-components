@@ -170,7 +170,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                                 LOGGER.info(String.format(" [%s][%s]first entry retrieved", range, i));
                             }
 
-                            if (in.getControllerId().isEmpty() && !getPermissonsJocCockpit(step.getJobSchedulerId(), accessToken).getHistory()
+                            if (in.getControllerId().isEmpty() && !getPermissonsJocCockpit(step.getControllerId(), accessToken).getHistory()
                                     .getView().isStatus()) {
                                 continue;
                             }

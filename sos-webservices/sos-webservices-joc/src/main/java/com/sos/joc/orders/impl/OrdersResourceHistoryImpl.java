@@ -143,7 +143,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                             LOGGER.info(String.format(" [%s][%s]first entry retrieved", range, i));
                         }
 
-                        if (in.getControllerId().isEmpty() && !getPermissonsJocCockpit(item.getJobSchedulerId(), accessToken).getHistory().getView()
+                        if (in.getControllerId().isEmpty() && !getPermissonsJocCockpit(item.getControllerId(), accessToken).getHistory().getView()
                                 .isStatus()) {
                             continue;
                         }

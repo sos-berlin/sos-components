@@ -17,7 +17,7 @@ public class HistoryMapper {
 
     public static OrderHistoryItem map2OrderHistoryItem(DBItemHistoryOrder item) {
         OrderHistoryItem history = new OrderHistoryItem();
-        history.setControllerId(item.getJobSchedulerId());
+        history.setControllerId(item.getControllerId());
         history.setEndTime(item.getEndTime());
         history.setHistoryId(item.getId());
         history.setOrderId(item.getOrderKey());
@@ -34,7 +34,7 @@ public class HistoryMapper {
 
     public static TaskHistoryItem map2TaskHistoryItem(DBItemHistoryOrderStep item) {
         TaskHistoryItem history = new TaskHistoryItem();
-        history.setControllerId(item.getJobSchedulerId());
+        history.setControllerId(item.getControllerId());
         history.setAgentUrl(item.getAgentUri());
         history.setStartTime(item.getStartTime());
         history.setEndTime(item.getEndTime());

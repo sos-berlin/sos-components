@@ -36,7 +36,7 @@ public class DBItemLogTest {
         DBItemHistoryLog item = null;
         if (Files.exists(logFile)) {
             item = new DBItemHistoryLog();
-            item.setJobSchedulerId("jobscheduler2.0");
+            item.setControllerId("jobscheduler2.0");
 
             item.setMainOrderId(new Long(0));
             item.setOrderId(new Long(0));

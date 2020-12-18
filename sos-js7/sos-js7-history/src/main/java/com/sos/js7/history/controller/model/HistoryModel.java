@@ -401,7 +401,7 @@ public class HistoryModel {
         DBItemHistoryController item = new DBItemHistoryController();
         try {
             Date eventDate = entry.getEventDatetime();
-            item.setJobSchedulerId(controllerConfiguration.getCurrent().getId());
+            item.setControllerId(controllerConfiguration.getCurrent().getId());
             item.setUri(controllerConfiguration.getCurrent().getUri());
             item.setTimezone(entry.getTimezone());
             item.setStartTime(eventDate);
@@ -453,8 +453,8 @@ public class HistoryModel {
             } catch (Exception ex) {
             }
 
-            item.setJobSchedulerId(controllerConfiguration.getCurrent().getId());
-            item.setPath(entry.getPath());
+            item.setControllerId(controllerConfiguration.getCurrent().getId());
+            item.setAgentId(entry.getPath());
             item.setUri(entry.getUri());
             item.setTimezone(entry.getTimezone());
             item.setStartTime(entry.getEventDatetime());
@@ -464,7 +464,7 @@ public class HistoryModel {
             dbLayer.getSession().save(item);
 
             ca = new CachedAgent(item);
-            addCachedAgent(item.getPath(), ca);
+            addCachedAgent(item.getAgentId(), ca);
 
             tryStoreCurrentState(dbLayer, entry.getEventId());
         } catch (SOSHibernateObjectOperationException e) {
@@ -485,7 +485,7 @@ public class HistoryModel {
         try {
             checkControllerTimezone(dbLayer);
 
-            item.setJobSchedulerId(controllerConfiguration.getCurrent().getId());
+            item.setControllerId(controllerConfiguration.getCurrent().getId());
             item.setOrderKey(entry.getOrderId());
 
             item.setWorkflowPath(entry.getWorkflowPath());
@@ -832,7 +832,7 @@ public class HistoryModel {
         try {
             checkControllerTimezone(dbLayer);
 
-            item.setJobSchedulerId(controllerConfiguration.getCurrent().getId());
+            item.setControllerId(controllerConfiguration.getCurrent().getId());
             item.setOrderKey(forkOrder.getOrderId());
 
             item.setWorkflowPath(entry.getWorkflowPath());
@@ -940,7 +940,7 @@ public class HistoryModel {
             Date agentStartTime = entry.getEventDatetime();
 
             item = new DBItemHistoryOrderStep();
-            item.setJobSchedulerId(controllerConfiguration.getCurrent().getId());
+            item.setControllerId(controllerConfiguration.getCurrent().getId());
             item.setOrderKey(entry.getOrderId());
 
             item.setWorkflowPath(entry.getWorkflowPath());
@@ -1259,8 +1259,8 @@ public class HistoryModel {
                             identifier, controllerConfiguration.getCurrent().getId(), key, controllerTimezone, getDateAsString(startTime), uri));
 
                     item = new DBItemHistoryAgent();
-                    item.setJobSchedulerId(controllerConfiguration.getCurrent().getId());
-                    item.setPath(key);
+                    item.setControllerId(controllerConfiguration.getCurrent().getId());
+                    item.setAgentId(key);
                     item.setUri(uri);
                     item.setTimezone(controllerTimezone);
                     item.setStartTime(startTime);
@@ -1276,8 +1276,8 @@ public class HistoryModel {
                             controllerConfiguration.getCurrent().getId(), key, controllerTimezone, getDateAsString(startTime)));
 
                     item = new DBItemHistoryAgent();
-                    item.setJobSchedulerId(controllerConfiguration.getCurrent().getId());
-                    item.setPath(key);
+                    item.setControllerId(controllerConfiguration.getCurrent().getId());
+                    item.setAgentId(key);
                     item.setUri(inst.getUri());
                     item.setTimezone(controllerTimezone);
                     item.setStartTime(startTime);
@@ -1327,7 +1327,7 @@ public class HistoryModel {
         DBItemHistoryLog item = null;
         if (Files.exists(file)) {
             item = new DBItemHistoryLog();
-            item.setJobSchedulerId(controllerConfiguration.getCurrent().getId());
+            item.setControllerId(controllerConfiguration.getCurrent().getId());
 
             item.setMainOrderId(mainOrderId);
             item.setOrderId(orderId);
