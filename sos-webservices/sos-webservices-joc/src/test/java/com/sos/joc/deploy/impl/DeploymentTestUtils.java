@@ -426,13 +426,8 @@ public class DeploymentTestUtils {
         DeployDelete delete = new DeployDelete();
         filter.setDelete(delete);
 
-        ControllerId js7Cluster = new ControllerId();
-        js7Cluster.setControllerId("js7-cluster");
-        ControllerId standalone = new ControllerId();
-        standalone.setControllerId("standalone");
-
-        filter.getControllerIds().add(js7Cluster);
-        filter.getControllerIds().add(standalone);
+        filter.getControllerIds().add("js7-cluster");
+        filter.getControllerIds().add("standalone");
         
         Config workflow10DraftConfig = new Config();
         Configuration workflow10draft = new Configuration();

@@ -85,12 +85,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             // process filter
             Set<String> controllerIds = new HashSet<String>(deployFilter.getControllerIds());
             List<Configuration> draftConfigsToStore = getDraftConfigurationsToStoreFromFilter(deployFilter);
-            /* TODO: 
-             * - check for configurationIds with -marked-for-delete- set
-             * - get all deployments from history related to the given configurationId
-             * - get all controllers from those deployments
-             * - delete all those existing deployments from all determined controllers
-            **/
+            /*
+             * TODO: - check for configurationIds with -marked-for-delete- set - get all deployments from history related to the given configurationId - get all
+             * controllers from those deployments - delete all those existing deployments from all determined controllers
+             **/
             List<Configuration> deployConfigsToStoreAgain = getDeployConfigurationsToStoreFromFilter(deployFilter);
             List<Configuration> deployConfigsToDelete = getDeployConfigurationsToDeleteFromFilter(deployFilter);
             
@@ -101,13 +99,13 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             }
 
             // read all objects provided in the filter from the database
-            List<DBItemInventoryConfiguration> configurationDBItemsToDeploy = null;
+            List<DBItemInventoryConfiguration> configurationDBItemsToStore = null;
             if (draftConfigsToStore != null) {
-                configurationDBItemsToDeploy = dbLayer.getFilteredInventoryConfiguration(draftConfigsToStore);
+                configurationDBItemsToStore = dbLayer.getFilteredInventoryConfiguration(draftConfigsToStore);
             }
-            List<DBItemDeploymentHistory> depHistoryDBItemsToDeploy = null;
-            if (deployConfigsToStoreAgain != null) {
-                depHistoryDBItemsToDeploy = dbLayer.getFilteredDeploymentHistory(deployConfigsToStoreAgain);
+            List<DBItemDeploymentHistory> depHistoryDBItemsToStore = null;
+            if (!deployConfigsToStoreAgain.isEmpty()) {
+                depHistoryDBItemsToStore = dbLayer.getFilteredDeploymentHistory(deployConfigsToStoreAgain);
             }
             List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete = null;
             if (deployConfigsToDelete != null) {
@@ -118,13 +116,13 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
             Map<DBItemDeploymentHistory, DBItemDepSignatures> signedDeployments = new HashMap<DBItemDeploymentHistory, DBItemDepSignatures>();
 
-            for (DBItemInventoryConfiguration update : configurationDBItemsToDeploy) {
+            for (DBItemInventoryConfiguration update : configurationDBItemsToStore) {
                 DBItemDepSignatures signature = dbLayer.getSignature(update.getId());
                 if (signature != null) {
                     signedDrafts.put(update, signature);
                 }
             }
-            for (DBItemDeploymentHistory depHistory : depHistoryDBItemsToDeploy) {
+            for (DBItemDeploymentHistory depHistory : depHistoryDBItemsToStore) {
                 DBItemDepSignatures signature = dbLayer.getSignature(depHistory.getId());
                 if (signature != null) {
                     signedDeployments.put(depHistory, signature);

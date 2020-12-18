@@ -232,9 +232,9 @@ public class DBLayerDeploy {
             StringBuilder hql = new StringBuilder();
             hql.append(" from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
             if (recursive) {
-                hql.append(" where folder = :folder");
-            } else {
                 hql.append(" where folder like :folder");
+            } else {
+                hql.append(" where folder = :folder");
             }
             Query<DBItemInventoryReleasedConfiguration> query = session.createQuery(hql.toString());
             if (recursive) {
@@ -254,9 +254,9 @@ public class DBLayerDeploy {
             StringBuilder hql = new StringBuilder();
             hql.append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             if (recursive) {
-                hql.append(" where folder = :folder");
-            } else {
                 hql.append(" where folder like :folder");
+            } else {
+                hql.append(" where folder = :folder");
             }
             if (onlyDeployables || onlyReleasables) {
               hql.append(" and type in (:types)");  

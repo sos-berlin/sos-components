@@ -45,7 +45,6 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
-import com.sos.joc.model.publish.ControllerId;
 import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.publish.db.DBLayerDeploy;
@@ -73,8 +72,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             initLogging(API_CALL, filter, xAccessToken);
             JsonValidator.validate(filter, DeployFilter.class);
             DeployFilter deployFilter = Globals.objectMapper.readValue(filter, DeployFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations()
-                    .getPublish().isDeploy());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", 
+                    getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isDeploy());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -87,11 +86,13 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             // process filter
             Set<String> controllerIds = new HashSet<String>(deployFilter.getControllerIds());
             List<Configuration> draftConfigsToStore = getDraftConfigurationsToStoreFromFilter(deployFilter);
+            List<Configuration> draftFoldersToStore = getDraftConfigurationFoldersToStoreFromFilter(deployFilter);
             /*
-             * TODO: - check for configurationIds with -marked-for-delete- set - get all deployments from history related to the given configurationId - get all
-             * controllers from those deployments - delete all those existing deployments from all determined controllers
+             * TODO: - check for configurationIds with -marked-for-delete- set - get all deployments from history related to the given configurationId - 
+             * get all controllers from those deployments - delete all those existing deployments from all determined controllers
              **/
             List<Configuration> deployConfigsToStoreAgain = getDeployConfigurationsToStoreFromFilter(deployFilter);
+            List<Configuration> deployFoldersToStoreAgain = getDeployConfigurationFoldersToStoreFromFilter(deployFilter);
             List<Configuration> deployConfigsToDelete = getDeployConfigurationsToDeleteFromFilter(deployFilter);
             List<Config> foldersToDelete = null;
             if (deployFilter.getDelete() != null) {
@@ -104,9 +105,21 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             if (!draftConfigsToStore.isEmpty()) {
                 configurationDBItemsToStore = dbLayer.getFilteredInventoryConfiguration(draftConfigsToStore);
             }
+            if (!draftFoldersToStore.isEmpty()) {
+                if (configurationDBItemsToStore == null) {
+                    configurationDBItemsToStore = new ArrayList<DBItemInventoryConfiguration>();
+                }
+                configurationDBItemsToStore.addAll(PublishUtils.getDeployableInventoryConfigurationsfromFolders(draftFoldersToStore, dbLayer));
+            }
             List<DBItemDeploymentHistory> depHistoryDBItemsToStore = null;
             if (!deployConfigsToStoreAgain.isEmpty()) {
                 depHistoryDBItemsToStore = dbLayer.getFilteredDeploymentHistory(deployConfigsToStoreAgain);
+            }
+            if (!deployFoldersToStoreAgain.isEmpty()) {
+                if (depHistoryDBItemsToStore == null) {
+                    depHistoryDBItemsToStore = new ArrayList<DBItemDeploymentHistory>();
+                }
+                depHistoryDBItemsToStore.addAll(PublishUtils.getLatestActiveDepHistoryEntriesFromFolders(deployFoldersToStoreAgain, dbLayer));
             }
             List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete = null;
             if (!deployConfigsToDelete.isEmpty()) {
@@ -274,9 +287,27 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         }
     }
 
+    private List<Configuration> getDraftConfigurationFoldersToStoreFromFilter(DeployFilter deployFilter) {
+        if (deployFilter.getStore() != null) {
+            return deployFilter.getStore().getDraftConfigurations().stream().filter(item -> item.getConfiguration().getObjectType().equals(
+                    ConfigurationType.FOLDER)).map(Config::getConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
+        } else {
+            return new ArrayList<Configuration>();
+        }
+    }
+
     private List<Configuration> getDeployConfigurationsToStoreFromFilter(DeployFilter deployFilter) {
         if (deployFilter.getStore() != null) {
             return deployFilter.getStore().getDeployConfigurations().stream().filter(item -> !item.getConfiguration().getObjectType().equals(
+                    ConfigurationType.FOLDER)).map(Config::getConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
+        } else {
+            return new ArrayList<Configuration>();
+        }
+    }
+
+    private List<Configuration> getDeployConfigurationFoldersToStoreFromFilter(DeployFilter deployFilter) {
+        if (deployFilter.getStore() != null) {
+            return deployFilter.getStore().getDeployConfigurations().stream().filter(item -> item.getConfiguration().getObjectType().equals(
                     ConfigurationType.FOLDER)).map(Config::getConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
         } else {
             return new ArrayList<Configuration>();
