@@ -9,10 +9,12 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
@@ -89,37 +91,30 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
             
             ResponseDeployableTreeItem treeItem = getResponseDeployableTreeItem(config);
             
-            if (in.getWithVersions()) {
+            if (!in.getWithoutDrafts() || !in.getWithoutDeployed()) {
                 List<InventoryDeploymentItem> deployments = dbLayer.getDeploymentHistory(config.getId());
-                if (deployments != null && !deployments.isEmpty()) {
-                    Set<ResponseDeployableVersion> versions = new LinkedHashSet<>();
-                    if (treeItem.getDeployed()) {
-                        treeItem.setDeploymentId(deployments.iterator().next().getId());
-                    } else {
-                        if (config.getValid()) {
-                            ResponseDeployableVersion draft = new ResponseDeployableVersion();
-                            draft.setId(config.getId());
-                            draft.setVersionDate(config.getModified());
-                            draft.setVersions(null);
-                            versions.add(draft);
-                        }
-                    }
-                    versions.addAll(getVersions(config.getId(), deployments));
-                    if (versions.isEmpty()) {
-                        versions = null;
-                    }
-                    treeItem.setDeployablesVersions(versions);
-                } else if (in.getOnlyValidObjects() && !config.getValid() && !config.getDeleted()) {
-                    throw new JocDeployException(String.format("%s not valid: %s", type.value().toLowerCase(), config.getPath()));
+                if ((deployments == null || deployments.isEmpty()) && in.getOnlyValidObjects() && !config.getValid() && !config.getDeleted()) {
+                    throw new JocDeployException(String.format("%s is neither valid nor already deployed: %s", type.value().toLowerCase(), config
+                            .getPath()));
                 }
+                Set<ResponseDeployableVersion> versions = new LinkedHashSet<>();
+                if (!treeItem.getDeployed() && config.getValid() && !in.getWithoutDrafts()) {
+                    ResponseDeployableVersion draft = new ResponseDeployableVersion();
+                    draft.setId(config.getId());
+                    draft.setVersionDate(config.getModified());
+                    draft.setVersions(null);
+                    versions.add(draft);
+                }
+                versions.addAll(getVersions(config.getId(), deployments, in.getWithoutDeployed(), in.getLatest()));
+//                if (versions.isEmpty()) {
+//                    versions = null;
+//                }
+                treeItem.setDeployablesVersions(versions);
             } else {
                 InventoryDeploymentItem depItem = dbLayer.getLastDeploymentHistory(config.getId());
-                if (depItem != null) {
-                    if (config.getDeployed() || !config.getValid()) {
-                        treeItem.setDeploymentId(depItem.getId());
-                    } else if (in.getOnlyValidObjects() && !config.getValid() && !config.getDeleted()) {
-                        throw new JocDeployException(String.format("%s not valid: %s", type.value().toLowerCase(), config.getPath()));
-                    }
+                if (depItem == null && in.getOnlyValidObjects() && !config.getValid() && !config.getDeleted()) {
+                    throw new JocDeployException(String.format("%s is neither valid nor already deployed: %s", type.value().toLowerCase(), config
+                            .getPath()));
                 }
             }
 
@@ -135,23 +130,24 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
         }
     }
     
-    public static Set<ResponseDeployableVersion> getVersions(Long confId, Collection<InventoryDeploymentItem> deployments) {
-        if (deployments == null) {
+    public static Set<ResponseDeployableVersion> getVersions(Long confId, Collection<InventoryDeploymentItem> deployments, boolean withoutDeployed,
+            boolean onlyLatest) {
+        if (deployments == null || withoutDeployed) {
             return Collections.emptySet();
         }
-        
-        Map<Date, Set<ResponseItemDeployment>> versions = deployments.stream().filter(Objects::nonNull)
-                .collect(Collectors.groupingBy(InventoryDeploymentItem::getDeploymentDate, Collectors.mapping(deployment -> {
-            ResponseItemDeployment id = new ResponseItemDeployment();
-            id.setVersion(deployment.getVersion());
-            id.setControllerId(deployment.getControllerId());
+
+        Map<Date, Set<ResponseItemDeployment>> versions = deployments.stream().filter(Objects::nonNull).collect(Collectors.groupingBy(
+                InventoryDeploymentItem::getDeploymentDate, Collectors.mapping(deployment -> {
+                    ResponseItemDeployment id = new ResponseItemDeployment();
+                    id.setVersion(deployment.getVersion());
+                    id.setControllerId(deployment.getControllerId());
             return id;
         }, Collectors.toSet())));
         
         Map<Date, InventoryDeploymentItem> mapDateGrouped = deployments.stream().filter(Objects::nonNull)
                 .collect(Collectors.toMap(InventoryDeploymentItem::getDeploymentDate, Function.identity()));
         
-        return mapDateGrouped.values().stream().sorted(Comparator.comparing(InventoryDeploymentItem::getDeploymentDate).reversed()).map(
+        Stream<ResponseDeployableVersion> versionsStream = mapDateGrouped.values().stream().sorted(Comparator.comparing(InventoryDeploymentItem::getDeploymentDate).reversed()).map(
                 deployment -> {
                     ResponseDeployableVersion dv = new ResponseDeployableVersion();
                     dv.setId(confId);
@@ -162,7 +158,18 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
                     dv.setDeploymentOperation(OperationType.fromValue(deployment.getOperation()).name().toLowerCase());
                     dv.setDeploymentPath(deployment.getPath());
                     return dv;
-                }).collect(Collectors.toCollection(LinkedHashSet::new));
+                });
+        
+        if (onlyLatest) {
+            Optional<ResponseDeployableVersion> opt = versionsStream.findFirst();
+            if (opt.isPresent()) {
+                return Collections.singleton(opt.get());
+            } else {
+                return Collections.emptySet();
+            }
+        } else {
+            return versionsStream.collect(Collectors.toCollection(LinkedHashSet::new));
+        }
     }
     
     public static ResponseDeployableTreeItem getResponseDeployableTreeItem(DBItemInventoryConfiguration item) {

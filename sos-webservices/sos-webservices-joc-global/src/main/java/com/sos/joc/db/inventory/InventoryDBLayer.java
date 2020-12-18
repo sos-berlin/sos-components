@@ -8,12 +8,14 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -116,6 +118,23 @@ public class InventoryDBLayer extends DBLayer {
         Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("configId", configId);
         return getSession().getSingleResult(query);
+    }
+    
+    public Map<Long, DBItemInventoryReleasedConfiguration> getReleasedItemsByConfigurationIds(Collection<Long> configIds) throws SOSHibernateException {
+        if (configIds != null && !configIds.isEmpty()) {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+            hql.append(" where cId in (:configIds) ");
+
+            Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
+            query.setParameterList("configIds", configIds);
+            List<DBItemInventoryReleasedConfiguration> result = getSession().getResultList(query);
+            if (result != null) {
+                return result.stream().collect(Collectors.toMap(DBItemInventoryReleasedConfiguration::getCid, Function.identity()));
+            }
+            return Collections.emptyMap();
+        } else {
+            return Collections.emptyMap();
+        }
     }
 
     public Integer deleteReleasedItemsByConfigurationIds(Collection<Long> configIds) throws SOSHibernateException {
@@ -408,6 +427,26 @@ public class InventoryDBLayer extends DBLayer {
         }
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("path", path.toLowerCase());
+        if (isCalendar) {
+            query.setParameterList("types", JocInventory.getCalendarTypes());
+        } else {
+            query.setParameter("type", type);
+        }
+        return getSession().getSingleResult(query);
+    }
+    
+    public DBItemInventoryConfiguration getConfigurationByName(String name, Integer type) throws SOSHibernateException {
+        boolean isCalendar = JocInventory.isCalendar(type);
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where lower(name)=:name");
+        if (isCalendar) {
+            hql.append(" and type in (:types)");
+        } else {
+            hql.append(" and type=:type");
+        }
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setMaxResults(1);
+        query.setParameter("name", name.toLowerCase());
         if (isCalendar) {
             query.setParameterList("types", JocInventory.getCalendarTypes());
         } else {

@@ -29,7 +29,11 @@
 			"type": "boolean"
 		},
 		"releasableVersions": {
-			"$ref": "response-releasableVersion-schema.json"
+			"type": "array",
+			"items": {
+				"$ref": "response-releasableVersion-schema.json"
+			},
+			"uniqueItems": true
 		}
 	}
 }

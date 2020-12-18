@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,14 +24,16 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.inventory.resource.IReleasablesResource;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.inventory.deploy.DeployablesFilter;
+import com.sos.joc.model.inventory.release.ReleasablesFilter;
 import com.sos.joc.model.inventory.release.ResponseReleasableTreeItem;
+import com.sos.joc.model.inventory.release.ResponseReleasableVersion;
 import com.sos.joc.model.inventory.release.ResponseReleasables;
 import com.sos.schema.JsonValidator;
 
@@ -42,8 +45,8 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
             initLogging(IMPL_PATH, inBytes, accessToken);
-            JsonValidator.validate(inBytes, DeployablesFilter.class);
-            DeployablesFilter in = Globals.objectMapper.readValue(inBytes, DeployablesFilter.class);
+            JsonValidator.validate(inBytes, ReleasablesFilter.class);
+            ReleasablesFilter in = Globals.objectMapper.readValue(inBytes, ReleasablesFilter.class);
 
             JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
 
@@ -62,7 +65,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
         }
     }
 
-    private ResponseReleasables releasables(DeployablesFilter in) throws Exception {
+    private ResponseReleasables releasables(ReleasablesFilter in) throws Exception {
         SOSHibernateSession session = null;
         try {
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
@@ -85,14 +88,23 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
                 // get not deleted deployables (only these needs left join with historic table DEP_HISTORY)
                 Set<Long> notDeletedIds = dbLayer.getNotDeletedConfigurations(releasableTypes, in.getFolder(), in.getRecursive(), deletedFolders);
                 // get deleted deployables outside deleted folders (avoid left join to the historic table DEP_HISTORY)
-                if (!in.getWithoutRemovedObjects()) {
+                if (in.getWithRemovedObjects()) {
                     List<DBItemInventoryConfiguration> folders = dbLayer.getFolderContent(in.getFolder(), in.getRecursive(), Arrays.asList(
                             ConfigurationType.FOLDER.intValue()));
                     releasables.addAll(getResponseStreamOfDeletedItem(dbLayer.getDeletedConfigurations(releasableTypes, in.getFolder(), in
                             .getRecursive(), deletedFolders), folders, permittedFolders));
                 }
-                releasables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurations(notDeletedIds), in.getOnlyValidObjects(),
-                        permittedFolders));
+                
+                if (!in.getWithoutDrafts() || !in.getWithoutReleased()) {
+                    Map<Long, DBItemInventoryReleasedConfiguration> releasedItems = Collections.emptyMap();
+                    if (!in.getWithoutReleased()) {
+                        releasedItems = dbLayer.getReleasedItemsByConfigurationIds(notDeletedIds);
+                    }
+                    releasables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurations(notDeletedIds), releasedItems, in
+                            .getOnlyValidObjects(), permittedFolders, in.getWithoutDrafts(), in.getWithoutReleased()));
+                } else {
+                    releasables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurations(notDeletedIds), in.getOnlyValidObjects(), permittedFolders));
+                }
             }
             
             ResponseReleasables result = new ResponseReleasables();
@@ -141,7 +153,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
     }
     
     private Set<ResponseReleasableTreeItem> getResponseStreamOfNotDeletedItem(List<DBItemInventoryConfiguration> list,
-            Boolean onlyValidObjects, Set<Folder> permittedFolders) {
+            Map<Long, DBItemInventoryReleasedConfiguration> releasedItems, Boolean onlyValidObjects, Set<Folder> permittedFolders, Boolean withoutDrafts, Boolean withoutReleased) {
         if (list != null) {
             final Set<String> paths = list.stream().filter(item -> ConfigurationType.FOLDER.intValue() != item.getType()).map(item -> item.getPath())
                     .collect(Collectors.toSet());
@@ -153,15 +165,54 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
                 }
             };
             return list.stream()
-                    //.filter(item -> ConfigurationType.FOLDER.intValue() != item.getConfiguration().getType())
                     .filter(folderIsNotEmpty)
-                    .filter(item -> !item.getReleased())
+                    //.filter(item -> !item.getReleased())
                     .filter(item -> !onlyValidObjects || item.getDeleted() || item.getValid())
                     .filter(item -> folderIsPermitted(item.getFolder(), permittedFolders))
                     .map(item -> {
                         ResponseReleasableTreeItem treeItem = ReleasableResourceImpl.getResponseReleasableTreeItem(item);
+                        Set<ResponseReleasableVersion> versions = new LinkedHashSet<>();
+                        if (ConfigurationType.FOLDER.intValue() != item.getType()) {
+                            if (!treeItem.getReleased() && item.getValid() && !withoutDrafts) {
+                                ResponseReleasableVersion draft = new ResponseReleasableVersion();
+                                draft.setId(item.getId());
+                                draft.setVersionDate(item.getModified());
+                                versions.add(draft);
+                            }
+                            versions.addAll(ReleasableResourceImpl.getVersion(item.getId(), releasedItems.get(item.getId()), withoutReleased));
+                            // if (versions.isEmpty()) {
+                            // versions = null;
+                            // }
+                        } else {
+                            versions = null;
+                        }
+                        treeItem.setReleasableVersions(versions);
                         return treeItem;
                     })
+                    .collect(Collectors.toSet());
+        } else {
+            return Collections.emptySet();
+        }
+    }
+    
+    private Set<ResponseReleasableTreeItem> getResponseStreamOfNotDeletedItem(List<DBItemInventoryConfiguration> list, Boolean onlyValidObjects, Set<Folder> permittedFolders) {
+        if (list != null) {
+            final Set<String> paths = list.stream().filter(item -> ConfigurationType.FOLDER.intValue() != item.getType()).map(item -> item.getPath())
+                    .collect(Collectors.toSet());
+            Predicate<DBItemInventoryConfiguration> folderIsNotEmpty = item -> {
+                if (ConfigurationType.FOLDER.intValue() != item.getType()) {
+                    return true;
+                } else {
+                    return folderIsNotEmpty(item.getPath(), paths);
+                }
+            };
+            
+            return list.stream()
+                    .filter(folderIsNotEmpty)
+                    //.filter(item -> !item.getReleased())
+                    .filter(item -> !onlyValidObjects || item.getDeleted() || item.getValid())
+                    .filter(item -> folderIsPermitted(item.getFolder(), permittedFolders))
+                    .map(item -> ReleasableResourceImpl.getResponseReleasableTreeItem(item))
                     .collect(Collectors.toSet());
         } else {
             return Collections.emptySet();

@@ -47,7 +47,7 @@ public class Statistics {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date surveyDate;
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
@@ -55,7 +55,7 @@ public class Statistics {
     @JsonProperty("numOfJobs")
     private Long numOfJobs;
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
@@ -112,7 +112,7 @@ public class Statistics {
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
@@ -123,7 +123,7 @@ public class Statistics {
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
@@ -134,7 +134,7 @@ public class Statistics {
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
@@ -145,7 +145,7 @@ public class Statistics {
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 

@@ -316,7 +316,7 @@ public class Globals {
         if (path == null) {
             return null;
         }
-        return ("/" + path.trim()).replaceAll("//+", "/").replaceFirst("/$", "");
+        return Paths.get("/").resolve(path).normalize().toString().replace('\\', '/');
     }
     
     public static JocSecurityLevel getJocSecurityLevel() {

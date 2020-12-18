@@ -24,6 +24,7 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
+import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.AgentState;
 import com.sos.joc.model.agent.AgentStateText;
@@ -89,64 +90,69 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
 
             if (dbAgents != null) {
 
-                JControllerState currentState = Proxy.of(controllerId).currentState();
-                agents.setSurveyDate(Date.from(Instant.ofEpochMilli(currentState.eventId() / 1000)));
-
                 Map<String, Integer> ordersCountPerAgent = new HashMap<>();
                 Map<String, List<OrderV>> ordersPerAgent = new HashMap<>();
-                Stream<JOrder> jOrderStream = currentState.ordersBy(JOrderPredicates.byOrderState(Order.Processing$.class)).filter(o -> o
-                        .attached() != null && o.attached().isRight());
-                if (agentsParam.getCompact() == Boolean.TRUE) {
-                    ordersCountPerAgent.putAll(jOrderStream.collect(Collectors.groupingBy(o -> o.attached().get().string(), Collectors.reducing(0,
-                            o -> 1, Integer::sum))));
-                } else {
-                    ordersPerAgent.putAll(jOrderStream.map(o -> {
-                        try {
-                            return OrdersHelper.mapJOrderToOrderV(o, false, null, false);
-                        } catch (Exception e) {
+                JControllerState currentState;
+                try {
+                    currentState = Proxy.of(controllerId).currentState();
+                    agents.setSurveyDate(Date.from(Instant.ofEpochMilli(currentState.eventId() / 1000)));
+                    Stream<JOrder> jOrderStream = currentState.ordersBy(JOrderPredicates.byOrderState(Order.Processing$.class)).filter(o -> o
+                            .attached() != null && o.attached().isRight());
+                    if (agentsParam.getCompact() == Boolean.TRUE) {
+                        ordersCountPerAgent.putAll(jOrderStream.collect(Collectors.groupingBy(o -> o.attached().get().string(), Collectors.reducing(0,
+                                o -> 1, Integer::sum))));
+                    } else {
+                        ordersPerAgent.putAll(jOrderStream.map(o -> {
+                            try {
+                                return OrdersHelper.mapJOrderToOrderV(o, false, null, false);
+                            } catch (Exception e) {
+                                return null;
+                            }
+                        }).filter(Objects::nonNull).collect(Collectors.groupingBy(OrderV::getAgentId)));
+                    }
+                    
+                    agentsList.addAll(dbAgents.stream().map(dbAgent -> {
+                        Either<Problem, JAgentRefState> either = currentState.idToAgentRefState(AgentId.of(dbAgent.getAgentId()));
+                        AgentV agent = mapDbAgentToAgentV(dbAgent);
+                        AgentStateText stateText = AgentStateText.UNKNOWN;
+                        if (either.isRight()) {
+                            AgentRefState.CouplingState couplingState = either.get().asScala().couplingState();
+                            if (couplingState instanceof AgentRefState.CouplingFailed) {
+                                stateText = AgentStateText.COUPLINGFAILED;
+                                agent.setErrorMessage(ProblemHelper.getErrorMessage(((AgentRefState.CouplingFailed) couplingState).problem()));
+                            } else if (couplingState instanceof AgentRefState.Coupled$) {
+                                stateText = AgentStateText.COUPLED;
+                            } else if (couplingState instanceof AgentRefState.Decoupled$) {
+                                stateText = AgentStateText.DECOUPLED;
+                            }
+                        } else {
+                            agent.setErrorMessage(ProblemHelper.getErrorMessage(either.getLeft()));
+                        }
+                        if (withStateFilter && !agentsParam.getStates().contains(stateText)) {
                             return null;
                         }
-                    }).filter(Objects::nonNull).collect(Collectors.groupingBy(OrderV::getAgentId)));
+                        if (agentsParam.getCompact() == Boolean.TRUE) {
+                            agent.setRunningTasks(ordersCountPerAgent.getOrDefault(dbAgent.getAgentId(), 0));
+                            agent.setOrders(null);
+                        } else {
+                            if (ordersPerAgent.containsKey(dbAgent.getAgentId())) {
+                                agent.setOrders(ordersPerAgent.get(dbAgent.getAgentId()));
+                                agent.setRunningTasks(agent.getOrders().size());
+                            }
+                        }
+                        agent.setState(getState(stateText));
+                        return agent;
+                    }).filter(Objects::nonNull).sorted(Comparator.comparingInt(AgentV::getRunningTasks).reversed()).collect(Collectors.toList()));
+                    
+                } catch (JobSchedulerConnectionRefusedException e1) {
+                    agentsList.addAll(dbAgents.stream().map(dbAgent -> {
+                        AgentV agent = mapDbAgentToAgentV(dbAgent);
+                        if (withStateFilter && !agentsParam.getStates().contains(AgentStateText.UNKNOWN)) {
+                            return null;
+                        }
+                        return agent;
+                    }).filter(Objects::nonNull).collect(Collectors.toList()));
                 }
-
-                agentsList.addAll(dbAgents.stream().map(dbAgent -> {
-                    Either<Problem, JAgentRefState> either = currentState.idToAgentRefState(AgentId.of(dbAgent.getAgentId()));
-                    AgentV agent = new AgentV();
-                    AgentStateText stateText = AgentStateText.UNKNOWN;
-                    if (either.isRight()) {
-                        AgentRefState.CouplingState couplingState = either.get().asScala().couplingState();
-                        if (couplingState instanceof AgentRefState.CouplingFailed) {
-                            stateText = AgentStateText.COUPLINGFAILED;
-                            agent.setErrorMessage(ProblemHelper.getErrorMessage(((AgentRefState.CouplingFailed) couplingState).problem()));
-                        } else if (couplingState instanceof AgentRefState.Coupled$) {
-                            stateText = AgentStateText.COUPLED;
-                        } else if (couplingState instanceof AgentRefState.Decoupled$) {
-                            stateText = AgentStateText.DECOUPLED;
-                        }
-                    } else {
-                        agent.setErrorMessage(ProblemHelper.getErrorMessage(either.getLeft()));
-                    }
-                    if (withStateFilter && !agentsParam.getStates().contains(stateText)) {
-                        return null;
-                    }
-                    agent.setRunningTasks(0);
-                    if (agentsParam.getCompact() == Boolean.TRUE) {
-                        agent.setRunningTasks(ordersCountPerAgent.getOrDefault(dbAgent.getAgentId(), 0));
-                        agent.setOrders(null);
-                    } else {
-                        if (ordersPerAgent.containsKey(dbAgent.getAgentId())) {
-                            agent.setOrders(ordersPerAgent.get(dbAgent.getAgentId()));
-                            agent.setRunningTasks(agent.getOrders().size());
-                        }
-                    }
-                    agent.setAgentId(dbAgent.getAgentId());
-                    agent.setAgentName(dbAgent.getAgentName());
-                    agent.setControllerId(controllerId);
-                    agent.setUrl(dbAgent.getUri());
-                    agent.setIsClusterWatcher(dbAgent.getIsWatcher());
-                    agent.setState(getState(stateText));
-                    return agent;
-                }).filter(Objects::nonNull).sorted(Comparator.comparingInt(AgentV::getRunningTasks).reversed()).collect(Collectors.toList()));
             }
 
             agents.setDeliveryDate(Date.from(Instant.now()));
@@ -168,5 +174,18 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         s.set_text(state);
         s.setSeverity(agentStates.get(state));
         return s;
+    }
+    
+    private static AgentV mapDbAgentToAgentV(DBItemInventoryAgentInstance dbAgent) {
+        AgentV agent = new AgentV();
+        agent.setRunningTasks(0);
+        agent.setOrders(null);
+        agent.setAgentId(dbAgent.getAgentId());
+        agent.setAgentName(dbAgent.getAgentName());
+        agent.setControllerId(dbAgent.getControllerId());
+        agent.setUrl(dbAgent.getUri());
+        agent.setIsClusterWatcher(dbAgent.getIsWatcher());
+        agent.setState(getState(AgentStateText.UNKNOWN));
+        return agent;
     }
 }

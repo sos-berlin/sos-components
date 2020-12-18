@@ -59,11 +59,11 @@ public class ResponseDeployableVersion {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("deploymentPath")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String deploymentPath;
     /**
      * string without < and >
@@ -155,7 +155,7 @@ public class ResponseDeployableVersion {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("deploymentPath")
@@ -166,7 +166,7 @@ public class ResponseDeployableVersion {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("deploymentPath")

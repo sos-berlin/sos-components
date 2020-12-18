@@ -30,7 +30,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "valid",
     "deleted",
     "deployed",
-    "deploymentId",
     "deployablesVersions"
 })
 public class ResponseDeployableTreeItem {
@@ -46,11 +45,11 @@ public class ResponseDeployableTreeItem {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("folder")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String folder;
     /**
      * string without < and >
@@ -82,14 +81,6 @@ public class ResponseDeployableTreeItem {
     private Boolean deleted;
     @JsonProperty("deployed")
     private Boolean deployed;
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("deploymentId")
-    private Long deploymentId;
     @JsonProperty("deployablesVersions")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<ResponseDeployableVersion> deployablesVersions = new LinkedHashSet<ResponseDeployableVersion>();
@@ -119,7 +110,7 @@ public class ResponseDeployableTreeItem {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("folder")
@@ -130,7 +121,7 @@ public class ResponseDeployableTreeItem {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("folder")
@@ -234,28 +225,6 @@ public class ResponseDeployableTreeItem {
         this.deployed = deployed;
     }
 
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("deploymentId")
-    public Long getDeploymentId() {
-        return deploymentId;
-    }
-
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("deploymentId")
-    public void setDeploymentId(Long deploymentId) {
-        this.deploymentId = deploymentId;
-    }
-
     @JsonProperty("deployablesVersions")
     public Set<ResponseDeployableVersion> getDeployablesVersions() {
         return deployablesVersions;
@@ -268,12 +237,12 @@ public class ResponseDeployableTreeItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("folder", folder).append("objectName", objectName).append("account", account).append("objectType", objectType).append("valid", valid).append("deleted", deleted).append("deployed", deployed).append("deploymentId", deploymentId).append("deployablesVersions", deployablesVersions).toString();
+        return new ToStringBuilder(this).append("id", id).append("folder", folder).append("objectName", objectName).append("account", account).append("objectType", objectType).append("valid", valid).append("deleted", deleted).append("deployed", deployed).append("deployablesVersions", deployablesVersions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(valid).append(folder).append(deleted).append(deploymentId).append(objectName).append(deployed).append(id).append(deployablesVersions).append(account).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(valid).append(folder).append(deleted).append(objectName).append(deployed).append(id).append(deployablesVersions).append(account).append(objectType).toHashCode();
     }
 
     @Override
@@ -285,7 +254,7 @@ public class ResponseDeployableTreeItem {
             return false;
         }
         ResponseDeployableTreeItem rhs = ((ResponseDeployableTreeItem) other);
-        return new EqualsBuilder().append(valid, rhs.valid).append(folder, rhs.folder).append(deleted, rhs.deleted).append(deploymentId, rhs.deploymentId).append(objectName, rhs.objectName).append(deployed, rhs.deployed).append(id, rhs.id).append(deployablesVersions, rhs.deployablesVersions).append(account, rhs.account).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(valid, rhs.valid).append(folder, rhs.folder).append(deleted, rhs.deleted).append(objectName, rhs.objectName).append(deployed, rhs.deployed).append(id, rhs.id).append(deployablesVersions, rhs.deployablesVersions).append(account, rhs.account).append(objectType, rhs.objectType).isEquals();
     }
 
 }

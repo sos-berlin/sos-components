@@ -9,18 +9,17 @@ Each releasable object contains the following fields depends on the requested pa
 * valid
 * deleted
 * released
-
-if ``withVersions`` == true
-
 * releasableVersions 
 
-It is an array where the first item is the draft if the draft is valid and ``withDrafts`` == true
+It is an array where the first item is the draft if the draft is valid and ``withoutDrafts`` == false
+
 The draft item has the fields
   
   * id
   * versionDate
 
-If ``withReleased`` == true then a further item of a previous release is included
+If ``withoutReleased`` == false then a further item of a previous release is included
+
 The released item has the fields
 
   * id

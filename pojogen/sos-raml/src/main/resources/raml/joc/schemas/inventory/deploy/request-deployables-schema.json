@@ -24,10 +24,6 @@
 			"type": "boolean",
 			"default": false
 		},
-		"withVersions": {
-			"type": "boolean",
-			"default": false
-		},
 		"withRemovedObjects": {
 			"type": "boolean",
 			"default": false

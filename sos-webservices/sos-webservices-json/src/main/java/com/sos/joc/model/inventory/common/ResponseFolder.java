@@ -48,12 +48,12 @@ public class ResponseFolder {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String path;
     @JsonProperty("workflows")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
@@ -107,7 +107,7 @@ public class ResponseFolder {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
@@ -119,7 +119,7 @@ public class ResponseFolder {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */

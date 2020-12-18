@@ -1,7 +1,7 @@
 {
-	"title": "filter for release",
+	"title": "filter for deploy",
 	"$schema": "http://json-schema.org/draft-04/schema#",
-	"javaType": "com.sos.joc.model.inventory.release.ReleasableFilter",
+	"javaType": "com.sos.joc.model.inventory.deploy.DeployableFilter",
 	"type": "object",
 	"description": "",
   	"extends" : {
@@ -25,11 +25,20 @@
 			"type": "boolean",
 			"default": false
 		},
+		"withRemovedObjects": {
+			"type": "boolean",
+			"default": false
+		},
 		"withoutDrafts": {
 			"type": "boolean",
 			"default": false
 		},
-		"withoutReleased": {
+		"withoutDeployed": {
+			"type": "boolean",
+			"default": false
+		},
+		"latest": {
+			"description": "only relevant for deployed objects",
 			"type": "boolean",
 			"default": false
 		}

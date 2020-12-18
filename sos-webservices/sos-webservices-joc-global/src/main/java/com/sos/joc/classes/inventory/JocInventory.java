@@ -159,6 +159,10 @@ public class JocInventory {
         }
         return result;
     }
+    
+    public static boolean isFolder(ConfigurationType type) {
+        return ConfigurationType.FOLDER.equals(type);
+    }
 
     public static boolean isCalendar(ConfigurationType type) {
         return ConfigurationType.WORKINGDAYSCALENDAR.equals(type) || ConfigurationType.NONWORKINGDAYSCALENDAR.equals(type);
@@ -226,6 +230,50 @@ public class JocInventory {
         }
         return (IConfigurationObject) Globals.objectMapper.readValue(content, CLASS_MAPPING.get(type));
     }
+    
+    public static Path makeParentDir(InventoryDBLayer dbLayer, Path folder) throws JsonParseException, JsonMappingException, SOSHibernateException,
+            JsonProcessingException, IOException {
+        if (folder == null) {
+            return null;
+        }
+        String f = folder.toString().replace('\\', '/');
+        if (ROOT_FOLDER.equals(f)) {
+            return null;
+        }
+        DBItemInventoryConfiguration dbFolder = dbLayer.getConfiguration(f, ConfigurationType.FOLDER.intValue());
+        if (dbFolder != null) { // folder already exists
+            return null;
+        }
+        DBItemInventoryConfiguration item = new DBItemInventoryConfiguration();
+        item.setType(ConfigurationType.FOLDER);
+        InventoryPath path = new InventoryPath(folder, ConfigurationType.FOLDER);
+        item.setPath(path.getPath());
+        item.setName(path.getName());
+        item.setFolder(path.getFolder());
+        item.setValid(false);
+        item.setDocumentationId(0L);
+        item.setTitle(null);
+        item.setTitle(null);
+        item.setValid(true);
+        item.setDeployed(false);
+        item.setReleased(false);
+        item.setContent(null);
+        item.setModified(Date.from(Instant.now()));
+        item.setCreated(Date.from(Instant.now()));
+        insertConfiguration(dbLayer, item, null);
+        if (ROOT_FOLDER.equals(path.getFolder())) {
+            return null;
+        }
+        return folder.getParent();
+    }
+    
+    public static void makeParentDirs(InventoryDBLayer dbLayer, Path folder) throws JsonParseException, JsonMappingException, SOSHibernateException,
+            JsonProcessingException, IOException {
+        Path parent = makeParentDir(dbLayer, folder);
+        while (parent != null) {
+            parent = makeParentDir(dbLayer, parent);
+        }
+    }
 
     public static class InventoryPath {
 
@@ -239,11 +287,16 @@ public class JocInventory {
                 Path p = Paths.get(path);
                 name = p.getFileName().toString();
                 CheckJavaVariableName.test(type.value().toLowerCase(), name);
-                // if (ConfigurationType.FOLDER.equals(type)) {
-                // folder = path;
-                // } else {
                 folder = normalizeFolder(p.getParent());
-                // }
+            }
+        }
+        
+        public InventoryPath(final java.nio.file.Path inventoryPath, ConfigurationType type) {
+            if (inventoryPath != null) {
+                path = inventoryPath.toString().replace('\\', '/');
+                name = inventoryPath.getFileName().toString();
+                CheckJavaVariableName.test(type.value().toLowerCase(), name);
+                folder = normalizeFolder(inventoryPath.getParent());
             }
         }
 
@@ -287,9 +340,6 @@ public class JocInventory {
             // temp. because of rename error on root folder
             config.setPath(config.getPath().replace("//+", "/"));
         } else {
-            if (!folderPermissions.isPermittedForFolder(path)) {
-                throw new JocFolderPermissionsException("Access denied for folder: " + path);
-            }
             if (JocInventory.ROOT_FOLDER.equals(path) && ConfigurationType.FOLDER.equals(type)) {
                 config = new DBItemInventoryConfiguration();
                 config.setId(0L);
@@ -301,6 +351,10 @@ public class JocInventory {
                 config.setDeployed(false);
                 config.setReleased(false);
             } else {
+                path = normalizePath(path).toString().replace('\\', '/');
+                if (!folderPermissions.isPermittedForFolder(path)) {
+                    throw new JocFolderPermissionsException("Access denied for folder: " + path);
+                }
                 config = dbLayer.getConfiguration(path, type.intValue());
                 if (config == null) {
                     throw new DBMissingDataException(String.format("%s not found: %s", type.value().toLowerCase(), path));
@@ -308,6 +362,10 @@ public class JocInventory {
             }
         }
         return config;
+    }
+    
+    public static Path normalizePath(String path) {
+        return Paths.get(JocInventory.ROOT_FOLDER).resolve(path).normalize();
     }
 
     public static String toString(IConfigurationObject config) throws JsonProcessingException {

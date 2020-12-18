@@ -28,11 +28,11 @@ public class Folder implements IConfigurationObject
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String path;
     /**
      * string without < and >
@@ -46,7 +46,7 @@ public class Folder implements IConfigurationObject
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
@@ -57,7 +57,7 @@ public class Folder implements IConfigurationObject
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")

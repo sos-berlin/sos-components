@@ -12,20 +12,28 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * include
+ * ResponseReleasableVersion
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "id",
     "releaseId",
-    "path",
-    "controllerId",
-    "releaseDate"
+    "releasePath",
+    "versionDate"
 })
-public class ResponseItemRelease {
+public class ResponseReleasableVersion {
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    private Long id;
     /**
      * non negative long
      * <p>
@@ -40,26 +48,40 @@ public class ResponseItemRelease {
      * absolute path of an object.
      * 
      */
-    @JsonProperty("path")
+    @JsonProperty("releasePath")
     @JsonPropertyDescription("absolute path of an object.")
-    private String path;
-    /**
-     * filename
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
+    private String releasePath;
     /**
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("releaseDate")
+    @JsonProperty("versionDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    private Date releaseDate;
+    private Date versionDate;
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     /**
      * non negative long
@@ -89,9 +111,9 @@ public class ResponseItemRelease {
      * absolute path of an object.
      * 
      */
-    @JsonProperty("path")
-    public String getPath() {
-        return path;
+    @JsonProperty("releasePath")
+    public String getReleasePath() {
+        return releasePath;
     }
 
     /**
@@ -100,31 +122,9 @@ public class ResponseItemRelease {
      * absolute path of an object.
      * 
      */
-    @JsonProperty("path")
-    public void setPath(String path) {
-        this.path = path;
-    }
-
-    /**
-     * filename
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * filename
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
+    @JsonProperty("releasePath")
+    public void setReleasePath(String releasePath) {
+        this.releasePath = releasePath;
     }
 
     /**
@@ -133,9 +133,9 @@ public class ResponseItemRelease {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("releaseDate")
-    public Date getReleaseDate() {
-        return releaseDate;
+    @JsonProperty("versionDate")
+    public Date getVersionDate() {
+        return versionDate;
     }
 
     /**
@@ -144,19 +144,19 @@ public class ResponseItemRelease {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("releaseDate")
-    public void setReleaseDate(Date releaseDate) {
-        this.releaseDate = releaseDate;
+    @JsonProperty("versionDate")
+    public void setVersionDate(Date versionDate) {
+        this.versionDate = versionDate;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("releaseId", releaseId).append("path", path).append("controllerId", controllerId).append("releaseDate", releaseDate).toString();
+        return new ToStringBuilder(this).append("id", id).append("releaseId", releaseId).append("releasePath", releasePath).append("versionDate", versionDate).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(controllerId).append(releaseId).append(releaseDate).toHashCode();
+        return new HashCodeBuilder().append(releasePath).append(id).append(releaseId).append(versionDate).toHashCode();
     }
 
     @Override
@@ -164,11 +164,11 @@ public class ResponseItemRelease {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ResponseItemRelease) == false) {
+        if ((other instanceof ResponseReleasableVersion) == false) {
             return false;
         }
-        ResponseItemRelease rhs = ((ResponseItemRelease) other);
-        return new EqualsBuilder().append(path, rhs.path).append(controllerId, rhs.controllerId).append(releaseId, rhs.releaseId).append(releaseDate, rhs.releaseDate).isEquals();
+        ResponseReleasableVersion rhs = ((ResponseReleasableVersion) other);
+        return new EqualsBuilder().append(releasePath, rhs.releasePath).append(id, rhs.id).append(releaseId, rhs.releaseId).append(versionDate, rhs.versionDate).isEquals();
     }
 
 }

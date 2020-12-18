@@ -1,10 +1,13 @@
 
 package com.sos.joc.model.inventory.release;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -26,7 +29,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "objectType",
     "valid",
     "deleted",
-    "released"
+    "released",
+    "releasableVersions"
 })
 public class ResponseReleasableTreeItem {
 
@@ -41,11 +45,11 @@ public class ResponseReleasableTreeItem {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("folder")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String folder;
     /**
      * string without < and >
@@ -77,6 +81,9 @@ public class ResponseReleasableTreeItem {
     private Boolean deleted;
     @JsonProperty("released")
     private Boolean released;
+    @JsonProperty("releasableVersions")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<ResponseReleasableVersion> releasableVersions = new LinkedHashSet<ResponseReleasableVersion>();
 
     /**
      * non negative long
@@ -103,7 +110,7 @@ public class ResponseReleasableTreeItem {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("folder")
@@ -114,7 +121,7 @@ public class ResponseReleasableTreeItem {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("folder")
@@ -218,14 +225,24 @@ public class ResponseReleasableTreeItem {
         this.released = released;
     }
 
+    @JsonProperty("releasableVersions")
+    public Set<ResponseReleasableVersion> getReleasableVersions() {
+        return releasableVersions;
+    }
+
+    @JsonProperty("releasableVersions")
+    public void setReleasableVersions(Set<ResponseReleasableVersion> releasableVersions) {
+        this.releasableVersions = releasableVersions;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("folder", folder).append("objectName", objectName).append("account", account).append("objectType", objectType).append("valid", valid).append("deleted", deleted).append("released", released).toString();
+        return new ToStringBuilder(this).append("id", id).append("folder", folder).append("objectName", objectName).append("account", account).append("objectType", objectType).append("valid", valid).append("deleted", deleted).append("released", released).append("releasableVersions", releasableVersions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(valid).append(folder).append(deleted).append(objectName).append(id).append(account).append(released).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(valid).append(folder).append(deleted).append(releasableVersions).append(objectName).append(id).append(account).append(released).append(objectType).toHashCode();
     }
 
     @Override
@@ -237,7 +254,7 @@ public class ResponseReleasableTreeItem {
             return false;
         }
         ResponseReleasableTreeItem rhs = ((ResponseReleasableTreeItem) other);
-        return new EqualsBuilder().append(valid, rhs.valid).append(folder, rhs.folder).append(deleted, rhs.deleted).append(objectName, rhs.objectName).append(id, rhs.id).append(account, rhs.account).append(released, rhs.released).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(valid, rhs.valid).append(folder, rhs.folder).append(deleted, rhs.deleted).append(releasableVersions, rhs.releasableVersions).append(objectName, rhs.objectName).append(id, rhs.id).append(account, rhs.account).append(released, rhs.released).append(objectType, rhs.objectType).isEquals();
     }
 
 }

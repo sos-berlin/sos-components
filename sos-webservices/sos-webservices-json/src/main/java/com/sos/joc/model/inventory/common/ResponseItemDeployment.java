@@ -38,11 +38,11 @@ public class ResponseItemDeployment {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String path;
     /**
      * filename
@@ -95,7 +95,7 @@ public class ResponseItemDeployment {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
@@ -106,7 +106,7 @@ public class ResponseItemDeployment {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")

@@ -89,15 +89,15 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 // get not deleted deployables (only these needs left join with historic table DEP_HISTORY)
                 Set<Long> notDeletedIds = dbLayer.getNotDeletedConfigurations(deployableTypes, in.getFolder(), in.getRecursive(), deletedFolders);
                 // get deleted deployables outside deleted folders (avoid left join to the historic table DEP_HISTORY)
-                if (!in.getWithoutRemovedObjects()) {
+                if (in.getWithRemovedObjects()) {
                     List<DBItemInventoryConfiguration> folders = dbLayer.getFolderContent(in.getFolder(), in.getRecursive(), Arrays.asList(
                             ConfigurationType.FOLDER.intValue()));
                     deployables.addAll(getResponseStreamOfDeletedItem(dbLayer.getDeletedConfigurations(deployableTypes, in.getFolder(), in
                             .getRecursive(), deletedFolders), folders, permittedFolders));
                 }
-                if (in.getWithVersions()) {
+                if (!in.getWithoutDrafts() || !in.getWithoutDeployed()) {
                     deployables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurationsWithAllDeployments(notDeletedIds), in
-                            .getOnlyValidObjects(), permittedFolders));
+                            .getOnlyValidObjects(), permittedFolders, in.getWithoutDrafts(), in.getWithoutDeployed(), in.getLatest()));
                 } else {
                     deployables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurationsWithMaxDeployment(notDeletedIds), in
                             .getOnlyValidObjects(), permittedFolders));
@@ -149,7 +149,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
     }
     
     private Set<ResponseDeployableTreeItem> getResponseStreamOfNotDeletedItem(Map<DBItemInventoryConfiguration, Set<InventoryDeploymentItem>> map,
-            Boolean onlyValidObjects, Set<Folder> permittedFolders) {
+            Boolean onlyValidObjects, Set<Folder> permittedFolders, Boolean withoutDrafts, Boolean withoutDeployed, Boolean onlyLatest) {
         if (map != null) {
             final Set<String> paths = map.keySet().stream().filter(item -> ConfigurationType.FOLDER.intValue() != item.getType()).map(item -> item
                     .getPath()).collect(Collectors.toSet());
@@ -161,7 +161,6 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 }
             };
             return map.entrySet().stream()
-                    //.filter(entry -> ConfigurationType.FOLDER.intValue() != entry.getKey().getType())
                     .filter(folderIsNotEmpty)
                     .filter(entry -> !onlyValidObjects || (entry.getValue() != null && entry.getValue().iterator().next() != null) || entry.getKey().getValid())
                     .filter(entry -> folderIsPermitted(entry.getKey().getFolder(), permittedFolders))
@@ -172,21 +171,19 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                         if (deployments != null && !deployments.isEmpty()) {
                             Set<ResponseDeployableVersion> versions = new LinkedHashSet<>();
                             if (ConfigurationType.FOLDER.intValue() != conf.getType()) {
-                                if (treeItem.getDeployed()) {
-                                    treeItem.setDeploymentId(deployments.iterator().next().getId());
-                                } else {
-                                    if (conf.getValid()) {
-                                        ResponseDeployableVersion draft = new ResponseDeployableVersion();
-                                        draft.setId(conf.getId());
-                                        draft.setVersionDate(conf.getModified());
-                                        draft.setVersions(null);
-                                        versions.add(draft);
-                                    }
+                                if (!treeItem.getDeployed() && conf.getValid() && !withoutDrafts) {
+                                    ResponseDeployableVersion draft = new ResponseDeployableVersion();
+                                    draft.setId(conf.getId());
+                                    draft.setVersionDate(conf.getModified());
+                                    draft.setVersions(null);
+                                    versions.add(draft);
                                 }
-                                versions.addAll(DeployableResourceImpl.getVersions(conf.getId(), deployments));
-                                if (versions.isEmpty()) {
-                                    versions = null;
-                                }
+                                versions.addAll(DeployableResourceImpl.getVersions(conf.getId(), deployments, withoutDeployed, onlyLatest));
+//                                if (versions.isEmpty()) {
+//                                    versions = null;
+//                                }
+                            } else {
+                                versions = null;
                             }
                             treeItem.setDeployablesVersions(versions);
                         }
@@ -211,19 +208,10 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 }
             };
             return list.stream()
-                    //.filter(item -> ConfigurationType.FOLDER.intValue() != item.getConfiguration().getType())
                     .filter(folderIsNotEmpty)
                     .filter(item -> !onlyValidObjects || item.getDeployment() != null || item.getConfiguration().getValid())
                     .filter(item -> folderIsPermitted(item.getConfiguration().getFolder(), permittedFolders))
-                    .map(item -> {
-                        ResponseDeployableTreeItem treeItem = DeployableResourceImpl.getResponseDeployableTreeItem(item.getConfiguration());
-                        if (item.getDeployment() != null) {
-                            if (treeItem.getDeployed() || !item.getConfiguration().getValid()) {
-                                treeItem.setDeploymentId(item.getDeployment().getId());
-                            }
-                        }
-                        return treeItem;
-                    })
+                    .map(item -> DeployableResourceImpl.getResponseDeployableTreeItem(item.getConfiguration()))
                     .collect(Collectors.toSet());
         } else {
             return Collections.emptySet();

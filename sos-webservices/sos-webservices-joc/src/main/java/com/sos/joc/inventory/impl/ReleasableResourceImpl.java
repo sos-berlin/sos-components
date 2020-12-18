@@ -1,8 +1,11 @@
 package com.sos.joc.inventory.impl;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import javax.ws.rs.Path;
@@ -13,6 +16,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocDeployException;
@@ -20,9 +24,10 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.inventory.resource.IReleasableResource;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.inventory.deploy.DeployableFilter;
+import com.sos.joc.model.inventory.release.ReleasableFilter;
 import com.sos.joc.model.inventory.release.ResponseReleasable;
 import com.sos.joc.model.inventory.release.ResponseReleasableTreeItem;
+import com.sos.joc.model.inventory.release.ResponseReleasableVersion;
 import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
@@ -33,8 +38,8 @@ public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasab
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
             initLogging(IMPL_PATH, inBytes, accessToken);
-            JsonValidator.validate(inBytes, DeployableFilter.class);
-            DeployableFilter in = Globals.objectMapper.readValue(inBytes, DeployableFilter.class);
+            JsonValidator.validate(inBytes, ReleasableFilter.class);
+            ReleasableFilter in = Globals.objectMapper.readValue(inBytes, ReleasableFilter.class);
 
             JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
 
@@ -50,7 +55,7 @@ public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasab
         }
     }
 
-    private ResponseReleasable releasable(DeployableFilter in) throws Exception {
+    private ResponseReleasable releasable(ReleasableFilter in) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -74,17 +79,32 @@ public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasab
                 config.setDeleted(true);
             }
             
-            if (in.getOnlyValidObjects() && !config.getValid() && !config.getDeleted()) {
-                throw new JocDeployException(String.format("%s not valid: %s", type.value().toLowerCase(), config.getPath()));
+            ResponseReleasableTreeItem treeItem = getResponseReleasableTreeItem(config);
+            
+            DBItemInventoryReleasedConfiguration releasedItem = dbLayer.getReleasedItemByConfigurationId(config.getId());
+            if (releasedItem == null && in.getOnlyValidObjects() && !config.getValid() && !config.getDeleted()) {
+                throw new JocDeployException(String.format("%s is neither valid nor already released: %s", type.value().toLowerCase(), config
+                        .getPath()));
             }
             
-            if (config.getReleased()) {
-                throw new JocDeployException(String.format("%s is already released: %s", type.value().toLowerCase(), config.getPath()));
+            if (!in.getWithoutDrafts() || !in.getWithoutReleased()) {
+                Set<ResponseReleasableVersion> versions = new LinkedHashSet<>();
+                if (!treeItem.getReleased() && config.getValid() && !in.getWithoutDrafts()) {
+                    ResponseReleasableVersion draft = new ResponseReleasableVersion();
+                    draft.setId(config.getId());
+                    draft.setVersionDate(config.getModified());
+                    versions.add(draft);
+                }
+                versions.addAll(getVersion(config.getId(), releasedItem, in.getWithoutReleased()));
+//                if (versions.isEmpty()) {
+//                    versions = null;
+//                }
+                treeItem.setReleasableVersions(versions);
             }
             
             ResponseReleasable result = new ResponseReleasable();
             result.setDeliveryDate(Date.from(Instant.now()));
-            result.setReleasable(getResponseReleasableTreeItem(config));
+            result.setReleasable(treeItem);
             return result;
         } catch (Throwable e) {
             Globals.rollback(session);
@@ -92,6 +112,20 @@ public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasab
         } finally {
             Globals.disconnect(session);
         }
+    }
+    
+    public static Set<ResponseReleasableVersion> getVersion(Long confId, DBItemInventoryReleasedConfiguration release, boolean withoutReleased) {
+        if (release == null || withoutReleased) {
+            return Collections.emptySet();
+        }
+
+        ResponseReleasableVersion rv = new ResponseReleasableVersion();
+        rv.setId(confId);
+        rv.setVersionDate(release.getModified());
+        rv.setReleaseId(release.getId());
+        rv.setReleasePath(release.getPath());
+        
+        return Collections.singleton(rv);
     }
     
     public static ResponseReleasableTreeItem getResponseReleasableTreeItem(DBItemInventoryConfiguration item) {
@@ -103,6 +137,7 @@ public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasab
         treeItem.setDeleted(item.getDeleted());
         treeItem.setReleased(item.getReleased());
         treeItem.setValid(item.getValid());
+        treeItem.setReleasableVersions(null);
         return treeItem;
     }
 

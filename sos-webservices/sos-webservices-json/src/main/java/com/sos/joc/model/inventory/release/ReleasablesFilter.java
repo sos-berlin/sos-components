@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.inventory.deploy;
+package com.sos.joc.model.inventory.release;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +14,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Filter Deployables
+ * Filter Releasables
  * <p>
  * 
  * 
@@ -27,10 +27,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "onlyValidObjects",
     "withRemovedObjects",
     "withoutDrafts",
-    "withoutDeployed",
-    "latest"
+    "withoutReleased"
 })
-public class DeployablesFilter {
+public class ReleasablesFilter {
 
     /**
      * path
@@ -52,15 +51,8 @@ public class DeployablesFilter {
     private Boolean withRemovedObjects = false;
     @JsonProperty("withoutDrafts")
     private Boolean withoutDrafts = false;
-    @JsonProperty("withoutDeployed")
-    private Boolean withoutDeployed = false;
-    /**
-     * only relevant for deployed objects
-     * 
-     */
-    @JsonProperty("latest")
-    @JsonPropertyDescription("only relevant for deployed objects")
-    private Boolean latest = false;
+    @JsonProperty("withoutReleased")
+    private Boolean withoutReleased = false;
 
     /**
      * path
@@ -136,42 +128,24 @@ public class DeployablesFilter {
         this.withoutDrafts = withoutDrafts;
     }
 
-    @JsonProperty("withoutDeployed")
-    public Boolean getWithoutDeployed() {
-        return withoutDeployed;
+    @JsonProperty("withoutReleased")
+    public Boolean getWithoutReleased() {
+        return withoutReleased;
     }
 
-    @JsonProperty("withoutDeployed")
-    public void setWithoutDeployed(Boolean withoutDeployed) {
-        this.withoutDeployed = withoutDeployed;
-    }
-
-    /**
-     * only relevant for deployed objects
-     * 
-     */
-    @JsonProperty("latest")
-    public Boolean getLatest() {
-        return latest;
-    }
-
-    /**
-     * only relevant for deployed objects
-     * 
-     */
-    @JsonProperty("latest")
-    public void setLatest(Boolean latest) {
-        this.latest = latest;
+    @JsonProperty("withoutReleased")
+    public void setWithoutReleased(Boolean withoutReleased) {
+        this.withoutReleased = withoutReleased;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("folder", folder).append("recursive", recursive).append("objectTypes", objectTypes).append("onlyValidObjects", onlyValidObjects).append("withRemovedObjects", withRemovedObjects).append("withoutDrafts", withoutDrafts).append("withoutDeployed", withoutDeployed).append("latest", latest).toString();
+        return new ToStringBuilder(this).append("folder", folder).append("recursive", recursive).append("objectTypes", objectTypes).append("onlyValidObjects", onlyValidObjects).append("withRemovedObjects", withRemovedObjects).append("withoutDrafts", withoutDrafts).append("withoutReleased", withoutReleased).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folder).append(withRemovedObjects).append(withoutDeployed).append(withoutDrafts).append(objectTypes).append(recursive).append(onlyValidObjects).append(latest).toHashCode();
+        return new HashCodeBuilder().append(folder).append(withRemovedObjects).append(withoutDrafts).append(objectTypes).append(recursive).append(onlyValidObjects).append(withoutReleased).toHashCode();
     }
 
     @Override
@@ -179,11 +153,11 @@ public class DeployablesFilter {
         if (other == this) {
             return true;
         }
-        if ((other instanceof DeployablesFilter) == false) {
+        if ((other instanceof ReleasablesFilter) == false) {
             return false;
         }
-        DeployablesFilter rhs = ((DeployablesFilter) other);
-        return new EqualsBuilder().append(folder, rhs.folder).append(withRemovedObjects, rhs.withRemovedObjects).append(withoutDeployed, rhs.withoutDeployed).append(withoutDrafts, rhs.withoutDrafts).append(objectTypes, rhs.objectTypes).append(recursive, rhs.recursive).append(onlyValidObjects, rhs.onlyValidObjects).append(latest, rhs.latest).isEquals();
+        ReleasablesFilter rhs = ((ReleasablesFilter) other);
+        return new EqualsBuilder().append(folder, rhs.folder).append(withRemovedObjects, rhs.withRemovedObjects).append(withoutDrafts, rhs.withoutDrafts).append(objectTypes, rhs.objectTypes).append(recursive, rhs.recursive).append(onlyValidObjects, rhs.onlyValidObjects).append(withoutReleased, rhs.withoutReleased).isEquals();
     }
 
 }
