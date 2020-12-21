@@ -1,7 +1,6 @@
 package com.sos.joc.publish.history.impl;
 
 import java.time.Instant;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,7 +33,7 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, showDepHistoryFilter, xAccessToken);
-            JsonValidator.validateFailFast(showDepHistoryFilter, ShowDepHistoryFilter.class);
+            JsonValidator.validate(showDepHistoryFilter, ShowDepHistoryFilter.class);
             ShowDepHistoryFilter filter = Globals.objectMapper.readValue(showDepHistoryFilter, ShowDepHistoryFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getPermissonsJocCockpit(null, xAccessToken).getHistory().getView().isStatus());
             if (jocDefaultResponse != null) {
@@ -42,7 +41,22 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
-            List<DBItemDeploymentHistory> dbHistoryItems = dbLayer.getDeploymentHistory(filter);
+            List<DBItemDeploymentHistory> dbHistoryItems = null;
+            if (filter.getCompactFilter() != null) {
+                dbHistoryItems = dbLayer.getDeploymentHistoryCommits(filter);
+                dbHistoryItems.stream().forEach(item -> {
+                    item.setId(null);
+                    item.setType(null);
+                    item.setPath(null);
+                    item.setFolder(null);
+                    item.setContent(null);
+                    item.setInvContent(null);
+                    item.setSignedContent(null);
+                    item.setInventoryConfigurationId(null);
+                });
+            } else {
+                dbHistoryItems = dbLayer.getDeploymentHistoryDetails(filter);
+            }
             return JOCDefaultResponse.responseStatus200(getDepHistoryFromDBItems(dbHistoryItems));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -71,12 +85,18 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
         depHistoryItem.setDeleteDate(dbItem.getDeleteDate());
         depHistoryItem.setDeploymentDate(dbItem.getDeploymentDate());
         depHistoryItem.setDeploymentId(dbItem.getId());
-        depHistoryItem.setDeployType(DeployType.fromValue(dbItem.getType()).value());
+        if (dbItem.getType() != null) {
+            depHistoryItem.setDeployType(DeployType.fromValue(dbItem.getType()).value());
+        }
         depHistoryItem.setFolder(dbItem.getFolder());
         depHistoryItem.setInvConfigurationId(dbItem.getInventoryConfigurationId());
-        depHistoryItem.setOperation(OperationType.fromValue(dbItem.getOperation()).name());
+        if(dbItem.getOperation() != null) {
+            depHistoryItem.setOperation(OperationType.fromValue(dbItem.getOperation()).name());
+        }
         depHistoryItem.setPath(dbItem.getPath());
-        depHistoryItem.setState(DeploymentState.fromValue(dbItem.getState()).name());
+        if(dbItem.getState() != null) {
+            depHistoryItem.setState(DeploymentState.fromValue(dbItem.getState()).name());
+        }
         depHistoryItem.setVersion(dbItem.getVersion());
         return depHistoryItem;
         

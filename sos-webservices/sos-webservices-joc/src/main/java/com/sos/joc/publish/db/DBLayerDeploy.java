@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -51,9 +52,6 @@ import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.ExcludeConfiguration;
 import com.sos.joc.model.publish.ExportDeployables;
-import com.sos.joc.model.publish.ExportFilter;
-import com.sos.joc.model.publish.ExportForBackup;
-import com.sos.joc.model.publish.ExportForSigning;
 import com.sos.joc.model.publish.ExportReleasables;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
@@ -1460,44 +1458,92 @@ public class DBLayerDeploy {
         return folder;
     }
 
-    public List<DBItemDeploymentHistory> getDeploymentHistory(ShowDepHistoryFilter filter) throws SOSHibernateException {
-        Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter);
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-        hql.append(
-                presentFilterAttributes.stream()
-                .map(item -> {
-                    if("from".equals(item)) {
-                        return FROM_DEP_DATE;
-                    } else if("to".equals(item)) {
-                        return TO_DEP_DATE;
-                    } else if ("limit".equals(item)) {
-                        return null;
-                    } else {
-                        return item + " = :" + item;
-                    }
-                }).filter(item -> item != null)
-                .collect(Collectors.joining(" and ", " where ", "")));
-        hql.append(" order by deploymentDate desc");
-        Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
-        presentFilterAttributes.stream().forEach(item -> {
-            switch (item) {
-            case "from":
-            case "to":
-                query.setParameter(item + "Date", FilterAttributesMapper.getValueByFilterAttribute(filter, item), TemporalType.TIMESTAMP);
-                break;
-            case "deploymentDate":
-            case "deleteDate":
-                query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter, item), TemporalType.TIMESTAMP);
-                break;
-            case "limit":
-                query.setMaxResults((Integer)FilterAttributesMapper.getValueByFilterAttribute(filter, item));
-                break;
-            default:
-                query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter, item));
-                break;
-            }
-        });
-        return getSession().getResultList(query);
+    public List<DBItemDeploymentHistory> getDeploymentHistoryCommits(ShowDepHistoryFilter filter) throws SOSHibernateException {
+        if(filter.getCompactFilter() != null) {
+            Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter.getCompactFilter());            
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append(
+                    presentFilterAttributes.stream()
+                    .map(item -> {
+                        if("from".equals(item)) {
+                            return FROM_DEP_DATE;
+                        } else if("to".equals(item)) {
+                            return TO_DEP_DATE;
+                        } else if ("limit".equals(item)) {
+                            return null;
+                        } else {
+                            return item + " = :" + item;
+                        }
+                    }).filter(Objects::nonNull)
+                    .collect(Collectors.joining(" and ", " where ", "")));
+            hql.append(" group by commitId order by deploymentDate desc");
+            Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
+            presentFilterAttributes.stream().forEach(item -> {
+                switch (item) {
+                case "from":
+                case "to":
+                    query.setParameter(item + "Date", FilterAttributesMapper.getValueByFilterAttribute(filter.getCompactFilter(), item), TemporalType.TIMESTAMP);
+                    break;
+                case "deploymentDate":
+                case "deleteDate":
+                    query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter.getCompactFilter(), item), TemporalType.TIMESTAMP);
+                    break;
+                case "limit":
+                    query.setMaxResults((Integer)FilterAttributesMapper.getValueByFilterAttribute(filter.getCompactFilter(), item));
+                    break;
+                default:
+                    query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter.getCompactFilter(), item));
+                    break;
+                }
+            });
+            return getSession().getResultList(query);
+        } else {
+            return new ArrayList<DBItemDeploymentHistory>();
+        }
+    }
+    
+    public List<DBItemDeploymentHistory> getDeploymentHistoryDetails(ShowDepHistoryFilter filter) throws SOSHibernateException {
+        if(filter.getDetailFilter() != null) {
+            Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter.getDetailFilter());
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append(
+                    presentFilterAttributes.stream()
+                    .map(item -> {
+                        if("from".equals(item)) {
+                            return FROM_DEP_DATE;
+                        } else if("to".equals(item)) {
+                            return TO_DEP_DATE;
+                        } else if ("limit".equals(item)) {
+                            return null;
+                        } else {
+                            return item + " = :" + item;
+                        }
+                    }).filter(Objects::nonNull)
+                    .collect(Collectors.joining(" and ", " where ", "")));
+            hql.append(" order by deploymentDate desc");
+            Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
+            presentFilterAttributes.stream().forEach(item -> {
+                switch (item) {
+                case "from":
+                case "to":
+                    query.setParameter(item + "Date", FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item), TemporalType.TIMESTAMP);
+                    break;
+                case "deploymentDate":
+                case "deleteDate":
+                    query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item), TemporalType.TIMESTAMP);
+                    break;
+                case "limit":
+                    query.setMaxResults((Integer)FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item));
+                    break;
+                default:
+                    query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item));
+                    break;
+                }
+            });
+            return getSession().getResultList(query);
+        } else {
+            return new ArrayList<DBItemDeploymentHistory>();
+        }
     }
     
     public List<DBItemDeploymentHistory> getDeploymentsToRedeploy(RedeployFilter filter) throws SOSHibernateException {

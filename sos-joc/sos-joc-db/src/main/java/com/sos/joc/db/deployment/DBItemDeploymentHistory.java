@@ -105,7 +105,7 @@ public class DBItemDeploymentHistory extends DBItem {
     }
     
     public String getFolder() {
-        if (folder == null || folder.isEmpty()) {
+        if ((folder == null || folder.isEmpty()) && (path != null && !path.isEmpty())) {
             folder = Paths.get(path).getParent().toString().replaceAll("\\\\", "/");
         }
         return folder;

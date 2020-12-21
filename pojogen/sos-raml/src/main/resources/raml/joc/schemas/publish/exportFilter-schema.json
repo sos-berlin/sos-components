@@ -22,10 +22,6 @@
     "forBackup": {
       "$ref": "exportForBackupFilter-schema.json"
     },
-    "recursive": {
-      "description": "Decides if folders contained in the request will be processed recursively. default false",
-      "type":"boolean"
-    },
     "exportFile": {
       "$ref": "exportFile-schema.json"
     },

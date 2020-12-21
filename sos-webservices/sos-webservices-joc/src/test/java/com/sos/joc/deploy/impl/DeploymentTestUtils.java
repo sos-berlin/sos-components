@@ -27,6 +27,9 @@ import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.ControllerId;
 import com.sos.joc.model.publish.DepHistory;
+import com.sos.joc.model.publish.DepHistoryCompactFilter;
+import com.sos.joc.model.publish.DepHistoryDetailFilter;
+import com.sos.joc.model.publish.DepHistoryItem;
 import com.sos.joc.model.publish.DeployDelete;
 import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.DeployableObjects;
@@ -205,120 +208,148 @@ public class DeploymentTestUtils {
         return job;
     }
 
-    public static ShowDepHistoryFilter createDefaultShowDepHistoryFilter() {
+    public static ShowDepHistoryFilter createDefaultShowDepHistoryCompactFilter() {
         ShowDepHistoryFilter filter = new ShowDepHistoryFilter();
-        filter.setAccount("root");
-        filter.setCommitId("4cbb095d-b998-4091-92f2-4fb8efb58805");
-        filter.setControllerId("testsuite");
+        DepHistoryCompactFilter compactFilter = new DepHistoryCompactFilter();
+        filter.setCompactFilter(compactFilter);
+        compactFilter.setAccount("root");
+        compactFilter.setControllerId("testsuite");
         Instant depDate = Instant.parse("2020-11-06T06:48:21.00Z");
-        filter.setDeploymentDate(Date.from(depDate));
-        filter.setDeleteDate(Date.from(depDate));
-        filter.setDeployType(DeployType.WORKFLOW.name());
-        filter.setFolder("/myWorkflows/myIfElseWorkflows");
-        filter.setOperation(OperationType.UPDATE.name());
-        filter.setPath("/myWorkflows/myIfElseWorkflows/workflow_01");
-        filter.setState(DeploymentState.DEPLOYED.name());
-        filter.setFrom("-10d");
-        filter.setTo("-5d");
-        filter.setVersion("0.0.1");
-        filter.setTimeZone("Europe/Berlin");
+        compactFilter.setDeploymentDate(Date.from(depDate));
+        compactFilter.setDeleteDate(Date.from(depDate));
+        compactFilter.setFolder("/myWorkflows/myIfElseWorkflows");
+        compactFilter.setFrom("-10d");
+        compactFilter.setTo("-5d");
+        compactFilter.setTimeZone("Europe/Berlin");
+        return filter;
+    }
+    
+    public static ShowDepHistoryFilter createDefaultShowDepHistoryDetailFilter() {
+        ShowDepHistoryFilter filter = new ShowDepHistoryFilter();
+        DepHistoryDetailFilter detailFilter = new DepHistoryDetailFilter();
+        filter.setDetailFilter(detailFilter);
+        detailFilter.setAccount("root");
+        detailFilter.setCommitId("4cbb095d-b998-4091-92f2-4fb8efb58805");
+        detailFilter.setControllerId("testsuite");
+        Instant depDate = Instant.parse("2020-11-06T06:48:21.00Z");
+        detailFilter.setDeploymentDate(Date.from(depDate));
+        detailFilter.setDeleteDate(Date.from(depDate));
+        detailFilter.setDeployType(DeployType.WORKFLOW.name());
+        detailFilter.setFolder("/myWorkflows/myIfElseWorkflows");
+        detailFilter.setOperation(OperationType.UPDATE.name());
+        detailFilter.setPath("/myWorkflows/myIfElseWorkflows/workflow_01");
+        detailFilter.setState(DeploymentState.DEPLOYED.name());
+        detailFilter.setFrom("-10d");
+        detailFilter.setTo("-5d");
+        detailFilter.setVersion("0.0.1");
+        detailFilter.setTimeZone("Europe/Berlin");
         return filter;
     }
     
     public static ShowDepHistoryFilter createShowDepHistoryFilterByFromToAndPath() {
         ShowDepHistoryFilter filter = new ShowDepHistoryFilter();
-        filter.setAccount("root");
-        filter.setControllerId("testsuite");
-        filter.setDeployType(DeployType.WORKFLOW.name());
-        filter.setFolder("/myWorkflows/myIfElseWorkflows");
-        filter.setOperation(OperationType.UPDATE.name());
-        filter.setPath("/myWorkflows/myIfElseWorkflows/workflow_01");
-        filter.setState(DeploymentState.DEPLOYED.name());
-        filter.setFrom("-10d");
-        filter.setTo("-5d");
-        filter.setVersion("0.0.1");
-        filter.setTimeZone("Europe/Berlin");
-        filter.setCommitId(null);
-        filter.setDeploymentDate(null);
-        filter.setDeleteDate(null);
+        DepHistoryDetailFilter detailFilter = new DepHistoryDetailFilter();
+        filter.setDetailFilter(detailFilter);
+        detailFilter.setAccount("root");
+        detailFilter.setControllerId("testsuite");
+        detailFilter.setDeployType(DeployType.WORKFLOW.name());
+        detailFilter.setFolder("/myWorkflows/myIfElseWorkflows");
+        detailFilter.setOperation(OperationType.UPDATE.name());
+        detailFilter.setPath("/myWorkflows/myIfElseWorkflows/workflow_01");
+        detailFilter.setState(DeploymentState.DEPLOYED.name());
+        detailFilter.setFrom("-10d");
+        detailFilter.setTo("-5d");
+        detailFilter.setVersion("0.0.1");
+        detailFilter.setTimeZone("Europe/Berlin");
+        detailFilter.setCommitId(null);
+        detailFilter.setDeploymentDate(null);
+        detailFilter.setDeleteDate(null);
         return filter;
     }
     
     public static ShowDepHistoryFilter createShowDepHistoryFilterByDeploymentDateAndPath() {
         ShowDepHistoryFilter filter = new ShowDepHistoryFilter();
-        filter.setAccount("root");
-        filter.setControllerId("testsuite");
+        DepHistoryDetailFilter detailFilter = new DepHistoryDetailFilter();
+        filter.setDetailFilter(detailFilter);
+        detailFilter.setAccount("root");
+        detailFilter.setControllerId("testsuite");
         Instant depDate = Instant.parse("2020-11-06T06:48:21.00Z");
-        filter.setDeploymentDate(Date.from(depDate));
-        filter.setDeployType(DeployType.WORKFLOW.name());
-        filter.setFolder("/myWorkflows/myIfElseWorkflows");
-        filter.setOperation(OperationType.UPDATE.name());
-        filter.setPath("/myWorkflows/myIfElseWorkflows/workflow_01");
-        filter.setState(DeploymentState.DEPLOYED.name());
-        filter.setVersion("0.0.1");
-        filter.setFrom(null);
-        filter.setTo(null);
-        filter.setTimeZone(null);
-        filter.setDeleteDate(null);
-        filter.setCommitId(null);
+        detailFilter.setDeploymentDate(Date.from(depDate));
+        detailFilter.setDeployType(DeployType.WORKFLOW.name());
+        detailFilter.setFolder("/myWorkflows/myIfElseWorkflows");
+        detailFilter.setOperation(OperationType.UPDATE.name());
+        detailFilter.setPath("/myWorkflows/myIfElseWorkflows/workflow_01");
+        detailFilter.setState(DeploymentState.DEPLOYED.name());
+        detailFilter.setVersion("0.0.1");
+        detailFilter.setFrom(null);
+        detailFilter.setTo(null);
+        detailFilter.setTimeZone(null);
+        detailFilter.setDeleteDate(null);
+        detailFilter.setCommitId(null);
         return filter;
     }
     
     public static ShowDepHistoryFilter createShowDepHistoryFilterByDeleteDateAndPath() {
         ShowDepHistoryFilter filter = new ShowDepHistoryFilter();
-        filter.setAccount("root");
-        filter.setControllerId("testsuite");
+        DepHistoryDetailFilter detailFilter = new DepHistoryDetailFilter();
+        filter.setDetailFilter(detailFilter);
+        detailFilter.setAccount("root");
+        detailFilter.setControllerId("testsuite");
         Instant depDate = Instant.parse("2020-11-06T06:48:21.00Z");
-        filter.setDeleteDate(Date.from(depDate));
-        filter.setDeployType(DeployType.WORKFLOW.name());
-        filter.setFolder("/myWorkflows/myIfElseWorkflows");
-        filter.setPath("/myWorkflows/myIfElseWorkflows/workflow_01");
-        filter.setState(DeploymentState.DEPLOYED.name());
-        filter.setVersion("0.0.1");
-        filter.setCommitId(null);
-        filter.setDeploymentDate(null);
-        filter.setOperation(OperationType.DELETE.name());
-        filter.setFrom(null);
-        filter.setTo(null);
-        filter.setTimeZone(null);
+        detailFilter.setDeleteDate(Date.from(depDate));
+        detailFilter.setDeployType(DeployType.WORKFLOW.name());
+        detailFilter.setFolder("/myWorkflows/myIfElseWorkflows");
+        detailFilter.setPath("/myWorkflows/myIfElseWorkflows/workflow_01");
+        detailFilter.setState(DeploymentState.DEPLOYED.name());
+        detailFilter.setVersion("0.0.1");
+        detailFilter.setCommitId(null);
+        detailFilter.setDeploymentDate(null);
+        detailFilter.setOperation(OperationType.DELETE.name());
+        detailFilter.setFrom(null);
+        detailFilter.setTo(null);
+        detailFilter.setTimeZone(null);
         return filter;
     }
     
     public static ShowDepHistoryFilter createShowDepHistoryFilterByDeleteOperationAndPath() {
         ShowDepHistoryFilter filter = new ShowDepHistoryFilter();
-        filter.setAccount("root");
-        filter.setControllerId("testsuite");
-        filter.setDeployType(DeployType.WORKFLOW.name());
-        filter.setFolder("/myWorkflows/myIfElseWorkflows");
-        filter.setPath("/myWorkflows/myIfElseWorkflows/workflow_01");
-        filter.setState(DeploymentState.DEPLOYED.name());
-        filter.setVersion("0.0.1");
-        filter.setCommitId(null);
-        filter.setDeploymentDate(null);
-        filter.setDeleteDate(null);
-        filter.setOperation(OperationType.DELETE.name());
-        filter.setFrom(null);
-        filter.setTo(null);
-        filter.setTimeZone(null);
+        DepHistoryDetailFilter detailFilter = new DepHistoryDetailFilter();
+        filter.setDetailFilter(detailFilter);
+        detailFilter.setAccount("root");
+        detailFilter.setControllerId("testsuite");
+        detailFilter.setDeployType(DeployType.WORKFLOW.name());
+        detailFilter.setFolder("/myWorkflows/myIfElseWorkflows");
+        detailFilter.setPath("/myWorkflows/myIfElseWorkflows/workflow_01");
+        detailFilter.setState(DeploymentState.DEPLOYED.name());
+        detailFilter.setVersion("0.0.1");
+        detailFilter.setCommitId(null);
+        detailFilter.setDeploymentDate(null);
+        detailFilter.setDeleteDate(null);
+        detailFilter.setOperation(OperationType.DELETE.name());
+        detailFilter.setFrom(null);
+        detailFilter.setTo(null);
+        detailFilter.setTimeZone(null);
         return filter;
     }
     
     public static ShowDepHistoryFilter createShowDepHistoryFilterByCommitIdAndFolder() {
         ShowDepHistoryFilter filter = new ShowDepHistoryFilter();
-        filter.setAccount("root");
-        filter.setCommitId("4cbb095d-b998-4091-92f2-4fb8efb58805");
-        filter.setFolder("/myWorkflows/myIfElseWorkflows");
-        filter.setFrom(null);
-        filter.setTo(null);
-        filter.setTimeZone(null);
-        filter.setDeploymentDate(null);
-        filter.setDeleteDate(null);
-        filter.setOperation(null);
-        filter.setDeployType(null);
-        filter.setState(null);
-        filter.setPath(null);
-        filter.setControllerId(null);
-        filter.setVersion(null);
+        DepHistoryDetailFilter detailFilter = new DepHistoryDetailFilter();
+        filter.setDetailFilter(detailFilter);
+        detailFilter.setAccount("root");
+        detailFilter.setCommitId("4cbb095d-b998-4091-92f2-4fb8efb58805");
+        detailFilter.setFolder("/myWorkflows/myIfElseWorkflows");
+        detailFilter.setFrom(null);
+        detailFilter.setTo(null);
+        detailFilter.setTimeZone(null);
+        detailFilter.setDeploymentDate(null);
+        detailFilter.setDeleteDate(null);
+        detailFilter.setOperation(null);
+        detailFilter.setDeployType(null);
+        detailFilter.setState(null);
+        detailFilter.setPath(null);
+        detailFilter.setControllerId(null);
+        detailFilter.setVersion(null);
         return filter;
     }
     
@@ -339,84 +370,84 @@ public class DeploymentTestUtils {
         return depHistory;
     }
 
-    public static Object getValueByFilterAttribute (ShowDepHistoryFilter filter, String attribute) {
-        switch(attribute) {
-            case "account":
-                return filter.getAccount();
-            case "path":
-                return filter.getPath();
-            case "folder":
-                return filter.getFolder();
-            case "type":
-                return DeployType.fromValue(filter.getDeployType()).intValue();
-            case "controllerId":
-                return filter.getControllerId();
-            case "commitId":
-                return filter.getCommitId();
-            case "version":
-                return filter.getVersion();
-            case "operation":
-                return OperationType.valueOf(filter.getOperation()).value();
-            case "state":
-                return DeploymentState.valueOf(filter.getState()).value();
-            case "deploymentDate":
-                return filter.getDeploymentDate();
-            case "deleteDate":
-                return filter.getDeleteDate();
-            case "from":
-                return JobSchedulerDate.getDateFrom(filter.getFrom(), filter.getTimeZone());
-            case "to":
-                return JobSchedulerDate.getDateTo(filter.getTo(), filter.getTimeZone());
-            case "timeZone":
-                return filter.getTimeZone();
-        }
-        return null;
-    }
-
-    public static Set<String> extractDefaultShowDepHistoryFilterAttributes (ShowDepHistoryFilter filter) {
-        Set<String> filterAttributes = new HashSet<String>();
-        if (filter.getAccount() != null) {
-            filterAttributes.add("account");
-        }
-        if (filter.getPath() != null) {
-            filterAttributes.add("path");
-        }
-        if (filter.getFolder() != null) {
-            filterAttributes.add("folder");
-        }
-        if (filter.getDeployType() != null) {
-            filterAttributes.add("type");
-        }
-        if (filter.getControllerId() != null) {
-            filterAttributes.add("controllerId");
-        }
-        if (filter.getCommitId() != null) {
-            filterAttributes.add("commitId");
-        }
-        if (filter.getVersion() != null) {
-            filterAttributes.add("version");
-        }
-        if (filter.getOperation() != null) {
-            filterAttributes.add("operation");
-        }
-        if (filter.getState() != null) {
-            filterAttributes.add("state");
-        }
-        if (filter.getDeploymentDate() != null) {
-            filterAttributes.add("deploymentDate");
-        }
-        if (filter.getDeleteDate() != null) {
-            filterAttributes.add("deleteDate");
-        }
-        if (filter.getFrom() != null) {
-            filterAttributes.add("from");
-        }
-        if (filter.getTo() != null) {
-            filterAttributes.add("to");
-        }
-        return filterAttributes;
-    }
-
+////    public static Object getValueByFilterAttribute (ShowDepHistoryFilter filter, String attribute) {
+////        switch(attribute) {
+////            case "account":
+////                return filter.getAccount();
+////            case "path":
+////                return filter.getPath();
+////            case "folder":
+////                return filter.getFolder();
+////            case "type":
+////                return DeployType.fromValue(filter.getDeployType()).intValue();
+////            case "controllerId":
+////                return filter.getControllerId();
+////            case "commitId":
+////                return filter.getCommitId();
+////            case "version":
+////                return filter.getVersion();
+////            case "operation":
+////                return OperationType.valueOf(filter.getOperation()).value();
+////            case "state":
+////                return DeploymentState.valueOf(filter.getState()).value();
+////            case "deploymentDate":
+////                return filter.getDeploymentDate();
+////            case "deleteDate":
+////                return filter.getDeleteDate();
+////            case "from":
+////                return JobSchedulerDate.getDateFrom(filter.getFrom(), filter.getTimeZone());
+////            case "to":
+////                return JobSchedulerDate.getDateTo(filter.getTo(), filter.getTimeZone());
+////            case "timeZone":
+////                return filter.getTimeZone();
+////        }
+////        return null;
+////    }
+////
+//    public static Set<String> extractDefaultShowDepHistoryFilterAttributes (ShowDepHistoryFilter filter) {
+//        Set<String> filterAttributes = new HashSet<String>();
+//        if (filter.getAccount() != null) {
+//            filterAttributes.add("account");
+//        }
+//        if (filter.getPath() != null) {
+//            filterAttributes.add("path");
+//        }
+//        if (filter.getFolder() != null) {
+//            filterAttributes.add("folder");
+//        }
+//        if (filter.getDeployType() != null) {
+//            filterAttributes.add("type");
+//        }
+//        if (filter.getControllerId() != null) {
+//            filterAttributes.add("controllerId");
+//        }
+//        if (filter.getCommitId() != null) {
+//            filterAttributes.add("commitId");
+//        }
+//        if (filter.getVersion() != null) {
+//            filterAttributes.add("version");
+//        }
+//        if (filter.getOperation() != null) {
+//            filterAttributes.add("operation");
+//        }
+//        if (filter.getState() != null) {
+//            filterAttributes.add("state");
+//        }
+//        if (filter.getDeploymentDate() != null) {
+//            filterAttributes.add("deploymentDate");
+//        }
+//        if (filter.getDeleteDate() != null) {
+//            filterAttributes.add("deleteDate");
+//        }
+//        if (filter.getFrom() != null) {
+//            filterAttributes.add("from");
+//        }
+//        if (filter.getTo() != null) {
+//            filterAttributes.add("to");
+//        }
+//        return filterAttributes;
+//    }
+//
     public static DeployFilter createExampleDeployFilter () {
         DeployFilter filter = new DeployFilter();
         

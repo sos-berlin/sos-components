@@ -1,0 +1,58 @@
+{
+  "title": "detail Filter For The Deployment History",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.joc.model.publish.DepHistoryDetailFilter",
+  "type": "object",
+  "properties": {
+    "account": {
+      "type": "string"
+    },
+    "path": {
+      "type": "string"
+    },
+    "folder": {
+      "type": "string"
+    },
+    "controllerId": {
+      "type": "string"
+    },
+    "commitId" : {
+      "type": "string"
+    },
+    "version" : {
+      "type": "string"
+    },
+    "deployType" : {
+      "type": "string"
+    },
+    "operation" : {
+      "type": "string"
+    },
+    "state" : {
+      "type": "string"
+    },
+    "deploymentDate": {
+      "$ref": "../common/timestamp-schema.json"
+    },
+    "deleteDate": {
+      "$ref": "../common/timestamp-schema.json"
+    },
+    "from": {
+      "type": "string",
+      "pattern": "^(0|([0-9-]+[smhdwMy])+|\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(,\\d{1,3})?)(Z|[+-]\\d{2}(:?\\d{2})?)?$"
+    },
+    "to": {
+      "type": "string",
+      "pattern": "^(0|([0-9-]+[smhdwMy])+|\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(,\\d{1,3})?)(Z|[+-]\\d{2}(:?\\d{2})?)?$"
+    },
+    "timeZone": {
+      "description": "see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones",
+      "type": "string"
+    }, 
+    "limit": {
+        "description": "Only for db history URIs. Restricts the number of delivered items; -1=unlimited",
+        "type": "integer",
+        "default": 10000
+    }
+  }
+}

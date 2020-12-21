@@ -130,27 +130,36 @@ public class MappingTest {
         }
     }
 
-//    @Test
-    public void test05MapDepHistoryFilter () throws JsonProcessingException {
-        ShowDepHistoryFilter filter = DeploymentTestUtils.createDefaultShowDepHistoryFilter();
+    @Test
+    public void test05MapDepHistoryCompactFilter () throws JsonProcessingException {
+        ShowDepHistoryFilter filter = DeploymentTestUtils.createDefaultShowDepHistoryCompactFilter();
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         DateFormat df = new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:ss.SSS'Z'");
         om.setDateFormat(df);
         LOGGER.info("ALL properties:\n" + om.writeValueAsString(filter));
-        filter = DeploymentTestUtils.createShowDepHistoryFilterByFromToAndPath();
-        LOGGER.info("EXAMPLE 1:\n" + om.writeValueAsString(filter));
-        filter = DeploymentTestUtils.createShowDepHistoryFilterByDeploymentDateAndPath();
-        LOGGER.info("EXAMPLE 2:\n" + om.writeValueAsString(filter));
-        filter = DeploymentTestUtils.createShowDepHistoryFilterByDeleteDateAndPath();
-        LOGGER.info("EXAMPLE 3:\n" + om.writeValueAsString(filter));
-        filter = DeploymentTestUtils.createShowDepHistoryFilterByDeleteOperationAndPath();
-        LOGGER.info("EXAMPLE 4:\n" + om.writeValueAsString(filter));
-        filter = DeploymentTestUtils.createShowDepHistoryFilterByCommitIdAndFolder();
-        LOGGER.info("EXAMPLE 5:\n" + om.writeValueAsString(filter));
     }
 
+  @Test
+  public void test06MapDepHistoryDetailFilter () throws JsonProcessingException {
+      ShowDepHistoryFilter filter = DeploymentTestUtils.createDefaultShowDepHistoryDetailFilter();
+      ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
+      DateFormat df = new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:ss.SSS'Z'");
+      om.setDateFormat(df);
+      LOGGER.info("ALL properties:\n" + om.writeValueAsString(filter));
+      filter = DeploymentTestUtils.createShowDepHistoryFilterByFromToAndPath();
+      LOGGER.info("EXAMPLE 1:\n" + om.writeValueAsString(filter));
+      filter = DeploymentTestUtils.createShowDepHistoryFilterByDeploymentDateAndPath();
+      LOGGER.info("EXAMPLE 2:\n" + om.writeValueAsString(filter));
+      filter = DeploymentTestUtils.createShowDepHistoryFilterByDeleteDateAndPath();
+      LOGGER.info("EXAMPLE 3:\n" + om.writeValueAsString(filter));
+      filter = DeploymentTestUtils.createShowDepHistoryFilterByDeleteOperationAndPath();
+      LOGGER.info("EXAMPLE 4:\n" + om.writeValueAsString(filter));
+      filter = DeploymentTestUtils.createShowDepHistoryFilterByCommitIdAndFolder();
+      LOGGER.info("EXAMPLE 5:\n" + om.writeValueAsString(filter));
+  }
+
 //  @Test
-    public void test06MapRedeployFilter () throws JsonProcessingException {
+    public void test07MapRedeployFilter () throws JsonProcessingException {
         RedeployFilter filter = DeploymentTestUtils.createDefaultRedeployFilter();
         ExcludeConfiguration exclude = new ExcludeConfiguration();
         exclude.setPath("/myWorkflows/myIfElseWorkflows/workflow_02");
@@ -164,10 +173,10 @@ public class MappingTest {
      * No Unit test. DB connection needed to test query parameters
      * */
 //    @Test
-    public void test07GetDeploymentHistoryDBLayerDeployTest () throws SOSHibernateException {
+    public void test08GetDeploymentHistoryDBLayerDeployTest () throws SOSHibernateException {
         ShowDepHistoryFilter filter = DeploymentTestUtils.createShowDepHistoryFilterByDeploymentDateAndPath();
 
-        Set<String> presentFilterAttributes = DeploymentTestUtils.extractDefaultShowDepHistoryFilterAttributes(filter);
+        Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter.getDetailFilter());
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
         hql.append(
                 presentFilterAttributes.stream()
@@ -181,7 +190,7 @@ public class MappingTest {
         factory.build();
         SOSHibernateSession session = factory.openStatelessSession();
          Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
-        presentFilterAttributes.stream().forEach(item -> query.setParameter(item, DeploymentTestUtils.getValueByFilterAttribute(filter, item)));
+        presentFilterAttributes.stream().forEach(item -> query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item)));
 
         LOGGER.info("Create hql via StringBuilder using streams");
         LOGGER.info(hql.toString());
@@ -207,10 +216,10 @@ public class MappingTest {
      * No Unit test. DB connection needed to test query parameters
      * */
 //    @Test
-    public void test08GetDeploymentHistoryFromToDBLayerDeployTest () throws SOSHibernateException {
+    public void test09GetDeploymentHistoryFromToDBLayerDeployTest () throws SOSHibernateException {
        ShowDepHistoryFilter filter = DeploymentTestUtils.createShowDepHistoryFilterByFromToAndPath();
 
-        Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter);
+        Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter.getDetailFilter());
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
         hql.append(
                 presentFilterAttributes.stream()
@@ -236,14 +245,14 @@ public class MappingTest {
             switch (item) {
             case "from":
             case "to":
-                query.setParameter(item + "Date", FilterAttributesMapper.getValueByFilterAttribute(filter, item), TemporalType.TIMESTAMP);
+                query.setParameter(item + "Date", FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item), TemporalType.TIMESTAMP);
                 break;
             case "deploymentDate":
             case "deleteDate":
-                query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter, item), TemporalType.TIMESTAMP);
+                query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item), TemporalType.TIMESTAMP);
                 break;
             default:
-                query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter, item));
+                query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item));
                 break;
             }
         });
@@ -269,7 +278,7 @@ public class MappingTest {
     }
     
     @Test
-    public void test09MapRedeployFilter () throws JsonProcessingException {
+    public void test10MapRedeployFilter () throws JsonProcessingException {
         RedeployFilter filter = DeploymentTestUtils.createDefaultRedeployFilter();
 //        ExcludeConfiguration exclude = new ExcludeConfiguration();
 //        exclude.setPath("/myWorkflows/myIfElseWorkflow/workflow_12");
@@ -297,35 +306,35 @@ public class MappingTest {
     }
 
     @Test
-    public void test10MapDeployFilter () throws JsonProcessingException {
+    public void test11MapDeployFilter () throws JsonProcessingException {
         LOGGER.info("DeployFilter Example");
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleDeployFilter()));
     }
 
     @Test
-    public void test11MapExportFilterForSigning () throws JsonProcessingException {
+    public void test12MapExportFilterForSigning () throws JsonProcessingException {
         LOGGER.info("ExportFilter forSigning=true Example");
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleExportFilter(true)));
     }
 
     @Test
-    public void test12MapExportForBackupFilter () throws JsonProcessingException {
+    public void test13MapExportForBackupFilter () throws JsonProcessingException {
         LOGGER.info("ExportFilter forSigning=false Example");
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleExportFilter(false)));
     }
 
     @Test
-    public void test13MapSetVersionFilter () throws JsonProcessingException {
+    public void test14MapSetVersionFilter () throws JsonProcessingException {
         LOGGER.info("SetVersionFilter Example");
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleSetVersionFilter()));
     }
 
     @Test
-    public void test14MapSetVersionsFilter () throws JsonProcessingException {
+    public void test15MapSetVersionsFilter () throws JsonProcessingException {
         LOGGER.info("SetVersionsFilter Example");
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleSetVersionsFilter()));
