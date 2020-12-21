@@ -96,7 +96,7 @@ public class PerformanceTest {
         List<String> l = new ArrayList<String>();
         String where = "";
         for (Entry<Long, Set<String>> entry : m.entrySet()) {
-            String s = "mainOrderId = " + entry.getKey();
+            String s = "historyOrderMainParentId = " + entry.getKey();
             if (!entry.getValue().isEmpty() && !entry.getValue().contains(null)) {
                 if (entry.getValue().size() == 1) {
                     s += " and workflowPosition = '" + entry.getValue().iterator().next() + "'";
