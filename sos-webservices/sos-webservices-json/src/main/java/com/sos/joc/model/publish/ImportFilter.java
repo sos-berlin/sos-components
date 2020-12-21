@@ -20,7 +20,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "overwrite",
-    "folder",
+    "targetFolder",
+    "format",
     "auditLog"
 })
 public class ImportFilter {
@@ -38,9 +39,17 @@ public class ImportFilter {
      * absolute path of an object.
      * 
      */
-    @JsonProperty("folder")
+    @JsonProperty("targetFolder")
     @JsonPropertyDescription("absolute path of an object.")
-    private String folder;
+    private String targetFolder;
+    /**
+     * Archive Format of the archive file
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("format")
+    private ArchiveFormat format = ArchiveFormat.fromValue("ZIP");
     /**
      * auditParams
      * <p>
@@ -76,9 +85,9 @@ public class ImportFilter {
      * absolute path of an object.
      * 
      */
-    @JsonProperty("folder")
-    public String getFolder() {
-        return folder;
+    @JsonProperty("targetFolder")
+    public String getTargetFolder() {
+        return targetFolder;
     }
 
     /**
@@ -87,9 +96,31 @@ public class ImportFilter {
      * absolute path of an object.
      * 
      */
-    @JsonProperty("folder")
-    public void setFolder(String folder) {
-        this.folder = folder;
+    @JsonProperty("targetFolder")
+    public void setTargetFolder(String targetFolder) {
+        this.targetFolder = targetFolder;
+    }
+
+    /**
+     * Archive Format of the archive file
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("format")
+    public ArchiveFormat getFormat() {
+        return format;
+    }
+
+    /**
+     * Archive Format of the archive file
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("format")
+    public void setFormat(ArchiveFormat format) {
+        this.format = format;
     }
 
     /**
@@ -116,12 +147,12 @@ public class ImportFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("overwrite", overwrite).append("folder", folder).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("overwrite", overwrite).append("targetFolder", targetFolder).append("format", format).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folder).append(auditLog).append(overwrite).toHashCode();
+        return new HashCodeBuilder().append(targetFolder).append(format).append(auditLog).append(overwrite).toHashCode();
     }
 
     @Override
@@ -133,7 +164,7 @@ public class ImportFilter {
             return false;
         }
         ImportFilter rhs = ((ImportFilter) other);
-        return new EqualsBuilder().append(folder, rhs.folder).append(auditLog, rhs.auditLog).append(overwrite, rhs.overwrite).isEquals();
+        return new EqualsBuilder().append(targetFolder, rhs.targetFolder).append(format, rhs.format).append(auditLog, rhs.auditLog).append(overwrite, rhs.overwrite).isEquals();
     }
 
 }

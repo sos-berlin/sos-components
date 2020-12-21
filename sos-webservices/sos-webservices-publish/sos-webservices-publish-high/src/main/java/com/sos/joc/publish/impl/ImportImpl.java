@@ -24,6 +24,7 @@ import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.inventory.ConfigurationObject;
+import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.model.publish.ImportFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.IImportResource;
@@ -38,8 +39,9 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
     @Override
 	public JOCDefaultResponse postImportConfiguration(String xAccessToken, 
 			FormDataBodyPart body, 
+            String format,
 			boolean overwrite,
-			String folder,
+			String targetFolder,
 			String timeSpent,
 			String ticketLink,
 			String comment) throws Exception {
@@ -51,7 +53,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
         } catch (Exception e) {}
         ImportFilter filter = new ImportFilter();
         filter.setAuditLog(auditLog);
-        filter.setFolder(folder);
+        filter.setTargetFolder(targetFolder);
         filter.setOverwrite(overwrite);
 		return postImportConfiguration(xAccessToken, body, filter, auditLog);
 	}
@@ -79,9 +81,9 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             final String mediaSubType = body.getMediaType().getSubtype().replaceFirst("^x-", "");
             Set<ConfigurationObject> configurations = new HashSet<ConfigurationObject>();
             // process uploaded archive
-            if (mediaSubType.contains("zip") && !mediaSubType.contains("gzip")) {
+            if (ArchiveFormat.ZIP.equals(filter.getFormat())) {
                 configurations = PublishUtils.readZipFileContent(stream);
-            } else if (mediaSubType.contains("tgz") || mediaSubType.contains("tar.gz") || mediaSubType.contains("gzip")) {
+            } else if (ArchiveFormat.TAR_GZ.equals(filter.getFormat())) {
                 configurations = PublishUtils.readTarGzipFileContent(stream);
             } else {
             	throw new JocUnsupportedFileTypeException(
@@ -94,14 +96,16 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             logAuditMessage(importAudit);
             DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(importAudit);
             Set<java.nio.file.Path> folders = new HashSet<java.nio.file.Path>();
-            if(filter.getFolder() != null && !filter.getFolder().isEmpty()) {
+            if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
                 configurations.stream().map(item -> {
-                    item.setPath(filter.getFolder() + item.getPath());
+                    item.setPath(filter.getTargetFolder() + item.getPath());
                     item.getConfiguration().setPath(item.getPath());
                     return item;
-                }).forEach(item -> dbLayer.saveOrUpdateInventoryConfiguration(item, account, dbItemAuditLog.getId(), filter.getOverwrite(), filter.getFolder()));
+                }).forEach(item -> dbLayer.saveOrUpdateInventoryConfiguration(
+                        item, account, dbItemAuditLog.getId(), filter.getOverwrite(), filter.getTargetFolder()));
             } else {
-                configurations.stream().forEach(item -> dbLayer.saveOrUpdateInventoryConfiguration(item, account, dbItemAuditLog.getId(), filter.getOverwrite()));
+                configurations.stream().forEach(item -> dbLayer.saveOrUpdateInventoryConfiguration(
+                        item, account, dbItemAuditLog.getId(), filter.getOverwrite()));
             }
             folders = configurations.stream().map(cfg -> cfg.getPath()).map(path -> Paths.get(path).getParent()).collect(Collectors.toSet());
             dbLayer.createInvConfigurationsDBItemsForFoldersIfNotExists(PublishUtils.updateSetOfPathsWithParents(folders), dbItemAuditLog.getId());
