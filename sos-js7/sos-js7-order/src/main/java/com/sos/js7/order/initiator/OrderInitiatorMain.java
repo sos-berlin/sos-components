@@ -65,7 +65,7 @@ public class OrderInitiatorMain extends JocClusterService {
             timer.purge();
         }
         timer = new Timer();
-        timer.schedule(new OrderInitiatorRunner(controllers, settings, true), 0, 10 * 1000);
+        timer.schedule(new OrderInitiatorRunner(controllers, settings, true), 0, 60 * 1000);
     }
 
     private void setSettings() throws Exception {
