@@ -161,7 +161,7 @@ public class LogOrderContent {
              // }
              // }
             mainParentHistoryId = historyOrderItem.getMainParentId();
-            orderId = historyOrderItem.getOrderKey();
+            orderId = historyOrderItem.getOrderId();
             return historyOrderItem;
         } finally {
             Globals.disconnect(connection);
@@ -184,7 +184,7 @@ public class LogOrderContent {
              // }
              // }
             mainParentHistoryId = historyOrderItem.getMainParentId();
-            orderId = historyOrderItem.getOrderKey();
+            orderId = historyOrderItem.getOrderId();
             if (historyOrderItem.getLogId() == 0L) {
                 if (historyOrderItem.getEndTime() == null) {
                     // Order is running

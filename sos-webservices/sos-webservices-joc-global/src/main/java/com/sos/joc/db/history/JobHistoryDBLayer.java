@@ -54,11 +54,11 @@ public class JobHistoryDBLayer {
         this.filter = filter;
     }
 
-    public List<DBItemHistoryOrderStep> getOrderSteps(Long orderId) throws DBConnectionRefusedException, DBInvalidDataException {
+    public List<DBItemHistoryOrderStep> getOrderSteps(Long historyOrderId) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             Query<DBItemHistoryOrderStep> query = session.createQuery(new StringBuilder().append("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP)
-                    .append(" where orderId = :orderId").toString());
-            query.setParameter("orderId", orderId);
+                    .append(" where historyOrderId = :historyOrderId").toString());
+            query.setParameter("historyOrderId", historyOrderId);
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -92,7 +92,7 @@ public class JobHistoryDBLayer {
             List<String> l = new ArrayList<String>();
             String where = "";
             for (Entry<Long, Set<String>> entry : mapOfHistoryIdAndPosition.entrySet()) {
-                String s = "mainOrderId = " + entry.getKey();
+                String s = "historyOrderMainParentId = " + entry.getKey();
                 Set<String> workflowPositions = entry.getValue();
                 if (!workflowPositions.isEmpty() && !workflowPositions.contains(null)) {
                     if (workflowPositions.size() == 1) {
@@ -179,14 +179,15 @@ public class JobHistoryDBLayer {
         }
     }
 
-    public List<DBItemHistoryOrder> getChildOrders(Collection<Long> mainOrderIds) throws DBConnectionRefusedException, DBInvalidDataException {
+    public List<DBItemHistoryOrder> getChildOrders(Collection<Long> historyOrderMainParentIds) throws DBConnectionRefusedException,
+            DBInvalidDataException {
         try {
             List<DBItemHistoryOrder> childOrders = null;
-            if (mainOrderIds != null && !mainOrderIds.isEmpty()) {
+            if (historyOrderMainParentIds != null && !historyOrderMainParentIds.isEmpty()) {
                 String hql = new StringBuilder().append("from ").append(DBLayer.DBITEM_HISTORY_ORDER).append(
-                        " where mainParentId in (:mainOrderIds) and parentId != 0 order by startEventId desc").toString();
+                        " where historyOrderMainParentId in (:historyOrderMainParentIds) and parentId != 0 order by startEventId desc").toString();
                 Query<DBItemHistoryOrder> query = session.createQuery(hql);
-                query.setParameterList("mainOrderIds", mainOrderIds);
+                query.setParameterList("historyOrderMainParentIds", historyOrderMainParentIds);
                 childOrders = session.getResultList(query);
             }
             if (childOrders == null) {
@@ -214,12 +215,12 @@ public class JobHistoryDBLayer {
         }
     }
 
-    public List<DBItemHistoryOrderState> getOrderStates(Long orderId) throws DBConnectionRefusedException, DBInvalidDataException {
+    public List<DBItemHistoryOrderState> getOrderStates(Long historyOrderId) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STATE).append(" ");
-            hql.append("where orderId=:orderId");
+            hql.append("where historyOrderId=:historyOrderId");
             Query<DBItemHistoryOrderState> query = session.createQuery(hql.toString());
-            query.setParameter("orderId", orderId);
+            query.setParameter("historyOrderId", historyOrderId);
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -321,9 +322,9 @@ public class JobHistoryDBLayer {
                     String s = "workflowPath = '" + entry.getKey() + "'";
                     if (!entry.getValue().isEmpty() && !entry.getValue().contains(null)) {
                         if (entry.getValue().size() == 1) {
-                            s += " and orderKey = '" + entry.getValue().iterator().next() + "'";
+                            s += " and orderId = '" + entry.getValue().iterator().next() + "'";
                         } else {
-                            s += " and orderKey in (" + entry.getValue().stream().map(val -> "'" + val + "'").collect(Collectors.joining(",")) + ")";
+                            s += " and orderId in (" + entry.getValue().stream().map(val -> "'" + val + "'").collect(Collectors.joining(",")) + ")";
                         }
                     }
                     l.add("(" + s + ")");
@@ -363,9 +364,9 @@ public class JobHistoryDBLayer {
                         String s = "workflowPath != '" + entry.getKey() + "'";
                         if (!entry.getValue().isEmpty() && !entry.getValue().contains(null)) {
                             if (entry.getValue().size() == 1) {
-                                s += " or orderKey != '" + entry.getValue().iterator().next() + "'";
+                                s += " or orderId != '" + entry.getValue().iterator().next() + "'";
                             } else {
-                                s += " or orderKey not in (" + entry.getValue().stream().map(val -> "'" + val + "'").collect(Collectors.joining(","))
+                                s += " or orderId not in (" + entry.getValue().stream().map(val -> "'" + val + "'").collect(Collectors.joining(","))
                                         + ")";
                             }
                         }

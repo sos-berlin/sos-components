@@ -38,9 +38,9 @@ public class DBItemLogTest {
             item = new DBItemHistoryLog();
             item.setControllerId("jobscheduler2.0");
 
-            item.setMainOrderId(new Long(0));
-            item.setOrderId(new Long(0));
-            item.setOrderStepId(new Long(0));
+            item.setHistoryOrderMainParentId(new Long(0));
+            item.setHistoryOrderId(new Long(0));
+            item.setHistoryOrderStepId(new Long(0));
 
             item.setFileBasename(SOSPath.getFileNameWithoutExtension(logFile.getFileName()));
             item.setFileSizeUncomressed(Files.size(logFile));

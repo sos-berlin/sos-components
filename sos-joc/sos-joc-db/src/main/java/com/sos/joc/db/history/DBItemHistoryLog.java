@@ -31,14 +31,14 @@ public class DBItemHistoryLog extends DBItem {
     @Column(name = "[CONTROLLER_ID]", nullable = false)
     private String controllerId;
 
-    @Column(name = "[MAIN_ORDER_ID]", nullable = false)
-    private Long mainOrderId;
+    @Column(name = "[HO_MAIN_PARENT_ID]", nullable = false)
+    private Long historyOrderMainParentId;
 
-    @Column(name = "[ORDER_ID]", nullable = false)
-    private Long orderId;
+    @Column(name = "[HO_ID]", nullable = false)
+    private Long historyOrderId;
 
-    @Column(name = "[ORDER_STEP_ID]", nullable = false)
-    private Long orderStepId;
+    @Column(name = "[HOS_ID]", nullable = false)
+    private Long historyOrderStepId;
 
     @Column(name = "[COMPRESSED]", nullable = false)
     @Type(type = "numeric_boolean")
@@ -79,28 +79,28 @@ public class DBItemHistoryLog extends DBItem {
         controllerId = val;
     }
 
-    public Long geMainOrdertId() {
-        return mainOrderId;
+    public Long getHistoryOrderMainParentId() {
+        return historyOrderMainParentId;
     }
 
-    public void setMainOrderId(Long val) {
-        mainOrderId = val;
+    public void setHistoryOrderMainParentId(Long val) {
+        historyOrderMainParentId = val;
     }
 
-    public Long getOrderId() {
-        return orderId;
+    public Long getHistoryOrderId() {
+        return historyOrderId;
     }
 
-    public void setOrderId(Long val) {
-        orderId = val;
+    public void setHistoryOrderId(Long val) {
+        historyOrderId = val;
     }
 
-    public Long getOrderStepId() {
-        return orderStepId;
+    public Long getHistoryOrderStepId() {
+        return historyOrderStepId;
     }
 
-    public void setOrderStepId(Long val) {
-        orderStepId = val;
+    public void setHistoryOrderStepId(Long val) {
+        historyOrderStepId = val;
     }
 
     public void setCompressed(boolean val) {

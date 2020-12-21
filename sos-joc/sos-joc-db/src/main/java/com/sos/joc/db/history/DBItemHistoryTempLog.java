@@ -19,8 +19,8 @@ public class DBItemHistoryTempLog extends DBItem {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @Column(name = "[MAIN_ORDER_ID]", nullable = false)
-    private Long mainOrderId;
+    @Column(name = "[HO_MAIN_PARENT_ID]", nullable = false)
+    private Long historyOrderMainParentId;
 
     @Column(name = "[MEMBER_ID]", nullable = false)
     private String memberId;
@@ -41,12 +41,12 @@ public class DBItemHistoryTempLog extends DBItem {
     public DBItemHistoryTempLog() {
     }
 
-    public Long getMainOrdertId() {
-        return mainOrderId;
+    public Long getHistoryOrderMainParentId() {
+        return historyOrderMainParentId;
     }
 
-    public void setMainOrderId(Long val) {
-        mainOrderId = val;
+    public void setHistoryOrderMainParentId(Long val) {
+        historyOrderMainParentId = val;
     }
 
     public String getMemberId() {

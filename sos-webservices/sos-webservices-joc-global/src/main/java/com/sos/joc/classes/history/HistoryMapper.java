@@ -20,7 +20,7 @@ public class HistoryMapper {
         history.setControllerId(item.getControllerId());
         history.setEndTime(item.getEndTime());
         history.setHistoryId(item.getId());
-        history.setOrderId(item.getOrderKey());
+        history.setOrderId(item.getOrderId());
         history.setPlannedTime(item.getStartTimePlanned());
         history.setStartTime(item.getStartTime());
         history.setState(getState(item.getSeverity()));
@@ -40,7 +40,7 @@ public class HistoryMapper {
         history.setEndTime(item.getEndTime());
         history.setError(setError(item));
         history.setJob(item.getJobName());
-        history.setOrderId(item.getOrderKey());
+        history.setOrderId(item.getOrderId());
         history.setExitCode(item.getReturnCode());
         history.setState(getState(item.getSeverity()));
         history.setCriticality(item.getCriticalityAsEnum().value().toLowerCase());

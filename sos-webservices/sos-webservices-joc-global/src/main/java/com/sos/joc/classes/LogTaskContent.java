@@ -41,7 +41,7 @@ public class LogTaskContent {
     private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd' 'HH:mm:ss.SSSZ");
     // private String controllerId;
     private Long historyId;
-    private Long mainOrderId;
+    private Long orderMainParentId;
     private Long orderId;
     private String jobName;
     private String workflow;
@@ -148,7 +148,7 @@ public class LogTaskContent {
         eventId = Instant.now().toEpochMilli() * 1000;
         complete = false;
         try {
-            Path tasklog = Paths.get("logs", "history", mainOrderId.toString(), orderId.toString() + "_" + historyId + ".log");
+            Path tasklog = Paths.get("logs", "history", orderMainParentId.toString(), orderId.toString() + "_" + historyId + ".log");
             if (Files.exists(tasklog)) {
                 unCompressedLength = Files.size(tasklog);
                 return Files.newInputStream(tasklog);
@@ -184,8 +184,8 @@ public class LogTaskContent {
             if (historyOrderStepItem == null) {
                 throw new DBMissingDataException(String.format("Task (Id:%d) not found", historyId));
             }
-            orderId = historyOrderStepItem.getOrderId();
-            mainOrderId = historyOrderStepItem.getMainOrderId();
+            orderId = historyOrderStepItem.getHistoryOrderId();
+            orderMainParentId = historyOrderStepItem.getHistoryOrderMainParentId();
             jobName = historyOrderStepItem.getJobName();
             workflow = historyOrderStepItem.getWorkflowPath();
             if (historyOrderStepItem.getLogId() == 0L) {

@@ -147,7 +147,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                                 .isStatus()) {
                             continue;
                         }
-                        if (matcher != null && !matcher.reset(item.getWorkflowPath() + "," + item.getOrderKey()).find()) {
+                        if (matcher != null && !matcher.reset(item.getWorkflowPath() + "," + item.getOrderId()).find()) {
                             continue;
                         }
                         history.add(HistoryMapper.map2OrderHistoryItem(item));

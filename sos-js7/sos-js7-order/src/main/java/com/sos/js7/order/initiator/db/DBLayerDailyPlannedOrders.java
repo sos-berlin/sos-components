@@ -238,7 +238,7 @@ public class DBLayerDailyPlannedOrders {
                         + "    p.plannedStart as plannedStart, p.expectedEnd as expectedEnd,p.created as plannedOrderCreated, "
                         + "    o.id as orderHistoryId, o.startTime as startTime, o.endTime as endTime, o.state as state " +
 
-                        " from " + DBItemDailyPlannedOrders + " p left outer join " + DBItemHistoryOrder + " o on p.orderId = o.orderKey " + getWhere(
+                        " from " + DBItemDailyPlannedOrders + " p left outer join " + DBItemHistoryOrder + " o on p.orderId = o.orderId " + getWhere(
                                 filter, "p.schedulePath");
 
         Query<DBItemDailyPlanWithHistory> query = sosHibernateSession.createQuery(q);

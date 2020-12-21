@@ -7,9 +7,9 @@ import java.util.Date;
 public class CachedOrderStep {
 
     private final Long id;
-    private final Long mainOrderId;
-    private final Long orderId;
-    private final String orderKey;
+    private final Long historyOrderMainParentId;
+    private final Long historyOrderId;
+    private final String orderId;
     private final String jobName;
     private final String agentTimezone;
     private final String agentPath;
@@ -24,9 +24,9 @@ public class CachedOrderStep {
 
     public CachedOrderStep(DBItemHistoryOrderStep item, String timezone) {
         id = item.getId();
-        mainOrderId = item.getMainOrderId();
+        historyOrderMainParentId = item.getHistoryOrderMainParentId();
+        historyOrderId = item.getHistoryOrderId();
         orderId = item.getOrderId();
-        orderKey = item.getOrderKey();
         jobName = item.getJobName();
         agentTimezone = timezone;
         agentPath = item.getAgentPath();
@@ -41,16 +41,16 @@ public class CachedOrderStep {
         return id;
     }
 
-    public Long getMainOrderId() {
-        return mainOrderId;
+    public Long getHistoryOrderMainParentId() {
+        return historyOrderMainParentId;
     }
 
-    public Long getOrderId() {
+    public Long getHistoryOrderId() {
+        return historyOrderId;
+    }
+
+    public String getOrderId() {
         return orderId;
-    }
-
-    public String getOrderKey() {
-        return orderKey;
     }
 
     public String getJobName() {

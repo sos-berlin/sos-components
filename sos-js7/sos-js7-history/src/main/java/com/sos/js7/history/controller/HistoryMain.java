@@ -176,7 +176,7 @@ public class HistoryMain extends JocClusterService {
                 for (int i = 0; i < result.size(); i++) {
                     DBItemHistoryTempLog item = result.get(i);
 
-                    Path dir = getOrderLogDirectory(logDir, item.getMainOrdertId());
+                    Path dir = getOrderLogDirectory(logDir, item.getHistoryOrderMainParentId());
                     try {
                         if (Files.exists(dir)) {
                             SOSPath.cleanupDirectory(dir);
@@ -184,7 +184,7 @@ public class HistoryMain extends JocClusterService {
                             Files.createDirectory(dir);
                         }
                         SOSPath.ungzipDirectory(item.getContent(), dir);
-                        toDelete.add(item.getMainOrdertId());
+                        toDelete.add(item.getHistoryOrderMainParentId());
                         LOGGER.info(String.format("[log directory restored from database]%s", dir));
                     } catch (Exception e) {
                         LOGGER.error(String.format("[%s]%s", dir, e.toString()), e);
@@ -196,9 +196,9 @@ public class HistoryMain extends JocClusterService {
                     session.getSQLExecutor().executeUpdate("truncate table " + DBLayer.TABLE_HISTORY_TEMP_LOGS);
                 } else {
                     hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_HISTORY_TEMP_LOG);
-                    hql.append(" where mainOrderId in (:mainOrderIds)");
+                    hql.append(" where historyOrderMainParentId in (:historyOrderMainParentIds)");
                     query = session.createQuery(hql.toString());
-                    query.setParameterList("mainOrderIds", toDelete);
+                    query.setParameterList("historyOrderMainParentIds", toDelete);
                     session.executeUpdate(query);
                 }
                 session.commit();
@@ -258,16 +258,16 @@ public class HistoryMain extends JocClusterService {
         }
     }
 
-    private void importOrderLogs(SOSHibernateSession session, Long mainOrderId) {
-        Path dir = getOrderLogDirectory(logDir, mainOrderId);
+    private void importOrderLogs(SOSHibernateSession session, Long historyOrderMainParentId) {
+        Path dir = getOrderLogDirectory(logDir, historyOrderMainParentId);
         try {
             if (Files.exists(dir)) {
                 session.beginTransaction();
 
                 StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_TEMP_LOG);
-                hql.append(" where mainOrderId=:mainOrderId");
+                hql.append(" where historyOrderMainParentId=:historyOrderMainParentId");
                 Query<DBItemHistoryTempLog> query = session.createQuery(hql.toString());
-                query.setParameter("mainOrderId", mainOrderId);
+                query.setParameter("historyOrderMainParentId", historyOrderMainParentId);
 
                 DBItemHistoryTempLog item = session.getSingleResult(query);
                 File f = SOSPath.getMostRecentFile(dir);
@@ -275,7 +275,7 @@ public class HistoryMain extends JocClusterService {
                 boolean imported = false;
                 if (item == null) {
                     item = new DBItemHistoryTempLog();
-                    item.setMainOrderId(mainOrderId);
+                    item.setHistoryOrderMainParentId(historyOrderMainParentId);
                     item.setMemberId(getJocConfig().getMemberId());
                     item.setContent(SOSPath.gzipDirectory(dir));
                     item.setMostRecentFile(mostRecentFile);
@@ -315,8 +315,8 @@ public class HistoryMain extends JocClusterService {
         }
     }
 
-    public static Path getOrderLogDirectory(Path logDir, Long mainOrderId) {
-        return logDir.resolve(String.valueOf(mainOrderId));
+    public static Path getOrderLogDirectory(Path logDir, Long historyOrderMainParentId) {
+        return logDir.resolve(String.valueOf(historyOrderMainParentId));
     }
 
     private void closeEventHandlers() {

@@ -33,8 +33,8 @@ public class DBItemHistoryOrderStep extends DBItem {
     @Column(name = "[CONTROLLER_ID]", nullable = false)
     private String controllerId;
 
-    @Column(name = "[ORDER_KEY]", nullable = false)
-    private String orderKey;// event TODO redundant?
+    @Column(name = "[ORDER_ID]", nullable = false)
+    private String orderId;// event TODO redundant?
 
     @Column(name = "[WORKFLOW_PATH]", nullable = false)
     private String workflowPath;// event
@@ -52,11 +52,11 @@ public class DBItemHistoryOrderStep extends DBItem {
     private String workflowName;// extracted from workflowPath
 
     /** Foreign key - TABLE_SCHEDULER_ORDER_HISTORY.ID */
-    @Column(name = "[MAIN_ORDER_ID]", nullable = false)
-    private Long mainOrderId;// db
+    @Column(name = "[HO_MAIN_PARENT_ID]", nullable = false)
+    private Long historyOrderMainParentId;// db
 
-    @Column(name = "[ORDER_ID]", nullable = false)
-    private Long orderId;// db
+    @Column(name = "[HO_ID]", nullable = false)
+    private Long historyOrderId;// db
 
     @Column(name = "[POSITION]", nullable = false)
     private Integer position; // last position of the workflowPosition. e.g.: wp=1#fork_1#3. p=3
@@ -153,12 +153,12 @@ public class DBItemHistoryOrderStep extends DBItem {
         controllerId = val;
     }
 
-    public String getOrderKey() {
-        return orderKey;
+    public String getOrderId() {
+        return orderId;
     }
 
-    public void setOrderKey(String val) {
-        orderKey = val;
+    public void setOrderId(String val) {
+        orderId = val;
     }
 
     public String getWorkflowPath() {
@@ -201,20 +201,20 @@ public class DBItemHistoryOrderStep extends DBItem {
         workflowName = val;
     }
 
-    public Long getMainOrderId() {
-        return mainOrderId;
+    public Long getHistoryOrderMainParentId() {
+        return historyOrderMainParentId;
     }
 
-    public void setMainOrderId(Long val) {
-        mainOrderId = val;
+    public void setHistoryOrderMainParentId(Long val) {
+        historyOrderMainParentId = val;
     }
 
-    public Long getOrderId() {
-        return orderId;
+    public Long getHistoryOrderId() {
+        return historyOrderId;
     }
 
-    public void setOrderId(Long val) {
-        orderId = val;
+    public void setHistoryOrderId(Long val) {
+        historyOrderId = val;
     }
 
     public Integer getPosition() {

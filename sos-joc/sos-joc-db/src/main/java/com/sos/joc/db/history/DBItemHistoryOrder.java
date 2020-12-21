@@ -35,8 +35,8 @@ public class DBItemHistoryOrder extends DBItem {
     @Column(name = "[CONTROLLER_ID]", nullable = false)
     private String controllerId;
 
-    @Column(name = "[ORDER_KEY]", nullable = false)
-    private String orderKey;// event
+    @Column(name = "[ORDER_ID]", nullable = false)
+    private String orderId;// event
 
     @Column(name = "[WORKFLOW_PATH]", nullable = false)
     private String workflowPath;// event
@@ -56,15 +56,15 @@ public class DBItemHistoryOrder extends DBItem {
     @Column(name = "[WORKFLOW_TITLE]", nullable = true)
     private String workflowTitle;// TODO
 
-    /** Foreign key - TABLE_HISTORY_ORDERS.ID, KEY */
+    /** Foreign key - TABLE_HISTORY_ORDERS.ID */
     @Column(name = "[MAIN_PARENT_ID]", nullable = false)
     private Long mainParentId;// db
 
     @Column(name = "[PARENT_ID]", nullable = false)
     private Long parentId;// db
 
-    @Column(name = "[PARENT_ORDER_KEY]", nullable = false)
-    private String parentOrderKey;// db
+    @Column(name = "[PARENT_ORDER_ID]", nullable = false)
+    private String parentOrderId;// db
 
     @Column(name = "[HAS_CHILDREN]", nullable = false)
     @Type(type = "numeric_boolean")
@@ -97,8 +97,8 @@ public class DBItemHistoryOrder extends DBItem {
     @Column(name = "[START_PARAMETERS]", nullable = true)
     private String startParameters;
 
-    @Column(name = "[CURRENT_ORDER_STEP_ID]", nullable = false)
-    private Long currentOrderStepId; // db
+    @Column(name = "[CURRENT_HOS_ID]", nullable = false)
+    private Long currentHistoryOrderStepId; // db
 
     @Column(name = "[END_TIME]", nullable = true)
     private Date endTime;
@@ -109,8 +109,8 @@ public class DBItemHistoryOrder extends DBItem {
     @Column(name = "[END_EVENT_ID]", nullable = true)
     private String endEventId;// event <- order finisched event id
 
-    @Column(name = "[END_ORDER_STEP_ID]", nullable = false)
-    private Long endOrderStepId; // db. TABLE_HISTORY_ORDER_STEPS.ID
+    @Column(name = "[END_HOS_ID]", nullable = false)
+    private Long endHistoryOrderStepId; // db. TABLE_HISTORY_ORDER_STEPS.ID
 
     @Column(name = "[SEVERITY]", nullable = false)
     private Integer severity;
@@ -179,12 +179,12 @@ public class DBItemHistoryOrder extends DBItem {
         controllerId = val;
     }
 
-    public String getOrderKey() {
-        return orderKey;
+    public String getOrderId() {
+        return orderId;
     }
 
-    public void setOrderKey(String val) {
-        orderKey = val;
+    public void setOrderId(String val) {
+        orderId = val;
     }
 
     public String getWorkflowPath() {
@@ -251,15 +251,15 @@ public class DBItemHistoryOrder extends DBItem {
         parentId = val;
     }
 
-    public String getParentOrderKey() {
-        return parentOrderKey;
+    public String getParentOrderId() {
+        return parentOrderId;
     }
 
-    public void setParentOrderKey(String val) {
+    public void setParentOrderId(String val) {
         if (val == null) {
             val = DBLayer.DEFAULT_KEY;
         }
-        parentOrderKey = val;
+        parentOrderId = val;
     }
 
     public void setHasChildren(boolean val) {
@@ -342,12 +342,12 @@ public class DBItemHistoryOrder extends DBItem {
         startParameters = val;
     }
 
-    public Long getCurrentOrderStepId() {
-        return currentOrderStepId;
+    public Long getCurrentHistoryOrderStepId() {
+        return currentHistoryOrderStepId;
     }
 
-    public void setCurrentOrderStepId(Long val) {
-        currentOrderStepId = val;
+    public void setCurrentHistoryOrderStepId(Long val) {
+        currentHistoryOrderStepId = val;
     }
 
     public Date getEndTime() {
@@ -377,12 +377,12 @@ public class DBItemHistoryOrder extends DBItem {
         return endEventId;
     }
 
-    public void setEndOrderStepId(Long val) {
-        endOrderStepId = val;
+    public void setEndHistoryOrderStepId(Long val) {
+        endHistoryOrderStepId = val;
     }
 
-    public Long getEndOrderStepId() {
-        return endOrderStepId;
+    public Long getEndHistoryOrderStepId() {
+        return endHistoryOrderStepId;
     }
 
     public Integer getSeverity() {

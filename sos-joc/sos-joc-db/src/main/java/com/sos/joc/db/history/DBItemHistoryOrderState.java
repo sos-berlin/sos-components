@@ -27,15 +27,15 @@ public class DBItemHistoryOrderState extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    /** Foreign key - TABLE_HISTORY_ORDERS.ID, KEY */
-    @Column(name = "[MAIN_PARENT_ID]", nullable = false)
-    private Long mainParentId;// db
+    /** Foreign key - TABLE_HISTORY_ORDERS.MAIN_PARENT_ID */
+    @Column(name = "[HO_MAIN_PARENT_ID]", nullable = false)
+    private Long historyOrderMainParentId;// db
 
-    @Column(name = "[PARENT_ID]", nullable = false)
-    private Long parentId;// db
+    @Column(name = "[HO_PARENT_ID]", nullable = false)
+    private Long historyOrderParentId;// db
 
-    @Column(name = "[ORDER_ID]", nullable = false)
-    private Long orderId;// HISTORY_ORDERS.ID
+    @Column(name = "[HO_ID]", nullable = false)
+    private Long historyOrderId;// HISTORY_ORDERS.ID
 
     @Column(name = "[STATE]", nullable = false)
     private Integer state;
@@ -66,28 +66,28 @@ public class DBItemHistoryOrderState extends DBItem {
         id = val;
     }
 
-    public Long getMainParentId() {
-        return mainParentId;
+    public Long hetHistoryOrderMainParentId() {
+        return historyOrderMainParentId;
     }
 
-    public void setMainParentId(Long val) {
-        mainParentId = val;
+    public void setHistoryOrderMainParentId(Long val) {
+        historyOrderMainParentId = val;
     }
 
-    public Long getParentId() {
-        return parentId;
+    public Long getHistoryOrderParentId() {
+        return historyOrderParentId;
     }
 
-    public void setParentId(Long val) {
-        parentId = val;
+    public void setHistoryOrderParentId(Long val) {
+        historyOrderParentId = val;
     }
 
-    public Long getOrderId() {
-        return orderId;
+    public Long getHistoryOrderId() {
+        return historyOrderId;
     }
 
-    public void setOrderId(Long val) {
-        orderId = val;
+    public void setHistoryOrderId(Long val) {
+        historyOrderId = val;
     }
 
     public Integer getState() {

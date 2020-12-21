@@ -31,11 +31,11 @@ public class SOSHibernateTest {
             factory = createFactory();
             session = factory.openStatelessSession();
 
-            StringBuilder hql = new StringBuilder("select ho.orderKey as orderKey "); // set aliases for all properties
+            StringBuilder hql = new StringBuilder("select ho.orderId as orderId "); // set aliases for all properties
             hql.append(",hos.id as stepId,hos.jobName as jobName ");
             hql.append("from " + DBLayer.DBITEM_HISTORY_ORDER).append(" ho ");
             hql.append(",").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(" hos ");
-            hql.append("where ho.id=hos.orderId ");
+            hql.append("where ho.id=hos.historyOrderId ");
 
             Query<MyJoinEntity> query = session.createQuery(hql.toString(), MyJoinEntity.class); // pass MyJoinEntity as resultType
             query.setMaxResults(10); // only for this test
@@ -65,18 +65,18 @@ public class SOSHibernateTest {
             factory = createFactory();
             session = factory.openStatelessSession();
 
-            StringBuilder hql = new StringBuilder("select ho.orderKey ");
+            StringBuilder hql = new StringBuilder("select ho.orderId ");
             hql.append(",hos.id, hos.jobName ");
             hql.append("from " + DBLayer.DBITEM_HISTORY_ORDER).append(" ho ");
             hql.append(",").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(" hos ");
-            hql.append("where ho.id=hos.orderId ");
+            hql.append("where ho.id=hos.historyOrderId ");
 
             Query<Object[]> query = session.createQuery(hql.toString());
             query.setMaxResults(10); // only for this test
             List<Object[]> result = session.getResultList(query);
             for (Object[] item : result) {
                 LOGGER.info(SOSHibernate.toString(item));
-                LOGGER.info("   ho.orderKey=" + item[0]);
+                LOGGER.info("   ho.orderId=" + item[0]);
                 LOGGER.info("   hos.id=" + item[1]);
                 LOGGER.info("   hos.jobName=" + item[2]);
             }
@@ -141,16 +141,16 @@ public class SOSHibernateTest {
             session = factory.openStatelessSession();
 
             StringBuilder sql = new StringBuilder("select ");
-            sql.append(factory.quoteColumn("ho.ORDER_KEY")).append(" as orderKey "); // quote columns and set aliases for all properties
+            sql.append(factory.quoteColumn("ho.ORDER_ID")).append(" as orderId "); // quote columns and set aliases for all properties
             sql.append(",").append(factory.quoteColumn("hos.ID")).append(" as stepId ");
             sql.append(",").append(factory.quoteColumn("hos.JOB_NAME")).append(" as jobName ");
             sql.append("from " + DBLayer.TABLE_HISTORY_ORDERS).append(" ho ");
             sql.append(",").append(DBLayer.TABLE_HISTORY_ORDER_STEPS).append(" hos ");
             sql.append("where ");
-            sql.append(factory.quoteColumn("ho.ID")).append("=").append(factory.quoteColumn("hos.ORDER_ID"));
+            sql.append(factory.quoteColumn("ho.ID")).append("=").append(factory.quoteColumn("hos.HO_ID"));
 
             NativeQuery<MyJoinEntity> query = session.createNativeQuery(sql.toString(), MyJoinEntity.class); // pass MyJoinEntity as resultType
-            query.addScalar("orderKey", StringType.INSTANCE); // map column value to property type
+            query.addScalar("orderId", StringType.INSTANCE); // map column value to property type
             query.addScalar("stepId", LongType.INSTANCE);
             query.addScalar("jobName", StringType.INSTANCE);
 

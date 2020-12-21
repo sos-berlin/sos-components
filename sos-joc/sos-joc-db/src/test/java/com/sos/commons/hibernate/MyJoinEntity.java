@@ -3,7 +3,7 @@ package com.sos.commons.hibernate;
 public class MyJoinEntity {
 
     private Long stepId;
-    private String orderKey;
+    private String orderId;
     private String jobName;
 
     public Long getStepId() {
@@ -14,12 +14,12 @@ public class MyJoinEntity {
         stepId = val;
     }
 
-    public String getOrderKey() {
-        return orderKey;
+    public String getOrderId() {
+        return orderId;
     }
 
-    public void setOrderKey(String val) {
-        orderKey = val;
+    public void setOrderId(String val) {
+        orderId = val;
     }
 
     public String getJobName() {

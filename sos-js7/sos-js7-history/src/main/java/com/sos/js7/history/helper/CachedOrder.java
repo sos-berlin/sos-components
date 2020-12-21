@@ -6,7 +6,7 @@ import java.util.Date;
 public class CachedOrder {
 
     private final Long id;
-    private final String orderKey;
+    private final String orderId;
     private final Long mainParentId;
     private final Long parentId;
     private final String startWorkflowPosition;
@@ -17,12 +17,12 @@ public class CachedOrder {
     private Integer state;
     private boolean hasChildren;
     private boolean hasStates;
-    private Long currentOrderStepId;
+    private Long currentHistoryOrderStepId;
     private Date startTime;
 
     public CachedOrder(DBItemHistoryOrder item) {
         id = item.getId();
-        orderKey = item.getOrderKey();
+        orderId = item.getOrderId();
         mainParentId = item.getMainParentId();
         parentId = item.getParentId();
         startWorkflowPosition = item.getStartWorkflowPosition();
@@ -30,7 +30,7 @@ public class CachedOrder {
         state = item.getState();
         hasChildren = item.getHasChildren();
         hasStates = item.getHasStates();
-        currentOrderStepId = item.getCurrentOrderStepId();
+        currentHistoryOrderStepId = item.getCurrentHistoryOrderStepId();
         startTime = item.getStartTime();
         endTime = item.getEndTime();
         created = new Date();
@@ -40,8 +40,8 @@ public class CachedOrder {
         return id;
     }
 
-    public String getOrderKey() {
-        return orderKey;
+    public String getOrderId() {
+        return orderId;
     }
 
     public Long getMainParentId() {
@@ -84,12 +84,12 @@ public class CachedOrder {
         hasStates = val;
     }
 
-    public Long getCurrentOrderStepId() {
-        return currentOrderStepId;
+    public Long getCurrentHistoryOrderStepId() {
+        return currentHistoryOrderStepId;
     }
 
-    public void setCurrentOrderStepId(Long val) {
-        currentOrderStepId = val;
+    public void setCurrentHistoryOrderStepId(Long val) {
+        currentHistoryOrderStepId = val;
     }
 
     public void setStartTime(Date val) {

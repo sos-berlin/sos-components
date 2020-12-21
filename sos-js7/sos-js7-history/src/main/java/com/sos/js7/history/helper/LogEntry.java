@@ -20,10 +20,10 @@ public class LogEntry {
     private final EventType eventType;
     private final Date controllerDatetime;
     private final Date agentDatetime;
-    private String orderKey = ".";
-    private Long mainOrderId = new Long(0L);
-    private Long orderId = new Long(0L);
-    private Long orderStepId = new Long(0L);
+    private String orderId = ".";
+    private Long historyOrderMainParentId = new Long(0L);
+    private Long historyOrderId = new Long(0L);
+    private Long historyOrderStepId = new Long(0L);
     private String position;
     private String jobName = ".";
     private String agentTimezone = null;
@@ -50,11 +50,11 @@ public class LogEntry {
     }
 
     public void onOrder(CachedOrder order, String workflowPosition, List<FatForkedChild> childs) {
-        orderKey = order.getOrderKey();
-        mainOrderId = order.getMainParentId();
-        orderId = order.getId();
+        orderId = order.getOrderId();
+        historyOrderMainParentId = order.getMainParentId();
+        historyOrderId = order.getId();
         position = workflowPosition;
-        chunk = order.getOrderKey();
+        chunk = order.getOrderId();
     }
 
     public void setError(String state, CachedOrderStep cos) {
@@ -74,9 +74,9 @@ public class LogEntry {
     }
 
     public void onOrderJoined(CachedOrder order, String workflowPosition, List<String> childs, FatOutcome outcome) {
-        orderKey = order.getOrderKey();
-        mainOrderId = order.getMainParentId();
-        orderId = order.getId();
+        orderId = order.getOrderId();
+        historyOrderMainParentId = order.getMainParentId();
+        historyOrderId = order.getId();
         position = workflowPosition;
         chunk = String.join(", ", childs);
         if (outcome != null) {
@@ -92,10 +92,10 @@ public class LogEntry {
     }
 
     public void onOrderStep(CachedOrderStep orderStep, String entryChunk) {
-        orderKey = orderStep.getOrderKey();
-        mainOrderId = orderStep.getMainOrderId();
         orderId = orderStep.getOrderId();
-        orderStepId = orderStep.getId();
+        historyOrderMainParentId = orderStep.getHistoryOrderMainParentId();
+        historyOrderId = orderStep.getHistoryOrderId();
+        historyOrderStepId = orderStep.getId();
         position = orderStep.getWorkflowPosition();
         jobName = orderStep.getJobName();
         agentTimezone = orderStep.getAgentTimezone();
@@ -155,20 +155,20 @@ public class LogEntry {
         return eventType;
     }
 
-    public String getOrderKey() {
-        return orderKey;
-    }
-
-    public Long getMainOrderId() {
-        return mainOrderId;
-    }
-
-    public Long getOrderId() {
+    public String getOrderId() {
         return orderId;
     }
 
-    public Long getOrderStepId() {
-        return orderStepId;
+    public Long getHistoryOrderMainParentId() {
+        return historyOrderMainParentId;
+    }
+
+    public Long getHistoryOrderId() {
+        return historyOrderId;
+    }
+
+    public Long getHistoryOrderStepId() {
+        return historyOrderStepId;
     }
 
     public String getPosition() {
