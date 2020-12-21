@@ -62,7 +62,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     private static final String API_CALL = "./inventory/deployment/deploy";
     private static final Logger LOGGER = LoggerFactory.getLogger(DeployImpl.class);
     private DBLayerDeploy dbLayer = null;
-    // private boolean hasErrors = false;
     private List<Err419> listOfErrors = new ArrayList<Err419>();
 
     @Override
@@ -163,7 +162,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
 
                 if (foldersToDelete != null && !foldersToDelete.isEmpty()) {
                     foldersToDelete.stream().map(Config::getConfiguration).map(item -> dbLayer.getLatestDepHistoryItemsFromFolder(
-                            item.getPath(), controllerId)).forEach(item -> itemsFromFolderToDelete.addAll(item));
+                            item.getPath(), controllerId, item.getRecursive())).forEach(item -> itemsFromFolderToDelete.addAll(item));
                 }
                 if (unsignedDrafts != null) {
                     unsignedDrafts.stream().filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).forEach(
@@ -263,9 +262,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 }
             }
 
-            // if (hasErrors) {
-            // return JOCDefaultResponse.responseStatus419(listOfErrors);
-            // } else {
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             // }
         } catch (JocException e) {
@@ -411,6 +407,9 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 Set<Long> configurationIdsToDelete = itemsToDelete.stream()
                         .map(item -> dbLayer.getInventoryConfigurationIdByPathAndType(item.getPath(), item.getType()))
                         .collect(Collectors.toSet());
+                foldersToDelete.stream()
+                    .forEach(item -> configurationIdsToDelete.addAll(
+                        dbLayer.getDeployableInventoryConfigurationIdsByFolder(item.getConfiguration().getPath(), item.getConfiguration().getRecursive())));
                 Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer);
                 createAuditLogForEach(deletedDeployItems, deployFilter, controllerId, false, versionIdForDelete);
                 JocInventory.deleteConfigurations(configurationIdsToDelete);

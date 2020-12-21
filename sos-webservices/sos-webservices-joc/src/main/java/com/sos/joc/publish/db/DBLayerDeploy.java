@@ -165,6 +165,36 @@ public class DBLayerDeploy {
         }
     }
 
+    public List<Long> getDeployableInventoryConfigurationIdsByFolder(String folder, boolean recursive)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("select id from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            if (recursive) {
+                sql.append(" where folder like :folder");
+            } else {
+                sql.append(" where folder = :folder");
+            }
+            sql.append(" and type in (:types)");  
+            Query<Long> query = session.createQuery(sql.toString());
+            if (recursive) {
+                query.setParameter("folder", MatchMode.START.toMatchString(folder));
+            } else {
+                query.setParameter("folder", folder);
+            }
+            query.setParameterList("types", Arrays.asList(new Integer[] {
+                    ConfigurationType.WORKFLOW.intValue(), 
+                    ConfigurationType.JUNCTION.intValue(),
+                    ConfigurationType.JOBCLASS.intValue(),
+                    ConfigurationType.LOCK.intValue()}));
+            return session.getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
     public Long getInventoryConfigurationIdByPathAndType(String path, Integer type)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
@@ -947,19 +977,31 @@ public class DBLayerDeploy {
     }
 
     public List<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolder (String folder, String controllerId) {
+         return getLatestDepHistoryItemsFromFolder(folder, controllerId, false);
+    }
+
+    public List<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolder (String folder, String controllerId, boolean recursive) {
         try {
             StringBuilder hql = new StringBuilder("select dep from ")
                     .append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
             hql.append(" where dep.id = (")
                 .append("select max(history.id) from ")
                 .append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
-            hql.append(" where history.folder = :folder")
-                .append(" and history.controllerId = :controllerId")
+            if (recursive) {
+                hql.append(" where history.folder like :folder");
+            } else {
+                hql.append(" where history.folder = :folder");
+            }
+            hql.append(" and history.controllerId = :controllerId")
                 .append(" and history.state = 0")
                 .append(" and history.path = dep.path group by history.path")
                 .append(")");
             Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
-            query.setParameter("folder", folder);
+            if (recursive) {
+                query.setParameter("folder", MatchMode.START.toMatchString(folder));
+            } else {
+                query.setParameter("folder", folder);
+            }
             query.setParameter("controllerId", controllerId);
             return session.getResultList(query);
         } catch (SOSHibernateException e) {
