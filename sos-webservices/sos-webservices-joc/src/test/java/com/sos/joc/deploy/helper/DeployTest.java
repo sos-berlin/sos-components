@@ -3,7 +3,7 @@ package com.sos.joc.deploy.helper;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -32,7 +32,7 @@ import js7.data.agent.AgentRef;
 import js7.data.item.VersionId;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.data.agent.JAgentRef;
-import js7.proxy.javaapi.data.item.JUpdateRepoOperation;
+import js7.proxy.javaapi.data.item.JUpdateItemOperation;
 import reactor.core.publisher.Flux;
 
 public class DeployTest {
@@ -70,7 +70,6 @@ public class DeployTest {
     @Test
     public void testDeployWorkflowWithPGP() throws Exception {
         String versionId = "1";
-        String agentId = "agent";
 
         // 1 - redefine Version (e.g. when already deployed)
         Workflow w = Globals.objectMapper.readValue(Files.readAllBytes(WORKFLOW), Workflow.class);
@@ -89,29 +88,29 @@ public class DeployTest {
 
         // 3 - deploy
         JControllerApi api = proxy.getControllerApi(ProxyUser.JOC, CONTROLLER_URI_PRIMARY);
-        updateRepoAgent(api, agentId);
-        updateRepoController(api, workflowOriginal, workflowSigned, SIGNATURE_TYPE_PGP, versionId);
+        addOrChangeAgent(api, "agent");
+        addOrChangeItem(api, workflowOriginal, workflowSigned, SIGNATURE_TYPE_PGP, versionId);
 
     }
 
-    @SuppressWarnings("deprecation")
-    private void updateRepoAgent(JControllerApi api, String agentId) throws InterruptedException, ExecutionException {
-        List<JAgentRef> agents = new ArrayList<JAgentRef>();
+    private void addOrChangeAgent(JControllerApi api, String agentId) throws InterruptedException, ExecutionException {
         JAgentRef agent = JAgentRef.apply(AgentRef.apply(AgentId.of(agentId), AGENT_URI));
-        agents.add(agent);
-        Either<Problem, Void> answer = api.updateAgentRefs(agents).get();
-        LOGGER.info("[updateRepoAgent][" + agentId + "]" + SOSString.toString(answer));
+        List<JAgentRef> agents = Arrays.asList(agent);
+
+        Either<Problem, Void> answer = api.updateItems(Flux.fromIterable(agents).map(JUpdateItemOperation::addOrChange)).get();
+        LOGGER.info("[addOrChangeAgent][" + agentId + "]" + SOSString.toString(answer));
+
     }
 
-    @SuppressWarnings("deprecation")
-    private void updateRepoController(JControllerApi api, String workflowOriginal, String workflowSigned, String signatureType, String versionId)
+    private void addOrChangeItem(JControllerApi api, String contentOriginal, String contentSigned, String signatureType, String versionId)
             throws InterruptedException, ExecutionException {
-        Set<JUpdateRepoOperation> items = new HashSet<JUpdateRepoOperation>();
-        JUpdateRepoOperation item = JUpdateRepoOperation.addOrReplace(SignedString.of(workflowOriginal, signatureType, workflowSigned));
+        Set<JUpdateItemOperation> items = new HashSet<JUpdateItemOperation>();
+        JUpdateItemOperation item = JUpdateItemOperation.addOrChange(SignedString.of(contentOriginal, signatureType, contentSigned));
         items.add(item);
 
-        Either<Problem, Void> answer = api.updateRepo(VersionId.of(versionId), Flux.fromIterable(items)).get();
-        LOGGER.info("[updateRepoController][" + CONTROLLER_URI_PRIMARY + "]" + SOSString.toString(answer));
+        Either<Problem, Void> answer = api.updateItems(Flux.concat(Flux.just(JUpdateItemOperation.addVersion(VersionId.of(versionId))), Flux
+                .fromIterable(items))).get();
+        LOGGER.info("[addOrChangeItem][" + CONTROLLER_URI_PRIMARY + "]" + SOSString.toString(answer));
     }
 
 }
