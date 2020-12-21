@@ -1,0 +1,101 @@
+{
+    "TYPE"            : "Workflow",
+    "path"            : "/workflow_fork",
+    "versionId"       : "1",
+    "instructions"    : [ 
+        {
+            "TYPE"      : "Execute.Named",
+            "jobName"   : "job_1",
+            "label"     : "job_1_label",
+            "defaultArguments" : {
+                "job_1_instr_p1" : "job_1_instr_p1_value",
+                "job_1_instr_p2" : "job_1_instr_p2_value"
+            }
+        }, 
+        {
+            "TYPE" : "Fork",
+            "branches" : [ 
+            {
+                "id" : "branch_1",
+                "workflow" : {
+                    "instructions" : [ {
+                        "TYPE"      : "Execute.Named",
+                        "jobName"   : "job_b_1",
+                        "label"     : "job_b_1_label"
+                    } ]
+                }
+            }, 
+            {
+                "id" : "branch_2",
+                "workflow" : {
+                    "instructions" : [ {
+                        "TYPE"      : "Execute.Named",
+                        "jobName"   : "job_b_2",
+                        "label"     : "job_b_2_label"
+                    } ]
+                }
+            } ]
+        }, 
+        {
+            "TYPE"      : "Execute.Named",
+            "jobName"   : "job_3",
+            "label"     : "job_3_label"
+        } 
+    ],
+    "jobs" : {
+        "job_1" : {
+            "title"     : "job_1_titel",
+            "agentId"   : "agent",
+            "taskLimit" : 1,
+            "executable" : {
+                "TYPE"      : "ExecutableScript",
+                "script"    : "dir"
+            },
+            "returnCodeMeaning" : {
+                "success" : [ 0 ]
+            },
+            "defaultArguments" : {
+                "job_1_p1" : "job_1_p1_value"
+            }
+        },
+        "job_b_1" : {
+            "title"     : "job_b_1_titel",
+            "agentId" 	: "agent",
+            "taskLimit" : 1,
+            "executable" : {
+                "TYPE" : "ExecutableScript",
+                "script" : "dir"
+            },
+            "returnCodeMeaning" : {
+                "success" : [ 0, 5 ]
+            },
+            "defaultArguments" : {
+                "job_b_1_p1" : "job_b_1_value"
+            }
+        },
+        "job_b_2" : {
+            "title"     : "job_b_2_titel",
+            "agentId" 	: "agent",
+            "taskLimit" : 1,
+            "executable" : {
+                "TYPE" : "ExecutableScript",
+                "script" : "dir"
+            },
+            "defaultArguments" : {
+                "job_b_2_p1" : "job_b_2_value"
+            }
+        },
+        "job_3" : {
+            "title"     : "job_3_titel",
+            "agentId" 	: "agent",
+            "taskLimit" : 1,
+            "executable" : {
+                "TYPE" : "ExecutableScript",
+                "script" : "dir"
+            },
+            "defaultArguments" : {
+                "job_3_p1" : "job_3_p1_value"
+            }
+        }
+    }
+}
