@@ -59,7 +59,7 @@ public class JocClusterConfiguration {
     private void register() {
         services = new ArrayList<>();
         addServiceClass(CLASS_NAME_HISTORY);
-        // addServiceClass(CLASS_NAME_DAILYPLAN);
+        addServiceClass(CLASS_NAME_DAILYPLAN);
     }
 
     private void addServiceClass(String className) {

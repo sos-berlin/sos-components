@@ -2,10 +2,6 @@ package com.sos.js7.order.initiator;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.Timer;
@@ -36,15 +32,14 @@ public class OrderInitiatorMain extends JocClusterService {
     }
 
     @Override
-    public JocClusterAnswer start(List<ControllerConfiguration> masters) {
+    public JocClusterAnswer start(List<ControllerConfiguration> controllers) {
         try {
             LOGGER.info(String.format("[%s]start", getIdentifier()));
+
             setSettings();
-            if (settings.isRunOnStart()) {
-                OrderInitiatorRunner o = new OrderInitiatorRunner(settings,true);
-                o.run();
+            if (settings.getDayAhead() > 0) {
+                resetStartPlannedOrderTimer(controllers);
             }
-            resetStartPlannedOrderTimer();
 
             return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
         } catch (Exception e) {
@@ -56,58 +51,21 @@ public class OrderInitiatorMain extends JocClusterService {
     @Override
     public JocClusterAnswer stop() {
         LOGGER.info(String.format("[%s]stop", getIdentifier()));
-
-        // TODO
-
-        return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
-    }
-
-    private void waitUntilFirstRun() {
-        SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
-        Date firstRun = new Date();
-        try {
-            firstRun = formatter.parse(settings.getFirstRunAt());
-        } catch (ParseException e1) {
-            LOGGER.warn("Wrong format for start time " + settings.getFirstRunAt() + " Using default 00:00:00");
-            try {
-                firstRun = formatter.parse("00:00:00");
-            } catch (ParseException e) {
-                LOGGER.error("Could not parse date. Using now");
-            }
-        }
-        Calendar first = Calendar.getInstance();
-        first.setTime(firstRun);
-        Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.HOUR_OF_DAY, first.get(Calendar.HOUR));
-        cal.set(Calendar.MINUTE, first.get(Calendar.MINUTE));
-        cal.set(Calendar.SECOND, first.get(Calendar.SECOND));
-        firstRun = cal.getTime();
-        Date now = new Date();
-        Long wait = 0L;
-        Long diff = now.getTime() - firstRun.getTime();
-        if (now.before(firstRun)) {
-            wait = diff;
-        } else {
-            wait = 24 * 60 * 1000 - diff;
-        }
-        LOGGER.debug("Waiting for " + wait / 1000 + " seconds until " + settings.getFirstRunAt() + "(UTC)");
-        try {
-            java.lang.Thread.sleep(diff);
-        } catch (InterruptedException e) {
-            LOGGER.warn("Wait time has been interrupted " + e.getCause());
-        }
-
-    }
-
-    private void resetStartPlannedOrderTimer() {
         if (timer != null) {
             timer.cancel();
             timer.purge();
         }
-        waitUntilFirstRun();
+
+        return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
+    }
+
+    private void resetStartPlannedOrderTimer(List<ControllerConfiguration> controllers) {
+        if (timer != null) {
+            timer.cancel();
+            timer.purge();
+        }
         timer = new Timer();
-        LOGGER.debug("Plans will be created every " + settings.getRunInterval() + " s");
-        timer.schedule(new OrderInitiatorRunner(settings,true), 0, settings.getRunInterval() * 1000);
+        timer.schedule(new OrderInitiatorRunner(controllers, settings, true), 0, 10 * 1000);
     }
 
     private void setSettings() throws Exception {
@@ -118,11 +76,9 @@ public class OrderInitiatorMain extends JocClusterService {
             Properties conf = JocConfiguration.readConfiguration(file);
             LOGGER.info(conf.toString());
 
-            settings.setControllerId(conf.getProperty("controller_id"));
-            settings.setDayOffset(conf.getProperty("day_offset"));
-            settings.setRunOnStart("true".equalsIgnoreCase(conf.getProperty("run_on_start", "true")));
-            settings.setRunInterval(conf.getProperty("run_interval", "1440"));
-            settings.setFirstRunAt(conf.getProperty("first_run_at", "00:00:00"));
+            settings.setDayAhead(conf.getProperty("day_ahead"));
+            settings.setTimeZone(conf.getProperty("time_zone"));
+            settings.setPeriodBegin(conf.getProperty("period_begin"));
             settings.setOrderTemplatesDirectory(conf.getProperty("order_templates_directory"));
             settings.setHibernateConfigurationFile(getJocConfig().getHibernateConfiguration());
         } else {

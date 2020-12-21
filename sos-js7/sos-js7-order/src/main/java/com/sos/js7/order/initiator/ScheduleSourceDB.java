@@ -8,7 +8,9 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderSelector;
+import com.sos.joc.model.dailyplan.DailyPlanOrderSelectorDef;
 import com.sos.js7.order.initiator.db.DBLayerSchedules;
 import com.sos.js7.order.initiator.db.FilterSchedules;
 import com.sos.webservices.order.initiator.model.Schedule;
@@ -19,6 +21,12 @@ public class ScheduleSourceDB extends ScheduleSource {
 
     public ScheduleSourceDB(String controllerId) {
         dailyPlanOrderSelector = new DailyPlanOrderSelector();
+        dailyPlanOrderSelector.setSelector(new DailyPlanOrderSelectorDef());
+        dailyPlanOrderSelector.getSelector().setFolders(new ArrayList<Folder>());
+        Folder f = new Folder();
+        f.setFolder("/");
+        f.setRecursive(true);
+        dailyPlanOrderSelector.getSelector().getFolders().add(f);
         dailyPlanOrderSelector.setControllerIds(new ArrayList<String>());
         dailyPlanOrderSelector.getControllerIds().add(controllerId);
     }
@@ -41,7 +49,9 @@ public class ScheduleSourceDB extends ScheduleSource {
 
         List<DBItemInventoryReleasedConfiguration> listOfSchedulesDbItems = dbLayerSchedules.getSchedules(filterSchedules, 0);
         for (DBItemInventoryReleasedConfiguration dbItemInventoryConfiguration : listOfSchedulesDbItems) {
-            listOfSchedules.add(dbItemInventoryConfiguration.getSchedule());
+            if (dbItemInventoryConfiguration.getSchedule().getPlanOrderAutomatically()) {
+                listOfSchedules.add(dbItemInventoryConfiguration.getSchedule());
+            }
         }
 
         return listOfSchedules;

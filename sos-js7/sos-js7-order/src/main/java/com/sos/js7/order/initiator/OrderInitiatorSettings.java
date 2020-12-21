@@ -1,40 +1,28 @@
 package com.sos.js7.order.initiator;
 
 import java.nio.file.Path;
-import java.util.HashSet;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.joc.model.common.Folder;
+import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 
 public class OrderInitiatorSettings {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderInitiatorSettings.class);
+   
     private String controllerId;
-
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
-
     private Path hibernateConfigurationFile;
     private String propertiesFile;
     private String orderTemplatesDirectory;
-    private int dayOffset;
+    private int dayAhead=0;
     private String userAccount = "JS7";
     private String timeZone = "UTC";
     private String periodBegin = "00:00";
-    private boolean runOnStart = true;
     private boolean overwrite = false;
     private boolean submit = true;
-    private int runInterval = 1440;
-    private String firstRunAt = "00:00:00";
- 
+  
     public boolean isSubmit() {
         return submit;
     }
@@ -83,12 +71,12 @@ public class OrderInitiatorSettings {
         this.propertiesFile = propertiesFile;
     }
 
-    public int getDayOffset() {
-        return dayOffset;
+    public int getDayAhead() {
+        return dayAhead;
     }
 
     public void setDayOffset(int dayOffset) {
-        this.dayOffset = dayOffset;
+        this.dayAhead = dayOffset;
     }
 
     public String getOrderTemplatesDirectory() {
@@ -107,45 +95,20 @@ public class OrderInitiatorSettings {
         this.hibernateConfigurationFile = hibernateConfigurationFile;
     }
 
-    public void setDayOffset(String property) {
-        this.dayOffset = Integer.parseInt(property);
+    public void setDayAhead(String dayAhead) {
+        this.dayAhead = Integer.parseInt(dayAhead);
     }
+ 
+ 
 
-    public boolean isRunOnStart() {
-        return runOnStart;
-    }
-
-    public void setRunOnStart(boolean runOnStart) {
-        this.runOnStart = runOnStart;
-    }
-
-    public int getRunInterval() {
-        return runInterval;
-    }
-
-    public void setRunInterval(int runInterval) {
-        this.runInterval = runInterval;
-    }
-
-    public void setRunInterval(String runInterval) {
-        try {
-            this.runInterval = Integer.parseInt(runInterval);
-        } catch (NumberFormatException e) {
-            this.runInterval = 1440;
-            LOGGER.warn("error during converting " + runInterval + " to int");
-            LOGGER.warn("  ... using default 1440");
-
-        }
-    }
-
-    public String getFirstRunAt() {
-        return firstRunAt;
-    }
-
-    public void setFirstRunAt(String firstRunAt) {
-        this.firstRunAt = firstRunAt;
+    
+    public String getControllerId() {
+        return controllerId;
     }
 
     
-
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
+    }
+  
 }

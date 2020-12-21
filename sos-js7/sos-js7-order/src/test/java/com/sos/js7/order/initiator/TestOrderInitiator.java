@@ -49,11 +49,8 @@ public class TestOrderInitiator {
             throw new Exception(String.format("[%s][%s]error on read the history configuration: %s", method, cp, ex.toString()), ex);
         }
 
-        orderInitiatorSettings.setDayOffset(conf.getProperty("day_offset"));
+        orderInitiatorSettings.setDayAhead(conf.getProperty("day_offset"));
         orderInitiatorSettings.setControllerId(conf.getProperty("controller_id"));
-        orderInitiatorSettings.setRunOnStart("true".equalsIgnoreCase(conf.getProperty("run_on_start", "true")));
-        orderInitiatorSettings.setRunInterval(conf.getProperty("run_interval", "1440"));
-        orderInitiatorSettings.setFirstRunAt(conf.getProperty("first_run_at", "00:00:00"));
         String hibernateConfiguration = conf.getProperty("hibernate_configuration_file");
         if (hibernateConfiguration != null) {
             hibernateConfiguration = hibernateConfiguration.trim();

@@ -9,6 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -50,6 +51,8 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
 import com.sos.joc.model.calendar.Period;
+import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
+import com.sos.js7.order.initiator.classes.DailyPlanHelper;
 import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 import com.sos.js7.order.initiator.classes.PlannedOrder;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlanSubmissionHistory;
@@ -65,6 +68,8 @@ public class OrderInitiatorRunner extends TimerTask {
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderInitiatorRunner.class);
     private List<Schedule> listOfSchedules;
     private boolean fromService = true;
+    private Set<String> createdPlans;
+    private List<ControllerConfiguration> controllers;
 
     public List<Schedule> getListOfSchedules() {
         return listOfSchedules;
@@ -79,11 +84,17 @@ public class OrderInitiatorRunner extends TimerTask {
         this.fromService = fromService;
     }
 
+    public OrderInitiatorRunner(List<ControllerConfiguration> controllers, OrderInitiatorSettings orderInitiatorSettings, boolean fromService) {
+        OrderInitiatorGlobals.orderInitiatorSettings = orderInitiatorSettings;
+        this.controllers = controllers;
+        this.fromService = fromService;
+    }
+
     public void generateDailyPlan(String dailyPlanDate, Boolean withSubmit) throws JsonParseException, JsonMappingException,
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
             IOException, ParseException, SOSException, URISyntaxException, JobSchedulerConnectionResetException,
             JobSchedulerConnectionRefusedException, InterruptedException, ExecutionException, TimeoutException {
-        orderListSynchronizer = calculateStartTimes(stringAsDate(dailyPlanDate));
+        orderListSynchronizer = calculateStartTimes(DailyPlanHelper.stringAsDate(dailyPlanDate));
         if (orderListSynchronizer.getListOfPlannedOrders().size() > 0) {
             orderListSynchronizer.addPlannedOrderToControllerAndDB(withSubmit);
         }
@@ -134,26 +145,45 @@ public class OrderInitiatorRunner extends TimerTask {
         }
     }
 
-    public void run() {
+    public void createPlan(java.util.Calendar calendar) throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, ParseException, SOSException,
+            URISyntaxException, InterruptedException, ExecutionException, TimeoutException {
 
+       
         try {
+            for (ControllerConfiguration controllerConfiguration : controllers) {
+                java.util.Calendar dailyPlanCalendar = calendar;
+                dailyPlanCalendar.add(java.util.Calendar.DATE, 1);
+                OrderInitiatorGlobals.orderInitiatorSettings.setControllerId(controllerConfiguration.getCurrent().getId());
+                ScheduleSource scheduleSource = new ScheduleSourceDB(controllerConfiguration.getCurrent().getId());
+                readTemplates(scheduleSource);
 
-            ScheduleSource scheduleSource = new ScheduleSourceDB(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
-            // ScheduleSource scheduleSource = new ScheduleSourceDB("");
-            readTemplates(scheduleSource);
-            java.util.Calendar calendar = java.util.Calendar.getInstance();
-
-            for (int day = 0; day < OrderInitiatorGlobals.orderInitiatorSettings.getDayOffset(); day++) {
-                // generateDailyPlan(calendar);
-                calendar.add(java.util.Calendar.DATE, 1);
+                for (int day = 0; day < OrderInitiatorGlobals.orderInitiatorSettings.getDayAhead(); day++) {
+                    generateDailyPlan(DailyPlanHelper.dateAsString(dailyPlanCalendar.getTime()), true);
+                    dailyPlanCalendar.add(java.util.Calendar.DATE, 1);
+                }
             }
-
-        } catch (IOException | DBConnectionRefusedException | DBInvalidDataException | DBMissingDataException | JocConfigurationException
-                | DBOpenSessionException e) {
+        } catch (SOSHibernateException | IOException | DBConnectionRefusedException | DBInvalidDataException | DBMissingDataException
+                | JocConfigurationException | DBOpenSessionException e) {
             LOGGER.error(e.getMessage(), e);
-        } catch (SOSHibernateException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        }
+
+    }
+
+    public void run() {
+        if (createdPlans == null) {
+            createdPlans = new HashSet<String>();
+        }
+
+        java.util.Calendar calendar = DailyPlanHelper.getDailyplanCalendar();
+        java.util.Calendar now = java.util.Calendar.getInstance(TimeZone.getTimeZone(OrderInitiatorGlobals.orderInitiatorSettings.getTimeZone()));
+        if (!createdPlans.contains(DailyPlanHelper.getDayOfYear(now)) && now.after(calendar)) {
+            createdPlans.add(DailyPlanHelper.getDayOfYear(calendar));
+            try {
+                createPlan(calendar);
+            } catch (JobSchedulerConnectionResetException | JobSchedulerConnectionRefusedException | ParseException | SOSException
+                    | URISyntaxException | InterruptedException | ExecutionException | TimeoutException e) {
+                LOGGER.error(e.getMessage(), e);
+            }
         }
     }
 
@@ -194,50 +224,24 @@ public class OrderInitiatorRunner extends TimerTask {
         }
     }
 
-    private String getDailyPlanDate(Long startTime) {
-        java.util.Calendar calendar = java.util.Calendar.getInstance(TimeZone.getTimeZone(UTC));
-        calendar.setTime(new Date(startTime));
-        return this.dateAsString(calendar.getTime());
-    }
-
-    private String buildOrderKey(Schedule o, Long startTime) {
-        Path path = Paths.get(o.getPath());
-        String shortScheduleName = path.getFileName().toString();
-        if (shortScheduleName.length() > 30) {
-            shortScheduleName = shortScheduleName.substring(0, 30);
-        }
-        return "#" + this.getDailyPlanDate(startTime) + "#P" + "<id" + startTime + ">-" + shortScheduleName;
-    }
-
     private FreshOrder buildFreshOrder(Schedule o, Long startTime) {
         Variables variables = new Variables();
         for (NameValuePair param : o.getVariables()) {
             variables.setAdditionalProperty(param.getName(), param.getValue());
         }
         FreshOrder freshOrder = new FreshOrder();
-        freshOrder.setId(this.buildOrderKey(o, startTime));
+        freshOrder.setId(DailyPlanHelper.buildOrderKey(o, startTime));
         freshOrder.setScheduledFor(startTime);
         freshOrder.setArguments(variables);
         freshOrder.setWorkflowPath(o.getWorkflowPath());
         return freshOrder;
     }
 
-    private String dateAsString(Date date) {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-        String dateS = formatter.format(date);
-        return dateS;
-    }
-
-    private Date stringAsDate(String date) throws ParseException {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-        return formatter.parse(date);
-    }
-
     private void generateNonWorkingDays(Date dailyPlanDate, Schedule o, String controllerId) throws SOSMissingDataException, SOSInvalidDataException,
             JsonParseException, JsonMappingException, DBMissingDataException, DBConnectionRefusedException, DBInvalidDataException, IOException,
             ParseException, JocConfigurationException, DBOpenSessionException, SOSHibernateException {
 
-        Date nextDate = this.getNextDay(dailyPlanDate);
+        Date nextDate = DailyPlanHelper.getNextDay(dailyPlanDate);
 
         if (o.getNonWorkingCalendars() != null) {
             FrequencyResolver fr = new FrequencyResolver();
@@ -247,8 +251,8 @@ public class OrderInitiatorRunner extends TimerTask {
                 Calendar calendar = getCalendar(controllerId, assignedNonWorkingCalendars.getCalendarPath());
                 CalendarDatesFilter calendarFilter = new CalendarDatesFilter();
 
-                calendarFilter.setDateFrom(dateAsString(dailyPlanDate));
-                calendarFilter.setDateTo(dateAsString(nextDate));
+                calendarFilter.setDateFrom(DailyPlanHelper.dateAsString(dailyPlanDate));
+                calendarFilter.setDateTo(DailyPlanHelper.dateAsString(nextDate));
                 calendarFilter.setCalendar(calendar);
                 fr.resolve(calendarFilter);
             }
@@ -258,16 +262,6 @@ public class OrderInitiatorRunner extends TimerTask {
                 listOfNonWorkingDays.put(d, controllerId);
             }
         }
-    }
-
-    private Date getNextDay(Date dateForPlan) throws ParseException {
-        TimeZone timeZone = TimeZone.getTimeZone(OrderInitiatorGlobals.orderInitiatorSettings.getTimeZone());
-
-        java.util.Calendar calendar = java.util.Calendar.getInstance(timeZone);
-
-        calendar.setTime(dateForPlan);
-        calendar.add(java.util.Calendar.DATE, 1);
-        return calendar.getTime();
     }
 
     private OrderListSynchronizer calculateStartTimes(Date dailyPlanDate) throws JsonParseException, JsonMappingException,
@@ -282,7 +276,7 @@ public class OrderInitiatorRunner extends TimerTask {
         }
         SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("OrderInitiatorRunner");
         Date actDate = dailyPlanDate;
-        Date nextDate = this.getNextDay(dailyPlanDate);
+        Date nextDate = DailyPlanHelper.getNextDay(dailyPlanDate);
 
         try {
             OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer();
@@ -307,16 +301,20 @@ public class OrderInitiatorRunner extends TimerTask {
                         Calendar calendar = getCalendar(controllerId, assignedCalendar.getCalendarPath());
                         Calendar restrictions = new Calendar();
 
-                        calendar.setFrom(dateAsString(actDate));
-                        calendar.setTo(dateAsString(nextDate));
+                        String actDateAsString = DailyPlanHelper.dateAsString(actDate);
+                        String nextDateAsString = DailyPlanHelper.dateAsString(nextDate);
+                        String dailyPlanDateAsString = DailyPlanHelper.dateAsString(dailyPlanDate);
+
+                        calendar.setFrom(actDateAsString);
+                        calendar.setTo(nextDateAsString);
                         String calendarJson = new ObjectMapper().writeValueAsString(calendar);
                         restrictions.setIncludes(assignedCalendar.getIncludes());
 
-                        fr.resolveRestrictions(calendarJson, calendarJson, dateAsString(actDate), dateAsString(nextDate));
+                        fr.resolveRestrictions(calendarJson, calendarJson, actDateAsString, nextDateAsString);
                         Set<String> s = fr.getDates().keySet();
                         PeriodResolver periodResolver = new PeriodResolver();
                         for (Period p : assignedCalendar.getPeriods()) {
-                            periodResolver.addStartTimes(p, dateAsString(dailyPlanDate), assignedCalendar.getTimeZone());
+                            periodResolver.addStartTimes(p, dailyPlanDateAsString, assignedCalendar.getTimeZone());
                         }
 
                         for (String d : s) {
@@ -324,7 +322,7 @@ public class OrderInitiatorRunner extends TimerTask {
                             if (listOfNonWorkingDays != null && listOfNonWorkingDays.get(d) != null) {
                                 LOGGER.trace(d + "will be ignored as it is a non working day");
                             } else {
-                                for (Entry<Long, Period> startTime : periodResolver.getStartTimes(d, dateAsString(dailyPlanDate)).entrySet()) {
+                                for (Entry<Long, Period> startTime : periodResolver.getStartTimes(d, dailyPlanDateAsString).entrySet()) {
                                     FreshOrder freshOrder = buildFreshOrder(schedule, startTime.getKey());
 
                                     PlannedOrder plannedOrder = new PlannedOrder();
