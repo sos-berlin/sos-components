@@ -97,7 +97,7 @@ public class DBLayer implements Serializable {
     public static final String DAILY_PLAN_ORDERS_TABLE_SEQUENCE = "SEQ_DPL_ORDERS";
     public static final String DAILY_PLAN_ORDERS_DBITEM = DBItemDailyPlanOrders.class.getSimpleName();
 
-    public static final String DAILY_PLAN_SUBMISSION_HISTORY_TABLE = "DPL_DAILY_PLAN_SUBMISSION_HISTORY";
+    public static final String DAILY_PLAN_SUBMISSION_HISTORY_TABLE = "DPL_SUBMISSION_HISTORY";
     public static final String DAILY_PLAN_SUBMISSION_HISTORY_SEQUENCE = "DPL_SUBHISTORY_SEQ";
     public static final String DAILY_PLAN_SUBMISSION_HISTORY_DBITEM = DBItemDailyPlanSubmissionHistory.class.getSimpleName();
 
