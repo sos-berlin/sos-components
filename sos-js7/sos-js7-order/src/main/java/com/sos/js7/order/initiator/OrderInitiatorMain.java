@@ -9,6 +9,8 @@ import java.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.joc.Globals;
+import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterService;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
@@ -22,7 +24,7 @@ public class OrderInitiatorMain extends JocClusterService {
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderInitiatorMain.class);
 
     private static final String IDENTIFIER = JocClusterServices.dailyplan.name();
-    private static final String PROPERTIES_FILE = "dailyplan.properties";
+    private static final String PROPERTIES_FILE = "/joc/joc.properties";
 
     private OrderInitiatorSettings settings;
     private Timer timer;
@@ -68,22 +70,35 @@ public class OrderInitiatorMain extends JocClusterService {
         timer.schedule(new OrderInitiatorRunner(controllers, settings, true), 0, 60 * 1000);
     }
 
+    private String getProperty(JocCockpitProperties sosCockpitProperties, String prop,String defaults) {
+     String val = defaults;
+        if (sosCockpitProperties != null){
+           val = sosCockpitProperties.getProperty(prop); 
+        }
+        return val;
+    }
+
     private void setSettings() throws Exception {
         settings = new OrderInitiatorSettings();
 
-        Path file = getJocConfig().getResourceDirectory().resolve(PROPERTIES_FILE).normalize();
-        if (Files.exists(file)) {
-            Properties conf = JocConfiguration.readConfiguration(file);
-            LOGGER.info(conf.toString());
-
-            settings.setDayAhead(conf.getProperty("day_ahead"));
-            settings.setTimeZone(conf.getProperty("time_zone"));
-            settings.setPeriodBegin(conf.getProperty("period_begin"));
-            settings.setOrderTemplatesDirectory(conf.getProperty("order_templates_directory"));
-            settings.setHibernateConfigurationFile(getJocConfig().getHibernateConfiguration());
-        } else {
-            LOGGER.info(String.format("[%s]not found. use defaults", file));
+        if (Globals.sosCockpitProperties == null) {
+            Globals.sosCockpitProperties = new JocCockpitProperties();
         }
+
+        // Path file = getJocConfig().getResourceDirectory().resolve(PROPERTIES_FILE).normalize();
+        // if (Files.exists(file)) {
+        // Properties conf = JocConfiguration.readConfiguration(file);
+        // LOGGER.info(conf.toString());
+
+        settings.setDayAhead(getProperty(Globals.sosCockpitProperties, "daily_plan_day_ahead", "0"));
+        settings.setTimeZone(getProperty(Globals.sosCockpitProperties, "daily_plan_time_zone", "UTC"));
+        settings.setPeriodBegin(getProperty(Globals.sosCockpitProperties, "daily_plan_period_begin", "00:00"));
+   
+        settings.setHibernateConfigurationFile(getJocConfig().getHibernateConfiguration());
+
+        // } else {
+        // LOGGER.info(String.format("[%s]not found. use defaults", file));
+        // }
     }
 
 }
