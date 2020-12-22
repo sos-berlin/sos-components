@@ -1485,7 +1485,7 @@ public class DBLayerDeploy {
         folder.setType(ConfigurationType.FOLDER.intValue());
         folder.setPath(path.toString().replace('\\', '/'));
         folder.setName(path.getFileName().toString());
-        folder.setFolder(path.toString().replace('\\', '/'));
+        folder.setFolder(path.getParent().toString().replace('\\', '/'));
         folder.setTitle(null);
         folder.setContent(null);
         folder.setValid(true);
