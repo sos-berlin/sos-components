@@ -50,6 +50,7 @@ import com.sos.js7.history.controller.exception.FatEventOrderStepNotFoundExcepti
 import com.sos.js7.history.controller.proxy.HistoryEventType;
 import com.sos.js7.history.controller.proxy.fatevent.AFatEvent;
 import com.sos.js7.history.controller.proxy.fatevent.AFatEventOrderProcessed;
+import com.sos.js7.history.controller.proxy.fatevent.FatEventAgentCouplingFailed;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventAgentReady;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventControllerReady;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventControllerShutDown;
@@ -224,6 +225,10 @@ public class HistoryModel {
                     case ControllerShutDown:
                         controllerShutDown(dbLayer, (FatEventControllerShutDown) entry);
                         counter.getController().addShutdown();
+                        break;
+                    case AgentCouplingFailed:
+                        agentCouplingFailed(dbLayer, (FatEventAgentCouplingFailed) entry);
+                        counter.getAgent().addCouplingFailed();
                         break;
                     case AgentReady:
                         agentReady(dbLayer, (FatEventAgentReady) entry);
@@ -444,8 +449,9 @@ public class HistoryModel {
                 item.setShutdownTime(entry.getEventDatetime());
                 dbLayer.getSession().update(item);
             } else {
-                LOGGER.info(String.format("[%s][%s][%s][skip]controller not found with the ready time < %s", identifier, entry.getType(),
-                        controllerConfiguration.getCurrent().getId(), getDateAsString(entry.getEventDatetime())));
+                LOGGER.info(String.format("[%s][%s][%s][skip]found with the ready time < %s and shutdown time=%s", identifier, entry.getType(),
+                        controllerConfiguration.getCurrent().getId(), getDateAsString(entry.getEventDatetime()), getDateAsString(item
+                                .getShutdownTime())));
             }
             if (controllerTimezone == null) {
                 controllerTimezone = item.getTimezone();
@@ -467,6 +473,23 @@ public class HistoryModel {
         }
     }
 
+    private void agentCouplingFailed(DBLayerHistory dbLayer, FatEventAgentCouplingFailed entry) throws Exception {
+        DBItemHistoryAgent item = dbLayer.getAgentByCouplingFailedEventId(entry.getId(), String.valueOf(entry.getEventId()));
+        if (item == null) {
+            LOGGER.warn(String.format("[%s][%s][%s][skip]not found agent entry with the ready time < %s", identifier, entry.getType(), entry.getId(),
+                    getDateAsString(entry.getEventDatetime())));
+        } else {
+            if (item.getCouplingFailedTime() == null) {
+                item.setCouplingFailedTime(entry.getEventDatetime());
+                dbLayer.getSession().update(item);
+            } else {
+                LOGGER.info(String.format("[%s][%s][%s][skip]found with the ready time < %s and coupling failed time=%s", identifier, entry.getType(),
+                        entry.getId(), getDateAsString(entry.getEventDatetime()), getDateAsString(item.getCouplingFailedTime())));
+            }
+        }
+        tryStoreCurrentState(dbLayer, entry.getEventId());
+    }
+
     private void agentReady(DBLayerHistory dbLayer, FatEventAgentReady entry) throws Exception {
         DBItemHistoryAgent item = new DBItemHistoryAgent();
         CachedAgent ca = null;
@@ -475,16 +498,16 @@ public class HistoryModel {
             checkControllerTimezone(dbLayer);
 
             try {
-                ca = getCachedAgent(dbLayer, entry.getPath());
+                ca = getCachedAgent(dbLayer, entry.getId());
             } catch (Exception ex) {
             }
 
             item.setControllerId(controllerConfiguration.getCurrent().getId());
-            item.setAgentId(entry.getPath());
+            item.setAgentId(entry.getId());
             item.setUri(entry.getUri());
             item.setTimezone(entry.getTimezone());
-            item.setStartTime(entry.getEventDatetime());
-            item.setEventId(String.valueOf(entry.getEventId()));
+            item.setReadyTime(entry.getEventDatetime());
+            item.setReadyEventId(String.valueOf(entry.getEventId()));
             item.setCreated(new Date());
 
             dbLayer.getSession().save(item);
@@ -499,7 +522,7 @@ public class HistoryModel {
                 LOGGER.error(e.toString(), e);
                 throw e;
             }
-            LOGGER.warn(String.format("[%s][%s][%s]%s", identifier, entry.getType(), entry.getPath(), e.toString()), e);
+            LOGGER.warn(String.format("[%s][%s][%s]%s", identifier, entry.getType(), entry.getId(), e.toString()), e);
             LOGGER.warn(String.format("[%s][ConstraintViolation item]%s", identifier, SOSHibernate.toString(item)));
         }
     }
@@ -700,7 +723,7 @@ public class HistoryModel {
                     LOGGER.warn(String.format("[%s][%s][currentStep not found]id=%s", identifier, co.getOrderId(), co
                             .getCurrentHistoryOrderStepId()));
                 } else {
-                    CachedAgent ca = getCachedAgent(dbLayer, item.getAgentPath());
+                    CachedAgent ca = getCachedAgent(dbLayer, item.getAgentId());
                     step = new CachedOrderStep(item, ca.getTimezone());
                     if (item.getError()) {
                         step.setError(item.getErrorState(), item.getErrorReason(), item.getErrorCode(), item.getErrorText());
@@ -961,7 +984,7 @@ public class HistoryModel {
         try {
             checkControllerTimezone(dbLayer);
 
-            ca = getCachedAgent(dbLayer, entry.getAgentPath());
+            ca = getCachedAgent(dbLayer, entry.getAgentId());
             co = getCachedOrder(dbLayer, entry.getOrderId(), entry.getEventDatetime(), entry.getEventId());
 
             Date agentStartTime = entry.getEventDatetime();
@@ -985,7 +1008,7 @@ public class HistoryModel {
             item.setJobTitle(null);// TODO
             item.setCriticality(JobCriticality.NORMAL);// TODO
 
-            item.setAgentPath(entry.getAgentPath());
+            item.setAgentId(entry.getAgentId());
             item.setAgentUri(ca.getUri());
 
             item.setStartCause(OrderStepStartCause.order.name());// TODO
@@ -1207,11 +1230,11 @@ public class HistoryModel {
                 throw new FatEventOrderStepNotFoundException(String.format("[%s][%s]order step not found. orderId=%s", identifier, currentEventId,
                         orderId), orderId, currentEventId);
             } else {
-                DBItemHistoryAgent agent = dbLayer.getAgent(controllerConfiguration.getCurrent().getId(), item.getAgentPath());
+                DBItemHistoryAgent agent = dbLayer.getLastAgent(controllerConfiguration.getCurrent().getId(), item.getAgentId());
                 if (agent == null) {
                     LOGGER.warn(String.format(
                             "[%s][agent is null]agent timezone can't be identified. set agent log timezone to controller timezone ...", item
-                                    .getAgentPath()));
+                                    .getAgentId()));
                     co = new CachedOrderStep(item, controllerTimezone);
                 } else {
                     co = new CachedOrderStep(item, agent.getTimezone());
@@ -1254,7 +1277,7 @@ public class HistoryModel {
             if (agent == null) {
                 LOGGER.warn(String.format(
                         "[%s][agent not found]agent timezone can't be identified. set agent log timezone to controller timezone ...", item
-                                .getAgentPath()));
+                                .getAgentId()));
                 addCachedOrderStep(orderId, new CachedOrderStep(item, controllerTimezone));
             } else {
                 addCachedOrderStep(orderId, new CachedOrderStep(item, agent.getTimezone()));
@@ -1272,44 +1295,44 @@ public class HistoryModel {
     private CachedAgent getCachedAgent(DBLayerHistory dbLayer, String agentId) throws Exception {
         CachedAgent co = getCachedAgent(agentId);
         if (co == null) {
-            DBItemHistoryAgent item = dbLayer.getAgent(controllerConfiguration.getCurrent().getId(), agentId);
+            DBItemHistoryAgent item = dbLayer.getLastAgent(controllerConfiguration.getCurrent().getId(), agentId);
             if (item == null) {
                 LOGGER.warn(String.format("[%s][%s][%s]agent not found in the history. try to find in the agent instances...", identifier,
                         controllerConfiguration.getCurrent().getId(), agentId));
                 DBItemInventoryAgentInstance inst = dbLayer.getAgentInstance(controllerConfiguration.getCurrent().getId(), agentId);
                 // TODO read from controller API?
                 if (inst == null) {
-                    Date startTime = new Date();
+                    Date readyTime = new Date();
                     String uri = "http://localhost:4445";
 
                     LOGGER.warn(String.format(
-                            "[%s][%s][%s]agent not found in the agent instances. set agent timezone to controller timezone=%s, start time=%s, uri=%s",
-                            identifier, controllerConfiguration.getCurrent().getId(), agentId, controllerTimezone, getDateAsString(startTime), uri));
+                            "[%s][%s][%s]agent not found in the agent instances. set agent timezone to controller timezone=%s, ready time=%s, uri=%s",
+                            identifier, controllerConfiguration.getCurrent().getId(), agentId, controllerTimezone, getDateAsString(readyTime), uri));
 
                     item = new DBItemHistoryAgent();
                     item.setControllerId(controllerConfiguration.getCurrent().getId());
                     item.setAgentId(agentId);
                     item.setUri(uri);
                     item.setTimezone(controllerTimezone);
-                    item.setStartTime(startTime);
-                    item.setEventId(String.valueOf(HistoryUtil.getDateAsEventId(startTime)));
+                    item.setReadyTime(readyTime);
+                    item.setReadyEventId(String.valueOf(HistoryUtil.getDateAsEventId(readyTime)));
                     item.setCreated(new Date());
                 } else {
-                    Date startTime = inst.getStartedAt();
-                    if (startTime == null) {
-                        startTime = new Date();
+                    Date readyTime = inst.getStartedAt();
+                    if (readyTime == null) {
+                        readyTime = new Date();
                     }
                     LOGGER.info(String.format(
-                            "[%s][%s][%s]agent found in the agent instances. set agent timezone to controller timezone=%s, start time=%s", identifier,
-                            controllerConfiguration.getCurrent().getId(), agentId, controllerTimezone, getDateAsString(startTime)));
+                            "[%s][%s][%s]agent found in the agent instances. set agent timezone to controller timezone=%s, ready time=%s", identifier,
+                            controllerConfiguration.getCurrent().getId(), agentId, controllerTimezone, getDateAsString(readyTime)));
 
                     item = new DBItemHistoryAgent();
                     item.setControllerId(controllerConfiguration.getCurrent().getId());
                     item.setAgentId(agentId);
                     item.setUri(inst.getUri());
                     item.setTimezone(controllerTimezone);
-                    item.setStartTime(startTime);
-                    item.setEventId(String.valueOf(HistoryUtil.getDateAsEventId(startTime)));
+                    item.setReadyTime(readyTime);
+                    item.setReadyEventId(String.valueOf(HistoryUtil.getDateAsEventId(readyTime)));
                     item.setCreated(new Date());
                 }
                 dbLayer.getSession().save(item);
@@ -1442,7 +1465,7 @@ public class HistoryModel {
             orderEntry = createOrderLogEntry(entry);
             orderEntry.setControllerDatetime(getDateAsString(entry.getControllerDatetime(), controllerTimezone));
             orderEntry.setAgentDatetime(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone()));
-            orderEntry.setAgentPath(entry.getAgentPath());
+            orderEntry.setAgentPath(entry.getAgentId());
             orderEntry.setAgentUrl(entry.getAgentUri());
             orderEntry.setJob(entry.getJobName());
             orderEntry.setTaskId(entry.getHistoryOrderStepId());

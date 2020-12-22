@@ -6,7 +6,7 @@ import com.sos.js7.history.controller.proxy.HistoryEventType;
 
 public final class FatEventControllerShutDown extends AFatEvent {
 
-    private String controllerId;
+    private String id;
 
     public FatEventControllerShutDown(Long eventId, Date eventDatetime) {
         super(eventId, eventDatetime);
@@ -14,8 +14,8 @@ public final class FatEventControllerShutDown extends AFatEvent {
 
     @Override
     public void set(Object... objects) {
-        if (objects.length >= 1) {
-            this.controllerId = (String) objects[0];
+        if (objects.length > 0) {
+            this.id = (String) objects[0];
         }
     }
 
@@ -24,8 +24,8 @@ public final class FatEventControllerShutDown extends AFatEvent {
         return HistoryEventType.ControllerShutDown;
     }
 
-    public String getControllerId() {
-        return controllerId;
+    public String getId() {
+        return id;
     }
 
 }

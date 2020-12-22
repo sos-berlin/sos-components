@@ -28,6 +28,7 @@ import com.sos.js7.history.controller.configuration.HistoryConfiguration;
 import com.sos.js7.history.controller.model.HistoryModel;
 import com.sos.js7.history.controller.proxy.EventFluxStopper;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry;
+import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryAgentCouplingFailed;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryAgentReady;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryControllerReady;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryOrder;
@@ -35,6 +36,7 @@ import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryOrder.Outco
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.OutcomeType;
 import com.sos.js7.history.controller.proxy.HistoryEventType;
 import com.sos.js7.history.controller.proxy.fatevent.AFatEvent;
+import com.sos.js7.history.controller.proxy.fatevent.FatEventAgentCouplingFailed;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventAgentReady;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventControllerReady;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventControllerShutDown;
@@ -234,15 +236,24 @@ public class HistoryControllerHandler {
                 event = new FatEventControllerReady(entry.getEventId(), entry.getEventDate());
                 event.set(controllerConfig.getCurrent().getId(), cr.getTimezone());
                 break;
+
             case ControllerShutDown:
                 event = new FatEventControllerShutDown(entry.getEventId(), entry.getEventDate());
                 event.set(controllerConfig.getCurrent().getId());
                 break;
+
+            case AgentCouplingFailed:
+                HistoryAgentCouplingFailed acf = entry.getAgentCouplingFailed();
+
+                event = new FatEventAgentCouplingFailed(entry.getEventId(), entry.getEventDate());
+                event.set(acf.getId(), acf.getMessage());
+                break;
+
             case AgentReady:
                 HistoryAgentReady ar = entry.getAgentReady();
 
                 event = new FatEventAgentReady(entry.getEventId(), entry.getEventDate());
-                event.set(ar.getPath(), ar.getUri(), ar.getTimezone());
+                event.set(ar.getId(), ar.getUri(), ar.getTimezone());
                 break;
 
             case OrderAdded:
@@ -289,6 +300,7 @@ public class HistoryControllerHandler {
                 event.set(order.getOrderId(), order.getWorkflowInfo().getPath(), order.getWorkflowInfo().getVersionId(), order.getWorkflowInfo()
                         .getPosition().asList(), order.getArguments(), childs, outcome);
                 break;
+
             case OrderStepStdoutWritten:
                 order = entry.getOrder();
                 OrderStdoutWritten stdout = (OrderStdoutWritten) entry.getEvent();
@@ -310,7 +322,7 @@ public class HistoryControllerHandler {
 
                 event = new FatEventOrderStepStarted(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId(), order.getWorkflowInfo().getPath(), order.getWorkflowInfo().getVersionId(), order.getWorkflowInfo()
-                        .getPosition().asList(), order.getArguments(), order.getStepInfo().getAgentPath(), order.getStepInfo().getJobName());
+                        .getPosition().asList(), order.getArguments(), order.getStepInfo().getAgentId(), order.getStepInfo().getJobName());
                 break;
 
             case OrderStepProcessed:
@@ -326,6 +338,7 @@ public class HistoryControllerHandler {
                 event = new FatEventOrderStepProcessed(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId(), outcome);
                 break;
+
             case OrderFailed:
                 order = entry.getOrder();
 
@@ -339,7 +352,6 @@ public class HistoryControllerHandler {
                 }
                 event = new FatEventOrderFailed(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId(), outcome);
-
                 break;
 
             case OrderBroken:
@@ -352,42 +364,41 @@ public class HistoryControllerHandler {
 
                 event = new FatEventOrderBroken(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId()); // outcome
-
                 break;
+
             case OrderSuspended:
                 order = entry.getOrder();
 
                 event = new FatEventOrderSuspended(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId());
-
                 break;
+
             case OrderSuspendMarked:
                 order = entry.getOrder();
 
                 event = new FatEventOrderSuspendMarked(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId());
-
                 break;
+
             case OrderResumed:
                 order = entry.getOrder();
 
                 event = new FatEventOrderResumed(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId());
-
                 break;
+
             case OrderResumeMarked:
                 order = entry.getOrder();
 
                 event = new FatEventOrderResumeMarked(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId());
-
                 break;
+
             case OrderFinished:
                 order = entry.getOrder();
 
                 event = new FatEventOrderFinished(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId());
-
                 break;
 
             case OrderCancelled:
@@ -395,8 +406,8 @@ public class HistoryControllerHandler {
 
                 event = new FatEventOrderCancelled(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId());
-
                 break;
+
             default:
                 event = new FatEventWithProblem(entry, new Exception("unknown type=" + entry.getEventType()));
                 break;

@@ -15,6 +15,7 @@ import com.sos.js7.history.controller.exception.FatEventProblemException;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
+import js7.controller.data.events.AgentRefStateEvent.AgentCouplingFailed;
 import js7.controller.data.events.AgentRefStateEvent.AgentReady;
 import js7.controller.data.events.ControllerEvent.ControllerReady;
 import js7.data.agent.AgentId;
@@ -103,6 +104,10 @@ public class HistoryEventEntry {
 
     public HistoryControllerReady getControllerReady() {
         return new HistoryControllerReady();
+    }
+
+    public HistoryAgentCouplingFailed getAgentCouplingFailed() throws FatEventProblemException {
+        return new HistoryAgentCouplingFailed();
     }
 
     public HistoryAgentReady getAgentReady() throws FatEventProblemException {
@@ -344,7 +349,7 @@ public class HistoryEventEntry {
 
             private final WorkflowInfo workflowInfo;
             private final JOrder order;
-            private String agentPath;
+            private String agentId;
             private String jobName;
 
             public StepInfo(WorkflowInfo workflowInfo, JOrder order) {
@@ -352,17 +357,17 @@ public class HistoryEventEntry {
                 this.order = order;
             }
 
-            public String getAgentPath() throws Exception {
-                if (agentPath == null) {
+            public String getAgentId() throws Exception {
+                if (agentId == null) {
                     if (order == null) {
                         throw new Exception(String.format("[%s][%s]missing JOrder", eventId, orderId));
                     }
 
                     Either<Problem, AgentId> pa = order.attached();
                     AgentId arp = getFromEither(pa);
-                    agentPath = arp.string();
+                    agentId = arp.string();
                 }
-                return agentPath;
+                return agentId;
             }
 
             public String getJobName() throws Exception {
@@ -453,17 +458,41 @@ public class HistoryEventEntry {
 
     }
 
+    public class HistoryAgentCouplingFailed {
+
+        private final String id;
+        private String message;
+
+        public HistoryAgentCouplingFailed() throws FatEventProblemException {
+            AgentId arp = (AgentId) keyedEvent.key();
+            id = arp.string();
+
+            Problem p = ((AgentCouplingFailed) event).problem();
+            if (p != null) {
+                message = p.message();
+            }
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+    }
+
     public class HistoryAgentReady {
 
+        private final String id;
         private final String timezone;
-        private final String path;
         private String uri;
 
         public HistoryAgentReady() throws FatEventProblemException {
             timezone = ((AgentReady) event).timezone();
 
             AgentId arp = (AgentId) keyedEvent.key();
-            path = arp.string();
+            id = arp.string();
 
             Either<Problem, JAgentRef> pa = eventAndState.state().idToAgentRef(arp);
             JAgentRef ar = getFromEither(pa);
@@ -476,8 +505,8 @@ public class HistoryEventEntry {
             return timezone;
         }
 
-        public String getPath() {
-            return path;
+        public String getId() {
+            return id;
         }
 
         public String getUri() {

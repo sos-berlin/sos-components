@@ -15,7 +15,7 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_HISTORY_AGENTS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[EVENT_ID]" }) })
+@Table(name = DBLayer.TABLE_HISTORY_AGENTS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[READY_EVENT_ID]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_HISTORY_AGENTS_SEQUENCE, sequenceName = DBLayer.TABLE_HISTORY_AGENTS_SEQUENCE, allocationSize = 1)
 public class DBItemHistoryAgent extends DBItem {
 
@@ -38,11 +38,14 @@ public class DBItemHistoryAgent extends DBItem {
     @Column(name = "[TIMEZONE]", nullable = false)
     private String timezone;
 
-    @Column(name = "[START_TIME]", nullable = false)
-    private Date startTime;
+    @Column(name = "[READY_TIME]", nullable = false)
+    private Date readyTime;
 
-    @Column(name = "[EVENT_ID]", nullable = false)
-    private String eventId;
+    @Column(name = "[COUPLING_FAILED_TIME]", nullable = true)
+    private Date couplingFailedTime;
+
+    @Column(name = "[READY_EVENT_ID]", nullable = false)
+    private String readyEventId;
 
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
@@ -90,20 +93,28 @@ public class DBItemHistoryAgent extends DBItem {
         timezone = val;
     }
 
-    public Date getStartTime() {
-        return startTime;
+    public Date getReadyTime() {
+        return readyTime;
     }
 
-    public void setStartTime(Date val) {
-        startTime = val;
+    public void setReadyTime(Date val) {
+        readyTime = val;
     }
 
-    public String getEventId() {
-        return eventId;
+    public Date getCouplingFailedTime() {
+        return couplingFailedTime;
     }
 
-    public void setEventId(String val) {
-        eventId = val;
+    public void setCouplingFailedTime(Date val) {
+        couplingFailedTime = val;
+    }
+
+    public String getReadyEventId() {
+        return readyEventId;
+    }
+
+    public void setReadyEventId(String val) {
+        readyEventId = val;
     }
 
     public void setCreated(Date val) {

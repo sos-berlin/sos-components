@@ -4,34 +4,34 @@ import java.util.Date;
 
 import com.sos.js7.history.controller.proxy.HistoryEventType;
 
-public final class FatEventControllerReady extends AFatEvent {
+public final class FatEventAgentCouplingFailed extends AFatEvent {
 
     private String id;
-    private String timezone;
+    private String message;
 
-    public FatEventControllerReady(Long eventId, Date eventDatetime) {
+    public FatEventAgentCouplingFailed(Long eventId, Date eventDatetime) {
         super(eventId, eventDatetime);
     }
 
     @Override
     public void set(Object... objects) {
-        if (objects.length == 2) {
+        if (objects.length > 1) {
             this.id = (String) objects[0];
-            this.timezone = (String) objects[1];
+            this.message = (String) objects[1];
         }
     }
 
     @Override
     public HistoryEventType getType() {
-        return HistoryEventType.ControllerReady;
+        return HistoryEventType.AgentCouplingFailed;
     }
 
     public String getId() {
         return id;
     }
 
-    public String getTimezone() {
-        return timezone;
+    public String getMessage() {
+        return message;
     }
 
 }

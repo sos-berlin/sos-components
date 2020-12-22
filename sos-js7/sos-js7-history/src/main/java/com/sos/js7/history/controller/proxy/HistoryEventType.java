@@ -3,6 +3,7 @@ package com.sos.js7.history.controller.proxy;
 import java.util.HashMap;
 import java.util.Map;
 
+import js7.controller.data.events.AgentRefStateEvent.AgentCouplingFailed;
 import js7.controller.data.events.AgentRefStateEvent.AgentReady;
 import js7.controller.data.events.ControllerEvent.ControllerReady;
 import js7.controller.data.events.ControllerEvent.ControllerShutDown;
@@ -15,12 +16,12 @@ import js7.data.order.OrderEvent.OrderForked;
 import js7.data.order.OrderEvent.OrderJoined;
 import js7.data.order.OrderEvent.OrderProcessed;
 import js7.data.order.OrderEvent.OrderProcessingStarted$;
-import js7.data.order.OrderEvent.OrderResumed;
 import js7.data.order.OrderEvent.OrderResumeMarked;
+import js7.data.order.OrderEvent.OrderResumed;
 import js7.data.order.OrderEvent.OrderStderrWritten;
 import js7.data.order.OrderEvent.OrderStdoutWritten;
-import js7.data.order.OrderEvent.OrderSuspended$;
 import js7.data.order.OrderEvent.OrderSuspendMarked;
+import js7.data.order.OrderEvent.OrderSuspended$;
 
 public enum HistoryEventType {
     EventWithProblem("EventWithProblem"),// special case for events with problems
@@ -28,6 +29,8 @@ public enum HistoryEventType {
     ControllerReady(ControllerReady.class.getSimpleName()),
 
     ControllerShutDown(ControllerShutDown.class.getSimpleName()),
+
+    AgentCouplingFailed(AgentCouplingFailed.class.getSimpleName()),
 
     AgentReady(AgentReady.class.getSimpleName()),
 

@@ -96,7 +96,7 @@ public class DBLayerHistory {
         return session.getSingleResult(query);
     }
 
-    public DBItemHistoryAgent getAgent(String controllerId, String agentId) throws SOSHibernateException {
+    public DBItemHistoryAgent getLastAgent(String controllerId, String agentId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ");
         hql.append(DBLayer.DBITEM_HISTORY_AGENT);
         hql.append(" where id = ");
@@ -110,6 +110,23 @@ public class DBLayerHistory {
         Query<DBItemHistoryAgent> query = session.createQuery(hql.toString());
         query.setParameter("controllerId", controllerId);
         query.setParameter("agentId", agentId);
+        return session.getSingleResult(query);
+    }
+
+    public DBItemHistoryAgent getAgentByCouplingFailedEventId(String agentId, String couplingFailedEventId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_AGENT).append(" ");
+        hql.append("where id = ");
+        hql.append("(");
+        hql.append("select max(id) from ");
+        hql.append(DBLayer.DBITEM_HISTORY_AGENT);
+        hql.append(" where agentId=:agentId");
+        hql.append(" and readyEventId < : couplingFailedEventId ");
+        hql.append(")");
+
+        Query<DBItemHistoryAgent> query = session.createQuery(hql.toString());
+        query.setParameter("agentId", agentId);
+        query.setParameter("couplingFailedEventId", couplingFailedEventId);
+
         return session.getSingleResult(query);
     }
 

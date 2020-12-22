@@ -307,7 +307,7 @@ public class LogOrderContent {
     public static ByteArrayInputStream getLogLine(OrderLogItem item) {
         // "masterDatetime [logLevel] [logEvent] id:orderId, pos:position"
         // and further optional additions
-        // " ,Job=job, Agent (url=agentUrl, path=agentPath, time=agentDatetime), Job=job"
+        // " ,Job=job, Agent (url=agentUrl, id=agentId, time=agentDatetime), Job=job"
         // " ,Error (status=error.errorState, code=error.errorCode, reason=error.errorReason, msg=error.errorText), returncode=returncode
         item = getMappedLogItem(item);
         List<String> info = new ArrayList<String>();
@@ -318,7 +318,7 @@ public class LogOrderContent {
                 info.add("url=" + item.getAgentUrl());
             }
             if (item.getAgentPath() != null && !item.getAgentPath().isEmpty()) {
-                info.add("path=" + item.getAgentPath());
+                info.add("id=" + item.getAgentPath());
             }
             if (item.getAgentPath() != null && !item.getAgentPath().isEmpty()) {
                 info.add("time=" + item.getAgentDatetime());

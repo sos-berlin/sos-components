@@ -27,7 +27,7 @@ public class LogEntry {
     private String position;
     private String jobName = ".";
     private String agentTimezone = null;
-    private String agentPath = ".";
+    private String agentId = ".";
     private String agentUri = ".";
     private String chunk;
     private Integer state;
@@ -99,12 +99,12 @@ public class LogEntry {
         position = orderStep.getWorkflowPosition();
         jobName = orderStep.getJobName();
         agentTimezone = orderStep.getAgentTimezone();
-        agentPath = orderStep.getAgentPath();
+        agentId = orderStep.getAgentId();
         agentUri = orderStep.getAgentUri();
         StringBuilder sb;
         switch (eventType) {
         case OrderProcessingStarted:
-            chunk = String.format("[Start] Job=%s, Agent (url=%s, path=%s)", jobName, agentUri, agentPath);
+            chunk = String.format("[Start] Job=%s, Agent (url=%s, id=%s)", jobName, agentUri, agentId);
             return;
         case OrderProcessed:
             returnCode = orderStep.getReturnCode();
@@ -191,8 +191,8 @@ public class LogEntry {
         return agentUri;
     }
 
-    public String getAgentPath() {
-        return agentPath;
+    public String getAgentId() {
+        return agentId;
     }
 
     public Date getControllerDatetime() {

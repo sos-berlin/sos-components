@@ -73,8 +73,8 @@ public class DBItemHistoryOrderStep extends DBItem {
     @Column(name = "[CRITICALITY]", nullable = false)
     private Integer criticality;
 
-    @Column(name = "[AGENT_PATH]", nullable = false)
-    private String agentPath;// event
+    @Column(name = "[AGENT_ID]", nullable = false)
+    private String agentId;// event
 
     @Column(name = "[AGENT_URI]", nullable = false)
     private String agentUri;// event
@@ -274,12 +274,12 @@ public class DBItemHistoryOrderStep extends DBItem {
         setCriticality(val == null ? JobCriticality.NORMAL.intValue() : val.intValue());
     }
 
-    public String getAgentPath() {
-        return agentPath;
+    public String getAgentId() {
+        return agentId;
     }
 
-    public void setAgentPath(String val) {
-        agentPath = val;
+    public void setAgentId(String val) {
+        agentId = val;
     }
 
     public String getAgentUri() {

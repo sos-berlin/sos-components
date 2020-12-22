@@ -12,7 +12,7 @@ public class CachedOrderStep {
     private final String orderId;
     private final String jobName;
     private final String agentTimezone;
-    private final String agentPath;
+    private final String agentId;
     private final String agentUri;
     private final String workflowPosition;
     private Integer returnCode;
@@ -29,7 +29,7 @@ public class CachedOrderStep {
         orderId = item.getOrderId();
         jobName = item.getJobName();
         agentTimezone = timezone;
-        agentPath = item.getAgentPath();
+        agentId = item.getAgentId();
         agentUri = item.getAgentUri();
         workflowPosition = item.getWorkflowPosition();
         returnCode = item.getReturnCode();
@@ -61,8 +61,8 @@ public class CachedOrderStep {
         return agentTimezone;
     }
 
-    public String getAgentPath() {
-        return agentPath;
+    public String getAgentId() {
+        return agentId;
     }
 
     public String getAgentUri() {

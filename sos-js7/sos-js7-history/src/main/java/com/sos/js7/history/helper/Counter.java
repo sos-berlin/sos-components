@@ -13,7 +13,6 @@ public class Counter {
     private final OrderStep orderStep;
 
     private int total = 0;
-    @SuppressWarnings("unused")
     private int processed = 0;
     @SuppressWarnings("unused")
     private int skipped;
@@ -73,7 +72,7 @@ public class Counter {
         if (controller.ready > 0 || controller.shutdown > 0) {
             sb.append(toString(controller)).append(",");
         }
-        if (agent.ready > 0) {
+        if (agent.ready > 0 || agent.couplingFailed > 0) {
             sb.append(toString(agent)).append(",");
         }
         sb.append(toString(order)).append(",").append(toString(orderStep));
@@ -110,9 +109,14 @@ public class Counter {
     public class Agent {
 
         private int ready = 0;
+        private int couplingFailed = 0;
 
         public void addReady() {
             ready += 1;
+        }
+
+        public void addCouplingFailed() {
+            couplingFailed += 1;
         }
     }
 

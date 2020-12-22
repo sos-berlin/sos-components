@@ -6,7 +6,7 @@ import com.sos.js7.history.controller.proxy.HistoryEventType;
 
 public final class FatEventAgentReady extends AFatEvent {
 
-    private String path;
+    private String id;
     private String uri;
     private String timezone;
 
@@ -17,7 +17,7 @@ public final class FatEventAgentReady extends AFatEvent {
     @Override
     public void set(Object... objects) {
         if (objects.length == 3) {
-            this.path = (String) objects[0];
+            this.id = (String) objects[0];
             this.uri = (String) objects[1];
             this.timezone = (String) objects[2];
         }
@@ -28,8 +28,8 @@ public final class FatEventAgentReady extends AFatEvent {
         return HistoryEventType.AgentReady;
     }
 
-    public String getPath() {
-        return path;
+    public String getId() {
+        return id;
     }
 
     public String getUri() {
