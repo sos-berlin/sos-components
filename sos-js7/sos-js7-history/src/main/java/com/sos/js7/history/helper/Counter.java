@@ -70,7 +70,7 @@ public class Counter {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(toString(this)).append(",");
-        if (controller.ready > 0) {
+        if (controller.ready > 0 || controller.shutdown > 0) {
             sb.append(toString(controller)).append(",");
         }
         if (agent.ready > 0) {
@@ -96,9 +96,14 @@ public class Counter {
     public class Controller {
 
         private int ready = 0;
+        private int shutdown = 0;
 
         public void addReady() {
             ready += 1;
+        }
+
+        public void addShutdown() {
+            shutdown += 1;
         }
     }
 

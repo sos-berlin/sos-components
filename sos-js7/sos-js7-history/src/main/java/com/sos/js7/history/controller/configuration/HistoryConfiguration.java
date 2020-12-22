@@ -33,16 +33,16 @@ public class HistoryConfiguration {
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("[history_log_dir=%s]%s", conf.getProperty("history_log_dir"), logDir));
             }
-            Path ld = Paths.get(logDir);
-            if (!Files.exists(ld)) {
-                try {
-                    Files.createDirectory(ld);
-                    if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[history_log_dir=%s]created", logDir));
-                    }
-                } catch (Throwable e) {
-                    throw new Exception(String.format("[%s][can't create directory]%s", ld.toAbsolutePath(), e.toString()), e);
+        }
+        Path ld = Paths.get(logDir);
+        if (!Files.exists(ld)) {
+            try {
+                Files.createDirectory(ld);
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[history_log_dir=%s]created", logDir));
                 }
+            } catch (Throwable e) {
+                throw new Exception(String.format("[%s][can't create directory]%s", ld.toAbsolutePath(), e.toString()), e);
             }
         }
 

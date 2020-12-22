@@ -5,6 +5,7 @@ import java.util.Map;
 
 import js7.controller.data.events.AgentRefStateEvent.AgentReady;
 import js7.controller.data.events.ControllerEvent.ControllerReady;
+import js7.controller.data.events.ControllerEvent.ControllerShutDown;
 import js7.data.order.OrderEvent.OrderAdded;
 import js7.data.order.OrderEvent.OrderBroken;
 import js7.data.order.OrderEvent.OrderCancelled$;
@@ -25,6 +26,8 @@ public enum HistoryEventType {
     EventWithProblem("EventWithProblem"),// special case for events with problems
 
     ControllerReady(ControllerReady.class.getSimpleName()),
+
+    ControllerShutDown(ControllerShutDown.class.getSimpleName()),
 
     AgentReady(AgentReady.class.getSimpleName()),
 

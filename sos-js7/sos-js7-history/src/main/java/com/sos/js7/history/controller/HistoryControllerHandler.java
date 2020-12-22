@@ -37,6 +37,7 @@ import com.sos.js7.history.controller.proxy.HistoryEventType;
 import com.sos.js7.history.controller.proxy.fatevent.AFatEvent;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventAgentReady;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventControllerReady;
+import com.sos.js7.history.controller.proxy.fatevent.FatEventControllerShutDown;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderAdded;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderBroken;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderCancelled;
@@ -232,6 +233,10 @@ public class HistoryControllerHandler {
 
                 event = new FatEventControllerReady(entry.getEventId(), entry.getEventDate());
                 event.set(controllerConfig.getCurrent().getId(), cr.getTimezone());
+                break;
+            case ControllerShutDown:
+                event = new FatEventControllerShutDown(entry.getEventId(), entry.getEventDate());
+                event.set(controllerConfig.getCurrent().getId());
                 break;
             case AgentReady:
                 HistoryAgentReady ar = entry.getAgentReady();

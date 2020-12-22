@@ -52,6 +52,7 @@ import com.sos.js7.history.controller.proxy.fatevent.AFatEvent;
 import com.sos.js7.history.controller.proxy.fatevent.AFatEventOrderProcessed;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventAgentReady;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventControllerReady;
+import com.sos.js7.history.controller.proxy.fatevent.FatEventControllerShutDown;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderAdded;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderForked;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderJoined;
@@ -219,6 +220,10 @@ public class HistoryModel {
                     case ControllerReady:
                         controllerReady(dbLayer, (FatEventControllerReady) entry);
                         counter.getController().addReady();
+                        break;
+                    case ControllerShutDown:
+                        controllerShutDown(dbLayer, (FatEventControllerShutDown) entry);
+                        counter.getController().addShutdown();
                         break;
                     case AgentReady:
                         agentReady(dbLayer, (FatEventAgentReady) entry);
@@ -404,9 +409,9 @@ public class HistoryModel {
             item.setControllerId(controllerConfiguration.getCurrent().getId());
             item.setUri(controllerConfiguration.getCurrent().getUri());
             item.setTimezone(entry.getTimezone());
-            item.setStartTime(eventDate);
+            item.setReadyTime(eventDate);
             item.setIsPrimary(controllerConfiguration.getCurrent().isPrimary());// TODO
-            item.setEventId(String.valueOf(entry.getEventId()));
+            item.setReadyEventId(String.valueOf(entry.getEventId()));
             item.setCreated(new Date());
 
             dbLayer.getSession().save(item);
@@ -428,9 +433,30 @@ public class HistoryModel {
         }
     }
 
+    private void controllerShutDown(DBLayerHistory dbLayer, FatEventControllerShutDown entry) throws Exception {
+        DBItemHistoryController item = dbLayer.getControllerByShutDownEventId(controllerConfiguration.getCurrent().getId(), String.valueOf(entry
+                .getEventId()));
+        if (item == null) {
+            LOGGER.warn(String.format("[%s][%s][%s][skip]not found controller entry with the ready time < %s", identifier, entry.getType(),
+                    controllerConfiguration.getCurrent().getId(), getDateAsString(entry.getEventDatetime())));
+        } else {
+            if (item.getShutdownTime() == null) {
+                item.setShutdownTime(entry.getEventDatetime());
+                dbLayer.getSession().update(item);
+            } else {
+                LOGGER.info(String.format("[%s][%s][%s][skip]controller not found with the ready time < %s", identifier, entry.getType(),
+                        controllerConfiguration.getCurrent().getId(), getDateAsString(entry.getEventDatetime())));
+            }
+            if (controllerTimezone == null) {
+                controllerTimezone = item.getTimezone();
+            }
+        }
+        tryStoreCurrentState(dbLayer, entry.getEventId());
+    }
+
     private void checkControllerTimezone(DBLayerHistory dbLayer) throws Exception {
         if (controllerTimezone == null) {
-            controllerTimezone = dbLayer.getControllerTimezone(controllerConfiguration.getCurrent().getId());
+            controllerTimezone = dbLayer.getLastControllerTimezone(controllerConfiguration.getCurrent().getId());
             if (controllerTimezone == null) {
                 // TODO read from controller api, and instances
                 // throw new Exception(String.format("controller not found: %s", controllerConfiguration.getCurrent().getId()));

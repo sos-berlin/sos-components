@@ -17,7 +17,7 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_HISTORY_CONTROLLERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[EVENT_ID]" }) })
+@Table(name = DBLayer.TABLE_HISTORY_CONTROLLERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[READY_EVENT_ID]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_HISTORY_CONTROLLERS_SEQUENCE, sequenceName = DBLayer.TABLE_HISTORY_CONTROLLERS_SEQUENCE, allocationSize = 1)
 public class DBItemHistoryController extends DBItem {
 
@@ -37,15 +37,18 @@ public class DBItemHistoryController extends DBItem {
     @Column(name = "[TIMEZONE]", nullable = false)
     private String timezone;
 
-    @Column(name = "[START_TIME]", nullable = false)
-    private Date startTime;
+    @Column(name = "[READY_TIME]", nullable = false)
+    private Date readyTime;
+
+    @Column(name = "[SHUTDOWN_TIME]", nullable = true)
+    private Date shutdownTime;
 
     @Column(name = "[IS_PRIMARY]", nullable = false)
     @Type(type = "numeric_boolean")
     private boolean isPrimary;
 
-    @Column(name = "[EVENT_ID]", nullable = false)
-    private String eventId;
+    @Column(name = "[READY_EVENT_ID]", nullable = false)
+    private String readyEventId;
 
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
@@ -85,12 +88,20 @@ public class DBItemHistoryController extends DBItem {
         timezone = val;
     }
 
-    public Date getStartTime() {
-        return startTime;
+    public Date getReadyTime() {
+        return readyTime;
     }
 
-    public void setStartTime(Date val) {
-        startTime = val;
+    public void setReadyTime(Date val) {
+        readyTime = val;
+    }
+
+    public Date getShutdownTime() {
+        return shutdownTime;
+    }
+
+    public void setShutdownTime(Date val) {
+        shutdownTime = val;
     }
 
     public void setIsPrimary(boolean val) {
@@ -101,12 +112,12 @@ public class DBItemHistoryController extends DBItem {
         return isPrimary;
     }
 
-    public String getEventId() {
-        return eventId;
+    public String getReadyEventId() {
+        return readyEventId;
     }
 
-    public void setEventId(String val) {
-        eventId = val;
+    public void setReadyEventId(String val) {
+        readyEventId = val;
     }
 
     public void setCreated(Date val) {

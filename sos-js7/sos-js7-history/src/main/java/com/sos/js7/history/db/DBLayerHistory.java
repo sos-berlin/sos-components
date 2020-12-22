@@ -12,6 +12,7 @@ import com.sos.commons.util.SOSDate;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.db.history.DBItemHistoryAgent;
+import com.sos.joc.db.history.DBItemHistoryController;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.common.HistorySeverity;
@@ -63,7 +64,7 @@ public class DBLayerHistory {
         return session.executeUpdate(query);
     }
 
-    public String getControllerTimezone(String controllerId) throws SOSHibernateException {
+    public String getLastControllerTimezone(String controllerId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select timezone from ");
         hql.append(DBLayer.DBITEM_HISTORY_CONTROLLER);
         hql.append(" where id = ");
@@ -75,6 +76,23 @@ public class DBLayerHistory {
 
         Query<String> query = session.createQuery(hql.toString());
         query.setParameter("controllerId", controllerId);
+        return session.getSingleResult(query);
+    }
+
+    public DBItemHistoryController getControllerByShutDownEventId(String controllerId, String shutDownEventId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_CONTROLLER).append(" ");
+        hql.append("where id = ");
+        hql.append("(");
+        hql.append("select max(id) from ");
+        hql.append(DBLayer.DBITEM_HISTORY_CONTROLLER);
+        hql.append(" where controllerId=:controllerId");
+        hql.append(" and readyEventId < : shutDownEventId ");
+        hql.append(")");
+
+        Query<DBItemHistoryController> query = session.createQuery(hql.toString());
+        query.setParameter("controllerId", controllerId);
+        query.setParameter("shutDownEventId", shutDownEventId);
+
         return session.getSingleResult(query);
     }
 
