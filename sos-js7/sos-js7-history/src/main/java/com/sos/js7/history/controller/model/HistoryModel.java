@@ -483,8 +483,10 @@ public class HistoryModel {
                 item.setCouplingFailedTime(entry.getEventDatetime());
                 dbLayer.getSession().update(item);
             } else {
-                LOGGER.info(String.format("[%s][%s][%s][skip]found with the ready time < %s and coupling failed time=%s", identifier, entry.getType(),
-                        entry.getId(), getDateAsString(entry.getEventDatetime()), getDateAsString(item.getCouplingFailedTime())));
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[%s][%s][%s][skip]found with the ready time < %s and coupling failed time=%s", identifier, entry
+                            .getType(), entry.getId(), getDateAsString(entry.getEventDatetime()), getDateAsString(item.getCouplingFailedTime())));
+                }
             }
         }
         tryStoreCurrentState(dbLayer, entry.getEventId());

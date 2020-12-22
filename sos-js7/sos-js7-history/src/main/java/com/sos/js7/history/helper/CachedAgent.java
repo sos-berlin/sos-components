@@ -7,7 +7,7 @@ public class CachedAgent {
     private final Long id;
     private final String agentId;
     private final String timezone;
-    private String uri;
+    private final String uri;
 
     public CachedAgent(final DBItemHistoryAgent item) {
         id = item.getId();
@@ -32,7 +32,4 @@ public class CachedAgent {
         return uri;
     }
 
-    public void setUri(String val) {
-        uri = val;
-    }
 }
