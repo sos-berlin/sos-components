@@ -1025,6 +1025,33 @@ public class DBLayerDeploy {
             } else {
                 hql.append(" where history.folder = :folder");
             }
+            hql.append(" and history.state = 0")
+                .append(" and history.path = dep.path group by history.path")
+                .append(")");
+            Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
+            if (recursive) {
+                query.setParameter("folder", MatchMode.START.toMatchString(folder));
+            } else {
+                query.setParameter("folder", folder);
+            }
+            return session.getResultList(query);
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+    }
+
+    public List<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolderPerController (String folder, boolean recursive) {
+        try {
+            StringBuilder hql = new StringBuilder("select dep from ")
+                    .append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
+            hql.append(" where dep.id = (")
+                .append("select max(history.id) from ")
+                .append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
+            if (recursive) {
+                hql.append(" where history.folder like :folder");
+            } else {
+                hql.append(" where history.folder = :folder");
+            }
             hql.append(" and history.controllerId = dep.controllerId")
                 .append(" and history.state = 0")
                 .append(" and history.path = dep.path group by history.path")
