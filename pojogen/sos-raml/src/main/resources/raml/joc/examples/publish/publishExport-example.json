@@ -33,7 +33,7 @@
       }
     }, {
       "example2": {
-        "forBackup": {
+        "shallowCopy": {
           "deployables": {
             "draftConfigurations": [{
                 "configuration": {

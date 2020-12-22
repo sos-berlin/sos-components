@@ -20,16 +20,13 @@ import com.sos.jobscheduler.model.job.Job;
 import com.sos.jobscheduler.model.workflow.Branch;
 import com.sos.jobscheduler.model.workflow.Jobs;
 import com.sos.jobscheduler.model.workflow.Workflow;
-import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
-import com.sos.joc.model.publish.ControllerId;
 import com.sos.joc.model.publish.DepHistory;
 import com.sos.joc.model.publish.DepHistoryCompactFilter;
 import com.sos.joc.model.publish.DepHistoryDetailFilter;
-import com.sos.joc.model.publish.DepHistoryItem;
 import com.sos.joc.model.publish.DeployDelete;
 import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.DeployableObjects;
@@ -39,9 +36,9 @@ import com.sos.joc.model.publish.ExcludeConfiguration;
 import com.sos.joc.model.publish.ExportDeployables;
 import com.sos.joc.model.publish.ExportFile;
 import com.sos.joc.model.publish.ExportFilter;
-import com.sos.joc.model.publish.ExportForBackup;
 import com.sos.joc.model.publish.ExportForSigning;
 import com.sos.joc.model.publish.ExportReleasables;
+import com.sos.joc.model.publish.ExportShallowCopy;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.RedeployFilter;
@@ -542,10 +539,10 @@ public class DeploymentTestUtils {
             exportSigning.setControllerId("testsuite");
             exportSigning.setDeployables(exportDeployables);
         } else {
-            ExportForBackup exportBackup = new ExportForBackup();
-            filter.setForBackup(exportBackup);
-            exportBackup.setDeployables(exportDeployables);
-            exportBackup.setReleasables(exportReleasables);
+            ExportShallowCopy exportShallowCopy = new ExportShallowCopy();
+            filter.setShallowCopy(exportShallowCopy);
+            exportShallowCopy.setDeployables(exportDeployables);
+            exportShallowCopy.setReleasables(exportReleasables);
         }
         return filter;
     }

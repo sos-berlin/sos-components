@@ -24,7 +24,7 @@
 </tr>
 <tr>
 <td>``forSigning``</td>
-<td>required oneOf(``forSigning``, ``forBackup``), object</td>
+<td>required oneOf(``forSigning``, ``shallowCopy``), object</td>
 <td>Object consists of a ``controllerId`` and a ``deployables`` object.</td>
 <td>"forSigning" : {
 <div style="padding-left:10px;">"controllerId" : "testsuite",</div>
@@ -135,10 +135,10 @@
 <td>false</td>
 </tr>
 <tr>
-<td>``forBackup``</td>
-<td>required oneOf(``forSigning``, ``forBackup``), object</td>
+<td>``shallowCopy``</td>
+<td>required oneOf(``forSigning``, ``shallowCopy``), object</td>
 <td>Object  of ``deployables`` and ``releasables`` objects.</td>
-<td>"forBackup" : {
+<td>"shallowCopy" : {
 <div style="padding-left:10px;">"deployables" : {</div>
 <div style="padding-left:20px;">...example see below...</div>
 <div style="padding-left:10px;">}, {</div>

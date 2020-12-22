@@ -21,7 +21,7 @@ import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.model.publish.ExportFilter;
-import com.sos.joc.model.publish.ExportForBackup;
+import com.sos.joc.model.publish.ExportShallowCopy;
 import com.sos.joc.model.publish.ExportForSigning;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.publish.db.DBLayerDeploy;
@@ -60,7 +60,7 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
 
             ExportForSigning forSigning = filter.getForSigning();
-            ExportForBackup forBackup = filter.getForBackup();
+            ExportShallowCopy shallowCopy = filter.getShallowCopy();
             
             Set<JSObject> deployables = null;
             Set<ConfigurationObject> releasables = null;
@@ -83,8 +83,8 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                     }
                 });
             } else {
-                deployables = PublishUtils.getDeployableObjectsFromDB(forBackup.getDeployables(), dbLayer);
-                releasables = PublishUtils.getReleasableObjectsFromDB(forBackup.getReleasables(), dbLayer);
+                deployables = PublishUtils.getDeployableObjectsFromDB(shallowCopy.getDeployables(), dbLayer);
+                releasables = PublishUtils.getReleasableObjectsFromDB(shallowCopy.getReleasables(), dbLayer);
             }
             // TODO: create time restricted token to export, too
             // TODO: get JOC Version and Schema Version for later appliance of transformation rules (import)

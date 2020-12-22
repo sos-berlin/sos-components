@@ -3,7 +3,6 @@ package com.sos.joc.model.publish;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -20,8 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "forSigning",
-    "forBackup",
-    "recursive",
+    "shallowCopy",
     "exportFile",
     "auditLog"
 })
@@ -36,20 +34,13 @@ public class ExportFilter {
     @JsonProperty("forSigning")
     private ExportForSigning forSigning;
     /**
-     * ExportForBackupFilter
+     * Shallow Copy Export Filter
      * <p>
      * 
      * 
      */
-    @JsonProperty("forBackup")
-    private ExportForBackup forBackup;
-    /**
-     * Decides if folders contained in the request will be processed recursively. default false
-     * 
-     */
-    @JsonProperty("recursive")
-    @JsonPropertyDescription("Decides if folders contained in the request will be processed recursively. default false")
-    private Boolean recursive;
+    @JsonProperty("shallowCopy")
+    private ExportShallowCopy shallowCopy;
     /**
      * ExportFile
      * <p>
@@ -90,43 +81,25 @@ public class ExportFilter {
     }
 
     /**
-     * ExportForBackupFilter
+     * Shallow Copy Export Filter
      * <p>
      * 
      * 
      */
-    @JsonProperty("forBackup")
-    public ExportForBackup getForBackup() {
-        return forBackup;
+    @JsonProperty("shallowCopy")
+    public ExportShallowCopy getShallowCopy() {
+        return shallowCopy;
     }
 
     /**
-     * ExportForBackupFilter
+     * Shallow Copy Export Filter
      * <p>
      * 
      * 
      */
-    @JsonProperty("forBackup")
-    public void setForBackup(ExportForBackup forBackup) {
-        this.forBackup = forBackup;
-    }
-
-    /**
-     * Decides if folders contained in the request will be processed recursively. default false
-     * 
-     */
-    @JsonProperty("recursive")
-    public Boolean getRecursive() {
-        return recursive;
-    }
-
-    /**
-     * Decides if folders contained in the request will be processed recursively. default false
-     * 
-     */
-    @JsonProperty("recursive")
-    public void setRecursive(Boolean recursive) {
-        this.recursive = recursive;
+    @JsonProperty("shallowCopy")
+    public void setShallowCopy(ExportShallowCopy shallowCopy) {
+        this.shallowCopy = shallowCopy;
     }
 
     /**
@@ -175,12 +148,12 @@ public class ExportFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("forSigning", forSigning).append("forBackup", forBackup).append("recursive", recursive).append("exportFile", exportFile).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("forSigning", forSigning).append("shallowCopy", shallowCopy).append("exportFile", exportFile).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(forBackup).append(exportFile).append(forSigning).append(auditLog).append(recursive).toHashCode();
+        return new HashCodeBuilder().append(exportFile).append(forSigning).append(auditLog).append(shallowCopy).toHashCode();
     }
 
     @Override
@@ -192,7 +165,7 @@ public class ExportFilter {
             return false;
         }
         ExportFilter rhs = ((ExportFilter) other);
-        return new EqualsBuilder().append(forBackup, rhs.forBackup).append(exportFile, rhs.exportFile).append(forSigning, rhs.forSigning).append(auditLog, rhs.auditLog).append(recursive, rhs.recursive).isEquals();
+        return new EqualsBuilder().append(exportFile, rhs.exportFile).append(forSigning, rhs.forSigning).append(auditLog, rhs.auditLog).append(shallowCopy, rhs.shallowCopy).isEquals();
     }
 
 }

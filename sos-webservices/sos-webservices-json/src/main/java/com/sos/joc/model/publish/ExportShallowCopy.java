@@ -10,7 +10,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * ExportForBackupFilter
+ * Shallow Copy Export Filter
  * <p>
  * 
  * 
@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "deployables",
     "releasables"
 })
-public class ExportForBackup {
+public class ExportShallowCopy {
 
     /**
      * Export Deployables
@@ -98,10 +98,10 @@ public class ExportForBackup {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ExportForBackup) == false) {
+        if ((other instanceof ExportShallowCopy) == false) {
             return false;
         }
-        ExportForBackup rhs = ((ExportForBackup) other);
+        ExportShallowCopy rhs = ((ExportShallowCopy) other);
         return new EqualsBuilder().append(deployables, rhs.deployables).append(releasables, rhs.releasables).isEquals();
     }
 

@@ -1,7 +1,7 @@
 {
-	"title": "ExportForBackupFilter",
+	"title": "Shallow Copy Export Filter",
 	"$schema": "http://json-schema.org/draft-04/schema#",
-	"javaType": "com.sos.joc.model.publish.ExportForBackup",
+	"javaType": "com.sos.joc.model.publish.ExportShallowCopy",
 	"type": "object",
   "anyOf": [{
     "required": [

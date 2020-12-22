@@ -10,7 +10,7 @@
       ]
     }, {
       "required": [
-        "forBackup",
+        "shallowCopy",
         "exportFile"
       ]
     }
@@ -19,8 +19,8 @@
     "forSigning": {
       "$ref": "exportForSigningFilter-schema.json"
     },
-    "forBackup": {
-      "$ref": "exportForBackupFilter-schema.json"
+    "shallowCopy": {
+      "$ref": "exportShallowCopyFilter-schema.json"
     },
     "exportFile": {
       "$ref": "exportFile-schema.json"
