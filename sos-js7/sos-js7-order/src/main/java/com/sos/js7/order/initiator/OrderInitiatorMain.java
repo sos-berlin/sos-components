@@ -1,9 +1,6 @@
 package com.sos.js7.order.initiator;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
-import java.util.Properties;
 import java.util.Timer;
 
 import org.slf4j.Logger;
@@ -70,11 +67,16 @@ public class OrderInitiatorMain extends JocClusterService {
         timer.schedule(new OrderInitiatorRunner(controllers, settings, true), 0, 60 * 1000);
     }
 
-    private String getProperty(JocCockpitProperties sosCockpitProperties, String prop,String defaults) {
-     String val = defaults;
-        if (sosCockpitProperties != null){
-           val = sosCockpitProperties.getProperty(prop); 
+    private String getProperty(JocCockpitProperties sosCockpitProperties, String prop, String defaults) {
+        String val = defaults;
+        if (sosCockpitProperties != null) {
+            val = sosCockpitProperties.getProperty(prop);
+            if (val == null) {
+                val = defaults;
+            }
+
         }
+        LOGGER.debug("Setting " + prop + "=" + val);
         return val;
     }
 
@@ -84,21 +86,15 @@ public class OrderInitiatorMain extends JocClusterService {
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties();
         }
-
-        // Path file = getJocConfig().getResourceDirectory().resolve(PROPERTIES_FILE).normalize();
-        // if (Files.exists(file)) {
-        // Properties conf = JocConfiguration.readConfiguration(file);
-        // LOGGER.info(conf.toString());
+ 
 
         settings.setDayAhead(getProperty(Globals.sosCockpitProperties, "daily_plan_day_ahead", "0"));
         settings.setTimeZone(getProperty(Globals.sosCockpitProperties, "daily_plan_time_zone", "UTC"));
         settings.setPeriodBegin(getProperty(Globals.sosCockpitProperties, "daily_plan_period_begin", "00:00"));
-   
+
         settings.setHibernateConfigurationFile(getJocConfig().getHibernateConfiguration());
 
-        // } else {
-        // LOGGER.info(String.format("[%s]not found. use defaults", file));
-        // }
+        
     }
 
 }

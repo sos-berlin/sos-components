@@ -7,7 +7,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.query.Query;
-import org.hibernate.transform.Transformers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -17,15 +18,15 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
-import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
-import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
+import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.webservices.order.initiator.model.Schedule;
-import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 
 public class DBLayerSchedules {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerSchedules.class);
 
     private static final String DBItemInventoryReleasedConfiguration = com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration.class
             .getSimpleName();
@@ -44,7 +45,7 @@ public class DBLayerSchedules {
     private String getWhere(FilterSchedules filter) {
         String where = " type = " + ConfigurationType.SCHEDULE.intValue();
         String and = " and (";
-        String kzu ="";
+        String kzu = "";
 
         if (filter.getListOfSchedules() != null && filter.getListOfSchedules().size() > 0) {
             where += and + SearchStringHelper.getStringListSql(filter.getListOfSchedules(), "path");
@@ -136,9 +137,14 @@ public class DBLayerSchedules {
                 schedule = objectMapper.readValue(dbItemInventoryConfiguration.getContent(), Schedule.class);
             }
 
-            if (!filteredByControllerIds || setOfWorkflows.contains(schedule.getWorkflowPath())) {
-                dbItemInventoryConfiguration.setSchedule(schedule);
-                filteredResultset.add(dbItemInventoryConfiguration);
+            if (schedule != null) {
+                if (!filteredByControllerIds || setOfWorkflows.contains(schedule.getWorkflowPath())) {
+
+                    dbItemInventoryConfiguration.setSchedule(schedule);
+                    filteredResultset.add(dbItemInventoryConfiguration);
+                } else {
+                    LOGGER.debug("Warn: schedule is null " + dbItemInventoryConfiguration.getContent());
+                }
             }
         }
 

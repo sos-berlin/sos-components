@@ -49,8 +49,10 @@ public class ScheduleSourceDB extends ScheduleSource {
 
         List<DBItemInventoryReleasedConfiguration> listOfSchedulesDbItems = dbLayerSchedules.getSchedules(filterSchedules, 0);
         for (DBItemInventoryReleasedConfiguration dbItemInventoryConfiguration : listOfSchedulesDbItems) {
-            if (dbItemInventoryConfiguration.getSchedule().getPlanOrderAutomatically()) {
-                listOfSchedules.add(dbItemInventoryConfiguration.getSchedule());
+            if (dbItemInventoryConfiguration.getSchedule() != null) {
+                if (dbItemInventoryConfiguration.getSchedule().getPlanOrderAutomatically()) {
+                    listOfSchedules.add(dbItemInventoryConfiguration.getSchedule());
+                }
             }
         }
 

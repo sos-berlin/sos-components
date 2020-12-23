@@ -2,10 +2,7 @@ package com.sos.js7.order.initiator;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
