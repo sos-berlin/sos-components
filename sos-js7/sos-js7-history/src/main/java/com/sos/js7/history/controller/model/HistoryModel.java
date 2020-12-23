@@ -474,7 +474,8 @@ public class HistoryModel {
     }
 
     private void agentCouplingFailed(DBLayerHistory dbLayer, FatEventAgentCouplingFailed entry) throws Exception {
-        DBItemHistoryAgent item = dbLayer.getAgentByCouplingFailedEventId(entry.getId(), String.valueOf(entry.getEventId()));
+        DBItemHistoryAgent item = dbLayer.getAgentByCouplingFailedEventId(controllerConfiguration.getCurrent().getId(), entry.getId(), String.valueOf(
+                entry.getEventId()));
         if (item == null) {
             LOGGER.warn(String.format("[%s][%s][%s][skip]not found agent entry with the ready time < %s", identifier, entry.getType(), entry.getId(),
                     getDateAsString(entry.getEventDatetime())));
@@ -494,15 +495,9 @@ public class HistoryModel {
 
     private void agentReady(DBLayerHistory dbLayer, FatEventAgentReady entry) throws Exception {
         DBItemHistoryAgent item = new DBItemHistoryAgent();
-        CachedAgent ca = null;
 
         try {
             checkControllerTimezone(dbLayer);
-
-            try {
-                ca = getCachedAgent(dbLayer, entry.getId());
-            } catch (Exception ex) {
-            }
 
             item.setControllerId(controllerConfiguration.getCurrent().getId());
             item.setAgentId(entry.getId());
@@ -510,14 +505,13 @@ public class HistoryModel {
             item.setTimezone(entry.getTimezone());
             item.setReadyTime(entry.getEventDatetime());
             item.setReadyEventId(String.valueOf(entry.getEventId()));
+            item.setCouplingFailedTime(null);
             item.setCreated(new Date());
 
             dbLayer.getSession().save(item);
 
-            ca = new CachedAgent(item);
-            addCachedAgent(item.getAgentId(), ca);
-
             tryStoreCurrentState(dbLayer, entry.getEventId());
+            addCachedAgent(item.getAgentId(), new CachedAgent(item));
         } catch (SOSHibernateObjectOperationException e) {
             Exception cve = SOSHibernate.findConstraintViolationException(e);
             if (cve == null) {
@@ -526,6 +520,7 @@ public class HistoryModel {
             }
             LOGGER.warn(String.format("[%s][%s][%s]%s", identifier, entry.getType(), entry.getId(), e.toString()), e);
             LOGGER.warn(String.format("[%s][ConstraintViolation item]%s", identifier, SOSHibernate.toString(item)));
+            addCachedAgentByReadyEventId(dbLayer, entry.getId(), entry.getEventId());
         }
     }
 
@@ -1294,9 +1289,20 @@ public class HistoryModel {
         cachedAgents.put(agentId, ca);
     }
 
+    private CachedAgent addCachedAgentByReadyEventId(DBLayerHistory dbLayer, String agentId, Long readyEventId) {
+        CachedAgent ca = null;
+        try {
+            ca = new CachedAgent(dbLayer.getAgentByReadyEventId(controllerConfiguration.getCurrent().getId(), agentId, String.valueOf(readyEventId)));
+        } catch (Throwable e) {
+            ca = getCachedAgent(agentId);
+        }
+        addCachedAgent(agentId, ca);
+        return ca;
+    }
+
     private CachedAgent getCachedAgent(DBLayerHistory dbLayer, String agentId) throws Exception {
-        CachedAgent co = getCachedAgent(agentId);
-        if (co == null) {
+        CachedAgent ca = getCachedAgent(agentId);
+        if (ca == null) {
             DBItemHistoryAgent item = dbLayer.getLastAgent(controllerConfiguration.getCurrent().getId(), agentId);
             if (item == null) {
                 LOGGER.warn(String.format("[%s][%s][%s]agent not found in the history. try to find in the agent instances...", identifier,
@@ -1340,10 +1346,10 @@ public class HistoryModel {
                 dbLayer.getSession().save(item);
             }
 
-            co = new CachedAgent(item);
-            addCachedAgent(agentId, co);
+            ca = new CachedAgent(item);
+            addCachedAgent(agentId, ca);
         }
-        return co;
+        return ca;
     }
 
     private CachedAgent getCachedAgent(String agentId) {
