@@ -1590,7 +1590,7 @@ public class DBLayerDeploy {
                         }
                     }).filter(Objects::nonNull)
                     .collect(Collectors.joining(" and ", " where ", "")));
-            hql.append(" group by commitId order by deploymentDate desc");
+            hql.append(" order by deploymentDate desc");
             Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
             presentFilterAttributes.stream().forEach(item -> {
                 switch (item) {

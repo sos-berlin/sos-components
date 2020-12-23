@@ -1,8 +1,10 @@
 package com.sos.joc.publish.history.impl;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -44,7 +46,14 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
             List<DBItemDeploymentHistory> dbHistoryItems = null;
             if (filter.getCompactFilter() != null) {
                 dbHistoryItems = dbLayer.getDeploymentHistoryCommits(filter);
-                dbHistoryItems.stream().forEach(item -> {
+                Map<String, List<DBItemDeploymentHistory>> groupedAsMap = dbHistoryItems.stream()
+                        .collect(Collectors.groupingBy(DBItemDeploymentHistory::getCommitId));
+                List<DBItemDeploymentHistory> groupedItems = new ArrayList<DBItemDeploymentHistory>();
+                for (String commitId : groupedAsMap.keySet()) {
+                    groupedItems.add(groupedAsMap.get(commitId).get(0));
+                    
+                }
+                groupedItems.stream().forEach(item -> {
                     item.setId(null);
                     item.setType(null);
                     item.setPath(null);
@@ -54,10 +63,11 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
                     item.setSignedContent(null);
                     item.setInventoryConfigurationId(null);
                 });
+                return JOCDefaultResponse.responseStatus200(getDepHistoryFromDBItems(groupedItems));
             } else {
                 dbHistoryItems = dbLayer.getDeploymentHistoryDetails(filter);
+                return JOCDefaultResponse.responseStatus200(getDepHistoryFromDBItems(dbHistoryItems));
             }
-            return JOCDefaultResponse.responseStatus200(getDepHistoryFromDBItems(dbHistoryItems));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
