@@ -1,7 +1,7 @@
 {
-	"title": "Deployable Objects",
+	"title": "Filter for Releasable Objects",
 	"$schema": "http://json-schema.org/draft-04/schema#",
-	"javaType": "com.sos.joc.model.publish.DeployableObjects",
+	"javaType": "com.sos.joc.model.publish.ReleasablesFilter",
 	"type": "object",
   "anyOf": [{
     "required": [
@@ -9,22 +9,26 @@
       ]
     }, {
       "required": [
-        "deployConfigurations"
+        "releasedConfigurations"
       ]
     }
   ],
-  "properties": {
+ 	"properties": {
     "draftConfigurations": {
       "type" : "array",
       "items" : {
         "$ref": "config-schema.json"
       }
     },
-    "deployConfigurations": {
+    "releasedConfigurations": {
       "type" : "array",
       "items" : {
         "$ref": "config-schema.json"
       }
+    },
+    "withoutInvalid": {
+      "type": "boolean",
+      "default": false
     }
-  }
+	}
 }

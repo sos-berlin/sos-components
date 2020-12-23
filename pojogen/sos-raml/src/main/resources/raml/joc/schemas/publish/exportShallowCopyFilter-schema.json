@@ -15,10 +15,10 @@
   ],
  	"properties": {
     "deployables": {
-        "$ref": "exportDeployables-schema.json"
+        "$ref": "deployablesFilter-schema.json"
     },
     "releasables": {
-        "$ref": "exportReleasables-schema.json"
+        "$ref": "releasablesFilter-schema.json"
     }
 	}
 }

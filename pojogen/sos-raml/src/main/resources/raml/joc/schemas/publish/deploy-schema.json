@@ -23,7 +23,7 @@
       }
 		},
 		"store": {
-			"$ref": "deployableObjects-schema.json"
+			"$ref": "deployablesValidFilter-schema.json"
 		},
 		"delete": {
 			"$ref": "deployDelete-schema.json"

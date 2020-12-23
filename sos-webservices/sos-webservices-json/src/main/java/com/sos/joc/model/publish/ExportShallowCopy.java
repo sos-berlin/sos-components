@@ -23,63 +23,63 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class ExportShallowCopy {
 
     /**
-     * Export Deployables
+     * Filter for Deployable Objects
      * <p>
      * 
      * 
      */
     @JsonProperty("deployables")
-    private ExportDeployables deployables;
+    private DeployablesFilter deployables;
     /**
-     * Export Releasables
+     * Filter for Releasable Objects
      * <p>
      * 
      * 
      */
     @JsonProperty("releasables")
-    private ExportReleasables releasables;
+    private ReleasablesFilter releasables;
 
     /**
-     * Export Deployables
+     * Filter for Deployable Objects
      * <p>
      * 
      * 
      */
     @JsonProperty("deployables")
-    public ExportDeployables getDeployables() {
+    public DeployablesFilter getDeployables() {
         return deployables;
     }
 
     /**
-     * Export Deployables
+     * Filter for Deployable Objects
      * <p>
      * 
      * 
      */
     @JsonProperty("deployables")
-    public void setDeployables(ExportDeployables deployables) {
+    public void setDeployables(DeployablesFilter deployables) {
         this.deployables = deployables;
     }
 
     /**
-     * Export Releasables
+     * Filter for Releasable Objects
      * <p>
      * 
      * 
      */
     @JsonProperty("releasables")
-    public ExportReleasables getReleasables() {
+    public ReleasablesFilter getReleasables() {
         return releasables;
     }
 
     /**
-     * Export Releasables
+     * Filter for Releasable Objects
      * <p>
      * 
      * 
      */
     @JsonProperty("releasables")
-    public void setReleasables(ExportReleasables releasables) {
+    public void setReleasables(ReleasablesFilter releasables) {
         this.releasables = releasables;
     }
 

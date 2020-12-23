@@ -30,21 +30,21 @@ public class DeployFilter {
     @JsonProperty("controllerIds")
     private List<String> controllerIds = new ArrayList<String>();
     /**
-     * Deployable Objects
+     * Filter for Deployable Objects
      * <p>
      * 
      * 
      */
     @JsonProperty("store")
-    private DeployableObjects store;
+    private DeployablesValidFilter store;
     /**
-     * DeployDelete
+     * Filter for Deploy-delete operation
      * <p>
      * 
      * 
      */
     @JsonProperty("delete")
-    private DeployDelete delete;
+    private DeployDeleteFilter delete;
     /**
      * auditParams
      * <p>
@@ -65,46 +65,46 @@ public class DeployFilter {
     }
 
     /**
-     * Deployable Objects
+     * Filter for Deployable Objects
      * <p>
      * 
      * 
      */
     @JsonProperty("store")
-    public DeployableObjects getStore() {
+    public DeployablesValidFilter getStore() {
         return store;
     }
 
     /**
-     * Deployable Objects
+     * Filter for Deployable Objects
      * <p>
      * 
      * 
      */
     @JsonProperty("store")
-    public void setStore(DeployableObjects store) {
+    public void setStore(DeployablesValidFilter store) {
         this.store = store;
     }
 
     /**
-     * DeployDelete
+     * Filter for Deploy-delete operation
      * <p>
      * 
      * 
      */
     @JsonProperty("delete")
-    public DeployDelete getDelete() {
+    public DeployDeleteFilter getDelete() {
         return delete;
     }
 
     /**
-     * DeployDelete
+     * Filter for Deploy-delete operation
      * <p>
      * 
      * 
      */
     @JsonProperty("delete")
-    public void setDelete(DeployDelete delete) {
+    public void setDelete(DeployDeleteFilter delete) {
         this.delete = delete;
     }
 

@@ -51,8 +51,9 @@ import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.ExcludeConfiguration;
-import com.sos.joc.model.publish.ExportDeployables;
-import com.sos.joc.model.publish.ExportReleasables;
+import com.sos.joc.model.publish.DeployablesFilter;
+import com.sos.joc.model.publish.DeployablesValidFilter;
+import com.sos.joc.model.publish.ReleasablesFilter;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.RedeployFilter;
@@ -231,24 +232,40 @@ public class DBLayerDeploy {
         return getFilteredDeployments(filter);
     }
 
-    public List<DBItemInventoryConfiguration> getInventoryConfigurationsByFolder(String folder) {
-        return getInventoryConfigurationsByFolder(folder, false, false, false);
+    public List<DBItemInventoryConfiguration> getAllInventoryConfigurationsByFolder(String folder) {
+        return getInventoryConfigurationsByFolder(folder, false, false, false, false);
     }
 
     public List<DBItemInventoryConfiguration> getDeployableInventoryConfigurationsByFolder(String folder) {
-        return getInventoryConfigurationsByFolder(folder, true, false, false);
+        return getInventoryConfigurationsByFolder(folder, true, false, false, false);
+    }
+
+    public List<DBItemInventoryConfiguration> getValidDeployableInventoryConfigurationsByFolder(String folder) {
+        return getInventoryConfigurationsByFolder(folder, true, false, false, true);
     }
 
     public List<DBItemInventoryConfiguration> getDeployableInventoryConfigurationsByFolder(String folder, boolean recursive) {
-        return getInventoryConfigurationsByFolder(folder, true, false, recursive);
+        return getInventoryConfigurationsByFolder(folder, true, false, recursive, false);
+    }
+
+    public List<DBItemInventoryConfiguration> getValidDeployableInventoryConfigurationsByFolder(String folder, boolean recursive) {
+        return getInventoryConfigurationsByFolder(folder, true, false, recursive, true);
     }
 
     public List<DBItemInventoryConfiguration> getReleasableInventoryConfigurationsByFolder(String folder) {
-        return getInventoryConfigurationsByFolder(folder, false, true, false);
+        return getInventoryConfigurationsByFolder(folder, false, true, false, false);
+    }
+
+    public List<DBItemInventoryConfiguration> getValidReleasableInventoryConfigurationsByFolder(String folder) {
+        return getInventoryConfigurationsByFolder(folder, false, true, false, true);
     }
 
     public List<DBItemInventoryConfiguration> getReleasableInventoryConfigurationsByFolder(String folder, boolean recursive) {
-        return getInventoryConfigurationsByFolder(folder, false, true, recursive);
+        return getInventoryConfigurationsByFolder(folder, false, true, recursive, false);
+    }
+
+    public List<DBItemInventoryConfiguration> getValidReleasableInventoryConfigurationsByFolder(String folder, boolean recursive) {
+        return getInventoryConfigurationsByFolder(folder, false, true, recursive, true);
     }
 
     public List<DBItemInventoryReleasedConfiguration> getReleasedInventoryConfigurationsByFolder(String folder) {
@@ -277,7 +294,7 @@ public class DBLayerDeploy {
     }
         
     private List<DBItemInventoryConfiguration> getInventoryConfigurationsByFolder(String folder, boolean onlyDeployables, boolean onlyReleasables,
-            boolean recursive) {
+            boolean recursive, boolean onlyValid) {
         try {
             StringBuilder hql = new StringBuilder();
             hql.append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
@@ -289,6 +306,9 @@ public class DBLayerDeploy {
             if (onlyDeployables || onlyReleasables) {
               hql.append(" and type in (:types)");  
             } 
+            if (onlyValid) {
+                hql.append(" and valid = true");
+            }
             Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
             if (recursive) {
                 query.setParameter("folder", MatchMode.START.toMatchString(folder));
@@ -502,7 +522,7 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemInventoryConfiguration> getFilteredDeployableConfigurations(ExportDeployables filter) throws DBConnectionRefusedException,
+    public List<DBItemInventoryConfiguration> getFilteredDeployableConfigurations(DeployablesFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
         List<Configuration> configurations = filter.getDraftConfigurations().stream()
                 .map(item -> item.getConfiguration())
@@ -514,7 +534,19 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemInventoryConfiguration> getFilteredReleasableConfigurations(ExportReleasables filter) throws DBConnectionRefusedException,
+    public List<DBItemInventoryConfiguration> getFilteredDeployableConfigurations(DeployablesValidFilter filter) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        List<Configuration> configurations = filter.getDraftConfigurations().stream()
+                .map(item -> item.getConfiguration())
+                .collect(Collectors.toList());
+        if(!configurations.isEmpty()) {
+            return getFilteredInventoryConfiguration(configurations);
+        } else {
+            return new ArrayList<DBItemInventoryConfiguration>();
+        }
+    }
+        
+    public List<DBItemInventoryConfiguration> getFilteredReleasableConfigurations(ReleasablesFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
         List<Configuration> configurations = filter.getDraftConfigurations().stream()
                 .map(item -> item.getConfiguration())
@@ -526,7 +558,7 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemInventoryReleasedConfiguration> getFilteredReleasedConfigurations(ExportReleasables filter) throws DBConnectionRefusedException,
+    public List<DBItemInventoryReleasedConfiguration> getFilteredReleasedConfigurations(ReleasablesFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
         List<Configuration> configurations = filter.getReleasedConfigurations().stream()
                 .map(item -> item.getConfiguration())
@@ -538,7 +570,20 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemDeploymentHistory> getFilteredDeployments(ExportDeployables filter) throws DBConnectionRefusedException,
+    public List<DBItemDeploymentHistory> getFilteredDeployments(DeployablesFilter filter) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        List<Configuration> configurations = filter.getDeployConfigurations().stream()
+                .filter(item -> !item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+                .map(item -> item.getConfiguration())
+                .collect(Collectors.toList());
+        if (!configurations.isEmpty()) {
+            return getFilteredDeploymentHistory(configurations);
+        } else {
+            return new ArrayList<DBItemDeploymentHistory>();
+        }
+    }
+
+    public List<DBItemDeploymentHistory> getFilteredDeployments(DeployablesValidFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
         List<Configuration> configurations = filter.getDeployConfigurations().stream()
                 .filter(item -> !item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))

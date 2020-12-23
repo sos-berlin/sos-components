@@ -100,11 +100,12 @@ import com.sos.joc.model.pgp.JocKeyPair;
 import com.sos.joc.model.pgp.JocKeyType;
 import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
+import com.sos.joc.model.publish.DeployablesFilter;
+import com.sos.joc.model.publish.DeployablesValidFilter;
 import com.sos.joc.model.publish.DeploymentState;
-import com.sos.joc.model.publish.ExportDeployables;
-import com.sos.joc.model.publish.ExportReleasables;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
+import com.sos.joc.model.publish.ReleasablesFilter;
 import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignaturePath;
 import com.sos.joc.publish.common.ConfigurationObjectFileExtension;
@@ -1662,9 +1663,21 @@ public abstract class PublishUtils {
         return entries.stream().collect(Collectors.toSet());
     }
     
+    public static Set<DBItemInventoryConfiguration> getValidDeployableInventoryConfigurationsfromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
+        List<DBItemInventoryConfiguration> entries = new ArrayList<DBItemInventoryConfiguration>();
+        folders.stream().forEach(item -> entries.addAll(dbLayer.getValidDeployableInventoryConfigurationsByFolder(item.getPath(), item.getRecursive())));
+        return entries.stream().collect(Collectors.toSet());
+    }
+    
     public static Set<DBItemInventoryConfiguration> getReleasableInventoryConfigurationsfromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
         List<DBItemInventoryConfiguration> entries = new ArrayList<DBItemInventoryConfiguration>();
         folders.stream().forEach(item -> entries.addAll(dbLayer.getReleasableInventoryConfigurationsByFolder(item.getPath(), item.getRecursive())));
+        return entries.stream().collect(Collectors.toSet());
+    }
+    
+    public static Set<DBItemInventoryConfiguration> getValidReleasableInventoryConfigurationsfromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
+        List<DBItemInventoryConfiguration> entries = new ArrayList<DBItemInventoryConfiguration>();
+        folders.stream().forEach(item -> entries.addAll(dbLayer.getValidReleasableInventoryConfigurationsByFolder(item.getPath(), item.getRecursive())));
         return entries.stream().collect(Collectors.toSet());
     }
     
@@ -1698,13 +1711,13 @@ public abstract class PublishUtils {
         return entries.stream().filter(item -> item.getOperation().equals(OperationType.DELETE.value())).collect(Collectors.toSet());
     }
     
-    public static Set<JSObject> getDeployableObjectsFromDB(ExportDeployables filter, DBLayerDeploy dbLayer) 
+    public static Set<JSObject> getDeployableObjectsFromDB(DeployablesFilter filter, DBLayerDeploy dbLayer) 
             throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
             IOException, SOSHibernateException {
         return getDeployableObjectsFromDB(filter, dbLayer, null);
     }
 
-    public static Set<JSObject> getDeployableObjectsFromDB(ExportDeployables filter, DBLayerDeploy dbLayer, String commitId) 
+    public static Set<JSObject> getDeployableObjectsFromDB(DeployablesFilter filter, DBLayerDeploy dbLayer, String commitId) 
             throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
             IOException, SOSHibernateException {
         Set<JSObject> allObjects = new HashSet<JSObject>();
@@ -1763,7 +1776,66 @@ public abstract class PublishUtils {
         return allObjects;
     }
     
-    public static Set<ConfigurationObject> getReleasableObjectsFromDB(ExportReleasables filter, DBLayerDeploy dbLayer) 
+    public static Set<JSObject> getDeployableObjectsFromDB(DeployablesValidFilter filter, DBLayerDeploy dbLayer, String commitId) 
+            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
+            IOException, SOSHibernateException {
+        Set<JSObject> allObjects = new HashSet<JSObject>();
+        if (filter != null) {
+            if (filter.getDeployConfigurations() != null && !filter.getDeployConfigurations().isEmpty()) {
+                List<Configuration> depFolders = filter.getDeployConfigurations().stream()
+                        .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+                        .map(item -> item.getConfiguration())
+                        .collect(Collectors.toList());
+                Set<DBItemDeploymentHistory> allItems = new HashSet<DBItemDeploymentHistory>();
+                if (depFolders != null && !depFolders.isEmpty()) {
+                    allItems.addAll(getLatestActiveDepHistoryEntriesFromFolders(depFolders, dbLayer));
+                }
+                List<DBItemDeploymentHistory> deploymentDbItems = dbLayer.getFilteredDeployments(filter);
+                if (deploymentDbItems != null && !deploymentDbItems.isEmpty()) {
+                    allItems.addAll(deploymentDbItems);
+                }
+                if (!allItems.isEmpty()) {
+                    allItems.stream()
+                        .filter(Objects::nonNull)
+                        .filter(item -> !item.getType().equals(ConfigurationType.FOLDER.intValue()))
+                        .forEach(item -> {
+                            if (commitId != null) {
+                                dbLayer.storeCommitIdForLaterUsage(item, commitId);
+                            }
+                            allObjects.add(getJSObjectFromDBItem(item, commitId));
+                        });
+                }
+            }
+            if (filter.getDraftConfigurations() != null && !filter.getDraftConfigurations().isEmpty()) {
+                List<Configuration> draftFolders = filter.getDraftConfigurations().stream()
+                        .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
+                        .map(item -> item.getConfiguration())
+                        .collect(Collectors.toList());
+                Set<DBItemInventoryConfiguration> allItems = new HashSet<DBItemInventoryConfiguration>();
+                if (draftFolders != null && !draftFolders.isEmpty()) {
+                    allItems.addAll(getDeployableInventoryConfigurationsfromFolders(draftFolders, dbLayer));
+                }
+                List<DBItemInventoryConfiguration> configurationDbItems = dbLayer.getFilteredDeployableConfigurations(filter);
+                if (configurationDbItems != null && !configurationDbItems.isEmpty()) {
+                    allItems.addAll(configurationDbItems);
+                }
+                if (!allItems.isEmpty()) {
+                    allItems.stream()
+                        .filter(Objects::nonNull)
+                        .filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
+                        .forEach(item -> {
+                            if (commitId != null) {
+                                dbLayer.storeCommitIdForLaterUsage(item, commitId);
+                            }
+                            allObjects.add(mapInvConfigToJSObject(item));
+                        });
+                }
+            } 
+        }
+        return allObjects;
+    }
+    
+    public static Set<ConfigurationObject> getReleasableObjectsFromDB(ReleasablesFilter filter, DBLayerDeploy dbLayer) 
             throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
             IOException, SOSHibernateException {
         Set<ConfigurationObject> allObjects = new HashSet<ConfigurationObject>();

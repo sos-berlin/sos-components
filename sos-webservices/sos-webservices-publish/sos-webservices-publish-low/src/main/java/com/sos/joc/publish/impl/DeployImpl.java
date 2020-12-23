@@ -108,7 +108,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 if (configurationDBItemsToStore == null) {
                     configurationDBItemsToStore = new ArrayList<DBItemInventoryConfiguration>();
                 }
-                configurationDBItemsToStore.addAll(PublishUtils.getDeployableInventoryConfigurationsfromFolders(draftFoldersToStore, dbLayer));
+                configurationDBItemsToStore.addAll(PublishUtils.getValidDeployableInventoryConfigurationsfromFolders(draftFoldersToStore, dbLayer));
             }
             List<DBItemDeploymentHistory> depHistoryDBItemsToStore = null;
             if (!deployConfigsToStoreAgain.isEmpty()) {

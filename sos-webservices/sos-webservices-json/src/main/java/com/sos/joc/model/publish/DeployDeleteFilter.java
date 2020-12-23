@@ -12,38 +12,40 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Export Deployables
+ * Filter for Deploy-delete operation
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "draftConfigurations",
     "deployConfigurations"
 })
-public class ExportDeployables {
+public class DeployDeleteFilter {
 
-    @JsonProperty("draftConfigurations")
-    private List<Config> draftConfigurations = new ArrayList<Config>();
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("deployConfigurations")
     private List<Config> deployConfigurations = new ArrayList<Config>();
 
-    @JsonProperty("draftConfigurations")
-    public List<Config> getDraftConfigurations() {
-        return draftConfigurations;
-    }
-
-    @JsonProperty("draftConfigurations")
-    public void setDraftConfigurations(List<Config> draftConfigurations) {
-        this.draftConfigurations = draftConfigurations;
-    }
-
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("deployConfigurations")
     public List<Config> getDeployConfigurations() {
         return deployConfigurations;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("deployConfigurations")
     public void setDeployConfigurations(List<Config> deployConfigurations) {
         this.deployConfigurations = deployConfigurations;
@@ -51,12 +53,12 @@ public class ExportDeployables {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("draftConfigurations", draftConfigurations).append("deployConfigurations", deployConfigurations).toString();
+        return new ToStringBuilder(this).append("deployConfigurations", deployConfigurations).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(draftConfigurations).append(deployConfigurations).toHashCode();
+        return new HashCodeBuilder().append(deployConfigurations).toHashCode();
     }
 
     @Override
@@ -64,11 +66,11 @@ public class ExportDeployables {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ExportDeployables) == false) {
+        if ((other instanceof DeployDeleteFilter) == false) {
             return false;
         }
-        ExportDeployables rhs = ((ExportDeployables) other);
-        return new EqualsBuilder().append(draftConfigurations, rhs.draftConfigurations).append(deployConfigurations, rhs.deployConfigurations).isEquals();
+        DeployDeleteFilter rhs = ((DeployDeleteFilter) other);
+        return new EqualsBuilder().append(deployConfigurations, rhs.deployConfigurations).isEquals();
     }
 
 }

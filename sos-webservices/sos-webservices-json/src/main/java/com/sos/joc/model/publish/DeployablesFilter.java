@@ -12,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Deployable Objects
+ * Filter for Deployable Objects
  * <p>
  * 
  * 
@@ -20,14 +20,17 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "draftConfigurations",
-    "deployConfigurations"
+    "deployConfigurations",
+    "withoutInvalid"
 })
-public class DeployableObjects {
+public class DeployablesFilter {
 
     @JsonProperty("draftConfigurations")
     private List<Config> draftConfigurations = new ArrayList<Config>();
     @JsonProperty("deployConfigurations")
     private List<Config> deployConfigurations = new ArrayList<Config>();
+    @JsonProperty("withoutInvalid")
+    private Boolean withoutInvalid = false;
 
     @JsonProperty("draftConfigurations")
     public List<Config> getDraftConfigurations() {
@@ -49,14 +52,24 @@ public class DeployableObjects {
         this.deployConfigurations = deployConfigurations;
     }
 
+    @JsonProperty("withoutInvalid")
+    public Boolean getWithoutInvalid() {
+        return withoutInvalid;
+    }
+
+    @JsonProperty("withoutInvalid")
+    public void setWithoutInvalid(Boolean withoutInvalid) {
+        this.withoutInvalid = withoutInvalid;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("draftConfigurations", draftConfigurations).append("deployConfigurations", deployConfigurations).toString();
+        return new ToStringBuilder(this).append("draftConfigurations", draftConfigurations).append("deployConfigurations", deployConfigurations).append("withoutInvalid", withoutInvalid).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(draftConfigurations).append(deployConfigurations).toHashCode();
+        return new HashCodeBuilder().append(draftConfigurations).append(withoutInvalid).append(deployConfigurations).toHashCode();
     }
 
     @Override
@@ -64,11 +77,11 @@ public class DeployableObjects {
         if (other == this) {
             return true;
         }
-        if ((other instanceof DeployableObjects) == false) {
+        if ((other instanceof DeployablesFilter) == false) {
             return false;
         }
-        DeployableObjects rhs = ((DeployableObjects) other);
-        return new EqualsBuilder().append(draftConfigurations, rhs.draftConfigurations).append(deployConfigurations, rhs.deployConfigurations).isEquals();
+        DeployablesFilter rhs = ((DeployablesFilter) other);
+        return new EqualsBuilder().append(draftConfigurations, rhs.draftConfigurations).append(withoutInvalid, rhs.withoutInvalid).append(deployConfigurations, rhs.deployConfigurations).isEquals();
     }
 
 }

@@ -12,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Export Releasables
+ * Filter for Deployable Objects
  * <p>
  * 
  * 
@@ -20,14 +20,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "draftConfigurations",
-    "releasedConfigurations"
+    "deployConfigurations"
 })
-public class ExportReleasables {
+public class DeployablesValidFilter {
 
     @JsonProperty("draftConfigurations")
     private List<Config> draftConfigurations = new ArrayList<Config>();
-    @JsonProperty("releasedConfigurations")
-    private List<Config> releasedConfigurations = new ArrayList<Config>();
+    @JsonProperty("deployConfigurations")
+    private List<Config> deployConfigurations = new ArrayList<Config>();
 
     @JsonProperty("draftConfigurations")
     public List<Config> getDraftConfigurations() {
@@ -39,24 +39,24 @@ public class ExportReleasables {
         this.draftConfigurations = draftConfigurations;
     }
 
-    @JsonProperty("releasedConfigurations")
-    public List<Config> getReleasedConfigurations() {
-        return releasedConfigurations;
+    @JsonProperty("deployConfigurations")
+    public List<Config> getDeployConfigurations() {
+        return deployConfigurations;
     }
 
-    @JsonProperty("releasedConfigurations")
-    public void setReleasedConfigurations(List<Config> releasedConfigurations) {
-        this.releasedConfigurations = releasedConfigurations;
+    @JsonProperty("deployConfigurations")
+    public void setDeployConfigurations(List<Config> deployConfigurations) {
+        this.deployConfigurations = deployConfigurations;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("draftConfigurations", draftConfigurations).append("releasedConfigurations", releasedConfigurations).toString();
+        return new ToStringBuilder(this).append("draftConfigurations", draftConfigurations).append("deployConfigurations", deployConfigurations).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(draftConfigurations).append(releasedConfigurations).toHashCode();
+        return new HashCodeBuilder().append(draftConfigurations).append(deployConfigurations).toHashCode();
     }
 
     @Override
@@ -64,11 +64,11 @@ public class ExportReleasables {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ExportReleasables) == false) {
+        if ((other instanceof DeployablesValidFilter) == false) {
             return false;
         }
-        ExportReleasables rhs = ((ExportReleasables) other);
-        return new EqualsBuilder().append(draftConfigurations, rhs.draftConfigurations).append(releasedConfigurations, rhs.releasedConfigurations).isEquals();
+        DeployablesValidFilter rhs = ((DeployablesValidFilter) other);
+        return new EqualsBuilder().append(draftConfigurations, rhs.draftConfigurations).append(deployConfigurations, rhs.deployConfigurations).isEquals();
     }
 
 }

@@ -32,14 +32,14 @@ public class ExportForSigning {
     @JsonProperty("controllerId")
     private String controllerId;
     /**
-     * Export Deployables
+     * Filter for Deployable Objects
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("deployables")
-    private ExportDeployables deployables;
+    private DeployablesValidFilter deployables;
 
     /**
      * string without < and >
@@ -66,26 +66,26 @@ public class ExportForSigning {
     }
 
     /**
-     * Export Deployables
+     * Filter for Deployable Objects
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("deployables")
-    public ExportDeployables getDeployables() {
+    public DeployablesValidFilter getDeployables() {
         return deployables;
     }
 
     /**
-     * Export Deployables
+     * Filter for Deployable Objects
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("deployables")
-    public void setDeployables(ExportDeployables deployables) {
+    public void setDeployables(DeployablesValidFilter deployables) {
         this.deployables = deployables;
     }
 

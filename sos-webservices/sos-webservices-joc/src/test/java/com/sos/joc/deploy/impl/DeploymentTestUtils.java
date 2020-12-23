@@ -27,17 +27,17 @@ import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.DepHistory;
 import com.sos.joc.model.publish.DepHistoryCompactFilter;
 import com.sos.joc.model.publish.DepHistoryDetailFilter;
-import com.sos.joc.model.publish.DeployDelete;
+import com.sos.joc.model.publish.DeployDeleteFilter;
 import com.sos.joc.model.publish.DeployFilter;
-import com.sos.joc.model.publish.DeployableObjects;
+import com.sos.joc.model.publish.DeployablesFilter;
+import com.sos.joc.model.publish.DeployablesValidFilter;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.DeploymentVersion;
 import com.sos.joc.model.publish.ExcludeConfiguration;
-import com.sos.joc.model.publish.ExportDeployables;
 import com.sos.joc.model.publish.ExportFile;
 import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.ExportForSigning;
-import com.sos.joc.model.publish.ExportReleasables;
+import com.sos.joc.model.publish.ReleasablesFilter;
 import com.sos.joc.model.publish.ExportShallowCopy;
 import com.sos.joc.model.publish.JSObject;
 import com.sos.joc.model.publish.OperationType;
@@ -448,10 +448,10 @@ public class DeploymentTestUtils {
     public static DeployFilter createExampleDeployFilter () {
         DeployFilter filter = new DeployFilter();
         
-        DeployableObjects toStore = new DeployableObjects();
+        DeployablesValidFilter toStore = new DeployablesValidFilter();
         filter.setStore(toStore);
 
-        DeployDelete delete = new DeployDelete();
+        DeployDeleteFilter delete = new DeployDeleteFilter();
         filter.setDelete(delete);
 
         filter.getControllerIds().add("js7-cluster");
@@ -498,51 +498,55 @@ public class DeploymentTestUtils {
         exportFile.setFormat(ArchiveFormat.ZIP);
         filter.setExportFile(exportFile);
 
-        ExportDeployables exportDeployables = new ExportDeployables();
+        DeployablesFilter deployablesFilter = new DeployablesFilter();
+        DeployablesValidFilter deployablesValidFilter = new DeployablesValidFilter();
         Config workflow10DraftConfig = new Config();
         Configuration workflow10draft = new Configuration();
         workflow10draft.setPath("/myWorkflows/ifElseWorkflow/workflow_10");
         workflow10draft.setObjectType(ConfigurationType.WORKFLOW);
         workflow10DraftConfig.setConfiguration(workflow10draft);
-        exportDeployables.getDraftConfigurations().add(workflow10DraftConfig);
+        deployablesFilter.getDraftConfigurations().add(workflow10DraftConfig);
+        deployablesValidFilter.getDraftConfigurations().add(workflow10DraftConfig);
         Config workflow16DraftConfig = new Config();
         Configuration workflow16draft = new Configuration();
         workflow16draft.setPath("/myWorkflows/ifElseWorkflow/workflow_16");
         workflow16draft.setObjectType(ConfigurationType.WORKFLOW);
         workflow16DraftConfig.setConfiguration(workflow16draft);
-        exportDeployables.getDraftConfigurations().add(workflow16DraftConfig);
+        deployablesFilter.getDraftConfigurations().add(workflow16DraftConfig);
+        deployablesValidFilter.getDraftConfigurations().add(workflow16DraftConfig);
         Config workflow12deployConfig = new Config();
         Configuration workflow12deployed = new Configuration();
         workflow12deployed.setPath("/myWorkflows/ifElseWorkflow/workflow_12");
         workflow12deployed.setObjectType(ConfigurationType.WORKFLOW);
         workflow12deployed.setCommitId("4273b6c6-c354-4fcd-afdb-2758088abe4a");
         workflow12deployConfig.setConfiguration(workflow12deployed);
-        exportDeployables.getDeployConfigurations().add(workflow12deployConfig);
+        deployablesFilter.getDeployConfigurations().add(workflow12deployConfig);
+        deployablesValidFilter.getDeployConfigurations().add(workflow12deployConfig);
         
-        ExportReleasables exportReleasables = new ExportReleasables();
+        ReleasablesFilter releasablesFilter = new ReleasablesFilter();
         Config scheduleCfg = new Config();
         Configuration schedule = new Configuration();
         schedule.setPath("/mySchedules/newSchedules/mySchedule");
         schedule.setObjectType(ConfigurationType.SCHEDULE);
         scheduleCfg.setConfiguration(schedule);
-        exportReleasables.getDraftConfigurations().add(scheduleCfg);
+        releasablesFilter.getDraftConfigurations().add(scheduleCfg);
         Config calendarCfg = new Config();
         Configuration calendar = new Configuration();
         calendar.setPath("/myCalendars/newCalendars/myCalendar");
         calendar.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
         calendarCfg.setConfiguration(calendar);
-        exportReleasables.getReleasedConfigurations().add(calendarCfg);
+        releasablesFilter.getReleasedConfigurations().add(calendarCfg);
 
         if (forSigning) {
             ExportForSigning exportSigning = new ExportForSigning();
             filter.setForSigning(exportSigning);
             exportSigning.setControllerId("testsuite");
-            exportSigning.setDeployables(exportDeployables);
+            exportSigning.setDeployables(deployablesValidFilter);
         } else {
             ExportShallowCopy exportShallowCopy = new ExportShallowCopy();
             filter.setShallowCopy(exportShallowCopy);
-            exportShallowCopy.setDeployables(exportDeployables);
-            exportShallowCopy.setReleasables(exportReleasables);
+            exportShallowCopy.setDeployables(deployablesFilter);
+            exportShallowCopy.setReleasables(releasablesFilter);
         }
         return filter;
     }

@@ -1,7 +1,7 @@
 {
-	"title": "Export Deployables",
+	"title": "Filter for valid Deployable Objects only",
 	"$schema": "http://json-schema.org/draft-04/schema#",
-	"javaType": "com.sos.joc.model.publish.ExportDeployables",
+	"javaType": "com.sos.joc.model.publish.DeployablesValidFilter",
 	"type": "object",
   "anyOf": [{
     "required": [
@@ -13,7 +13,7 @@
       ]
     }
   ],
- 	"properties": {
+  "properties": {
     "draftConfigurations": {
       "type" : "array",
       "items" : {
@@ -26,5 +26,5 @@
         "$ref": "config-schema.json"
       }
     }
-	}
+  }
 }
