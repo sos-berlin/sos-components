@@ -1578,14 +1578,14 @@ public class DBLayerDeploy {
             StringBuilder hql = new StringBuilder();
             /*
                 SELECT ID, COMMIT_ID FROM DEP_HISTORY AS dep WHERE dep.id = (
-                    SELECT MAX(history.id) FROM DEP_HISTORY AS history 
+                    SELECT MIN(history.id) FROM DEP_HISTORY AS history 
                         WHERE history.COMMIT_ID = dep.COMMIT_ID
                         AND history.CONTROLLER_ID = 'master') order by id asc;
              */
 
             hql.append("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
             hql.append(" where dep.id = (")
-                .append(" select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history")
+                .append(" select min(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history")
                 .append(" where history.commitId = dep.commitId");
                 if (filter.getCompactFilter().getAccount() != null) {
                     hql.append(" and history.account = :account");

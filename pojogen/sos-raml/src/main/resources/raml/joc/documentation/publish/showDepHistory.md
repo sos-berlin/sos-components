@@ -42,6 +42,39 @@
 <td></td>
 </tr>
 <tr>
+<td style="padding-left:20px;">``deployType``</td>
+<td>optional, string</td>
+<td>Type of the deployed object. Subset of deployable objects from the enum ConfigurationType. The subset consists of WORKFLOW, JOBCLASS, LOCK, JUNCTION.</td>
+<td>
+  <div>{</div>
+  <div style="padding-left:10px;">"deployType": "WORKFLOW"</div>
+  <div>}</div>
+</td>
+<td></td>
+</tr>
+<tr>
+<td style="padding-left:20px;">``operation``</td>
+<td>optional, string</td>
+<td>The operation of the deployment. Possible values are UPDATE, DELETE.</td>
+<td>
+  <div>{</div>
+  <div style="padding-left:10px;">"operation": "UPDATE"</div>
+  <div>}</div>
+</td>
+<td></td>
+</tr>
+<tr>
+<td style="padding-left:20px;">``state``</td>
+<td>optional, string</td>
+<td>State of the deployment. Possible values are DEPLOYED, NOT_DEPLOYED</td>
+<td>
+  <div>{</div>
+  <div style="padding-left:10px;">"state": "DEPLOYED"</div>
+  <div>}</div>
+</td>
+<td></td>
+</tr>
+<tr>
 <td style="padding-left:20px;">``deploymentDate``</td>
 <td>optional, Date</td>
 <td>Specific date when the deployment was done.</td>
@@ -217,7 +250,7 @@
 <td>Type of the deployed object. Subset of deployable objects from the enum ConfigurationType. The subset consists of WORKFLOW, JOBCLASS, LOCK, JUNCTION.</td>
 <td>
   <div>{</div>
-  <div style="padding-left:10px;">"deployType": "Workflow"</div>
+  <div style="padding-left:10px;">"deployType": "WORKFLOW"</div>
   <div>}</div>
 </td>
 <td></td>

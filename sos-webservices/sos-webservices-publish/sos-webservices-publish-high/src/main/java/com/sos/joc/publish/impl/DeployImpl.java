@@ -435,7 +435,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                                 stillActiveReleasables)) {
                             if (checkDeploymentItemsStillExist(stillActiveDeployments)) {
                                 LOGGER.warn(String
-                                        .format("removed folder \"%1$s\" can´t be deleted from inventory. Deployments still exist on controller %1$s.", 
+                                        .format("removed folder \"%1$s\" can´t be deleted from inventory. Deployments still exist on controller %2$s.", 
                                                 folder.getConfiguration().getPath(), controllerId));
                             }
                             if (checkReleasedItemsStillExist(stillActiveReleased)) {
