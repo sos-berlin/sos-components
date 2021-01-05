@@ -1070,31 +1070,56 @@ public abstract class PublishUtils {
                 if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
                     WorkflowEdit workflowEdit = new WorkflowEdit();
                     workflowEdit.setConfiguration(om.readValue(outBuffer.toString(), Workflow.class));
-                    workflowEdit.setPath(workflowEdit.getConfiguration().getPath());
+                    if (workflowEdit.getConfiguration().getPath() != null) {
+                        workflowEdit.setPath(workflowEdit.getConfiguration().getPath());
+                    } else {
+                        workflowEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""));
+                        workflowEdit.getConfiguration().setPath(workflowEdit.getPath());
+                    }
                     workflowEdit.setObjectType(ConfigurationType.WORKFLOW);
                     objects.add(workflowEdit);
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
                     LockEdit lockEdit = new LockEdit();
                     lockEdit.setConfiguration(om.readValue(outBuffer.toString(), Lock.class));
-                    lockEdit.setPath(lockEdit.getConfiguration().getPath());
+                    if (lockEdit.getConfiguration().getPath() != null ) {
+                        lockEdit.setPath(lockEdit.getConfiguration().getPath());
+                    } else {
+                        lockEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                        lockEdit.getConfiguration().setPath(lockEdit.getPath());
+                    }
                     lockEdit.setObjectType(ConfigurationType.LOCK);
                     objects.add(lockEdit);
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
                     JunctionEdit junctionEdit = new JunctionEdit();
                     junctionEdit.setConfiguration(om.readValue(outBuffer.toString(), Junction.class));
-                    junctionEdit.setPath(junctionEdit.getConfiguration().getPath());
+                    if (junctionEdit.getConfiguration().getPath() != null ) {
+                        junctionEdit.setPath(junctionEdit.getConfiguration().getPath());
+                    } else {
+                        junctionEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), ""));
+                        junctionEdit.getConfiguration().setPath(junctionEdit.getPath());
+                    }
                     junctionEdit.setObjectType(ConfigurationType.JUNCTION);
                     objects.add(junctionEdit);
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
                     JobClassEdit jobClassEdit = new JobClassEdit();
                     jobClassEdit.setConfiguration(om.readValue(outBuffer.toString(), JobClass.class));
-                    jobClassEdit.setPath(jobClassEdit.getConfiguration().getPath());
+                    if (jobClassEdit.getConfiguration().getPath() != null ) {
+                        jobClassEdit.setPath(jobClassEdit.getConfiguration().getPath());
+                    } else {
+                        jobClassEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), ""));
+                        jobClassEdit.getConfiguration().setPath(jobClassEdit.getPath());
+                    }
                     jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
                     objects.add(jobClassEdit);
                 } else if (("/" + entryName).endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value())) {
                     ScheduleEdit scheduleEdit = new ScheduleEdit();
                     scheduleEdit.setConfiguration(om.readValue(outBuffer.toString(), Schedule.class));
-                    scheduleEdit.setPath(scheduleEdit.getConfiguration().getPath());
+                    if (scheduleEdit.getConfiguration().getPath() != null ) {
+                        scheduleEdit.setPath(scheduleEdit.getConfiguration().getPath());
+                    } else {
+                        scheduleEdit.setPath(("/" + entryName).replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(), ""));
+                        scheduleEdit.getConfiguration().setPath(scheduleEdit.getPath());
+                    }
                     scheduleEdit.setObjectType(ConfigurationType.SCHEDULE);
                     objects.add(scheduleEdit);
                 } else if (("/" + entryName).endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
@@ -1102,13 +1127,23 @@ public abstract class PublishUtils {
                     if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
                         WorkingDaysCalendarEdit wdcEdit = new WorkingDaysCalendarEdit();
                         wdcEdit.setConfiguration(cal);
-                        wdcEdit.setPath(wdcEdit.getConfiguration().getPath());
+                        if (wdcEdit.getConfiguration().getPath() != null ) {
+                            wdcEdit.setPath(wdcEdit.getConfiguration().getPath());
+                        } else {
+                            wdcEdit.setPath(("/" + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), ""));
+                            wdcEdit.getConfiguration().setPath(wdcEdit.getPath());
+                        }
                         wdcEdit.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
                         objects.add(wdcEdit);
                     } else if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
                         NonWorkingDaysCalendarEdit nwdcEdit = new NonWorkingDaysCalendarEdit();
                         nwdcEdit.setConfiguration(cal);
-                        nwdcEdit.setPath(nwdcEdit.getConfiguration().getPath());
+                        if (nwdcEdit.getConfiguration().getPath() != null ) {
+                            nwdcEdit.setPath(nwdcEdit.getConfiguration().getPath());
+                        } else {
+                            nwdcEdit.setPath(("/" + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), ""));
+                            nwdcEdit.getConfiguration().setPath(nwdcEdit.getPath());
+                        }
                         nwdcEdit.setObjectType(ConfigurationType.NONWORKINGDAYSCALENDAR);
                         objects.add(nwdcEdit);
                     }
