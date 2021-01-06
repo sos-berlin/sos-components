@@ -21,8 +21,10 @@ public interface IImportDeploy {
     public JOCDefaultResponse postImportDeploy(
             @HeaderParam("X-Access-Token") String xAccessToken, 
             @FormDataParam("file") FormDataBodyPart body,
+            @FormDataParam("controllerId") String controllerId,
+            @FormDataParam("signatureAlgorithm") String signatureAlgorithm,
+            @FormDataParam("format") String format,
             @FormDataParam("timeSpent") String timeSpent,
             @FormDataParam("ticketLink") String ticketLink,
-            @FormDataParam("comment") String comment,
-            @FormDataParam("importDeployFilter") String deployFilter) throws Exception;
+            @FormDataParam("comment") String comment) throws Exception;
 }

@@ -1080,7 +1080,7 @@ traits:
     /import_deploy:
       type:
         postForImportDeploy:
-          description: uploads archive file (zip, tar.gz, gz) with signed and unsigned JSON files of JobScheduler Objects and deploys the objects to the given controllers
+          description: uploads archive file (*.zip, *.tar.gz) with valid deployable configurations and their signatures and deploys the configurations to the specified controller.
           schema: !include joc/schemas/publish/importDeployFilter-schema.json
           example: !include joc/examples/publish/publishImportDeploy-example.json
 
@@ -1859,7 +1859,7 @@ traits:
         description1: " "
         description2: " "
         schema: !include joc/examples/publish/emptyBody-example.json
-        schema200: !include joc/schemas/pgp/jocKeyPair-schema.json
+        schema200: !include joc/schemas/sign/jocKeyPair-schema.json
         example: !include joc/examples/publish/emptyBody-example.json
         example200: !include joc/examples/publish/showKey-example.json
 
@@ -1871,7 +1871,7 @@ traits:
           description2: !include joc/documentation/publish/keyAlgorithm.md
           audit: !include joc/documentation/audit/auditLog.md
           description200: " "
-          schema200: !include joc/schemas/pgp/jocKeyPair-schema.json
+          schema200: !include joc/schemas/sign/jocKeyPair-schema.json
           example200: !include joc/examples/publish/showKey-example.json
           schema: !include joc/schemas/publish/generateKey-schema.json
           example: !include joc/examples/publish/generateKey-example.json

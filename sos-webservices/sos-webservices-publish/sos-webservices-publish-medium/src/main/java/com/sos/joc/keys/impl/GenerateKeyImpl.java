@@ -15,7 +15,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.keys.resource.IGenerateKey;
 import com.sos.joc.model.common.JocSecurityLevel;
-import com.sos.joc.model.pgp.JocKeyPair;
+import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.publish.GenerateKeyFilter;
 import com.sos.schema.JsonValidator;
 

@@ -6,14 +6,19 @@ post:
   body:
     multipart/form-data:
       formParameters:
-        importDeployFilter:
-          description: json of list of controllers to deploy to
-          example: |
-            {</br>&nbsp;&nbsp;"controllers" : [{</br>&nbsp;&nbsp;&nbsp;&nbsp;"controller" : "myControllerCluster"</br>&nbsp;&nbsp;}]</br>}
+        controllerId:
+          description: The controllerId of the controller the imported objects should be deployed to.
+          example: testsuite
           required: true
           type: string
         signatureAlgorithm:
-          description: The algorithm of the signature, e.g.&colon; SHA256withRSA, SHA512withECDSA
+          description: The signature algorithm the objects where signed with.
+          example: SHA512withECDSA
+          required: true
+          type: string
+        format:
+          description: Specifies the archive format (tar.gz or zip) of the import file. The enum archiveFormat for the value consist of ZIP and TAR_GZ.
+          example: ZIP
           required: true
           type: string
         comment:

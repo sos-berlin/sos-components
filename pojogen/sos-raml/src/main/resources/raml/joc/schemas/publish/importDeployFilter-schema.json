@@ -4,15 +4,19 @@
 	"javaType": "com.sos.joc.model.publish.ImportDeployFilter",
 	"type": "object",
 	"required": [
-		"controllers",
-		"signatureAlgorithm"
+		"controllerId",
+		"signatureAlgorithm",
+		"format"
 	],
 	"properties": {
     "controllerId": {
       "$ref": "../common/string255-schema.json"
     },
-    "keyAlgorithm" : {
+    "signatureAlgorithm" : {
       "type": "string"
+    },
+    "format": {
+      "$ref": "archiveFormat-schema.json"
     },
 		"auditLog": {
 			"$ref": "../audit/auditParams-schema.json"

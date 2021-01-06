@@ -29,7 +29,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.JocSecurityLevel;
-import com.sos.joc.model.pgp.JocKeyPair;
+import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.publish.RedeployFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.IRedeploy;

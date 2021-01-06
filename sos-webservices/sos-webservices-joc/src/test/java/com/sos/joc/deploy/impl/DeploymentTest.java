@@ -536,9 +536,9 @@ public class DeploymentTest {
             while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
                 outBuffer.write(binBuffer, 0, binRead);
             }
-            if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value())) {
+            if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
                 SignaturePath signaturePath = new SignaturePath();
-                signaturePath.setObjectPath("/" + entryName.substring(0, entryName.indexOf(JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION
+                signaturePath.setObjectPath("/" + entryName.substring(0, entryName.indexOf(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION
                         .value())));
                 Signature signature = new Signature();
                 signature.setSignatureString(outBuffer.toString());

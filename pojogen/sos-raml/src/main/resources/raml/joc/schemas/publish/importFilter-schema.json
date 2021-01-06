@@ -11,10 +11,10 @@
 			"type": "boolean"
 		}, 
     "targetFolder": {
-    "$ref": "../common/path-schema.json"
+      "$ref": "../common/path-schema.json"
     },
     "format": {
-    "$ref": "archiveFormat-schema.json"
+      "$ref": "archiveFormat-schema.json"
     },
 		"auditLog": {
 			"$ref": "../audit/auditParams-schema.json"

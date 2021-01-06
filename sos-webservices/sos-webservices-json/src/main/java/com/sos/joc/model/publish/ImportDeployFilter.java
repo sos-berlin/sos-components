@@ -19,7 +19,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "keyAlgorithm",
+    "signatureAlgorithm",
+    "format",
     "auditLog"
 })
 public class ImportDeployFilter {
@@ -28,12 +29,27 @@ public class ImportDeployFilter {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("controllerId")
     private String controllerId;
-    @JsonProperty("keyAlgorithm")
-    private String keyAlgorithm;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("signatureAlgorithm")
+    private String signatureAlgorithm;
+    /**
+     * Archive Format of the archive file
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("format")
+    private ArchiveFormat format = ArchiveFormat.fromValue("ZIP");
     /**
      * auditParams
      * <p>
@@ -47,6 +63,7 @@ public class ImportDeployFilter {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -58,6 +75,7 @@ public class ImportDeployFilter {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -65,14 +83,48 @@ public class ImportDeployFilter {
         this.controllerId = controllerId;
     }
 
-    @JsonProperty("keyAlgorithm")
-    public String getKeyAlgorithm() {
-        return keyAlgorithm;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("signatureAlgorithm")
+    public String getSignatureAlgorithm() {
+        return signatureAlgorithm;
     }
 
-    @JsonProperty("keyAlgorithm")
-    public void setKeyAlgorithm(String keyAlgorithm) {
-        this.keyAlgorithm = keyAlgorithm;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("signatureAlgorithm")
+    public void setSignatureAlgorithm(String signatureAlgorithm) {
+        this.signatureAlgorithm = signatureAlgorithm;
+    }
+
+    /**
+     * Archive Format of the archive file
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("format")
+    public ArchiveFormat getFormat() {
+        return format;
+    }
+
+    /**
+     * Archive Format of the archive file
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("format")
+    public void setFormat(ArchiveFormat format) {
+        this.format = format;
     }
 
     /**
@@ -99,12 +151,12 @@ public class ImportDeployFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("keyAlgorithm", keyAlgorithm).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("signatureAlgorithm", signatureAlgorithm).append("format", format).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(keyAlgorithm).append(controllerId).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(format).append(controllerId).append(auditLog).append(signatureAlgorithm).toHashCode();
     }
 
     @Override
@@ -116,7 +168,7 @@ public class ImportDeployFilter {
             return false;
         }
         ImportDeployFilter rhs = ((ImportDeployFilter) other);
-        return new EqualsBuilder().append(keyAlgorithm, rhs.keyAlgorithm).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(format, rhs.format).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(signatureAlgorithm, rhs.signatureAlgorithm).isEquals();
     }
 
 }

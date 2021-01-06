@@ -32,7 +32,7 @@ import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.resource.IImportKey;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.JocSecurityLevel;
-import com.sos.joc.model.pgp.JocKeyPair;
+import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.publish.ImportKeyFilter;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;

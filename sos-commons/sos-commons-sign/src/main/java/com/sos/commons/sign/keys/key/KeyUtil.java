@@ -95,7 +95,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.sign.keys.SOSKeyConstants;
-import com.sos.joc.model.pgp.JocKeyPair;
+import com.sos.joc.model.sign.JocKeyPair;
 
 
 public abstract class KeyUtil {

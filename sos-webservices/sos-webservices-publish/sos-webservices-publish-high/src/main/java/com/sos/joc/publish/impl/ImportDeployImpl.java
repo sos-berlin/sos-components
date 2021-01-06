@@ -3,7 +3,6 @@ package com.sos.joc.publish.impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
@@ -47,7 +46,9 @@ import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.JocSecurityLevel;
-import com.sos.joc.model.pgp.JocKeyPair;
+import com.sos.joc.model.inventory.ConfigurationObject;
+import com.sos.joc.model.sign.JocKeyPair;
+import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.model.publish.ImportDeployFilter;
 import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignaturePath;
@@ -69,37 +70,52 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
     private List<Err419> listOfErrors = new ArrayList<Err419>();
 
     @Override
-	public JOCDefaultResponse postImportDeploy(String xAccessToken, 
-			FormDataBodyPart body, 
-			String timeSpent,
-			String ticketLink,
-			String comment,
-			String importDeployFilter) throws Exception {
+    public JOCDefaultResponse postImportDeploy(String xAccessToken,
+            FormDataBodyPart body, 
+            String controllerId, 
+            String signatureAlgorithm,
+            String format, 
+            String timeSpent, 
+            String ticketLink, 
+            String comment) throws Exception {
         AuditParams auditParams = new AuditParams();
         auditParams.setComment(comment);
         auditParams.setTicketLink(ticketLink);
         try {
             auditParams.setTimeSpent(Integer.valueOf(timeSpent));
         } catch (Exception e) {}
-		return postImportDeploy(xAccessToken, body, auditParams, importDeployFilter);
-	}
+        ImportDeployFilter filter = new ImportDeployFilter();
+        filter.setAuditLog(auditParams);
+        filter.setControllerId(controllerId);
+        filter.setFormat(ArchiveFormat.fromValue(format));
+        filter.setSignatureAlgorithm(signatureAlgorithm);
+        return postImportDeploy(xAccessToken, body, Globals.objectMapper.writeValueAsBytes(filter));
+    }
 
-	private JOCDefaultResponse postImportDeploy(String xAccessToken, FormDataBodyPart body,
-			AuditParams auditParams, String importDeployFilter) throws Exception {
+	private JOCDefaultResponse postImportDeploy(String xAccessToken, FormDataBodyPart body, byte[] importDeployFilter) throws Exception {
         InputStream stream = null;
         String uploadFileName = null;
         SOSHibernateSession hibernateSession = null;
         try {
-            initLogging(API_CALL, importDeployFilter.getBytes(StandardCharsets.UTF_8), xAccessToken);
-            JsonValidator.validateFailFast(importDeployFilter.getBytes(StandardCharsets.UTF_8), ImportDeployFilter.class);
+            initLogging(API_CALL, importDeployFilter, xAccessToken);
+            JsonValidator.validateFailFast(importDeployFilter, ImportDeployFilter.class);
             ImportDeployFilter filter = Globals.objectMapper.readValue(importDeployFilter, ImportDeployFilter.class);
-            filter.setAuditLog(auditParams);
             // copy&paste Permission, has to be changed to the correct permission for upload 
             JOCDefaultResponse jocDefaultResponse = initPermissions("",
                    getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isImport() &&
                    getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isDeploy());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
+            }
+            Set<ConfigurationObject> configurations = new HashSet<ConfigurationObject>();
+            // process uploaded archive
+            if (ArchiveFormat.ZIP.equals(filter.getFormat())) {
+                configurations = PublishUtils.readZipFileContent(stream);
+            } else if (ArchiveFormat.TAR_GZ.equals(filter.getFormat())) {
+                configurations = PublishUtils.readTarGzipFileContent(stream);
+            } else {
+                throw new JocUnsupportedFileTypeException(
+                        String.format("The file %1$s to be uploaded must have one of the formats zip, tar.gz or tgz!", uploadFileName)); 
             }
             if (body != null) {
                 uploadFileName = URLDecoder.decode(body.getContentDisposition().getFileName(), "UTF-8");
@@ -112,6 +128,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
 
             Set<Workflow> workflows = new HashSet<Workflow>();
             Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
+            Map<ConfigurationObject, SignaturePath> objectsWithSignature = new HashMap<ConfigurationObject, SignaturePath>();
             
             // process uploaded archive
             if (mediaSubType.contains("zip") && !mediaSubType.contains("gzip")) {
@@ -328,5 +345,5 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
         audits.stream().forEach(audit -> logAuditMessage(audit));
         audits.stream().forEach(audit -> storeAuditLogEntry(audit));
     }
-    
+
 }

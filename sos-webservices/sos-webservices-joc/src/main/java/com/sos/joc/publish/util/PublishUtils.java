@@ -96,8 +96,8 @@ import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.CalendarType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.pgp.JocKeyPair;
-import com.sos.joc.model.pgp.JocKeyType;
+import com.sos.joc.model.sign.JocKeyPair;
+import com.sos.joc.model.sign.JocKeyType;
 import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.DeployablesFilter;
@@ -952,8 +952,10 @@ public abstract class PublishUtils {
             return DeployType.LOCK;
         case JUNCTION:
             return DeployType.JUNCTION;
+        case JOBCLASS:
+            return DeployType.JOBCLASS;
         default:
-            return null;
+            return DeployType.WORKFLOW;
         }
     }
 
@@ -965,8 +967,10 @@ public abstract class PublishUtils {
             return ConfigurationType.LOCK;
         case JUNCTION:
             return ConfigurationType.JUNCTION;
+        case JOBCLASS:
+            return ConfigurationType.JOBCLASS;
         default:
-            return null;
+            return ConfigurationType.WORKFLOW;
         }
     }
 
@@ -1023,17 +1027,17 @@ public abstract class PublishUtils {
                 Signature signature = new Signature();
                 if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
                     workflows.add(om.readValue(outBuffer.toString(), Workflow.class));
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value())) {
-                    if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value())) {
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
+                    if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
                         signaturePath.setObjectPath("/" + entryName.substring(0, entryName.indexOf(
-                                JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value())));
+                                JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())));
                         signature.setSignatureString(outBuffer.toString());
                         signaturePath.setSignature(signature);
                         signaturePaths.add(signaturePath);
                     }
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
                     // TODO: add processing for Locks, when Locks are ready
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_SIGNATURE_FILE_EXTENSION.value())) {
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_PGP_SIGNATURE_FILE_EXTENSION.value())) {
                     // TODO: add processing for Locks, when Locks are ready
                 }
             }
@@ -1045,6 +1049,127 @@ public abstract class PublishUtils {
             }
         }
         return signaturePaths;
+    }
+
+    public static Set<ConfigurationObject> readZipFileContentWithSignatures(InputStream inputStream)
+            throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException, 
+            JocConfigurationException, DBOpenSessionException {
+        Set<ConfigurationObject> objects = new HashSet<ConfigurationObject>();
+        Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
+        Map<ConfigurationObject, SignaturePath> objectsWithSignature = new HashMap<ConfigurationObject, SignaturePath>();
+        ZipInputStream zipStream = null;
+        try {
+            zipStream = new ZipInputStream(inputStream);
+            ZipEntry entry = null;
+            while ((entry = zipStream.getNextEntry()) != null) {
+                if (entry.isDirectory()) {
+                    continue;
+                }
+                String entryName = entry.getName().replace('\\', '/');
+                ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
+                byte[] binBuffer = new byte[8192];
+                int binRead = 0;
+                while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
+                    outBuffer.write(binBuffer, 0, binRead);
+                }
+                // process deployables and releaseables
+                SignaturePath signaturePath = new SignaturePath();
+                Signature signature = new Signature();
+                if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+                    WorkflowEdit workflowEdit = new WorkflowEdit();
+                    workflowEdit.setConfiguration(om.readValue(outBuffer.toString(), Workflow.class));
+                    if (workflowEdit.getConfiguration().getPath() != null) {
+                        workflowEdit.setPath(workflowEdit.getConfiguration().getPath());
+                    } else {
+                        workflowEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""));
+                        workflowEdit.getConfiguration().setPath(workflowEdit.getPath());
+                    }
+                    workflowEdit.setObjectType(ConfigurationType.WORKFLOW);
+                    
+                    objects.add(workflowEdit);
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
+                    signaturePath.setObjectPath(("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value(), ""));
+                    signature.setSignatureString(outBuffer.toString());
+                    signaturePath.setSignature(signature);
+                    signaturePaths.add(signaturePath);
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value())) {
+                    signaturePath.setObjectPath(("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value(), ""));
+                    signature.setSignatureString(outBuffer.toString());
+                    signaturePath.setSignature(signature);
+                    signaturePaths.add(signaturePath);
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
+                    LockEdit lockEdit = new LockEdit();
+                    lockEdit.setConfiguration(om.readValue(outBuffer.toString(), Lock.class));
+                    if (lockEdit.getConfiguration().getPath() != null ) {
+                        lockEdit.setPath(lockEdit.getConfiguration().getPath());
+                    } else {
+                        lockEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                        lockEdit.getConfiguration().setPath(lockEdit.getPath());
+                    }
+                    lockEdit.setObjectType(ConfigurationType.LOCK);
+                    objects.add(lockEdit);
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_PGP_SIGNATURE_FILE_EXTENSION.value())) {
+                    signaturePath.setObjectPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_PGP_SIGNATURE_FILE_EXTENSION.value(), ""));
+                    signature.setSignatureString(outBuffer.toString());
+                    signaturePath.setSignature(signature);
+                    signaturePaths.add(signaturePath);
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_X509_SIGNATURE_FILE_EXTENSION.value())) {
+                    signaturePath.setObjectPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_X509_SIGNATURE_FILE_EXTENSION.value(), ""));
+                    signature.setSignatureString(outBuffer.toString());
+                    signaturePath.setSignature(signature);
+                    signaturePaths.add(signaturePath);
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
+                    JunctionEdit junctionEdit = new JunctionEdit();
+                    junctionEdit.setConfiguration(om.readValue(outBuffer.toString(), Junction.class));
+                    if (junctionEdit.getConfiguration().getPath() != null ) {
+                        junctionEdit.setPath(junctionEdit.getConfiguration().getPath());
+                    } else {
+                        junctionEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), ""));
+                        junctionEdit.getConfiguration().setPath(junctionEdit.getPath());
+                    }
+                    junctionEdit.setObjectType(ConfigurationType.JUNCTION);
+                    objects.add(junctionEdit);
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.JUNCTION_PGP_SIGNATURE_FILE_EXTENSION.value())) {
+                    signaturePath.setObjectPath(("/" + entryName).replace(JSObjectFileExtension.JUNCTION_PGP_SIGNATURE_FILE_EXTENSION.value(), ""));
+                    signature.setSignatureString(outBuffer.toString());
+                    signaturePath.setSignature(signature);
+                    signaturePaths.add(signaturePath);
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.JUNCTION_X509_SIGNATURE_FILE_EXTENSION.value())) {
+                    signaturePath.setObjectPath(("/" + entryName).replace(JSObjectFileExtension.JUNCTION_X509_SIGNATURE_FILE_EXTENSION.value(), ""));
+                    signature.setSignatureString(outBuffer.toString());
+                    signaturePath.setSignature(signature);
+                    signaturePaths.add(signaturePath);
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
+                    JobClassEdit jobClassEdit = new JobClassEdit();
+                    jobClassEdit.setConfiguration(om.readValue(outBuffer.toString(), JobClass.class));
+                    if (jobClassEdit.getConfiguration().getPath() != null ) {
+                        jobClassEdit.setPath(jobClassEdit.getConfiguration().getPath());
+                    } else {
+                        jobClassEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), ""));
+                        jobClassEdit.getConfiguration().setPath(jobClassEdit.getPath());
+                    }
+                    jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
+                    objects.add(jobClassEdit);
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.JOBCLASS_PGP_SIGNATURE_FILE_EXTENSION.value())) {
+                    signaturePath.setObjectPath(("/" + entryName).replace(JSObjectFileExtension.JOBCLASS_PGP_SIGNATURE_FILE_EXTENSION.value(), ""));
+                    signature.setSignatureString(outBuffer.toString());
+                    signaturePath.setSignature(signature);
+                    signaturePaths.add(signaturePath);
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.JOBCLASS_X509_SIGNATURE_FILE_EXTENSION.value())) {
+                    signaturePath.setObjectPath(("/" + entryName).replace(JSObjectFileExtension.JOBCLASS_X509_SIGNATURE_FILE_EXTENSION.value(), ""));
+                    signature.setSignatureString(outBuffer.toString());
+                    signaturePath.setSignature(signature);
+                    signaturePaths.add(signaturePath);
+                } 
+            }
+        } finally {
+            if (zipStream != null) {
+                try {
+                    zipStream.close();
+                } catch (IOException e) {}
+            }
+        }
+        return objects;
     }
 
     public static Set<ConfigurationObject> readZipFileContent(InputStream inputStream)
@@ -1184,17 +1309,17 @@ public abstract class PublishUtils {
                 Signature signature = new Signature();
                 if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
                     workflows.add(om.readValue(outBuffer.toString(), Workflow.class));
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value())) {
-                    if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value())) {
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
+                    if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
                         signaturePath.setObjectPath("/" + entryName.substring(0, entryName.indexOf(
-                                JSObjectFileExtension.WORKFLOW_SIGNATURE_FILE_EXTENSION.value())));
+                                JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())));
                         signature.setSignatureString(outBuffer.toString());
                         signaturePath.setSignature(signature);
                         signaturePaths.add(signaturePath);
                     }
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
                     // TODO: add processing for Locks, when Locks are ready
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_SIGNATURE_FILE_EXTENSION.value())) {
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_PGP_SIGNATURE_FILE_EXTENSION.value())) {
                     // TODO: add processing for Locks, when Locks are ready
                 }
             }

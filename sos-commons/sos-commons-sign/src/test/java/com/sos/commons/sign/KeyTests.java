@@ -42,8 +42,8 @@ import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.sign.keys.sign.SignObject;
 import com.sos.commons.sign.keys.verify.VerifySignature;
-import com.sos.joc.model.pgp.JocKeyAlgorithm;
-import com.sos.joc.model.pgp.JocKeyPair;
+import com.sos.joc.model.sign.JocKeyAlgorithm;
+import com.sos.joc.model.sign.JocKeyPair;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class KeyTests {

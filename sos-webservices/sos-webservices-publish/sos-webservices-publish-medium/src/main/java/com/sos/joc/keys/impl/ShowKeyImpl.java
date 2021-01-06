@@ -28,9 +28,9 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.keys.resource.IShowKey;
 import com.sos.joc.model.common.JocSecurityLevel;
-import com.sos.joc.model.pgp.JocKeyAlgorithm;
-import com.sos.joc.model.pgp.JocKeyPair;
-import com.sos.joc.model.pgp.JocKeyType;
+import com.sos.joc.model.sign.JocKeyAlgorithm;
+import com.sos.joc.model.sign.JocKeyPair;
+import com.sos.joc.model.sign.JocKeyType;
 import com.sos.joc.publish.util.PublishUtils;
 
 

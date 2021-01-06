@@ -8,9 +8,9 @@ import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDepKeys;
 import com.sos.joc.model.common.JocSecurityLevel;
-import com.sos.joc.model.pgp.JocKeyAlgorithm;
-import com.sos.joc.model.pgp.JocKeyPair;
-import com.sos.joc.model.pgp.JocKeyType;
+import com.sos.joc.model.sign.JocKeyAlgorithm;
+import com.sos.joc.model.sign.JocKeyPair;
+import com.sos.joc.model.sign.JocKeyType;
 
 public class DBLayerKeys {
 

@@ -19,7 +19,7 @@
 		"change": {
 			"type": "array",
 			"items": {
-			  "$ref": "../../../joc/schemas/pgp/signedObject-schema.json"
+			  "$ref": "../../../joc/schemas/sign/signedObject-schema.json"
 			}
 		},
 		"delete": {

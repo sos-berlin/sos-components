@@ -8,7 +8,7 @@
   ],
   "properties": {
     "keys": {
-      "$ref": "../pgp/jocKeyPair-schema.json"
+      "$ref": "../sign/jocKeyPair-schema.json"
     },
     "auditLog": {
       "$ref": "../audit/auditParams-schema.json"
