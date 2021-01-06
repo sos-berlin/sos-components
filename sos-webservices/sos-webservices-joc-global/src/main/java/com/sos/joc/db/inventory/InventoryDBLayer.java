@@ -69,6 +69,7 @@ public class InventoryDBLayer extends DBLayer {
         StringBuilder hql = new StringBuilder("select controllerId, max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
         hql.append(" where inventoryConfigurationId = :configId");
         hql.append(" and state = :state ");
+        hql.append(" group by controllerId");
         Query<Object[]> query = getSession().createQuery(hql.toString());
         query.setParameter("configId", configId);
         query.setParameter("state", DeploymentState.DEPLOYED.value());
