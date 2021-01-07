@@ -1547,7 +1547,13 @@ public class DBLayerDeploy {
         Set<Path> pathsWithParents = PublishUtils.updateSetOfPathsWithParents(paths);
         pathsWithParents.removeAll(existingFolderPaths);
         Set<DBItemInventoryConfiguration> newFolders = 
-                pathsWithParents.stream().map(folder -> createFolderConfiguration(folder, auditLogId)).collect(Collectors.toSet());
+                pathsWithParents.stream().map(folder -> {
+                    if (!folder.equals(Paths.get("/"))) {
+                        return createFolderConfiguration(folder, auditLogId);
+                    } else {
+                        return null;
+                    }
+                }).filter(Objects::nonNull).collect(Collectors.toSet());
         for (DBItemInventoryConfiguration folder : newFolders) {
             session.save(folder);
         }
