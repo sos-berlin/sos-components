@@ -81,7 +81,9 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
+import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocImportException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocNotImplementedException;
@@ -1004,54 +1006,54 @@ public abstract class PublishUtils {
         return alreadyDeployedToDelete;
     }
 
-    public static Set<SignaturePath> readZipFileContentWithSignatures(InputStream inputStream, Set<Workflow> workflows
-            /* , Set<Lock> locks */) throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException,
-            IOException, JocUnsupportedFileTypeException, JocConfigurationException, DBOpenSessionException {
-        Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
-        ZipInputStream zipStream = null;
-        try {
-            zipStream = new ZipInputStream(inputStream);
-            ZipEntry entry = null;
-            while ((entry = zipStream.getNextEntry()) != null) {
-                if (entry.isDirectory()) {
-                    continue;
-                }
-                String entryName = entry.getName().replace('\\', '/');
-                ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
-                byte[] binBuffer = new byte[8192];
-                int binRead = 0;
-                while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
-                    outBuffer.write(binBuffer, 0, binRead);
-                }
-                SignaturePath signaturePath = new SignaturePath();
-                Signature signature = new Signature();
-                if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
-                    workflows.add(om.readValue(outBuffer.toString(), Workflow.class));
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-                    if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-                        signaturePath.setObjectPath("/" + entryName.substring(0, entryName.indexOf(
-                                JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())));
-                        signature.setSignatureString(outBuffer.toString());
-                        signaturePath.setSignature(signature);
-                        signaturePaths.add(signaturePath);
-                    }
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
-                    // TODO: add processing for Locks, when Locks are ready
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-                    // TODO: add processing for Locks, when Locks are ready
-                }
-            }
-        } finally {
-            if (zipStream != null) {
-                try {
-                    zipStream.close();
-                } catch (IOException e) {}
-            }
-        }
-        return signaturePaths;
-    }
+//    public static Set<SignaturePath> readZipFileContentWithSignatures(InputStream inputStream, Set<Workflow> workflows
+//            /* , Set<Lock> locks */) throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException,
+//            IOException, JocUnsupportedFileTypeException, JocConfigurationException, DBOpenSessionException {
+//        Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
+//        ZipInputStream zipStream = null;
+//        try {
+//            zipStream = new ZipInputStream(inputStream);
+//            ZipEntry entry = null;
+//            while ((entry = zipStream.getNextEntry()) != null) {
+//                if (entry.isDirectory()) {
+//                    continue;
+//                }
+//                String entryName = entry.getName().replace('\\', '/');
+//                ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
+//                byte[] binBuffer = new byte[8192];
+//                int binRead = 0;
+//                while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
+//                    outBuffer.write(binBuffer, 0, binRead);
+//                }
+//                SignaturePath signaturePath = new SignaturePath();
+//                Signature signature = new Signature();
+//                if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+//                    workflows.add(om.readValue(outBuffer.toString(), Workflow.class));
+//                } else if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
+//                    if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
+//                        signaturePath.setObjectPath("/" + entryName.substring(0, entryName.indexOf(
+//                                JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())));
+//                        signature.setSignatureString(outBuffer.toString());
+//                        signaturePath.setSignature(signature);
+//                        signaturePaths.add(signaturePath);
+//                    }
+//                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
+//                    // TODO: add processing for Locks, when Locks are ready
+//                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_PGP_SIGNATURE_FILE_EXTENSION.value())) {
+//                    // TODO: add processing for Locks, when Locks are ready
+//                }
+//            }
+//        } finally {
+//            if (zipStream != null) {
+//                try {
+//                    zipStream.close();
+//                } catch (IOException e) {}
+//            }
+//        }
+//        return signaturePaths;
+//    }
 
-    public static Set<ConfigurationObject> readZipFileContentWithSignatures(InputStream inputStream)
+    public static Map<ConfigurationObject, SignaturePath> readZipFileContentWithSignatures(InputStream inputStream)
             throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException, 
             JocConfigurationException, DBOpenSessionException {
         Set<ConfigurationObject> objects = new HashSet<ConfigurationObject>();
@@ -1072,7 +1074,7 @@ public abstract class PublishUtils {
                 while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
                     outBuffer.write(binBuffer, 0, binRead);
                 }
-                // process deployables and releaseables
+                // process deployables only
                 SignaturePath signaturePath = new SignaturePath();
                 Signature signature = new Signature();
                 if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
@@ -1108,16 +1110,6 @@ public abstract class PublishUtils {
                     }
                     lockEdit.setObjectType(ConfigurationType.LOCK);
                     objects.add(lockEdit);
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-                    signaturePath.setObjectPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_PGP_SIGNATURE_FILE_EXTENSION.value(), ""));
-                    signature.setSignatureString(outBuffer.toString());
-                    signaturePath.setSignature(signature);
-                    signaturePaths.add(signaturePath);
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_X509_SIGNATURE_FILE_EXTENSION.value())) {
-                    signaturePath.setObjectPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_X509_SIGNATURE_FILE_EXTENSION.value(), ""));
-                    signature.setSignatureString(outBuffer.toString());
-                    signaturePath.setSignature(signature);
-                    signaturePaths.add(signaturePath);
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
                     JunctionEdit junctionEdit = new JunctionEdit();
                     junctionEdit.setConfiguration(om.readValue(outBuffer.toString(), Junction.class));
@@ -1129,16 +1121,6 @@ public abstract class PublishUtils {
                     }
                     junctionEdit.setObjectType(ConfigurationType.JUNCTION);
                     objects.add(junctionEdit);
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.JUNCTION_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-                    signaturePath.setObjectPath(("/" + entryName).replace(JSObjectFileExtension.JUNCTION_PGP_SIGNATURE_FILE_EXTENSION.value(), ""));
-                    signature.setSignatureString(outBuffer.toString());
-                    signaturePath.setSignature(signature);
-                    signaturePaths.add(signaturePath);
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.JUNCTION_X509_SIGNATURE_FILE_EXTENSION.value())) {
-                    signaturePath.setObjectPath(("/" + entryName).replace(JSObjectFileExtension.JUNCTION_X509_SIGNATURE_FILE_EXTENSION.value(), ""));
-                    signature.setSignatureString(outBuffer.toString());
-                    signaturePath.setSignature(signature);
-                    signaturePaths.add(signaturePath);
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
                     JobClassEdit jobClassEdit = new JobClassEdit();
                     jobClassEdit.setConfiguration(om.readValue(outBuffer.toString(), JobClass.class));
@@ -1150,18 +1132,12 @@ public abstract class PublishUtils {
                     }
                     jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
                     objects.add(jobClassEdit);
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.JOBCLASS_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-                    signaturePath.setObjectPath(("/" + entryName).replace(JSObjectFileExtension.JOBCLASS_PGP_SIGNATURE_FILE_EXTENSION.value(), ""));
-                    signature.setSignatureString(outBuffer.toString());
-                    signaturePath.setSignature(signature);
-                    signaturePaths.add(signaturePath);
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.JOBCLASS_X509_SIGNATURE_FILE_EXTENSION.value())) {
-                    signaturePath.setObjectPath(("/" + entryName).replace(JSObjectFileExtension.JOBCLASS_X509_SIGNATURE_FILE_EXTENSION.value(), ""));
-                    signature.setSignatureString(outBuffer.toString());
-                    signaturePath.setSignature(signature);
-                    signaturePaths.add(signaturePath);
                 } 
             }
+            objects.stream().forEach(item -> {
+                objectsWithSignature.put(item, signaturePaths.stream()
+                        .filter(item2 -> item2.getObjectPath().equals(item.getConfiguration().getPath())).findFirst().get());
+            });            
         } finally {
             if (zipStream != null) {
                 try {
@@ -1169,7 +1145,7 @@ public abstract class PublishUtils {
                 } catch (IOException e) {}
             }
         }
-        return objects;
+        return objectsWithSignature;
     }
 
     public static Set<ConfigurationObject> readZipFileContent(InputStream inputStream)
@@ -1249,6 +1225,10 @@ public abstract class PublishUtils {
                     objects.add(scheduleEdit);
                 } else if (("/" + entryName).endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
                     Calendar cal = om.readValue(outBuffer.toString(), Calendar.class);
+                    if (cal.getType() == null) {
+                        LOGGER.debug(String.format("Calendar with path %1$s not imported. Could not determine calendar type.", 
+                                ("/" + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), "")));
+                    }
                     if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
                         WorkingDaysCalendarEdit wdcEdit = new WorkingDaysCalendarEdit();
                         wdcEdit.setConfiguration(cal);
@@ -1284,10 +1264,64 @@ public abstract class PublishUtils {
         return objects;
     }
 
-    public static Set<SignaturePath> readTarGzipFileContentWithSignatures(InputStream inputStream, Set<Workflow> workflows
-            /* , Set<Lock> locks */) throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException,
-            IOException, JocUnsupportedFileTypeException, JocConfigurationException, DBOpenSessionException {
+//    public static Set<SignaturePath> readTarGzipFileContentWithSignatures(InputStream inputStream, Set<Workflow> workflows
+//            /* , Set<Lock> locks */) throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException,
+//            IOException, JocUnsupportedFileTypeException, JocConfigurationException, DBOpenSessionException {
+//        Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
+//        GZIPInputStream gzipInputStream = null;
+//        TarArchiveInputStream tarArchiveInputStream = null;
+//        try {
+//            gzipInputStream = new GZIPInputStream(inputStream);
+//            tarArchiveInputStream = new TarArchiveInputStream(gzipInputStream);
+//            ArchiveEntry entry = null;
+//            while ((entry = tarArchiveInputStream.getNextEntry()) != null) {
+//                if (entry.isDirectory()) {
+//                    continue;
+//                }
+//                String entryName = entry.getName().replace('\\', '/');
+//                ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
+//                byte[] binBuffer = new byte[8192];
+//                int binRead = 0;
+//                while ((binRead = tarArchiveInputStream.read(binBuffer, 0, 8192)) >= 0) {
+//                    outBuffer.write(binBuffer, 0, binRead);
+//                }
+//                SignaturePath signaturePath = new SignaturePath();
+//                Signature signature = new Signature();
+//                if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+//                    workflows.add(om.readValue(outBuffer.toString(), Workflow.class));
+//                } else if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
+//                    if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
+//                        signaturePath.setObjectPath("/" + entryName.substring(0, entryName.indexOf(
+//                                JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())));
+//                        signature.setSignatureString(outBuffer.toString());
+//                        signaturePath.setSignature(signature);
+//                        signaturePaths.add(signaturePath);
+//                    }
+//                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
+//                    // TODO: add processing for Locks, when Locks are ready
+//                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_PGP_SIGNATURE_FILE_EXTENSION.value())) {
+//                    // TODO: add processing for Locks, when Locks are ready
+//                }
+//            }
+//        } finally {
+//            try {
+//                if (tarArchiveInputStream != null) {
+//                    tarArchiveInputStream.close();
+//                }
+//                if (gzipInputStream != null) {
+//                    gzipInputStream.close();
+//                }
+//            } catch (Exception e) {}
+//        }
+//        return signaturePaths;
+//    }
+
+    public static Map<ConfigurationObject, SignaturePath> readTarGzipFileContentWithSignatures(InputStream inputStream) 
+            throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException, 
+            JocConfigurationException, DBOpenSessionException {
+        Set<ConfigurationObject> objects = new HashSet<ConfigurationObject>();
         Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
+        Map<ConfigurationObject, SignaturePath> objectsWithSignature = new HashMap<ConfigurationObject, SignaturePath>();
         GZIPInputStream gzipInputStream = null;
         TarArchiveInputStream tarArchiveInputStream = null;
         try {
@@ -1305,24 +1339,49 @@ public abstract class PublishUtils {
                 while ((binRead = tarArchiveInputStream.read(binBuffer, 0, 8192)) >= 0) {
                     outBuffer.write(binBuffer, 0, binRead);
                 }
+                // process deployables only
                 SignaturePath signaturePath = new SignaturePath();
                 Signature signature = new Signature();
                 if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
-                    workflows.add(om.readValue(outBuffer.toString(), Workflow.class));
+                    WorkflowEdit workflowEdit = new WorkflowEdit();
+                    workflowEdit.setConfiguration(om.readValue(outBuffer.toString(), Workflow.class));
+                    workflowEdit.setPath(workflowEdit.getConfiguration().getPath());
+                    workflowEdit.setObjectType(ConfigurationType.WORKFLOW);
+                    objects.add(workflowEdit);
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-                    if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-                        signaturePath.setObjectPath("/" + entryName.substring(0, entryName.indexOf(
-                                JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())));
-                        signature.setSignatureString(outBuffer.toString());
-                        signaturePath.setSignature(signature);
-                        signaturePaths.add(signaturePath);
-                    }
+                    signaturePath.setObjectPath(("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value(), ""));
+                    signature.setSignatureString(outBuffer.toString());
+                    signaturePath.setSignature(signature);
+                    signaturePaths.add(signaturePath);
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value())) {
+                    signaturePath.setObjectPath(("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value(), ""));
+                    signature.setSignatureString(outBuffer.toString());
+                    signaturePath.setSignature(signature);
+                    signaturePaths.add(signaturePath);
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
-                    // TODO: add processing for Locks, when Locks are ready
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-                    // TODO: add processing for Locks, when Locks are ready
+                    LockEdit lockEdit = new LockEdit();
+                    lockEdit.setConfiguration(om.readValue(outBuffer.toString(), Lock.class));
+                    lockEdit.setPath(lockEdit.getConfiguration().getPath());
+                    lockEdit.setObjectType(ConfigurationType.LOCK);
+                    objects.add(lockEdit);
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
+                    JunctionEdit junctionEdit = new JunctionEdit();
+                    junctionEdit.setConfiguration(om.readValue(outBuffer.toString(), Junction.class));
+                    junctionEdit.setPath(junctionEdit.getConfiguration().getPath());
+                    junctionEdit.setObjectType(ConfigurationType.JUNCTION);
+                    objects.add(junctionEdit);
+                } else if (("/" + entryName).endsWith(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
+                    JobClassEdit jobClassEdit = new JobClassEdit();
+                    jobClassEdit.setConfiguration(om.readValue(outBuffer.toString(), JobClass.class));
+                    jobClassEdit.setPath(jobClassEdit.getConfiguration().getPath());
+                    jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
+                    objects.add(jobClassEdit);
                 }
             }
+            objects.stream().forEach(item -> {
+                objectsWithSignature.put(item, signaturePaths.stream()
+                        .filter(item2 -> item2.getObjectPath().equals(item.getConfiguration().getPath())).findFirst().get());
+            });            
         } finally {
             try {
                 if (tarArchiveInputStream != null) {
@@ -1333,7 +1392,7 @@ public abstract class PublishUtils {
                 }
             } catch (Exception e) {}
         }
-        return signaturePaths;
+        return objectsWithSignature;
     }
 
     public static Set<ConfigurationObject> readTarGzipFileContent(InputStream inputStream) 
@@ -1614,6 +1673,44 @@ public abstract class PublishUtils {
         return streamingOutput;
     }
     
+    public static boolean verifyDeployable(SOSHibernateSession hibernateSession, SignaturePath signaturePath, ConfigurationObject deployable,
+            String account) throws JocSignatureVerificationException, SOSHibernateException {
+        DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
+        boolean verified = false;
+        try {
+            if (signaturePath != null && signaturePath.getSignature() != null) {
+                JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.HIGH);
+                String publicKey = keyPair.getPublicKey();
+                if (keyPair.getCertificate() != null && !keyPair.getCertificate().isEmpty()) {
+                    Certificate certificate = KeyUtil.getCertificate(keyPair.getCertificate());
+                    verified = VerifySignature.verifyX509(certificate, 
+                            om.writeValueAsString(deployable), signaturePath.getSignature().getSignatureString());                    
+                } else if (publicKey != null && !publicKey.isEmpty()) {
+                    if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+                        verified = VerifySignature.verifyPGP(publicKey, 
+                                om.writeValueAsString(deployable), signaturePath.getSignature().getSignatureString());
+                    } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+                        PublicKey pubKey = KeyUtil.getPublicKeyFromString(KeyUtil.decodePublicKeyString(publicKey)); 
+                        verified = VerifySignature.verifyX509(pubKey, 
+                                om.writeValueAsString(deployable), signaturePath.getSignature().getSignatureString());
+                    } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+                        PublicKey pubKey = KeyUtil.getECDSAPublicKeyFromString(publicKey); 
+                        verified = VerifySignature.verifyX509(pubKey, 
+                                om.writeValueAsString(deployable), signaturePath.getSignature().getSignatureString());
+                    }
+                }
+                if (!verified) {
+                    LOGGER.debug(String.format("signature verification for deployable %1$s was not successful!", deployable.getPath()));
+                    return verified;
+                } 
+            }
+        } catch (IOException | PGPException | NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException 
+                | SignatureException | CertificateException | NoSuchProviderException  e) {
+            throw new JocSignatureVerificationException(e);
+        }
+        return verified;
+    }
+
     public static Signature verifyWorkflows(SOSHibernateSession hibernateSession, Set<SignaturePath> signaturePaths, Workflow workflow,
             String account) throws JocSignatureVerificationException, SOSHibernateException {
         SignaturePath signaturePath = signaturePaths.stream().filter(signaturePathFromStream -> signaturePathFromStream.getObjectPath()
