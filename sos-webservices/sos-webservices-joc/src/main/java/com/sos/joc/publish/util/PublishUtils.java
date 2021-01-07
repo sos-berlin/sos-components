@@ -81,7 +81,6 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocImportException;
 import com.sos.joc.exceptions.JocMissingKeyException;
@@ -98,8 +97,6 @@ import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.CalendarType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.sign.JocKeyPair;
-import com.sos.joc.model.sign.JocKeyType;
 import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.DeployablesFilter;
@@ -110,6 +107,8 @@ import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.ReleasablesFilter;
 import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignaturePath;
+import com.sos.joc.model.sign.JocKeyPair;
+import com.sos.joc.model.sign.JocKeyType;
 import com.sos.joc.publish.common.ConfigurationObjectFileExtension;
 import com.sos.joc.publish.common.JSObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
@@ -1079,7 +1078,13 @@ public abstract class PublishUtils {
                 Signature signature = new Signature();
                 if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
                     WorkflowEdit workflowEdit = new WorkflowEdit();
-                    workflowEdit.setConfiguration(om.readValue(outBuffer.toString(), Workflow.class));
+                    Workflow workflow = om.readValue(outBuffer.toString(), Workflow.class);
+                    if (checkObjectNotEmpty(workflow)) {
+                        workflowEdit.setConfiguration(workflow);
+                    } else {
+                        throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", 
+                                ("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
+                    }
                     if (workflowEdit.getConfiguration().getPath() != null) {
                         workflowEdit.setPath(workflowEdit.getConfiguration().getPath());
                     } else {
@@ -1101,7 +1106,13 @@ public abstract class PublishUtils {
                     signaturePaths.add(signaturePath);
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
                     LockEdit lockEdit = new LockEdit();
-                    lockEdit.setConfiguration(om.readValue(outBuffer.toString(), Lock.class));
+                    Lock lock = om.readValue(outBuffer.toString(), Lock.class);
+                    if (checkObjectNotEmpty(lock)) {
+                        lockEdit.setConfiguration(lock);
+                    } else {
+                        throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", 
+                                ("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
+                    }
                     if (lockEdit.getConfiguration().getPath() != null ) {
                         lockEdit.setPath(lockEdit.getConfiguration().getPath());
                     } else {
@@ -1112,7 +1123,13 @@ public abstract class PublishUtils {
                     objects.add(lockEdit);
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
                     JunctionEdit junctionEdit = new JunctionEdit();
-                    junctionEdit.setConfiguration(om.readValue(outBuffer.toString(), Junction.class));
+                    Junction junction = om.readValue(outBuffer.toString(), Junction.class);
+                    if (checkObjectNotEmpty(junction)) {
+                        junctionEdit.setConfiguration(junction);
+                    } else {
+                        throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", 
+                                ("/" + entryName).replace(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
+                    }
                     if (junctionEdit.getConfiguration().getPath() != null ) {
                         junctionEdit.setPath(junctionEdit.getConfiguration().getPath());
                     } else {
@@ -1123,7 +1140,13 @@ public abstract class PublishUtils {
                     objects.add(junctionEdit);
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
                     JobClassEdit jobClassEdit = new JobClassEdit();
-                    jobClassEdit.setConfiguration(om.readValue(outBuffer.toString(), JobClass.class));
+                    JobClass jobClass = om.readValue(outBuffer.toString(), JobClass.class);
+                    if (checkObjectNotEmpty(jobClass)) {
+                        jobClassEdit.setConfiguration(jobClass);
+                    } else {
+                        throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", 
+                                ("/" + entryName).replace(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
+                    }
                     if (jobClassEdit.getConfiguration().getPath() != null ) {
                         jobClassEdit.setPath(jobClassEdit.getConfiguration().getPath());
                     } else {
@@ -1170,7 +1193,13 @@ public abstract class PublishUtils {
                 // process deployables and releaseables
                 if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
                     WorkflowEdit workflowEdit = new WorkflowEdit();
-                    workflowEdit.setConfiguration(om.readValue(outBuffer.toString(), Workflow.class));
+                    Workflow workflow = om.readValue(outBuffer.toString(), Workflow.class);
+                    if (checkObjectNotEmpty(workflow)) {
+                        workflowEdit.setConfiguration(workflow);
+                    } else {
+                        throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", 
+                                ("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
+                    }
                     if (workflowEdit.getConfiguration().getPath() != null) {
                         workflowEdit.setPath(workflowEdit.getConfiguration().getPath());
                     } else {
@@ -1181,7 +1210,13 @@ public abstract class PublishUtils {
                     objects.add(workflowEdit);
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
                     LockEdit lockEdit = new LockEdit();
-                    lockEdit.setConfiguration(om.readValue(outBuffer.toString(), Lock.class));
+                    Lock lock = om.readValue(outBuffer.toString(), Lock.class);
+                    if (checkObjectNotEmpty(lock)) {
+                        lockEdit.setConfiguration(lock);
+                    } else {
+                        throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", 
+                                ("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
+                    }
                     if (lockEdit.getConfiguration().getPath() != null ) {
                         lockEdit.setPath(lockEdit.getConfiguration().getPath());
                     } else {
@@ -1192,7 +1227,13 @@ public abstract class PublishUtils {
                     objects.add(lockEdit);
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
                     JunctionEdit junctionEdit = new JunctionEdit();
-                    junctionEdit.setConfiguration(om.readValue(outBuffer.toString(), Junction.class));
+                    Junction junction = om.readValue(outBuffer.toString(), Junction.class);
+                    if (checkObjectNotEmpty(junction)) {
+                        junctionEdit.setConfiguration(junction);
+                    } else {
+                        throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", 
+                                ("/" + entryName).replace(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
+                    }
                     if (junctionEdit.getConfiguration().getPath() != null ) {
                         junctionEdit.setPath(junctionEdit.getConfiguration().getPath());
                     } else {
@@ -1203,7 +1244,13 @@ public abstract class PublishUtils {
                     objects.add(junctionEdit);
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
                     JobClassEdit jobClassEdit = new JobClassEdit();
-                    jobClassEdit.setConfiguration(om.readValue(outBuffer.toString(), JobClass.class));
+                    JobClass jobClass = om.readValue(outBuffer.toString(), JobClass.class);
+                    if (checkObjectNotEmpty(jobClass)) {
+                        jobClassEdit.setConfiguration(jobClass);
+                    } else {
+                        throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", 
+                                ("/" + entryName).replace(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
+                    }
                     if (jobClassEdit.getConfiguration().getPath() != null ) {
                         jobClassEdit.setPath(jobClassEdit.getConfiguration().getPath());
                     } else {
@@ -1214,7 +1261,13 @@ public abstract class PublishUtils {
                     objects.add(jobClassEdit);
                 } else if (("/" + entryName).endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value())) {
                     ScheduleEdit scheduleEdit = new ScheduleEdit();
-                    scheduleEdit.setConfiguration(om.readValue(outBuffer.toString(), Schedule.class));
+                    Schedule schedule = om.readValue(outBuffer.toString(), Schedule.class);
+                    if (checkObjectNotEmpty(schedule)) {
+                        scheduleEdit.setConfiguration(schedule);
+                    } else {
+                        throw new JocImportException(String.format("Schedule with path %1$s not imported. Object values could not be mapped.", 
+                                ("/" + entryName).replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(), "")));
+                    }
                     if (scheduleEdit.getConfiguration().getPath() != null ) {
                         scheduleEdit.setPath(scheduleEdit.getConfiguration().getPath());
                     } else {
@@ -1225,32 +1278,33 @@ public abstract class PublishUtils {
                     objects.add(scheduleEdit);
                 } else if (("/" + entryName).endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
                     Calendar cal = om.readValue(outBuffer.toString(), Calendar.class);
-                    if (cal.getType() == null) {
-                        LOGGER.debug(String.format("Calendar with path %1$s not imported. Could not determine calendar type.", 
+                    if (checkObjectNotEmpty(cal)) {
+                        if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
+                            WorkingDaysCalendarEdit wdcEdit = new WorkingDaysCalendarEdit();
+                            wdcEdit.setConfiguration(cal);
+                            if (wdcEdit.getConfiguration().getPath() != null ) {
+                                wdcEdit.setPath(wdcEdit.getConfiguration().getPath());
+                            } else {
+                                wdcEdit.setPath(("/" + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), ""));
+                                wdcEdit.getConfiguration().setPath(wdcEdit.getPath());
+                            }
+                            wdcEdit.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
+                            objects.add(wdcEdit);
+                        } else if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
+                            NonWorkingDaysCalendarEdit nwdcEdit = new NonWorkingDaysCalendarEdit();
+                            nwdcEdit.setConfiguration(cal);
+                            if (nwdcEdit.getConfiguration().getPath() != null ) {
+                                nwdcEdit.setPath(nwdcEdit.getConfiguration().getPath());
+                            } else {
+                                nwdcEdit.setPath(("/" + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), ""));
+                                nwdcEdit.getConfiguration().setPath(nwdcEdit.getPath());
+                            }
+                            nwdcEdit.setObjectType(ConfigurationType.NONWORKINGDAYSCALENDAR);
+                            objects.add(nwdcEdit);
+                        }
+                    } else {
+                        throw new JocImportException(String.format("Calendar with path %1$s not imported. Object values could not be mapped.", 
                                 ("/" + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), "")));
-                    }
-                    if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
-                        WorkingDaysCalendarEdit wdcEdit = new WorkingDaysCalendarEdit();
-                        wdcEdit.setConfiguration(cal);
-                        if (wdcEdit.getConfiguration().getPath() != null ) {
-                            wdcEdit.setPath(wdcEdit.getConfiguration().getPath());
-                        } else {
-                            wdcEdit.setPath(("/" + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), ""));
-                            wdcEdit.getConfiguration().setPath(wdcEdit.getPath());
-                        }
-                        wdcEdit.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
-                        objects.add(wdcEdit);
-                    } else if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
-                        NonWorkingDaysCalendarEdit nwdcEdit = new NonWorkingDaysCalendarEdit();
-                        nwdcEdit.setConfiguration(cal);
-                        if (nwdcEdit.getConfiguration().getPath() != null ) {
-                            nwdcEdit.setPath(nwdcEdit.getConfiguration().getPath());
-                        } else {
-                            nwdcEdit.setPath(("/" + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), ""));
-                            nwdcEdit.getConfiguration().setPath(nwdcEdit.getPath());
-                        }
-                        nwdcEdit.setObjectType(ConfigurationType.NONWORKINGDAYSCALENDAR);
-                        objects.add(nwdcEdit);
                     }
                 }
             }
@@ -1263,58 +1317,6 @@ public abstract class PublishUtils {
         }
         return objects;
     }
-
-//    public static Set<SignaturePath> readTarGzipFileContentWithSignatures(InputStream inputStream, Set<Workflow> workflows
-//            /* , Set<Lock> locks */) throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException,
-//            IOException, JocUnsupportedFileTypeException, JocConfigurationException, DBOpenSessionException {
-//        Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
-//        GZIPInputStream gzipInputStream = null;
-//        TarArchiveInputStream tarArchiveInputStream = null;
-//        try {
-//            gzipInputStream = new GZIPInputStream(inputStream);
-//            tarArchiveInputStream = new TarArchiveInputStream(gzipInputStream);
-//            ArchiveEntry entry = null;
-//            while ((entry = tarArchiveInputStream.getNextEntry()) != null) {
-//                if (entry.isDirectory()) {
-//                    continue;
-//                }
-//                String entryName = entry.getName().replace('\\', '/');
-//                ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
-//                byte[] binBuffer = new byte[8192];
-//                int binRead = 0;
-//                while ((binRead = tarArchiveInputStream.read(binBuffer, 0, 8192)) >= 0) {
-//                    outBuffer.write(binBuffer, 0, binRead);
-//                }
-//                SignaturePath signaturePath = new SignaturePath();
-//                Signature signature = new Signature();
-//                if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
-//                    workflows.add(om.readValue(outBuffer.toString(), Workflow.class));
-//                } else if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-//                    if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-//                        signaturePath.setObjectPath("/" + entryName.substring(0, entryName.indexOf(
-//                                JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())));
-//                        signature.setSignatureString(outBuffer.toString());
-//                        signaturePath.setSignature(signature);
-//                        signaturePaths.add(signaturePath);
-//                    }
-//                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
-//                    // TODO: add processing for Locks, when Locks are ready
-//                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-//                    // TODO: add processing for Locks, when Locks are ready
-//                }
-//            }
-//        } finally {
-//            try {
-//                if (tarArchiveInputStream != null) {
-//                    tarArchiveInputStream.close();
-//                }
-//                if (gzipInputStream != null) {
-//                    gzipInputStream.close();
-//                }
-//            } catch (Exception e) {}
-//        }
-//        return signaturePaths;
-//    }
 
     public static Map<ConfigurationObject, SignaturePath> readTarGzipFileContentWithSignatures(InputStream inputStream) 
             throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException, 
@@ -1344,7 +1346,13 @@ public abstract class PublishUtils {
                 Signature signature = new Signature();
                 if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
                     WorkflowEdit workflowEdit = new WorkflowEdit();
-                    workflowEdit.setConfiguration(om.readValue(outBuffer.toString(), Workflow.class));
+                    Workflow workflow = om.readValue(outBuffer.toString(), Workflow.class);
+                    if (checkObjectNotEmpty(workflow)) {
+                        workflowEdit.setConfiguration(workflow);
+                    } else {
+                        throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", 
+                                ("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
+                    }
                     workflowEdit.setPath(workflowEdit.getConfiguration().getPath());
                     workflowEdit.setObjectType(ConfigurationType.WORKFLOW);
                     objects.add(workflowEdit);
@@ -1360,19 +1368,37 @@ public abstract class PublishUtils {
                     signaturePaths.add(signaturePath);
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
                     LockEdit lockEdit = new LockEdit();
-                    lockEdit.setConfiguration(om.readValue(outBuffer.toString(), Lock.class));
+                    Lock lock = om.readValue(outBuffer.toString(), Lock.class);
+                    if (checkObjectNotEmpty(lock)) {
+                        lockEdit.setConfiguration(lock);
+                    } else {
+                        throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", 
+                                ("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
+                    }
                     lockEdit.setPath(lockEdit.getConfiguration().getPath());
                     lockEdit.setObjectType(ConfigurationType.LOCK);
                     objects.add(lockEdit);
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
                     JunctionEdit junctionEdit = new JunctionEdit();
-                    junctionEdit.setConfiguration(om.readValue(outBuffer.toString(), Junction.class));
+                    Junction junction = om.readValue(outBuffer.toString(), Junction.class);
+                    if (checkObjectNotEmpty(junction)) {
+                        junctionEdit.setConfiguration(junction);
+                    } else {
+                        throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", 
+                                ("/" + entryName).replace(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
+                    }
                     junctionEdit.setPath(junctionEdit.getConfiguration().getPath());
                     junctionEdit.setObjectType(ConfigurationType.JUNCTION);
                     objects.add(junctionEdit);
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
                     JobClassEdit jobClassEdit = new JobClassEdit();
-                    jobClassEdit.setConfiguration(om.readValue(outBuffer.toString(), JobClass.class));
+                    JobClass jobClass = om.readValue(outBuffer.toString(), JobClass.class);
+                    if (checkObjectNotEmpty(jobClass)) {
+                        jobClassEdit.setConfiguration(jobClass);
+                    } else {
+                        throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", 
+                                ("/" + entryName).replace(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
+                    }
                     jobClassEdit.setPath(jobClassEdit.getConfiguration().getPath());
                     jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
                     objects.add(jobClassEdit);
@@ -1419,48 +1445,93 @@ public abstract class PublishUtils {
                 // process deployables and releaseables
                 if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
                     WorkflowEdit workflowEdit = new WorkflowEdit();
-                    workflowEdit.setConfiguration(om.readValue(outBuffer.toString(), Workflow.class));
+                    Workflow workflow = om.readValue(outBuffer.toString(), Workflow.class);
+                    if (checkObjectNotEmpty(workflow)) {
+                        workflowEdit.setConfiguration(workflow);
+                    } else {
+                        throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", 
+                                ("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
+                    }
                     workflowEdit.setPath(workflowEdit.getConfiguration().getPath());
                     workflowEdit.setObjectType(ConfigurationType.WORKFLOW);
                     objects.add(workflowEdit);
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
                     LockEdit lockEdit = new LockEdit();
-                    lockEdit.setConfiguration(om.readValue(outBuffer.toString(), Lock.class));
+                    Lock lock = om.readValue(outBuffer.toString(), Lock.class);
+                    if (checkObjectNotEmpty(lock)) {
+                        lockEdit.setConfiguration(lock);
+                    } else {
+                        throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", 
+                                ("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
+                    }
                     lockEdit.setPath(lockEdit.getConfiguration().getPath());
                     lockEdit.setObjectType(ConfigurationType.LOCK);
                     objects.add(lockEdit);
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
                     JunctionEdit junctionEdit = new JunctionEdit();
-                    junctionEdit.setConfiguration(om.readValue(outBuffer.toString(), Junction.class));
+                    Junction junction = om.readValue(outBuffer.toString(), Junction.class);
+                    if (checkObjectNotEmpty(junction)) {
+                        junctionEdit.setConfiguration(junction);
+                    } else {
+                        throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", 
+                                ("/" + entryName).replace(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
+                    }
                     junctionEdit.setPath(junctionEdit.getConfiguration().getPath());
                     junctionEdit.setObjectType(ConfigurationType.JUNCTION);
                     objects.add(junctionEdit);
                 } else if (("/" + entryName).endsWith(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
                     JobClassEdit jobClassEdit = new JobClassEdit();
-                    jobClassEdit.setConfiguration(om.readValue(outBuffer.toString(), JobClass.class));
+                    JobClass jobClass = om.readValue(outBuffer.toString(), JobClass.class);
+                    if (checkObjectNotEmpty(jobClass)) {
+                        jobClassEdit.setConfiguration(jobClass);
+                    } else {
+                        throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", 
+                                ("/" + entryName).replace(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
+                    }
                     jobClassEdit.setPath(jobClassEdit.getConfiguration().getPath());
                     jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
                     objects.add(jobClassEdit);
                 } else if (("/" + entryName).endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value())) {
                     ScheduleEdit scheduleEdit = new ScheduleEdit();
-                    scheduleEdit.setConfiguration(om.readValue(outBuffer.toString(), Schedule.class));
+                    Schedule schedule = om.readValue(outBuffer.toString(), Schedule.class);
+                    if (checkObjectNotEmpty(schedule)) {
+                        scheduleEdit.setConfiguration(schedule);
+                    } else {
+                        throw new JocImportException(String.format("Schedule with path %1$s not imported. Object values could not be mapped.", 
+                                ("/" + entryName).replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(), "")));
+                    }
                     scheduleEdit.setPath(scheduleEdit.getConfiguration().getPath());
                     scheduleEdit.setObjectType(ConfigurationType.SCHEDULE);
                     objects.add(scheduleEdit);
                 } else if (("/" + entryName).endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
                     Calendar cal = om.readValue(outBuffer.toString(), Calendar.class);
-                    if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
-                        WorkingDaysCalendarEdit wdcEdit = new WorkingDaysCalendarEdit();
-                        wdcEdit.setConfiguration(cal);
-                        wdcEdit.setPath(wdcEdit.getConfiguration().getPath());
-                        wdcEdit.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
-                        objects.add(wdcEdit);
-                    } else if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
-                        NonWorkingDaysCalendarEdit nwdcEdit = new NonWorkingDaysCalendarEdit();
-                        nwdcEdit.setConfiguration(cal);
-                        nwdcEdit.setPath(nwdcEdit.getConfiguration().getPath());
-                        nwdcEdit.setObjectType(ConfigurationType.NONWORKINGDAYSCALENDAR);
-                        objects.add(nwdcEdit);
+                    if (checkObjectNotEmpty(cal)) {
+                        if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
+                            WorkingDaysCalendarEdit wdcEdit = new WorkingDaysCalendarEdit();
+                            wdcEdit.setConfiguration(cal);
+                            if (wdcEdit.getConfiguration().getPath() != null ) {
+                                wdcEdit.setPath(wdcEdit.getConfiguration().getPath());
+                            } else {
+                                wdcEdit.setPath(("/" + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), ""));
+                                wdcEdit.getConfiguration().setPath(wdcEdit.getPath());
+                            }
+                            wdcEdit.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
+                            objects.add(wdcEdit);
+                        } else if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
+                            NonWorkingDaysCalendarEdit nwdcEdit = new NonWorkingDaysCalendarEdit();
+                            nwdcEdit.setConfiguration(cal);
+                            if (nwdcEdit.getConfiguration().getPath() != null ) {
+                                nwdcEdit.setPath(nwdcEdit.getConfiguration().getPath());
+                            } else {
+                                nwdcEdit.setPath(("/" + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), ""));
+                                nwdcEdit.getConfiguration().setPath(nwdcEdit.getPath());
+                            }
+                            nwdcEdit.setObjectType(ConfigurationType.NONWORKINGDAYSCALENDAR);
+                            objects.add(nwdcEdit);
+                        }
+                    } else {
+                        throw new JocImportException(String.format("Calendar with path %1$s not imported. Object values could not be mapped.", 
+                                ("/" + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), "")));
                     }
                 }
             }
@@ -2289,4 +2360,82 @@ public abstract class PublishUtils {
         }
     }
 
+    private static boolean checkObjectNotEmpty (Workflow workflow) {
+        if (workflow.getDocumentationId() == null 
+                && workflow.getInstructions() == null 
+                && workflow.getJobs() == null
+                && workflow.getPath() == null
+                && workflow.getTYPE() == null) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    
+    private static boolean checkObjectNotEmpty (Junction junction) {
+        if (junction.getDocumentationId() == null
+                && junction.getLifetime() == null
+                && junction.getOrderId() == null
+                && junction.getPath() == null
+                && junction.getTYPE() == null) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    
+    private static boolean checkObjectNotEmpty (JobClass jobClass) {
+        if (jobClass.getDocumentationId() == null 
+                && jobClass.getMaxProcesses() == null
+                && jobClass.getPath() == null
+                && jobClass.getPriority() == null
+                && jobClass.getTYPE() == null) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    
+    private static boolean checkObjectNotEmpty (Lock lock) {
+        if (lock.getDocumentationId() == null 
+                && lock.getCapacity() == null
+                && lock.getPath() == null
+                && lock.getMaxNonExclusive() == null
+                && lock.getTYPE() == null) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    
+    private static boolean checkObjectNotEmpty (Schedule schedule) {
+        if (schedule.getDocumentationId() == null 
+                && schedule.getPlanOrderAutomatically() == null
+                && schedule.getPath() == null
+                && schedule.getCalendars() == null
+                && schedule.getWorkflowPath() == null
+                && schedule.getSubmitOrderToControllerWhenPlanned() == null
+                && schedule.getNonWorkingCalendars() == null
+                && schedule.getVariables() == null) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    
+    private static boolean checkObjectNotEmpty (Calendar calendar) {
+        if (calendar.getDocumentationId() == null 
+                && calendar.getExcludes() == null
+                && calendar.getPath() == null
+                && calendar.getFrom() == null
+                && calendar.getIncludes() == null
+                && calendar.getName() == null 
+                && calendar.getTo() == null 
+                && calendar.getType() == null) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    
 }
