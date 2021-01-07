@@ -78,7 +78,6 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             }
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             stream = body.getEntityAs(InputStream.class);
-            final String mediaSubType = body.getMediaType().getSubtype().replaceFirst("^x-", "");
             Set<ConfigurationObject> configurations = new HashSet<ConfigurationObject>();
             // process uploaded archive
             if (ArchiveFormat.ZIP.equals(filter.getFormat())) {
@@ -87,7 +86,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 configurations = PublishUtils.readTarGzipFileContent(stream);
             } else {
             	throw new JocUnsupportedFileTypeException(
-            	        String.format("The file %1$s to be uploaded must have one of the formats zip, tar.gz or tgz!", uploadFileName)); 
+            	        String.format("The file %1$s to be uploaded must have one of the formats .zip or .tar.gz!", uploadFileName)); 
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);

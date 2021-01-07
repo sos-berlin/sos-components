@@ -26,12 +26,20 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
+import com.sos.jobscheduler.model.deploy.DeployType;
+import com.sos.jobscheduler.model.jobclass.JobClass;
+import com.sos.jobscheduler.model.jobclass.JobClassPublish;
+import com.sos.jobscheduler.model.junction.Junction;
+import com.sos.jobscheduler.model.junction.JunctionPublish;
+import com.sos.jobscheduler.model.lock.Lock;
+import com.sos.jobscheduler.model.lock.LockPublish;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.jobscheduler.model.workflow.WorkflowPublish;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.ImportDeployAudit;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -47,11 +55,10 @@ import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.ConfigurationObject;
-import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.model.publish.ImportDeployFilter;
-import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignaturePath;
+import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.IImportDeploy;
 import com.sos.joc.publish.util.PublishUtils;
@@ -126,47 +133,92 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             stream = body.getEntityAs(InputStream.class);
             final String mediaSubType = body.getMediaType().getSubtype().replaceFirst("^x-", "");
 
-            Set<Workflow> workflows = new HashSet<Workflow>();
+//            Set<Workflow> workflows = new HashSet<Workflow>();
             Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
             Map<ConfigurationObject, SignaturePath> objectsWithSignature = new HashMap<ConfigurationObject, SignaturePath>();
             
             // process uploaded archive
-            if (mediaSubType.contains("zip") && !mediaSubType.contains("gzip")) {
-                PublishUtils.readZipFileContentWithSignatures(stream, workflows);
-            } else if (mediaSubType.contains("tgz") || mediaSubType.contains("tar.gz") || mediaSubType.contains("gzip")) {
-                PublishUtils.readTarGzipFileContentWithSignatures(stream, workflows);
+            if (ArchiveFormat.ZIP.equals(filter.getFormat())) {
+                objectsWithSignature = PublishUtils.readZipFileContentWithSignatures(stream);
+            } else if (ArchiveFormat.TAR_GZ.equals(filter.getFormat())) {
+                objectsWithSignature = PublishUtils.readTarGzipFileContentWithSignatures(stream);
             } else {
             	throw new JocUnsupportedFileTypeException(
-            	        String.format("The file %1$s to be uploaded must have the format zip!", uploadFileName)); 
+            	        String.format("The file %1$s to be uploaded must have one of the formats .zip or .tar.gz!", uploadFileName)); 
             }
             // process signature verification and save or update objects
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             dbLayer = new DBLayerDeploy(hibernateSession);
             Map<DBItemInventoryConfiguration, DBItemDepSignatures> importedObjects = 
                     new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
-            String versionId = null;
-            if (workflows != null && !workflows.isEmpty()) {
-                versionId = workflows.stream().findFirst().get().getVersionId();
+            String commitId = null;
+            if (objectsWithSignature != null && !objectsWithSignature.isEmpty()) {
+                ConfigurationObject config = objectsWithSignature.keySet().stream().findFirst().get();
+                switch (config.getObjectType()) {
+                case WORKFLOW:
+                    commitId = ((Workflow)config.getConfiguration()).getVersionId();
+                    break;
+                case LOCK:
+                    commitId = ((Lock)config.getConfiguration()).getVersionId();
+                    break;
+                case JUNCTION:
+                    commitId = ((Junction)config.getConfiguration()).getVersionId();
+                    break;
+                case JOBCLASS:
+                    commitId = ((JobClass)config.getConfiguration()).getVersionId();
+                    break;
+                default:
+                    commitId = ((Workflow)config.getConfiguration()).getVersionId();
+                }
             }
             ImportDeployAudit mainAudit = new ImportDeployAudit(filter,
-                    String.format("%1$d workflow(s) imported with profile %2$s", workflows.size(), account));
+                    String.format("%1$d object(s) imported with profile %2$s", objectsWithSignature.size(), account));
             logAuditMessage(mainAudit);
             DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(mainAudit);
             Set<java.nio.file.Path> folders = new HashSet<java.nio.file.Path>();
-            folders = workflows.stream().map(wf -> wf.getPath()).map(path -> Paths.get(path).getParent()).collect(Collectors.toSet());
-            for (Workflow workflow : workflows) {
-                WorkflowPublish wfEdit = new WorkflowPublish();
-                wfEdit.setContent(workflow);
-                if (!signaturePaths.isEmpty()) {
-                    Signature signature = PublishUtils.verifyWorkflows(hibernateSession, signaturePaths, workflow, account);
-                    if (signature != null) {
-                        wfEdit.setSignedContent(signature.getSignatureString());
-                    } 
+            folders = objectsWithSignature.keySet().stream().map(config -> config.getPath()).map(path -> Paths.get(path).getParent()).collect(Collectors.toSet());
+            for (ConfigurationObject config : objectsWithSignature.keySet()) {
+                SignaturePath signaturePath = objectsWithSignature.get(config);
+                switch(config.getObjectType()) {
+                case WORKFLOW:
+                    WorkflowPublish workflowPublish = new WorkflowPublish();
+                    workflowPublish.setContent((Workflow)config.getConfiguration());
+                    workflowPublish.setSignedContent(signaturePath.getSignature().getSignatureString());
+                    DBItemInventoryConfiguration workflowDbItem = dbLayer.saveOrUpdateInventoryConfiguration(
+                            config.getPath(), workflowPublish, DeployType.WORKFLOW, account, dbItemAuditLog.getId());
+                    DBItemDepSignatures workflowDbItemSignature = dbLayer.saveOrUpdateSignature(
+                            workflowDbItem.getId(), workflowPublish, account, DeployType.WORKFLOW);
+                    importedObjects.put(workflowDbItem, workflowDbItemSignature);
+                    break;
+                case LOCK:
+                    LockPublish lockPublish = new LockPublish();
+                    lockPublish.setContent((Lock)config.getConfiguration());
+                    DBItemInventoryConfiguration lockDbItem = dbLayer.saveOrUpdateInventoryConfiguration(
+                            config.getPath(), lockPublish, DeployType.LOCK, account, dbItemAuditLog.getId());
+//                    importedObjects.put(lockDbItem, null);
+                    break;
+                case JUNCTION:
+                    JunctionPublish junctionPublish = new JunctionPublish();
+                    junctionPublish.setContent((Junction)config.getConfiguration());
+                    DBItemInventoryConfiguration junctionDbItem = dbLayer.saveOrUpdateInventoryConfiguration(
+                            config.getPath(), junctionPublish, DeployType.LOCK, account, dbItemAuditLog.getId());
+//                    importedObjects.put(junctionDbItem, null);
+                    break;
+                case JOBCLASS:
+                    JobClassPublish jobClassPublish = new JobClassPublish();
+                    jobClassPublish.setContent((JobClass)config.getConfiguration());
+                    DBItemInventoryConfiguration jobClassDbItem = dbLayer.saveOrUpdateInventoryConfiguration(
+                            config.getPath(), jobClassPublish, DeployType.LOCK, account, dbItemAuditLog.getId());
+//                    importedObjects.put(jobClassDbItem, null);
+                    break;
+                case FOLDER:
+                case JOB:
+                case NONWORKINGDAYSCALENDAR:
+                case SCHEDULE:
+                case WORKINGDAYSCALENDAR:
+                default:
+                    break;
                 }
-                DBItemInventoryConfiguration dbItem = dbLayer.saveOrUpdateInventoryConfiguration(
-                        workflow.getPath(), wfEdit, workflow.getTYPE(), account, dbItemAuditLog.getId());
-                DBItemDepSignatures dbItemSignature = dbLayer.saveOrUpdateSignature(dbItem.getId(), wfEdit, account, workflow.getTYPE());
-                importedObjects.put(dbItem, dbItemSignature);
             }
             dbLayer.createInvConfigurationsDBItemsForFoldersIfNotExists(
                     PublishUtils.updateSetOfPathsWithParents(folders), dbItemAuditLog.getId());
@@ -174,7 +226,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             final Date deploymentDate = Date.from(Instant.now());
             // call UpdateRepo for all provided Controllers
             String controllerId = filter.getControllerId();
-            final String versionIdForUpdate = versionId;
+            final String commitIdForUpdate = commitId;
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
             JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.HIGH);
             if (keyPair == null) {
@@ -189,11 +241,11 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 // clone list as it has to be final now for processing in CompleteableFuture.thenAccept method
                 final List<DBItemDeploymentHistory> toDelete = toDeleteForRename;
                 // set new versionId for second round (delete items)
-                final String versionIdForDeleteRenamed = UUID.randomUUID().toString();
+                final String commitIdForDeleteRenamed = UUID.randomUUID().toString();
                     // call updateRepo command via Proxy of given controllers
-                    PublishUtils.updateItemsDelete(versionIdForDeleteRenamed, toDelete, controllerId, dbLayer, 
+                    PublishUtils.updateItemsDelete(commitIdForDeleteRenamed, toDelete, controllerId, dbLayer, 
                             keyPair.getKeyAlgorithm()).thenAccept(either -> {
-                            processAfterDelete(either, toDelete, controllerId, account, versionIdForDeleteRenamed, null);
+                            processAfterDelete(either, toDelete, controllerId, account, commitIdForDeleteRenamed, null);
                     }).get();
             }
 //            for (Controller controller : controllers) {
@@ -202,25 +254,25 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 X509Certificate cert = null;
                 switch(keyPair.getKeyAlgorithm()) {
                 case SOSKeyConstants.PGP_ALGORITHM_NAME:
-                    PublishUtils.updateItemsAddOrUpdatePGP(versionIdForUpdate, importedObjects, null, controllerId, dbLayer)
+                    PublishUtils.updateItemsAddOrUpdatePGP(commitIdForUpdate, importedObjects, null, controllerId, dbLayer)
                         .thenAccept(either -> {
-                            processAfterAdd(either, importedObjects, null, account, versionIdForUpdate, controllerId, deploymentDate, filter);
+                            processAfterAdd(either, importedObjects, null, account, commitIdForUpdate, controllerId, deploymentDate, filter);
                     }).get();
                     break;
                 case SOSKeyConstants.RSA_ALGORITHM_NAME:
                     cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                     signerDN = cert.getSubjectDN().getName();
-                    PublishUtils.updateItemsAddOrUpdateWithX509(versionIdForUpdate, importedObjects, null, controllerId, dbLayer,
+                    PublishUtils.updateItemsAddOrUpdateWithX509(commitIdForUpdate, importedObjects, null, controllerId, dbLayer,
                             SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
-                                processAfterAdd(either, importedObjects, null, account, versionIdForUpdate, controllerId, deploymentDate, filter);
+                                processAfterAdd(either, importedObjects, null, account, commitIdForUpdate, controllerId, deploymentDate, filter);
                     }).get();
                     break;
                 case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
                     cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                     signerDN = cert.getSubjectDN().getName();
-                    PublishUtils.updateItemsAddOrUpdateWithX509(versionIdForUpdate, importedObjects, null, controllerId, dbLayer,
+                    PublishUtils.updateItemsAddOrUpdateWithX509(commitIdForUpdate, importedObjects, null, controllerId, dbLayer,
                             SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
-                                processAfterAdd(either, importedObjects, null, account, versionIdForUpdate, controllerId, deploymentDate, filter);
+                                processAfterAdd(either, importedObjects, null, account, commitIdForUpdate, controllerId, deploymentDate, filter);
                     }).get();
                     break;
                 }
@@ -230,7 +282,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             } else {
                 if (importedObjects != null && !importedObjects.isEmpty()) {
                     dbLayer.cleanupSignaturesForConfigurations(importedObjects.keySet());
-                    dbLayer.cleanupCommitIdsForConfigurations(versionId);
+                    dbLayer.cleanupCommitIdsForConfigurations(commitId);
                 }
                 return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             }
@@ -268,9 +320,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                         verifiedConfigurations, null, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate);
                 deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(
                         verifiedReDeployables, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
-                createAuditLogFor(deployedObjects, filter, controllerId, true, versionIdForUpdate);
+                createAuditLogForEach(deployedObjects, filter, controllerId, true, versionIdForUpdate);
                 PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), null, controllerId, dbLayer.getSession());
                 LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
+                JocInventory.handleWorkflowSearch(newHibernateSession, deployedObjects, false);
             } else if (either.isLeft()) {
                 // an error occurred
                 String message = String.format(
@@ -299,39 +352,50 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
     
     private void processAfterDelete (
             Either<Problem, Void> either, 
-            List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete, 
+            List<DBItemDeploymentHistory> itemsToDelete, 
             String controller, 
             String account, 
             String versionIdForDelete,
             ImportDeployFilter filter) {
-        if (either.isRight()) {
-            Set<DBItemDeploymentHistory> deletedDeployItems = 
-                    PublishUtils.updateDeletedDepHistory(depHistoryDBItemsToDeployDelete, dbLayer);
-            if (filter != null) {
-                createAuditLogFor(deletedDeployItems, filter, controller, false, versionIdForDelete);
+        SOSHibernateSession newHibernateSession = null;
+        try {
+            newHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            if (either.isRight()) {
+                Set<Long> configurationIdsToDelete = itemsToDelete.stream()
+                        .map(item -> dbLayer.getInventoryConfigurationIdByPathAndType(item.getPath(), item.getType()))
+                        .collect(Collectors.toSet());
+                Set<DBItemDeploymentHistory> deletedDeployItems = 
+                        PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer);
+                if (filter != null) {
+                    createAuditLogForEach(deletedDeployItems, filter, controller, false, versionIdForDelete);
+                }
+                JocInventory.deleteConfigurations(configurationIdsToDelete);
+                JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);
+            } else if (either.isLeft()) {
+                String message = String.format("Response from Controller \"%1$s:\": %2$s", controller, either.getLeft().message());
+                LOGGER.warn(message);
+                // updateRepo command is atomic, therefore all items are rejected
+                List<DBItemDeploymentHistory> failedDeployDeleteItems = dbLayer.updateFailedDeploymentForDelete(
+                        itemsToDelete, controller, account, versionIdForDelete, either.getLeft().message());
+                // if not successful the objects and the related controllerId have to be stored 
+                // in a submissions table for reprocessing
+                dbLayer.createSubmissionForFailedDeployments(failedDeployDeleteItems);
+                hasErrors = true;
+                if (either.getLeft().codeOrNull() != null) {
+                    listOfErrors.add(
+                            new BulkError().get(new JocError(either.getLeft().message()), "/"));
+                } else {
+                    listOfErrors.add(
+                            new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), 
+                                    either.getLeft().message()), "/"));
+                }
             }
-        } else if (either.isLeft()) {
-            String message = String.format("Response from Controller \"%1$s:\": %2$s", controller, either.getLeft().message());
-            LOGGER.warn(message);
-            // updateRepo command is atomic, therefore all items are rejected
-            List<DBItemDeploymentHistory> failedDeployDeleteItems = dbLayer.updateFailedDeploymentForDelete(
-                    depHistoryDBItemsToDeployDelete, controller, account, versionIdForDelete, either.getLeft().message());
-            // if not successful the objects and the related controllerId have to be stored 
-            // in a submissions table for reprocessing
-            dbLayer.createSubmissionForFailedDeployments(failedDeployDeleteItems);
-            hasErrors = true;
-            if (either.getLeft().codeOrNull() != null) {
-                listOfErrors.add(
-                        new BulkError().get(new JocError(either.getLeft().message()), "/"));
-            } else {
-                listOfErrors.add(
-                        new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), 
-                                either.getLeft().message()), "/"));
-            }
+        } finally {
+            Globals.disconnect(newHibernateSession);
         }
     }
     
-    private void createAuditLogFor(Collection<DBItemDeploymentHistory> depHistoryEntries, ImportDeployFilter filter, String controllerId,
+    private void createAuditLogForEach(Collection<DBItemDeploymentHistory> depHistoryEntries, ImportDeployFilter filter, String controllerId,
             boolean update, String commitId) {
         Set<ImportDeployAudit> audits = depHistoryEntries.stream().map(item -> { 
             if (update) {

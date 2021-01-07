@@ -78,7 +78,6 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             }
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             stream = body.getEntityAs(InputStream.class);
-            final String mediaSubType = body.getMediaType().getSubtype().replaceFirst("^x-", "");
             Set<ConfigurationObject> configurations = new HashSet<ConfigurationObject>();
             // process uploaded archive
             if (ArchiveFormat.ZIP.equals(filter.getFormat())) {
