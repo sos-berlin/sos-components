@@ -352,7 +352,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 }
                 if (!deployedObjects.isEmpty()) {
                     LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
-                    createAuditLogForEach(deployedObjects, deployFilter, controllerId, true, versionIdForUpdate, account);
+//                    createAuditLogForEach(deployedObjects, deployFilter, controllerId, true, versionIdForUpdate, account);
                     JocInventory.handleWorkflowSearch(newHibernateSession, deployedObjects, false);
                 }
             } else if (either.isLeft()) {
@@ -399,7 +399,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         .collect(Collectors.toSet());
                 Set<DBItemDeploymentHistory> deletedDeployItems = 
                         PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer);
-                createAuditLogForEach(deletedDeployItems, deployFilter, controllerId, false, versionIdForDelete, account);
+//                createAuditLogForEach(deletedDeployItems, deployFilter, controllerId, false, versionIdForDelete, account);
                 JocInventory.deleteConfigurations(configurationIdsToDelete);
                 JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);
             } else if (either.isLeft()) {
@@ -440,7 +440,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     .forEach(item -> configurationIdsToDelete.addAll(
                         dbLayer.getDeployableInventoryConfigurationIdsByFolder(item.getConfiguration().getPath(), item.getConfiguration().getRecursive())));
                 Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer);
-                createAuditLogForEach(deletedDeployItems, deployFilter, controllerId, false, versionIdForDelete, account);
+//                createAuditLogForEach(deletedDeployItems, deployFilter, controllerId, false, versionIdForDelete, account);
                 JocInventory.deleteConfigurations(configurationIdsToDelete);
                 JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);
                 if (foldersToDelete != null && !foldersToDelete.isEmpty()) {

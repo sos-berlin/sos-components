@@ -158,7 +158,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 }
             }
             ImportDeployAudit mainAudit = new ImportDeployAudit(filter,
-                    String.format("%1$d object(s) imported with profile %2$s", objectsWithSignature.size(), account));
+                    String.format("%1$d object(s) imported with profile %2$s", objectsWithSignature.size()));
             logAuditMessage(mainAudit);
             DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(mainAudit);
             Set<java.nio.file.Path> folders = new HashSet<java.nio.file.Path>();
@@ -313,7 +313,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                         verifiedReDeployables, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
                 }
                 if (!deployedObjects.isEmpty()) {
-                    createAuditLogForEach(deployedObjects, filter, controllerId, true, versionIdForUpdate, account);
+//                    createAuditLogForEach(deployedObjects, filter, controllerId, true, versionIdForUpdate, account);
                     LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
                     JocInventory.handleWorkflowSearch(newHibernateSession, deployedObjects, false);
                 }
@@ -360,7 +360,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 Set<DBItemDeploymentHistory> deletedDeployItems = 
                         PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer);
                 if (filter != null) {
-                    createAuditLogForEach(deletedDeployItems, filter, controller, false, versionIdForDelete, account);
+//                    createAuditLogForEach(deletedDeployItems, filter, controller, false, versionIdForDelete, account);
                 }
                 JocInventory.deleteConfigurations(configurationIdsToDelete);
                 JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);
