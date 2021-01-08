@@ -2,6 +2,10 @@ package com.sos.joc.classes.audit;
 
 import java.nio.file.Paths;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -13,7 +17,10 @@ import com.sos.joc.model.publish.DeployFilter;
     "controllerId",
     "workflow",
     "update",
-    "delete"
+    "delete",
+    "reason",
+    "commitId",
+    "profile"
 })
 public class DeployAudit implements IAuditLog {
 
@@ -43,13 +50,15 @@ public class DeployAudit implements IAuditLog {
     
     @JsonIgnore
     private String folder;
+    
+    private String profile;
 
     public DeployAudit(DeployFilter filter, String reason) {
         setAuditParams(filter.getAuditLog());
         this.reason = reason;
     }
 
-    public DeployAudit(DeployFilter filter, boolean update, String controllerId, String commitId, Long depHistoryId, String path, String reason) {
+    public DeployAudit(DeployFilter filter, boolean update, String controllerId, String commitId, Long depHistoryId, String path, String reason, String profile) {
         setAuditParams(filter.getAuditLog());
         this.reason = reason;
         this.commitId = commitId;
@@ -64,6 +73,7 @@ public class DeployAudit implements IAuditLog {
             this.update = null;
             this.delete = true;
         }
+        this.profile = profile;
     }
 
     private void setAuditParams(AuditParams auditParams) {
@@ -138,6 +148,35 @@ public class DeployAudit implements IAuditLog {
 
     public String getCommitId() {
         return commitId;
+    }
+    
+    public String getProfile() {
+        return profile;
+    }
+    
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("commitId", commitId).append("workflowPath", workflowPath)
+                .append("update", update).append("delete", delete).append("reason", reason).append("profile", profile).toString();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder().append(controllerId).append(commitId).append(workflowPath).append(update).append(delete).append(reason).append(profile)
+                .toHashCode();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof DeployAudit) == false) {
+            return false;
+        }
+        DeployAudit rhs = ((DeployAudit) other);
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(commitId, rhs.commitId).append(workflowPath, rhs.workflowPath)
+                .append(update, rhs.update).append(delete, rhs.delete).append(reason, rhs.reason).append(profile, rhs.profile).isEquals();
     }
 
 }

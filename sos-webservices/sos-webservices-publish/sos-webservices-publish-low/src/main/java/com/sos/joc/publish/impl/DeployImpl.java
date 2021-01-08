@@ -343,7 +343,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 }
                 if (!deployedObjects.isEmpty()) {
                     LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
-                    createAuditLogForEach(deployedObjects, deployFilter, controllerId, true, versionIdForUpdate);
+                    createAuditLogForEach(deployedObjects, deployFilter, controllerId, true, versionIdForUpdate, account);
                     JocInventory.handleWorkflowSearch(newHibernateSession, deployedObjects, false);
                 }
             } else if (either.isLeft()) {
@@ -380,7 +380,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 Set<Long> configurationIdsToDelete = depHistoryDBItemsToDeployDelete.stream().map(
                         DBItemDeploymentHistory::getInventoryConfigurationId).collect(Collectors.toSet());
                 Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistory(depHistoryDBItemsToDeployDelete, dbLayer);
-                createAuditLogForEach(deletedDeployItems, deployFilter, controller, false, versionIdForDelete);
+                createAuditLogForEach(deletedDeployItems, deployFilter, controller, false, versionIdForDelete, account);
                 JocInventory.deleteConfigurations(configurationIdsToDelete);
                 JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);
             } else if (either.isLeft()) {
@@ -418,7 +418,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     .forEach(item -> configurationIdsToDelete.addAll(
                         dbLayer.getDeployableInventoryConfigurationIdsByFolder(item.getConfiguration().getPath(), item.getConfiguration().getRecursive())));
                 Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer);
-                createAuditLogForEach(deletedDeployItems, deployFilter, controllerId, false, versionIdForDelete);
+                createAuditLogForEach(deletedDeployItems, deployFilter, controllerId, false, versionIdForDelete, account);
                 JocInventory.deleteConfigurations(configurationIdsToDelete);
                 JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);
                 if (foldersToDelete != null && !foldersToDelete.isEmpty()) {
@@ -476,16 +476,17 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     }
 
     private void createAuditLogForEach(Collection<DBItemDeploymentHistory> depHistoryEntries, DeployFilter deployFilter, String controllerId,
-            boolean update, String commitId) {
-        Set<DeployAudit> audits = depHistoryEntries.stream().map(item -> {
+            boolean update, String commitId, String account) {
+        final Set<DeployAudit> audits = new HashSet<DeployAudit>(); 
+        audits.addAll(depHistoryEntries.stream().map(item -> {
             if (update) {
                 return new DeployAudit(deployFilter, update, controllerId, commitId, item.getId(), item.getPath(), String.format(
-                        "object %1$s updated on controller %2$s", item.getPath(), controllerId));
+                        "object %1$s updated on controller %2$s", item.getPath(), controllerId), account);
             } else {
                 return new DeployAudit(deployFilter, update, controllerId, commitId, item.getId(), item.getPath(), String.format(
-                        "object %1$s deleted from controller %2$s", item.getPath(), controllerId));
+                        "object %1$s deleted from controller %2$s", item.getPath(), controllerId), account);
             }
-        }).collect(Collectors.toSet());
+        }).collect(Collectors.toSet()));
         audits.stream().forEach(audit -> logAuditMessage(audit));
         audits.stream().forEach(audit -> storeAuditLogEntry(audit));
     }

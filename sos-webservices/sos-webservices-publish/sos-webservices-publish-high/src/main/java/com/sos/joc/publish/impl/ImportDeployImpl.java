@@ -313,7 +313,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                         verifiedReDeployables, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
                 }
                 if (!deployedObjects.isEmpty()) {
-                    createAuditLogForEach(deployedObjects, filter, controllerId, true, versionIdForUpdate);
+                    createAuditLogForEach(deployedObjects, filter, controllerId, true, versionIdForUpdate, account);
                     LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
                     JocInventory.handleWorkflowSearch(newHibernateSession, deployedObjects, false);
                 }
@@ -360,7 +360,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 Set<DBItemDeploymentHistory> deletedDeployItems = 
                         PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer);
                 if (filter != null) {
-                    createAuditLogForEach(deletedDeployItems, filter, controller, false, versionIdForDelete);
+                    createAuditLogForEach(deletedDeployItems, filter, controller, false, versionIdForDelete, account);
                 }
                 JocInventory.deleteConfigurations(configurationIdsToDelete);
                 JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);
@@ -389,16 +389,17 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
     }
     
     private void createAuditLogForEach(Collection<DBItemDeploymentHistory> depHistoryEntries, ImportDeployFilter filter, String controllerId,
-            boolean update, String commitId) {
-        Set<ImportDeployAudit> audits = depHistoryEntries.stream().map(item -> { 
+            boolean update, String commitId, String account) {
+        final Set<ImportDeployAudit> audits = new HashSet<ImportDeployAudit>();
+        audits.addAll(depHistoryEntries.stream().map(item -> { 
             if (update) {
                 return new ImportDeployAudit(filter, update, controllerId, commitId, item.getId(),
-                        item.getPath(), String.format("object %1$s updated on controller %2$s", item.getPath(), controllerId));
+                        item.getPath(), String.format("object %1$s updated on controller %2$s", item.getPath(), controllerId), account);
             } else {
                 return new ImportDeployAudit(filter, update, controllerId, commitId, item.getId(),
-                        item.getPath(), String.format("object %1$s deleted from controller %2$s", item.getPath(), controllerId));
+                        item.getPath(), String.format("object %1$s deleted from controller %2$s", item.getPath(), controllerId), account);
             }
-        }).collect(Collectors.toSet());
+        }).collect(Collectors.toSet()));
         audits.stream().forEach(audit -> logAuditMessage(audit));
         audits.stream().forEach(audit -> storeAuditLogEntry(audit));
     }
