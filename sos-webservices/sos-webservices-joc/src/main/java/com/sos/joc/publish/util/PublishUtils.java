@@ -649,24 +649,28 @@ public abstract class PublishUtils {
             String signatureAlgorithm, String signerDN)
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         Set<JUpdateItemOperation> updateRepoOperations = new HashSet<JUpdateItemOperation>();
-        updateRepoOperations.addAll(
-                drafts.keySet().stream().map(
-                        item -> JUpdateItemOperation.addOrChange(SignedString.x509WithSignedId(
-                                item.getContent(),
-                                drafts.get(item).getSignature(),
-                                signatureAlgorithm,
-                                SignerId.of(signerDN)))
-                        ).collect(Collectors.toSet())
-                );
-        updateRepoOperations.addAll(
-                alreadyDeployed.keySet().stream().map(
-                        item -> JUpdateItemOperation.addOrChange(SignedString.x509WithSignedId(
-                                item.getContent(),
-                                alreadyDeployed.get(item).getSignature(),
-                                signatureAlgorithm,
-                                SignerId.of(signerDN)))
-                        ).collect(Collectors.toSet())
-                );
+        if (drafts != null) {
+            updateRepoOperations.addAll(
+                    drafts.keySet().stream().map(
+                            item -> JUpdateItemOperation.addOrChange(SignedString.x509WithSignedId(
+                                    item.getContent(),
+                                    drafts.get(item).getSignature(),
+                                    signatureAlgorithm,
+                                    SignerId.of(signerDN)))
+                            ).collect(Collectors.toSet())
+                    );
+        }
+        if (alreadyDeployed != null) {
+            updateRepoOperations.addAll(
+                    alreadyDeployed.keySet().stream().map(
+                            item -> JUpdateItemOperation.addOrChange(SignedString.x509WithSignedId(
+                                    item.getContent(),
+                                    alreadyDeployed.get(item).getSignature(),
+                                    signatureAlgorithm,
+                                    SignerId.of(signerDN)))
+                            ).collect(Collectors.toSet())
+                    );
+        }
         return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId))),
                 Flux.fromIterable(updateRepoOperations)));
     }
@@ -1004,53 +1008,6 @@ public abstract class PublishUtils {
         }
         return alreadyDeployedToDelete;
     }
-
-//    public static Set<SignaturePath> readZipFileContentWithSignatures(InputStream inputStream, Set<Workflow> workflows
-//            /* , Set<Lock> locks */) throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException,
-//            IOException, JocUnsupportedFileTypeException, JocConfigurationException, DBOpenSessionException {
-//        Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
-//        ZipInputStream zipStream = null;
-//        try {
-//            zipStream = new ZipInputStream(inputStream);
-//            ZipEntry entry = null;
-//            while ((entry = zipStream.getNextEntry()) != null) {
-//                if (entry.isDirectory()) {
-//                    continue;
-//                }
-//                String entryName = entry.getName().replace('\\', '/');
-//                ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
-//                byte[] binBuffer = new byte[8192];
-//                int binRead = 0;
-//                while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
-//                    outBuffer.write(binBuffer, 0, binRead);
-//                }
-//                SignaturePath signaturePath = new SignaturePath();
-//                Signature signature = new Signature();
-//                if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
-//                    workflows.add(om.readValue(outBuffer.toString(), Workflow.class));
-//                } else if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-//                    if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-//                        signaturePath.setObjectPath("/" + entryName.substring(0, entryName.indexOf(
-//                                JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())));
-//                        signature.setSignatureString(outBuffer.toString());
-//                        signaturePath.setSignature(signature);
-//                        signaturePaths.add(signaturePath);
-//                    }
-//                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
-//                    // TODO: add processing for Locks, when Locks are ready
-//                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-//                    // TODO: add processing for Locks, when Locks are ready
-//                }
-//            }
-//        } finally {
-//            if (zipStream != null) {
-//                try {
-//                    zipStream.close();
-//                } catch (IOException e) {}
-//            }
-//        }
-//        return signaturePaths;
-//    }
 
     public static Map<ConfigurationObject, SignaturePath> readZipFileContentWithSignatures(InputStream inputStream)
             throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException, 

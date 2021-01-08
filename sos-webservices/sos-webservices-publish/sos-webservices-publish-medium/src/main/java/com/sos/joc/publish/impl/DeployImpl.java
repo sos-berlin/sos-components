@@ -339,15 +339,22 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             final Date deploymentDate = Date.from(Instant.now());
             if (either.isRight()) {
                 // no error occurred
-                Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(
-                        verifiedConfigurations, updateableAgentNames, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate);
-                deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(
-                        verifiedReDeployables, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
-                PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet().stream().collect(Collectors.toSet()), 
-                        updateableAgentNames, controllerId, dbLayer.getSession());
-                LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
-                createAuditLogForEach(deployedObjects, deployFilter, controllerId, true, versionIdForUpdate);
-                JocInventory.handleWorkflowSearch(newHibernateSession, deployedObjects, false);
+                Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
+                if (verifiedConfigurations != null && !verifiedConfigurations.isEmpty()) {
+                    deployedObjects.addAll(PublishUtils.cloneInvConfigurationsToDepHistoryItems(verifiedConfigurations,
+                        updateableAgentNames, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
+                    PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet().stream().collect(Collectors.toSet()),
+                            updateableAgentNames, controllerId, dbLayer.getSession());
+                }
+                if (verifiedReDeployables != null && !verifiedReDeployables.isEmpty()) {
+                    deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(verifiedReDeployables, account, dbLayer, versionIdForUpdate,
+                            controllerId, deploymentDate));
+                }
+                if (!deployedObjects.isEmpty()) {
+                    LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
+                    createAuditLogForEach(deployedObjects, deployFilter, controllerId, true, versionIdForUpdate);
+                    JocInventory.handleWorkflowSearch(newHibernateSession, deployedObjects, false);
+                }
             } else if (either.isLeft()) {
                 // an error occurred
                 String message = String.format(

@@ -10,7 +10,7 @@ public class SOSKeyConstants {
     public static final String RSA_SIGNER_ALGORITHM     = "SHA256WithRSA";
     public static final String PGP_ALGORITHM_NAME       = "PGP";
     public static final String ECDSA_ALGORITHM_NAME     = "ECDSA";
-    public static final String ECDSA_SIGNER_ALGORITHM   = "SHA512withECDSA";
+    public static final String ECDSA_SIGNER_ALGORITHM   = "SHA512WithECDSA";
     public static final String EC_ALGORITHM_NAME        = "EC";
     public static final String PRIVATE_KEY_HEADER       = "-----BEGIN PRIVATE KEY-----";
     public static final String PRIVATE_KEY_FOOTER       = "-----END PRIVATE KEY-----";

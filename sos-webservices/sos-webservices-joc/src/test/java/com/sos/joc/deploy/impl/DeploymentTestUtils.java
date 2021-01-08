@@ -184,7 +184,7 @@ public class DeploymentTestUtils {
     public static JSObject createJsObjectForDeployment(Workflow workflow, Signature signature) {
         JSObject jsObject = new JSObject();
         jsObject.setObjectType(DeployType.WORKFLOW);
-        jsObject.setAccount("ME!");
+        jsObject.setAccount("SP");
         jsObject.setComment("Created from JUnit test class \"DeploymentTests\".");
         jsObject.setModified(Date.from(Instant.now()));
         jsObject.setPath(workflow.getPath());

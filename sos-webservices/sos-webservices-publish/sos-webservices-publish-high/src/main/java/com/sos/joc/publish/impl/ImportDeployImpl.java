@@ -114,16 +114,6 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            Set<ConfigurationObject> configurations = new HashSet<ConfigurationObject>();
-            // process uploaded archive
-            if (ArchiveFormat.ZIP.equals(filter.getFormat())) {
-                configurations = PublishUtils.readZipFileContent(stream);
-            } else if (ArchiveFormat.TAR_GZ.equals(filter.getFormat())) {
-                configurations = PublishUtils.readTarGzipFileContent(stream);
-            } else {
-                throw new JocUnsupportedFileTypeException(
-                        String.format("The file %1$s to be uploaded must have one of the formats zip, tar.gz or tgz!", uploadFileName)); 
-            }
             if (body != null) {
                 uploadFileName = URLDecoder.decode(body.getContentDisposition().getFileName(), "UTF-8");
             } else {
@@ -131,10 +121,6 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             }
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             stream = body.getEntityAs(InputStream.class);
-            final String mediaSubType = body.getMediaType().getSubtype().replaceFirst("^x-", "");
-
-//            Set<Workflow> workflows = new HashSet<Workflow>();
-            Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
             Map<ConfigurationObject, SignaturePath> objectsWithSignature = new HashMap<ConfigurationObject, SignaturePath>();
             
             // process uploaded archive
@@ -316,14 +302,21 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
             if (either.isRight()) {
                 // no error occurred
-                Set<DBItemDeploymentHistory> deployedObjects = PublishUtils.cloneInvConfigurationsToDepHistoryItems(
-                        verifiedConfigurations, null, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate);
-                deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(
+                Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
+                if (verifiedConfigurations != null && !verifiedConfigurations.isEmpty()) {
+                    deployedObjects.addAll(PublishUtils.cloneInvConfigurationsToDepHistoryItems(
+                        verifiedConfigurations, null, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
+                    PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), null, controllerId, dbLayer.getSession());
+                }
+                if (verifiedReDeployables != null && !verifiedReDeployables.isEmpty()) {
+                    deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(
                         verifiedReDeployables, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
-                createAuditLogForEach(deployedObjects, filter, controllerId, true, versionIdForUpdate);
-                PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), null, controllerId, dbLayer.getSession());
-                LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
-                JocInventory.handleWorkflowSearch(newHibernateSession, deployedObjects, false);
+                }
+                if (!deployedObjects.isEmpty()) {
+                    createAuditLogForEach(deployedObjects, filter, controllerId, true, versionIdForUpdate);
+                    LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
+                    JocInventory.handleWorkflowSearch(newHibernateSession, deployedObjects, false);
+                }
             } else if (either.isLeft()) {
                 // an error occurred
                 String message = String.format(
