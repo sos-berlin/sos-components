@@ -49,6 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.exception.SOSException;
@@ -62,12 +63,16 @@ import com.sos.jobscheduler.model.deploy.DeployType;
 import com.sos.jobscheduler.model.job.Job;
 import com.sos.jobscheduler.model.jobclass.JobClass;
 import com.sos.jobscheduler.model.jobclass.JobClassEdit;
+import com.sos.jobscheduler.model.jobclass.JobClassPublish;
 import com.sos.jobscheduler.model.junction.Junction;
 import com.sos.jobscheduler.model.junction.JunctionEdit;
+import com.sos.jobscheduler.model.junction.JunctionPublish;
 import com.sos.jobscheduler.model.lock.Lock;
 import com.sos.jobscheduler.model.lock.LockEdit;
+import com.sos.jobscheduler.model.lock.LockPublish;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.jobscheduler.model.workflow.WorkflowEdit;
+import com.sos.jobscheduler.model.workflow.WorkflowPublish;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.db.DBItem;
@@ -629,6 +634,59 @@ public abstract class PublishUtils {
                 Flux.fromIterable(updateRepoOperations)));
     }
 
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdatePGP2(
+            String commitId,  Map<JSObject, DBItemDepSignatures> drafts,
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer)
+                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+        Set<JUpdateItemOperation> updateRepoOperations = new HashSet<JUpdateItemOperation>();
+        updateRepoOperations.addAll(
+                drafts.keySet().stream().map(
+                        item -> {
+                            switch(item.getObjectType()) {
+                                case WORKFLOW:
+                                try {
+                                    return JUpdateItemOperation.addOrChange(SignedString.of(
+                                                    Globals.objectMapper.writeValueAsString(((WorkflowPublish)item).getContent()),
+                                                    SOSKeyConstants.PGP_ALGORITHM_NAME,
+                                                    drafts.get(item).getSignature()));
+                                } catch (JsonProcessingException e) {}
+                                case LOCK:
+                                try {
+                                    return JUpdateItemOperation.addOrChange(SignedString.of(
+                                                    Globals.objectMapper.writeValueAsString(((LockPublish)item).getContent()),
+                                                    SOSKeyConstants.PGP_ALGORITHM_NAME,
+                                                    drafts.get(item).getSignature()));
+                                } catch (JsonProcessingException e) {}
+                                case JUNCTION:
+                                try {
+                                    return JUpdateItemOperation.addOrChange(SignedString.of(
+                                                    Globals.objectMapper.writeValueAsString(((JunctionPublish)item).getContent()),
+                                                    SOSKeyConstants.PGP_ALGORITHM_NAME,
+                                                    drafts.get(item).getSignature()));
+                                } catch (JsonProcessingException e) {}
+                                case JOBCLASS:
+                                try {
+                                    return JUpdateItemOperation.addOrChange(SignedString.of(
+                                                    Globals.objectMapper.writeValueAsString(((JobClassPublish)item).getContent()),
+                                                    SOSKeyConstants.PGP_ALGORITHM_NAME,
+                                                    drafts.get(item).getSignature()));
+                                } catch (JsonProcessingException e) {}
+                                default:
+                                    return null;
+                            }
+                        }).filter(Objects::nonNull).collect(Collectors.toSet()));
+        updateRepoOperations.addAll(
+                alreadyDeployed.keySet().stream().map(
+                        item -> JUpdateItemOperation.addOrChange(SignedString.of(
+                                item.getContent(),
+                                SOSKeyConstants.PGP_ALGORITHM_NAME,
+                                alreadyDeployed.get(item).getSignature()))
+                        ).collect(Collectors.toSet())
+                );
+        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId))),
+                Flux.fromIterable(updateRepoOperations)));
+    }
+
     public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdatePGP(
             String commitId,  List<DBItemDeploymentHistory> alreadyDeployed, String controllerId)
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
@@ -658,6 +716,70 @@ public abstract class PublishUtils {
                                     signatureAlgorithm,
                                     SignerId.of(signerDN)))
                             ).collect(Collectors.toSet())
+                    );
+        }
+        if (alreadyDeployed != null) {
+            updateRepoOperations.addAll(
+                    alreadyDeployed.keySet().stream().map(
+                            item -> JUpdateItemOperation.addOrChange(SignedString.x509WithSignedId(
+                                    item.getContent(),
+                                    alreadyDeployed.get(item).getSignature(),
+                                    signatureAlgorithm,
+                                    SignerId.of(signerDN)))
+                            ).collect(Collectors.toSet())
+                    );
+        }
+        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId))),
+                Flux.fromIterable(updateRepoOperations)));
+    }
+
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509_2(
+            String commitId,  Map<JSObject, DBItemDepSignatures> drafts,
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer,
+            String signatureAlgorithm, String signerDN)
+                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+        Set<JUpdateItemOperation> updateRepoOperations = new HashSet<JUpdateItemOperation>();
+        if (drafts != null) {
+            updateRepoOperations.addAll(
+                    drafts.keySet().stream().map(
+                            item -> {
+                            switch(item.getObjectType()) {
+                                case WORKFLOW:
+                                try {
+                                    return JUpdateItemOperation.addOrChange(SignedString.x509WithSignedId(
+                                                    om.writeValueAsString(((WorkflowPublish)item).getContent()),
+                                                    drafts.get(item).getSignature(),
+                                                    signatureAlgorithm,
+                                                    SignerId.of(signerDN)));
+                                } catch (JsonProcessingException e) {}
+                                case LOCK:
+                                try {
+                                    return JUpdateItemOperation.addOrChange(SignedString.x509WithSignedId(
+                                                    om.writeValueAsString(((LockPublish)item).getContent()),
+                                                    drafts.get(item).getSignature(),
+                                                    signatureAlgorithm,
+                                                    SignerId.of(signerDN)));
+                                } catch (JsonProcessingException e) {}
+                                case JUNCTION:
+                                try {
+                                    return JUpdateItemOperation.addOrChange(SignedString.x509WithSignedId(
+                                                    om.writeValueAsString(((JunctionPublish)item).getContent()),
+                                                    drafts.get(item).getSignature(),
+                                                    signatureAlgorithm,
+                                                    SignerId.of(signerDN)));
+                                } catch (JsonProcessingException e) {}
+                                case JOBCLASS:
+                                try {
+                                    return JUpdateItemOperation.addOrChange(SignedString.x509WithSignedId(
+                                                    om.writeValueAsString(((JobClassPublish)item).getContent()),
+                                                    drafts.get(item).getSignature(),
+                                                    signatureAlgorithm,
+                                                    SignerId.of(signerDN)));
+                                } catch (JsonProcessingException e) {}
+                                default:
+                                    return null;
+                            }
+                        }).filter(Objects::nonNull).collect(Collectors.toSet())
                     );
         }
         if (alreadyDeployed != null) {
@@ -829,6 +951,58 @@ public abstract class PublishUtils {
         return deployedObjects;
     }
 
+    public static Set<DBItemDeploymentHistory> cloneInvConfigurationsToDepHistoryItems(
+            Map<JSObject, DBItemDepSignatures> draftsWithSignature, String account, DBLayerDeploy dbLayerDeploy, String commitId,
+            String controllerId, Date deploymentDate) throws JsonParseException, JsonMappingException, IOException {
+        Set<DBItemDeploymentHistory> deployedObjects;
+        try {
+            DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
+            deployedObjects = new HashSet<DBItemDeploymentHistory>();
+            for (JSObject draft : draftsWithSignature.keySet()) {
+                DBItemDeploymentHistory newDeployedObject = new DBItemDeploymentHistory();
+                DBItemInventoryConfiguration original = dbLayerDeploy.getConfiguration(draft.getPath(), draft.getObjectType().intValue());
+                newDeployedObject.setAccount(account);
+                // TODO: get Version to set here
+                newDeployedObject.setVersion(null);
+                newDeployedObject.setPath(original.getPath());
+                newDeployedObject.setFolder(original.getFolder());
+                newDeployedObject.setType(draft.getObjectType().intValue());
+                newDeployedObject.setCommitId(commitId);
+                switch (draft.getObjectType()) {
+                case WORKFLOW:
+                    String workflow = Globals.objectMapper.writeValueAsString(((WorkflowPublish)draft).getContent());
+                    newDeployedObject.setContent(workflow);
+                    break;
+                case LOCK:
+                    String lock = Globals.objectMapper.writeValueAsString(((WorkflowPublish)draft).getContent());
+                    newDeployedObject.setContent(lock);
+                    break;
+                case JUNCTION:
+                    String junction = Globals.objectMapper.writeValueAsString(((WorkflowPublish)draft).getContent());
+                    newDeployedObject.setContent(junction);
+                    break;
+                case JOBCLASS:
+                    String jobclass = Globals.objectMapper.writeValueAsString(((WorkflowPublish)draft).getContent());
+                    newDeployedObject.setContent(jobclass);
+                    break;
+                }
+                newDeployedObject.setSignedContent(draftsWithSignature.get(draft).getSignature());
+                newDeployedObject.setInvContent(original.getContent());
+                newDeployedObject.setDeploymentDate(deploymentDate);
+                newDeployedObject.setControllerInstanceId(controllerInstance.getId());
+                newDeployedObject.setControllerId(controllerId);
+                newDeployedObject.setInventoryConfigurationId(original.getId());
+                newDeployedObject.setOperation(OperationType.UPDATE.value());
+                newDeployedObject.setState(DeploymentState.DEPLOYED.value());
+                dbLayerDeploy.getSession().save(newDeployedObject);
+                deployedObjects.add(newDeployedObject);
+            }
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+        return deployedObjects;
+    }
+
 //    public static Set<DBItemDeploymentHistory> cloneInvConfigurationsToDepHistoryItems(
 //            Map<DBItemInventoryConfiguration, JSObject> importedObjects, String account, DBLayerDeploy dbLayerDeploy, String controllerId,
 //            Date deploymentDate, String commitId) {
@@ -943,6 +1117,24 @@ public abstract class PublishUtils {
                     replaceAgentIdWithOrigAgentName(draft, updateableAgentNames, controllerId);
                 }
                 hibernateSession.update(draft);
+            }
+        } catch (SOSHibernateException | IOException e) {
+            throw new JocSosHibernateException(e);
+        }
+    }
+
+    public static void prepareNextInvConfigGeneration(Set<JSObject> drafts, 
+            Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String controllerId, DBLayerDeploy dbLayer) {
+        try {
+            for (JSObject draft : drafts) {
+                DBItemInventoryConfiguration configuration = dbLayer.getConfiguration(draft.getPath(), mapDeployType(draft.getObjectType()));
+                configuration.setDeployed(true);
+                configuration.setModified(Date.from(Instant.now()));
+                // update agentName with original in Workflow jobs before updating  agentId -> agentName
+                if (updateableAgentNames != null && draft.getObjectType().equals(DeployType.WORKFLOW)) {
+                    replaceAgentIdWithOrigAgentName(configuration, updateableAgentNames, controllerId);
+                }
+                dbLayer.getSession().update(configuration);
             }
         } catch (SOSHibernateException | IOException e) {
             throw new JocSosHibernateException(e);

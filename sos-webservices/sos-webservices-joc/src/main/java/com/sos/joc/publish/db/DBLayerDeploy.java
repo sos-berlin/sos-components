@@ -751,6 +751,38 @@ public class DBLayerDeploy {
         }
     }
     
+    public DBItemInventoryConfiguration getConfiguration(String path, ConfigurationType type) {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            hql.append(" where path = :path");
+            hql.append(" and type = :type");
+            Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+            query.setParameter("path", path);
+            query.setParameter("type", type.intValue());
+            return query.getSingleResult();
+        } catch(NoResultException e) {
+            return null;
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        } 
+    }
+    
+    public DBItemInventoryConfiguration getConfiguration(String path, Integer type) {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            hql.append(" where path = :path");
+            hql.append(" and type = :type");
+            Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+            query.setParameter("path", path);
+            query.setParameter("type", type);
+            return query.getSingleResult();
+        } catch(NoResultException e) {
+            return null;
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        } 
+    }
+    
     public DBItemInventoryConfiguration saveOrUpdateInventoryConfiguration(String path, JSObject jsObject, DeployType type, String account, Long auditLogId)
             throws SOSHibernateException, JsonProcessingException {
         StringBuilder hql = new StringBuilder(" from ");
@@ -1265,6 +1297,82 @@ public class DBLayerDeploy {
         return depHistoryFailed;
     }
     
+    public List<DBItemDeploymentHistory> updateFailedDeploymentForImportDeploy(
+            Map<JSObject, DBItemDepSignatures> verifiedConfigurations, 
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedReDeployables, 
+            String controllerId, String account, String versionId, String errorMessage) {
+        List<DBItemDeploymentHistory> depHistoryFailed = new ArrayList<DBItemDeploymentHistory>();
+        if (verifiedConfigurations != null) {
+            for (JSObject jsObject : verifiedConfigurations.keySet()) {
+                DBItemInventoryConfiguration inventoryConfig = getConfiguration(jsObject.getPath(), PublishUtils.mapDeployType(jsObject.getObjectType()));
+                DBItemDeploymentHistory newDepHistoryItem = new DBItemDeploymentHistory();
+                newDepHistoryItem.setAccount(account);
+                newDepHistoryItem.setCommitId(versionId);
+                try {
+                    newDepHistoryItem.setContent(Globals.objectMapper.writeValueAsString(jsObject.getContent()));
+                } catch (JsonProcessingException e1) {
+                    // TODO Auto-generated catch block
+                }
+//                newDepHistoryItem.setContent(inventoryConfig.getContent());
+                Long controllerInstanceId = 0L;
+                try {
+                    controllerInstanceId = getController(controllerId).getId();
+                } catch (SOSHibernateException e) {
+                    continue;
+                }
+                newDepHistoryItem.setControllerInstanceId(controllerInstanceId);
+                newDepHistoryItem.setControllerId(controllerId);
+                newDepHistoryItem.setDeleteDate(null);
+                newDepHistoryItem.setDeploymentDate(Date.from(Instant.now()));
+                newDepHistoryItem.setInventoryConfigurationId(inventoryConfig.getId());
+                newDepHistoryItem.setType(jsObject.getObjectType().intValue());
+                newDepHistoryItem.setOperation(OperationType.UPDATE.value());
+                newDepHistoryItem.setState(DeploymentState.NOT_DEPLOYED.value());
+                newDepHistoryItem.setPath(inventoryConfig.getPath());
+                newDepHistoryItem.setFolder(inventoryConfig.getFolder());
+                newDepHistoryItem.setSignedContent(verifiedConfigurations.get(jsObject).getSignature());
+                newDepHistoryItem.setInvContent(inventoryConfig.getContent());
+                newDepHistoryItem.setErrorMessage(errorMessage);
+                // TODO: get Version to set here
+                newDepHistoryItem.setVersion(null);
+                try {
+                    session.save(newDepHistoryItem);
+                } catch (SOSHibernateException e) {
+                    throw new JocSosHibernateException(e);
+                }
+                depHistoryFailed.add(newDepHistoryItem);
+            } 
+        }
+        if (verifiedReDeployables != null) {
+            for (DBItemDeploymentHistory deploy : verifiedReDeployables.keySet()) {
+                deploy.setSignedContent(verifiedReDeployables.get(deploy).getSignature());
+                deploy.setId(null);
+                deploy.setCommitId(versionId);
+                deploy.setAccount(account);
+                Long controllerInstanceId = 0L;
+                try {
+                    controllerInstanceId = getController(controllerId).getId();
+                } catch (SOSHibernateException e) {
+                    continue;
+                }
+                deploy.setControllerInstanceId(controllerInstanceId);
+                deploy.setControllerId(controllerId);
+                deploy.setState(DeploymentState.NOT_DEPLOYED.value());
+                deploy.setDeploymentDate(Date.from(Instant.now()));
+                deploy.setErrorMessage(errorMessage);
+                // TODO: get Version to set here
+                deploy.setVersion(null);
+                try {
+                    session.save(deploy);
+                } catch (SOSHibernateException e) {
+                    throw new JocSosHibernateException(e);
+                }
+                depHistoryFailed.add(deploy);
+            } 
+        }
+        return depHistoryFailed;
+    }
+    
     public List<DBItemDeploymentHistory> updateFailedDeploymentForUpdate(
             List<DBItemDeploymentHistory> reDeployables, String controllerId, String account, String errorMessage) {
         List<DBItemDeploymentHistory> depHistoryFailed = new ArrayList<DBItemDeploymentHistory>();
@@ -1473,6 +1581,14 @@ public class DBLayerDeploy {
         List<DBItemDepSignatures> signaturesToDelete = session.getResultList(query);
         if (signaturesToDelete != null && !signaturesToDelete.isEmpty()) {
             for (DBItemDepSignatures sig : signaturesToDelete) {
+                session.delete(sig);
+            }
+        }
+    }
+    
+    public void cleanupSignatures (Set<DBItemDepSignatures> signatures) throws SOSHibernateException {
+        if (signatures != null && !signatures.isEmpty()) {
+            for (DBItemDepSignatures sig : signatures) {
                 session.delete(sig);
             }
         }
@@ -1822,14 +1938,29 @@ public class DBLayerDeploy {
     public List<DBItemInventoryConfiguration> getReleasableConfigurations (String folder) {
         Set<Integer> types = JocInventory.getReleasableTypes();
         try {
-            StringBuilder hql = new StringBuilder("from ")
-                    .append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             hql.append(" where folder = :folder");
             hql.append(" and type in (:types)");
             Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
             query.setParameter("folder", folder);
             query.setParameterList("types", types);
             return query.getResultList();
+        } catch(NoResultException e) {
+            return null;
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        } 
+    }
+    
+    public String getOriginalContent(String path, ConfigurationType type) {
+        try {
+            StringBuilder hql = new StringBuilder("select content from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            hql.append(" where path = :path");
+            hql.append(" and type == type");
+            Query<String> query = getSession().createQuery(hql.toString());
+            query.setParameter("path", path);
+            query.setParameter("type", type.intValue());
+            return query.getSingleResult();
         } catch(NoResultException e) {
             return null;
         } catch (SOSHibernateException e) {
