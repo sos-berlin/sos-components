@@ -1,5 +1,7 @@
 package com.sos.joc.classes.proxy;
 
+import java.util.Base64;
+
 import js7.proxy.javaapi.data.auth.JCredentials;
 
 public enum ProxyUser {
@@ -21,25 +23,18 @@ public enum ProxyUser {
     }
     
     public String getUser() {
-//        if (this.user.equals("History")) {
-//            return this.user.toLowerCase();
-//        }
         return user;
     }
     
     public String getPwd() {
-//        if (this.user.equals("History")) {
-//            return this.user.toLowerCase();
-//        }
         return pwd;
     }
 
     protected JCredentials value() {
-//        if (this.user.equals("History")) {
-//            return JCredentials.of(this.user.toLowerCase(), this.user.toLowerCase());
-//        } else {
-//            return JCredentials.noCredentials();
-//        }
         return JCredentials.of(this.user, this.pwd);
+    }
+    
+    public String getBasicAuthorization() {
+        return new String(Base64.getEncoder().encode((this.user + ":" + this.pwd).getBytes()));
     }
 }

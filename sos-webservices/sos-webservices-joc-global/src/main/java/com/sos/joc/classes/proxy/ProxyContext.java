@@ -34,7 +34,6 @@ import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.JProxyContext;
 import js7.proxy.javaapi.data.agent.JAgentRef;
-import js7.proxy.javaapi.data.item.JSimpleItem;
 import js7.proxy.javaapi.data.item.JUpdateItemOperation;
 import js7.proxy.javaapi.eventbus.JStandardEventBus;
 import reactor.core.publisher.Flux;

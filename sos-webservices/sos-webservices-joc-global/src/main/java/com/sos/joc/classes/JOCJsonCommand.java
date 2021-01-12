@@ -22,6 +22,7 @@ import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
 import com.sos.commons.httpclient.exception.SOSConnectionResetException;
 import com.sos.commons.httpclient.exception.SOSNoResponseException;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.ForcedClosingHttpClientException;
 import com.sos.joc.exceptions.JobSchedulerBadRequestException;
@@ -435,6 +436,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
         setConnectionTimeout(Globals.httpConnectionTimeout);
         setSocketTimeout(Globals.httpSocketTimeout);
         setSSLContext(SSLContext.getInstance().getSSLContext());
+        setBasicAuthorization(ProxyUser.JOC.getBasicAuthorization());
     }
     
     private <T extends JsonStructure> T getJsonStructure(String jsonStr) {
