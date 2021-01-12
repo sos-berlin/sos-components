@@ -45,6 +45,7 @@ public class EventServiceFactory {
     private final static long cleanupPeriodInMillis = TimeUnit.MINUTES.toMillis(6);
     protected static Lock lock = new ReentrantLock();
     //protected static Condition eventArrived  = lock.newCondition();
+//    private static CopyOnWriteArraySet<Condition> conditions = new CopyOnWriteArraySet<>();
     
     public enum Mode {
         IMMEDIATLY, TRUE, FALSE;
@@ -59,6 +60,18 @@ public class EventServiceFactory {
         }
         return eventServiceFactory;
     }
+    
+//    private void addCondition(Condition cond) {
+//        conditions.add(cond);
+//    }
+//    
+//    private void removeCondition(Condition cond) {
+//        conditions.remove(cond);
+//    }
+//    
+//    protected static void signalAll() {
+//        conditions.stream().parallel().forEach(Condition::signalAll);
+//    }
     
     public static Event getEvents(String controllerId, Long eventId, String accessToken, Condition eventArrived, Session session, boolean isCurrentController) {
         return EventServiceFactory.getInstance()._getEvents(controllerId, eventId, accessToken, eventArrived, session, isCurrentController);
@@ -96,9 +109,11 @@ public class EventServiceFactory {
         events.setControllerId(controllerId);
         events.setEventId(eventId); //default
         EventService service = null;
+        LOGGER.info("Listen Events of '" + controllerId + "' since " + eventId);
         try {
             service = getEventService(controllerId);
             service.addCondition(eventArrived);
+            //addCondition(eventArrived);
             //service.setIsCurrentController(isCurrentController);
             SortedSet<Long> evtIds = new TreeSet<>(Comparator.comparing(Long::longValue));
             Set<EventSnapshot> evt = new HashSet<>();
@@ -167,6 +182,7 @@ public class EventServiceFactory {
             if (service != null) {
                 service.removeCondition(eventArrived);
             }
+            //removeCondition(eventArrived);
         }
         
         return events;

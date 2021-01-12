@@ -262,11 +262,14 @@ public class EventService {
     
     private synchronized void signalAll() {
         try {
+            LOGGER.info("Try signal all Events of '" + controllerId + "'");
             if (atLeastOneConditionIsHold.get() && EventServiceFactory.lock.tryLock(200L, TimeUnit.MILLISECONDS)) {
                 try {
+                    //EventServiceFactory.signalAll();
                     conditions.stream().parallel().forEach(Condition::signalAll);
                     atLeastOneConditionIsHold.set(false);
                 } catch (Exception e) {
+                    LOGGER.warn(e.toString());
                 } finally {
                     EventServiceFactory.lock.unlock();
                 }
@@ -302,7 +305,8 @@ public class EventService {
             if (EventServiceFactory.lock.tryLock(200L, TimeUnit.MILLISECONDS)) { // with timeout
                 try {
                     atLeastOneConditionIsHold.set(true);
-                    eventArrived.await();
+                    LOGGER.info("Waiting for Events of '" + controllerId + "'");
+                    eventArrived.await(6, TimeUnit.MINUTES);
                 } catch (InterruptedException e1) {
                 } finally {
                     EventServiceFactory.lock.unlock();
