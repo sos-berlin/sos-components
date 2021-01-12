@@ -14,6 +14,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -44,8 +45,6 @@ public class EventServiceFactory {
     private volatile Map<String, EventService> eventServices = new ConcurrentHashMap<>();
     private final static long cleanupPeriodInMillis = TimeUnit.MINUTES.toMillis(6);
     protected static Lock lock = new ReentrantLock();
-    //protected static Condition eventArrived  = lock.newCondition();
-//    private static CopyOnWriteArraySet<Condition> conditions = new CopyOnWriteArraySet<>();
     
     public enum Mode {
         IMMEDIATLY, TRUE, FALSE;
@@ -61,19 +60,37 @@ public class EventServiceFactory {
         return eventServiceFactory;
     }
     
-//    private void addCondition(Condition cond) {
-//        conditions.add(cond);
-//    }
-//    
-//    private void removeCondition(Condition cond) {
-//        conditions.remove(cond);
-//    }
-//    
-//    protected static void signalAll() {
-//        conditions.stream().parallel().forEach(Condition::signalAll);
-//    }
+    public static class EventCondition {
+        
+        private Condition eventArrived = null;
+        private AtomicBoolean hold = new AtomicBoolean(false);
+        private AtomicBoolean unhold = new AtomicBoolean(true);
+        
+        public EventCondition(Condition eventArrived) {
+            this.eventArrived = eventArrived;
+        }
+        
+        public boolean getHold() {
+            return this.hold.get();
+        }
+        
+        public boolean getUnHold() {
+            return this.unhold.get();
+        }
+        
+        public void signalAll() {
+            this.eventArrived.signalAll();
+            this.hold.set(false);
+        }
+
+        public void await() throws InterruptedException {
+            this.unhold.set(false);
+            this.hold.set(true);
+            this.eventArrived.await(6, TimeUnit.MINUTES);
+        }
+    }
     
-    public static Event getEvents(String controllerId, Long eventId, String accessToken, Condition eventArrived, Session session, boolean isCurrentController) {
+    public static Event getEvents(String controllerId, Long eventId, String accessToken, EventCondition eventArrived, Session session, boolean isCurrentController) {
         return EventServiceFactory.getInstance()._getEvents(controllerId, eventId, accessToken, eventArrived, session, isCurrentController);
     }
     
@@ -98,11 +115,11 @@ public class EventServiceFactory {
         }
     }
     
-    public static Condition createCondition() {
-        return lock.newCondition();
+    public static EventCondition createCondition() {
+        return new EventCondition(lock.newCondition());
     }
     
-    private Event _getEvents(String controllerId, Long eventId, String accessToken, Condition eventArrived, Session session,
+    private Event _getEvents(String controllerId, Long eventId, String accessToken, EventCondition eventArrived, Session session,
             boolean isCurrentController) {
         Event events = new Event();
         events.setNotifications(null); // TODO not yet implemented
@@ -113,18 +130,17 @@ public class EventServiceFactory {
         try {
             service = getEventService(controllerId);
             service.addCondition(eventArrived);
-            //addCondition(eventArrived);
             //service.setIsCurrentController(isCurrentController);
             SortedSet<Long> evtIds = new TreeSet<>(Comparator.comparing(Long::longValue));
             Set<EventSnapshot> evt = new HashSet<>();
             Mode mode = service.hasOldEvent(eventId, eventArrived);
-            if (mode == Mode.FALSE) {
+            if (Mode.FALSE.equals(mode)) {
                 long delay = Math.min(cleanupPeriodInMillis - 1000, getSessionTimeout(session));
                 if (isDebugEnabled) {
                     LOGGER.debug("waiting for Events for " + controllerId + ": maxdelay " + delay + "ms");
                 }
                 ScheduledFuture<Void> watchdog = startWatchdog(delay, eventArrived);
-                mode = service.hasEvent(eventArrived);
+                mode = waitingForEvents(eventArrived, controllerId);
                 if (!watchdog.isDone()) {
                     watchdog.cancel(false);
                     if (isDebugEnabled) {
@@ -137,7 +153,7 @@ public class EventServiceFactory {
             if (isDebugEnabled) {
                 LOGGER.debug("received Events for " + controllerId + ": mode " + mode.name());
             }
-            if (mode == Mode.TRUE) {
+            if (Mode.TRUE.equals(mode)) {
                 try {
                     TimeUnit.SECONDS.sleep(2);
                 } catch (InterruptedException e1) {
@@ -153,7 +169,7 @@ public class EventServiceFactory {
                         //LOGGER.info("collected events for " + controllerId + ": " + evt.toString());
                     }
                 });
-            } else if (mode == Mode.IMMEDIATLY) {
+            } else if (Mode.IMMEDIATLY.equals(mode)) {
                 service.getEvents().iterator().forEachRemaining(e -> {
                     if (e.getEventId() != null && eventId < e.getEventId()) {
                         evt.add(e);
@@ -182,10 +198,29 @@ public class EventServiceFactory {
             if (service != null) {
                 service.removeCondition(eventArrived);
             }
-            //removeCondition(eventArrived);
         }
         
         return events;
+    }
+    
+    private synchronized Mode waitingForEvents(EventCondition eventArrived, String controllerId) {
+        try {
+            if (eventArrived.getUnHold() && lock.tryLock(200L, TimeUnit.MILLISECONDS)) { // with timeout
+                try {
+                    LOGGER.info("Waiting for Events of '" + controllerId + "'");
+                    eventArrived.await();
+                } catch (InterruptedException e1) {
+                } finally {
+                    lock.unlock();
+                }
+            }
+        } catch (InterruptedException e) {
+        }
+//        if (events.stream().parallel().anyMatch(e -> EventType.PROBLEM.equals(e.getObjectType()))) {
+//            LOGGER.info("ProblemEvent for " + controllerId + ": true");
+//            return EventServiceFactory.Mode.IMMEDIATLY;
+//        }
+        return Mode.TRUE;
     }
     
     private static EventSnapshot cloneEvent(EventSnapshot e) {
@@ -218,7 +253,7 @@ public class EventServiceFactory {
         }
     }
     
-    protected static void signalEvent(Condition eventArrived) {
+    protected static synchronized void signalEvent(EventCondition eventArrived) {
         try {
             if (lock.tryLock(2L, TimeUnit.SECONDS)) {
                 try {
@@ -231,7 +266,7 @@ public class EventServiceFactory {
         }
     }
     
-    private static ScheduledFuture<Void> startWatchdog(long maxDelay, Condition eventArrived) {
+    private static ScheduledFuture<Void> startWatchdog(long maxDelay, EventCondition eventArrived) {
         return Executors.newScheduledThreadPool(1).schedule(() -> {
             if (isDebugEnabled) {
                 LOGGER.debug("start watchdog which stops waiting after for " + maxDelay + "ms");

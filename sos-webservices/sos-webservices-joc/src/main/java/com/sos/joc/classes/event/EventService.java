@@ -7,13 +7,13 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.Condition;
 import java.util.function.BiConsumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.jobscheduler.model.workflow.WorkflowId;
+import com.sos.joc.classes.event.EventServiceFactory.EventCondition;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.event.EventBus;
@@ -78,8 +78,8 @@ public class EventService {
     private volatile CopyOnWriteArraySet<EventSnapshot> events = new CopyOnWriteArraySet<>();
     private AtomicBoolean isCurrentController = new AtomicBoolean(false);
     private JControllerEventBus evtBus = null;
-    private volatile CopyOnWriteArraySet<Condition> conditions = new CopyOnWriteArraySet<>();
-    private AtomicBoolean atLeastOneConditionIsHold = new AtomicBoolean(false);
+    private volatile CopyOnWriteArraySet<EventCondition> conditions = new CopyOnWriteArraySet<>();
+    //private AtomicBoolean atLeastOneConditionIsHold = new AtomicBoolean(false);
 
     public EventService(String controllerId) throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException,
             DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
@@ -97,12 +97,16 @@ public class EventService {
         evtBus.subscribe(eventsOfController, callbackOfController);
     }
 
-    public void addCondition(Condition cond) {
+    public void addCondition(EventCondition cond) {
         conditions.add(cond);
     }
     
-    public void removeCondition(Condition cond) {
+    public void removeCondition(EventCondition cond) {
         conditions.remove(cond);
+    }
+    
+    private boolean atLeastOneConditionIsHold() {
+        return conditions.stream().parallel().anyMatch(EventCondition::getHold);
     }
     
     public CopyOnWriteArraySet<EventSnapshot> getEvents() {
@@ -254,7 +258,7 @@ public class EventService {
             if (isDebugEnabled) {
                 LOGGER.debug("add event for " + controllerId + ": " + eventSnapshot.toString());
             }
-            if (atLeastOneConditionIsHold.get()) {
+            if (atLeastOneConditionIsHold()) {
                 signalAll();
             }
         }
@@ -263,11 +267,9 @@ public class EventService {
     private synchronized void signalAll() {
         try {
             LOGGER.info("Try signal all Events of '" + controllerId + "'");
-            if (atLeastOneConditionIsHold.get() && EventServiceFactory.lock.tryLock(200L, TimeUnit.MILLISECONDS)) {
+            if (atLeastOneConditionIsHold() && EventServiceFactory.lock.tryLock(200L, TimeUnit.MILLISECONDS)) {
                 try {
-                    //EventServiceFactory.signalAll();
-                    conditions.stream().parallel().forEach(Condition::signalAll);
-                    atLeastOneConditionIsHold.set(false);
+                    conditions.stream().parallel().forEach(EventCondition::signalAll);
                 } catch (Exception e) {
                     LOGGER.warn(e.toString());
                 } finally {
@@ -280,7 +282,7 @@ public class EventService {
         }
     }
 
-    protected EventServiceFactory.Mode hasOldEvent(Long eventId, Condition eventArrived) {
+    protected EventServiceFactory.Mode hasOldEvent(Long eventId, EventCondition eventArrived) {
         if (events.stream().parallel().anyMatch(e -> eventId < e.getEventId())) {
             if (isDebugEnabled) {
                 LOGGER.debug("has old Event for " + controllerId + ": true");
@@ -291,7 +293,6 @@ public class EventService {
 //                return EventServiceFactory.Mode.IMMEDIATLY;
 //            }
             EventServiceFactory.signalEvent(eventArrived);
-            atLeastOneConditionIsHold.set(false);
             return EventServiceFactory.Mode.TRUE;
         }
         if (isDebugEnabled) {
@@ -300,25 +301,26 @@ public class EventService {
         return EventServiceFactory.Mode.FALSE;
     }
 
-    protected EventServiceFactory.Mode hasEvent(Condition eventArrived) {
-        try {
-            if (EventServiceFactory.lock.tryLock(200L, TimeUnit.MILLISECONDS)) { // with timeout
-                try {
-                    atLeastOneConditionIsHold.set(true);
-                    LOGGER.info("Waiting for Events of '" + controllerId + "'");
-                    eventArrived.await(6, TimeUnit.MINUTES);
-                } catch (InterruptedException e1) {
-                } finally {
-                    EventServiceFactory.lock.unlock();
-                }
-            }
-        } catch (InterruptedException e) {
-        }
-//        if (events.stream().parallel().anyMatch(e -> EventType.PROBLEM.equals(e.getObjectType()))) {
-//            LOGGER.info("ProblemEvent for " + controllerId + ": true");
-//            return EventServiceFactory.Mode.IMMEDIATLY;
+//    protected EventServiceFactory.Mode hasEvent(Condition eventArrived) {
+//        try {
+//            if (EventServiceFactory.lock.tryLock(200L, TimeUnit.MILLISECONDS)) { // with timeout
+//                try {
+//                    //atLeastOneConditionIsHold.set(true);
+//                    LOGGER.info("Waiting for Events of '" + controllerId + "'");
+//                    eventArrived.await(6, TimeUnit.MINUTES);
+//                    //EventServiceFactory.await(eventArrived);
+//                } catch (InterruptedException e1) {
+//                } finally {
+//                    EventServiceFactory.lock.unlock();
+//                }
+//            }
+//        } catch (InterruptedException e) {
 //        }
-        return EventServiceFactory.Mode.TRUE;
-    }
+////        if (events.stream().parallel().anyMatch(e -> EventType.PROBLEM.equals(e.getObjectType()))) {
+////            LOGGER.info("ProblemEvent for " + controllerId + ": true");
+////            return EventServiceFactory.Mode.IMMEDIATLY;
+////        }
+//        return EventServiceFactory.Mode.TRUE;
+//    }
 
 }

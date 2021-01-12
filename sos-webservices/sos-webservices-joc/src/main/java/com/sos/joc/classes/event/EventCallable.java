@@ -1,10 +1,10 @@
 package com.sos.joc.classes.event;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.locks.Condition;
 
 import org.apache.shiro.session.Session;
 
+import com.sos.joc.classes.event.EventServiceFactory.EventCondition;
 import com.sos.joc.model.event.Event;
 
 public class EventCallable implements Callable<Event> {
@@ -13,10 +13,10 @@ public class EventCallable implements Callable<Event> {
     public final String controllerId;
     public final Long eventId;
     public final boolean isCurrentController;
-    public final Condition eventArrived;
+    public final EventCondition eventArrived;
     public String accessToken;
 
-    public EventCallable(Session session, Long eventId, String controllerId, String accessToken, Condition eventArrived) {
+    public EventCallable(Session session, Long eventId, String controllerId, String accessToken, EventCondition eventArrived) {
         this.eventId = eventId;
         this.session = session;
         this.controllerId = controllerId;
@@ -25,7 +25,7 @@ public class EventCallable implements Callable<Event> {
         this.isCurrentController = false;
     }
     
-    public EventCallable(Session session, Long eventId, String controllerId, String accessToken, Condition eventArrived, boolean isCurrentController) {
+    public EventCallable(Session session, Long eventId, String controllerId, String accessToken, EventCondition eventArrived, boolean isCurrentController) {
         this.eventId = eventId;
         this.session = session;
         this.controllerId = controllerId;

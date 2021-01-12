@@ -11,7 +11,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.locks.Condition;
 
 import javax.ws.rs.Path;
 
@@ -24,6 +23,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.event.EventCallable;
 import com.sos.joc.classes.event.EventCallableOfCurrentController;
 import com.sos.joc.classes.event.EventServiceFactory;
+import com.sos.joc.classes.event.EventServiceFactory.EventCondition;
 import com.sos.joc.event.resource.IEventResource;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JocException;
@@ -73,7 +73,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             List<EventCallable> tasks = new ArrayList<EventCallable>();
             
             String currentControllerId = in.getControllers().get(0).getControllerId();
-            Condition eventArrived = EventServiceFactory.createCondition();
+            EventCondition eventArrived = EventServiceFactory.createCondition();
             for (Controller controller : in.getControllers()) {
                 Event evt = initEvent(controller, defaultEventId);
                 eventList.put(controller.getControllerId(), evt);
