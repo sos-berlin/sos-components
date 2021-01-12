@@ -57,7 +57,6 @@ import js7.data.order.OrderEvent.OrderProcessingStarted$;
 import js7.data.order.OrderEvent.OrderRemoved$;
 import js7.data.order.OrderEvent.OrderRetrying;
 import js7.data.order.OrderEvent.OrderStarted$;
-import js7.data.order.OrderEvent.OrderTerminated;
 import js7.data.order.OrderId;
 import js7.data.workflow.WorkflowPath;
 import js7.proxy.javaapi.data.controller.JControllerState;
@@ -74,7 +73,7 @@ public class EventService {
     // OrderFinished, OrderCancelled, OrderRemoved$ extends OrderTerminated
     private static List<Class<? extends Event>> eventsOfController = Arrays.asList(ControllerEvent.class, ClusterEvent.class,
             AgentRefStateEvent.class, OrderStarted$.class, OrderProcessingKilled$.class, OrderFailed.class, OrderFailedInFork.class,
-            OrderRetrying.class, OrderBroken.class, OrderTerminated.class, OrderAdded.class, OrderProcessed.class,
+            OrderRetrying.class, OrderBroken.class, OrderFinished$.class, OrderCancelled$.class, OrderAdded.class, OrderProcessed.class,
             OrderProcessingStarted$.class, OrderRemoved$.class, VersionedItemEvent.class, SimpleItemEvent.class);
     private String controllerId;
     private volatile CopyOnWriteArraySet<EventSnapshot> events = new CopyOnWriteArraySet<>();
