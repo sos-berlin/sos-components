@@ -56,6 +56,10 @@ public class JocConfiguration {
 
     public static Properties readConfiguration(Path path) {
         String method = "readConfiguration";
+        if (!Files.exists(path)) {
+            LOGGER.info(String.format("[%s][%s]not found. use defaults.", method, path));
+            return new Properties();
+        }
 
         LOGGER.info(String.format("[%s]%s", method, path));
 
@@ -91,7 +95,7 @@ public class JocConfiguration {
     public String getTitle() {
         return title;
     }
-    
+
     public Integer getOrdering() {
         return ordering;
     }
