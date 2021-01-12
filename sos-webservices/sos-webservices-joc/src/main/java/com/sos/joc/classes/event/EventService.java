@@ -47,16 +47,15 @@ import js7.data.lock.LockId;
 import js7.data.order.OrderEvent;
 import js7.data.order.OrderEvent.OrderAdded;
 import js7.data.order.OrderEvent.OrderBroken;
-import js7.data.order.OrderEvent.OrderCancelled$;
 import js7.data.order.OrderEvent.OrderFailed;
 import js7.data.order.OrderEvent.OrderFailedInFork;
-import js7.data.order.OrderEvent.OrderFinished$;
 import js7.data.order.OrderEvent.OrderProcessed;
 import js7.data.order.OrderEvent.OrderProcessingKilled$;
 import js7.data.order.OrderEvent.OrderProcessingStarted$;
 import js7.data.order.OrderEvent.OrderRemoved$;
 import js7.data.order.OrderEvent.OrderRetrying;
 import js7.data.order.OrderEvent.OrderStarted$;
+import js7.data.order.OrderEvent.OrderTerminated;
 import js7.data.order.OrderId;
 import js7.data.workflow.WorkflowPath;
 import js7.proxy.javaapi.data.controller.JControllerState;
@@ -73,7 +72,7 @@ public class EventService {
     // OrderFinished, OrderCancelled, OrderRemoved$ extends OrderTerminated
     private static List<Class<? extends Event>> eventsOfController = Arrays.asList(ControllerEvent.class, ClusterEvent.class,
             AgentRefStateEvent.class, OrderStarted$.class, OrderProcessingKilled$.class, OrderFailed.class, OrderFailedInFork.class,
-            OrderRetrying.class, OrderBroken.class, OrderFinished$.class, OrderCancelled$.class, OrderAdded.class, OrderProcessed.class,
+            OrderRetrying.class, OrderBroken.class, OrderTerminated.class, OrderAdded.class, OrderProcessed.class,
             OrderProcessingStarted$.class, OrderRemoved$.class, VersionedItemEvent.class, SimpleItemEvent.class);
     private String controllerId;
     private volatile CopyOnWriteArraySet<EventSnapshot> events = new CopyOnWriteArraySet<>();
@@ -175,7 +174,7 @@ public class EventService {
                 eventSnapshot.setEventType("OrderStateChanged");
                 if (evt instanceof OrderAdded) {
                     eventSnapshot.setEventType("OrderAdded");
-                } else if (evt instanceof OrderFinished$ || evt instanceof OrderCancelled$ || evt instanceof OrderRemoved$) {
+                } else if (evt instanceof OrderTerminated || evt instanceof OrderRemoved$) {
                     eventSnapshot.setEventType("OrderTerminated");
 //                } else if (evt instanceof OrderRemoved$) {
 //                    eventSnapshot.setEventType("OrderRemoved");
@@ -255,20 +254,26 @@ public class EventService {
             if (isDebugEnabled) {
                 LOGGER.debug("add event for " + controllerId + ": " + eventSnapshot.toString());
             }
-            try {
-                if (atLeastOneConditionIsHold.get() && EventServiceFactory.lock.tryLock(200L, TimeUnit.MILLISECONDS)) {
-                    try {
-                        conditions.stream().parallel().forEach(Condition::signalAll);
-                        atLeastOneConditionIsHold.set(false);
-                    } catch (Exception e) {
-                    } finally {
-                        EventServiceFactory.lock.unlock();
-                    }
-                }
-            } catch (InterruptedException e) {
-            } catch (Exception e) {
-                LOGGER.warn(e.toString());
+            if (atLeastOneConditionIsHold.get()) {
+                signalAll();
             }
+        }
+    }
+    
+    private synchronized void signalAll() {
+        try {
+            if (atLeastOneConditionIsHold.get() && EventServiceFactory.lock.tryLock(200L, TimeUnit.MILLISECONDS)) {
+                try {
+                    conditions.stream().parallel().forEach(Condition::signalAll);
+                    atLeastOneConditionIsHold.set(false);
+                } catch (Exception e) {
+                } finally {
+                    EventServiceFactory.lock.unlock();
+                }
+            }
+        } catch (InterruptedException e) {
+        } catch (Exception e) {
+            LOGGER.warn(e.toString());
         }
     }
 
