@@ -33,7 +33,6 @@ public class DBLayerDailyPlannedOrders {
     private static final String DBItemDailyPlannedOrders = DBItemDailyPlanOrders.class.getSimpleName();
     private static final String DBItemDailyPlanVariables = DBItemDailyPlanVariables.class.getSimpleName();
     private static final String DBItemHistoryOrder = DBItemHistoryOrder.class.getSimpleName();
-    private static final String DBItemDailyPlanWithHistory = DBItemDailyPlanWithHistory.class.getName();
     private final SOSHibernateSession sosHibernateSession;
 
     public DBLayerDailyPlannedOrders(SOSHibernateSession session) {

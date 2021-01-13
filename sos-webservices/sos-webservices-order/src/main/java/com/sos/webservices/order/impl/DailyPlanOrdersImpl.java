@@ -24,7 +24,6 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.joc.model.dailyplan.Period;
 import com.sos.joc.model.dailyplan.PlannedOrderItem;
 import com.sos.joc.model.dailyplan.PlannedOrders;
-import com.sos.joc.model.dailyplan.PlannedOrdersFilter;
 import com.sos.joc.model.order.OrderState;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
@@ -84,12 +83,13 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
         SOSHibernateSession sosHibernateSession = null;
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL, dailyPlanOrderFilter, xAccessToken, dailyPlanOrderFilter.getControllerId(),
-                    getPermissonsJocCockpit(getControllerId(xAccessToken,dailyPlanOrderFilter.getControllerId()), xAccessToken).getDailyPlan().getView().isStatus());
+                    getPermissonsJocCockpit(getControllerId(xAccessToken, dailyPlanOrderFilter.getControllerId()), xAccessToken).getDailyPlan()
+                            .getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             this.checkRequiredParameter("filter", dailyPlanOrderFilter.getFilter());
             this.checkRequiredParameter("dailyPlanDate", dailyPlanOrderFilter.getFilter().getDailyPlanDate());
 
@@ -98,10 +98,12 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
 
             DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
-            boolean withFolderFilter = dailyPlanOrderFilter.getFilter().getFolders() != null && !dailyPlanOrderFilter.getFilter().getFolders().isEmpty();
+            boolean withFolderFilter = dailyPlanOrderFilter.getFilter().getFolders() != null && !dailyPlanOrderFilter.getFilter().getFolders()
+                    .isEmpty();
             boolean hasPermission = true;
             Set<Folder> folders = addPermittedFolder(dailyPlanOrderFilter.getFilter().getFolders());
 
+            sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
 
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
@@ -131,15 +133,25 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
 
             if (hasPermission) {
                 List<DBItemDailyPlanWithHistory> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanWithHistoryList(filter, 0);
+                
                 for (DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory : listOfPlannedOrders) {
 
                     boolean add = true;
                     PlannedOrderItem p = createPlanItem(dbItemDailyPlanWithHistory);
-
+                    if (OrderStateText.CANCELLED.equals(p.getState().get_text())) {
+                        FilterDailyPlannedOrders filterDailyPlannedOrders = new FilterDailyPlannedOrders();
+                        filterDailyPlannedOrders.setControllerId(dbItemDailyPlanWithHistory.getControllerId());
+                        filterDailyPlannedOrders.addSchedulePath(dbItemDailyPlanWithHistory.getSchedulePath());
+                        filterDailyPlannedOrders.setSubmitted(false);
+                        dbLayerDailyPlannedOrders.setSubmitted(filterDailyPlannedOrders);
+                        p.getState().set_text(OrderStateText.PLANNED);
+                        p.getState().setSeverity(OrdersHelper.severityByGroupedStates.get(p.getState().get_text()));
+                    }
                     if (add) {
                         result.add(p);
                     }
                 }
+                Globals.commit(sosHibernateSession);
             }
 
             entity.setPlannedOrderItems(result);

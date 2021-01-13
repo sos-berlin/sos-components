@@ -166,28 +166,28 @@ public class Globals {
         SSLContext.getInstance().setSSLContext(sosCockpitProperties);
     }
 
-    public static void beginTransaction(SOSHibernateSession connection) {
+    public static void beginTransaction(SOSHibernateSession session) {
         try {
-            if (connection != null) {
-                connection.beginTransaction();
+            if (session != null) {
+                session.beginTransaction();
             }
         } catch (Exception e) {
         }
     }
 
-    public static void rollback(SOSHibernateSession connection) {
+    public static void rollback(SOSHibernateSession session) {
         try {
-            if (connection != null && connection.isTransactionOpened()) {
-                connection.rollback();
+            if (session != null && session.isTransactionOpened()) {
+                session.rollback();
             }
         } catch (Exception e) {
         }
     }
 
-    public static void commit(SOSHibernateSession connection) {
+    public static void commit(SOSHibernateSession session) {
         try {
-            if (connection != null) {
-                connection.commit();
+            if (session != null) {
+                session.commit();
             }
         } catch (Exception e) {
         }
