@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -102,6 +103,7 @@ import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.CalendarType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.joc.JocMetaInfo;
 import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.DeployablesFilter;
@@ -1771,6 +1773,14 @@ public abstract class PublishUtils {
                             }
                         } 
                     }
+                    JocMetaInfo jocMetaInfo = getJocMetaInfo();
+                    if (!isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
+                        String zipEntryName = "meta_inf";
+                        ZipEntry entry = new ZipEntry(zipEntryName);
+                        zipOut.putNextEntry(entry);
+                        zipOut.write(om.writeValueAsBytes(jocMetaInfo));
+                        zipOut.closeEntry();
+                    }
                     zipOut.flush();
                 } finally {
                     if (zipOut != null) {
@@ -1864,6 +1874,16 @@ public abstract class PublishUtils {
                                 tarOut.closeArchiveEntry();
                             }
                         } 
+                    }
+                    JocMetaInfo jocMetaInfo = getJocMetaInfo();
+                    if (!isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
+                        String zipEntryName = "meta_inf";
+                        TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
+                        byte[] jocMetaInfoBytes = om.writeValueAsBytes(jocMetaInfo);
+                        entry.setSize(jocMetaInfoBytes.length);
+                        tarOut.putArchiveEntry(entry);
+                        tarOut.write(jocMetaInfoBytes);
+                        tarOut.closeArchiveEntry();
                     }
                     tarOut.flush();
                 } finally {
@@ -2587,4 +2607,29 @@ public abstract class PublishUtils {
         }
     }
     
+    private static JocMetaInfo getJocMetaInfo() {
+        Properties jocProperties = Globals.sosCockpitProperties.getProperties();
+        JocMetaInfo jocMetaInfo = new JocMetaInfo();
+        if (jocProperties.containsKey("joc_version")) {
+            jocMetaInfo.setJocVersion(jocProperties.getProperty("joc_version"));
+        }
+        if (jocProperties.containsKey("inventory_schema_version")) {
+            jocMetaInfo.setInventorySchemaVersion(jocProperties.getProperty("inventory_schema_version"));
+        }
+        if(jocProperties.containsKey("api_version")) {
+            jocMetaInfo.setApiVersion(jocProperties.getProperty("api_version"));
+        }
+        return jocMetaInfo;
+    }
+
+    private static boolean isJocMetaInfoNullOrEmpty (JocMetaInfo jocMetaInfo) {
+        if (jocMetaInfo == null ||
+                ((jocMetaInfo.getJocVersion() == null || jocMetaInfo.getJocVersion().isEmpty())
+                        && (jocMetaInfo.getInventorySchemaVersion() == null || jocMetaInfo.getInventorySchemaVersion().isEmpty())
+                        && (jocMetaInfo.getApiVersion() == null || jocMetaInfo.getApiVersion().isEmpty()))) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
