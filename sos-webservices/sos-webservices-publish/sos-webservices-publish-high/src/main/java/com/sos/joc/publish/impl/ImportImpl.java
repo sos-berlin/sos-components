@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -24,6 +26,7 @@ import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.inventory.ConfigurationObject;
+import com.sos.joc.model.joc.JocMetaInfo;
 import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.model.publish.ImportFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
@@ -35,6 +38,7 @@ import com.sos.schema.JsonValidator;
 public class ImportImpl extends JOCResourceImpl implements IImportResource {
 
     private static final String API_CALL = "./inventory/import";
+    private static final Logger LOGGER = LoggerFactory.getLogger(ImportImpl.class);
 
     @Override
 	public JOCDefaultResponse postImportConfiguration(String xAccessToken, 
@@ -79,14 +83,21 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             stream = body.getEntityAs(InputStream.class);
             Set<ConfigurationObject> configurations = new HashSet<ConfigurationObject>();
+            JocMetaInfo jocMetaInfo = new JocMetaInfo();
             // process uploaded archive
             if (ArchiveFormat.ZIP.equals(filter.getFormat())) {
-                configurations = PublishUtils.readZipFileContent(stream);
+                configurations = PublishUtils.readZipFileContent(stream, jocMetaInfo);
             } else if (ArchiveFormat.TAR_GZ.equals(filter.getFormat())) {
-                configurations = PublishUtils.readTarGzipFileContent(stream);
+                configurations = PublishUtils.readTarGzipFileContent(stream, jocMetaInfo);
             } else {
             	throw new JocUnsupportedFileTypeException(
-            	        String.format("The file %1$s to be uploaded must have one of the formats zip, tar.gz or tgz!", uploadFileName)); 
+            	        String.format("The file %1$s to be uploaded must have one of the formats zip or tar.gz!", uploadFileName)); 
+            }
+            if(!PublishUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
+                // TODO: process transformation rules 
+                LOGGER.info(String.format("Imported from JS7 JOC Cockpit version: %1$s", jocMetaInfo.getJocVersion()));
+                LOGGER.info(String.format("  with inventory schema version: %1$s", jocMetaInfo.getInventorySchemaVersion()));
+                LOGGER.info(String.format("  and API version: %1$s", jocMetaInfo.getApiVersion()));
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);

@@ -27,6 +27,9 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.jobscheduler.model.deploy.DeployType;
+import com.sos.jobscheduler.model.jobclass.JobClassPublish;
+import com.sos.jobscheduler.model.junction.JunctionPublish;
+import com.sos.jobscheduler.model.lock.LockPublish;
 import com.sos.jobscheduler.model.workflow.WorkflowPublish;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerDate;
@@ -1304,7 +1307,7 @@ public class DBLayerDeploy {
         List<DBItemDeploymentHistory> depHistoryFailed = new ArrayList<DBItemDeploymentHistory>();
         if (verifiedConfigurations != null) {
             for (JSObject jsObject : verifiedConfigurations.keySet()) {
-                DBItemInventoryConfiguration inventoryConfig = getConfiguration(jsObject.getPath(), PublishUtils.mapDeployType(jsObject.getObjectType()));
+                DBItemInventoryConfiguration inventoryConfig = null;
                 DBItemDeploymentHistory newDepHistoryItem = new DBItemDeploymentHistory();
                 newDepHistoryItem.setAccount(account);
                 newDepHistoryItem.setCommitId(versionId);
@@ -1313,12 +1316,25 @@ public class DBLayerDeploy {
                 } catch (JsonProcessingException e1) {
                     // TODO Auto-generated catch block
                 }
-//                newDepHistoryItem.setContent(inventoryConfig.getContent());
                 Long controllerInstanceId = 0L;
                 try {
                     controllerInstanceId = getController(controllerId).getId();
                 } catch (SOSHibernateException e) {
                     continue;
+                }
+                switch (jsObject.getObjectType()) {
+                case WORKFLOW:
+                    inventoryConfig = getConfiguration(((WorkflowPublish)jsObject).getContent().getPath(), ConfigurationType.WORKFLOW);
+                    break;
+                case LOCK:
+                    inventoryConfig = getConfiguration(((LockPublish)jsObject).getContent().getPath(), ConfigurationType.LOCK);
+                    break;
+                case JUNCTION:
+                    inventoryConfig = getConfiguration(((JunctionPublish)jsObject).getContent().getPath(), ConfigurationType.JUNCTION);
+                    break;
+                case JOBCLASS:
+                    inventoryConfig = getConfiguration(((JobClassPublish)jsObject).getContent().getPath(), ConfigurationType.JOBCLASS);
+                    break;
                 }
                 newDepHistoryItem.setControllerInstanceId(controllerInstanceId);
                 newDepHistoryItem.setControllerId(controllerId);
@@ -1362,6 +1378,9 @@ public class DBLayerDeploy {
                 deploy.setErrorMessage(errorMessage);
                 // TODO: get Version to set here
                 deploy.setVersion(null);
+                DBItemInventoryConfiguration inventoryConfig = getConfiguration(deploy.getPath(), ConfigurationType.fromValue(deploy.getType()));
+                deploy.setInvContent(inventoryConfig.getContent());
+                deploy.setInventoryConfigurationId(inventoryConfig.getId());
                 try {
                     session.save(deploy);
                 } catch (SOSHibernateException e) {

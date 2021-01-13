@@ -6,11 +6,13 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
@@ -27,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -426,10 +429,51 @@ public class DeploymentTest {
         assertEquals(2, counterSigned);
         LOGGER.info(String.format("%1$d workflows signed", counterSigned));
         LOGGER.info("*************************       export signature to zip file ************************");
-        exportWorkflows(jsObjectsToExport, "export_high.zip", JSObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value());
-        assertTrue(Files.exists(Paths.get("target").resolve("created_test_files").resolve("export_high.zip")));
-        LOGGER.info("Archive export_high.zip succefully created in ./target/created_test_files!");
+        exportWorkflows(jsObjectsToExport, "export_high_from_gui.zip", JSObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value());
+        assertTrue(Files.exists(Paths.get("target").resolve("created_test_files").resolve("export_high_from_gui.zip")));
+        LOGGER.info("Archive export_high_from_gui.zip succefully created in ./target/created_test_files!");
         LOGGER.info("Archive contains the workflows and their signatures.");
+        LOGGER.info("************************* End Test import workflows from zip file  ******************");
+        LOGGER.info("");
+    }
+
+    @Test
+    public void test12ImportWorkflowsFromFolderSignAndUpdateArchiveFiles() 
+            throws IOException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, PGPException {
+        LOGGER.info("*************************  import sign and update workflows from zip files Test *****");
+        LOGGER.info("*************************       import workflows ************************************");
+        Path archivesPath = Paths.get("src/test/resources/import_deploy");
+        Set<Path> filePaths = Files.list(archivesPath).collect(Collectors.toSet());
+        Integer archivesToSignCount = filePaths.size();
+        filePaths.stream().forEach(item -> {
+            try {
+                Set<Workflow> workflows = importWorkflows(item.toString().replace("\\", "/").replace("src/test/resources", ""));
+                LOGGER.info(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
+                LOGGER.info("*************************       sign Workflows **************************************");
+                Set<JSObject> jsObjectsToExport = new HashSet<JSObject>();
+                int counterSigned = 0;
+                for (Workflow workflow : workflows) {
+                    Signature signature = signWorkflowECDSA(workflow);
+                    JSObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow, signature);
+                    assertNotNull(jsObject.getSignedContent());
+                    counterSigned++;
+                    jsObjectsToExport.add(jsObject);
+                }
+                LOGGER.info(String.format("%1$d workflows signed", counterSigned));
+                LOGGER.info("*************************       export signature to zip file ************************");
+                exportWorkflows(jsObjectsToExport, item.getFileName().toString(),
+                        item.getParent().toString().replace("\\", "/").replace("src/test/resources/",""), 
+                        JSObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value());
+                LOGGER.info(String.format("Archive %1$s succefully created in ./target/created_test_files/%2$s!",
+                        item.getFileName().toString(), item.getParent().toString().replace("\\", "/").replace("src/test/resources/","")));
+                LOGGER.info("Archive contains the workflows and their signatures.");
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        Set<Path> signedArchivesPaths = Files.list(Paths.get("target/created_test_files/import_deploy")).collect(Collectors.toSet());
+        assertTrue(archivesToSignCount == signedArchivesPaths.size());
+        LOGGER.info(String.format("%1$d archives signed.", signedArchivesPaths.size()));
         LOGGER.info("************************* End Test import workflows from zip file  ******************");
         LOGGER.info("");
     }
@@ -439,14 +483,25 @@ public class DeploymentTest {
     }
 
     private void exportWorkflows(Set<JSObject> jsObjectsToExport, String filename, String signatureFileExtension) throws IOException {
+        exportWorkflows(jsObjectsToExport, filename, null, signatureFileExtension);
+    }
+
+    private void exportWorkflows(Set<JSObject> jsObjectsToExport, String filename, String targetFolder, String signatureFileExtension) throws IOException {
         ZipOutputStream zipOut = null;
         OutputStream out = null;
-        Boolean notExists = Files.notExists(Paths.get("target").resolve("created_test_files"));
-        if (notExists) {
-            Files.createDirectory(Paths.get("target").resolve("created_test_files"));
-            LOGGER.info("subfolder \"created_test_files\" created in target folder.");
+        Path defaultTargetFolderPath = Paths.get("target").resolve("created_test_files");
+        Path targetFolderPath = null;
+        if (targetFolder != null) {
+            targetFolderPath = defaultTargetFolderPath.resolve(targetFolder);
+        } else {
+            targetFolderPath = defaultTargetFolderPath;
         }
-        out = Files.newOutputStream(Paths.get("target").resolve("created_test_files").resolve(filename));
+        Boolean notExists = Files.notExists(targetFolderPath);
+        if (notExists) {
+            Files.createDirectory(targetFolderPath);
+            LOGGER.info(String.format("folder \"%1$s\" created.", targetFolderPath.toString()));
+        }
+        out = Files.newOutputStream(targetFolderPath.resolve(filename));
         zipOut = new ZipOutputStream(new BufferedOutputStream(out), StandardCharsets.UTF_8);
         for (JSObject jsObjectToExport : jsObjectsToExport) {
             Workflow workflow = (Workflow) jsObjectToExport.getContent();
@@ -471,7 +526,6 @@ public class DeploymentTest {
         }
     }
 
-    @SuppressWarnings("unused")
     private void exportSingleWorkflow(Set<JSObject> jsObjectsToExport) throws IOException {
         ZipOutputStream zipOut = null;
         OutputStream out = null;
@@ -529,10 +583,34 @@ public class DeploymentTest {
         return workflows;
     }
 
+    private Set<Workflow> importWorkflows(String filepath) throws IOException {
+        Set<Workflow> workflows = new HashSet<Workflow>();
+        
+        InputStream fileStream = getClass().getResourceAsStream(filepath);
+        ZipInputStream zipStream = new ZipInputStream(fileStream);
+        ZipEntry entry = null;
+        while ((entry = zipStream.getNextEntry()) != null) {
+            if (entry.isDirectory()) {
+                continue;
+            }
+            String entryName = entry.getName().replace('\\', '/');
+            ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
+            byte[] binBuffer = new byte[8192];
+            int binRead = 0;
+            while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
+                outBuffer.write(binBuffer, 0, binRead);
+            }
+            if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+                workflows.add(om.readValue(outBuffer.toString(), Workflow.class));
+            }
+        }
+        return workflows;
+    }
+
     private Set<Workflow> importWorkflows2() throws IOException {
         Set<Workflow> workflows = new HashSet<Workflow>();
-        LOGGER.info("archive to read from exists: " + Files.exists(Paths.get("target/created_test_files").resolve(TARGET_FILENAME)));
-        InputStream fileStream = getClass().getResourceAsStream("/export_high.zip");
+        LOGGER.info("archive to read from exists: " + Files.exists(Paths.get("src/test/resources/import_deploy").resolve("export_high_from_gui.zip")));
+        InputStream fileStream = getClass().getResourceAsStream("/import_deploy/export_high_from_gui.zip");
         ZipInputStream zipStream = new ZipInputStream(fileStream);
         ZipEntry entry = null;
         while ((entry = zipStream.getNextEntry()) != null) {

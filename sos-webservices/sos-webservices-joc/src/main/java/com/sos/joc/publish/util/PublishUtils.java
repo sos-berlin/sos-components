@@ -136,6 +136,7 @@ import reactor.core.publisher.Flux;
 public abstract class PublishUtils {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PublishUtils.class);
+    private static final String JOC_META_INFO_FILENAME = "meta_inf";
     private static ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
 
     public static String getExtensionFromFilename(String filename) {
@@ -460,32 +461,6 @@ public abstract class PublishUtils {
         }
     }
 
-//    public static Set<DBItemInventoryConfiguration> verifyPGPSignatures(String account, Set<DBItemInventoryConfiguration> signedDrafts,
-//            JocKeyPair keyPair, SOSHibernateSession connection) throws SOSHibernateException, IOException, PGPException {
-//        Set<DBItemInventoryConfiguration> verifiedDrafts = new HashSet<DBItemInventoryConfiguration>();
-//        String publicKey = null;
-//        if (keyPair.getPublicKey() == null) {
-//            publicKey = KeyUtil.extractPublicKey(keyPair.getPrivateKey());
-//        } else {
-//            publicKey = keyPair.getPublicKey();
-//        }
-//        Boolean verified = false;
-//        for (DBItemInventoryConfiguration draft : signedDrafts) {
-//            DBLayerDeploy dbLayer = new DBLayerDeploy(connection);
-//            DBItemDepSignatures dbSignature = dbLayer.getSignature(draft.getId());
-//            if(dbSignature != null) {
-//                verified = VerifySignature.verifyPGP(publicKey, draft.getContent(), dbSignature.getSignature());
-//                if (!verified) {
-//                    LOGGER.trace(
-//                            String.format("Signature of object %1$s could not be verified! Object will not be deployed.", draft.getPath()));
-//                } else {
-//                    verifiedDrafts.add(draft);
-//                }
-//            }
-//        }
-//        return verifiedDrafts;
-//    }
-//
     public static DBItemInventoryConfiguration verifyPGPSignature(String account, DBItemInventoryConfiguration signedDraft,
             DBItemDepSignatures draftSignature, JocKeyPair keyPair) throws SOSHibernateException, IOException, PGPException {
         DBItemInventoryConfiguration verifiedDraft = null;
@@ -962,38 +937,54 @@ public abstract class PublishUtils {
             deployedObjects = new HashSet<DBItemDeploymentHistory>();
             for (JSObject draft : draftsWithSignature.keySet()) {
                 DBItemDeploymentHistory newDeployedObject = new DBItemDeploymentHistory();
-                DBItemInventoryConfiguration original = dbLayerDeploy.getConfiguration(draft.getPath(), draft.getObjectType().intValue());
                 newDeployedObject.setAccount(account);
                 // TODO: get Version to set here
                 newDeployedObject.setVersion(null);
-                newDeployedObject.setPath(original.getPath());
-                newDeployedObject.setFolder(original.getFolder());
                 newDeployedObject.setType(draft.getObjectType().intValue());
                 newDeployedObject.setCommitId(commitId);
+                DBItemInventoryConfiguration original = null;
                 switch (draft.getObjectType()) {
                 case WORKFLOW:
                     String workflow = Globals.objectMapper.writeValueAsString(((WorkflowPublish)draft).getContent());
                     newDeployedObject.setContent(workflow);
+                    original = dbLayerDeploy.getConfiguration(((WorkflowPublish)draft).getContent().getPath(), ConfigurationType.WORKFLOW.intValue());
+                    newDeployedObject.setPath(original.getPath());
+                    newDeployedObject.setFolder(original.getFolder());
+                    newDeployedObject.setInvContent(original.getContent());
+                    newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
                 case LOCK:
                     String lock = Globals.objectMapper.writeValueAsString(((WorkflowPublish)draft).getContent());
                     newDeployedObject.setContent(lock);
+                    original = dbLayerDeploy.getConfiguration(((LockPublish)draft).getContent().getPath(), ConfigurationType.LOCK.intValue());
+                    newDeployedObject.setPath(original.getPath());
+                    newDeployedObject.setFolder(original.getFolder());
+                    newDeployedObject.setInvContent(original.getContent());
+                    newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
                 case JUNCTION:
                     String junction = Globals.objectMapper.writeValueAsString(((WorkflowPublish)draft).getContent());
                     newDeployedObject.setContent(junction);
+                    original = dbLayerDeploy.getConfiguration(((JunctionPublish)draft).getContent().getPath(), ConfigurationType.JUNCTION.intValue());
+                    newDeployedObject.setPath(original.getPath());
+                    newDeployedObject.setFolder(original.getFolder());
+                    newDeployedObject.setInvContent(original.getContent());
+                    newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
                 case JOBCLASS:
                     String jobclass = Globals.objectMapper.writeValueAsString(((WorkflowPublish)draft).getContent());
                     newDeployedObject.setContent(jobclass);
+                    original = dbLayerDeploy.getConfiguration(((JobClassPublish)draft).getContent().getPath(), ConfigurationType.JOBCLASS.intValue());
+                    newDeployedObject.setPath(original.getPath());
+                    newDeployedObject.setFolder(original.getFolder());
+                    newDeployedObject.setInvContent(original.getContent());
+                    newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
                 }
                 newDeployedObject.setSignedContent(draftsWithSignature.get(draft).getSignature());
-                newDeployedObject.setInvContent(original.getContent());
                 newDeployedObject.setDeploymentDate(deploymentDate);
                 newDeployedObject.setControllerInstanceId(controllerInstance.getId());
                 newDeployedObject.setControllerId(controllerId);
-                newDeployedObject.setInventoryConfigurationId(original.getId());
                 newDeployedObject.setOperation(OperationType.UPDATE.value());
                 newDeployedObject.setState(DeploymentState.DEPLOYED.value());
                 dbLayerDeploy.getSession().save(newDeployedObject);
@@ -1005,39 +996,6 @@ public abstract class PublishUtils {
         return deployedObjects;
     }
 
-//    public static Set<DBItemDeploymentHistory> cloneInvConfigurationsToDepHistoryItems(
-//            Map<DBItemInventoryConfiguration, JSObject> importedObjects, String account, DBLayerDeploy dbLayerDeploy, String controllerId,
-//            Date deploymentDate, String commitId) {
-//        Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
-//        try {
-//            DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
-//            for (DBItemInventoryConfiguration draft : importedObjects.keySet()) {
-//                DBItemDeploymentHistory newDeployedObject = new DBItemDeploymentHistory();
-//                newDeployedObject.setAccount(account);
-//                // TODO: get Version to set here
-//                newDeployedObject.setVersion(null);
-//                newDeployedObject.setPath(draft.getPath());
-//                newDeployedObject.setFolder(draft.getFolder());
-//                newDeployedObject.setType(
-//                        PublishUtils.mapInventoryMetaConfigurationType(ConfigurationType.fromValue(draft.getType())).intValue());
-//                newDeployedObject.setCommitId(commitId);
-//                newDeployedObject.setContent(draft.getContent());
-//                newDeployedObject.setSignedContent(importedObjects.get(draft).getSignedContent());
-//                newDeployedObject.setDeploymentDate(deploymentDate);
-//                newDeployedObject.setControllerInstanceId(controllerInstance.getId());
-//                newDeployedObject.setControllerId(controllerId);
-//                newDeployedObject.setInventoryConfigurationId(draft.getId());
-//                newDeployedObject.setOperation(OperationType.UPDATE.value());
-//                newDeployedObject.setState(DeploymentState.DEPLOYED.value());
-//                dbLayerDeploy.getSession().save(newDeployedObject);
-//                deployedObjects.add(newDeployedObject);
-//            }
-//        } catch (SOSHibernateException e) {
-//            throw new JocSosHibernateException(e);
-//        }
-//        return deployedObjects;
-//    }
-//
     public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToRedeployed(
             Map<DBItemDeploymentHistory, DBItemDepSignatures> redeployedWithSignature, String account, DBLayerDeploy dbLayerDeploy,
             String commitId, String controllerId, Date deploymentDate) {
@@ -1203,7 +1161,7 @@ public abstract class PublishUtils {
         return alreadyDeployedToDelete;
     }
 
-    public static Map<ConfigurationObject, SignaturePath> readZipFileContentWithSignatures(InputStream inputStream)
+    public static Map<ConfigurationObject, SignaturePath> readZipFileContentWithSignatures(InputStream inputStream, JocMetaInfo jocMetaInfo)
             throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException, 
             JocConfigurationException, DBOpenSessionException {
         Set<ConfigurationObject> objects = new HashSet<ConfigurationObject>();
@@ -1224,10 +1182,19 @@ public abstract class PublishUtils {
                 while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
                     outBuffer.write(binBuffer, 0, binRead);
                 }
+                // process JOC meta info file
+                if (entryName.equals(JOC_META_INFO_FILENAME)) {
+                    JocMetaInfo fromFile = om.readValue(outBuffer.toString(), JocMetaInfo.class);
+                    if(!isJocMetaInfoNullOrEmpty(fromFile)) {
+                        jocMetaInfo.setJocVersion(fromFile.getJocVersion());
+                        jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
+                        jocMetaInfo.setApiVersion(fromFile.getApiVersion());
+                    }
+                }
                 // process deployables only
                 SignaturePath signaturePath = new SignaturePath();
                 Signature signature = new Signature();
-                if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+                if (entryName.endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
                     WorkflowEdit workflowEdit = new WorkflowEdit();
                     Workflow workflow = om.readValue(outBuffer.toString(), Workflow.class);
                     if (checkObjectNotEmpty(workflow)) {
@@ -1245,17 +1212,17 @@ public abstract class PublishUtils {
                     workflowEdit.setObjectType(ConfigurationType.WORKFLOW);
                     
                     objects.add(workflowEdit);
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
                     signaturePath.setObjectPath(("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value(), ""));
                     signature.setSignatureString(outBuffer.toString());
                     signaturePath.setSignature(signature);
                     signaturePaths.add(signaturePath);
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(JSObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value())) {
                     signaturePath.setObjectPath(("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value(), ""));
                     signature.setSignatureString(outBuffer.toString());
                     signaturePath.setSignature(signature);
                     signaturePaths.add(signaturePath);
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
                     LockEdit lockEdit = new LockEdit();
                     Lock lock = om.readValue(outBuffer.toString(), Lock.class);
                     if (checkObjectNotEmpty(lock)) {
@@ -1272,7 +1239,7 @@ public abstract class PublishUtils {
                     }
                     lockEdit.setObjectType(ConfigurationType.LOCK);
                     objects.add(lockEdit);
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
                     JunctionEdit junctionEdit = new JunctionEdit();
                     Junction junction = om.readValue(outBuffer.toString(), Junction.class);
                     if (checkObjectNotEmpty(junction)) {
@@ -1289,7 +1256,7 @@ public abstract class PublishUtils {
                     }
                     junctionEdit.setObjectType(ConfigurationType.JUNCTION);
                     objects.add(junctionEdit);
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
                     JobClassEdit jobClassEdit = new JobClassEdit();
                     JobClass jobClass = om.readValue(outBuffer.toString(), JobClass.class);
                     if (checkObjectNotEmpty(jobClass)) {
@@ -1322,7 +1289,7 @@ public abstract class PublishUtils {
         return objectsWithSignature;
     }
 
-    public static Set<ConfigurationObject> readZipFileContent(InputStream inputStream)
+    public static Set<ConfigurationObject> readZipFileContent(InputStream inputStream, JocMetaInfo jocMetaInfo)
             throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException, 
             JocConfigurationException, DBOpenSessionException {
         Set<ConfigurationObject> objects = new HashSet<ConfigurationObject>();
@@ -1341,8 +1308,17 @@ public abstract class PublishUtils {
                 while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
                     outBuffer.write(binBuffer, 0, binRead);
                 }
+                // process JOC meta info file
+                if (entryName.equals(JOC_META_INFO_FILENAME)) {
+                    JocMetaInfo fromFile = om.readValue(outBuffer.toString(), JocMetaInfo.class);
+                    if(!isJocMetaInfoNullOrEmpty(fromFile)) {
+                        jocMetaInfo.setJocVersion(fromFile.getJocVersion());
+                        jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
+                        jocMetaInfo.setApiVersion(fromFile.getApiVersion());
+                    }
+                }
                 // process deployables and releaseables
-                if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+                if (entryName.endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
                     WorkflowEdit workflowEdit = new WorkflowEdit();
                     Workflow workflow = om.readValue(outBuffer.toString(), Workflow.class);
                     if (checkObjectNotEmpty(workflow)) {
@@ -1359,7 +1335,7 @@ public abstract class PublishUtils {
                     }
                     workflowEdit.setObjectType(ConfigurationType.WORKFLOW);
                     objects.add(workflowEdit);
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
                     LockEdit lockEdit = new LockEdit();
                     Lock lock = om.readValue(outBuffer.toString(), Lock.class);
                     if (checkObjectNotEmpty(lock)) {
@@ -1376,7 +1352,7 @@ public abstract class PublishUtils {
                     }
                     lockEdit.setObjectType(ConfigurationType.LOCK);
                     objects.add(lockEdit);
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
                     JunctionEdit junctionEdit = new JunctionEdit();
                     Junction junction = om.readValue(outBuffer.toString(), Junction.class);
                     if (checkObjectNotEmpty(junction)) {
@@ -1393,7 +1369,7 @@ public abstract class PublishUtils {
                     }
                     junctionEdit.setObjectType(ConfigurationType.JUNCTION);
                     objects.add(junctionEdit);
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
                     JobClassEdit jobClassEdit = new JobClassEdit();
                     JobClass jobClass = om.readValue(outBuffer.toString(), JobClass.class);
                     if (checkObjectNotEmpty(jobClass)) {
@@ -1410,7 +1386,7 @@ public abstract class PublishUtils {
                     }
                     jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
                     objects.add(jobClassEdit);
-                } else if (("/" + entryName).endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value())) {
                     ScheduleEdit scheduleEdit = new ScheduleEdit();
                     Schedule schedule = om.readValue(outBuffer.toString(), Schedule.class);
                     if (checkObjectNotEmpty(schedule)) {
@@ -1427,7 +1403,7 @@ public abstract class PublishUtils {
                     }
                     scheduleEdit.setObjectType(ConfigurationType.SCHEDULE);
                     objects.add(scheduleEdit);
-                } else if (("/" + entryName).endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
                     Calendar cal = om.readValue(outBuffer.toString(), Calendar.class);
                     if (checkObjectNotEmpty(cal)) {
                         if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
@@ -1469,7 +1445,7 @@ public abstract class PublishUtils {
         return objects;
     }
 
-    public static Map<ConfigurationObject, SignaturePath> readTarGzipFileContentWithSignatures(InputStream inputStream) 
+    public static Map<ConfigurationObject, SignaturePath> readTarGzipFileContentWithSignatures(InputStream inputStream, JocMetaInfo jocMetaInfo) 
             throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException, 
             JocConfigurationException, DBOpenSessionException {
         Set<ConfigurationObject> objects = new HashSet<ConfigurationObject>();
@@ -1492,10 +1468,19 @@ public abstract class PublishUtils {
                 while ((binRead = tarArchiveInputStream.read(binBuffer, 0, 8192)) >= 0) {
                     outBuffer.write(binBuffer, 0, binRead);
                 }
+                // process JOC meta info file
+                if (entryName.equals(JOC_META_INFO_FILENAME)) {
+                    JocMetaInfo fromFile = om.readValue(outBuffer.toString(), JocMetaInfo.class);
+                    if(!isJocMetaInfoNullOrEmpty(fromFile)) {
+                        jocMetaInfo.setJocVersion(fromFile.getJocVersion());
+                        jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
+                        jocMetaInfo.setApiVersion(fromFile.getApiVersion());
+                    }
+                }
                 // process deployables only
                 SignaturePath signaturePath = new SignaturePath();
                 Signature signature = new Signature();
-                if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+                if (entryName.endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
                     WorkflowEdit workflowEdit = new WorkflowEdit();
                     Workflow workflow = om.readValue(outBuffer.toString(), Workflow.class);
                     if (checkObjectNotEmpty(workflow)) {
@@ -1507,17 +1492,17 @@ public abstract class PublishUtils {
                     workflowEdit.setPath(workflowEdit.getConfiguration().getPath());
                     workflowEdit.setObjectType(ConfigurationType.WORKFLOW);
                     objects.add(workflowEdit);
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
                     signaturePath.setObjectPath(("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value(), ""));
                     signature.setSignatureString(outBuffer.toString());
                     signaturePath.setSignature(signature);
                     signaturePaths.add(signaturePath);
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(JSObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value())) {
                     signaturePath.setObjectPath(("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value(), ""));
                     signature.setSignatureString(outBuffer.toString());
                     signaturePath.setSignature(signature);
                     signaturePaths.add(signaturePath);
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
                     LockEdit lockEdit = new LockEdit();
                     Lock lock = om.readValue(outBuffer.toString(), Lock.class);
                     if (checkObjectNotEmpty(lock)) {
@@ -1529,7 +1514,7 @@ public abstract class PublishUtils {
                     lockEdit.setPath(lockEdit.getConfiguration().getPath());
                     lockEdit.setObjectType(ConfigurationType.LOCK);
                     objects.add(lockEdit);
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
                     JunctionEdit junctionEdit = new JunctionEdit();
                     Junction junction = om.readValue(outBuffer.toString(), Junction.class);
                     if (checkObjectNotEmpty(junction)) {
@@ -1541,7 +1526,7 @@ public abstract class PublishUtils {
                     junctionEdit.setPath(junctionEdit.getConfiguration().getPath());
                     junctionEdit.setObjectType(ConfigurationType.JUNCTION);
                     objects.add(junctionEdit);
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
                     JobClassEdit jobClassEdit = new JobClassEdit();
                     JobClass jobClass = om.readValue(outBuffer.toString(), JobClass.class);
                     if (checkObjectNotEmpty(jobClass)) {
@@ -1572,7 +1557,7 @@ public abstract class PublishUtils {
         return objectsWithSignature;
     }
 
-    public static Set<ConfigurationObject> readTarGzipFileContent(InputStream inputStream) 
+    public static Set<ConfigurationObject> readTarGzipFileContent(InputStream inputStream, JocMetaInfo jocMetaInfo) 
             throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException, 
             JocConfigurationException, DBOpenSessionException {
         Set<ConfigurationObject> objects = new HashSet<ConfigurationObject>();
@@ -1593,8 +1578,17 @@ public abstract class PublishUtils {
                 while ((binRead = tarArchiveInputStream.read(binBuffer, 0, 8192)) >= 0) {
                     outBuffer.write(binBuffer, 0, binRead);
                 }
+                // process JOC meta info file
+                if (entryName.equals(JOC_META_INFO_FILENAME)) {
+                    JocMetaInfo fromFile = om.readValue(outBuffer.toString(), JocMetaInfo.class);
+                    if(!isJocMetaInfoNullOrEmpty(fromFile)) {
+                        jocMetaInfo.setJocVersion(fromFile.getJocVersion());
+                        jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
+                        jocMetaInfo.setApiVersion(fromFile.getApiVersion());
+                    }
+                }
                 // process deployables and releaseables
-                if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+                if (entryName.endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
                     WorkflowEdit workflowEdit = new WorkflowEdit();
                     Workflow workflow = om.readValue(outBuffer.toString(), Workflow.class);
                     if (checkObjectNotEmpty(workflow)) {
@@ -1606,7 +1600,7 @@ public abstract class PublishUtils {
                     workflowEdit.setPath(workflowEdit.getConfiguration().getPath());
                     workflowEdit.setObjectType(ConfigurationType.WORKFLOW);
                     objects.add(workflowEdit);
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
                     LockEdit lockEdit = new LockEdit();
                     Lock lock = om.readValue(outBuffer.toString(), Lock.class);
                     if (checkObjectNotEmpty(lock)) {
@@ -1618,7 +1612,7 @@ public abstract class PublishUtils {
                     lockEdit.setPath(lockEdit.getConfiguration().getPath());
                     lockEdit.setObjectType(ConfigurationType.LOCK);
                     objects.add(lockEdit);
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
                     JunctionEdit junctionEdit = new JunctionEdit();
                     Junction junction = om.readValue(outBuffer.toString(), Junction.class);
                     if (checkObjectNotEmpty(junction)) {
@@ -1630,7 +1624,7 @@ public abstract class PublishUtils {
                     junctionEdit.setPath(junctionEdit.getConfiguration().getPath());
                     junctionEdit.setObjectType(ConfigurationType.JUNCTION);
                     objects.add(junctionEdit);
-                } else if (("/" + entryName).endsWith(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
                     JobClassEdit jobClassEdit = new JobClassEdit();
                     JobClass jobClass = om.readValue(outBuffer.toString(), JobClass.class);
                     if (checkObjectNotEmpty(jobClass)) {
@@ -1642,7 +1636,7 @@ public abstract class PublishUtils {
                     jobClassEdit.setPath(jobClassEdit.getConfiguration().getPath());
                     jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
                     objects.add(jobClassEdit);
-                } else if (("/" + entryName).endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value())) {
                     ScheduleEdit scheduleEdit = new ScheduleEdit();
                     Schedule schedule = om.readValue(outBuffer.toString(), Schedule.class);
                     if (checkObjectNotEmpty(schedule)) {
@@ -1654,7 +1648,7 @@ public abstract class PublishUtils {
                     scheduleEdit.setPath(scheduleEdit.getConfiguration().getPath());
                     scheduleEdit.setObjectType(ConfigurationType.SCHEDULE);
                     objects.add(scheduleEdit);
-                } else if (("/" + entryName).endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
                     Calendar cal = om.readValue(outBuffer.toString(), Calendar.class);
                     if (checkObjectNotEmpty(cal)) {
                         if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
@@ -1775,7 +1769,7 @@ public abstract class PublishUtils {
                     }
                     JocMetaInfo jocMetaInfo = getJocMetaInfo();
                     if (!isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
-                        String zipEntryName = "meta_inf";
+                        String zipEntryName = JOC_META_INFO_FILENAME;
                         ZipEntry entry = new ZipEntry(zipEntryName);
                         zipOut.putNextEntry(entry);
                         zipOut.write(om.writeValueAsBytes(jocMetaInfo));
@@ -1877,7 +1871,7 @@ public abstract class PublishUtils {
                     }
                     JocMetaInfo jocMetaInfo = getJocMetaInfo();
                     if (!isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
-                        String zipEntryName = "meta_inf";
+                        String zipEntryName = JOC_META_INFO_FILENAME;
                         TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
                         byte[] jocMetaInfoBytes = om.writeValueAsBytes(jocMetaInfo);
                         entry.setSize(jocMetaInfoBytes.length);
@@ -2431,10 +2425,6 @@ public abstract class PublishUtils {
         }
     }
 
-    private static JSObject getJSObjectFromDBItem (DBItemDeploymentHistory item) {
-        return getJSObjectFromDBItem(item, null);
-    }
-
     private static JSObject getJSObjectFromDBItem (DBItemDeploymentHistory item, String commitId) {
         try {
             JSObject jsObject = new JSObject();
@@ -2622,7 +2612,7 @@ public abstract class PublishUtils {
         return jocMetaInfo;
     }
 
-    private static boolean isJocMetaInfoNullOrEmpty (JocMetaInfo jocMetaInfo) {
+    public static boolean isJocMetaInfoNullOrEmpty (JocMetaInfo jocMetaInfo) {
         if (jocMetaInfo == null ||
                 ((jocMetaInfo.getJocVersion() == null || jocMetaInfo.getJocVersion().isEmpty())
                         && (jocMetaInfo.getInventorySchemaVersion() == null || jocMetaInfo.getInventorySchemaVersion().isEmpty())
