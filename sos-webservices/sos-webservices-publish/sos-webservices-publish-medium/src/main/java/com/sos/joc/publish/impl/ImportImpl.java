@@ -91,7 +91,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 configurations = PublishUtils.readTarGzipFileContent(stream, jocMetaInfo);
             } else {
             	throw new JocUnsupportedFileTypeException(
-            	        String.format("The file %1$s to be uploaded must have one of the formats .zip or .tar.gz!", uploadFileName)); 
+            	        String.format("The file %1$s to be uploaded must have one of the formats zip or tar.gz!", uploadFileName)); 
             }
             if(!PublishUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
                 // TODO: process transformation rules 

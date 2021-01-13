@@ -937,38 +937,54 @@ public abstract class PublishUtils {
             deployedObjects = new HashSet<DBItemDeploymentHistory>();
             for (JSObject draft : draftsWithSignature.keySet()) {
                 DBItemDeploymentHistory newDeployedObject = new DBItemDeploymentHistory();
-                DBItemInventoryConfiguration original = dbLayerDeploy.getConfiguration(draft.getPath(), draft.getObjectType().intValue());
                 newDeployedObject.setAccount(account);
                 // TODO: get Version to set here
                 newDeployedObject.setVersion(null);
-                newDeployedObject.setPath(original.getPath());
-                newDeployedObject.setFolder(original.getFolder());
                 newDeployedObject.setType(draft.getObjectType().intValue());
                 newDeployedObject.setCommitId(commitId);
+                DBItemInventoryConfiguration original = null;
                 switch (draft.getObjectType()) {
                 case WORKFLOW:
                     String workflow = Globals.objectMapper.writeValueAsString(((WorkflowPublish)draft).getContent());
                     newDeployedObject.setContent(workflow);
+                    original = dbLayerDeploy.getConfiguration(((WorkflowPublish)draft).getContent().getPath(), ConfigurationType.WORKFLOW.intValue());
+                    newDeployedObject.setPath(original.getPath());
+                    newDeployedObject.setFolder(original.getFolder());
+                    newDeployedObject.setInvContent(original.getContent());
+                    newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
                 case LOCK:
                     String lock = Globals.objectMapper.writeValueAsString(((WorkflowPublish)draft).getContent());
                     newDeployedObject.setContent(lock);
+                    original = dbLayerDeploy.getConfiguration(((LockPublish)draft).getContent().getPath(), ConfigurationType.LOCK.intValue());
+                    newDeployedObject.setPath(original.getPath());
+                    newDeployedObject.setFolder(original.getFolder());
+                    newDeployedObject.setInvContent(original.getContent());
+                    newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
                 case JUNCTION:
                     String junction = Globals.objectMapper.writeValueAsString(((WorkflowPublish)draft).getContent());
                     newDeployedObject.setContent(junction);
+                    original = dbLayerDeploy.getConfiguration(((JunctionPublish)draft).getContent().getPath(), ConfigurationType.JUNCTION.intValue());
+                    newDeployedObject.setPath(original.getPath());
+                    newDeployedObject.setFolder(original.getFolder());
+                    newDeployedObject.setInvContent(original.getContent());
+                    newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
                 case JOBCLASS:
                     String jobclass = Globals.objectMapper.writeValueAsString(((WorkflowPublish)draft).getContent());
                     newDeployedObject.setContent(jobclass);
+                    original = dbLayerDeploy.getConfiguration(((JobClassPublish)draft).getContent().getPath(), ConfigurationType.JOBCLASS.intValue());
+                    newDeployedObject.setPath(original.getPath());
+                    newDeployedObject.setFolder(original.getFolder());
+                    newDeployedObject.setInvContent(original.getContent());
+                    newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
                 }
                 newDeployedObject.setSignedContent(draftsWithSignature.get(draft).getSignature());
-                newDeployedObject.setInvContent(original.getContent());
                 newDeployedObject.setDeploymentDate(deploymentDate);
                 newDeployedObject.setControllerInstanceId(controllerInstance.getId());
                 newDeployedObject.setControllerId(controllerId);
-                newDeployedObject.setInventoryConfigurationId(original.getId());
                 newDeployedObject.setOperation(OperationType.UPDATE.value());
                 newDeployedObject.setState(DeploymentState.DEPLOYED.value());
                 dbLayerDeploy.getSession().save(newDeployedObject);
