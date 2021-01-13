@@ -126,7 +126,9 @@ public class EventServiceFactory {
         events.setControllerId(controllerId);
         events.setEventId(eventId); //default
         EventService service = null;
-        LOGGER.info("Listen Events of '" + controllerId + "' since " + eventId);
+        if (isDebugEnabled) {
+            LOGGER.debug("Listen Events of '" + controllerId + "' since " + eventId);
+        }
         try {
             service = getEventService(controllerId);
             service.addCondition(eventArrived);
@@ -140,7 +142,7 @@ public class EventServiceFactory {
                     LOGGER.debug("waiting for Events for " + controllerId + ": maxdelay " + delay + "ms");
                 }
                 ScheduledFuture<Void> watchdog = startWatchdog(delay, eventArrived);
-                mode = waitingForEvents(eventArrived, controllerId);
+                mode = waitingForEvents(eventArrived);
                 if (!watchdog.isDone()) {
                     watchdog.cancel(false);
                     if (isDebugEnabled) {
@@ -158,20 +160,17 @@ public class EventServiceFactory {
                     TimeUnit.SECONDS.sleep(2);
                 } catch (InterruptedException e1) {
                 }
-                //LOGGER.info("EventId from request for " + controllerId + ": " + eventId);
-                //LOGGER.info("All events for " + controllerId + ": " + service.getEvents().toString());
                 service.getEvents().iterator().forEachRemaining(e -> {
-                    //LOGGER.info("event for " + controllerId + ": " + e.toString());
                     if (e.getEventId() != null && eventId < e.getEventId()) {
-                        //LOGGER.info("collect event for " + controllerId + ": " + e.toString());
+                        e.setEventId(e.getEventId() - 1L);
                         evt.add(e);
                         evtIds.add(e.getEventId());
-                        //LOGGER.info("collected events for " + controllerId + ": " + evt.toString());
                     }
                 });
             } else if (Mode.IMMEDIATLY.equals(mode)) {
                 service.getEvents().iterator().forEachRemaining(e -> {
                     if (e.getEventId() != null && eventId < e.getEventId()) {
+                        e.setEventId(e.getEventId() - 1L);
                         evt.add(e);
                         evtIds.add(e.getEventId());
                     }
@@ -203,11 +202,11 @@ public class EventServiceFactory {
         return events;
     }
     
-    private synchronized Mode waitingForEvents(EventCondition eventArrived, String controllerId) {
+    private synchronized Mode waitingForEvents(EventCondition eventArrived) {
         try {
             if (eventArrived.getUnHold() && lock.tryLock(200L, TimeUnit.MILLISECONDS)) { // with timeout
                 try {
-                    LOGGER.info("Waiting for Events of '" + controllerId + "'");
+                    //LOGGER.info("Waiting for Events ");
                     eventArrived.await();
                 } catch (InterruptedException e1) {
                 } finally {
