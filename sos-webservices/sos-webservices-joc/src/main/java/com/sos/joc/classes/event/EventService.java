@@ -266,7 +266,9 @@ public class EventService {
     
     private synchronized void signalAll() {
         try {
-            LOGGER.info("Try signal all Events of '" + controllerId + "'");
+            if (isDebugEnabled) {
+                LOGGER.debug("Try signal all Events of '" + controllerId + "'");
+            }
             if (atLeastOneConditionIsHold() && EventServiceFactory.lock.tryLock(200L, TimeUnit.MILLISECONDS)) {
                 try {
                     conditions.stream().parallel().forEach(EventCondition::signalAll);
@@ -284,9 +286,9 @@ public class EventService {
 
     protected EventServiceFactory.Mode hasOldEvent(Long eventId, EventCondition eventArrived) {
         if (events.stream().parallel().anyMatch(e -> eventId < e.getEventId())) {
-            //if (isDebugEnabled) {
-                LOGGER.info("has old Event for " + controllerId + ": true");
-            //}
+            if (isDebugEnabled) {
+                LOGGER.debug("has old Event for " + controllerId + ": true");
+            }
 //            if (isCurrentController.get() && events.stream().parallel().anyMatch(e -> EventType.PROBLEM.equals(e.getObjectType()))) {
 //                LOGGER.info("hasProblemEvent for " + controllerId + ": true");
 //                EventServiceFactory.signalEvent(eventArrived);
