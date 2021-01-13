@@ -282,15 +282,7 @@ public class JobSchedulerDate {
 
     }
 
-    public static ZonedDateTime convertTimeTimeZoneToTimeZone(String timeFormat, String fromTimeZone, String toTimeZone, String fromDateTime) {
-
-        java.time.format.DateTimeFormatter dateTimeFormatter = java.time.format.DateTimeFormatter.ofPattern(timeFormat);
-
-        LocalTime dateTime = LocalTime.parse(fromDateTime, dateTimeFormatter);
-        ZonedDateTime toDateTime = ZonedDateTime.now(ZoneId.of(fromTimeZone)).with(dateTime).withZoneSameInstant(ZoneId.of(toTimeZone));
-        return toDateTime;
-
-    }
+  
 
     public static String asTimeString(ZonedDateTime time) {
         java.time.format.DateTimeFormatter dateTimeFormatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss");

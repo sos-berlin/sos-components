@@ -82,7 +82,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
 
                 ScheduleSource scheduleSource = null;
                 scheduleSource = new ScheduleSourceDB(dailyPlanOrderSelector);
-                orderInitiatorRunner.readTemplates(scheduleSource);
+                orderInitiatorRunner.readSchedules(scheduleSource);
                 orderInitiatorRunner.generateDailyPlan(dailyPlanOrderSelector.getDailyPlanDate(), dailyPlanOrderSelector.getWithSubmit());
 
                 DailyPlanAudit orderAudit = new DailyPlanAudit(controllerId, dailyPlanOrderSelector.getAuditLog());

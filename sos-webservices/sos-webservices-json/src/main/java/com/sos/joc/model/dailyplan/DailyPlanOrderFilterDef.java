@@ -21,7 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "dailyPlanSubmissionHistoryIds",
+    "submissionHistoryIds",
     "folders",
     "schedulePaths",
     "workflowPaths",
@@ -34,8 +34,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class DailyPlanOrderFilterDef {
 
-    @JsonProperty("dailyPlanSubmissionHistoryIds")
-    private List<Long> dailyPlanSubmissionHistoryIds = null;
+    @JsonProperty("submissionHistoryIds")
+    private List<Long> submissionHistoryIds = null;
     /**
      * folders
      * <p>
@@ -75,14 +75,14 @@ public class DailyPlanOrderFilterDef {
     @JsonPropertyDescription("absolute path of an object.")
     private String schedulesFolder;
 
-    @JsonProperty("dailyPlanSubmissionHistoryIds")
-    public List<Long> getDailyPlanSubmissionHistoryIds() {
-        return dailyPlanSubmissionHistoryIds;
+    @JsonProperty("submissionHistoryIds")
+    public List<Long> getSubmissionHistoryIds() {
+        return submissionHistoryIds;
     }
 
-    @JsonProperty("dailyPlanSubmissionHistoryIds")
-    public void setDailyPlanSubmissionHistoryIds(List<Long> dailyPlanSubmissionHistoryIds) {
-        this.dailyPlanSubmissionHistoryIds = dailyPlanSubmissionHistoryIds;
+    @JsonProperty("submissionHistoryIds")
+    public void setSubmissionHistoryIds(List<Long> submissionHistoryIds) {
+        this.submissionHistoryIds = submissionHistoryIds;
     }
 
     /**
@@ -213,12 +213,12 @@ public class DailyPlanOrderFilterDef {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("dailyPlanSubmissionHistoryIds", dailyPlanSubmissionHistoryIds).append("folders", folders).append("schedulePaths", schedulePaths).append("workflowPaths", workflowPaths).append("orderIds", orderIds).append("controllerIds", controllerIds).append("states", states).append("late", late).append("dailyPlanDate", dailyPlanDate).append("schedulesFolder", schedulesFolder).toString();
+        return new ToStringBuilder(this).append("submissionHistoryIds", submissionHistoryIds).append("folders", folders).append("schedulePaths", schedulePaths).append("workflowPaths", workflowPaths).append("orderIds", orderIds).append("controllerIds", controllerIds).append("states", states).append("late", late).append("dailyPlanDate", dailyPlanDate).append("schedulesFolder", schedulesFolder).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(schedulePaths).append(folders).append(dailyPlanDate).append(late).append(controllerIds).append(workflowPaths).append(dailyPlanSubmissionHistoryIds).append(orderIds).append(schedulesFolder).append(states).toHashCode();
+        return new HashCodeBuilder().append(schedulePaths).append(folders).append(dailyPlanDate).append(late).append(controllerIds).append(submissionHistoryIds).append(workflowPaths).append(orderIds).append(schedulesFolder).append(states).toHashCode();
     }
 
     @Override
@@ -230,7 +230,7 @@ public class DailyPlanOrderFilterDef {
             return false;
         }
         DailyPlanOrderFilterDef rhs = ((DailyPlanOrderFilterDef) other);
-        return new EqualsBuilder().append(schedulePaths, rhs.schedulePaths).append(folders, rhs.folders).append(dailyPlanDate, rhs.dailyPlanDate).append(late, rhs.late).append(controllerIds, rhs.controllerIds).append(workflowPaths, rhs.workflowPaths).append(dailyPlanSubmissionHistoryIds, rhs.dailyPlanSubmissionHistoryIds).append(orderIds, rhs.orderIds).append(schedulesFolder, rhs.schedulesFolder).append(states, rhs.states).isEquals();
+        return new EqualsBuilder().append(schedulePaths, rhs.schedulePaths).append(folders, rhs.folders).append(dailyPlanDate, rhs.dailyPlanDate).append(late, rhs.late).append(controllerIds, rhs.controllerIds).append(submissionHistoryIds, rhs.submissionHistoryIds).append(workflowPaths, rhs.workflowPaths).append(orderIds, rhs.orderIds).append(schedulesFolder, rhs.schedulesFolder).append(states, rhs.states).isEquals();
     }
 
 }

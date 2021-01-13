@@ -67,10 +67,10 @@ public class PeriodResolver {
     private void addRepeat(Period period, String dailyPlanDate, String timeZone) throws ParseException {
         if (!period.getRepeat().isEmpty() && !"00:00:00".equals(period.getRepeat())) {
 
-            ZonedDateTime startUtc = JobSchedulerDate.convertTimeTimeZoneToTimeZone(HH_MM_SS, timeZone, "UTC", period.getBegin());
+            ZonedDateTime startUtc = JobSchedulerDate.convertDateTimeZoneToTimeZone(DATE_FORMAT_SIMPLE, timeZone, "UTC", dailyPlanDate + " " + period.getBegin());
             period.setBegin(JobSchedulerDate.asTimeString(startUtc));
 
-            ZonedDateTime endUtc = JobSchedulerDate.convertTimeTimeZoneToTimeZone(HH_MM_SS, timeZone, "UTC", period.getEnd());
+            ZonedDateTime endUtc = JobSchedulerDate.convertDateTimeZoneToTimeZone(DATE_FORMAT_SIMPLE, timeZone, "UTC", dailyPlanDate + " " + period.getEnd());
             period.setEnd(JobSchedulerDate.asTimeString(endUtc));
 
             Date repeat = getDate(dailyPlanDate, period.getRepeat(), DATE_FORMAT_SIMPLE);

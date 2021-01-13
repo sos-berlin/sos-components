@@ -44,10 +44,12 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     private Boolean isLate;
     private String controllerId;
     private List<String> listOfWorkflowPaths;
+    private String workflowPath;
     private List<Long> listOfSubmissionIds;
 
     private Long calendarId;
-    private List<String> listOfSchedules;
+    private List<String> listOfSchedulePaths;
+    private String schedulePath;
 
     public List<String> getListOfOrders() {
         return listOfOrders;
@@ -87,12 +89,20 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     }
 
     public void setListOfSchedules(List<String> listOfSchedules) {
-        this.listOfSchedules = listOfSchedules;
+        this.listOfSchedulePaths = listOfSchedules;
     }
 
     public List<String> getListOfSchedules() {
-        return listOfSchedules;
+        return listOfSchedulePaths;
     }
+    
+    public void addSchedulePath(String schedulePath) {
+        if (listOfSchedulePaths == null) {
+            listOfSchedulePaths = new ArrayList<String>();
+        }
+        listOfSchedulePaths.add(schedulePath);
+    }
+
 
     private void setOrderPlanDateInterval() {
         String timeZone = Globals.sosCockpitProperties.getProperty("daily_plan_timezone", Globals.DEFAULT_TIMEZONE_DAILY_PLAN);
@@ -277,5 +287,38 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     public void setListOfSubmissionIds(List<Long> listOfSubmissionIds) {
         this.listOfSubmissionIds = listOfSubmissionIds;
     }
+
+    
+    public String getWorkflowPath() {
+        return workflowPath;
+    }
+
+    
+    public void setWorkflowPath(String workflowPath) {
+        this.workflowPath = workflowPath;
+    }
+
+    
+    public List<String> getListOfSchedulePaths() {
+        return listOfSchedulePaths;
+    }
+
+    
+    public void setListOfSchedulePaths(List<String> listOfSchedulePaths) {
+        this.listOfSchedulePaths = listOfSchedulePaths;
+    }
+
+    
+    public String getSchedulePath() {
+        return schedulePath;
+    }
+
+    
+    public void setSchedulePath(String schedulePath) {
+        this.schedulePath = schedulePath;
+    }
+
+    
+ 
 
 }

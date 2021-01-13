@@ -5,7 +5,7 @@
 	"type": "object",
 	"description": "Define the filter To get orders from the daily plan",
 	"properties": {
-		"dailyPlanSubmissionHistoryIds": {
+		"submissionHistoryIds": {
 			"type": "array",
 			"items": {
 				"$ref": "../../../joc/schemas/common/nonNegativeLong-schema.json"
