@@ -107,7 +107,7 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
             filter.setControllerId(dailyPlanOrderFilter.getControllerId());
             filter.setListOfWorkflowPaths(dailyPlanOrderFilter.getFilter().getWorkflowPaths());
-            filter.setListOfSubmissionIds(dailyPlanOrderFilter.getFilter().getDailyPlanSubmissionHistoryIds());
+            filter.setListOfSubmissionIds(dailyPlanOrderFilter.getFilter().getSubmissionHistoryIds());
             filter.setListOfSchedules(dailyPlanOrderFilter.getFilter().getSchedulePaths());
             filter.setListOfOrders(dailyPlanOrderFilter.getFilter().getOrderIds());
 
