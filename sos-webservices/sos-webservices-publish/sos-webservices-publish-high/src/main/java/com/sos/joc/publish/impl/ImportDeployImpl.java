@@ -56,6 +56,7 @@ import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.joc.JocMetaInfo;
 import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.model.publish.ImportDeployFilter;
 import com.sos.joc.model.publish.JSObject;
@@ -124,15 +125,22 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             stream = body.getEntityAs(InputStream.class);
             Map<ConfigurationObject, SignaturePath> objectsWithSignature = new HashMap<ConfigurationObject, SignaturePath>();
+            JocMetaInfo jocMetaInfo = new JocMetaInfo();
             
             // process uploaded archive
             if (ArchiveFormat.ZIP.equals(filter.getFormat())) {
-                objectsWithSignature = PublishUtils.readZipFileContentWithSignatures(stream);
+                objectsWithSignature = PublishUtils.readZipFileContentWithSignatures(stream, jocMetaInfo);
             } else if (ArchiveFormat.TAR_GZ.equals(filter.getFormat())) {
-                objectsWithSignature = PublishUtils.readTarGzipFileContentWithSignatures(stream);
+                objectsWithSignature = PublishUtils.readTarGzipFileContentWithSignatures(stream, jocMetaInfo);
             } else {
             	throw new JocUnsupportedFileTypeException(
             	        String.format("The file %1$s to be uploaded must have one of the formats .zip or .tar.gz!", uploadFileName)); 
+            }
+            if(!PublishUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
+                // TODO: process transformation rules 
+                LOGGER.info(String.format("Imported from JS7 JOC Cockpit version: %1$s", jocMetaInfo.getJocVersion()));
+                LOGGER.info(String.format("  with inventory schema version: %1$s", jocMetaInfo.getInventorySchemaVersion()));
+                LOGGER.info(String.format("  and API version: %1$s", jocMetaInfo.getApiVersion()));
             }
             // process signature verification and save or update objects
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
