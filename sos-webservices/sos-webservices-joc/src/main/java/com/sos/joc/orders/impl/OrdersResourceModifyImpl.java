@@ -241,7 +241,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     
     private ModifyOrders initRequest(Action action, String accessToken, byte[] filterBytes) throws SOSJsonSchemaException, IOException {
         initLogging(API_CALL + "/" + action.name().toLowerCase(), filterBytes, accessToken);
-        JsonValidator.validateFailFast(filterBytes, ModifyOrders.class);
+        JsonValidator.validate(filterBytes, ModifyOrders.class);
         return Globals.objectMapper.readValue(filterBytes, ModifyOrders.class);
     }
     

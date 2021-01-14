@@ -4,6 +4,9 @@
   "description": "Actually, each even item is a string, each odd item is an integer",
   "type": "array",
   "items": {
-    "type": "null"
+    "anyOf": [
+    	{"type": "integer"},
+    	{"type": "string"}
+    ]
   }
 }
