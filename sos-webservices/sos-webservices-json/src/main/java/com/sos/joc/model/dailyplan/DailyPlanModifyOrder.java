@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.AuditParams;
+import com.sos.webservices.order.initiator.model.NameValuePair;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -23,10 +24,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "startTime",
+    "variables",
     "orderIds",
     "auditLog"
 })
-public class DailyChangeStartTime {
+public class DailyPlanModifyOrder {
 
     @JsonProperty("controllerId")
     private String controllerId;
@@ -39,6 +41,14 @@ public class DailyChangeStartTime {
     @JsonProperty("startTime")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date startTime;
+    /**
+     * params or environment variables
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("variables")
+    private List<NameValuePair> variables = null;
     @JsonProperty("orderIds")
     private List<String> orderIds = null;
     /**
@@ -82,6 +92,28 @@ public class DailyChangeStartTime {
         this.startTime = startTime;
     }
 
+    /**
+     * params or environment variables
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("variables")
+    public List<NameValuePair> getVariables() {
+        return variables;
+    }
+
+    /**
+     * params or environment variables
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("variables")
+    public void setVariables(List<NameValuePair> variables) {
+        this.variables = variables;
+    }
+
     @JsonProperty("orderIds")
     public List<String> getOrderIds() {
         return orderIds;
@@ -116,12 +148,12 @@ public class DailyChangeStartTime {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("startTime", startTime).append("orderIds", orderIds).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("startTime", startTime).append("variables", variables).append("orderIds", orderIds).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(startTime).append(orderIds).append(controllerId).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(startTime).append(variables).append(orderIds).append(controllerId).append(auditLog).toHashCode();
     }
 
     @Override
@@ -129,11 +161,11 @@ public class DailyChangeStartTime {
         if (other == this) {
             return true;
         }
-        if ((other instanceof DailyChangeStartTime) == false) {
+        if ((other instanceof DailyPlanModifyOrder) == false) {
             return false;
         }
-        DailyChangeStartTime rhs = ((DailyChangeStartTime) other);
-        return new EqualsBuilder().append(startTime, rhs.startTime).append(orderIds, rhs.orderIds).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).isEquals();
+        DailyPlanModifyOrder rhs = ((DailyPlanModifyOrder) other);
+        return new EqualsBuilder().append(startTime, rhs.startTime).append(variables, rhs.variables).append(orderIds, rhs.orderIds).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

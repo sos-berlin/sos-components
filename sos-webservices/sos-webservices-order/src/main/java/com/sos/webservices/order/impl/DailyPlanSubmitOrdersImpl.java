@@ -114,7 +114,6 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
-
     }
 
     @Override

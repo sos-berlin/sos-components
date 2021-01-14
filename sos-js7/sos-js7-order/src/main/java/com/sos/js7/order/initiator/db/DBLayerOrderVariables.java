@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.joc.db.orders.DBItemDailyPlanSubmissionHistory;
+import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
 
 public class DBLayerOrderVariables {
 
@@ -29,7 +31,7 @@ public class DBLayerOrderVariables {
         String where = " ";
         String and = " ";
         if (filter.getPlannedOrderId() != null) {
-            where +=  " plannedOrderId = :plannedOrderId";
+            where += " plannedOrderId = :plannedOrderId";
             and = " and ";
         } else {
             where = "v.plannedOrderId = p.id";
@@ -73,4 +75,12 @@ public class DBLayerOrderVariables {
         return sosHibernateSession.getResultList(query);
     }
 
+    public int delete(FilterOrderVariables filter) throws SOSHibernateException {
+        int row = 0;
+        String hql = "delete from " + DBItemDailyPlanVariables + " where plannedOrderId = :plannedOrderId";
+        Query<DBItemDailyPlanSubmissionHistory> query = sosHibernateSession.createQuery(hql);
+        query.setParameter("plannedOrderId", filter.getPlannedOrderId());
+        row = row + sosHibernateSession.executeUpdate(query);
+        return row;
+    }
 }

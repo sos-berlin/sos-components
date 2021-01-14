@@ -8,14 +8,15 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.model.dailyplan.DailyChangeStartTime;
+import com.sos.joc.model.dailyplan.DailyPlanModifyOrder;
 
-public interface IDailyPlanChangeStartTimeResource {
+public interface IDailyPlanModifyOrder {
 
     @POST
-    @Path("orders/starttime")
+    @Path("orders/modify")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postChangeStartime(@HeaderParam("X-Access-Token") String accessToken, DailyChangeStartTime dailyChangeStartTime)
+    public JOCDefaultResponse postModifyOrder(@HeaderParam("X-Access-Token") String accessToken, DailyPlanModifyOrder dailyPlanModifyOrder)
             throws Exception;
+ 
 
 }
