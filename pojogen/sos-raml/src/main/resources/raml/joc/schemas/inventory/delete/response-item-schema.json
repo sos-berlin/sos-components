@@ -4,8 +4,20 @@
 	"javaType": "com.sos.joc.model.inventory.delete.ResponseItem",
 	"type": "object",
 	"properties": {
-		"deleteFromTree": {
-			"type": "boolean"
+		"deliveryDate": {
+        	"$ref": "../../common/timestamp-schema.json"
+    	},
+		"updated": {
+			"type": "array",
+			"items": {
+			  "$ref": "../common/request-filter-schema.json"
+			}
+		},
+		"deleted": {
+		    "type": "array",
+			"items": {
+			  "$ref": "../common/request-filter-schema.json"
+			}
 		}
 	}
 }
