@@ -751,22 +751,22 @@ traits:
           schema200: ok
           example: " "
           example200: " "
-    /cancel:
+    /modify:
       type:
         postJSON:
-          description: Cancel submitted orders for a given daily plan 
-          description1: !include joc/documentation/dailyplan/delete/dailyPlanOrdersFilterDef.md
-          description2: !include joc/documentation/dailyplan/dailyPlanDate.md
-          description3: !include joc/documentation/dailyplan/orders/schedules.md
-          description4: !include joc/documentation/dailyplan/orders/folders.md
-          description5: !include joc/documentation/dailyplan/orders/workflowPaths.md
-          description6: !include joc/documentation/dailyplan/orders/late.md
-          description7: !include joc/documentation/dailyplan/cancel/states.md
-          description9: !include joc/documentation/dailyplan/orders/controllerIds.md
-          description10: !include joc/documentation/dailyplan/orders/orderIds.md
+          description: Modify orders for the daily plan 
+          description1: !include joc/documentation/dailyplan/modify/startTime.md
+          description2: !include joc/documentation/dailyplan/modify/variables.md
+          description3: !include joc/documentation/dailyplan/orders/orderIds.md
+          description4: 
+          description5: 
+          description6: 
+          description7: 
+          description9: 
+          description10: 
           audit: !include joc/documentation/audit/auditLog.md
           description200: " "
-          schema: !include orderManagement/schemas/dailyplan/dailyPlanOrdersFilter-schema.json
+          schema: !include orderManagement/schemas/dailyplan/dailyPlanModifyOrder-schema.json
           schema200: ok
           example: " "
           example200: " "
