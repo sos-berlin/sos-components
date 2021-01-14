@@ -17,7 +17,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "name"
+    "newPath",
+    "overwrite"
 })
 public class RequestFilter
     extends com.sos.joc.model.inventory.common.RequestFilter
@@ -29,8 +30,10 @@ public class RequestFilter
      * 
      * 
      */
-    @JsonProperty("name")
-    private String name;
+    @JsonProperty("newPath")
+    private String newPath;
+    @JsonProperty("overwrite")
+    private Boolean overwrite = false;
 
     /**
      * string without < and >
@@ -38,9 +41,9 @@ public class RequestFilter
      * 
      * 
      */
-    @JsonProperty("name")
-    public String getName() {
-        return name;
+    @JsonProperty("newPath")
+    public String getNewPath() {
+        return newPath;
     }
 
     /**
@@ -49,19 +52,29 @@ public class RequestFilter
      * 
      * 
      */
-    @JsonProperty("name")
-    public void setName(String name) {
-        this.name = name;
+    @JsonProperty("newPath")
+    public void setNewPath(String newPath) {
+        this.newPath = newPath;
+    }
+
+    @JsonProperty("overwrite")
+    public Boolean getOverwrite() {
+        return overwrite;
+    }
+
+    @JsonProperty("overwrite")
+    public void setOverwrite(Boolean overwrite) {
+        this.overwrite = overwrite;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("name", name).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("newPath", newPath).append("overwrite", overwrite).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(name).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(newPath).append(overwrite).toHashCode();
     }
 
     @Override
@@ -73,7 +86,7 @@ public class RequestFilter
             return false;
         }
         RequestFilter rhs = ((RequestFilter) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(name, rhs.name).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(newPath, rhs.newPath).append(overwrite, rhs.overwrite).isEquals();
     }
 
 }

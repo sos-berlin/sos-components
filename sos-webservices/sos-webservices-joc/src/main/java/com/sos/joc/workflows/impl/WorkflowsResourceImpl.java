@@ -28,6 +28,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
+import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.workflow.Workflows;
@@ -66,7 +67,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             final Set<Folder> folders = addPermittedFolder(workflowsFilter.getFolders());
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
-            List<String> contents = null;
+            List<DeployedContent> contents = null;
             
             if (workflowIds != null && !workflowIds.isEmpty()) {
                 workflowsFilter.setRegex(null);
@@ -91,18 +92,22 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             
             Workflows workflows = new Workflows();
             if (contents != null) {
-                Stream<com.sos.jobscheduler.model.workflow.Workflow> workflowsStream = contents.stream().map(c -> {
+                Stream<DeployedContent> contentsStream = contents.stream();
+                if (workflowsFilter.getRegex() != null && !workflowsFilter.getRegex().isEmpty()) {
+                    Predicate<String> regex = Pattern.compile(workflowsFilter.getRegex().replaceAll("%", ".*")).asPredicate();
+                    contentsStream = contentsStream.filter(w -> regex.test(w.getPath()));
+                }
+                Stream<com.sos.jobscheduler.model.workflow.Workflow> workflowsStream = contentsStream.map(c -> {
                     try {
-                        return addWorkflowPositions(Globals.objectMapper.readValue(c, com.sos.jobscheduler.model.workflow.Workflow.class));
+                        com.sos.jobscheduler.model.workflow.Workflow workflow = Globals.objectMapper.readValue(c.getContent(),
+                                com.sos.jobscheduler.model.workflow.Workflow.class);
+                        workflow.setPath(c.getPath());
+                        return addWorkflowPositions(workflow);
                     } catch (Exception e) {
                         // TODO
                         return null;
                     }
                 }).filter(Objects::nonNull);
-                if (workflowsFilter.getRegex() != null && !workflowsFilter.getRegex().isEmpty()) {
-                    Predicate<String> regex = Pattern.compile(workflowsFilter.getRegex().replaceAll("%", ".*")).asPredicate();
-                    workflowsStream = workflowsStream.filter(w -> regex.test(w.getPath()));
-                }
                 workflows.setWorkflows(workflowsStream.collect(Collectors.toList()));
             }
             workflows.setDeliveryDate(Date.from(Instant.now()));

@@ -231,48 +231,38 @@ public class JocInventory {
         return (IConfigurationObject) Globals.objectMapper.readValue(content, CLASS_MAPPING.get(type));
     }
     
-    public static Path makeParentDir(InventoryDBLayer dbLayer, Path folder) throws JsonParseException, JsonMappingException, SOSHibernateException,
-            JsonProcessingException, IOException {
-        if (folder == null) {
-            return null;
+    public static void makeParentDirs(InventoryDBLayer dbLayer, java.nio.file.Path parentFolder, Long auditLogId) throws SOSHibernateException {
+        if (parentFolder != null) {
+            String newFolder = parentFolder.toString().replace('\\', '/');
+            if (!ROOT_FOLDER.equals(newFolder)) {
+                DBItemInventoryConfiguration newDbFolder = dbLayer.getConfiguration(newFolder, ConfigurationType.FOLDER.intValue());
+                if (newDbFolder == null) {
+                    newDbFolder = new DBItemInventoryConfiguration();
+                    //setItem(newDbFolder, parent);
+                    newDbFolder.setPath(newFolder);
+                    newDbFolder.setFolder(parentFolder.getParent().toString().replace('\\', '/'));
+                    newDbFolder.setName(parentFolder.getFileName().toString());
+                    newDbFolder.setDeployed(false);
+                    newDbFolder.setReleased(false);
+                    newDbFolder.setModified(Date.from(Instant.now()));
+                    newDbFolder.setAuditLogId(auditLogId == null ? 0L : auditLogId);
+                    newDbFolder.setContent(null);
+                    newDbFolder.setCreated(newDbFolder.getModified());
+                    newDbFolder.setDeleted(false);
+                    newDbFolder.setDocumentationId(0L);
+                    newDbFolder.setId(null);
+                    newDbFolder.setTitle(null);
+                    newDbFolder.setType(ConfigurationType.FOLDER);
+                    newDbFolder.setValid(true);
+                    dbLayer.getSession().save(newDbFolder);
+                    makeParentDirs(dbLayer, parentFolder.getParent(), auditLogId);
+                }
+            }
         }
-        String f = folder.toString().replace('\\', '/');
-        if (ROOT_FOLDER.equals(f)) {
-            return null;
-        }
-        DBItemInventoryConfiguration dbFolder = dbLayer.getConfiguration(f, ConfigurationType.FOLDER.intValue());
-        if (dbFolder != null) { // folder already exists
-            return null;
-        }
-        DBItemInventoryConfiguration item = new DBItemInventoryConfiguration();
-        item.setType(ConfigurationType.FOLDER);
-        InventoryPath path = new InventoryPath(folder, ConfigurationType.FOLDER);
-        item.setPath(path.getPath());
-        item.setName(path.getName());
-        item.setFolder(path.getFolder());
-        item.setValid(false);
-        item.setDocumentationId(0L);
-        item.setTitle(null);
-        item.setTitle(null);
-        item.setValid(true);
-        item.setDeployed(false);
-        item.setReleased(false);
-        item.setContent(null);
-        item.setModified(Date.from(Instant.now()));
-        item.setCreated(Date.from(Instant.now()));
-        insertConfiguration(dbLayer, item, null);
-        if (ROOT_FOLDER.equals(path.getFolder())) {
-            return null;
-        }
-        return folder.getParent();
     }
     
-    public static void makeParentDirs(InventoryDBLayer dbLayer, Path folder) throws JsonParseException, JsonMappingException, SOSHibernateException,
-            JsonProcessingException, IOException {
-        Path parent = makeParentDir(dbLayer, folder);
-        while (parent != null) {
-            parent = makeParentDir(dbLayer, parent);
-        }
+    public static void makeParentDirs(InventoryDBLayer dbLayer, Path folder) throws SOSHibernateException {
+        makeParentDirs(dbLayer, folder, null);
     }
 
     public static class InventoryPath {
@@ -503,6 +493,11 @@ public class JocInventory {
         dbLayer.getSession().update(item);
 
         handleWorkflowSearch(dbLayer, item, config);
+    }
+    
+    public static void insertConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item)
+            throws SOSHibernateException, JsonParseException, JsonMappingException, JsonProcessingException, IOException {
+        insertConfiguration(dbLayer, item, null);
     }
 
     public static void insertConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item, IConfigurationObject config)

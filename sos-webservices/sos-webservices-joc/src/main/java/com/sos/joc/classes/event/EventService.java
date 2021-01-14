@@ -79,7 +79,6 @@ public class EventService {
     private AtomicBoolean isCurrentController = new AtomicBoolean(false);
     private JControllerEventBus evtBus = null;
     private volatile CopyOnWriteArraySet<EventCondition> conditions = new CopyOnWriteArraySet<>();
-    //private AtomicBoolean atLeastOneConditionIsHold = new AtomicBoolean(false);
 
     public EventService(String controllerId) throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException,
             DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
@@ -106,7 +105,7 @@ public class EventService {
     }
     
     private boolean atLeastOneConditionIsHold() {
-        return conditions.stream().parallel().anyMatch(EventCondition::getHold);
+        return conditions.stream().parallel().anyMatch(EventCondition::isHold);
     }
     
     public CopyOnWriteArraySet<EventSnapshot> getEvents() {

@@ -23,6 +23,7 @@ import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.deploy.items.NumOfDeployment;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -38,15 +39,15 @@ public class DeployedConfigurationDBLayer {
         this.session = connection;
     }
 
-    public String getDeployedInventory(String controllerId, Integer type, String path) throws DBConnectionRefusedException,
+    public DeployedContent getDeployedInventory(String controllerId, Integer type, String path) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
-            StringBuilder sql = new StringBuilder();
-            sql.append("select content from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
-            sql.append(" where controllerId = :controllerId");
-            sql.append(" and type = :type");
-            sql.append(" and path = :path");
-            Query<String> query = session.createQuery(sql.toString());
+            StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
+            hql.append("(path, content) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
+            hql.append(" where controllerId = :controllerId");
+            hql.append(" and type = :type");
+            hql.append(" and path = :path");
+            Query<DeployedContent> query = session.createQuery(hql.toString());
             query.setParameter("controllerId", controllerId);
             query.setParameter("type", type);
             query.setParameter("path", path);
@@ -58,19 +59,19 @@ public class DeployedConfigurationDBLayer {
         }
     }
     
-    public String getDeployedInventory(String controllerId, Integer type, String path, String commitId)
+    public DeployedContent getDeployedInventory(String controllerId, Integer type, String path, String commitId)
             throws DBConnectionRefusedException, DBInvalidDataException {
         if (commitId == null || commitId.isEmpty()) {
             return getDeployedInventory(controllerId, type, path);
         }
         try {
-            StringBuilder sql = new StringBuilder();
-            sql.append("select content from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            sql.append(" where controllerId = :controllerId");
-            sql.append(" and type = :type");
-            sql.append(" and path = :path");
-            sql.append(" and commitId = :commitId");
-            Query<String> query = session.createQuery(sql.toString());
+            StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
+            hql.append("(path, content) from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append(" where controllerId = :controllerId");
+            hql.append(" and type = :type");
+            hql.append(" and path = :path");
+            hql.append(" and commitId = :commitId");
+            Query<DeployedContent> query = session.createQuery(hql.toString());
             query.setParameter("controllerId", controllerId);
             query.setParameter("type", type);
             query.setParameter("path", path);
@@ -85,10 +86,12 @@ public class DeployedConfigurationDBLayer {
     
     public Workflow getDeployedInventory(WorkflowFilter workflowFilter) throws DBConnectionRefusedException, DBInvalidDataException,
             JsonParseException, JsonMappingException, IOException {
-        String content = getDeployedInventory(workflowFilter.getControllerId(), DeployType.WORKFLOW.intValue(), workflowFilter.getWorkflowId()
+        DeployedContent content = getDeployedInventory(workflowFilter.getControllerId(), DeployType.WORKFLOW.intValue(), workflowFilter.getWorkflowId()
                 .getPath(), workflowFilter.getWorkflowId().getVersionId());
-        if (content != null && !content.isEmpty()) {
-            return (Workflow) Globals.objectMapper.readValue(content, Workflow.class);
+        if (content != null && content.getContent() != null && !content.getContent().isEmpty()) {
+            Workflow workflow =  Globals.objectMapper.readValue(content.getContent(), Workflow.class);
+            workflow.setPath(content.getPath());
+            return workflow;
         } else {
             return null;
         }
@@ -141,10 +144,12 @@ public class DeployedConfigurationDBLayer {
         }
     }
 
-    public List<String> getDeployedInventory(DeployedConfigurationFilter filter) throws DBConnectionRefusedException,
+    public List<DeployedContent> getDeployedInventory(DeployedConfigurationFilter filter) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
-            Query<String> query = createQuery("select content from " + DBLayer.DBITEM_DEP_CONFIGURATIONS + getWhere(filter), filter);
+            StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
+            hql.append("(path, content) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(getWhere(filter));
+            Query<DeployedContent> query = createQuery(hql.toString(), filter);
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -153,9 +158,11 @@ public class DeployedConfigurationDBLayer {
         }
     }
     
-    public List<String> getDeployedInventoryWithCommitIds(DeployedConfigurationFilter filter) throws DBConnectionRefusedException, DBInvalidDataException {
+    public List<DeployedContent> getDeployedInventoryWithCommitIds(DeployedConfigurationFilter filter) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            Query<String> query = createQuery("select content from " + DBLayer.DBITEM_DEP_HISTORY + getWhere(filter), filter);
+            StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
+            hql.append("(path, content) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(getWhere(filter));
+            Query<DeployedContent> query = createQuery(hql.toString(), filter);
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);

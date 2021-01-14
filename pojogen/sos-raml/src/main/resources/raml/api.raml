@@ -1242,14 +1242,14 @@ traits:
   /rename:
     type:
       postJSONWithOkWithoutJSId:
-        description: Renames inventory object
+        description: Renames/Moves inventory object
         description1: !include joc/documentation/inventory/idOrPathAndType.md
-        description2: !include joc/documentation/inventory/name.md
-        description3: " "
+        description2: !include joc/documentation/inventory/newPath.md
+        description3: !include joc/documentation/inventory/overwrite.md
         description4: " "
         description5: " "
         schema: !include joc/schemas/inventory/rename/request-filter-schema.json
-        example: TODO
+        example: !include joc/examples/inventory/rename-example.json
         
   /statistics:
     type:

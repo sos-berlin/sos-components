@@ -70,11 +70,11 @@ public class EventServiceFactory {
             this.eventArrived = eventArrived;
         }
         
-        public boolean getHold() {
+        public boolean isHold() {
             return this.hold.get();
         }
         
-        public boolean getUnHold() {
+        public boolean isUnHold() {
             return this.unhold.get();
         }
         
@@ -204,7 +204,7 @@ public class EventServiceFactory {
     
     private synchronized Mode waitingForEvents(EventCondition eventArrived) {
         try {
-            if (eventArrived.getUnHold() && lock.tryLock(200L, TimeUnit.MILLISECONDS)) { // with timeout
+            if (eventArrived.isUnHold() && lock.tryLock(200L, TimeUnit.MILLISECONDS)) { // with timeout
                 try {
                     //LOGGER.info("Waiting for Events ");
                     eventArrived.await();

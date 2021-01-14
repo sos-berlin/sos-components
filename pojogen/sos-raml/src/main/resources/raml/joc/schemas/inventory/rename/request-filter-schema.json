@@ -3,28 +3,31 @@
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"javaType": "com.sos.joc.model.inventory.rename.RequestFilter",
 	"type": "object",
-	"description": "",
-  	"extends" : {
+	"extends" : {
     	"$ref": "../common/request-filter-schema.json"
   	},
 	"anyOf": [
         {
             "required": [
                 "id",
-                "name"
+                "newPath"
             ]
         },
         {
             "required": [
                 "path",
                 "objectType",
-                "name"
+                "newPath"
             ]
         }
     ],
 	"properties": {
-		"name": {
+		"newPath": {
 			"$ref": "../../common/string255-schema.json"
+		},
+		"overwrite": {
+			"type": "boolean",
+			"default": false
 		}
 	}
 }
