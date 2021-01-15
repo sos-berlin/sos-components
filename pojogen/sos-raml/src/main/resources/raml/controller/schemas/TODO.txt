@@ -1,2 +1,0 @@
-enum orderState
-fields of orderPayload

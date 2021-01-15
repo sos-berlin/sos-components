@@ -1,1 +1,0 @@
-<tr><td>``type``</td><td>required, string</td><td>Possibly values 'cluster', 'history', 'dailyplan'</td><td></td><td></td></tr>

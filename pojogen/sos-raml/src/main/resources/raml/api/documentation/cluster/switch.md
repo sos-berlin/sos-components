@@ -1,1 +1,0 @@
-<tr><td>``memberId``</td><td>required, string</td><td>MemberId of a JOC node from ./controller/components API</td><td></td><td></td></tr>

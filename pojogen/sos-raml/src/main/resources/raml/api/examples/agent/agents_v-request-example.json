@@ -1,5 +1,0 @@
-{
-  "controllerId":"scheduler",
-  "onlyEnabledAgents": true,
-  "compact": true
-}

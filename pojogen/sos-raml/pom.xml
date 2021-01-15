@@ -26,6 +26,66 @@
 			</resource>
 		</resources>
 		<plugins>
+      <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
+        <configuration>
+          <filesets>
+            <fileset>
+              <directory>${project.basedir}/src/main/resources</directory>
+              <includes>
+                <include>**/*</include>
+              </includes>
+              <followSymlinks>false</followSymlinks>
+            </fileset>
+          </filesets>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <!-- get the environment to build the pojos -->
+          <execution>
+            <id>unpack-inventory-schema-sources</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.basedir}</outputDirectory>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>com.sos-berlin</groupId>
+                  <artifactId>js7-inventory-schemas</artifactId>
+                  <version>1.0.0-SNAPSHOT</version>
+                  <type>zip</type>
+                </artifactItem>
+              </artifactItems>
+              <overWriteIfNewer>true</overWriteIfNewer>
+              <!--excludes>*META-INF*,META-INF/**,**/hibernate-examples/**</excludes -->
+            </configuration>
+          </execution>
+          <execution>
+            <id>unpack-api-schema-sources</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.basedir}</outputDirectory>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>com.sos-berlin</groupId>
+                  <artifactId>js7-api-schemas</artifactId>
+                  <version>2.0.0-SNAPSHOT</version>
+                  <type>zip</type>
+                </artifactItem>
+              </artifactItems>
+              <!--includes>**/hibernate-examples/**</includes -->
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>

@@ -1,7 +1,0 @@
-{
-  "title": "non negative long",
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "type": "number",
-  "format":"utc-millisec",
-  "minimum": 0
-}
