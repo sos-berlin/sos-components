@@ -158,6 +158,7 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER);
 
             DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
+            DBLayerOrderVariables dbLayerOrderVariables = new DBLayerOrderVariables(sosHibernateSession);
 
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
             filter.setControllerId(dailyplanModifyOrder.getControllerId());
@@ -183,7 +184,18 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
                     List<DBItemDailyPlanWithHistory> listOfDailyPlanItems = new ArrayList<DBItemDailyPlanWithHistory>();
                     DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory = new DBItemDailyPlanWithHistory();
                     dbItemDailyPlanWithHistory.setOrderId(dbItemDailyPlanOrder.getOrderId());
+                    dbItemDailyPlanWithHistory.setPlannedOrderId(dbItemDailyPlanOrder.getId());
+                    listOfDailyPlanItems.add(dbItemDailyPlanWithHistory);
                     cancelOrdersFromController(filter, listOfDailyPlanItems);
+
+                    FilterDailyPlannedOrders filterDailyPlannedOrders = new FilterDailyPlannedOrders();
+                    filterDailyPlannedOrders.setPlannedOrderId(dbItemDailyPlanOrder.getId());
+                    dbLayerDailyPlannedOrders.delete(filterDailyPlannedOrders);
+                    
+                    DBItemDailyPlanOrders dbItemDailyPlanOrders = dbLayerDailyPlannedOrders.insertFrom(dbItemDailyPlanOrder);
+                    dbLayerOrderVariables.update(dbItemDailyPlanWithHistory.getPlannedOrderId(), dbItemDailyPlanOrders.getId());
+                    listOfPlannedOrders.clear();
+                    listOfPlannedOrders.add(dbItemDailyPlanOrders);
                 }
                 Globals.commit(sosHibernateSession);
 

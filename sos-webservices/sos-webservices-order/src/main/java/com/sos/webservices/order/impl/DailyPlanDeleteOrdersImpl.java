@@ -67,7 +67,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
 
             FilterDailyPlannedOrders filter = getFilter(dailyPlanOrderFilter);
             filter.addState(OrderStateText.PLANNED);
-            dbLayerDailyPlannedOrders.delete(filter);
+            dbLayerDailyPlannedOrders.deleteCascading(filter);
             Globals.commit(sosHibernateSession);
 
             DailyPlanAudit orderAudit = new DailyPlanAudit(filter.getControllerId(), dailyPlanOrderFilter.getAuditLog());

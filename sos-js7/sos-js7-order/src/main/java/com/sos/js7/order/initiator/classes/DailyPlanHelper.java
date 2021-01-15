@@ -2,6 +2,7 @@ package com.sos.js7.order.initiator.classes;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -9,6 +10,7 @@ import java.util.TimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.webservices.order.initiator.model.Schedule;
 
 public class DailyPlanHelper {
@@ -93,13 +95,24 @@ public class DailyPlanHelper {
         return result;
     }
     
-    public static String buildOrderKey(Schedule o, Long startTime) {
+    public static String buildOrderId(Schedule o, Long startTime) {
         Path path = Paths.get(o.getPath());
         String shortScheduleName = path.getFileName().toString();
         if (shortScheduleName.length() > 30) {
             shortScheduleName = shortScheduleName.substring(0, 30);
         }
         return "#" + getDailyPlanDate(startTime) + "#P" + "<id" + startTime + ">-" + shortScheduleName;
+    }
+    
+    public static String buildOrderId(DBItemDailyPlanOrders dbItemDailyPlanOrders) {
+        Path path = Paths.get(dbItemDailyPlanOrders.getSchedulePath());
+        String shortScheduleName = path.getFileName().toString();
+        if (shortScheduleName.length() > 30) {
+            shortScheduleName = shortScheduleName.substring(0, 30);
+        }
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd");  
+        String dailyPlanDate = dateFormat.format(dbItemDailyPlanOrders.getPlannedStart());  
+        return "#" + dailyPlanDate + "#P" + "<id0000000000>-" + shortScheduleName;
     }
     
     public static Date getNextDay(Date dateForPlan) throws ParseException {

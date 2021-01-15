@@ -83,4 +83,14 @@ public class DBLayerOrderVariables {
         row = row + sosHibernateSession.executeUpdate(query);
         return row;
     }
+
+    public int update(Long oldId, Long newId) throws SOSHibernateException {
+        int row = 0;
+        String hql = "update  " + DBItemDailyPlanVariables + " set plannedOrderId=:newId where plannedOrderId = :oldId";
+        Query<DBItemDailyPlanSubmissionHistory> query = sosHibernateSession.createQuery(hql);
+        query.setParameter("newId", newId);
+        query.setParameter("oldId", oldId);
+        row = row + sosHibernateSession.executeUpdate(query);
+        return row;
+    }
 }

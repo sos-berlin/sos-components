@@ -48,6 +48,7 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     private List<Long> listOfSubmissionIds;
 
     private Long calendarId;
+    private Long plannedOrderId;
     private List<String> listOfSchedulePaths;
     private String schedulePath;
 
@@ -316,6 +317,16 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     
     public void setSchedulePath(String schedulePath) {
         this.schedulePath = schedulePath;
+    }
+
+    
+    public Long getPlannedOrderId() {
+        return plannedOrderId;
+    }
+
+    
+    public void setPlannedOrderId(Long plannedOrderId) {
+        this.plannedOrderId = plannedOrderId;
     }
 
     

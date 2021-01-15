@@ -155,7 +155,7 @@ public class OrderListSynchronizer {
                 for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
                     FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
                     filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
-                    LOGGER.info("----> " + plannedOrder.getFreshOrder().getScheduledFor() + ":" + new Date(plannedOrder.getFreshOrder()
+                    LOGGER.debug("----> " + plannedOrder.getFreshOrder().getScheduledFor() + ":" + new Date(plannedOrder.getFreshOrder()
                             .getScheduledFor()));
                     filter.setControllerId(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
                     filter.addWorkflowPath(plannedOrder.getFreshOrder().getWorkflowPath());
@@ -165,7 +165,7 @@ public class OrderListSynchronizer {
                     } catch (JobSchedulerObjectNotExistException e) {
                         LOGGER.warn("Order unknown in JS7 Controller");
                     }
-                    dbLayerDailyPlannedOrders.delete(filter);
+                    dbLayerDailyPlannedOrders.deleteCascading(filter);
                 }
             }
             for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {

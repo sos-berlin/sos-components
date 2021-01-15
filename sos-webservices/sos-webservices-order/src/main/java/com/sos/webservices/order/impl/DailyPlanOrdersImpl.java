@@ -12,11 +12,14 @@ import javax.ws.rs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.mysql.cj.x.protobuf.MysqlxCrud.Delete;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.OrdersHelper;
+import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
@@ -27,6 +30,7 @@ import com.sos.joc.model.dailyplan.PlannedOrders;
 import com.sos.joc.model.order.OrderState;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
+import com.sos.js7.order.initiator.db.DBLayerOrderVariables;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.webservices.order.resource.IDailyPlanOrdersResource;
 
@@ -98,6 +102,7 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
 
             DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
+            DBLayerOrderVariables dbLayerOrderVariables = new DBLayerOrderVariables(sosHibernateSession);
             boolean withFolderFilter = dailyPlanOrderFilter.getFilter().getFolders() != null && !dailyPlanOrderFilter.getFilter().getFolders()
                     .isEmpty();
             boolean hasPermission = true;
@@ -140,13 +145,15 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
                     PlannedOrderItem p = createPlanItem(dbItemDailyPlanWithHistory);
                     if (OrderStateText.CANCELLED.equals(p.getState().get_text())) {
                         FilterDailyPlannedOrders filterDailyPlannedOrders = new FilterDailyPlannedOrders();
-                        filterDailyPlannedOrders.setControllerId(dbItemDailyPlanWithHistory.getControllerId());
-                        filterDailyPlannedOrders.addSchedulePath(dbItemDailyPlanWithHistory.getSchedulePath());
-                        filterDailyPlannedOrders.setSubmitted(false);
-                        dbLayerDailyPlannedOrders.setSubmitted(filterDailyPlannedOrders);
-                        p.getState().set_text(OrderStateText.PLANNED);
-                        p.getState().setSeverity(OrdersHelper.severityByGroupedStates.get(p.getState().get_text()));
-                    }
+                        filterDailyPlannedOrders.setPlannedOrderId(dbItemDailyPlanWithHistory.getPlannedOrderId());
+                        dbLayerDailyPlannedOrders.delete(filterDailyPlannedOrders);
+                        
+                        DBItemDailyPlanOrders dbItemDailyPlanOrders = dbLayerDailyPlannedOrders.insertFrom(dbItemDailyPlanWithHistory);
+                        dbLayerOrderVariables.update(dbItemDailyPlanWithHistory.getPlannedOrderId(), dbItemDailyPlanOrders.getId());                  
+                        
+                        p.setOrderId(dbItemDailyPlanOrders.getOrderId());
+                        p.setSubmitted(false);
+                     }
                     if (add) {
                         result.add(p);
                     }

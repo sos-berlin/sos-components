@@ -226,7 +226,7 @@ public class OrderInitiatorRunner extends TimerTask {
             variables.setAdditionalProperty(param.getName(), param.getValue());
         }
         FreshOrder freshOrder = new FreshOrder();
-        freshOrder.setId(DailyPlanHelper.buildOrderKey(o, startTime));
+        freshOrder.setId(DailyPlanHelper.buildOrderId(o, startTime));
         freshOrder.setScheduledFor(startTime);
         freshOrder.setArguments(variables);
         freshOrder.setWorkflowPath(o.getWorkflowPath());
