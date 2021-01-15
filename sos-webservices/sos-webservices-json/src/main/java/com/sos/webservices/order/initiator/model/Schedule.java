@@ -24,7 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "path",
     "workflowPath",
     "title",
-    "documentationId",
+    "documentationPath",
     "submitOrderToControllerWhenPlanned",
     "planOrderAutomatically",
     "calendars",
@@ -63,13 +63,14 @@ public class Schedule implements IConfigurationObject, IReleaseObject
     @JsonProperty("title")
     private String title;
     /**
-     * non negative long
+     * path
      * <p>
-     * 
+     * absolute path of an object.
      * 
      */
-    @JsonProperty("documentationId")
-    private Long documentationId;
+    @JsonProperty("documentationPath")
+    @JsonPropertyDescription("absolute path of an object.")
+    private String documentationPath;
     @JsonProperty("submitOrderToControllerWhenPlanned")
     private Boolean submitOrderToControllerWhenPlanned;
     @JsonProperty("planOrderAutomatically")
@@ -171,25 +172,25 @@ public class Schedule implements IConfigurationObject, IReleaseObject
     }
 
     /**
-     * non negative long
+     * path
      * <p>
-     * 
+     * absolute path of an object.
      * 
      */
-    @JsonProperty("documentationId")
-    public Long getDocumentationId() {
-        return documentationId;
+    @JsonProperty("documentationPath")
+    public String getDocumentationPath() {
+        return documentationPath;
     }
 
     /**
-     * non negative long
+     * path
      * <p>
-     * 
+     * absolute path of an object.
      * 
      */
-    @JsonProperty("documentationId")
-    public void setDocumentationId(Long documentationId) {
-        this.documentationId = documentationId;
+    @JsonProperty("documentationPath")
+    public void setDocumentationPath(String documentationPath) {
+        this.documentationPath = documentationPath;
     }
 
     @JsonProperty("submitOrderToControllerWhenPlanned")
@@ -282,12 +283,12 @@ public class Schedule implements IConfigurationObject, IReleaseObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("workflowPath", workflowPath).append("title", title).append("documentationId", documentationId).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("variables", variables).toString();
+        return new ToStringBuilder(this).append("path", path).append("workflowPath", workflowPath).append("title", title).append("documentationPath", documentationPath).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("variables", variables).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(planOrderAutomatically).append(path).append(variables).append(nonWorkingCalendars).append(workflowPath).append(documentationId).append(calendars).append(submitOrderToControllerWhenPlanned).append(title).toHashCode();
+        return new HashCodeBuilder().append(documentationPath).append(planOrderAutomatically).append(path).append(variables).append(nonWorkingCalendars).append(workflowPath).append(calendars).append(submitOrderToControllerWhenPlanned).append(title).toHashCode();
     }
 
     @Override
@@ -299,7 +300,7 @@ public class Schedule implements IConfigurationObject, IReleaseObject
             return false;
         }
         Schedule rhs = ((Schedule) other);
-        return new EqualsBuilder().append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(variables, rhs.variables).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(workflowPath, rhs.workflowPath).append(documentationId, rhs.documentationId).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(variables, rhs.variables).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(workflowPath, rhs.workflowPath).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(title, rhs.title).isEquals();
     }
 
 }

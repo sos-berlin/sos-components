@@ -2532,7 +2532,7 @@ public abstract class PublishUtils {
     }
     
     private static boolean checkObjectNotEmpty (Junction junction) {
-        if (junction.getDocumentationId() == null
+        if (junction.getDocumentationPath() == null
                 && junction.getLifetime() == null
                 && junction.getOrderId() == null
                 && junction.getPath() == null
@@ -2544,7 +2544,7 @@ public abstract class PublishUtils {
     }
     
     private static boolean checkObjectNotEmpty (JobClass jobClass) {
-        if (jobClass.getDocumentationId() == null 
+        if (jobClass.getDocumentationPath() == null 
                 && jobClass.getMaxProcesses() == null
                 && jobClass.getPath() == null
                 && jobClass.getPriority() == null
@@ -2556,10 +2556,9 @@ public abstract class PublishUtils {
     }
     
     private static boolean checkObjectNotEmpty (Lock lock) {
-        if (lock.getDocumentationId() == null 
-                && lock.getCapacity() == null
-                && lock.getPath() == null
-                && lock.getMaxNonExclusive() == null
+        if (lock.getDocumentationPath() == null 
+                && lock.getId() == null
+                && lock.getLimit() == null
                 && lock.getTYPE() == null) {
             return false;
         } else {
@@ -2568,7 +2567,7 @@ public abstract class PublishUtils {
     }
     
     private static boolean checkObjectNotEmpty (Schedule schedule) {
-        if (schedule.getDocumentationId() == null 
+        if (schedule.getDocumentationPath() == null 
                 && schedule.getPlanOrderAutomatically() == null
                 && schedule.getPath() == null
                 && schedule.getCalendars() == null
@@ -2583,7 +2582,7 @@ public abstract class PublishUtils {
     }
     
     private static boolean checkObjectNotEmpty (Calendar calendar) {
-        if (calendar.getDocumentationId() == null 
+        if (calendar.getDocumentationPath() == null 
                 && calendar.getExcludes() == null
                 && calendar.getPath() == null
                 && calendar.getFrom() == null
