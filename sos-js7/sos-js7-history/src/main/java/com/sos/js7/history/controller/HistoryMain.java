@@ -127,7 +127,7 @@ public class HistoryMain extends JocClusterService {
     }
 
     private void setConfig() {
-        String method = "getConfig";
+        String method = "setConfig";
 
         config = new Configuration();
         try {

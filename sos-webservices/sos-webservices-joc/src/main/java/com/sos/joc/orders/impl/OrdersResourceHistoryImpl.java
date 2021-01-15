@@ -115,9 +115,10 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                 }
                 dbFilter.setLimit(in.getLimit());
 
+                // TODO to remove
                 if (dbFilter.getExecutedFrom() == null) {
                     // 1970-01-01 01:00:00 + 1 day
-                    dbFilter.setExecutedFrom(SOSDate.add(Instant.ofEpochMilli(Globals.HISTORY_DEFAULT_DATE.getTime()), 1, ChronoUnit.DAYS));
+                    dbFilter.setExecutedFrom(SOSDate.add(Instant.ofEpochMilli(new Date(0).getTime()), 1, ChronoUnit.DAYS));
                 }
 
                 session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);

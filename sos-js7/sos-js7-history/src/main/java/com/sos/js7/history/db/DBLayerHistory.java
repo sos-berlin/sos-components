@@ -196,20 +196,20 @@ public class DBLayerHistory {
     public DBItemHistoryOrder getOrderBeforeCurrentEvent(String controllerId, String orderId, Date currentEventTime) throws SOSHibernateException {
         List<DBItemHistoryOrder> result = getOrder(controllerId, orderId);
         if (result != null) {
+            long currentStateTime = currentEventTime.getTime();
             switch (result.size()) {
             case 0:
                 return null;
             case 1:
-                return result.get(0);
+                DBItemHistoryOrder resultItem = result.get(0);
+                return resultItem.getStartTime().getTime() > currentStateTime ? null : resultItem;
             default:
                 result = result.stream().sorted((item1, item2) -> {
                     return Long.compare(item2.getId(), item1.getId());
                 }).collect(Collectors.toList());
-
-                long currentStateTime = currentEventTime.getTime();
                 for (DBItemHistoryOrder item : result) {
-                    long itemStateTime = item.getStartTime().getTime();
-                    if (itemStateTime > currentStateTime) {
+                    long startTime = item.getStartTime().getTime();
+                    if (startTime > currentStateTime) {
                         continue;
                     }
                     return item;
@@ -348,24 +348,16 @@ public class DBLayerHistory {
         return session.executeUpdate(query);
     }
 
-    public int updateOrderOnFork(Long id, Integer state, Date stateTime, String startEventId, Date startTime) throws SOSHibernateException {
+    public int updateOrderOnFork(Long id, Integer state, Date stateTime) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ");
         hql.append(DBLayer.DBITEM_HISTORY_ORDER);
         hql.append(" set hasChildren=true");
-        if (startEventId != null) {
-            hql.append(", startTime=:startTime ");
-            hql.append(", startEventId=:startEventId ");
-        }
         hql.append(", severity=:severity ");
         hql.append(", state=:state ");
         hql.append(", stateTime=:stateTime ");
         hql.append("where id=:id");
         Query<DBItemHistoryOrder> query = session.createQuery(hql.toString());
         query.setParameter("id", id);
-        if (startEventId != null) {
-            query.setParameter("startTime", startTime);
-            query.setParameter("startEventId", startEventId);
-        }
         query.setParameter("severity", HistorySeverity.map2DbSeverity(state));
         query.setParameter("state", state);
         query.setParameter("stateTime", stateTime);

@@ -15,6 +15,7 @@ import com.sos.js7.history.controller.exception.FatEventProblemException;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
+import js7.base.time.Timestamp;
 import js7.controller.data.events.AgentRefStateEvent.AgentCouplingFailed;
 import js7.controller.data.events.AgentRefStateEvent.AgentReady;
 import js7.controller.data.events.ControllerEvent.ControllerReady;
@@ -22,6 +23,7 @@ import js7.data.agent.AgentId;
 import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
+import js7.data.order.Order.Fresh;
 import js7.data.order.OrderEvent;
 import js7.data.order.OrderId;
 import js7.data.order.Outcome;
@@ -152,6 +154,29 @@ public class HistoryEventEntry {
 
         public String getOrderId() {
             return orderId.string();
+        }
+
+        public Date getScheduledFor() {
+            if (order != null) {
+                try {
+                    Optional<Timestamp> ot = OptionConverters.toJava(((Fresh) order.asScala().state()).scheduledFor());
+                    return ot.isPresent() ? Date.from(ot.get().toInstant()) : null;
+                } catch (Throwable e) {
+                    LOGGER.warn(String.format("[%s][getScheduledFor]%s", getOrderId(), e.toString()), e);
+                }
+            }
+            return null;
+        }
+
+        public Boolean isStarted() {
+            if (order != null) {
+                try {
+                    return order.asScala().isStarted();
+                } catch (Throwable e) {
+                    LOGGER.warn(String.format("[%s][isStarted]%s", getOrderId(), e.toString()), e);
+                }
+            }
+            return null;
         }
 
         public Map<String, Value> getArguments() {

@@ -16,11 +16,10 @@ public class JocClusterConfiguration {
     public static final String IDENTIFIER = JocClusterServices.cluster.name();
 
     public enum JocClusterServices {
-        cluster, history, dailyplan, jobstream, proxy;
+        cluster, history, dailyplan, proxy;
     }
 
     private static final String CLASS_NAME_HISTORY = "com.sos.js7.history.controller.HistoryMain";
-    @SuppressWarnings("unused")
     private static final String CLASS_NAME_DAILYPLAN = "com.sos.js7.order.initiator.OrderInitiatorMain";
 
     private static final String PROPERTIES_FILE = "joc/cluster.properties";
@@ -35,14 +34,13 @@ public class JocClusterConfiguration {
 
     // waiting for the answer after change the active memberId
     private int switchMemberWaitCounterOnSuccess = 10; // counter
-    private int switchMemberWaitIntervalOnSuccess = 5;// seconds
+    // seconds - max wait time = switch_member_wait_counter_on_success*switch_member_wait_interval_on_success+ execution time
+    private int switchMemberWaitIntervalOnSuccess = 5;
 
     // waiting for change the active memberId (on transactions concurrency errors)
     private int switchMemberWaitCounterOnError = 10; // counter
-    private int switchMemberWaitIntervalOnError = 2;// seconds
-
-    // TMP to remove
-    private boolean currentIsClusterMember = true;
+    // seconds - max wait time = switch_member_wait_counter_on_error*switchMemberWaitIntervalOnError+ execution time
+    private int switchMemberWaitIntervalOnError = 2;
 
     public JocClusterConfiguration(Path resourceDirectory) {
         Path configFile = resourceDirectory.resolve(PROPERTIES_FILE).normalize();
@@ -72,10 +70,6 @@ public class JocClusterConfiguration {
 
     private void setConfiguration(Properties conf) {
         try {
-            if (conf.getProperty("current_is_cluster_member") != null) {
-                currentIsClusterMember = Boolean.parseBoolean(conf.getProperty("current_is_cluster_member").trim());
-            }
-
             if (conf.getProperty("heart_beat_exceeded_interval") != null) {
                 heartBeatExceededInterval = Integer.parseInt(conf.getProperty("heart_beat_exceeded_interval").trim());
             }
@@ -100,10 +94,6 @@ public class JocClusterConfiguration {
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }
-    }
-
-    public boolean currentIsClusterMember() {
-        return currentIsClusterMember;
     }
 
     public int getPollingInterval() {

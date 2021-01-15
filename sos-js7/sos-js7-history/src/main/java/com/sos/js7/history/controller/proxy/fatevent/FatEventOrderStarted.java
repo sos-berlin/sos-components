@@ -4,11 +4,11 @@ import java.util.Date;
 
 import com.sos.js7.history.controller.proxy.HistoryEventType;
 
-public final class FatEventOrderAdded extends AFatEventOrder {
+public final class FatEventOrderStarted extends AFatEventOrder {
 
     private Date planned;
 
-    public FatEventOrderAdded(Long eventId, Date eventDatetime) {
+    public FatEventOrderStarted(Long eventId, Date eventDatetime) {
         super(eventId, eventDatetime);
     }
 
@@ -20,7 +20,7 @@ public final class FatEventOrderAdded extends AFatEventOrder {
 
     @Override
     public HistoryEventType getType() {
-        return HistoryEventType.OrderAdded;
+        return HistoryEventType.OrderStarted;
     }
 
     public Date getPlanned() {

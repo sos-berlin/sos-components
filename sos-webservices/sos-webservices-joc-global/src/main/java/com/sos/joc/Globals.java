@@ -45,7 +45,6 @@ public class Globals {
     public static final String SESSION_KEY_FOR_SEND_EVENTS_IMMEDIATLY = "send_events_immediatly";
     public static final String DEFAULT_SHIRO_INI_PATH = "classpath:shiro.ini";
     public static final String DEFAULT_SHIRO_INI_FILENAME = "shiro.ini";
-    public static final Date HISTORY_DEFAULT_DATE = new Date(0); // 1970-01-01 01:00:00
 
     public static SOSHibernateFactory sosHibernateFactory;
     public static JocWebserviceDataContainer jocWebserviceDataContainer = JocWebserviceDataContainer.getInstance();
@@ -318,7 +317,7 @@ public class Globals {
         }
         return Paths.get("/").resolve(path).normalize().toString().replace('\\', '/');
     }
-    
+
     public static JocSecurityLevel getJocSecurityLevel() {
         return getJocSecurityLevel(JocSecurityLevel.LOW);
     }

@@ -7,7 +7,6 @@ import js7.controller.data.events.AgentRefStateEvent.AgentCouplingFailed;
 import js7.controller.data.events.AgentRefStateEvent.AgentReady;
 import js7.controller.data.events.ControllerEvent.ControllerReady;
 import js7.controller.data.events.ControllerEvent.ControllerShutDown;
-import js7.data.order.OrderEvent.OrderAdded;
 import js7.data.order.OrderEvent.OrderBroken;
 import js7.data.order.OrderEvent.OrderCancelled$;
 import js7.data.order.OrderEvent.OrderFailed;
@@ -18,6 +17,7 @@ import js7.data.order.OrderEvent.OrderProcessed;
 import js7.data.order.OrderEvent.OrderProcessingStarted$;
 import js7.data.order.OrderEvent.OrderResumeMarked;
 import js7.data.order.OrderEvent.OrderResumed;
+import js7.data.order.OrderEvent.OrderStarted$;
 import js7.data.order.OrderEvent.OrderStderrWritten;
 import js7.data.order.OrderEvent.OrderStdoutWritten;
 import js7.data.order.OrderEvent.OrderSuspendMarked;
@@ -34,7 +34,7 @@ public enum HistoryEventType {
 
     AgentReady(AgentReady.class.getSimpleName()),
 
-    OrderAdded(OrderAdded.class.getSimpleName()),
+    OrderStarted(OrderStarted$.class.getSimpleName()),
 
     OrderForked(OrderForked.class.getSimpleName()),
 

@@ -40,7 +40,6 @@ import com.sos.js7.history.controller.proxy.fatevent.FatEventAgentCouplingFailed
 import com.sos.js7.history.controller.proxy.fatevent.FatEventAgentReady;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventControllerReady;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventControllerShutDown;
-import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderAdded;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderBroken;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderCancelled;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderFailed;
@@ -49,6 +48,7 @@ import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderForked;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderJoined;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderResumeMarked;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderResumed;
+import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStarted;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStepProcessed;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStepStarted;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStepStdWritten;
@@ -70,7 +70,6 @@ import js7.proxy.data.ProxyEvent;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.data.controller.JEventAndControllerState;
 import js7.proxy.javaapi.data.order.JOrder.Forked;
-import js7.proxy.javaapi.data.order.JOrderEvent.JOrderAdded;
 import js7.proxy.javaapi.data.order.JOrderEvent.JOrderForked;
 import js7.proxy.javaapi.data.order.JOrderEvent.JOrderJoined;
 import js7.proxy.javaapi.data.order.JOrderEvent.JOrderProcessed;
@@ -192,12 +191,12 @@ public class HistoryControllerHandler {
             Flux<JEventAndControllerState<Event>> flux = api.eventFlux(eventBus, OptionalLong.of(eventId.get()));
             flux = flux.filter(e -> HistoryEventType.fromValue(e.stampedEvent().value().event().getClass().getSimpleName()) != null);
 
-            // flux = flux.doOnNext(this::fluxDoOnNext);
+            //flux = flux.doOnNext(this::fluxDoOnNext);
             flux = flux.doOnError(this::fluxDoOnError);
             flux = flux.doOnComplete(this::fluxDoOnComplete);
             flux = flux.doOnCancel(this::fluxDoOnCancel);
             flux = flux.doFinally(this::fluxDoFinally);
-
+            
             flux.takeUntilOther(stopper.stopped()).map(this::map2fat).bufferTimeout(historyConfig.getBufferTimeoutMaxSize(), Duration.ofSeconds(
                     historyConfig.getBufferTimeoutMaxTime())).toIterable().forEach(list -> {
                         boolean run = true;
@@ -256,17 +255,18 @@ public class HistoryControllerHandler {
                 event.set(ar.getId(), ar.getUri(), ar.getTimezone());
                 break;
 
-            case OrderAdded:
+            case OrderStarted:
                 order = entry.getCheckedOrder();
-
-                JOrderAdded orderAdded = (JOrderAdded) entry.getJOrderEvent();
-                Date planned = orderAdded.scheduledFor().isPresent() ? Date.from(orderAdded.scheduledFor().get()) : null;
-
-                event = new FatEventOrderAdded(entry.getEventId(), entry.getEventDate());
+                Date planned = null;
+                try {
+                    planned = entry.getCheckedOrderFromPreviousState().getScheduledFor();
+                } catch (Throwable e) {
+                    LOGGER.warn(String.format("[%s][%s][PreviousState]%s", entry.getEventType().name(), order.getOrderId(), e.toString()), e);
+                }
+                event = new FatEventOrderStarted(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId(), order.getWorkflowInfo().getPath(), order.getWorkflowInfo().getVersionId(), order.getWorkflowInfo()
                         .getPosition().asList(), order.getArguments(), planned);
                 break;
-
             case OrderForked:
                 order = entry.getCheckedOrder();
                 JOrderForked jof = (JOrderForked) entry.getJOrderEvent();
@@ -403,8 +403,13 @@ public class HistoryControllerHandler {
 
             case OrderCancelled:
                 order = entry.getOrder();
-
-                event = new FatEventOrderCancelled(entry.getEventId(), entry.getEventDate());
+                Boolean isStarted = null;
+                try {
+                    isStarted = entry.getCheckedOrderFromPreviousState().isStarted();
+                } catch (Throwable e) {
+                    LOGGER.warn(String.format("[%s][%s][PreviousState]%s", entry.getEventType().name(), order.getOrderId(), e.toString()), e);
+                }
+                event = new FatEventOrderCancelled(entry.getEventId(), entry.getEventDate(), isStarted);
                 event.set(order.getOrderId());
                 break;
 
@@ -426,7 +431,8 @@ public class HistoryControllerHandler {
 
     @SuppressWarnings("unused")
     private void fluxDoOnNext(JEventAndControllerState<Event> state) {
-        releaseEvents(model.getStoredEventId());
+        // releaseEvents(model.getStoredEventId());
+        LOGGER.info(String.format("[fluxDoOnNext]%s", SOSString.toString(state)));
     }
 
     private void fluxDoOnCancel() {

@@ -123,7 +123,7 @@ public class Counter {
     public class Order {
 
         @SuppressWarnings("unused")
-        private int added = 0;
+        private int started = 0;
         @SuppressWarnings("unused")
         private int resumed = 0;
         @SuppressWarnings("unused")
@@ -141,12 +141,14 @@ public class Counter {
         @SuppressWarnings("unused")
         private int cancelled = 0;
         @SuppressWarnings("unused")
+        private int cancelledNotStarted = 0;
+        @SuppressWarnings("unused")
         private int broken = 0;
         @SuppressWarnings("unused")
         private int finished = 0;
 
-        public void addAdded() {
-            added += 1;
+        public void addStarted() {
+            started += 1;
         }
 
         public void addResumed() {
@@ -179,6 +181,10 @@ public class Counter {
 
         public void addCancelled() {
             cancelled += 1;
+        }
+
+        public void addCancelledNotStarted() {
+            cancelledNotStarted += 1;
         }
 
         public void addBroken() {
@@ -220,8 +226,8 @@ public class Counter {
 
         c.getAgent().addReady();
 
-        c.getOrder().addAdded();
-        c.getOrder().addAdded();
+        c.getOrder().addStarted();
+        c.getOrder().addStarted();
         c.getOrder().addBroken();
 
         c.getOrderStep().addStdWritten();

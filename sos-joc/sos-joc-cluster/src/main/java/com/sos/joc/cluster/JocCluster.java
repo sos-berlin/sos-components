@@ -211,14 +211,12 @@ public class JocCluster {
 
             skipPerform = false;
             synchronized (lockObject) {
-                if (config.currentIsClusterMember()) {
-                    item = handleCurrentMemberOnProcess(dbLayer, item);
-                    if (item != null) {
-                        activeMemberId = item.getMemberId();
-                        if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[end][current=%s][active=%s][lastActive=%s]%s", currentMemberId, activeMemberId,
-                                    lastActiveMemberId, SOSHibernate.toString(item)));
-                        }
+                item = handleCurrentMemberOnProcess(dbLayer, item);
+                if (item != null) {
+                    activeMemberId = item.getMemberId();
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[end][current=%s][active=%s][lastActive=%s]%s", currentMemberId, activeMemberId,
+                                lastActiveMemberId, SOSHibernate.toString(item)));
                     }
                 }
             }
@@ -250,12 +248,10 @@ public class JocCluster {
                 dbLayer.getSession().close();
             }
             if (!skipPerform) {
-                if (config.currentIsClusterMember()) {
-                    if (item != null) {
-                        JocClusterAnswer answer = performServices(item.getMemberId());
-                        if (answer.getError() != null) {
-                            LOGGER.error(SOSString.toString(answer));
-                        }
+                if (item != null) {
+                    JocClusterAnswer answer = performServices(item.getMemberId());
+                    if (answer.getError() != null) {
+                        LOGGER.error(SOSString.toString(answer));
                     }
                 }
             }
