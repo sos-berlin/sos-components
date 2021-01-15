@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
@@ -336,10 +338,10 @@ public class SOSPath {
         retVal = startStr.concat(midStr).concat(endStr);
         return retVal;
     }
-    
+
     public static String getFileNameWithoutExtension(Path filename) {
         if (filename != null) {
-           return filename.toString().replaceFirst("\\.[^.]$", "");
+            return filename.toString().replaceFirst("\\.[^.]$", "");
         }
         return null;
     }
@@ -420,31 +422,41 @@ public class SOSPath {
 
     public static void ungzipDirectory(InputStream targz, Path outputDirectory) throws IOException {
         // TODO ungzip sub directories etc ...
-        TarArchiveInputStream tais = null;
+        InputStream inputStream = null;
         try {
-            GZIPInputStream gis = new GZIPInputStream(new BufferedInputStream(targz));
-            tais = new TarArchiveInputStream(gis);
-            TarArchiveEntry entry = null;
-            while ((entry = tais.getNextTarEntry()) != null) {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(String.format("[ungzip][entry]%s", entry.getName()));
-                }
-                if (entry.isDirectory()) {
-                    continue;
-                } else {
-                    Path outputfile = outputDirectory.resolve(entry.getName());
-                    // outputFile.getParentFile().mkdirs();
-                    IOUtils.copy(tais, Files.newOutputStream(outputfile));
+            inputStream = new BufferedInputStream(new GZIPInputStream(new BufferedInputStream(targz)));
+
+            try (TarArchiveInputStream tis = new TarArchiveInputStream(inputStream)) {
+                for (TarArchiveEntry entry = tis.getNextTarEntry(); entry != null;) {
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug(String.format("[ungzip][entry]%s", entry.getName()));
+                    }
+                    if (entry.isDirectory()) {
+                        continue;
+                    } else {
+                        Path outputfile = outputDirectory.resolve(entry.getName());
+                        // outputFile.getParentFile().mkdirs();
+                        try (OutputStream out = Files.newOutputStream(outputfile)) {
+                            IOUtils.copy(tis, out);
+                        }
+                    }
+                    entry = tis.getNextTarEntry();
                 }
             }
         } catch (IOException e) {
             throw e;
         } finally {
-            if (tais != null) {
+            if (inputStream != null) {
                 try {
-                    tais.close();
+                    inputStream.close();
                 } catch (IOException e) {
                     LOGGER.warn(e.toString(), e);
+                }
+            }
+            if (targz != null) {
+                try {
+                    targz.close();
+                } catch (Throwable e) {
                 }
             }
         }
@@ -453,6 +465,35 @@ public class SOSPath {
     public static File getMostRecentFile(Path dir) {
         return Arrays.stream(toFile(dir).listFiles()).filter(f -> f.isFile()).max((f1, f2) -> Long.compare(f1.lastModified(), f2.lastModified()))
                 .orElse(null);
+    }
+
+    public static void main(String[] args) throws Exception {
+        Path input = null;
+        Path output = null;
+        int sleep = 1;
+
+        if (args.length > 2) {
+            input = Paths.get(args[0]);
+            output = Paths.get(args[1]);
+            sleep = Integer.parseInt(args[2]);
+        } else {
+            return;
+        }
+
+        try {
+            RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
+            String name = runtimeBean.getName();
+            String pid = name.split("@")[0];
+            System.out.println("PID=" + pid);
+
+            SOSPath.ungzipDirectory(SOSPath.gzipDirectory(input), output);
+
+            SOSPath.getMostRecentFile(input);
+
+            Thread.sleep(sleep * 1_000);
+        } catch (Exception e) {
+            LOGGER.error(e.toString(), e);
+        }
     }
 
 }
