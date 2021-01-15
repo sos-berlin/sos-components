@@ -25,7 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "id",
     "path",
     "name",
-    "documentationId",
+    "documentationPath",
     "type",
     "title",
     "from",
@@ -47,11 +47,11 @@ public class Calendar implements ICalendarObject, IConfigurationObject, IRelease
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String path;
     /**
      * string without < and >
@@ -62,13 +62,14 @@ public class Calendar implements ICalendarObject, IConfigurationObject, IRelease
     @JsonProperty("name")
     private String name;
     /**
-     * non negative long
+     * path
      * <p>
-     * 
+     * absolute path of an object.
      * 
      */
-    @JsonProperty("documentationId")
-    private Long documentationId;
+    @JsonProperty("documentationPath")
+    @JsonPropertyDescription("absolute path of an object.")
+    private String documentationPath;
     /**
      * calendar type
      * <p>
@@ -146,7 +147,7 @@ public class Calendar implements ICalendarObject, IConfigurationObject, IRelease
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
@@ -157,7 +158,7 @@ public class Calendar implements ICalendarObject, IConfigurationObject, IRelease
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
@@ -188,25 +189,25 @@ public class Calendar implements ICalendarObject, IConfigurationObject, IRelease
     }
 
     /**
-     * non negative long
+     * path
      * <p>
-     * 
+     * absolute path of an object.
      * 
      */
-    @JsonProperty("documentationId")
-    public Long getDocumentationId() {
-        return documentationId;
+    @JsonProperty("documentationPath")
+    public String getDocumentationPath() {
+        return documentationPath;
     }
 
     /**
-     * non negative long
+     * path
      * <p>
-     * 
+     * absolute path of an object.
      * 
      */
-    @JsonProperty("documentationId")
-    public void setDocumentationId(Long documentationId) {
-        this.documentationId = documentationId;
+    @JsonProperty("documentationPath")
+    public void setDocumentationPath(String documentationPath) {
+        this.documentationPath = documentationPath;
     }
 
     /**
@@ -345,12 +346,12 @@ public class Calendar implements ICalendarObject, IConfigurationObject, IRelease
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("documentationId", documentationId).append("type", type).append("title", title).append("from", from).append("to", to).append("includes", includes).append("excludes", excludes).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("documentationPath", documentationPath).append("type", type).append("title", title).append("from", from).append("to", to).append("includes", includes).append("excludes", excludes).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(excludes).append(documentationId).append(name).append(from).append(includes).append(id).append(to).append(type).append(title).toHashCode();
+        return new HashCodeBuilder().append(documentationPath).append(path).append(excludes).append(name).append(from).append(includes).append(id).append(to).append(type).append(title).toHashCode();
     }
 
     @Override
@@ -362,7 +363,7 @@ public class Calendar implements ICalendarObject, IConfigurationObject, IRelease
             return false;
         }
         Calendar rhs = ((Calendar) other);
-        return new EqualsBuilder().append(path, rhs.path).append(excludes, rhs.excludes).append(documentationId, rhs.documentationId).append(name, rhs.name).append(from, rhs.from).append(includes, rhs.includes).append(id, rhs.id).append(to, rhs.to).append(type, rhs.type).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(path, rhs.path).append(excludes, rhs.excludes).append(name, rhs.name).append(from, rhs.from).append(includes, rhs.includes).append(id, rhs.id).append(to, rhs.to).append(type, rhs.type).append(title, rhs.title).isEquals();
     }
 
 }

@@ -90,7 +90,7 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
             SOSHibernateException {
         JsonValidator.validate(configBytes, URI.create(JocInventory.SCHEMA_LOCATION.get(type)));
         if (ConfigurationType.WORKFLOW.equals(type)) {
-            JsonValidator.validateStrict(configBytes, URI.create("classpath:/raml/jobscheduler/schemas/workflow/workflowJobs-schema.json"));
+            JsonValidator.validateStrict(configBytes, URI.create("classpath:/raml/controller/schemas/workflow/workflowJobs-schema.json"));
             validateInstructions(((Workflow) config).getInstructions(), "instructions", new HashMap<String, String>());
         } else if (ConfigurationType.SCHEDULE.equals(type)) {
             validateCalendarRefs((Schedule) config);

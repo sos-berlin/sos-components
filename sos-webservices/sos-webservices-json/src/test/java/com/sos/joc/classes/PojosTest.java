@@ -128,7 +128,7 @@ public class PojosTest {
 	    jobs.setAdditionalProperty("job1", job);
 	    workflow.setJobs(jobs);
 	    byte[] workflowBytes = objectMapper.writeValueAsBytes(workflow);
-	    JsonValidator.validate(workflowBytes, URI.create("classpath:/raml/jobscheduler/schemas/workflow/workflow-schema.json"));
+	    JsonValidator.validate(workflowBytes, URI.create("classpath:/raml/controller/schemas/workflow/workflow-schema.json"));
 	    System.out.println(new String(workflowBytes, StandardCharsets.UTF_8));
 	    assertEquals("readInventoryRequestWithWorkflowTest", workflow.getTYPE(), DeployType.WORKFLOW);
 	}

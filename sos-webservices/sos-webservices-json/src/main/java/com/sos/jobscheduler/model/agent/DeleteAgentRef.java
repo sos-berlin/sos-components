@@ -17,7 +17,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "name"
+    "id"
 })
 public class DeleteAgentRef {
 
@@ -28,8 +28,8 @@ public class DeleteAgentRef {
      * (Required)
      * 
      */
-    @JsonProperty("name")
-    private String name;
+    @JsonProperty("id")
+    private String id;
 
     /**
      * No args constructor for use in serialization
@@ -40,11 +40,11 @@ public class DeleteAgentRef {
 
     /**
      * 
-     * @param name
+     * @param id
      */
-    public DeleteAgentRef(String name) {
+    public DeleteAgentRef(String id) {
         super();
-        this.name = name;
+        this.id = id;
     }
 
     /**
@@ -54,9 +54,9 @@ public class DeleteAgentRef {
      * (Required)
      * 
      */
-    @JsonProperty("name")
-    public String getName() {
-        return name;
+    @JsonProperty("id")
+    public String getId() {
+        return id;
     }
 
     /**
@@ -66,19 +66,19 @@ public class DeleteAgentRef {
      * (Required)
      * 
      */
-    @JsonProperty("name")
-    public void setName(String name) {
-        this.name = name;
+    @JsonProperty("id")
+    public void setId(String id) {
+        this.id = id;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("name", name).toString();
+        return new ToStringBuilder(this).append("id", id).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).toHashCode();
+        return new HashCodeBuilder().append(id).toHashCode();
     }
 
     @Override
@@ -90,7 +90,7 @@ public class DeleteAgentRef {
             return false;
         }
         DeleteAgentRef rhs = ((DeleteAgentRef) other);
-        return new EqualsBuilder().append(name, rhs.name).isEquals();
+        return new EqualsBuilder().append(id, rhs.id).isEquals();
     }
 
 }

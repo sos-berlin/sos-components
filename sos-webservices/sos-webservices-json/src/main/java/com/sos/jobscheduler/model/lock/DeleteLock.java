@@ -15,12 +15,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * delete lock
  * <p>
- * delete object with fixed property 'TYPE':'LockPath'
+ * delete object with fixed property 'TYPE':'LockId'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
+    "id",
     "path"
 })
 public class DeleteLock implements IDeleteObject
@@ -35,14 +36,22 @@ public class DeleteLock implements IDeleteObject
     @JsonProperty("TYPE")
     private DeleteType tYPE = DeleteType.LOCK;
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of a JobScheduler object.
+     * 
      * (Required)
      * 
      */
+    @JsonProperty("id")
+    private String id;
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String path;
 
     /**
@@ -55,10 +64,12 @@ public class DeleteLock implements IDeleteObject
     /**
      * 
      * @param path
+     * @param id
      * 
      */
-    public DeleteLock(String path) {
+    public DeleteLock(String id, String path) {
         super();
+        this.id = id;
         this.path = path;
     }
 
@@ -74,10 +85,33 @@ public class DeleteLock implements IDeleteObject
     }
 
     /**
+     * string without < and >
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("id")
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("id")
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
-     * (Required)
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
@@ -88,8 +122,7 @@ public class DeleteLock implements IDeleteObject
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
-     * (Required)
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
@@ -99,12 +132,12 @@ public class DeleteLock implements IDeleteObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("id", id).append("path", path).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(tYPE).append(path).toHashCode();
+        return new HashCodeBuilder().append(path).append(id).append(tYPE).toHashCode();
     }
 
     @Override
@@ -116,7 +149,7 @@ public class DeleteLock implements IDeleteObject
             return false;
         }
         DeleteLock rhs = ((DeleteLock) other);
-        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(path, rhs.path).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(id, rhs.id).append(tYPE, rhs.tYPE).isEquals();
     }
 
 }

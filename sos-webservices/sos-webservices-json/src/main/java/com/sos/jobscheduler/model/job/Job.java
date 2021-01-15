@@ -31,7 +31,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "jobClass",
     "defaultArguments",
     "title",
-    "documentationId",
+    "documentationPath",
     "logLevel",
     "criticality",
     "path"
@@ -91,11 +91,11 @@ public class Job implements IConfigurationObject
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("jobClass")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String jobClass;
     /**
      * key-value pairs
@@ -115,13 +115,14 @@ public class Job implements IConfigurationObject
     @JsonProperty("title")
     private String title;
     /**
-     * non negative long
+     * path
      * <p>
-     * 
+     * absolute path of an object.
      * 
      */
-    @JsonProperty("documentationId")
-    private Long documentationId;
+    @JsonProperty("documentationPath")
+    @JsonPropertyDescription("absolute path of an object.")
+    private String documentationPath;
     /**
      * log levels
      * <p>
@@ -141,11 +142,11 @@ public class Job implements IConfigurationObject
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String path;
 
     /**
@@ -157,10 +158,10 @@ public class Job implements IConfigurationObject
 
     /**
      * 
+     * @param documentationPath
      * @param taskLimit
-     * @param documentationId
-     * @param criticality
      * @param agentId
+     * @param criticality
      * @param title
      * @param executable
      * @param timeout
@@ -171,7 +172,7 @@ public class Job implements IConfigurationObject
      * @param logLevel
      * @param jobClass
      */
-    public Job(String agentId, ExecutableScript executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, String jobClass, Variables defaultArguments, String title, Long documentationId, JobLogLevel logLevel, JobCriticality criticality, String path) {
+    public Job(String agentId, ExecutableScript executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, String jobClass, Variables defaultArguments, String title, String documentationPath, JobLogLevel logLevel, JobCriticality criticality, String path) {
         super();
         this.agentId = agentId;
         this.executable = executable;
@@ -182,7 +183,7 @@ public class Job implements IConfigurationObject
         this.jobClass = jobClass;
         this.defaultArguments = defaultArguments;
         this.title = title;
-        this.documentationId = documentationId;
+        this.documentationPath = documentationPath;
         this.logLevel = logLevel;
         this.criticality = criticality;
         this.path = path;
@@ -325,7 +326,7 @@ public class Job implements IConfigurationObject
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("jobClass")
@@ -336,7 +337,7 @@ public class Job implements IConfigurationObject
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("jobClass")
@@ -389,25 +390,25 @@ public class Job implements IConfigurationObject
     }
 
     /**
-     * non negative long
+     * path
      * <p>
-     * 
+     * absolute path of an object.
      * 
      */
-    @JsonProperty("documentationId")
-    public Long getDocumentationId() {
-        return documentationId;
+    @JsonProperty("documentationPath")
+    public String getDocumentationPath() {
+        return documentationPath;
     }
 
     /**
-     * non negative long
+     * path
      * <p>
-     * 
+     * absolute path of an object.
      * 
      */
-    @JsonProperty("documentationId")
-    public void setDocumentationId(Long documentationId) {
-        this.documentationId = documentationId;
+    @JsonProperty("documentationPath")
+    public void setDocumentationPath(String documentationPath) {
+        this.documentationPath = documentationPath;
     }
 
     /**
@@ -457,7 +458,7 @@ public class Job implements IConfigurationObject
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
@@ -468,7 +469,7 @@ public class Job implements IConfigurationObject
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
@@ -478,12 +479,12 @@ public class Job implements IConfigurationObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentId", agentId).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("taskLimit", taskLimit).append("timeout", timeout).append("graceTimeout", graceTimeout).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("title", title).append("documentationId", documentationId).append("logLevel", logLevel).append("criticality", criticality).append("path", path).toString();
+        return new ToStringBuilder(this).append("agentId", agentId).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("taskLimit", taskLimit).append("timeout", timeout).append("graceTimeout", graceTimeout).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("title", title).append("documentationPath", documentationPath).append("logLevel", logLevel).append("criticality", criticality).append("path", path).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(taskLimit).append(documentationId).append(criticality).append(agentId).append(title).append(executable).append(timeout).append(returnCodeMeaning).append(path).append(graceTimeout).append(defaultArguments).append(logLevel).append(jobClass).toHashCode();
+        return new HashCodeBuilder().append(documentationPath).append(taskLimit).append(agentId).append(criticality).append(title).append(executable).append(timeout).append(returnCodeMeaning).append(path).append(graceTimeout).append(defaultArguments).append(logLevel).append(jobClass).toHashCode();
     }
 
     @Override
@@ -495,7 +496,7 @@ public class Job implements IConfigurationObject
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(taskLimit, rhs.taskLimit).append(documentationId, rhs.documentationId).append(criticality, rhs.criticality).append(agentId, rhs.agentId).append(title, rhs.title).append(executable, rhs.executable).append(timeout, rhs.timeout).append(returnCodeMeaning, rhs.returnCodeMeaning).append(path, rhs.path).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(logLevel, rhs.logLevel).append(jobClass, rhs.jobClass).isEquals();
+        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(taskLimit, rhs.taskLimit).append(agentId, rhs.agentId).append(criticality, rhs.criticality).append(title, rhs.title).append(executable, rhs.executable).append(timeout, rhs.timeout).append(returnCodeMeaning, rhs.returnCodeMeaning).append(path, rhs.path).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(logLevel, rhs.logLevel).append(jobClass, rhs.jobClass).isEquals();
     }
 
 }

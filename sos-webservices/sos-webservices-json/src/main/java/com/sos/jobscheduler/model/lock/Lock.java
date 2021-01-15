@@ -22,12 +22,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
+    "id",
+    "limit",
+    "documentationPath",
+    "title",
     "path",
-    "maxNonExclusive",
-    "capacity",
-    "versionId",
-    "documentationId",
-    "title"
+    "versionId"
 })
 public class Lock implements IConfigurationObject, IDeployObject
 {
@@ -41,14 +41,46 @@ public class Lock implements IConfigurationObject, IDeployObject
     @JsonProperty("TYPE")
     private DeployType tYPE = DeployType.LOCK;
     /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    private String id;
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("limit")
+    private Integer limit;
+    /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
-     * (Required)
+     * absolute path of an object.
+     * 
+     */
+    @JsonProperty("documentationPath")
+    @JsonPropertyDescription("absolute path of an object.")
+    private String documentationPath;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    private String title;
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String path;
     /**
      * string without < and >
@@ -58,38 +90,6 @@ public class Lock implements IConfigurationObject, IDeployObject
      */
     @JsonProperty("versionId")
     private String versionId;
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("maxNonExclusive")
-    private Integer maxNonExclusive;
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("capacity")
-    private Integer capacity;
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("documentationId")
-    private Long documentationId;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("title")
-    private String title;
 
     /**
      * No args constructor for use in serialization
@@ -100,22 +100,22 @@ public class Lock implements IConfigurationObject, IDeployObject
 
     /**
      * 
+     * @param documentationPath
      * @param path
      * @param versionId
-     * @param documentationId
-     * @param maxNonExclusive
+     * @param limit
+     * @param id
      * 
      * @param title
-     * @param capacity
      */
-    public Lock(String path, String versionId, Integer maxNonExclusive, Integer capacity, Long documentationId, String title) {
+    public Lock(String id, Integer limit, String documentationPath, String title, String path, String versionId) {
         super();
+        this.id = id;
+        this.limit = limit;
+        this.documentationPath = documentationPath;
+        this.title = title;
         this.path = path;
         this.versionId = versionId;
-        this.maxNonExclusive = maxNonExclusive;
-        this.capacity = capacity;
-        this.documentationId = documentationId;
-        this.title = title;
     }
 
     /**
@@ -130,10 +130,97 @@ public class Lock implements IConfigurationObject, IDeployObject
     }
 
     /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("limit")
+    public Integer getLimit() {
+        return limit;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("limit")
+    public void setLimit(Integer limit) {
+        this.limit = limit;
+    }
+
+    /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
-     * (Required)
+     * absolute path of an object.
+     * 
+     */
+    @JsonProperty("documentationPath")
+    public String getDocumentationPath() {
+        return documentationPath;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
+    @JsonProperty("documentationPath")
+    public void setDocumentationPath(String documentationPath) {
+        this.documentationPath = documentationPath;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    public String getTitle() {
+        return title;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
@@ -144,8 +231,7 @@ public class Lock implements IConfigurationObject, IDeployObject
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
-     * (Required)
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
@@ -175,102 +261,14 @@ public class Lock implements IConfigurationObject, IDeployObject
         this.versionId = versionId;
     }
 
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("maxNonExclusive")
-    public Integer getMaxNonExclusive() {
-        return maxNonExclusive;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("maxNonExclusive")
-    public void setMaxNonExclusive(Integer maxNonExclusive) {
-        this.maxNonExclusive = maxNonExclusive;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("capacity")
-    public Integer getCapacity() {
-        return capacity;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("capacity")
-    public void setCapacity(Integer capacity) {
-        this.capacity = capacity;
-    }
-
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("documentationId")
-    public Long getDocumentationId() {
-        return documentationId;
-    }
-
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("documentationId")
-    public void setDocumentationId(Long documentationId) {
-        this.documentationId = documentationId;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("title")
-    public String getTitle() {
-        return title;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("title")
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("versionId", versionId).append("maxNonExclusive", maxNonExclusive).append("capacity", capacity).append("documentationId", documentationId).append("title", title).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("id", id).append("limit", limit).append("documentationPath", documentationPath).append("title", title).append("path", path).append("versionId", versionId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(versionId).append(documentationId).append(maxNonExclusive).append(tYPE).append(title).append(capacity).toHashCode();
+        return new HashCodeBuilder().append(documentationPath).append(path).append(versionId).append(limit).append(id).append(tYPE).append(title).toHashCode();
     }
 
     @Override
@@ -282,7 +280,7 @@ public class Lock implements IConfigurationObject, IDeployObject
             return false;
         }
         Lock rhs = ((Lock) other);
-        return new EqualsBuilder().append(path, rhs.path).append(versionId, rhs.versionId).append(documentationId, rhs.documentationId).append(maxNonExclusive, rhs.maxNonExclusive).append(tYPE, rhs.tYPE).append(title, rhs.title).append(capacity, rhs.capacity).isEquals();
+        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(path, rhs.path).append(versionId, rhs.versionId).append(limit, rhs.limit).append(id, rhs.id).append(tYPE, rhs.tYPE).append(title, rhs.title).isEquals();
     }
 
 }

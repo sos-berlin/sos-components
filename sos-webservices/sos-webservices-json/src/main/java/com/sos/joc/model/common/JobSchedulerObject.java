@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -26,7 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class JobSchedulerObject {
 
     /**
-     * JobScheduler object type
+     * configuration types
      * <p>
      * 
      * 
@@ -36,15 +35,15 @@ public class JobSchedulerObject {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String path;
 
     /**
-     * JobScheduler object type
+     * configuration types
      * <p>
      * 
      * 
@@ -55,7 +54,7 @@ public class JobSchedulerObject {
     }
 
     /**
-     * JobScheduler object type
+     * configuration types
      * <p>
      * 
      * 
@@ -68,7 +67,7 @@ public class JobSchedulerObject {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
@@ -79,7 +78,7 @@ public class JobSchedulerObject {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")

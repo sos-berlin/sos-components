@@ -26,7 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "versionId",
     "maxProcesses",
     "priority",
-    "documentationId",
+    "documentationPath",
     "title"
 })
 public class JobClass implements IConfigurationObject, IDeployObject
@@ -43,12 +43,11 @@ public class JobClass implements IConfigurationObject, IDeployObject
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
-     * (Required)
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String path;
     /**
      * string without < and >
@@ -69,13 +68,14 @@ public class JobClass implements IConfigurationObject, IDeployObject
     @JsonProperty("priority")
     private String priority;
     /**
-     * non negative long
+     * path
      * <p>
-     * 
+     * absolute path of an object.
      * 
      */
-    @JsonProperty("documentationId")
-    private Long documentationId;
+    @JsonProperty("documentationPath")
+    @JsonPropertyDescription("absolute path of an object.")
+    private String documentationPath;
     /**
      * string without < and >
      * <p>
@@ -95,20 +95,20 @@ public class JobClass implements IConfigurationObject, IDeployObject
     /**
      * 
      * @param maxProcesses
+     * @param documentationPath
      * @param path
      * @param versionId
-     * @param documentationId
      * 
      * @param priority
      * @param title
      */
-    public JobClass(String path, String versionId, Integer maxProcesses, String priority, Long documentationId, String title) {
+    public JobClass(String path, String versionId, Integer maxProcesses, String priority, String documentationPath, String title) {
         super();
         this.path = path;
         this.versionId = versionId;
         this.maxProcesses = maxProcesses;
         this.priority = priority;
-        this.documentationId = documentationId;
+        this.documentationPath = documentationPath;
         this.title = title;
     }
 
@@ -126,8 +126,7 @@ public class JobClass implements IConfigurationObject, IDeployObject
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
-     * (Required)
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
@@ -138,8 +137,7 @@ public class JobClass implements IConfigurationObject, IDeployObject
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
-     * (Required)
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
@@ -202,25 +200,25 @@ public class JobClass implements IConfigurationObject, IDeployObject
     }
 
     /**
-     * non negative long
+     * path
      * <p>
-     * 
+     * absolute path of an object.
      * 
      */
-    @JsonProperty("documentationId")
-    public Long getDocumentationId() {
-        return documentationId;
+    @JsonProperty("documentationPath")
+    public String getDocumentationPath() {
+        return documentationPath;
     }
 
     /**
-     * non negative long
+     * path
      * <p>
-     * 
+     * absolute path of an object.
      * 
      */
-    @JsonProperty("documentationId")
-    public void setDocumentationId(Long documentationId) {
-        this.documentationId = documentationId;
+    @JsonProperty("documentationPath")
+    public void setDocumentationPath(String documentationPath) {
+        this.documentationPath = documentationPath;
     }
 
     /**
@@ -247,12 +245,12 @@ public class JobClass implements IConfigurationObject, IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("versionId", versionId).append("maxProcesses", maxProcesses).append("priority", priority).append("documentationId", documentationId).append("title", title).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("versionId", versionId).append("maxProcesses", maxProcesses).append("priority", priority).append("documentationPath", documentationPath).append("title", title).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(maxProcesses).append(path).append(versionId).append(documentationId).append(tYPE).append(priority).append(title).toHashCode();
+        return new HashCodeBuilder().append(maxProcesses).append(documentationPath).append(path).append(versionId).append(tYPE).append(priority).append(title).toHashCode();
     }
 
     @Override
@@ -264,7 +262,7 @@ public class JobClass implements IConfigurationObject, IDeployObject
             return false;
         }
         JobClass rhs = ((JobClass) other);
-        return new EqualsBuilder().append(maxProcesses, rhs.maxProcesses).append(path, rhs.path).append(versionId, rhs.versionId).append(documentationId, rhs.documentationId).append(tYPE, rhs.tYPE).append(priority, rhs.priority).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(maxProcesses, rhs.maxProcesses).append(documentationPath, rhs.documentationPath).append(path, rhs.path).append(versionId, rhs.versionId).append(tYPE, rhs.tYPE).append(priority, rhs.priority).append(title, rhs.title).isEquals();
     }
 
 }

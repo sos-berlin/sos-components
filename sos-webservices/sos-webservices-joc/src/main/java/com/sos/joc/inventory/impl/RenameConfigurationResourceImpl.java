@@ -55,8 +55,10 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+            session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-
+            
+            session.beginTransaction();
             DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, in, folderPermissions);
             
             final java.nio.file.Path p = Paths.get(config.getFolder()).resolve(in.getNewPath()).normalize();
@@ -139,9 +141,12 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 session.update(config);
                 JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId());
             }
+            
+            session.commit();
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {
+            Globals.rollback(session);
             throw e;
         } finally {
             Globals.disconnect(session);

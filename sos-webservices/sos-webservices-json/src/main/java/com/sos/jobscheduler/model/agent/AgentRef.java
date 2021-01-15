@@ -17,7 +17,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "name",
+    "id",
     "uri",
     "maxProcesses",
     "title"
@@ -31,8 +31,8 @@ public class AgentRef {
      * (Required)
      * 
      */
-    @JsonProperty("name")
-    private String name;
+    @JsonProperty("id")
+    private String id;
     /**
      * string without < and >
      * <p>
@@ -63,13 +63,13 @@ public class AgentRef {
     /**
      * 
      * @param maxProcesses
-     * @param name
+     * @param id
      * @param title
      * @param uri
      */
-    public AgentRef(String name, String uri, Integer maxProcesses, String title) {
+    public AgentRef(String id, String uri, Integer maxProcesses, String title) {
         super();
-        this.name = name;
+        this.id = id;
         this.uri = uri;
         this.maxProcesses = maxProcesses;
         this.title = title;
@@ -82,9 +82,9 @@ public class AgentRef {
      * (Required)
      * 
      */
-    @JsonProperty("name")
-    public String getName() {
-        return name;
+    @JsonProperty("id")
+    public String getId() {
+        return id;
     }
 
     /**
@@ -94,9 +94,9 @@ public class AgentRef {
      * (Required)
      * 
      */
-    @JsonProperty("name")
-    public void setName(String name) {
-        this.name = name;
+    @JsonProperty("id")
+    public void setId(String id) {
+        this.id = id;
     }
 
     /**
@@ -157,12 +157,12 @@ public class AgentRef {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("name", name).append("uri", uri).append("maxProcesses", maxProcesses).append("title", title).toString();
+        return new ToStringBuilder(this).append("id", id).append("uri", uri).append("maxProcesses", maxProcesses).append("title", title).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(maxProcesses).append(title).append(uri).toHashCode();
+        return new HashCodeBuilder().append(maxProcesses).append(id).append(title).append(uri).toHashCode();
     }
 
     @Override
@@ -174,7 +174,7 @@ public class AgentRef {
             return false;
         }
         AgentRef rhs = ((AgentRef) other);
-        return new EqualsBuilder().append(name, rhs.name).append(maxProcesses, rhs.maxProcesses).append(title, rhs.title).append(uri, rhs.uri).isEquals();
+        return new EqualsBuilder().append(maxProcesses, rhs.maxProcesses).append(id, rhs.id).append(title, rhs.title).append(uri, rhs.uri).isEquals();
     }
 
 }
