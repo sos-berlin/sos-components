@@ -428,7 +428,8 @@ public class DBLayerDailyPlannedOrders {
         String id = "0000000000" + String.valueOf(dbItemDailyPlanOrders.getId());
         id = id.substring(id.length() - 10);
         String orderId = DailyPlanHelper.buildOrderId(dbItemDailyPlanOrders);
-        dbItemDailyPlanOrders.setOrderId(orderId.replaceAll("<id.*>", id));        sosHibernateSession.update(dbItemDailyPlanOrders);
+        dbItemDailyPlanOrders.setOrderId(orderId.replaceAll("<id.*>", id));        
+        sosHibernateSession.update(dbItemDailyPlanOrders);
 
         return dbItemDailyPlanOrders;
 
