@@ -223,7 +223,7 @@ public class PerformanceTest {
     }
 
     private void deployAgentRef(AgentRef agentRef, Path deployPath) throws IOException, InterruptedException {
-        Path p = deployPath.resolve(agentRef.getName().substring(1) + ".agentref.json");
+        Path p = deployPath.resolve(agentRef.getId().substring(1) + ".agentref.json");
         if (!Files.exists(p.getParent())) {
             Files.createDirectories(p.getParent());
         }

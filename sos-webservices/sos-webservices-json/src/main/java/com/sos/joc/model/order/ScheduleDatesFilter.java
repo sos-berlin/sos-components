@@ -1,7 +1,6 @@
 
 package com.sos.joc.model.order;
 
-import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -15,7 +14,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Order Template States Filter
+ * Order Template Dates Filter
  * <p>
  * 
  * 
@@ -37,7 +36,7 @@ public class ScheduleDatesFilter {
      * 
      */
     @JsonProperty("calendars")
-    private List<AssignedCalendars> calendars = new ArrayList<AssignedCalendars>();
+    private List<AssignedCalendars> calendars = null;
     /**
      * Assigned Non Working Calendars List
      * <p>
@@ -45,7 +44,7 @@ public class ScheduleDatesFilter {
      * 
      */
     @JsonProperty("nonWorkingCalendars")
-    private List<AssignedNonWorkingCalendars> nonWorkingCalendars = new ArrayList<AssignedNonWorkingCalendars>();
+    private List<AssignedNonWorkingCalendars> nonWorkingCalendars = null;
     /**
      * date
      * <p>

@@ -1,7 +1,22 @@
 package com.sos.joc.inventory.impl;
 
+import java.io.IOException;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 import javax.ws.rs.Path;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -23,6 +38,10 @@ import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteDraftResource {
+    
+    private List<RequestFilter> updated = new ArrayList<>();
+    private List<RequestFilter> deleted = new ArrayList<>();
+    private SortedSet<String> folderToDelete = new TreeSet<>(Comparator.reverseOrder());
 
     @Override
     public JOCDefaultResponse delete(final String accessToken, final byte[] inBytes) {
@@ -54,52 +73,54 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
 
             DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, in, folderPermissions);
             ConfigurationType type = config.getTypeAsEnum();
-
-            if (config.getDeployed() || config.getReleased() || ConfigurationType.FOLDER.equals(type)) {
-                throw new DBMissingDataException(String.format("[%s] can't be deleted - no draft exists", config.getPath()));
-            }
-
-            ResponseItem r = new ResponseItem();
-            r.setDeleteFromTree(true);
-
+            
+            ResponseItem entity = new ResponseItem();
+            
             session.beginTransaction();
-            if (JocInventory.isDeployable(type)) {
-                InventoryDeploymentItem lastDeployment = dbLayer.getLastDeployedContent(config.getId());
-                if (lastDeployment == null) {
-                    // never deployed before or deleted or without content
-                    JocInventory.deleteConfiguration(dbLayer, config);
-                } else {
-                    // deployed
-                    r.setDeleteFromTree(false);
-                    config.setValid(true);
-                    config.setReleased(false);
-                    config.setDeployed(true);
-                    config.setContent(lastDeployment.getContent());
-                    config.setModified(lastDeployment.getDeploymentDate());
-                    JocInventory.updateConfiguration(dbLayer, config);
+            
+            if (ConfigurationType.FOLDER.equals(type)) {
+                List<DBItemInventoryConfiguration> dbFolderContent = dbLayer.getFolderContent(config.getPath(), true, null);
+                for (DBItemInventoryConfiguration item : dbFolderContent) {
+                    if (!item.getDeployed() && !item.getReleased() && !ConfigurationType.FOLDER.intValue().equals(item.getType())) {
+                        deleteUpdateDraft(item.getTypeAsEnum(), dbLayer, item);
+                    }
                 }
-            } else if (JocInventory.isReleasable(type)) {
-                DBItemInventoryReleasedConfiguration releasedItem = dbLayer.getReleasedItemByConfigurationId(config.getId());
-                if (releasedItem == null || releasedItem.getContent() == null) {
-                    // never released before or without content
-                    dbLayer.getSession().delete(config);
-                } else {
-                    // released
-                    r.setDeleteFromTree(false);
-                    config.setValid(true);
-                    config.setReleased(true);
-                    config.setDeployed(false);
-                    config.setContent(releasedItem.getContent());
-                    config.setModified(releasedItem.getModified());
-                    dbLayer.getSession().update(config);
+                // delete empty folders
+                if (!folderToDelete.isEmpty()) {
+                    Map<String, DBItemInventoryConfiguration> folderMap = dbFolderContent.stream().filter(item -> ConfigurationType.FOLDER.intValue()
+                            .equals(item.getType())).collect(Collectors.toMap(DBItemInventoryConfiguration::getPath, Function.identity()));
+                    for (String folder : folderToDelete) {
+                        List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(folder, true, null);
+                        if (folderContent == null || folderContent.isEmpty()) {
+                            DBItemInventoryConfiguration f = folderMap.get(folder);
+                            RequestFilter r = new RequestFilter();
+                            r.setId(f.getId());
+                            r.setObjectType(ConfigurationType.FOLDER);
+                            r.setPath(f.getPath());
+                            session.delete(f);
+                            deleted.add(r);
+                        } else {
+                            //break;
+                        }
+                    }
                 }
+            } else {
+                if (config.getDeployed() || config.getReleased()) {
+                    throw new DBMissingDataException(String.format("[%s] can't be deleted - no draft exists", config.getPath()));
+                }
+                deleteUpdateDraft(type, dbLayer, config);
             }
+            
             session.commit();
 
-            // TODO consider other Inventory tables
+            entity.setDeleted(deleted);
+            entity.setUpdated(updated);
+            entity.setDeliveryDate(Date.from(Instant.now()));
+            
+            // TODO consider other Inventory tables?
             storeAuditLog(type, config.getPath(), config.getFolder());
 
-            return JOCDefaultResponse.responseStatus200(r);
+            return JOCDefaultResponse.responseStatus200(entity);
         } catch (SOSHibernateException e) {
             Globals.rollback(session);
             throw e;
@@ -112,6 +133,49 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
         InventoryAudit audit = new InventoryAudit(objectType, path, folder);
         logAuditMessage(audit);
         storeAuditLogEntry(audit);
+    }
+    
+    private void deleteUpdateDraft(ConfigurationType type, InventoryDBLayer dbLayer, DBItemInventoryConfiguration item) throws SOSHibernateException,
+            JsonParseException, JsonMappingException, JsonProcessingException, IOException {
+        RequestFilter r = new RequestFilter();
+        r.setId(item.getId());
+        r.setObjectType(item.getTypeAsEnum());
+        r.setPath(item.getPath());
+        if (JocInventory.isDeployable(type)) {
+            InventoryDeploymentItem lastDeployment = dbLayer.getLastDeployedContent(item.getId());
+            if (lastDeployment == null) {
+                // never deployed before or deleted or without content
+                JocInventory.deleteConfiguration(dbLayer, item);
+                deleted.add(r);
+                folderToDelete.add(item.getFolder());
+            } else {
+                // deployed
+                item.setValid(true);
+                item.setReleased(false);
+                item.setDeployed(true);
+                item.setContent(lastDeployment.getContent());
+                item.setModified(lastDeployment.getDeploymentDate());
+                JocInventory.updateConfiguration(dbLayer, item);
+                updated.add(r);
+            }
+        } else if (JocInventory.isReleasable(type)) {
+            DBItemInventoryReleasedConfiguration releasedItem = dbLayer.getReleasedItemByConfigurationId(item.getId());
+            if (releasedItem == null || releasedItem.getContent() == null) {
+                // never released before or without content
+                JocInventory.deleteConfiguration(dbLayer, item);
+                deleted.add(r);
+                folderToDelete.add(item.getFolder());
+            } else {
+                // released
+                item.setValid(true);
+                item.setReleased(true);
+                item.setDeployed(false);
+                item.setContent(releasedItem.getContent());
+                item.setModified(releasedItem.getModified());
+                JocInventory.updateConfiguration(dbLayer, item);
+                updated.add(r);
+            }
+        }
     }
 
 }

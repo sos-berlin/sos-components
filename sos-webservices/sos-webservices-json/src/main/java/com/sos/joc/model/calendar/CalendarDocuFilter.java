@@ -28,22 +28,22 @@ public class CalendarDocuFilter {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
     @JsonProperty("calendar")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String calendar;
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
     @JsonProperty("documentation")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String documentation;
     /**
      * auditParams
@@ -57,7 +57,7 @@ public class CalendarDocuFilter {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
@@ -69,7 +69,7 @@ public class CalendarDocuFilter {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
@@ -81,7 +81,7 @@ public class CalendarDocuFilter {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
@@ -93,7 +93,7 @@ public class CalendarDocuFilter {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */

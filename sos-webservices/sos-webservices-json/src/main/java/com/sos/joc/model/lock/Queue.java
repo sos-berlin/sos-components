@@ -27,12 +27,12 @@ public class Queue {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
     @JsonProperty("job")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String job;
 
     /**
@@ -58,7 +58,7 @@ public class Queue {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */
@@ -70,7 +70,7 @@ public class Queue {
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
+     * absolute path of an object.
      * (Required)
      * 
      */

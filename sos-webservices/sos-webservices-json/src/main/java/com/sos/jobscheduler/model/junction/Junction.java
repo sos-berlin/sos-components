@@ -26,7 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "lifetime",
     "orderId",
     "versionId",
-    "documentationId",
+    "documentationPath",
     "title"
 })
 public class Junction implements IConfigurationObject, IDeployObject
@@ -43,12 +43,11 @@ public class Junction implements IConfigurationObject, IDeployObject
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
-     * (Required)
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path of a JobScheduler object.")
+    @JsonPropertyDescription("absolute path of an object.")
     private String path;
     /**
      * string without < and >
@@ -75,13 +74,14 @@ public class Junction implements IConfigurationObject, IDeployObject
     @JsonProperty("orderId")
     private String orderId;
     /**
-     * non negative long
+     * path
      * <p>
-     * 
+     * absolute path of an object.
      * 
      */
-    @JsonProperty("documentationId")
-    private Long documentationId;
+    @JsonProperty("documentationPath")
+    @JsonPropertyDescription("absolute path of an object.")
+    private String documentationPath;
     /**
      * string without < and >
      * <p>
@@ -100,21 +100,21 @@ public class Junction implements IConfigurationObject, IDeployObject
 
     /**
      * 
+     * @param documentationPath
      * @param path
      * @param versionId
      * @param orderId
-     * @param documentationId
      * @param lifetime
      * 
      * @param title
      */
-    public Junction(String path, String versionId, Integer lifetime, String orderId, Long documentationId, String title) {
+    public Junction(String path, String versionId, Integer lifetime, String orderId, String documentationPath, String title) {
         super();
         this.path = path;
         this.versionId = versionId;
         this.lifetime = lifetime;
         this.orderId = orderId;
-        this.documentationId = documentationId;
+        this.documentationPath = documentationPath;
         this.title = title;
     }
 
@@ -132,8 +132,7 @@ public class Junction implements IConfigurationObject, IDeployObject
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
-     * (Required)
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
@@ -144,8 +143,7 @@ public class Junction implements IConfigurationObject, IDeployObject
     /**
      * path
      * <p>
-     * absolute path of a JobScheduler object.
-     * (Required)
+     * absolute path of an object.
      * 
      */
     @JsonProperty("path")
@@ -220,25 +218,25 @@ public class Junction implements IConfigurationObject, IDeployObject
     }
 
     /**
-     * non negative long
+     * path
      * <p>
-     * 
+     * absolute path of an object.
      * 
      */
-    @JsonProperty("documentationId")
-    public Long getDocumentationId() {
-        return documentationId;
+    @JsonProperty("documentationPath")
+    public String getDocumentationPath() {
+        return documentationPath;
     }
 
     /**
-     * non negative long
+     * path
      * <p>
-     * 
+     * absolute path of an object.
      * 
      */
-    @JsonProperty("documentationId")
-    public void setDocumentationId(Long documentationId) {
-        this.documentationId = documentationId;
+    @JsonProperty("documentationPath")
+    public void setDocumentationPath(String documentationPath) {
+        this.documentationPath = documentationPath;
     }
 
     /**
@@ -265,12 +263,12 @@ public class Junction implements IConfigurationObject, IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("versionId", versionId).append("lifetime", lifetime).append("orderId", orderId).append("documentationId", documentationId).append("title", title).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("versionId", versionId).append("lifetime", lifetime).append("orderId", orderId).append("documentationPath", documentationPath).append("title", title).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(versionId).append(orderId).append(documentationId).append(lifetime).append(tYPE).append(title).toHashCode();
+        return new HashCodeBuilder().append(documentationPath).append(path).append(versionId).append(orderId).append(lifetime).append(tYPE).append(title).toHashCode();
     }
 
     @Override
@@ -282,7 +280,7 @@ public class Junction implements IConfigurationObject, IDeployObject
             return false;
         }
         Junction rhs = ((Junction) other);
-        return new EqualsBuilder().append(path, rhs.path).append(versionId, rhs.versionId).append(orderId, rhs.orderId).append(documentationId, rhs.documentationId).append(lifetime, rhs.lifetime).append(tYPE, rhs.tYPE).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(path, rhs.path).append(versionId, rhs.versionId).append(orderId, rhs.orderId).append(lifetime, rhs.lifetime).append(tYPE, rhs.tYPE).append(title, rhs.title).isEquals();
     }
 
 }

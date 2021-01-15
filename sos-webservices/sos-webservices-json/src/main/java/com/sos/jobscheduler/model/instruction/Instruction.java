@@ -41,7 +41,8 @@ import com.sos.jobscheduler.model.common.ClassHelper;
 		@JsonSubTypes.Type(value = TryCatch.class, name = "Try"),
 		@JsonSubTypes.Type(value = RetryInCatch.class, name = "Retry"),
 		@JsonSubTypes.Type(value = Finish.class, name = "Finish"),
-		@JsonSubTypes.Type(value = Fail.class, name = "Fail")})
+		@JsonSubTypes.Type(value = Fail.class, name = "Fail"),
+		@JsonSubTypes.Type(value = Lock.class, name = "Lock")})
 public abstract class Instruction
     extends ClassHelper
 {

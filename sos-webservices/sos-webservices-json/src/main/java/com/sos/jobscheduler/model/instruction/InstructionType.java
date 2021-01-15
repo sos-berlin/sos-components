@@ -16,7 +16,8 @@ public enum InstructionType {
     FAIL("Fail"),
     RETRY("Retry"),
     PUBLISH("Publish"),
-    AWAIT("Await");
+    AWAIT("Await"),
+    LOCK("Lock");
     private final String value;
     private final static Map<String, InstructionType> CONSTANTS = new HashMap<String, InstructionType>();
 

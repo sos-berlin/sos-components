@@ -132,7 +132,7 @@ public class JsonValidator {
      * @throws SOSJsonSchemaException */
     public static void validate(byte[] json, String schemaPath) throws IOException, SOSJsonSchemaException {
         if (schemaPath != null) {
-            validate(json, URI.create("classpath:/raml/joc/schemas/" + schemaPath), false, false);
+            validate(json, URI.create("classpath:/raml/api/schemas/" + schemaPath), false, false);
         }
     }
     
@@ -166,7 +166,7 @@ public class JsonValidator {
      * @throws SOSJsonSchemaException */
     public static void validateFailFast(byte[] json, String schemaPath) throws IOException, SOSJsonSchemaException {
         if (schemaPath != null) {
-            validate(json, URI.create("classpath:/raml/joc/schemas/" + schemaPath), true, false);
+            validate(json, URI.create("classpath:/raml/api/schemas/" + schemaPath), true, false);
         }
     }
 
@@ -194,7 +194,7 @@ public class JsonValidator {
     
     public static void validateStrict(byte[] json, String schemaPath) throws IOException, SOSJsonSchemaException {
         if (schemaPath != null) {
-            validate(json, URI.create("classpath:/raml/joc/schemas/" + schemaPath), false, true);
+            validate(json, URI.create("classpath:/raml/api/schemas/" + schemaPath), false, true);
         }
     }
     
@@ -267,7 +267,7 @@ public class JsonValidator {
      *
      **/
     public static boolean isValid(byte[] json, String schemaPath) {
-        return isValid(json, URI.create("classpath:/raml/joc/schemas/" + schemaPath));
+        return isValid(json, URI.create("classpath:/raml/api/schemas/" + schemaPath));
     }
     
     /** Checks if object is valid without raising any exceptions.

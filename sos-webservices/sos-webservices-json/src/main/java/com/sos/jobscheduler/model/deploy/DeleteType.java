@@ -10,7 +10,7 @@ public enum DeleteType {
 
     WORKFLOW("WorkflowPath", 1),
     JOBCLASS("JobClassPath", 2),
-    LOCK("LockPath", 4),
+    LOCK("LockId", 4),
     JUNCTION("JunctionPath", 5);
     private final String value;
     private final Integer intValue;

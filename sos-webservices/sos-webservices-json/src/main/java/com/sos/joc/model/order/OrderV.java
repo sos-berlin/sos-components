@@ -394,7 +394,7 @@ public class OrderV {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orderId", orderId).append("arguments", arguments).append("workflowId", workflowId).append("state", state).append("attachedState", attachedState).append("agent", agentId).append("position", position).append("scheduledFor", scheduledFor).append("lastOutcome", lastOutcome).append("historicOutcome", historicOutcome).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orderId", orderId).append("arguments", arguments).append("workflowId", workflowId).append("state", state).append("attachedState", attachedState).append("agentId", agentId).append("position", position).append("scheduledFor", scheduledFor).append("lastOutcome", lastOutcome).append("historicOutcome", historicOutcome).toString();
     }
 
     @Override
