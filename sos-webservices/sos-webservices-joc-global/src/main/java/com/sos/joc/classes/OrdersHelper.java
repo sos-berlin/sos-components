@@ -37,6 +37,7 @@ public class OrdersHelper {
                     put(Order.DelayedAfterError.class, OrderStateText.WAITING);
                     put(Order.Forked.class, OrderStateText.WAITING);
                     put(Order.Offering.class, OrderStateText.WAITING);
+                    put(Order.WaitingForLock$.class, OrderStateText.WAITING);
                     put(Order.Broken.class, OrderStateText.FAILED);
                     put(Order.Failed$.class, OrderStateText.FAILED);
                     put(Order.FailedInFork$.class, OrderStateText.FAILED);
@@ -61,6 +62,7 @@ public class OrdersHelper {
             put("DelayedAfterError", OrderStateText.WAITING);
             put("Forked", OrderStateText.WAITING);
             put("Offering", OrderStateText.WAITING);
+            put("WaitingForLock", OrderStateText.WAITING);
             put("Broken", OrderStateText.FAILED);
             put("Failed", OrderStateText.FAILED);
             put("FailedInFork", OrderStateText.FAILED);

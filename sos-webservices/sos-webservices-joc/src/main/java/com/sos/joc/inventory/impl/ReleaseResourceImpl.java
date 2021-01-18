@@ -46,7 +46,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
 
             if (response == null) {
-                response = release(in);
+                response = release(in, true);
             }
             return response;
         } catch (JocException e) {
@@ -57,7 +57,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         }
     }
 
-    private JOCDefaultResponse release(ReleaseFilter in) throws Exception {
+    private JOCDefaultResponse release(ReleaseFilter in, boolean withDeletionOfEmptyFolders) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -72,7 +72,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                         DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, folderPermissions);
                         createAuditLog(conf, conf.getTypeAsEnum());
                         if (ConfigurationType.FOLDER.intValue() == conf.getType()) {
-                            deleteReleasedFolder(conf, dbLayer);
+                            deleteReleasedFolder(conf, dbLayer, withDeletionOfEmptyFolders);
                         } else if (!JocInventory.isReleasable(conf.getTypeAsEnum())) {
                             throw new JobSchedulerInvalidResponseDataException(String.format("%s is not a 'Scheduling Object': %s", conf.getPath(),
                                     conf.getTypeAsEnum()));
@@ -173,13 +173,10 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         return release;
     }
 
-    private static void deleteReleasedFolder(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer) throws SOSHibernateException {
+    private static void deleteReleasedFolder(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer, boolean withDeletionOfEmptyFolders) throws SOSHibernateException {
         List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(conf.getPath(), true, JocInventory.getReleasableTypes());
         
         if (folderContent != null && !folderContent.isEmpty()) {
-            // remember folders for later deletion of empty folders
-            //Set<String> folders = folderContent.stream().map(DBItemInventoryConfiguration::getFolder).collect(Collectors.toSet());
-            
             // delete in INV_RELEASED_CONFIGURATION
             Globals.beginTransaction(dbLayer.getSession());
             try {
@@ -193,9 +190,9 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 // delete releasable objects in INV_CONFIGURATION
                 dbLayer.getSession().delete(item);
             }
-            
-            // TODO delete empty folders (read same folder with deployable types
-            //folderContent = dbLayer.getFolderContent(conf.getPath(), true, JocInventory.getDeployableTypesWithFolder(null));
+        }
+        if (withDeletionOfEmptyFolders) {
+            JocInventory.deleteEmptyFolders(dbLayer, conf);
         }
         
     }

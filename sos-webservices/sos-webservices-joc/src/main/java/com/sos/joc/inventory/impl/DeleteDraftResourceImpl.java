@@ -3,13 +3,8 @@ package com.sos.joc.inventory.impl;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -41,7 +36,6 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
     
     private List<RequestFilter> updated = new ArrayList<>();
     private List<RequestFilter> deleted = new ArrayList<>();
-    private SortedSet<String> folderToDelete = new TreeSet<>(Comparator.reverseOrder());
 
     @Override
     public JOCDefaultResponse delete(final String accessToken, final byte[] inBytes) {
@@ -52,7 +46,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
             JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
             if (response == null) {
-                response = delete(in);
+                response = delete(in, true);
             }
             return response;
         } catch (JocException e) {
@@ -63,7 +57,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
         }
     }
 
-    private JOCDefaultResponse delete(RequestFilter in) throws Exception {
+    private JOCDefaultResponse delete(RequestFilter in, boolean withDeletionOfEmptyFolders) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
@@ -76,7 +70,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             
             ResponseItem entity = new ResponseItem();
             
-            session.beginTransaction();
+            Globals.beginTransaction(session);
             
             if (ConfigurationType.FOLDER.equals(type)) {
                 List<DBItemInventoryConfiguration> dbFolderContent = dbLayer.getFolderContent(config.getPath(), true, null);
@@ -85,33 +79,24 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                         deleteUpdateDraft(item.getTypeAsEnum(), dbLayer, item);
                     }
                 }
-                // delete empty folders
-                if (!folderToDelete.isEmpty()) {
-                    Map<String, DBItemInventoryConfiguration> folderMap = dbFolderContent.stream().filter(item -> ConfigurationType.FOLDER.intValue()
-                            .equals(item.getType())).collect(Collectors.toMap(DBItemInventoryConfiguration::getPath, Function.identity()));
-                    for (String folder : folderToDelete) {
-                        List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(folder, true, null);
-                        if (folderContent == null || folderContent.isEmpty()) {
-                            DBItemInventoryConfiguration f = folderMap.get(folder);
-                            RequestFilter r = new RequestFilter();
-                            r.setId(f.getId());
-                            r.setObjectType(ConfigurationType.FOLDER);
-                            r.setPath(f.getPath());
-                            session.delete(f);
-                            deleted.add(r);
-                        } else {
-                            //break;
-                        }
-                    }
+                if (withDeletionOfEmptyFolders) {
+                    deleted.addAll(JocInventory.deleteEmptyFolders(dbLayer, config).stream().map(i -> {
+                        RequestFilter r = new RequestFilter();
+                        r.setId(i.getId());
+                        r.setPath(i.getPath());
+                        r.setObjectType(ConfigurationType.FOLDER);
+                        return r;
+                    }).collect(Collectors.toSet()));
                 }
+                
             } else {
                 if (config.getDeployed() || config.getReleased()) {
-                    throw new DBMissingDataException(String.format("[%s] can't be deleted - no draft exists", config.getPath()));
+                    throw new DBMissingDataException(String.format("Draft of [%s] doesn't exist", config.getPath()));
                 }
                 deleteUpdateDraft(type, dbLayer, config);
             }
             
-            session.commit();
+            Globals.commit(session);
 
             entity.setDeleted(deleted);
             entity.setUpdated(updated);
@@ -147,7 +132,6 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                 // never deployed before or deleted or without content
                 JocInventory.deleteConfiguration(dbLayer, item);
                 deleted.add(r);
-                folderToDelete.add(item.getFolder());
             } else {
                 // deployed
                 item.setValid(true);
@@ -164,7 +148,6 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                 // never released before or without content
                 JocInventory.deleteConfiguration(dbLayer, item);
                 deleted.add(r);
-                folderToDelete.add(item.getFolder());
             } else {
                 // released
                 item.setValid(true);

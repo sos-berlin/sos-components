@@ -11,6 +11,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jobscheduler.model.instruction.ForkJoin;
 import com.sos.jobscheduler.model.instruction.IfElse;
 import com.sos.jobscheduler.model.instruction.Instruction;
+import com.sos.jobscheduler.model.instruction.Lock;
 import com.sos.jobscheduler.model.instruction.TryCatch;
 import com.sos.jobscheduler.model.workflow.Branch;
 import com.sos.joc.Globals;
@@ -136,6 +137,10 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                     if (tc.getCatch() != null) {
                         setWorkflowPositions(extendArray(pos, "catch+0"), tc.getCatch().getInstructions());
                     }
+                    break;
+                case LOCK:
+                    Lock l = inst.cast();
+                    setWorkflowPositions(extendArray(pos, "lock"), l.getLockedWorkflow().getInstructions());
                     break;
                 default:
                     break;

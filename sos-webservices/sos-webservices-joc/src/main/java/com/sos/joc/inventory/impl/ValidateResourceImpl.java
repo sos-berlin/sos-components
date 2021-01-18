@@ -19,6 +19,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.model.instruction.ForkJoin;
 import com.sos.jobscheduler.model.instruction.IfElse;
 import com.sos.jobscheduler.model.instruction.Instruction;
+import com.sos.jobscheduler.model.instruction.Lock;
 import com.sos.jobscheduler.model.instruction.NamedJob;
 import com.sos.jobscheduler.model.instruction.TryCatch;
 import com.sos.jobscheduler.model.workflow.Branch;
@@ -187,6 +188,10 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
                     TryCatch tryCatch = inst.cast();
                     validateInstructions(tryCatch.getTry().getInstructions(), instPosition + "try.instructions", labels);
                     validateInstructions(tryCatch.getCatch().getInstructions(), instPosition + "catch.instructions", labels);
+                    break;
+                case LOCK:
+                    Lock lock = inst.cast();
+                    validateInstructions(lock.getLockedWorkflow().getInstructions(), instPosition + "lockedWorkflow.instructions", labels);
                     break;
                 }
                 index++;
