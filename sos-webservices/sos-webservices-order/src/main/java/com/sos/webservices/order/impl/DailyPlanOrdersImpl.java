@@ -141,17 +141,7 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
 
                     boolean add = true;
                     PlannedOrderItem p = createPlanItem(dbItemDailyPlanWithHistory);
-                    if (OrderStateText.CANCELLED.equals(p.getState().get_text())) {
-                        FilterDailyPlannedOrders filterDailyPlannedOrders = new FilterDailyPlannedOrders();
-                        filterDailyPlannedOrders.setPlannedOrderId(dbItemDailyPlanWithHistory.getPlannedOrderId());
-                        dbLayerDailyPlannedOrders.delete(filterDailyPlannedOrders);
-                        
-                        DBItemDailyPlanOrders dbItemDailyPlanOrders = dbLayerDailyPlannedOrders.insertFrom(dbItemDailyPlanWithHistory);
-                        dbLayerOrderVariables.update(dbItemDailyPlanWithHistory.getPlannedOrderId(), dbItemDailyPlanOrders.getId());                  
-                        
-                        p.setOrderId(dbItemDailyPlanOrders.getOrderId());
-                        p.setSubmitted(false);
-                     }
+ 
                     if (add) {
                         result.add(p);
                     }

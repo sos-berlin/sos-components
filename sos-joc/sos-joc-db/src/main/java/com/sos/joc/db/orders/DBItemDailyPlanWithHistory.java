@@ -50,7 +50,9 @@ public class DBItemDailyPlanWithHistory {
     }
 
     public OrderStateText getStateText() {
-        if (orderHistoryId == null || !submitted) {
+        if (submitted) {
+            return OrderStateText.fromValue("PENDING");
+        } else if (orderHistoryId == null) {
             return OrderStateText.fromValue("PLANNED");
         } else {
             return OrderStateText.fromValue(this.getState());
@@ -201,42 +203,34 @@ public class DBItemDailyPlanWithHistory {
         this.plannedOrderCreated = plannedOrderCreated;
     }
 
-    
     public Long getOrderHistoryId() {
         return orderHistoryId;
     }
 
-    
     public void setOrderHistoryId(Long orderHistoryId) {
         this.orderHistoryId = orderHistoryId;
     }
 
-    
     public Date getStartTime() {
         return startTime;
     }
 
-    
     public void setStartTime(Date startTime) {
         this.startTime = startTime;
     }
 
-    
     public Integer getState() {
         return state;
     }
 
-    
     public void setState(Integer state) {
         this.state = state;
     }
 
-    
     public Date getEndTime() {
         return endTime;
     }
 
-    
     public void setEndTime(Date endTime) {
         this.endTime = endTime;
     }

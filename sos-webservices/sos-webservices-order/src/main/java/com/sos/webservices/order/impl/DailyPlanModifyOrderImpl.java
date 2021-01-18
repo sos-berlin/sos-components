@@ -196,10 +196,12 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
                     dbLayerOrderVariables.update(dbItemDailyPlanWithHistory.getPlannedOrderId(), dbItemDailyPlanOrders.getId());
                     listOfPlannedOrders.clear();
                     listOfPlannedOrders.add(dbItemDailyPlanOrders);
+                    Globals.commit(sosHibernateSession);
+                    submitOrdersToController(listOfPlannedOrders);
+                }else {
+                    Globals.commit(sosHibernateSession);
                 }
-                Globals.commit(sosHibernateSession);
 
-                submitOrdersToController(listOfPlannedOrders);
             } else {
                 LOGGER.warn("Expected one record for order-id " + filter.getOrderId());
                 throw new DBMissingDataException("Expected one record for order-id " + filter.getOrderId());

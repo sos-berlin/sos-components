@@ -14,6 +14,8 @@ import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
+import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.jobscheduler.model.order.OrderModeType;
 import com.sos.jobscheduler.model.workflow.WorkflowId;
 import com.sos.joc.Globals;
@@ -26,6 +28,9 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.ModifyOrders;
 import com.sos.joc.orders.resource.IOrdersResourceModify;
+import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
+import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
+import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
@@ -160,7 +165,25 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 //        }
     }
     
-    private static CompletableFuture<Either<Problem, Void>> callCommand(Action action, ModifyOrders modifyOrders, Set<OrderId> oIds) {
+    private static void updateDailyPlan(ModifyOrders modifyOrders) throws SOSHibernateException {
+        SOSHibernateSession sosHibernateSession = null;
+
+        try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            sosHibernateSession.setAutoCommit(false);
+            DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
+            Globals.beginTransaction(sosHibernateSession);
+            FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+            filter.setListOfOrders(modifyOrders.getOrderIds());
+            filter.setSubmitted(false);
+            dbLayerDailyPlannedOrders.setSubmitted(filter);
+            Globals.commit(sosHibernateSession);
+        }finally {
+            Globals.disconnect(sosHibernateSession);
+        }
+    }
+    
+    private static CompletableFuture<Either<Problem, Void>> callCommand(Action action, ModifyOrders modifyOrders, Set<OrderId> oIds) throws SOSHibernateException {
         Optional<JPosition> position = Optional.empty();
         if (modifyOrders.getPosition() != null) {
             JPosition.fromList(modifyOrders.getPosition());
@@ -168,6 +191,10 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         
         switch (action) {
         case CANCEL:
+            
+            // TODO This update must be removed when dailyplan service receives events for order state changes
+            updateDailyPlan(modifyOrders);
+            
             // TODO a fresh order should cancelled by a dailyplan method!
             JCancelMode cancelMode = null;
             if (OrderModeType.FRESH_ONLY.equals(modifyOrders.getOrderType())) {
