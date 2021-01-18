@@ -6,6 +6,8 @@ import java.util.Date;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.jobscheduler.model.lock.Lock;
+import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -18,13 +20,11 @@ import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IStoreConfigurationResource;
-import com.sos.joc.model.common.ICalendarObject;
+import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.CalendarType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
-import com.sos.jobscheduler.model.lock.Lock;
-import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.initiator.model.Schedule;
 
@@ -133,19 +133,22 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 case WORKFLOW:
                     ((Workflow) in.getConfiguration()).setPath(item.getPath());
                     break;
-                case LOCK:
-                    Lock lock = (Lock) in.getConfiguration();
-                    lock.setId(item.getName());// TODO unique
-                    if (lock.getLimit() == null) {
-                        lock.setLimit(1);
-                    }
-                    break;
                 case SCHEDULE:
                     ((Schedule) in.getConfiguration()).setPath(item.getPath());
                     break;
                 case WORKINGDAYSCALENDAR:
                 case NONWORKINGDAYSCALENDAR:
-                    ((ICalendarObject) in.getConfiguration()).setType(CalendarType.fromValue(in.getObjectType().value()));
+                    Calendar calendar = (Calendar) in.getConfiguration();
+                    calendar.setPath(item.getPath());
+                    calendar.setType(CalendarType.fromValue(in.getObjectType().value()));
+                    // ((ICalendarObject) in.getConfiguration()).setType(CalendarType.fromValue(in.getObjectType().value()));
+                    break;
+                case LOCK: // without Path
+                    Lock lock = (Lock) in.getConfiguration();
+                    lock.setId(item.getName());// TODO unique
+                    if (lock.getLimit() == null) {
+                        lock.setLimit(1);
+                    }
                     break;
                 default:
                     break;
