@@ -131,10 +131,10 @@ public class ProxyContext {
                         if (controllerInstances == null || controllerInstances.size() < 2) { // is not cluster
                             throw new JobSchedulerBadRequestException("There is no cluster configured with the Id: " + credentials.getControllerId());
                         }
-                        NodeId activeId = NodeId.unchecked("Primary");
+                        NodeId activeId = NodeId.of("Primary");
                         Map<NodeId, Uri> idToUri = new HashMap<>();
                         for (DBItemInventoryJSInstance inst : controllerInstances) {
-                            idToUri.put(inst.getIsPrimary() ? activeId : NodeId.unchecked("Backup"), Uri.of(inst.getClusterUri()));
+                            idToUri.put(inst.getIsPrimary() ? activeId : NodeId.of("Backup"), Uri.of(inst.getClusterUri()));
                         }
                         p.api().clusterAppointNodes(idToUri, activeId, Proxies.getClusterWatchers(credentials.getControllerId(), null)).thenAccept(
                                 e -> {
