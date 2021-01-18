@@ -50,7 +50,8 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
     private void submitOrdersToController(DailyPlanOrderFilter dailyPlanOrderFilter) throws JsonParseException, JsonMappingException,
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
             JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, IOException, ParseException, SOSException,
-            URISyntaxException, InterruptedException, ExecutionException, TimeoutException {
+            URISyntaxException, InterruptedException, ExecutionException, TimeoutException {       
+        
         OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
         orderInitiatorSettings.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
         orderInitiatorSettings.setOverwrite(false);

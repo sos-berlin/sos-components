@@ -1,6 +1,8 @@
 package com.sos.js7.order.initiator;
 
+import java.io.File;
 import java.util.List;
+import java.util.Properties;
 import java.util.Timer;
 
 import org.slf4j.Logger;
@@ -21,21 +23,24 @@ public class OrderInitiatorMain extends JocClusterService {
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderInitiatorMain.class);
 
     private static final String IDENTIFIER = JocClusterServices.dailyplan.name();
-    private static final String PROPERTIES_FILE = "/joc/joc.properties";
 
     private OrderInitiatorSettings settings;
     private Timer timer;
 
     public OrderInitiatorMain(JocConfiguration jocConfiguration, ThreadGroup parentThreadGroup) {
         super(jocConfiguration, parentThreadGroup, IDENTIFIER);
+        LOGGER.info("Ressource: " + jocConfiguration.getResourceDirectory());
+
     }
 
     @Override
     public JocClusterAnswer start(List<ControllerConfiguration> controllers) {
         try {
-            LOGGER.info(String.format("[%s]start", getIdentifier()));
+            LOGGER.info(String.format("[%s] start", getIdentifier()));
 
+            LOGGER.info("Calling setSettings");
             setSettings();
+            LOGGER.info("Creating plan for " + settings.getDayAhead() + " days ahead");
             if (settings.getDayAhead() > 0) {
                 resetStartPlannedOrderTimer(controllers);
             }
@@ -67,7 +72,7 @@ public class OrderInitiatorMain extends JocClusterService {
         timer.schedule(new OrderInitiatorRunner(controllers, settings, true), 0, 60 * 1000);
     }
 
-    private String getProperty(JocCockpitProperties sosCockpitProperties, String prop, String defaults) {
+   /* private String getProperty(JocCockpitProperties sosCockpitProperties, String prop, String defaults) {
         String val = defaults;
         if (sosCockpitProperties != null) {
             val = sosCockpitProperties.getProperty(prop);
@@ -79,18 +84,40 @@ public class OrderInitiatorMain extends JocClusterService {
         LOGGER.debug("Setting " + prop + "=" + val);
         return val;
     }
+    */
+    private String getProperty(Properties conf, String prop, String defaults) {
+        String val = defaults;
+        if (conf != null) {
+            val = conf.getProperty(prop);
+            if (val == null) {
+                val = defaults;
+            }
+
+        }
+        LOGGER.debug("Setting " + prop + "=" + val);
+        return val;
+    }
+
 
     private void setSettings() throws Exception {
-        settings = new OrderInitiatorSettings();
+        LOGGER.info("... setSettings");
 
-        if (Globals.sosCockpitProperties == null) {
+        settings = new OrderInitiatorSettings();
+        Properties conf = JocConfiguration.readConfiguration(getJocConfig().getResourceDirectory().resolve("joc.properties").normalize());
+         if (Globals.sosCockpitProperties == null) {
+            LOGGER.info("init sosCockpitProperties");
             Globals.sosCockpitProperties = new JocCockpitProperties();
         }
  
+        LOGGER.info("propertiesFile:" + getJocConfig().getResourceDirectory().resolve("joc.properties").normalize());
 
-        settings.setDayAhead(getProperty(Globals.sosCockpitProperties, "daily_plan_day_ahead", "0"));
+      /*  settings.setDayAhead(getProperty(Globals.sosCockpitProperties, "daily_plan_day_ahead", "0"));
         settings.setTimeZone(getProperty(Globals.sosCockpitProperties, "daily_plan_time_zone", "UTC"));
         settings.setPeriodBegin(getProperty(Globals.sosCockpitProperties, "daily_plan_period_begin", "00:00"));
+*/
+        settings.setDayAhead(getProperty(conf, "daily_plan_day_ahead", "0"));
+        settings.setTimeZone(getProperty(conf, "daily_plan_time_zone", "UTC"));
+        settings.setPeriodBegin(getProperty(conf, "daily_plan_period_begin", "00:00"));
 
         settings.setHibernateConfigurationFile(getJocConfig().getHibernateConfiguration());
 

@@ -108,16 +108,22 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
             JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, IOException, ParseException, SOSException,
             URISyntaxException, InterruptedException, ExecutionException, TimeoutException {
-        OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
-        orderInitiatorSettings.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
-        orderInitiatorSettings.setOverwrite(false);
-        orderInitiatorSettings.setSubmit(true);
 
-        orderInitiatorSettings.setTimeZone(Globals.sosCockpitProperties.getProperty("daily_plan_timezone", Globals.DEFAULT_TIMEZONE_DAILY_PLAN));
-        orderInitiatorSettings.setPeriodBegin(Globals.sosCockpitProperties.getProperty("daily_plan_period_begin", Globals.DEFAULT_PERIOD_DAILY_PLAN));
-        OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings, false);
+        if (listOfPlannedOrders.size() > 0) {
 
-        orderInitiatorRunner.submitOrders(listOfPlannedOrders);
+            OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
+            orderInitiatorSettings.setControllerId(listOfPlannedOrders.get(0).getControllerId());
+            orderInitiatorSettings.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
+            orderInitiatorSettings.setOverwrite(false);
+            orderInitiatorSettings.setSubmit(true);
+
+            orderInitiatorSettings.setTimeZone(Globals.sosCockpitProperties.getProperty("daily_plan_timezone", Globals.DEFAULT_TIMEZONE_DAILY_PLAN));
+            orderInitiatorSettings.setPeriodBegin(Globals.sosCockpitProperties.getProperty("daily_plan_period_begin",
+                    Globals.DEFAULT_PERIOD_DAILY_PLAN));
+            OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings, false);
+
+            orderInitiatorRunner.submitOrders(listOfPlannedOrders);
+        }
     }
 
     private void updateVariables(DailyPlanModifyOrder dailyplanModifyOrder, DBItemDailyPlanOrders dbItemDailyPlanOrder) throws SOSHibernateException {
@@ -191,14 +197,14 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
                     FilterDailyPlannedOrders filterDailyPlannedOrders = new FilterDailyPlannedOrders();
                     filterDailyPlannedOrders.setPlannedOrderId(dbItemDailyPlanOrder.getId());
                     dbLayerDailyPlannedOrders.delete(filterDailyPlannedOrders);
-                    
+
                     DBItemDailyPlanOrders dbItemDailyPlanOrders = dbLayerDailyPlannedOrders.insertFrom(dbItemDailyPlanOrder);
                     dbLayerOrderVariables.update(dbItemDailyPlanWithHistory.getPlannedOrderId(), dbItemDailyPlanOrders.getId());
                     listOfPlannedOrders.clear();
                     listOfPlannedOrders.add(dbItemDailyPlanOrders);
                     Globals.commit(sosHibernateSession);
                     submitOrdersToController(listOfPlannedOrders);
-                }else {
+                } else {
                     Globals.commit(sosHibernateSession);
                 }
 
