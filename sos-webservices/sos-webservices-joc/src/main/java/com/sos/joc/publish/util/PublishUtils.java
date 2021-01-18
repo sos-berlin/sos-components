@@ -947,34 +947,48 @@ public abstract class PublishUtils {
                 case WORKFLOW:
                     String workflow = Globals.objectMapper.writeValueAsString(((WorkflowPublish)draft).getContent());
                     newDeployedObject.setContent(workflow);
-                    original = dbLayerDeploy.getConfiguration(((WorkflowPublish)draft).getContent().getPath(), ConfigurationType.WORKFLOW.intValue());
+                    if (draft.getPath() != null ) {
+                        original = dbLayerDeploy.getConfiguration(draft.getPath(), ConfigurationType.WORKFLOW.intValue());
+                    } else {
+                        original = dbLayerDeploy.getConfiguration(((WorkflowPublish)draft).getContent().getPath(), ConfigurationType.WORKFLOW.intValue());
+                    }
                     newDeployedObject.setPath(original.getPath());
                     newDeployedObject.setFolder(original.getFolder());
                     newDeployedObject.setInvContent(original.getContent());
                     newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
                 case LOCK:
-                    String lock = Globals.objectMapper.writeValueAsString(((WorkflowPublish)draft).getContent());
+                    String lock = Globals.objectMapper.writeValueAsString(((LockPublish)draft).getContent());
                     newDeployedObject.setContent(lock);
-                    original = dbLayerDeploy.getConfiguration(((LockPublish)draft).getContent().getPath(), ConfigurationType.LOCK.intValue());
+                    if(draft.getPath() != null) {
+                        original = dbLayerDeploy.getConfiguration(draft.getPath(), ConfigurationType.LOCK.intValue());
+                    }
                     newDeployedObject.setPath(original.getPath());
                     newDeployedObject.setFolder(original.getFolder());
                     newDeployedObject.setInvContent(original.getContent());
                     newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
                 case JUNCTION:
-                    String junction = Globals.objectMapper.writeValueAsString(((WorkflowPublish)draft).getContent());
+                    String junction = Globals.objectMapper.writeValueAsString(((JunctionPublish)draft).getContent());
                     newDeployedObject.setContent(junction);
-                    original = dbLayerDeploy.getConfiguration(((JunctionPublish)draft).getContent().getPath(), ConfigurationType.JUNCTION.intValue());
+                    if (draft.getPath() != null ) {
+                        original = dbLayerDeploy.getConfiguration(draft.getPath(), ConfigurationType.JUNCTION.intValue());
+                    } else {
+                        original = dbLayerDeploy.getConfiguration(((JunctionPublish)draft).getContent().getPath(), ConfigurationType.JUNCTION.intValue());
+                    }
                     newDeployedObject.setPath(original.getPath());
                     newDeployedObject.setFolder(original.getFolder());
                     newDeployedObject.setInvContent(original.getContent());
                     newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
                 case JOBCLASS:
-                    String jobclass = Globals.objectMapper.writeValueAsString(((WorkflowPublish)draft).getContent());
+                    String jobclass = Globals.objectMapper.writeValueAsString(((JobClassPublish)draft).getContent());
                     newDeployedObject.setContent(jobclass);
-                    original = dbLayerDeploy.getConfiguration(((JobClassPublish)draft).getContent().getPath(), ConfigurationType.JOBCLASS.intValue());
+                    if (draft.getPath() != null ) {
+                        original = dbLayerDeploy.getConfiguration(draft.getPath(), ConfigurationType.JOBCLASS.intValue());
+                    } else {
+                        original = dbLayerDeploy.getConfiguration(((JobClassPublish)draft).getContent().getPath(), ConfigurationType.JOBCLASS.intValue());
+                    }
                     newDeployedObject.setPath(original.getPath());
                     newDeployedObject.setFolder(original.getFolder());
                     newDeployedObject.setInvContent(original.getContent());
@@ -1231,11 +1245,8 @@ public abstract class PublishUtils {
                         throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", 
                                 ("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
                     }
-                    if (lockEdit.getConfiguration().getPath() != null ) {
-                        lockEdit.setPath(lockEdit.getConfiguration().getPath());
-                    } else {
+                    if (lockEdit.getPath() == null ) {
                         lockEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
-                        lockEdit.getConfiguration().setPath(lockEdit.getPath());
                     }
                     lockEdit.setObjectType(ConfigurationType.LOCK);
                     objects.add(lockEdit);
@@ -1265,11 +1276,8 @@ public abstract class PublishUtils {
                         throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", 
                                 ("/" + entryName).replace(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
                     }
-                    if (jobClassEdit.getConfiguration().getPath() != null ) {
-                        jobClassEdit.setPath(jobClassEdit.getConfiguration().getPath());
-                    } else {
+                    if (jobClassEdit.getPath() == null ) {
                         jobClassEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), ""));
-                        jobClassEdit.getConfiguration().setPath(jobClassEdit.getPath());
                     }
                     jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
                     objects.add(jobClassEdit);
@@ -1277,7 +1285,7 @@ public abstract class PublishUtils {
             }
             objects.stream().forEach(item -> {
                 objectsWithSignature.put(item, signaturePaths.stream()
-                        .filter(item2 -> item2.getObjectPath().equals(item.getConfiguration().getPath())).findFirst().get());
+                        .filter(item2 -> item2.getObjectPath().equals(item.getPath())).findFirst().get());
             });            
         } finally {
             if (zipStream != null) {
@@ -1344,11 +1352,8 @@ public abstract class PublishUtils {
                         throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", 
                                 ("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
                     }
-                    if (lockEdit.getConfiguration().getPath() != null ) {
-                        lockEdit.setPath(lockEdit.getConfiguration().getPath());
-                    } else {
+                    if (lockEdit.getPath() == null ) {
                         lockEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
-                        lockEdit.getConfiguration().setPath(lockEdit.getPath());
                     }
                     lockEdit.setObjectType(ConfigurationType.LOCK);
                     objects.add(lockEdit);
@@ -1409,22 +1414,16 @@ public abstract class PublishUtils {
                         if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
                             WorkingDaysCalendarEdit wdcEdit = new WorkingDaysCalendarEdit();
                             wdcEdit.setConfiguration(cal);
-                            if (wdcEdit.getConfiguration().getPath() != null ) {
-                                wdcEdit.setPath(wdcEdit.getConfiguration().getPath());
-                            } else {
+                            if (wdcEdit.getPath() == null ) {
                                 wdcEdit.setPath(("/" + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), ""));
-                                wdcEdit.getConfiguration().setPath(wdcEdit.getPath());
                             }
                             wdcEdit.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
                             objects.add(wdcEdit);
                         } else if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
                             NonWorkingDaysCalendarEdit nwdcEdit = new NonWorkingDaysCalendarEdit();
                             nwdcEdit.setConfiguration(cal);
-                            if (nwdcEdit.getConfiguration().getPath() != null ) {
-                                nwdcEdit.setPath(nwdcEdit.getConfiguration().getPath());
-                            } else {
+                            if (nwdcEdit.getPath() == null ) {
                                 nwdcEdit.setPath(("/" + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), ""));
-                                nwdcEdit.getConfiguration().setPath(nwdcEdit.getPath());
                             }
                             nwdcEdit.setObjectType(ConfigurationType.NONWORKINGDAYSCALENDAR);
                             objects.add(nwdcEdit);
@@ -1511,7 +1510,9 @@ public abstract class PublishUtils {
                         throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", 
                                 ("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
                     }
-                    lockEdit.setPath(lockEdit.getConfiguration().getPath());
+                    if (lockEdit.getPath() == null ) {
+                        lockEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                    }
                     lockEdit.setObjectType(ConfigurationType.LOCK);
                     objects.add(lockEdit);
                 } else if (entryName.endsWith(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
@@ -1523,7 +1524,9 @@ public abstract class PublishUtils {
                         throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", 
                                 ("/" + entryName).replace(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
                     }
-                    junctionEdit.setPath(junctionEdit.getConfiguration().getPath());
+                    if (junctionEdit.getPath() == null ) {
+                        junctionEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                    }
                     junctionEdit.setObjectType(ConfigurationType.JUNCTION);
                     objects.add(junctionEdit);
                 } else if (entryName.endsWith(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
@@ -1535,14 +1538,16 @@ public abstract class PublishUtils {
                         throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", 
                                 ("/" + entryName).replace(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
                     }
-                    jobClassEdit.setPath(jobClassEdit.getConfiguration().getPath());
+                    if (jobClassEdit.getPath() == null ) {
+                        jobClassEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                    }
                     jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
                     objects.add(jobClassEdit);
                 }
             }
             objects.stream().forEach(item -> {
                 objectsWithSignature.put(item, signaturePaths.stream()
-                        .filter(item2 -> item2.getObjectPath().equals(item.getConfiguration().getPath())).findFirst().get());
+                        .filter(item2 -> item2.getObjectPath().equals(item.getPath())).findFirst().get());
             });            
         } finally {
             try {
@@ -1609,7 +1614,9 @@ public abstract class PublishUtils {
                         throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", 
                                 ("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
                     }
-                    lockEdit.setPath(lockEdit.getConfiguration().getPath());
+                    if (lockEdit.getPath() == null ) {
+                        lockEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                    }
                     lockEdit.setObjectType(ConfigurationType.LOCK);
                     objects.add(lockEdit);
                 } else if (entryName.endsWith(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
@@ -1621,7 +1628,9 @@ public abstract class PublishUtils {
                         throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", 
                                 ("/" + entryName).replace(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
                     }
-                    junctionEdit.setPath(junctionEdit.getConfiguration().getPath());
+                    if (junctionEdit.getPath() == null ) {
+                        junctionEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                    }
                     junctionEdit.setObjectType(ConfigurationType.JUNCTION);
                     objects.add(junctionEdit);
                 } else if (entryName.endsWith(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
@@ -1633,7 +1642,9 @@ public abstract class PublishUtils {
                         throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", 
                                 ("/" + entryName).replace(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
                     }
-                    jobClassEdit.setPath(jobClassEdit.getConfiguration().getPath());
+                    if (jobClassEdit.getPath() == null ) {
+                        jobClassEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                    }
                     jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
                     objects.add(jobClassEdit);
                 } else if (entryName.endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value())) {
@@ -1645,7 +1656,9 @@ public abstract class PublishUtils {
                         throw new JocImportException(String.format("Schedule with path %1$s not imported. Object values could not be mapped.", 
                                 ("/" + entryName).replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(), "")));
                     }
-                    scheduleEdit.setPath(scheduleEdit.getConfiguration().getPath());
+                    if (scheduleEdit.getPath() == null ) {
+                        scheduleEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                    }
                     scheduleEdit.setObjectType(ConfigurationType.SCHEDULE);
                     objects.add(scheduleEdit);
                 } else if (entryName.endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
@@ -1654,22 +1667,16 @@ public abstract class PublishUtils {
                         if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
                             WorkingDaysCalendarEdit wdcEdit = new WorkingDaysCalendarEdit();
                             wdcEdit.setConfiguration(cal);
-                            if (wdcEdit.getConfiguration().getPath() != null ) {
-                                wdcEdit.setPath(wdcEdit.getConfiguration().getPath());
-                            } else {
-                                wdcEdit.setPath(("/" + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), ""));
-                                wdcEdit.getConfiguration().setPath(wdcEdit.getPath());
+                            if (wdcEdit.getPath() == null ) {
+                                wdcEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
                             }
                             wdcEdit.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
                             objects.add(wdcEdit);
                         } else if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
                             NonWorkingDaysCalendarEdit nwdcEdit = new NonWorkingDaysCalendarEdit();
                             nwdcEdit.setConfiguration(cal);
-                            if (nwdcEdit.getConfiguration().getPath() != null ) {
-                                nwdcEdit.setPath(nwdcEdit.getConfiguration().getPath());
-                            } else {
-                                nwdcEdit.setPath(("/" + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), ""));
-                                nwdcEdit.getConfiguration().setPath(nwdcEdit.getPath());
+                            if (nwdcEdit.getPath() == null ) {
+                                nwdcEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
                             }
                             nwdcEdit.setObjectType(ConfigurationType.NONWORKINGDAYSCALENDAR);
                             objects.add(nwdcEdit);
@@ -1719,7 +1726,6 @@ public abstract class PublishUtils {
                             case LOCK:
                                 extension = JSObjectFileExtension.LOCK_FILE_EXTENSION.toString();
                                 Lock lock = (Lock) deployable.getContent();
-                                lock.setVersionId(commitId);
                                 content = om.writeValueAsString(lock);
                                 break;
                             case JUNCTION:
@@ -1731,7 +1737,6 @@ public abstract class PublishUtils {
                             case JOBCLASS:
                                 extension = JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
                                 JobClass jobClass = (JobClass) deployable.getContent();
-                                jobClass.setVersionId(commitId);
                                 content = om.writeValueAsString(jobClass);
                                 break;
                             }
@@ -1817,7 +1822,6 @@ public abstract class PublishUtils {
                             case LOCK:
                                 extension = JSObjectFileExtension.LOCK_FILE_EXTENSION.toString();
                                 Lock lock = (Lock) deployable.getContent();
-                                lock.setVersionId(commitId);
                                 content = om.writeValueAsString(lock);
                                 break;
                             case JUNCTION:
@@ -1829,7 +1833,6 @@ public abstract class PublishUtils {
                             case JOBCLASS:
                                 extension = JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
                                 JobClass jobClass = (JobClass) deployable.getContent();
-                                jobClass.setVersionId(commitId);
                                 content = om.writeValueAsString(jobClass);
                                 break;
                             }
@@ -2395,9 +2398,6 @@ public abstract class PublishUtils {
                 break;
             case LOCK:
                 Lock lock = om.readValue(item.getContent().getBytes(), Lock.class);
-                if (commitId != null) {
-                    lock.setVersionId(commitId);
-                }
                 jsObject.setContent(lock);
                 break;
             case JUNCTION:
@@ -2409,9 +2409,6 @@ public abstract class PublishUtils {
                 break;
             case JOBCLASS:
                 JobClass jobClass = om.readValue(item.getContent().getBytes(), JobClass.class);
-                if (commitId != null) {
-                    jobClass.setVersionId(commitId);
-                }
                 jsObject.setContent(jobClass);
                 break;
             }
@@ -2441,16 +2438,10 @@ public abstract class PublishUtils {
                 break;
             case JOBCLASS:
                 JobClass jobClass = om.readValue(item.getInvContent().getBytes(), JobClass.class);
-                if (commitId != null) {
-                    jobClass.setVersionId(commitId);
-                }
                 jsObject.setContent(jobClass);
                 break;
             case LOCK:
                 Lock lock = om.readValue(item.getInvContent().getBytes(), Lock.class);
-                if (commitId != null) {
-                    lock.setVersionId(commitId);
-                }
                 jsObject.setContent(lock);
                 break;
             case JUNCTION:

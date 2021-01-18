@@ -155,13 +155,11 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     commitId = ((Workflow)config.getConfiguration()).getVersionId();
                     break;
                 case LOCK:
-                    commitId = ((Lock)config.getConfiguration()).getVersionId();
                     break;
                 case JUNCTION:
                     commitId = ((Junction)config.getConfiguration()).getVersionId();
                     break;
                 case JOBCLASS:
-                    commitId = ((JobClass)config.getConfiguration()).getVersionId();
                     break;
                 default:
                     commitId = ((Workflow)config.getConfiguration()).getVersionId();
@@ -329,7 +327,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 }
                 if (!deployedObjects.isEmpty()) {
 //                    createAuditLogForEach(deployedObjects, filter, controllerId, true, versionIdForUpdate, account);
-                    LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
+                    LOGGER.info(String.format("Update command successfully send to Controller \"%1$s\".", controllerId));
                     JocInventory.handleWorkflowSearch(newHibernateSession, deployedObjects, false);
                 }
             } else if (either.isLeft()) {

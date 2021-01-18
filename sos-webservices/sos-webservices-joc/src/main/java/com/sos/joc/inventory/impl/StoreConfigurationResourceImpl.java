@@ -124,7 +124,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 item.setTitle(in.getConfiguration().getTitle());
                 // "path" is required in schemas except for JOB and FOLDER
                 if (!ConfigurationType.JOB.equals(in.getObjectType())) {
-                    in.getConfiguration().setPath(item.getPath());
+//                    in.getConfiguration().setPath(item.getPath());
                 }
                 if (JocInventory.isCalendar(in.getObjectType())) {
                     ((ICalendarObject) in.getConfiguration()).setType(CalendarType.fromValue(in.getObjectType().value()));
