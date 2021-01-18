@@ -23,7 +23,10 @@ import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.CalendarType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
+import com.sos.jobscheduler.model.lock.Lock;
+import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.schema.JsonValidator;
+import com.sos.webservices.order.initiator.model.Schedule;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class StoreConfigurationResourceImpl extends JOCResourceImpl implements IStoreConfigurationResource {
@@ -111,29 +114,44 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             item.setTitle(null);
         }
 
-        if (JocInventory.isCalendar(in.getObjectType())) {
-            item.setType(in.getObjectType().intValue());
-        }
+        if (ConfigurationType.FOLDER.equals(in.getObjectType())) {
+            item.setTitle(null);
+            item.setValid(true);
+        } else {
+            if (JocInventory.isCalendar(in.getObjectType())) {
+                item.setType(in.getObjectType().intValue());
+            }
 
-        if (!ConfigurationType.FOLDER.equals(in.getObjectType())) {
             if (in.getConfiguration() == null) {
                 item.setContent(null);
                 item.setValid(false);
             } else {
                 item.setValid(in.getValid() == null ? true : in.getValid());
                 item.setTitle(in.getConfiguration().getTitle());
-                // "path" is required in schemas except for JOB and FOLDER
-                if (!ConfigurationType.JOB.equals(in.getObjectType())) {
-//                    in.getConfiguration().setPath(item.getPath());
-                }
-                if (JocInventory.isCalendar(in.getObjectType())) {
+
+                switch (in.getObjectType()) {
+                case WORKFLOW:
+                    ((Workflow) in.getConfiguration()).setPath(item.getPath());
+                    break;
+                case LOCK:
+                    Lock lock = (Lock) in.getConfiguration();
+                    lock.setId(item.getName());// TODO unique
+                    if (lock.getLimit() == null) {
+                        lock.setLimit(1);
+                    }
+                    break;
+                case SCHEDULE:
+                    ((Schedule) in.getConfiguration()).setPath(item.getPath());
+                    break;
+                case WORKINGDAYSCALENDAR:
+                case NONWORKINGDAYSCALENDAR:
                     ((ICalendarObject) in.getConfiguration()).setType(CalendarType.fromValue(in.getObjectType().value()));
+                    break;
+                default:
+                    break;
                 }
                 validate(item, in);
             }
-        } else {
-            item.setTitle(null);
-            item.setValid(true);
         }
 
         item.setDeployed(false);
