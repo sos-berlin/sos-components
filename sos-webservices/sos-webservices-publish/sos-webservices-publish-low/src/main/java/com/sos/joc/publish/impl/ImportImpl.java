@@ -110,7 +110,6 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
                 configurations.stream().map(item -> {
                     item.setPath(filter.getTargetFolder() + item.getPath());
-                    item.getConfiguration().setPath(item.getPath());
                     return item;
                 }).forEach(item -> dbLayer.saveOrUpdateInventoryConfiguration(
                         item, account, dbItemAuditLog.getId(), filter.getOverwrite(), filter.getTargetFolder()));

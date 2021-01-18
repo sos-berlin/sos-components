@@ -351,7 +351,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                             controllerId, deploymentDate));
                 }
                 if (!deployedObjects.isEmpty()) {
-                    LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
+                    LOGGER.info(String.format("Update command successfully send to Controller \"%1$s\".", controllerId));
 //                    createAuditLogForEach(deployedObjects, deployFilter, controllerId, true, versionIdForUpdate, account);
                     JocInventory.handleWorkflowSearch(newHibernateSession, deployedObjects, false);
                 }

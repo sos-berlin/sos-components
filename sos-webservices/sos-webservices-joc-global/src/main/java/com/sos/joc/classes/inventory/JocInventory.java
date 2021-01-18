@@ -4,15 +4,20 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -263,6 +268,48 @@ public class JocInventory {
     
     public static void makeParentDirs(InventoryDBLayer dbLayer, Path folder) throws SOSHibernateException {
         makeParentDirs(dbLayer, folder, null);
+    }
+    
+    public static List<DBItemInventoryConfiguration> deleteEmptyFolders(InventoryDBLayer dbLayer, DBItemInventoryConfiguration folder) throws SOSHibernateException {
+        List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(folder.getPath(), true, null);
+        if (folderContent == null) {
+            folderContent = new ArrayList<DBItemInventoryConfiguration>();
+        }
+        if (!ROOT_FOLDER.equals(folder.getPath())) {
+            folderContent.add(folder);
+        }
+        return deleteEmptyFolders(dbLayer.getSession(), folderContent);
+    }
+    
+    public static List<DBItemInventoryConfiguration> deleteEmptyFolders(InventoryDBLayer dbLayer, String folder) throws SOSHibernateException {
+        List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(folder, true, null);
+        if (folderContent == null) {
+            folderContent = new ArrayList<DBItemInventoryConfiguration>(); 
+        }
+        if (!ROOT_FOLDER.equals(folder)) {
+            DBItemInventoryConfiguration dbFolder = dbLayer.getConfiguration(folder, ConfigurationType.FOLDER.intValue());
+            if (dbFolder != null) {
+                folderContent.add(dbFolder); 
+            }
+        }
+        return deleteEmptyFolders(dbLayer.getSession(), folderContent);
+    }
+    
+    private static List<DBItemInventoryConfiguration> deleteEmptyFolders(SOSHibernateSession session, List<DBItemInventoryConfiguration> folderContent) throws SOSHibernateException {
+        List<DBItemInventoryConfiguration> deletedFolders = new ArrayList<>();
+        if (!folderContent.isEmpty()) {
+            LinkedHashSet<DBItemInventoryConfiguration> folders = folderContent.stream().filter(i -> ConfigurationType.FOLDER.intValue() == i
+                    .getType()).sorted(Comparator.comparing(DBItemInventoryConfiguration::getPath).reversed()).collect(Collectors.toCollection(
+                            LinkedHashSet::new));
+            for (DBItemInventoryConfiguration folder : folders) {
+                if (!folderContent.stream().parallel().anyMatch(i -> folder.getPath().equals(i.getFolder()))) {
+                    session.delete(folder);
+                    folderContent.remove(folder);
+                    deletedFolders.add(folder);
+                }
+            }
+        }
+        return deletedFolders;
     }
 
     public static class InventoryPath {

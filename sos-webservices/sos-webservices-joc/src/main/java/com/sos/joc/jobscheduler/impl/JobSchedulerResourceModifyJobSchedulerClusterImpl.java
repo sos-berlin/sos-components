@@ -164,10 +164,10 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
 //        ControllerApi.of(controllerId).executeCommandJson(Globals.objectMapper.writeValueAsString(command)).thenAccept(e -> ProblemHelper
 //                .postProblemEventIfExist(e, jocError, controllerId));
 
-        NodeId activeId = NodeId.unchecked("Primary");
+        NodeId activeId = NodeId.of("Primary");
         Map<NodeId, Uri> idToUri = new HashMap<>();
         for (DBItemInventoryJSInstance inst : controllerInstances) {
-            idToUri.put(inst.getIsPrimary() ? activeId : NodeId.unchecked("Backup"), Uri.of(inst.getClusterUri()));
+            idToUri.put(inst.getIsPrimary() ? activeId : NodeId.of("Backup"), Uri.of(inst.getClusterUri()));
         }
         ControllerApi.of(controllerId).clusterAppointNodes(idToUri, activeId, Proxies.getClusterWatchers(controllerId, dbLayer)).thenAccept(
                 e -> ProblemHelper.postProblemEventIfExist(e, accessToken, jocError, controllerId));

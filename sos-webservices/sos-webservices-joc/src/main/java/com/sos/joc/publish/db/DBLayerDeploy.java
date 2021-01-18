@@ -1327,7 +1327,7 @@ public class DBLayerDeploy {
                     inventoryConfig = getConfiguration(((WorkflowPublish)jsObject).getContent().getPath(), ConfigurationType.WORKFLOW);
                     break;
                 case LOCK:
-                    inventoryConfig = getConfiguration(((LockPublish)jsObject).getContent().getPath(), ConfigurationType.LOCK);
+                    inventoryConfig = getConfiguration(((LockPublish)jsObject).getPath(), ConfigurationType.LOCK);
                     break;
                 case JUNCTION:
                     inventoryConfig = getConfiguration(((JunctionPublish)jsObject).getContent().getPath(), ConfigurationType.JUNCTION);
