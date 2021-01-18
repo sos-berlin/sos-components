@@ -100,7 +100,6 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
 
             DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
-            DBLayerOrderVariables dbLayerOrderVariables = new DBLayerOrderVariables(sosHibernateSession);
             boolean withFolderFilter = dailyPlanOrderFilter.getFilter().getFolders() != null && !dailyPlanOrderFilter.getFilter().getFolders()
                     .isEmpty();
             boolean hasPermission = true;
