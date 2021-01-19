@@ -172,7 +172,7 @@ public class OrderInitiatorRunner extends TimerTask {
 
         java.util.Calendar calendar = DailyPlanHelper.getDailyplanCalendar();
         java.util.Calendar now = java.util.Calendar.getInstance(TimeZone.getTimeZone(OrderInitiatorGlobals.orderInitiatorSettings.getTimeZone()));
-        if (!createdPlans.contains(DailyPlanHelper.getDayOfYear(now)) && now.after(calendar)) {
+        if (!createdPlans.contains(DailyPlanHelper.getDayOfYear(calendar)) && now.after(calendar)) {
             createdPlans.add(DailyPlanHelper.getDayOfYear(calendar));
             try {
                 createPlan(calendar);
