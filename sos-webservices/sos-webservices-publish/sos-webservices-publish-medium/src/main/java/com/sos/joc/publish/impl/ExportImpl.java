@@ -77,8 +77,8 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                     if (DeployType.WORKFLOW.equals(deployable.getObjectType())) {
                         Workflow workflow = (Workflow)deployable.getContent();
                         try {
-                            updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(om.writeValueAsString(workflow), 
-                                    ConfigurationType.WORKFLOW, controllerIdUsed, dbLayer));
+                            updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(deployable.getPath(),
+                                    om.writeValueAsString(workflow), ConfigurationType.WORKFLOW, controllerIdUsed, dbLayer));
                         } catch (JsonProcessingException e) {}   
                     }
                 });

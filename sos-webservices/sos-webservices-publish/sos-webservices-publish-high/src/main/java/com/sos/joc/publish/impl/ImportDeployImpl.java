@@ -54,7 +54,6 @@ import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.JocSecurityLevel;
-import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.joc.JocMetaInfo;
 import com.sos.joc.model.publish.ArchiveFormat;
@@ -124,7 +123,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             }
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             stream = body.getEntityAs(InputStream.class);
-            Map<ConfigurationObject, SignaturePath> objectsWithSignature = new HashMap<ConfigurationObject, SignaturePath>();
+            Map<JSObject, SignaturePath> objectsWithSignature = new HashMap<JSObject, SignaturePath>();
             JocMetaInfo jocMetaInfo = new JocMetaInfo();
             
             // process uploaded archive
@@ -149,20 +148,20 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     new HashMap<JSObject, DBItemDepSignatures>();
             String commitId = null;
             if (objectsWithSignature != null && !objectsWithSignature.isEmpty()) {
-                ConfigurationObject config = objectsWithSignature.keySet().stream().findFirst().get();
+                JSObject config = objectsWithSignature.keySet().stream().findFirst().get();
                 switch (config.getObjectType()) {
                 case WORKFLOW:
-                    commitId = ((Workflow)config.getConfiguration()).getVersionId();
+                    commitId = ((Workflow)config.getContent()).getVersionId();
                     break;
                 case LOCK:
                     break;
                 case JUNCTION:
-                    commitId = ((Junction)config.getConfiguration()).getVersionId();
+                    commitId = ((Junction)config.getContent()).getVersionId();
                     break;
                 case JOBCLASS:
                     break;
                 default:
-                    commitId = ((Workflow)config.getConfiguration()).getVersionId();
+                    commitId = ((Workflow)config.getContent()).getVersionId();
                 }
             }
             ImportDeployAudit mainAudit = new ImportDeployAudit(filter,
@@ -172,12 +171,12 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             Set<java.nio.file.Path> folders = new HashSet<java.nio.file.Path>();
             folders = objectsWithSignature.keySet().stream().map(config -> config.getPath()).map(path -> Paths.get(path).getParent()).collect(Collectors.toSet());
             Set<DBItemInventoryConfiguration> objectsToCheckPathRenaming = new HashSet<DBItemInventoryConfiguration>();
-            for (ConfigurationObject config : objectsWithSignature.keySet()) {
+            for (JSObject config : objectsWithSignature.keySet()) {
                 SignaturePath signaturePath = objectsWithSignature.get(config);
                 switch(config.getObjectType()) {
                 case WORKFLOW:
                     WorkflowPublish workflowPublish = new WorkflowPublish();
-                    workflowPublish.setContent((Workflow)config.getConfiguration());
+                    workflowPublish.setContent((Workflow)config.getContent());
                     workflowPublish.setSignedContent(signaturePath.getSignature().getSignatureString());
                     DBItemInventoryConfiguration workflowDbItem = dbLayer.getConfiguration(config.getPath(), ConfigurationType.WORKFLOW);
                     objectsToCheckPathRenaming.add(workflowDbItem);
@@ -188,7 +187,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     break;
                 case LOCK:
                     LockPublish lockPublish = new LockPublish();
-                    lockPublish.setContent((Lock)config.getConfiguration());
+                    lockPublish.setContent((Lock)config.getContent());
 //                    DBItemInventoryConfiguration lockDbItem = dbLayer.getConfiguration(config.getPath(), ConfigurationType.LOCK);
 //                    objectsToCheckPathRenaming.add(lockDbItem);
 //                    lockPublish.setObjectType(DeployType.LOCK);
@@ -196,7 +195,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     break;
                 case JUNCTION:
                     JunctionPublish junctionPublish = new JunctionPublish();
-                    junctionPublish.setContent((Junction)config.getConfiguration());
+                    junctionPublish.setContent((Junction)config.getContent());
 //                    DBItemInventoryConfiguration junctionDbItem = dbLayer.getConfiguration(config.getPath(), ConfigurationType.LOCK);
 //                    objectsToCheckPathRenaming.add(junctionDbItem);
 //                    junctionPublish.setObjectType(DeployType.JUNCTION);
@@ -204,17 +203,12 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     break;
                 case JOBCLASS:
                     JobClassPublish jobClassPublish = new JobClassPublish();
-                    jobClassPublish.setContent((JobClass)config.getConfiguration());
+                    jobClassPublish.setContent((JobClass)config.getContent());
 //                    DBItemInventoryConfiguration jobClassDbItem = dbLayer.getConfiguration(config.getPath(), ConfigurationType.LOCK);
 //                    objectsToCheckPathRenaming.add(jobClassDbItem);
 //                    jobClassPublish.setObjectType(DeployType.JOBCLASS);
 //                    importedObjects.put(jobClassPublish, null);
                     break;
-                case FOLDER:
-                case JOB:
-                case NONWORKINGDAYSCALENDAR:
-                case SCHEDULE:
-                case WORKINGDAYSCALENDAR:
                 default:
                     break;
                 }
@@ -327,7 +321,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 }
                 if (!deployedObjects.isEmpty()) {
 //                    createAuditLogForEach(deployedObjects, filter, controllerId, true, versionIdForUpdate, account);
-                    LOGGER.info(String.format("Update command successfully send to Controller \"%1$s\".", controllerId));
+                    LOGGER.info(String.format("Update command send to Controller \"%1$s\".", controllerId));
                     JocInventory.handleWorkflowSearch(newHibernateSession, deployedObjects, false);
                 }
             } else if (either.isLeft()) {
