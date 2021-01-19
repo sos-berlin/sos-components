@@ -48,6 +48,11 @@
     		<artifactId>hibernate-hikaricp</artifactId>
 		</dependency>
 		<dependency>
+      		<groupId>com.zaxxer</groupId>
+      		<artifactId>HikariCP</artifactId>
+    	</dependency>
+    
+		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-c3p0</artifactId>
 		</dependency>
