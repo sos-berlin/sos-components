@@ -16,6 +16,8 @@ import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
+import javax.sound.midi.ControllerEventListener;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -152,7 +154,10 @@ public class OrderInitiatorRunner extends TimerTask {
                 OrderInitiatorGlobals.orderInitiatorSettings.setControllerId(controllerConfiguration.getCurrent().getId());
                 ScheduleSource scheduleSource = new ScheduleSourceDB(controllerConfiguration.getCurrent().getId());
                 readSchedules(scheduleSource);
-
+                LOGGER.info("Creating daily plans for controller: " + 
+                controllerConfiguration.getCurrent().getId() + 
+                        " from " + DailyPlanHelper.dateAsString(dailyPlanCalendar.getTime()) + 
+                        " for " +  OrderInitiatorGlobals.orderInitiatorSettings.getDayAhead() + " days");
                 for (int day = 0; day < OrderInitiatorGlobals.orderInitiatorSettings.getDayAhead(); day++) {
                     generateDailyPlan(DailyPlanHelper.dateAsString(dailyPlanCalendar.getTime()), true);
                     dailyPlanCalendar.add(java.util.Calendar.DATE, 1);

@@ -71,7 +71,7 @@ public class OrderInitiatorMain extends JocClusterService {
         timer.schedule(new OrderInitiatorRunner(controllers, settings, true), 0, 60 * 1000);
     }
 
-    /*private String getProperty(JocCockpitProperties sosCockpitProperties, String prop, String defaults) {
+    private String getProperty(JocCockpitProperties sosCockpitProperties, String prop, String defaults) {
         String val = defaults;
         if (sosCockpitProperties != null) {
             val = sosCockpitProperties.getProperty(prop);
@@ -82,37 +82,23 @@ public class OrderInitiatorMain extends JocClusterService {
         }
         LOGGER.debug("Setting " + prop + "=" + val);
         return val;
-    }*/
+    } 
      
-    private String getProperty(Properties conf, String prop, String defaults) {
-        String val = defaults;
-        if (conf != null) {
-            val = conf.getProperty(prop);
-            if (val == null) {
-                val = defaults;
-            }
-
-        }
-        LOGGER.debug("Setting " + prop + "=" + val);
-        return val;
-    }
+    
 
 
     private void setSettings() throws Exception {
         settings = new OrderInitiatorSettings();
         if (Globals.sosCockpitProperties == null) {
-            Globals.sosCockpitProperties = new JocCockpitProperties();
+            Globals.sosCockpitProperties = new JocCockpitProperties(getJocConfig().getResourceDirectory().resolve("joc.properties"));
         }
-        Properties conf = JocConfiguration.readConfiguration(getJocConfig().getResourceDirectory().resolve("joc.properties").normalize());
-        LOGGER.info("...Settings from " + getJocConfig().getResourceDirectory().resolve("joc.properties").normalize());
-
-        /*ettings.setDayAhead(getProperty(Globals.sosCockpitProperties, "daily_plan_day_ahead", "0"));
+ 
+        LOGGER.debug("...Settings from " + getJocConfig().getResourceDirectory().resolve("joc.properties").normalize());
+         
+        settings.setDayAhead(getProperty(Globals.sosCockpitProperties, "daily_plan_day_ahead", "0"));
         settings.setTimeZone(getProperty(Globals.sosCockpitProperties, "daily_plan_time_zone", "UTC"));
         settings.setPeriodBegin(getProperty(Globals.sosCockpitProperties, "daily_plan_period_begin", "00:00"));
-        */
-        settings.setDayAhead(getProperty(conf, "daily_plan_day_ahead", "0"));
-        settings.setTimeZone(getProperty(conf, "daily_plan_time_zone", "UTC"));
-        settings.setPeriodBegin(getProperty(conf, "daily_plan_period_begin", "00:00"));
+         
 
         settings.setHibernateConfigurationFile(getJocConfig().getHibernateConfiguration());
 
