@@ -26,6 +26,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.deployment.DBItemDepConfiguration;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
@@ -96,6 +97,17 @@ public class InventoryDBLayer extends DBLayer {
         }
         return null;
     }
+    
+//    //invContent is missing in DBItemDepConfiguration
+//    public DBItemDepConfiguration getLastDeployedContent(Long configId) throws SOSHibernateException {
+//        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
+//        hql.append(" where inventoryConfigurationId := configId");
+//        hql.append(" order by id desc");
+//        Query<DBItemDepConfiguration> query = getSession().createQuery(hql.toString());
+//        query.setParameter("configId", configId);
+//        query.setMaxResults(1);
+//        return getSession().getSingleResult(query);
+//    }
 
     public List<InventoryDeploymentItem> getDeploymentHistory(Long configId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeploymentItem.class.getName());
@@ -435,7 +447,7 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getSingleResult(query);
     }
     
-    public DBItemInventoryConfiguration getConfigurationByName(String name, Integer type) throws SOSHibernateException {
+    public List<DBItemInventoryConfiguration> getConfigurationByName(String name, Integer type) throws SOSHibernateException {
         boolean isCalendar = JocInventory.isCalendar(type);
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where lower(name)=:name");
@@ -445,14 +457,13 @@ public class InventoryDBLayer extends DBLayer {
             hql.append(" and type=:type");
         }
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-        query.setMaxResults(1);
         query.setParameter("name", name.toLowerCase());
         if (isCalendar) {
             query.setParameterList("types", JocInventory.getCalendarTypes());
         } else {
             query.setParameter("type", type);
         }
-        return getSession().getSingleResult(query);
+        return getSession().getResultList(query);
     }
 
     public DBItemInventoryConfiguration getCalendar(String path) throws SOSHibernateException {

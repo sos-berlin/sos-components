@@ -1,5 +1,6 @@
 package com.sos.joc.inventory.impl;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,6 +11,8 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -27,6 +30,7 @@ import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IReleaseResource;
 import com.sos.joc.model.common.Err419;
+import com.sos.joc.model.common.IReleaseObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.release.ReleaseFilter;
 import com.sos.schema.JsonValidator;
@@ -73,11 +77,13 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                         createAuditLog(conf, conf.getTypeAsEnum());
                         if (ConfigurationType.FOLDER.intValue() == conf.getType()) {
                             deleteReleasedFolder(conf, dbLayer, withDeletionOfEmptyFolders);
+                            JocInventory.postEvent(conf.getFolder());
                         } else if (!JocInventory.isReleasable(conf.getTypeAsEnum())) {
                             throw new JobSchedulerInvalidResponseDataException(String.format("%s is not a 'Scheduling Object': %s", conf.getPath(),
                                     conf.getTypeAsEnum()));
                         } else {
                             deleteReleasedObject(conf, dbLayer);
+                            JocInventory.postEvent(conf.getFolder());
                         }
                         either = Either.right(null);
                     } catch (DBMissingDataException ex) {
@@ -105,6 +111,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                                     conf.getTypeAsEnum()));
                         } else {
                             updateReleasedObject(conf, dbLayer);
+                            JocInventory.postEvent(conf.getFolder());
                         }
                         either = Either.right(null);
                     } catch (Exception ex) {
@@ -141,7 +148,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     }
 
     private static void updateReleasedObject(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer)
-            throws SOSHibernateException {
+            throws SOSHibernateException, JsonParseException, JsonMappingException, IOException {
         Date now = Date.from(Instant.now());
         DBItemInventoryReleasedConfiguration releaseItem = dbLayer.getReleasedItemByConfigurationId(conf.getId());
         if (releaseItem == null) {
@@ -156,12 +163,14 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         dbLayer.getSession().update(conf);
     }
     
-    private static DBItemInventoryReleasedConfiguration setReleaseItem(Long releaseId, DBItemInventoryConfiguration conf, Date now) {
+    private static DBItemInventoryReleasedConfiguration setReleaseItem(Long releaseId, DBItemInventoryConfiguration conf, Date now) throws JsonParseException, JsonMappingException, IOException {
         DBItemInventoryReleasedConfiguration release = new DBItemInventoryReleasedConfiguration();
         release.setId(releaseId);
         release.setAuditLogId(conf.getAuditLogId());
         release.setCid(conf.getId());
-        release.setContent(conf.getContent());
+        IReleaseObject r = (IReleaseObject) Globals.objectMapper.readValue(conf.getContent(), JocInventory.CLASS_MAPPING.get(conf.getTypeAsEnum()));
+        r.setPath(conf.getPath());
+        release.setContent(Globals.objectMapper.writeValueAsString(r));
         release.setCreated(now);
         release.setDocumentationId(conf.getDocumentationId());
         release.setFolder(conf.getFolder());

@@ -16,8 +16,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -43,6 +41,8 @@ import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.inventory.InventoryEvent;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.model.calendar.Calendar;
@@ -310,6 +310,10 @@ public class JocInventory {
             }
         }
         return deletedFolders;
+    }
+    
+    public static void postEvent(String folder) {
+        EventBus.getInstance().post(new InventoryEvent(folder));
     }
 
     public static class InventoryPath {

@@ -89,7 +89,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                     setItem(oldItem, p.resolve(oldPath.relativize(Paths.get(oldItem.getPath()))));
                     return oldItem;
                 }).collect(Collectors.toList());
-                DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(newPath, config.getType());
+                DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(newPath, ConfigurationType.FOLDER.intValue());
                 List<DBItemInventoryConfiguration> newDBFolderContent = dbLayer.getFolderContent(newPath, true, null);
 
                 if (newDBFolderContent != null && !newDBFolderContent.isEmpty()) {
@@ -124,6 +124,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 for (DBItemInventoryConfiguration item : oldDBFolderContent) {
                     session.update(item);
                 }
+                JocInventory.postEvent(config.getFolder());
                 
             } else {
                 DBItemInventoryConfiguration targetItem = dbLayer.getConfiguration(newPath, config.getType());
@@ -135,11 +136,24 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                         throw new JocObjectAlreadyExistException(String.format("%s %s already exists", ConfigurationType.fromValue(config.getType())
                                 .value().toLowerCase(), targetItem.getPath()));
                     }
+                } else {
+                    // check unique name
+                    List<DBItemInventoryConfiguration> namedItems = dbLayer.getConfigurationByName(p.getFileName().toString(), in.getObjectType()
+                            .intValue());
+                    if (namedItems != null) {
+                        namedItems.remove(config);
+                        if (!namedItems.isEmpty()) {
+                            throw new JocObjectAlreadyExistException(String.format("The name has to be unique: '%s' is already used in '%s'", p
+                                    .getFileName().toString(), namedItems.get(0).getPath()));
+                        }
+                    }
                 }
+                
                 setItem(config, p);
                 createAuditLog(config);
                 session.update(config);
                 JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId());
+                JocInventory.postEvent(config.getFolder());
             }
             
             session.commit();

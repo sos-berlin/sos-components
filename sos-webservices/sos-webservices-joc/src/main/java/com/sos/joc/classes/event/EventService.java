@@ -18,6 +18,7 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
+import com.sos.joc.event.bean.inventory.InventoryEvent;
 import com.sos.joc.event.bean.problem.ProblemEvent;
 import com.sos.joc.event.bean.proxy.ProxyEvent;
 import com.sos.joc.event.bean.proxy.ProxyRemoved;
@@ -141,6 +142,16 @@ public class EventService {
             eventSnapshot.setMessage(evt.getVariables().get("message"));
             addEvent(eventSnapshot);
         }
+    }
+    
+    @Subscribe({ InventoryEvent.class })
+    public void createEvent(InventoryEvent evt) {
+        EventSnapshot eventSnapshot = new EventSnapshot();
+        eventSnapshot.setEventId(evt.getEventId());
+        eventSnapshot.setEventType(evt.getKey()); // InventoryUpdated
+        eventSnapshot.setObjectType(EventType.FOLDER);
+        eventSnapshot.setPath(evt.getFolder());
+        addEvent(eventSnapshot);
     }
     
     @Subscribe({ com.sos.joc.event.bean.cluster.ClusterEvent.class })

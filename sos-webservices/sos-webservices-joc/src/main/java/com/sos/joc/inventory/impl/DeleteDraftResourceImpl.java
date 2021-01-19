@@ -103,7 +103,11 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             entity.setDeliveryDate(Date.from(Instant.now()));
             
             // TODO consider other Inventory tables?
-            storeAuditLog(type, config.getPath(), config.getFolder());
+            
+            if (deleted.size() + updated.size() > 0) {
+                JocInventory.postEvent(config.getFolder());
+                storeAuditLog(type, config.getPath(), config.getFolder());
+            }
 
             return JOCDefaultResponse.responseStatus200(entity);
         } catch (SOSHibernateException e) {

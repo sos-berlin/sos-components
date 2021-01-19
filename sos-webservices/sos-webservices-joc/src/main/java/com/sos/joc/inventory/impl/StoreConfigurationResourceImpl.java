@@ -2,12 +2,11 @@ package com.sos.joc.inventory.impl;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.model.lock.Lock;
-import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -19,14 +18,14 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.inventory.resource.IStoreConfigurationResource;
-import com.sos.joc.model.calendar.Calendar;
+import com.sos.joc.model.common.ICalendarObject;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.CalendarType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.schema.JsonValidator;
-import com.sos.webservices.order.initiator.model.Schedule;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class StoreConfigurationResourceImpl extends JOCResourceImpl implements IStoreConfigurationResource {
@@ -64,12 +63,30 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 item = setProperties(in, item, false);
                 JocInventory.updateConfiguration(dbLayer, item, in.getConfiguration());
             } catch (DBMissingDataException e) {
+                checkRequiredParameter("path", in.getPath());
+                checkRequiredParameter("objectType", in.getObjectType());
+                java.nio.file.Path path = JocInventory.normalizePath(in.getPath());
+                
+                // check if name is unique
+                if (!JocInventory.isFolder(in.getObjectType())) {
+                    String name = path.getFileName().toString();
+                    List<DBItemInventoryConfiguration> namedItems = dbLayer.getConfigurationByName(name, in.getObjectType().intValue());
+                    if (namedItems != null && !namedItems.isEmpty()) {
+                        throw new JocObjectAlreadyExistException(String.format("The name has to be unique: '%s' is already used in '%s'", name,
+                                namedItems.get(0).getPath()));
+                    }
+                }
+                
+                // mkdirs if necessary
+                JocInventory.makeParentDirs(dbLayer, path.getParent());
+                
                 item = new DBItemInventoryConfiguration();
                 item.setType(in.getObjectType());
                 item = setProperties(in, item, true);
                 item.setCreated(Date.from(Instant.now()));
                 createAuditLog(item, in.getObjectType());
                 JocInventory.insertConfiguration(dbLayer, item, in.getConfiguration());
+                JocInventory.postEvent(item.getFolder());
             }
             session.commit();
 
@@ -82,6 +99,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             answer.setValid(item.getValid());
             answer.setInvalidMsg(in.getInvalidMsg());
             answer.setDeployed(false);
+            answer.setReleased(false);
             answer.setState(ItemStateEnum.DRAFT_IS_NEWER);// TODO
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
@@ -117,6 +135,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         if (ConfigurationType.FOLDER.equals(in.getObjectType())) {
             item.setTitle(null);
             item.setValid(true);
+            item.setContent(null);
         } else {
             if (JocInventory.isCalendar(in.getObjectType())) {
                 item.setType(in.getObjectType().intValue());
@@ -130,26 +149,26 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 item.setTitle(in.getConfiguration().getTitle());
 
                 switch (in.getObjectType()) {
-                case WORKFLOW:
-                    ((Workflow) in.getConfiguration()).setPath(item.getPath());
-                    break;
-                case SCHEDULE:
-                    ((Schedule) in.getConfiguration()).setPath(item.getPath());
-                    break;
+//                case WORKFLOW:
+//                    ((Workflow) in.getConfiguration()).setPath(item.getPath());
+//                    break;
+//                case SCHEDULE:
+//                    ((Schedule) in.getConfiguration()).setPath(item.getPath());
+//                    break;
                 case WORKINGDAYSCALENDAR:
                 case NONWORKINGDAYSCALENDAR:
-                    Calendar calendar = (Calendar) in.getConfiguration();
-                    calendar.setPath(item.getPath());
-                    calendar.setType(CalendarType.fromValue(in.getObjectType().value()));
-                    // ((ICalendarObject) in.getConfiguration()).setType(CalendarType.fromValue(in.getObjectType().value()));
+//                    Calendar calendar = (Calendar) in.getConfiguration();
+//                    calendar.setPath(item.getPath());
+//                    calendar.setType(CalendarType.fromValue(in.getObjectType().value()));
+                    ((ICalendarObject) in.getConfiguration()).setType(CalendarType.fromValue(in.getObjectType().value()));
                     break;
-                case LOCK: // without Path
-                    Lock lock = (Lock) in.getConfiguration();
-                    lock.setId(item.getName());// TODO unique
-                    if (lock.getLimit() == null) {
-                        lock.setLimit(1);
-                    }
-                    break;
+//                case LOCK: // without Path
+//                    Lock lock = (Lock) in.getConfiguration();
+//                    lock.setId(item.getName());// TODO unique
+//                    if (lock.getLimit() == null) {
+//                        lock.setLimit(1);
+//                    }
+//                    break;
                 default:
                     break;
                 }

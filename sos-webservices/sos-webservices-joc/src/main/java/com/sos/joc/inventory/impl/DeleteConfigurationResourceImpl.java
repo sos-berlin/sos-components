@@ -85,6 +85,8 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
                 deleteOrUndeleteSingle(dbLayer, config, IMPL_PATH_DELETE.equals(action));
                 storeAuditLog(type, config.getPath(), config.getFolder());
             }
+            
+            JocInventory.postEvent(config.getFolder());
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {
