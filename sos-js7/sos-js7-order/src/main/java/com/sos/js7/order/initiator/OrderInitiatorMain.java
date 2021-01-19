@@ -1,6 +1,8 @@
 package com.sos.js7.order.initiator;
 
+import java.io.File;
 import java.util.List;
+import java.util.Properties;
 import java.util.Timer;
 
 import org.slf4j.Logger;
@@ -21,21 +23,23 @@ public class OrderInitiatorMain extends JocClusterService {
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderInitiatorMain.class);
 
     private static final String IDENTIFIER = JocClusterServices.dailyplan.name();
-    private static final String PROPERTIES_FILE = "/joc/joc.properties";
 
     private OrderInitiatorSettings settings;
     private Timer timer;
 
     public OrderInitiatorMain(JocConfiguration jocConfiguration, ThreadGroup parentThreadGroup) {
         super(jocConfiguration, parentThreadGroup, IDENTIFIER);
+        LOGGER.info("Ressource: " + jocConfiguration.getResourceDirectory());
+
     }
 
     @Override
     public JocClusterAnswer start(List<ControllerConfiguration> controllers) {
         try {
-            LOGGER.info(String.format("[%s]start", getIdentifier()));
+            LOGGER.info(String.format("[%s] start", getIdentifier()));
 
             setSettings();
+            LOGGER.info("Creating plan for " + settings.getDayAhead() + " days ahead");
             if (settings.getDayAhead() > 0) {
                 resetStartPlannedOrderTimer(controllers);
             }
@@ -82,11 +86,9 @@ public class OrderInitiatorMain extends JocClusterService {
 
     private void setSettings() throws Exception {
         settings = new OrderInitiatorSettings();
-
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties();
         }
- 
 
         settings.setDayAhead(getProperty(Globals.sosCockpitProperties, "daily_plan_day_ahead", "0"));
         settings.setTimeZone(getProperty(Globals.sosCockpitProperties, "daily_plan_time_zone", "UTC"));
@@ -94,7 +96,6 @@ public class OrderInitiatorMain extends JocClusterService {
 
         settings.setHibernateConfigurationFile(getJocConfig().getHibernateConfiguration());
 
-        
     }
 
 }
