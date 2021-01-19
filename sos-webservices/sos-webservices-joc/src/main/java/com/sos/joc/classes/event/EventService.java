@@ -151,6 +151,7 @@ public class EventService {
         eventSnapshot.setEventType(evt.getKey()); // InventoryUpdated
         eventSnapshot.setObjectType(EventType.FOLDER);
         eventSnapshot.setPath(evt.getFolder());
+        LOGGER.info("listen InventoryEvent for folder: " + evt.getFolder());
         addEvent(eventSnapshot);
     }
     
