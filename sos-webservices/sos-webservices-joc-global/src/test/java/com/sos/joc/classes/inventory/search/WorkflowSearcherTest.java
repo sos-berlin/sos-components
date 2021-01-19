@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.model.instruction.Instruction;
 import com.sos.jobscheduler.model.instruction.InstructionType;
+import com.sos.jobscheduler.model.instruction.Lock;
 import com.sos.jobscheduler.model.instruction.NamedJob;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
@@ -52,9 +54,9 @@ public class WorkflowSearcherTest {
             LOGGER.info("  JOB: " + j.getName());
         }
 
-        jobs = ws.getJobsByAgentName("/agent-.*");
+        jobs = ws.getJobsByAgentId("agent-.*");
         LOGGER.info(" ");
-        LOGGER.info("[getJobsByAgentRefPath(/agent-.*)][size] " + jobs.size());
+        LOGGER.info("[getJobsByAgentId(agent-.*)][size] " + jobs.size());
         for (WorkflowJob j : jobs) {
             LOGGER.info("  JOB: " + j.getName());
             LOGGER.info("           " + j.getJob().getAgentId());
@@ -172,6 +174,36 @@ public class WorkflowSearcherTest {
             LOGGER.info("  INSTRUCTION: " + i.getTYPE());
         }
 
+        instructions = ws.getInstructions(InstructionType.IF, InstructionType.LOCK);
+        LOGGER.info(" ");
+        LOGGER.info("[getInstructions(IF,LOCK)][size] " + instructions.size());
+        for (Instruction i : instructions) {
+            LOGGER.info("  INSTRUCTION: " + i.getTYPE());
+        }
+
+        List<Lock> locks = ws.getLockInstructions();
+        LOGGER.info(" ");
+        LOGGER.info("[getLockInstructions()][size] " + locks.size());
+        for (Lock l : locks) {
+            LOGGER.info("  LOCK: " + l.getLockId());
+        }
+
+        locks = ws.getLockInstructions("lock_10");
+        LOGGER.info(" ");
+        LOGGER.info("[getLockInstructions(lock_10)][size] " + locks.size());
+        for (Lock l : locks) {
+            LOGGER.info("  LOCK: " + l.getLockId());
+        }
+
+        // Predicate<Lock> filter = isCountGreaterThan(1);
+        // locks = ws.getLockInstructions(filter);
+        locks = ws.getLockInstructions(l -> l.getCount() != null && l.getCount() > 0);
+        LOGGER.info(" ");
+        LOGGER.info("[getLockInstructions(filter)][size] " + locks.size());
+        for (Lock l : locks) {
+            LOGGER.info("  LOCK: " + l.getLockId());
+        }
+
         List<NamedJob> jobs = ws.getJobInstructions();
         LOGGER.info(" ");
         LOGGER.info("[getJobInstructions()][size] " + jobs.size());
@@ -225,6 +257,10 @@ public class WorkflowSearcherTest {
             LOGGER.info("  JOB: " + j.getJobName());
             LOGGER.info("           " + j.getLabel());
         }
+    }
+
+    public static Predicate<Lock> isCountGreaterThan(int value) {
+        return l -> l.getCount() != null && l.getCount() > value;
     }
 
     private String getFileContent(Path file) throws Exception {
