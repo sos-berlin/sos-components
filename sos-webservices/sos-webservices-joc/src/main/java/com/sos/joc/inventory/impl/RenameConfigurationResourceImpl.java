@@ -138,8 +138,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                     }
                 } else {
                     // check unique name
-                    List<DBItemInventoryConfiguration> namedItems = dbLayer.getConfigurationByName(p.getFileName().toString(), in.getObjectType()
-                            .intValue());
+                    List<DBItemInventoryConfiguration> namedItems = dbLayer.getConfigurationByName(p.getFileName().toString(), config.getType());
                     if (namedItems != null) {
                         namedItems.remove(config);
                         if (!namedItems.isEmpty()) {
