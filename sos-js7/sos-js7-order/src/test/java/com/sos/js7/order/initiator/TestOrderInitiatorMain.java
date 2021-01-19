@@ -16,7 +16,7 @@ import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 
-public class TestOrderInitiatorMain {
+ public class TestOrderInitiatorMain {
 
     public static void exitAfter(OrderInitiatorMain history, int seconds) {
 
@@ -67,6 +67,7 @@ public class TestOrderInitiatorMain {
         return list;
     }
 
+    @Ignore
     @Test
     public void test() throws Exception {
         Globals.sosCockpitProperties = new JocCockpitProperties();
