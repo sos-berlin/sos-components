@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -188,6 +189,14 @@ public class WorkflowSearcher {
             return r;
         }
         return r.stream().filter(l -> l.getLockId().matches(lockIdRegex)).collect(Collectors.toList());
+    }
+
+    public List<Lock> getLockInstructions(Predicate<? super Lock> filter) {
+        List<Lock> r = getLockInstructions();
+        if (r == null || r.isEmpty() || filter == null) {
+            return r;
+        }
+        return r.stream().filter(filter).collect(Collectors.toList());
     }
 
     public List<NamedJob> getJobInstructions() {

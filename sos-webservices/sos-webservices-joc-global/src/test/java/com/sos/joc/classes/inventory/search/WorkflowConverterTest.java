@@ -48,13 +48,15 @@ public class WorkflowConverterTest {
 
         LOGGER.info("JOB NAMES:" + c.getJobs().getNames().size());
         LOGGER.info("JOB TITELS:" + c.getJobs().getTitels().size());
-        LOGGER.info("JOB AGENT_REFS:" + c.getJobs().getAgentRefs().size());
+        LOGGER.info("JOB AGENT_IDS:" + c.getJobs().getAgentIds().size());
         LOGGER.info("JOB JOB_CLASSES:" + c.getJobs().getJobClasses().size());
         LOGGER.info("JOB CRITICALITIES:" + c.getJobs().getCriticalities().size());
         LOGGER.info("JOB SCRIPTS:" + c.getJobs().getScripts().size());
         LOGGER.info("JOB ARG NAMES:" + c.getJobs().getArgNames().size());
         LOGGER.info("JOB ARG VALUES:" + c.getJobs().getArgValues().size());
         LOGGER.info("--------------------------");
+        LOGGER.info("INSTR LOCK IDS:" + c.getInstructions().getLockIds().size());
+        LOGGER.info("INSTR LOCKS:" + c.getInstructions().getLocks().size());
         LOGGER.info("INSTR JOB NAMES:" + c.getInstructions().getJobNames().size());
         LOGGER.info("INSTR JOB LABELS:" + c.getInstructions().getJobLabels().size());
         LOGGER.info("INSTR JOB ARG NAMES:" + c.getInstructions().getJobArgNames().size());

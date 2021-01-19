@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -194,6 +195,15 @@ public class WorkflowSearcherTest {
             LOGGER.info("  LOCK: " + l.getLockId());
         }
 
+        // Predicate<Lock> filter = isCountGreaterThan(1);
+        // locks = ws.getLockInstructions(filter);
+        locks = ws.getLockInstructions(l -> l.getCount() != null && l.getCount() > 0);
+        LOGGER.info(" ");
+        LOGGER.info("[getLockInstructions(filter)][size] " + locks.size());
+        for (Lock l : locks) {
+            LOGGER.info("  LOCK: " + l.getLockId());
+        }
+
         List<NamedJob> jobs = ws.getJobInstructions();
         LOGGER.info(" ");
         LOGGER.info("[getJobInstructions()][size] " + jobs.size());
@@ -247,6 +257,10 @@ public class WorkflowSearcherTest {
             LOGGER.info("  JOB: " + j.getJobName());
             LOGGER.info("           " + j.getLabel());
         }
+    }
+
+    public static Predicate<Lock> isCountGreaterThan(int value) {
+        return l -> l.getCount() != null && l.getCount() > value;
     }
 
     private String getFileContent(Path file) throws Exception {
