@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSString;
 import com.sos.jobscheduler.model.instruction.Instruction;
 import com.sos.jobscheduler.model.instruction.InstructionType;
+import com.sos.jobscheduler.model.instruction.Lock;
 import com.sos.jobscheduler.model.instruction.NamedJob;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
@@ -52,9 +53,9 @@ public class WorkflowSearcherTest {
             LOGGER.info("  JOB: " + j.getName());
         }
 
-        jobs = ws.getJobsByAgentName("/agent-.*");
+        jobs = ws.getJobsByAgentId("agent-.*");
         LOGGER.info(" ");
-        LOGGER.info("[getJobsByAgentRefPath(/agent-.*)][size] " + jobs.size());
+        LOGGER.info("[getJobsByAgentId(agent-.*)][size] " + jobs.size());
         for (WorkflowJob j : jobs) {
             LOGGER.info("  JOB: " + j.getName());
             LOGGER.info("           " + j.getJob().getAgentId());
@@ -170,6 +171,27 @@ public class WorkflowSearcherTest {
         LOGGER.info("[getInstructions(PUBLISH,AWAIT,FORK)][size] " + instructions.size());
         for (Instruction i : instructions) {
             LOGGER.info("  INSTRUCTION: " + i.getTYPE());
+        }
+
+        instructions = ws.getInstructions(InstructionType.IF, InstructionType.LOCK);
+        LOGGER.info(" ");
+        LOGGER.info("[getInstructions(IF,LOCK)][size] " + instructions.size());
+        for (Instruction i : instructions) {
+            LOGGER.info("  INSTRUCTION: " + i.getTYPE());
+        }
+
+        List<Lock> locks = ws.getLockInstructions();
+        LOGGER.info(" ");
+        LOGGER.info("[getLockInstructions()][size] " + locks.size());
+        for (Lock l : locks) {
+            LOGGER.info("  LOCK: " + l.getLockId());
+        }
+
+        locks = ws.getLockInstructions("lock_10");
+        LOGGER.info(" ");
+        LOGGER.info("[getLockInstructions(lock_10)][size] " + locks.size());
+        for (Lock l : locks) {
+            LOGGER.info("  LOCK: " + l.getLockId());
         }
 
         List<NamedJob> jobs = ws.getJobInstructions();

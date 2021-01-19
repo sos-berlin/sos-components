@@ -13,6 +13,7 @@ import com.sos.jobscheduler.model.instruction.ForkJoin;
 import com.sos.jobscheduler.model.instruction.IfElse;
 import com.sos.jobscheduler.model.instruction.Instruction;
 import com.sos.jobscheduler.model.instruction.InstructionType;
+import com.sos.jobscheduler.model.instruction.Lock;
 import com.sos.jobscheduler.model.instruction.NamedJob;
 import com.sos.jobscheduler.model.instruction.TryCatch;
 import com.sos.jobscheduler.model.job.Job;
@@ -70,12 +71,11 @@ public class WorkflowSearcher {
         return jobs.stream().filter(j -> !namedJobNames.contains(j.getName())).collect(Collectors.toList());
     }
 
-    public List<WorkflowJob> getJobsByAgentName(String agentRefRegex) {
-        if (agentRefRegex == null) {
+    public List<WorkflowJob> getJobsByAgentId(String agentIdRegex) {
+        if (agentIdRegex == null) {
             return getJobs();
         }
-        return toWorkflowJobList(getJobsStream().filter(e -> e.getValue().getAgentId() != null && e.getValue().getAgentId().matches(
-                agentRefRegex)));
+        return toWorkflowJobList(getJobsStream().filter(e -> e.getValue().getAgentId() != null && e.getValue().getAgentId().matches(agentIdRegex)));
     }
 
     public List<WorkflowJob> getJobsByJobClass(String jobClassRegex) {
@@ -174,6 +174,22 @@ public class WorkflowSearcher {
         return result;
     }
 
+    public List<Lock> getLockInstructions() {
+        List<Instruction> r = getInstructions(InstructionType.LOCK);
+        if (r == null) {
+            return null;
+        }
+        return r.stream().map(i -> (Lock) i).collect(Collectors.toList());
+    }
+
+    public List<Lock> getLockInstructions(String lockIdRegex) {
+        List<Lock> r = getLockInstructions();
+        if (r == null || r.isEmpty() || lockIdRegex == null) {
+            return r;
+        }
+        return r.stream().filter(l -> l.getLockId().matches(lockIdRegex)).collect(Collectors.toList());
+    }
+
     public List<NamedJob> getJobInstructions() {
         List<Instruction> r = getInstructions(InstructionType.EXECUTE_NAMED);
         if (r == null) {
@@ -257,6 +273,12 @@ public class WorkflowSearcher {
                 }
                 if (ie.getElse() != null) {
                     handleInstructions(result, ie.getElse().getInstructions(), types);
+                }
+                break;
+            case LOCK:
+                Lock l = in.cast();
+                if (l.getLockedWorkflow() != null) {
+                    handleInstructions(result, l.getLockedWorkflow().getInstructions(), types);
                 }
                 break;
             case TRY:
