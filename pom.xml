@@ -102,13 +102,13 @@
 
 	<build>
 		<plugins>
-			<plugin>
+			<!-- plugin>
 				<artifactId>maven-antrun-plugin</artifactId>
 				<executions>
-					<execution>
+					<execution -->
 						<!-- It is necessary to delete js7.engine once because they don't get a timestamp from sbt tool 
 						     when publishing to maven repository so that maven cannot update the jars -->
-						<inherited>false</inherited>
+						<!-- >inherited>false</inherited>
 						<id>purge-js7-engine</id>
 						<phase>pre-clean</phase>
 						<goals>
@@ -123,7 +123,7 @@
 						</configuration>
 					</execution>
 				</executions>
-			</plugin>
+			</plugin -->
 			<!-- configuration of the release properties -->
 			<plugin>
 				<artifactId>maven-release-plugin</artifactId>
@@ -478,6 +478,11 @@
 				<groupId>org.hibernate</groupId>
 				<artifactId>hibernate-c3p0</artifactId>
 				<version>${hibernate.version}</version>
+			</dependency>
+			<dependency>
+    			<groupId>org.hibernate</groupId>
+    			<artifactId>hibernate-hikaricp</artifactId>
+    			<version>${hibernate.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.mchange</groupId>
