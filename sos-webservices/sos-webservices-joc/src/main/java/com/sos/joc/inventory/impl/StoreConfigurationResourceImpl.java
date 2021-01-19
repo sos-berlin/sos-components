@@ -8,6 +8,7 @@ import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.InventoryAudit;
@@ -66,6 +67,15 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 checkRequiredParameter("path", in.getPath());
                 checkRequiredParameter("objectType", in.getObjectType());
                 java.nio.file.Path path = JocInventory.normalizePath(in.getPath());
+                
+                // Check Java variable name rules
+                for (int i = 0; i < path.getNameCount(); i++) {
+                    if (i == path.getNameCount() - 1) {
+                        CheckJavaVariableName.test("name", path.getName(i).toString());
+                    } else {
+                        CheckJavaVariableName.test("folder", path.getName(i).toString());
+                    }
+                }
                 
                 // check if name is unique
                 if (!JocInventory.isFolder(in.getObjectType())) {

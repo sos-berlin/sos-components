@@ -315,7 +315,6 @@ public class JocInventory {
     
     public static void postEvent(String folder) {
         EventBus.getInstance().post(new InventoryEvent(folder));
-        LOGGER.info("post InventoryEvent for folder: " + folder);
     }
 
     public static class InventoryPath {
