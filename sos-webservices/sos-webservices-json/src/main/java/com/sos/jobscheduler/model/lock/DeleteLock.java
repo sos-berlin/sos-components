@@ -3,7 +3,6 @@ package com.sos.jobscheduler.model.lock;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.jobscheduler.model.deploy.DeleteType;
 import com.sos.joc.model.common.IDeleteObject;
@@ -21,8 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
-    "id",
-    "path"
+    "id"
 })
 public class DeleteLock implements IDeleteObject
 {
@@ -44,15 +42,6 @@ public class DeleteLock implements IDeleteObject
      */
     @JsonProperty("id")
     private String id;
-    /**
-     * path
-     * <p>
-     * absolute path of an object.
-     * 
-     */
-    @JsonProperty("path")
-    @JsonPropertyDescription("absolute path of an object.")
-    private String path;
 
     /**
      * No args constructor for use in serialization
@@ -63,14 +52,12 @@ public class DeleteLock implements IDeleteObject
 
     /**
      * 
-     * @param path
      * @param id
      * 
      */
-    public DeleteLock(String id, String path) {
+    public DeleteLock(String id) {
         super();
         this.id = id;
-        this.path = path;
     }
 
     /**
@@ -108,36 +95,14 @@ public class DeleteLock implements IDeleteObject
         this.id = id;
     }
 
-    /**
-     * path
-     * <p>
-     * absolute path of an object.
-     * 
-     */
-    @JsonProperty("path")
-    public String getPath() {
-        return path;
-    }
-
-    /**
-     * path
-     * <p>
-     * absolute path of an object.
-     * 
-     */
-    @JsonProperty("path")
-    public void setPath(String path) {
-        this.path = path;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("id", id).append("path", path).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("id", id).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(id).append(tYPE).toHashCode();
+        return new HashCodeBuilder().append(tYPE).append(id).toHashCode();
     }
 
     @Override
@@ -149,7 +114,7 @@ public class DeleteLock implements IDeleteObject
             return false;
         }
         DeleteLock rhs = ((DeleteLock) other);
-        return new EqualsBuilder().append(path, rhs.path).append(id, rhs.id).append(tYPE, rhs.tYPE).isEquals();
+        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(id, rhs.id).isEquals();
     }
 
 }

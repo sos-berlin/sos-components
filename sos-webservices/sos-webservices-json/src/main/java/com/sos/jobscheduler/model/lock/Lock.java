@@ -42,18 +42,18 @@ public class Lock implements IConfigurationObject, IDeployObject
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("id")
     private String id;
     /**
-     * non negative integer
-     * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("limit")
-    private Integer limit;
+    private Integer limit = 1;
     /**
      * path
      * <p>
@@ -110,6 +110,7 @@ public class Lock implements IConfigurationObject, IDeployObject
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("id")
@@ -121,6 +122,7 @@ public class Lock implements IConfigurationObject, IDeployObject
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("id")
@@ -129,9 +131,8 @@ public class Lock implements IConfigurationObject, IDeployObject
     }
 
     /**
-     * non negative integer
-     * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("limit")
@@ -140,9 +141,8 @@ public class Lock implements IConfigurationObject, IDeployObject
     }
 
     /**
-     * non negative integer
-     * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("limit")
