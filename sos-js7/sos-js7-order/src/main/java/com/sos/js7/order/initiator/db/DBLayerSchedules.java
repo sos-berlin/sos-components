@@ -124,6 +124,7 @@ public class DBLayerSchedules {
         filterDeployHistory.setType(ConfigurationType.WORKFLOW);
         filterDeployHistory.setListOfControllerIds(filter.getListOfControllerIds());
         filterDeployHistory.setOperation(0);
+        filterDeployHistory.setState(DeploymentState.DEPLOYED);
 
         DBLayerDeployHistory dbLayerDeploy = new DBLayerDeployHistory(sosHibernateSession);
         DBLayerInventoryConfigurations dbLayerInventoryConfigurations = new DBLayerInventoryConfigurations(sosHibernateSession);
