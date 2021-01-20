@@ -23,10 +23,12 @@ import org.hibernate.query.Query;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue;
+import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue.ReturnType;
+import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.deployment.DBItemDepConfiguration;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
@@ -43,7 +45,7 @@ import com.sos.joc.model.tree.Tree;
 public class InventoryDBLayer extends DBLayer {
 
     private static final long serialVersionUID = 1L;
- 
+
     public InventoryDBLayer(SOSHibernateSession session) {
         super(session);
     }
@@ -97,17 +99,17 @@ public class InventoryDBLayer extends DBLayer {
         }
         return null;
     }
-    
-//    //invContent is missing in DBItemDepConfiguration
-//    public DBItemDepConfiguration getLastDeployedContent(Long configId) throws SOSHibernateException {
-//        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
-//        hql.append(" where inventoryConfigurationId := configId");
-//        hql.append(" order by id desc");
-//        Query<DBItemDepConfiguration> query = getSession().createQuery(hql.toString());
-//        query.setParameter("configId", configId);
-//        query.setMaxResults(1);
-//        return getSession().getSingleResult(query);
-//    }
+
+    // //invContent is missing in DBItemDepConfiguration
+    // public DBItemDepConfiguration getLastDeployedContent(Long configId) throws SOSHibernateException {
+    // StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
+    // hql.append(" where inventoryConfigurationId := configId");
+    // hql.append(" order by id desc");
+    // Query<DBItemDepConfiguration> query = getSession().createQuery(hql.toString());
+    // query.setParameter("configId", configId);
+    // query.setMaxResults(1);
+    // return getSession().getSingleResult(query);
+    // }
 
     public List<InventoryDeploymentItem> getDeploymentHistory(Long configId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeploymentItem.class.getName());
@@ -131,8 +133,9 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("configId", configId);
         return getSession().getSingleResult(query);
     }
-    
-    public Map<Long, DBItemInventoryReleasedConfiguration> getReleasedItemsByConfigurationIds(Collection<Long> configIds) throws SOSHibernateException {
+
+    public Map<Long, DBItemInventoryReleasedConfiguration> getReleasedItemsByConfigurationIds(Collection<Long> configIds)
+            throws SOSHibernateException {
         if (configIds != null && !configIds.isEmpty()) {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
             hql.append(" where cId in (:configIds) ");
@@ -446,7 +449,7 @@ public class InventoryDBLayer extends DBLayer {
         }
         return getSession().getSingleResult(query);
     }
-    
+
     public List<DBItemInventoryConfiguration> getConfigurationByName(String name, Integer type) throws SOSHibernateException {
         boolean isCalendar = JocInventory.isCalendar(type);
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
@@ -869,5 +872,44 @@ public class InventoryDBLayer extends DBLayer {
             }
         }
         return new HashSet<>();
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedWorkflowsByLockId(String lockId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select ic from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
+        hql.append("left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
+        hql.append("on ic.id=sw.inventoryConfigurationId ");
+        hql.append("where ic.type=:type ");
+        hql.append("and sw.deployed=false ");
+        hql.append("and ");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "sw.instructions", "$.locks." + lockId)).append(" is not null");
+
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
+        return getSession().getResultList(query);
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedSchedulesByWorkflowPath(String workflowPath) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+        hql.append("where type=:type ");
+        hql.append("and ");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "content", "$.workflowPath")).append("=:workflowPath");
+
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
+        query.setParameter("workflowPath", workflowPath);
+        return getSession().getResultList(query);
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedSchedulesByCalendarPath(String calendarPath) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+        hql.append("where type=:type ");
+        hql.append("and ");
+        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "content", "$.calendars");
+        hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":calendarPath"));
+
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
+        query.setParameter("calendarPath", "\"" + calendarPath + "\"");
+        return getSession().getResultList(query);
     }
 }
