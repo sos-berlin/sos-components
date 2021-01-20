@@ -1,43 +1,41 @@
 package com.sos.joc.db.inventory;
 
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
-import com.sos.joc.model.inventory.common.ConfigurationType;
 
-public class InventoryDBLayerTest {
+public class InventoryDBLayerUsedByTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(InventoryDBLayerTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(InventoryDBLayerUsedByTest.class);
 
     @Ignore
     @Test
-    public void testTreeFolder() throws Exception {
+    public void testUsedLocks() throws Exception {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
+        String lockId = "lock_1";
         try {
             factory = createFactory();
             session = factory.openStatelessSession();
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             session.beginTransaction();
 
-            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder("/", false, Arrays.asList(ConfigurationType.WORKFLOW.intValue()),
-                    false);
-            for (InventoryTreeFolderItem item : items) {
-                LOGGER.info(SOSString.toString(item));
+            List<DBItemInventoryConfiguration> items = dbLayer.getUsedWorkflowsByLockId(lockId);
+
+            LOGGER.info(String.format("[testUsedLocks][lockId=%s]found=%s", lockId, items.size()));
+            for (DBItemInventoryConfiguration item : items) {
+                LOGGER.info("---" + SOSHibernate.toString(item));
             }
+
             session.commit();
         } catch (Exception e) {
             try {
@@ -57,25 +55,30 @@ public class InventoryDBLayerTest {
 
     @Ignore
     @Test
-    public void testJocInventoryDeleteConfigurations() throws Exception {
+    public void testUsedSchedules() throws Exception {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
+        String workflowPath = "/workflow1";
+        String calendarPath = "/calendar1";
         try {
             factory = createFactory();
             session = factory.openStatelessSession();
-            session.setAutoCommit(false);
-
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+            session.beginTransaction();
 
-            Set<Long> ids = new HashSet<Long>();
-            ids.add(1L);
-            /// ids.add(2L);
-
-            if (ids != null && ids.size() > 0) {
-                session.beginTransaction();
-                dbLayer.deleteConfigurations(ids);
-                session.commit();
+            List<DBItemInventoryConfiguration> items = dbLayer.getUsedSchedulesByWorkflowPath(workflowPath);
+            LOGGER.info(String.format("[testUsedSchedules][workflowPath=%s]found=%s", workflowPath, items.size()));
+            for (DBItemInventoryConfiguration item : items) {
+                LOGGER.info("---" + SOSHibernate.toString(item));
             }
+
+            items = dbLayer.getUsedSchedulesByCalendarPath(calendarPath);
+            LOGGER.info(String.format("[testUsedSchedules][calendarPath=%s]found=%s", calendarPath, items.size()));
+            for (DBItemInventoryConfiguration item : items) {
+                LOGGER.info("---" + SOSHibernate.toString(item));
+            }
+
+            session.commit();
         } catch (Exception e) {
             try {
                 session.rollback();
