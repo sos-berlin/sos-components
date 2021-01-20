@@ -260,6 +260,11 @@ public abstract class PublishUtils {
                     sig.setAccount(account);
                     sig.setInvConfigurationId(draft.getId());
                     sig.setModified(Date.from(Instant.now()));
+                    if(draft.getType() == ConfigurationType.WORKFLOW.intValue()) {
+                        Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
+                        workflow.setPath(draft.getPath());
+                        draft.setContent(om.writeValueAsString(workflow));
+                    }
                     sig.setSignature(SignObject.signPGP(keyPair.getPrivateKey(), draft.getContent(), null));
                     signedDrafts.put(draft, sig);
                 } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
@@ -273,6 +278,11 @@ public abstract class PublishUtils {
                     sig.setAccount(account);
                     sig.setInvConfigurationId(draft.getId());
                     sig.setModified(Date.from(Instant.now()));
+                    if(draft.getType() == ConfigurationType.WORKFLOW.intValue()) {
+                        Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
+                        workflow.setPath(draft.getPath());
+                        draft.setContent(om.writeValueAsString(workflow));
+                    }
                     sig.setSignature(SignObject.signX509(kp.getPrivate(), draft.getContent()));
                     signedDrafts.put(draft, sig);
                 } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
@@ -282,6 +292,11 @@ public abstract class PublishUtils {
                     sig.setInvConfigurationId(draft.getId());
                     sig.setModified(Date.from(Instant.now()));
 //                    X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+                    if(draft.getType() == ConfigurationType.WORKFLOW.intValue()) {
+                        Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
+                        workflow.setPath(draft.getPath());
+                        draft.setContent(om.writeValueAsString(workflow));
+                    }
                     sig.setSignature(SignObject.signX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, kp.getPrivate(), draft.getContent()));
                     signedDrafts.put(draft, sig);
                 }
@@ -315,6 +330,11 @@ public abstract class PublishUtils {
                 sig.setAccount(account);
                 sig.setInvConfigurationId(unsignedDraftUpdated.getId());
                 sig.setModified(Date.from(Instant.now()));
+                if(unsignedDraft.getType() == ConfigurationType.WORKFLOW.intValue()) {
+                    Workflow workflow = om.readValue(unsignedDraft.getContent(), Workflow.class);
+                    workflow.setPath(unsignedDraft.getPath());
+                    unsignedDraft.setContent(om.writeValueAsString(workflow));
+                }
                 sig.setSignature(SignObject.signPGP(keyPair.getPrivateKey(), unsignedDraftUpdated.getContent(), null));
                 signedDrafts.put(unsignedDraftUpdated, sig);
             } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
@@ -328,6 +348,11 @@ public abstract class PublishUtils {
                 sig.setAccount(account);
                 sig.setInvConfigurationId(unsignedDraftUpdated.getId());
                 sig.setModified(Date.from(Instant.now()));
+                if(unsignedDraft.getType() == ConfigurationType.WORKFLOW.intValue()) {
+                    Workflow workflow = om.readValue(unsignedDraft.getContent(), Workflow.class);
+                    workflow.setPath(unsignedDraft.getPath());
+                    unsignedDraft.setContent(om.writeValueAsString(workflow));
+                }
                 sig.setSignature(SignObject.signX509(kp.getPrivate(), unsignedDraftUpdated.getContent()));
                 signedDrafts.put(unsignedDraftUpdated, sig);
             } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
@@ -337,6 +362,11 @@ public abstract class PublishUtils {
                 sig.setInvConfigurationId(unsignedDraftUpdated.getId());
                 sig.setModified(Date.from(Instant.now()));
 //                X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+                if(unsignedDraft.getType() == ConfigurationType.WORKFLOW.intValue()) {
+                    Workflow workflow = om.readValue(unsignedDraft.getContent(), Workflow.class);
+                    workflow.setPath(unsignedDraft.getPath());
+                    unsignedDraft.setContent(om.writeValueAsString(workflow));
+                }
                 sig.setSignature(SignObject.signX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, kp.getPrivate(), unsignedDraftUpdated.getContent()));
                 signedDrafts.put(unsignedDraftUpdated, sig);
             }
@@ -378,26 +408,69 @@ public abstract class PublishUtils {
                     sig.setDepHistoryId(deployed.getId());
                     sig.setInvConfigurationId(deployed.getInventoryConfigurationId());
                     sig.setModified(Date.from(Instant.now()));
+                    if(deployed.getType() == DeployType.WORKFLOW.intValue()) {
+                        Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
+                        workflow.setPath(deployed.getPath());
+                        deployed.setContent(om.writeValueAsString(workflow));
+                    }
                     sig.setSignature(SignObject.signPGP(keyPair.getPrivateKey(), deployed.getContent(), null));
                     signedReDeployable.put(deployed, sig);
-                } else {
+                } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                     KeyPair kp = null;
-                    String signerAlgorithm = null;
-                    if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+                    if (keyPair.getPrivateKey().startsWith(SOSKeyConstants.PRIVATE_RSA_KEY_HEADER)) {
                         kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(keyPair.getPrivateKey());
-                        signerAlgorithm = SOSKeyConstants.RSA_SIGNER_ALGORITHM;
                     } else {
-                        kp = KeyUtil.getKeyPairFromECDSAPrivatKeyString(keyPair.getPrivateKey());
-                        signerAlgorithm = SOSKeyConstants.ECDSA_SIGNER_ALGORITHM;
+                        kp = KeyUtil.getKeyPairFromPrivatKeyString(keyPair.getPrivateKey());
                     }
                     sig = new DBItemDepSignatures();
                     sig.setAccount(account);
-                    sig.setDepHistoryId(deployed.getId());
                     sig.setInvConfigurationId(deployed.getInventoryConfigurationId());
                     sig.setModified(Date.from(Instant.now()));
-                    sig.setSignature(SignObject.signX509(signerAlgorithm, kp.getPrivate(), deployed.getContent()));
+                    if(deployed.getType() == DeployType.WORKFLOW.intValue()) {
+                        Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
+                        workflow.setPath(deployed.getPath());
+                        deployed.setContent(om.writeValueAsString(workflow));
+                    }
+                    sig.setSignature(SignObject.signX509(kp.getPrivate(), deployed.getContent()));
+                    signedReDeployable.put(deployed, sig);
+                } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+                    KeyPair kp = KeyUtil.getKeyPairFromECDSAPrivatKeyString(keyPair.getPrivateKey());
+                    sig = new DBItemDepSignatures();
+                    sig.setAccount(account);
+                    sig.setInvConfigurationId(deployed.getInventoryConfigurationId());
+                    sig.setModified(Date.from(Instant.now()));
+//                    X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+                    if(deployed.getType() == ConfigurationType.WORKFLOW.intValue()) {
+                        Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
+                        workflow.setPath(deployed.getPath());
+                        deployed.setContent(om.writeValueAsString(workflow));
+                    }
+                    sig.setSignature(SignObject.signX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, kp.getPrivate(), deployed.getContent()));
                     signedReDeployable.put(deployed, sig);
                 }
+//                else {
+//                    KeyPair kp = null;
+//                    String signerAlgorithm = null;
+//                    if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+//                        kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(keyPair.getPrivateKey());
+//                        signerAlgorithm = SOSKeyConstants.RSA_SIGNER_ALGORITHM;
+//                    } else {
+//                        kp = KeyUtil.getKeyPairFromECDSAPrivatKeyString(keyPair.getPrivateKey());
+//                        signerAlgorithm = SOSKeyConstants.ECDSA_SIGNER_ALGORITHM;
+//                    }
+//                    sig = new DBItemDepSignatures();
+//                    sig.setAccount(account);
+//                    sig.setDepHistoryId(deployed.getId());
+//                    sig.setInvConfigurationId(deployed.getInventoryConfigurationId());
+//                    sig.setModified(Date.from(Instant.now()));
+//                    if(deployed.getType() == DeployType.WORKFLOW.intValue()) {
+//                        Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
+//                        workflow.setPath(deployed.getPath());
+//                        deployed.setContent(om.writeValueAsString(workflow));
+//                    }
+//                    sig.setSignature(SignObject.signX509(signerAlgorithm, kp.getPrivate(), deployed.getContent()));
+//                    signedReDeployable.put(deployed, sig);
+//                }
                 if (sig != null) {
                     session.save(sig);
                 }
