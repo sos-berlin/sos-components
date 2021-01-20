@@ -674,6 +674,9 @@ public abstract class PublishUtils {
                     case LOCK:
                         try {
                             Lock lock = om.readValue(item.getContent(), Lock.class);
+                            if (lock.getId() == null) {
+                                lock.setId(item.getName());
+                            }
                             return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
                         } catch (Exception e) {
                             throw new JocDeployException(e);
@@ -704,6 +707,9 @@ public abstract class PublishUtils {
                     case LOCK:
                         try {
                             Lock lock = om.readValue(item.getContent(), Lock.class);
+                            if (lock.getId() == null) {
+                                lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                            }
                             return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
                         } catch (Exception e) {
                             throw new JocDeployException(e);
@@ -762,6 +768,9 @@ public abstract class PublishUtils {
                                 case LOCK:
                                     try {
                                         Lock lock = (Lock)item.getContent();
+                                        if (lock.getId() == null) {
+                                            lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                                        }
                                         return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
                                     } catch (Exception e) {
                                         throw new JocDeployException(e);
@@ -795,6 +804,9 @@ public abstract class PublishUtils {
                                 case LOCK:
                                     try {
                                         Lock lock = om.readValue(item.getContent(), Lock.class);
+                                        if (lock.getId() == null) {
+                                            lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                                        }
                                         return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
                                     } catch (Exception e) {
                                         throw new JocDeployException(e);
@@ -841,6 +853,9 @@ public abstract class PublishUtils {
                                 case LOCK:
                                     try {
                                         Lock lock = om.readValue(item.getContent(), Lock.class);
+                                        if (lock.getId() == null) {
+                                            lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                                        }
                                         return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
                                     } catch (Exception e) {
                                         throw new JocDeployException(e);
@@ -886,6 +901,10 @@ public abstract class PublishUtils {
                                     case LOCK:
                                         try {
                                             Lock lock = om.readValue(item.getContent(), Lock.class);
+                                            if (lock.getId() == null) {
+                                                lock.setId(item.getName());
+                                            }
+//                                            JLock jLock = JLock.of(LockId.of(lock.getId()), lock.getLimit());
                                             return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
                                         } catch (Exception e) {
                                             throw new JocDeployException(e);
@@ -919,6 +938,9 @@ public abstract class PublishUtils {
                                     case LOCK:
                                         try {
                                             Lock lock = om.readValue(item.getContent(), Lock.class);
+                                            if (lock.getId() == null) {
+                                                lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                                            }
                                             return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
                                         } catch (Exception e) {
                                             throw new JocDeployException(e);
@@ -968,6 +990,9 @@ public abstract class PublishUtils {
                                     case LOCK:
                                         try {
                                             Lock lock = (Lock)item.getContent();
+                                            if (lock.getId() == null) {
+                                                lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                                            }
                                             return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
                                         } catch (Exception e) {
                                             throw new JocDeployException(e);
@@ -998,6 +1023,9 @@ public abstract class PublishUtils {
                                     case LOCK:
                                         try {
                                             Lock lock = om.readValue(item.getContent(), Lock.class);
+                                            if (lock.getId() == null) {
+                                                lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                                            }
                                             return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
                                         } catch (Exception e) {
                                             throw new JocDeployException(e);
@@ -1039,6 +1067,9 @@ public abstract class PublishUtils {
                                 case LOCK:
                                     try {
                                         Lock lock = om.readValue(item.getContent(), Lock.class);
+                                        if (lock.getId() == null) {
+                                            lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                                        }
                                         return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
                                     } catch (Exception e) {
                                         throw new JocDeployException(e);
@@ -1080,6 +1111,9 @@ public abstract class PublishUtils {
                             Lock lock;
                             try {
                                 lock = om.readValue(item.getContent(), Lock.class);
+                                if (lock.getId() == null) {
+                                    lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                                }
                                 return JUpdateItemOperation.deleteSimple(LockId.of(lock.getId()));
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
@@ -1111,15 +1145,15 @@ public abstract class PublishUtils {
             workflow.setVersionId(commitId);
             draft.setContent(om.writeValueAsString(workflow));
             break;
-        case LOCK:
             // TODO: locks and other objects
-            break;
+        case LOCK:
         case WORKINGDAYSCALENDAR:
         case NONWORKINGDAYSCALENDAR:
         case FOLDER:
+        case SCHEDULE:
+            break;
         case JOBCLASS:
         case JUNCTION:
-        case SCHEDULE:
         default:
             throw new JocNotImplementedException();
         }
