@@ -1259,6 +1259,7 @@ public class DBLayerDeploy {
                 newDepHistoryItem.setPath(inventoryConfig.getPath());
                 newDepHistoryItem.setFolder(inventoryConfig.getFolder());
                 newDepHistoryItem.setSignedContent(verifiedConfigurations.get(inventoryConfig).getSignature());
+                newDepHistoryItem.setInvContent(inventoryConfig.getContent());
                 newDepHistoryItem.setErrorMessage(errorMessage);
                 // TODO: get Version to set here
                 newDepHistoryItem.setVersion(null);
@@ -1313,6 +1314,7 @@ public class DBLayerDeploy {
                 newDepHistoryItem.setCommitId(versionId);
                 try {
                     newDepHistoryItem.setContent(Globals.objectMapper.writeValueAsString(jsObject.getContent()));
+                    newDepHistoryItem.setInvContent(newDepHistoryItem.getContent());
                 } catch (JsonProcessingException e1) {
                     // TODO Auto-generated catch block
                 }
