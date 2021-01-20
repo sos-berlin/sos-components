@@ -24,7 +24,7 @@ import com.sos.schema.JsonValidator;
 public class ValidateNameResourceImpl extends JOCResourceImpl implements IValidateNameResource {
 
     @Override
-    public JOCDefaultResponse parse(final String accessToken, byte[] inBytes) {
+    public JOCDefaultResponse check(final String accessToken, byte[] inBytes) {
         try {
             initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validate(inBytes, RequestFilter.class);
