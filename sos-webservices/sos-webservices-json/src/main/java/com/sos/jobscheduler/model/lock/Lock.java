@@ -42,7 +42,6 @@ public class Lock implements IConfigurationObject, IDeployObject
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("id")
@@ -110,7 +109,6 @@ public class Lock implements IConfigurationObject, IDeployObject
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("id")
@@ -122,7 +120,6 @@ public class Lock implements IConfigurationObject, IDeployObject
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("id")
