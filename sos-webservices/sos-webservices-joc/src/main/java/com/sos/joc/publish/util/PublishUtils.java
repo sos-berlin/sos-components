@@ -110,7 +110,7 @@ import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.DeployablesFilter;
 import com.sos.joc.model.publish.DeployablesValidFilter;
 import com.sos.joc.model.publish.DeploymentState;
-import com.sos.joc.model.publish.JSObject;
+import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.ReleasablesFilter;
 import com.sos.joc.model.publish.Signature;
@@ -118,7 +118,7 @@ import com.sos.joc.model.publish.SignaturePath;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.sign.JocKeyType;
 import com.sos.joc.publish.common.ConfigurationObjectFileExtension;
-import com.sos.joc.publish.common.JSObjectFileExtension;
+import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
@@ -744,7 +744,7 @@ public abstract class PublishUtils {
     }
 
     public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdatePGP2(
-            String commitId,  Map<JSObject, DBItemDepSignatures> drafts,
+            String commitId,  Map<ControllerObject, DBItemDepSignatures> drafts,
             Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer)
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         Set<JUpdateItemOperation> updateItemsOperationsVersioned = new HashSet<JUpdateItemOperation>();
@@ -965,7 +965,7 @@ public abstract class PublishUtils {
     }
 
     public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509_2(
-            String commitId,  Map<JSObject, DBItemDepSignatures> drafts,
+            String commitId,  Map<ControllerObject, DBItemDepSignatures> drafts,
             Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer,
             String signatureAlgorithm, String signerDN)
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
@@ -1250,13 +1250,13 @@ public abstract class PublishUtils {
     }
 
     public static Set<DBItemDeploymentHistory> cloneInvConfigurationsToDepHistoryItems(
-            Map<JSObject, DBItemDepSignatures> draftsWithSignature, String account, DBLayerDeploy dbLayerDeploy, String commitId,
+            Map<ControllerObject, DBItemDepSignatures> draftsWithSignature, String account, DBLayerDeploy dbLayerDeploy, String commitId,
             String controllerId, Date deploymentDate) throws JsonParseException, JsonMappingException, IOException {
         Set<DBItemDeploymentHistory> deployedObjects;
         try {
             DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
             deployedObjects = new HashSet<DBItemDeploymentHistory>();
-            for (JSObject draft : draftsWithSignature.keySet()) {
+            for (ControllerObject draft : draftsWithSignature.keySet()) {
                 DBItemDeploymentHistory newDeployedObject = new DBItemDeploymentHistory();
                 newDeployedObject.setAccount(account);
                 // TODO: get Version to set here
@@ -1418,10 +1418,10 @@ public abstract class PublishUtils {
         }
     }
 
-    public static void prepareNextInvConfigGeneration(Set<JSObject> drafts, 
+    public static void prepareNextInvConfigGeneration(Set<ControllerObject> drafts, 
             Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String controllerId, DBLayerDeploy dbLayer) {
         try {
-            for (JSObject draft : drafts) {
+            for (ControllerObject draft : drafts) {
                 DBItemInventoryConfiguration configuration = dbLayer.getConfiguration(draft.getPath(), mapDeployType(draft.getObjectType()));
                 configuration.setDeployed(true);
                 configuration.setModified(Date.from(Instant.now()));
@@ -1496,12 +1496,12 @@ public abstract class PublishUtils {
         return alreadyDeployedToDelete;
     }
 
-    public static Map<JSObject, SignaturePath> readZipFileContentWithSignatures(InputStream inputStream, JocMetaInfo jocMetaInfo)
+    public static Map<ControllerObject, SignaturePath> readZipFileContentWithSignatures(InputStream inputStream, JocMetaInfo jocMetaInfo)
             throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException, 
             JocConfigurationException, DBOpenSessionException {
-        Set<JSObject> objects = new HashSet<JSObject>();
+        Set<ControllerObject> objects = new HashSet<ControllerObject>();
         Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
-        Map<JSObject, SignaturePath> objectsWithSignature = new HashMap<JSObject, SignaturePath>();
+        Map<ControllerObject, SignaturePath> objectsWithSignature = new HashMap<ControllerObject, SignaturePath>();
         ZipInputStream zipStream = null;
         try {
             zipStream = new ZipInputStream(inputStream);
@@ -1529,62 +1529,62 @@ public abstract class PublishUtils {
                 // process deployables only
                 SignaturePath signaturePath = new SignaturePath();
                 Signature signature = new Signature();
-                if (entryName.endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+                if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
                     WorkflowPublish workflowPublish = new WorkflowPublish();
                     Workflow workflow = om.readValue(outBuffer.toString(), Workflow.class);
                     if (checkObjectNotEmpty(workflow)) {
                         workflowPublish.setContent(workflow);
                     } else {
                         throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
+                                ("/" + entryName).replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
                     }
-                    workflowPublish.setPath(("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""));
+                    workflowPublish.setPath(("/" + entryName).replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""));
                     workflowPublish.setObjectType(DeployType.WORKFLOW);
                     objects.add(workflowPublish);
-                } else if (entryName.endsWith(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-                    signaturePath.setObjectPath(("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value(), ""));
+                } else if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
+                    signaturePath.setObjectPath(("/" + entryName).replace(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value(), ""));
                     signature.setSignatureString(outBuffer.toString());
                     signaturePath.setSignature(signature);
                     signaturePaths.add(signaturePath);
-                } else if (entryName.endsWith(JSObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value())) {
-                    signaturePath.setObjectPath(("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value(), ""));
+                } else if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value())) {
+                    signaturePath.setObjectPath(("/" + entryName).replace(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value(), ""));
                     signature.setSignatureString(outBuffer.toString());
                     signaturePath.setSignature(signature);
                     signaturePaths.add(signaturePath);
-                } else if (entryName.endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
                     LockPublish lockPublish = new LockPublish();
                     Lock lock = om.readValue(outBuffer.toString(), Lock.class);
                     if (checkObjectNotEmpty(lock)) {
                         lockPublish.setContent(lock);
                     } else {
                         throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
+                                ("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
                     }
-                    lockPublish.setPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                    lockPublish.setPath(("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
                     lockPublish.setObjectType(DeployType.LOCK);
                     objects.add(lockPublish);
-                } else if (entryName.endsWith(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
                     JunctionPublish junctionPublish = new JunctionPublish();
                     Junction junction = om.readValue(outBuffer.toString(), Junction.class);
                     if (checkObjectNotEmpty(junction)) {
                         junctionPublish.setContent(junction);
                     } else {
                         throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
+                                ("/" + entryName).replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
                     }
-                    junctionPublish.setPath(("/" + entryName).replace(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), ""));
+                    junctionPublish.setPath(("/" + entryName).replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), ""));
                     junctionPublish.setObjectType(DeployType.JUNCTION);
                     objects.add(junctionPublish);
-                } else if (entryName.endsWith(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
                     JobClassPublish jobClassPublish = new JobClassPublish();
                     JobClass jobClass = om.readValue(outBuffer.toString(), JobClass.class);
                     if (checkObjectNotEmpty(jobClass)) {
                         jobClassPublish.setContent(jobClass);
                     } else {
                         throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
+                                ("/" + entryName).replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
                     }
-                    jobClassPublish.setPath(("/" + entryName).replace(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), ""));
+                    jobClassPublish.setPath(("/" + entryName).replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), ""));
                     jobClassPublish.setObjectType(DeployType.JOBCLASS);
                     objects.add(jobClassPublish);
                 } 
@@ -1632,52 +1632,52 @@ public abstract class PublishUtils {
                     }
                 }
                 // process deployables and releaseables
-                if (entryName.endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+                if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
                     WorkflowEdit workflowEdit = new WorkflowEdit();
                     Workflow workflow = om.readValue(outBuffer.toString(), Workflow.class);
                     if (checkObjectNotEmpty(workflow)) {
                         workflowEdit.setConfiguration(workflow);
                     } else {
                         throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
+                                ("/" + entryName).replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
                     }
-                    workflowEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""));
+                    workflowEdit.setPath(("/" + entryName).replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""));
                     workflowEdit.setObjectType(ConfigurationType.WORKFLOW);
                     objects.add(workflowEdit);
-                } else if (entryName.endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
                     LockEdit lockEdit = new LockEdit();
                     Lock lock = om.readValue(outBuffer.toString(), Lock.class);
                     if (checkObjectNotEmpty(lock)) {
                         lockEdit.setConfiguration(lock);
                     } else {
                         throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
+                                ("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
                     }
-                    lockEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                    lockEdit.setPath(("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
                     lockEdit.setObjectType(ConfigurationType.LOCK);
                     objects.add(lockEdit);
-                } else if (entryName.endsWith(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
                     JunctionEdit junctionEdit = new JunctionEdit();
                     Junction junction = om.readValue(outBuffer.toString(), Junction.class);
                     if (checkObjectNotEmpty(junction)) {
                         junctionEdit.setConfiguration(junction);
                     } else {
                         throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
+                                ("/" + entryName).replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
                     }
-                    junctionEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), ""));
+                    junctionEdit.setPath(("/" + entryName).replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), ""));
                     junctionEdit.setObjectType(ConfigurationType.JUNCTION);
                     objects.add(junctionEdit);
-                } else if (entryName.endsWith(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
                     JobClassEdit jobClassEdit = new JobClassEdit();
                     JobClass jobClass = om.readValue(outBuffer.toString(), JobClass.class);
                     if (checkObjectNotEmpty(jobClass)) {
                         jobClassEdit.setConfiguration(jobClass);
                     } else {
                         throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
+                                ("/" + entryName).replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
                     }
-                    jobClassEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), ""));
+                    jobClassEdit.setPath(("/" + entryName).replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), ""));
                     jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
                     objects.add(jobClassEdit);
                 } else if (entryName.endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value())) {
@@ -1724,12 +1724,12 @@ public abstract class PublishUtils {
         return objects;
     }
 
-    public static Map<JSObject, SignaturePath> readTarGzipFileContentWithSignatures(InputStream inputStream, JocMetaInfo jocMetaInfo) 
+    public static Map<ControllerObject, SignaturePath> readTarGzipFileContentWithSignatures(InputStream inputStream, JocMetaInfo jocMetaInfo) 
             throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException, 
             JocConfigurationException, DBOpenSessionException {
-        Set<JSObject> objects = new HashSet<JSObject>();
+        Set<ControllerObject> objects = new HashSet<ControllerObject>();
         Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
-        Map<JSObject, SignaturePath> objectsWithSignature = new HashMap<JSObject, SignaturePath>();
+        Map<ControllerObject, SignaturePath> objectsWithSignature = new HashMap<ControllerObject, SignaturePath>();
         GZIPInputStream gzipInputStream = null;
         TarArchiveInputStream tarArchiveInputStream = null;
         try {
@@ -1759,62 +1759,62 @@ public abstract class PublishUtils {
                 // process deployables only
                 SignaturePath signaturePath = new SignaturePath();
                 Signature signature = new Signature();
-                if (entryName.endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+                if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
                     WorkflowPublish workflowPublish = new WorkflowPublish();
                     Workflow workflow = om.readValue(outBuffer.toString(), Workflow.class);
                     if (checkObjectNotEmpty(workflow)) {
                         workflowPublish.setContent(workflow);
                     } else {
                         throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
+                                ("/" + entryName).replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
                     }
-                    workflowPublish.setPath(("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""));
+                    workflowPublish.setPath(("/" + entryName).replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""));
                     workflowPublish.setObjectType(DeployType.WORKFLOW);
                     objects.add(workflowPublish);
-                } else if (entryName.endsWith(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-                    signaturePath.setObjectPath(("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value(), ""));
+                } else if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
+                    signaturePath.setObjectPath(("/" + entryName).replace(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value(), ""));
                     signature.setSignatureString(outBuffer.toString());
                     signaturePath.setSignature(signature);
                     signaturePaths.add(signaturePath);
-                } else if (entryName.endsWith(JSObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value())) {
-                    signaturePath.setObjectPath(("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value(), ""));
+                } else if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value())) {
+                    signaturePath.setObjectPath(("/" + entryName).replace(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value(), ""));
                     signature.setSignatureString(outBuffer.toString());
                     signaturePath.setSignature(signature);
                     signaturePaths.add(signaturePath);
-                } else if (entryName.endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
                     LockPublish lockPublish = new LockPublish();
                     Lock lock = om.readValue(outBuffer.toString(), Lock.class);
                     if (checkObjectNotEmpty(lock)) {
                         lockPublish.setContent(lock);
                     } else {
                         throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
+                                ("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
                     }
-                    lockPublish.setPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                    lockPublish.setPath(("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
                     lockPublish.setObjectType(DeployType.LOCK);
                     objects.add(lockPublish);
-                } else if (entryName.endsWith(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
                     JunctionPublish junctionPublish = new JunctionPublish();
                     Junction junction = om.readValue(outBuffer.toString(), Junction.class);
                     if (checkObjectNotEmpty(junction)) {
                         junctionPublish.setContent(junction);
                     } else {
                         throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
+                                ("/" + entryName).replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
                     }
-                    junctionPublish.setPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                    junctionPublish.setPath(("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
                     junctionPublish.setObjectType(DeployType.JUNCTION);
                     objects.add(junctionPublish);
-                } else if (entryName.endsWith(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
                     JobClassPublish jobClassPublish = new JobClassPublish();
                     JobClass jobClass = om.readValue(outBuffer.toString(), JobClass.class);
                     if (checkObjectNotEmpty(jobClass)) {
                         jobClassPublish.setContent(jobClass);
                     } else {
                         throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
+                                ("/" + entryName).replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
                     }
-                    jobClassPublish.setPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                    jobClassPublish.setPath(("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
                     jobClassPublish.setObjectType(DeployType.JOBCLASS);
                     objects.add(jobClassPublish);
                 }
@@ -1867,52 +1867,52 @@ public abstract class PublishUtils {
                     }
                 }
                 // process deployables and releaseables
-                if (entryName.endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+                if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
                     WorkflowEdit workflowEdit = new WorkflowEdit();
                     Workflow workflow = om.readValue(outBuffer.toString(), Workflow.class);
                     if (checkObjectNotEmpty(workflow)) {
                         workflowEdit.setConfiguration(workflow);
                     } else {
                         throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
+                                ("/" + entryName).replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
                     }
-                    workflowEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""));
+                    workflowEdit.setPath(("/" + entryName).replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""));
                     workflowEdit.setObjectType(ConfigurationType.WORKFLOW);
                     objects.add(workflowEdit);
-                } else if (entryName.endsWith(JSObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
                     LockEdit lockEdit = new LockEdit();
                     Lock lock = om.readValue(outBuffer.toString(), Lock.class);
                     if (checkObjectNotEmpty(lock)) {
                         lockEdit.setConfiguration(lock);
                     } else {
                         throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
+                                ("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
                     }
-                    lockEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                    lockEdit.setPath(("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
                     lockEdit.setObjectType(ConfigurationType.LOCK);
                     objects.add(lockEdit);
-                } else if (entryName.endsWith(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
                     JunctionEdit junctionEdit = new JunctionEdit();
                     Junction junction = om.readValue(outBuffer.toString(), Junction.class);
                     if (checkObjectNotEmpty(junction)) {
                         junctionEdit.setConfiguration(junction);
                     } else {
                         throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(JSObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
+                                ("/" + entryName).replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
                     }
-                    junctionEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                    junctionEdit.setPath(("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
                     junctionEdit.setObjectType(ConfigurationType.JUNCTION);
                     objects.add(junctionEdit);
-                } else if (entryName.endsWith(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
+                } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
                     JobClassEdit jobClassEdit = new JobClassEdit();
                     JobClass jobClass = om.readValue(outBuffer.toString(), JobClass.class);
                     if (checkObjectNotEmpty(jobClass)) {
                         jobClassEdit.setConfiguration(jobClass);
                     } else {
                         throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
+                                ("/" + entryName).replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
                     }
-                    jobClassEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                    jobClassEdit.setPath(("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
                     jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
                     objects.add(jobClassEdit);
                 } else if (entryName.endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value())) {
@@ -1924,7 +1924,7 @@ public abstract class PublishUtils {
                         throw new JocImportException(String.format("Schedule with path %1$s not imported. Object values could not be mapped.", 
                                 ("/" + entryName).replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(), "")));
                     }
-                    scheduleEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                    scheduleEdit.setPath(("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
                     scheduleEdit.setObjectType(ConfigurationType.SCHEDULE);
                     objects.add(scheduleEdit);
                 } else if (entryName.endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
@@ -1933,13 +1933,13 @@ public abstract class PublishUtils {
                         if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
                             WorkingDaysCalendarEdit wdcEdit = new WorkingDaysCalendarEdit();
                             wdcEdit.setConfiguration(cal);
-                            wdcEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                            wdcEdit.setPath(("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
                             wdcEdit.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
                             objects.add(wdcEdit);
                         } else if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
                             NonWorkingDaysCalendarEdit nwdcEdit = new NonWorkingDaysCalendarEdit();
                             nwdcEdit.setConfiguration(cal);
-                            nwdcEdit.setPath(("/" + entryName).replace(JSObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                            nwdcEdit.setPath(("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
                             nwdcEdit.setObjectType(ConfigurationType.NONWORKINGDAYSCALENDAR);
                             objects.add(nwdcEdit);
                         }
@@ -1962,7 +1962,7 @@ public abstract class PublishUtils {
         return objects;
     }
 
-    public static StreamingOutput writeZipFile (Set<JSObject> deployables, Set<ConfigurationObject> releasables, 
+    public static StreamingOutput writeZipFile (Set<ControllerObject> deployables, Set<ConfigurationObject> releasables, 
             Set<UpdateableWorkflowJobAgentName> updateableAgentNames,String commitId, String controllerId, DBLayerDeploy dbLayer) {
         StreamingOutput streamingOutput = new StreamingOutput() {
             @Override
@@ -1972,11 +1972,11 @@ public abstract class PublishUtils {
                     zipOut = new ZipOutputStream(new BufferedOutputStream(output), StandardCharsets.UTF_8);
                     String content = null;
                     if (deployables != null && !deployables.isEmpty()) {
-                        for (JSObject deployable : deployables) {
+                        for (ControllerObject deployable : deployables) {
                             String extension = null;
                             switch (deployable.getObjectType()) {
                             case WORKFLOW:
-                                extension = JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
+                                extension = ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
                                 Workflow workflow = (Workflow) deployable.getContent();
                                 // determine agent names to be replaced
                                 workflow.setVersionId(commitId);
@@ -1986,18 +1986,18 @@ public abstract class PublishUtils {
                                 content = om.writeValueAsString(workflow);
                                 break;
                             case LOCK:
-                                extension = JSObjectFileExtension.LOCK_FILE_EXTENSION.toString();
+                                extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
                                 Lock lock = (Lock) deployable.getContent();
                                 content = om.writeValueAsString(lock);
                                 break;
                             case JUNCTION:
-                                extension = JSObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
+                                extension = ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
                                 Junction junction = (Junction) deployable.getContent();
                                 junction.setVersionId(commitId);
                                 content = om.writeValueAsString(junction);
                                 break;
                             case JOBCLASS:
-                                extension = JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
+                                extension = ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
                                 JobClass jobClass = (JobClass) deployable.getContent();
                                 content = om.writeValueAsString(jobClass);
                                 break;
@@ -2055,7 +2055,7 @@ public abstract class PublishUtils {
         return streamingOutput;
     }
     
-    public static StreamingOutput writeTarGzipFile (Set<JSObject> deployables, Set<ConfigurationObject> releasables,
+    public static StreamingOutput writeTarGzipFile (Set<ControllerObject> deployables, Set<ConfigurationObject> releasables,
             Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String commitId,  String controllerId, DBLayerDeploy dbLayer) {
         StreamingOutput streamingOutput = new StreamingOutput() {
             @Override
@@ -2069,11 +2069,11 @@ public abstract class PublishUtils {
                     tarOut = new TarArchiveOutputStream(gzipOut);
                     String content = null;
                     if (deployables != null && !deployables.isEmpty()) {
-                        for (JSObject deployable : deployables) {
+                        for (ControllerObject deployable : deployables) {
                             String extension = null;
                             switch (deployable.getObjectType()) {
                             case WORKFLOW:
-                                extension = JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
+                                extension = ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
                                 Workflow workflow = (Workflow) deployable.getContent();
                                 workflow.setVersionId(commitId);
                                 if (controllerId != null && updateableAgentNames != null) {
@@ -2082,18 +2082,18 @@ public abstract class PublishUtils {
                                 content = om.writeValueAsString(workflow);
                                 break;
                             case LOCK:
-                                extension = JSObjectFileExtension.LOCK_FILE_EXTENSION.toString();
+                                extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
                                 Lock lock = (Lock) deployable.getContent();
                                 content = om.writeValueAsString(lock);
                                 break;
                             case JUNCTION:
-                                extension = JSObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
+                                extension = ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
                                 Junction junction = (Junction) deployable.getContent();
                                 junction.setVersionId(commitId);
                                 content = om.writeValueAsString(junction);
                                 break;
                             case JOBCLASS:
-                                extension = JSObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
+                                extension = ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
                                 JobClass jobClass = (JobClass) deployable.getContent();
                                 content = om.writeValueAsString(jobClass);
                                 break;
@@ -2467,16 +2467,16 @@ public abstract class PublishUtils {
         return entries.stream().filter(item -> item.getOperation().equals(OperationType.DELETE.value())).collect(Collectors.toSet());
     }
     
-    public static Set<JSObject> getDeployableObjectsFromDB(DeployablesFilter filter, DBLayerDeploy dbLayer) 
+    public static Set<ControllerObject> getDeployableObjectsFromDB(DeployablesFilter filter, DBLayerDeploy dbLayer) 
             throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
             IOException, SOSHibernateException {
         return getDeployableObjectsFromDB(filter, dbLayer, null);
     }
 
-    public static Set<JSObject> getDeployableObjectsFromDB(DeployablesFilter filter, DBLayerDeploy dbLayer, String commitId) 
+    public static Set<ControllerObject> getDeployableObjectsFromDB(DeployablesFilter filter, DBLayerDeploy dbLayer, String commitId) 
             throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
             IOException, SOSHibernateException {
-        Set<JSObject> allObjects = new HashSet<JSObject>();
+        Set<ControllerObject> allObjects = new HashSet<ControllerObject>();
         if (filter != null) {
             if (filter.getDeployConfigurations() != null && !filter.getDeployConfigurations().isEmpty()) {
                 List<Configuration> depFolders = filter.getDeployConfigurations().stream()
@@ -2532,10 +2532,10 @@ public abstract class PublishUtils {
         return allObjects;
     }
     
-    public static Set<JSObject> getDeployableObjectsFromDB(DeployablesValidFilter filter, DBLayerDeploy dbLayer, String commitId) 
+    public static Set<ControllerObject> getDeployableObjectsFromDB(DeployablesValidFilter filter, DBLayerDeploy dbLayer, String commitId) 
             throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
             IOException, SOSHibernateException {
-        Set<JSObject> allObjects = new HashSet<JSObject>();
+        Set<ControllerObject> allObjects = new HashSet<ControllerObject>();
         if (filter != null) {
             if (filter.getDeployConfigurations() != null && !filter.getDeployConfigurations().isEmpty()) {
                 List<Configuration> depFolders = filter.getDeployConfigurations().stream()
@@ -2640,13 +2640,13 @@ public abstract class PublishUtils {
         return allObjects;
     }
     
-    private static JSObject mapInvConfigToJSObject (DBItemInventoryConfiguration item) {
+    private static ControllerObject mapInvConfigToJSObject (DBItemInventoryConfiguration item) {
         return mapInvConfigToJSObject(item, null);
     }
     
-    private static JSObject mapInvConfigToJSObject (DBItemInventoryConfiguration item, String commitId) {
+    private static ControllerObject mapInvConfigToJSObject (DBItemInventoryConfiguration item, String commitId) {
         try {
-            JSObject jsObject = new JSObject();
+            ControllerObject jsObject = new ControllerObject();
 //            jsObject.setId(item.getId());
             jsObject.setPath(item.getPath());
             jsObject.setObjectType(PublishUtils.mapConfigurationType(ConfigurationType.fromValue(item.getType())));
@@ -2684,9 +2684,9 @@ public abstract class PublishUtils {
         }
     }
 
-    private static JSObject getJSObjectFromDBItem (DBItemDeploymentHistory item, String commitId) {
+    private static ControllerObject getJSObjectFromDBItem (DBItemDeploymentHistory item, String commitId) {
         try {
-            JSObject jsObject = new JSObject();
+            ControllerObject jsObject = new ControllerObject();
 //            jsObject.setId(item.getId());
             jsObject.setPath(item.getPath());
             jsObject.setObjectType(DeployType.fromValue(item.getType()));

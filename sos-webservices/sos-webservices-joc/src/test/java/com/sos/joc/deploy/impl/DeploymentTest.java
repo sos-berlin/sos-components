@@ -61,10 +61,10 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.JocSecurityLevel;
-import com.sos.joc.model.publish.JSObject;
+import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.publish.Signature;
 import com.sos.joc.model.publish.SignaturePath;
-import com.sos.joc.publish.common.JSObjectFileExtension;
+import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
 
@@ -100,9 +100,9 @@ public class DeploymentTest {
     public void test01ExportWorkflowsToArchiveFile() throws IOException {
         LOGGER.info("*************************  export workflows to zip file Test ************************");
         Set<Workflow> workflows = DeploymentTestUtils.createWorkflowsforDeployment();
-        Set<JSObject> jsObjectsToExport = new HashSet<JSObject>();
+        Set<ControllerObject> jsObjectsToExport = new HashSet<ControllerObject>();
         for (Workflow workflow : workflows) {
-            JSObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow);
+            ControllerObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow);
             jsObjectsToExport.add(jsObject);
         }
         exportWorkflows(jsObjectsToExport);
@@ -116,9 +116,9 @@ public class DeploymentTest {
 //    public void test01aExportWorkflowToArchiveFile() throws IOException {
 //        LOGGER.info("*************************  export single workflow to zip file Test ******************");
 //        Set<Workflow> workflows = DeploymentTestUtils.createSingleWorkflowsforDeployment();
-//        Set<JSObject> jsObjectsToExport = new HashSet<JSObject>();
+//        Set<ControllerObject> jsObjectsToExport = new HashSet<ControllerObject>();
 //        for (Workflow workflow : workflows) {
-//            JSObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow);
+//            ControllerObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow);
 //            jsObjectsToExport.add(jsObject);
 //        }
 //        exportSingleWorkflow(jsObjectsToExport);
@@ -146,11 +146,11 @@ public class DeploymentTest {
         assertEquals(100, workflows.size());
         LOGGER.info(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
         LOGGER.info("*************************       sign Workflows **************************************");
-        Set<JSObject> jsObjectsToExport = new HashSet<JSObject>();
+        Set<ControllerObject> jsObjectsToExport = new HashSet<ControllerObject>();
         int counterSigned = 0;
         for (Workflow workflow : workflows) {
             Signature signature = signWorkflowPGP(workflow);
-            JSObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow, signature);
+            ControllerObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow, signature);
             assertNotNull(jsObject.getSignedContent());
             counterSigned++;
             jsObjectsToExport.add(jsObject);
@@ -168,7 +168,7 @@ public class DeploymentTest {
 
     @Test
     public void test04ImportWorkflowsandSignaturesFromArchiveFile() throws IOException, PGPException {
-        Set<JSObject> jsObjects = new HashSet<JSObject>();
+        Set<ControllerObject> jsObjects = new HashSet<ControllerObject>();
         LOGGER.info("************************* import workflows/signatures from zip file and verify Test *");
         LOGGER.info("*************************       import workflows ************************************");
         Set<Workflow> workflows = importWorkflows();
@@ -179,7 +179,7 @@ public class DeploymentTest {
         assertEquals(100, signatures.size());
         LOGGER.info(String.format("%1$d signatures successfully imported from archive!", workflows.size()));
         for (Workflow workflow : workflows) {
-            JSObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow);
+            ControllerObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow);
             SignaturePath signaturePath = signatures.stream().filter(signaturePathFromStream -> signaturePathFromStream.getObjectPath().equals(
                     workflow.getPath())).map(signaturePathFromStream -> signaturePathFromStream).findFirst().get();
             jsObject.setSignedContent(signaturePath.getSignature().getSignatureString());
@@ -190,7 +190,7 @@ public class DeploymentTest {
         LOGGER.info("*************************  verify signatures ****************************************");
         int countVerified = 0;
         int countNotVerified = 0;
-        for (JSObject jsObject : jsObjects) {
+        for (ControllerObject jsObject : jsObjects) {
             if (verifySignaturePGP((Workflow) jsObject.getContent(), jsObject.getSignedContent())) {
                 countVerified++;
             } else {
@@ -215,12 +215,12 @@ public class DeploymentTest {
         assertEquals(100, workflows.size());
         LOGGER.info(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
         LOGGER.info("*************************       sign Workflows **************************************");
-        Set<JSObject> jsObjectsToExport = new HashSet<JSObject>();
+        Set<ControllerObject> jsObjectsToExport = new HashSet<ControllerObject>();
         int counterSigned = 0;
         for (Workflow workflow : workflows) {
             Signature signature = signWorkflowRSA(workflow);
             LOGGER.info("Base64 MIME encoded: " + signature.getSignatureString());
-            JSObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow, signature);
+            ControllerObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow, signature);
             assertNotNull(jsObject.getSignedContent());
             counterSigned++;
             jsObjectsToExport.add(jsObject);
@@ -239,7 +239,7 @@ public class DeploymentTest {
     @Test
     public void test06ImportWorkflowsandSignaturesFromArchiveFile()
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, NoSuchProviderException {
-        Set<JSObject> jsObjects = new HashSet<JSObject>();
+        Set<ControllerObject> jsObjects = new HashSet<ControllerObject>();
         LOGGER.info("************************* import workflows/signatures from zip file and verify Test *");
         LOGGER.info("*************************       import workflows ************************************");
         Set<Workflow> workflows = importWorkflows();
@@ -250,7 +250,7 @@ public class DeploymentTest {
         assertEquals(100, signatures.size());
         LOGGER.info(String.format("%1$d signatures successfully imported from archive!", workflows.size()));
         for (Workflow workflow : workflows) {
-            JSObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow);
+            ControllerObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow);
             SignaturePath signaturePath = signatures.stream().filter(signaturePathFromStream -> signaturePathFromStream.getObjectPath().equals(
                     workflow.getPath())).map(signaturePathFromStream -> signaturePathFromStream).findFirst().get();
             jsObject.setSignedContent(signaturePath.getSignature().getSignatureString());
@@ -264,7 +264,7 @@ public class DeploymentTest {
         int countNotVerified = 0;
         String privateKey = new String (Files.readAllBytes(Paths.get(PRIVATE_RSA_KEY_PATH)));
         KeyPair kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(privateKey);
-        for (JSObject jsObject : jsObjects) {
+        for (ControllerObject jsObject : jsObjects) {
             if (verifySignatureWithRSAKey(kp.getPublic(), (Workflow) jsObject.getContent(), jsObject.getSignedContent())) {
                 countVerified++;
             } else {
@@ -277,7 +277,7 @@ public class DeploymentTest {
         countVerified = 0;
         countNotVerified = 0;
         Certificate cert = KeyUtil.generateCertificateFromKeyPair(kp);
-        for (JSObject jsObject : jsObjects) {
+        for (ControllerObject jsObject : jsObjects) {
             if (verifySignatureWithX509Certificate(cert, (Workflow) jsObject.getContent(), jsObject.getSignedContent())) {
                 countVerified++;
             } else {
@@ -303,11 +303,11 @@ public class DeploymentTest {
         assertEquals(100, workflows.size());
         LOGGER.info(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
         LOGGER.info("*************************       sign Workflows **************************************");
-        Set<JSObject> jsObjectsToExport = new HashSet<JSObject>();
+        Set<ControllerObject> jsObjectsToExport = new HashSet<ControllerObject>();
         int counterSigned = 0;
         for (Workflow workflow : workflows) {
             Signature signature = signWorkflowRSAPKCS8(workflow);
-            JSObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow, signature);
+            ControllerObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow, signature);
             assertNotNull(jsObject.getSignedContent());
             counterSigned++;
             jsObjectsToExport.add(jsObject);
@@ -326,7 +326,7 @@ public class DeploymentTest {
     @Test
     public void test08ImportWorkflowsandSignaturesFromArchiveFile()
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, NoSuchProviderException {
-        Set<JSObject> jsObjects = new HashSet<JSObject>();
+        Set<ControllerObject> jsObjects = new HashSet<ControllerObject>();
         LOGGER.info("************************* import workflows/signatures from zip file and verify Test *");
         LOGGER.info("*************************       import workflows ************************************");
         Set<Workflow> workflows = importWorkflows();
@@ -337,7 +337,7 @@ public class DeploymentTest {
         assertEquals(100, signatures.size());
         LOGGER.info(String.format("%1$d signatures successfully imported from archive!", workflows.size()));
         for (Workflow workflow : workflows) {
-            JSObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow);
+            ControllerObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow);
             SignaturePath signaturePath = signatures.stream().filter(signaturePathFromStream -> signaturePathFromStream.getObjectPath().equals(
                     workflow.getPath())).map(signaturePathFromStream -> signaturePathFromStream).findFirst().get();
             jsObject.setSignedContent(signaturePath.getSignature().getSignatureString());
@@ -351,7 +351,7 @@ public class DeploymentTest {
         int countNotVerified = 0;
         String privateKey = new String (Files.readAllBytes(Paths.get(PRIVATE_RSA_PKCS8_KEY_PATH)));
         KeyPair kp = KeyUtil.getKeyPairFromPrivatKeyString(privateKey);
-        for (JSObject jsObject : jsObjects) {
+        for (ControllerObject jsObject : jsObjects) {
             if (verifySignatureWithRSAKey(kp.getPublic(), (Workflow) jsObject.getContent(), jsObject.getSignedContent())) {
                 countVerified++;
             } else {
@@ -364,7 +364,7 @@ public class DeploymentTest {
         countVerified = 0;
         countNotVerified = 0;
         Certificate cert = KeyUtil.generateCertificateFromKeyPair(kp);
-        for (JSObject jsObject : jsObjects) {
+        for (ControllerObject jsObject : jsObjects) {
             if (verifySignatureWithX509Certificate(cert, (Workflow) jsObject.getContent(), jsObject.getSignedContent())) {
                 countVerified++;
             } else {
@@ -417,11 +417,11 @@ public class DeploymentTest {
         assertEquals(2, workflows.size());
         LOGGER.info(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
         LOGGER.info("*************************       sign Workflows **************************************");
-        Set<JSObject> jsObjectsToExport = new HashSet<JSObject>();
+        Set<ControllerObject> jsObjectsToExport = new HashSet<ControllerObject>();
         int counterSigned = 0;
         for (Workflow workflow : workflows) {
             Signature signature = signWorkflowECDSA(workflow);
-            JSObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow, signature);
+            ControllerObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow, signature);
             assertNotNull(jsObject.getSignedContent());
             counterSigned++;
             jsObjectsToExport.add(jsObject);
@@ -429,7 +429,7 @@ public class DeploymentTest {
         assertEquals(2, counterSigned);
         LOGGER.info(String.format("%1$d workflows signed", counterSigned));
         LOGGER.info("*************************       export signature to zip file ************************");
-        exportWorkflows(jsObjectsToExport, "export_high_from_gui.zip", JSObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value());
+        exportWorkflows(jsObjectsToExport, "export_high_from_gui.zip", ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value());
         assertTrue(Files.exists(Paths.get("target").resolve("created_test_files").resolve("export_high_from_gui.zip")));
         LOGGER.info("Archive export_high_from_gui.zip succefully created in ./target/created_test_files!");
         LOGGER.info("Archive contains the workflows and their signatures.");
@@ -450,11 +450,11 @@ public class DeploymentTest {
                 Set<Workflow> workflows = importWorkflows(item.toString().replace("\\", "/").replace("src/test/resources", ""));
                 LOGGER.info(String.format("%1$d workflows successfully imported from archive!", workflows.size()));
                 LOGGER.info("*************************       sign Workflows **************************************");
-                Set<JSObject> jsObjectsToExport = new HashSet<JSObject>();
+                Set<ControllerObject> jsObjectsToExport = new HashSet<ControllerObject>();
                 int counterSigned = 0;
                 for (Workflow workflow : workflows) {
                     Signature signature = signWorkflowECDSA(workflow);
-                    JSObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow, signature);
+                    ControllerObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow, signature);
                     assertNotNull(jsObject.getSignedContent());
                     counterSigned++;
                     jsObjectsToExport.add(jsObject);
@@ -463,7 +463,7 @@ public class DeploymentTest {
                 LOGGER.info("*************************       export signature to zip file ************************");
                 exportWorkflows(jsObjectsToExport, item.getFileName().toString(),
                         item.getParent().toString().replace("\\", "/").replace("src/test/resources/",""), 
-                        JSObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value());
+                        ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value());
                 LOGGER.info(String.format("Archive %1$s succefully created in ./target/created_test_files/%2$s!",
                         item.getFileName().toString(), item.getParent().toString().replace("\\", "/").replace("src/test/resources/","")));
                 LOGGER.info("Archive contains the workflows and their signatures.");
@@ -478,15 +478,15 @@ public class DeploymentTest {
         LOGGER.info("");
     }
 
-    private void exportWorkflows(Set<JSObject> jsObjectsToExport) throws IOException {
-        exportWorkflows(jsObjectsToExport, TARGET_FILENAME, JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value());
+    private void exportWorkflows(Set<ControllerObject> jsObjectsToExport) throws IOException {
+        exportWorkflows(jsObjectsToExport, TARGET_FILENAME, ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value());
     }
 
-    private void exportWorkflows(Set<JSObject> jsObjectsToExport, String filename, String signatureFileExtension) throws IOException {
+    private void exportWorkflows(Set<ControllerObject> jsObjectsToExport, String filename, String signatureFileExtension) throws IOException {
         exportWorkflows(jsObjectsToExport, filename, null, signatureFileExtension);
     }
 
-    private void exportWorkflows(Set<JSObject> jsObjectsToExport, String filename, String targetFolder, String signatureFileExtension) throws IOException {
+    private void exportWorkflows(Set<ControllerObject> jsObjectsToExport, String filename, String targetFolder, String signatureFileExtension) throws IOException {
         ZipOutputStream zipOut = null;
         OutputStream out = null;
         Path defaultTargetFolderPath = Paths.get("target").resolve("created_test_files");
@@ -503,7 +503,7 @@ public class DeploymentTest {
         }
         out = Files.newOutputStream(targetFolderPath.resolve(filename));
         zipOut = new ZipOutputStream(new BufferedOutputStream(out), StandardCharsets.UTF_8);
-        for (JSObject jsObjectToExport : jsObjectsToExport) {
+        for (ControllerObject jsObjectToExport : jsObjectsToExport) {
             Workflow workflow = (Workflow) jsObjectToExport.getContent();
             String signature = jsObjectToExport.getSignedContent();
             String zipEntryNameWorkflow = workflow.getPath().substring(1) + ".workflow.json";
@@ -526,7 +526,7 @@ public class DeploymentTest {
         }
     }
 
-    private void exportSingleWorkflow(Set<JSObject> jsObjectsToExport) throws IOException {
+    private void exportSingleWorkflow(Set<ControllerObject> jsObjectsToExport) throws IOException {
         ZipOutputStream zipOut = null;
         OutputStream out = null;
         Boolean notExists = Files.notExists(Paths.get("target").resolve("created_test_files"));
@@ -536,7 +536,7 @@ public class DeploymentTest {
         }
         out = Files.newOutputStream(Paths.get("target").resolve("created_test_files").resolve(TARGET_FILENAME_SINGLE));
         zipOut = new ZipOutputStream(new BufferedOutputStream(out), StandardCharsets.UTF_8);
-        for (JSObject jsObjectToExport : jsObjectsToExport) {
+        for (ControllerObject jsObjectToExport : jsObjectsToExport) {
             Workflow workflow = (Workflow) jsObjectToExport.getContent();
             String signature = jsObjectToExport.getSignedContent();
             String zipEntryNameWorkflow = workflow.getPath().substring(1) + ".workflow.json";
@@ -576,7 +576,7 @@ public class DeploymentTest {
             while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
                 outBuffer.write(binBuffer, 0, binRead);
             }
-            if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+            if (("/" + entryName).endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
                 workflows.add(om.readValue(outBuffer.toString(), Workflow.class));
             }
         }
@@ -600,7 +600,7 @@ public class DeploymentTest {
             while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
                 outBuffer.write(binBuffer, 0, binRead);
             }
-            if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+            if (("/" + entryName).endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
                 workflows.add(om.readValue(outBuffer.toString(), Workflow.class));
             }
         }
@@ -624,7 +624,7 @@ public class DeploymentTest {
             while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
                 outBuffer.write(binBuffer, 0, binRead);
             }
-            if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+            if (("/" + entryName).endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
                 workflows.add(om.readValue(outBuffer.toString(), Workflow.class));
             }
         }
@@ -649,7 +649,7 @@ public class DeploymentTest {
             while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
                 outBuffer.write(binBuffer, 0, binRead);
             }
-            if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+            if (("/" + entryName).endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
                 workflows.add(om.readValue(outBuffer.toString(), Workflow.class));
             }
         }
@@ -673,9 +673,9 @@ public class DeploymentTest {
             while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
                 outBuffer.write(binBuffer, 0, binRead);
             }
-            if (("/" + entryName).endsWith(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
+            if (("/" + entryName).endsWith(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
                 SignaturePath signaturePath = new SignaturePath();
-                signaturePath.setObjectPath("/" + entryName.substring(0, entryName.indexOf(JSObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION
+                signaturePath.setObjectPath("/" + entryName.substring(0, entryName.indexOf(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION
                         .value())));
                 Signature signature = new Signature();
                 signature.setSignatureString(outBuffer.toString());

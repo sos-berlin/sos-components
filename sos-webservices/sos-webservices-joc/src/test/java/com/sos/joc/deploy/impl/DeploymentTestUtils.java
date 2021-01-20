@@ -39,7 +39,7 @@ import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.ExportForSigning;
 import com.sos.joc.model.publish.ReleasablesFilter;
 import com.sos.joc.model.publish.ExportShallowCopy;
-import com.sos.joc.model.publish.JSObject;
+import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.RedeployFilter;
 import com.sos.joc.model.publish.SetVersionFilter;
@@ -177,12 +177,12 @@ public class DeploymentTestUtils {
         return workflows;
     }
     
-    public static JSObject createJsObjectForDeployment(Workflow workflow) {
+    public static ControllerObject createJsObjectForDeployment(Workflow workflow) {
         return createJsObjectForDeployment(workflow, null);        
     }
 
-    public static JSObject createJsObjectForDeployment(Workflow workflow, Signature signature) {
-        JSObject jsObject = new JSObject();
+    public static ControllerObject createJsObjectForDeployment(Workflow workflow, Signature signature) {
+        ControllerObject jsObject = new ControllerObject();
         jsObject.setObjectType(DeployType.WORKFLOW);
         jsObject.setAccount("SP");
         jsObject.setComment("Created from JUnit test class \"DeploymentTests\".");

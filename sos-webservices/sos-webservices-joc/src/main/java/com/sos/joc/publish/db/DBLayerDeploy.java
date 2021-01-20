@@ -58,13 +58,13 @@ import com.sos.joc.model.publish.ExcludeConfiguration;
 import com.sos.joc.model.publish.DeployablesFilter;
 import com.sos.joc.model.publish.DeployablesValidFilter;
 import com.sos.joc.model.publish.ReleasablesFilter;
-import com.sos.joc.model.publish.JSObject;
+import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.RedeployFilter;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.model.publish.SetVersionsFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
-import com.sos.joc.publish.common.JSObjectFileExtension;
+import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.mapper.FilterAttributesMapper;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.util.PublishUtils;
@@ -786,7 +786,7 @@ public class DBLayerDeploy {
         } 
     }
     
-    public DBItemInventoryConfiguration saveOrUpdateInventoryConfiguration(String path, JSObject jsObject, DeployType type, String account, Long auditLogId)
+    public DBItemInventoryConfiguration saveOrUpdateInventoryConfiguration(String path, ControllerObject jsObject, DeployType type, String account, Long auditLogId)
             throws SOSHibernateException, JsonProcessingException {
         StringBuilder hql = new StringBuilder(" from ");
         hql.append(DBLayer.DBITEM_INV_CONFIGURATIONS);
@@ -830,7 +830,7 @@ public class DBLayerDeploy {
             case WORKFLOW:
                 // Why cast WorkflowPublish?
                 newJsObject.setContent(om.writeValueAsString(((WorkflowPublish) jsObject).getContent()));
-                folderPath = Paths.get(((WorkflowPublish) jsObject).getContent().getPath() + JSObjectFileExtension.WORKFLOW_FILE_EXTENSION).getParent();
+                folderPath = Paths.get(((WorkflowPublish) jsObject).getContent().getPath() + ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION).getParent();
                 newJsObject.setFolder(folderPath.toString().replace('\\', '/'));
                 newJsObject.setPath(((WorkflowPublish) jsObject).getContent().getPath());
                 name = Paths.get(((WorkflowPublish) jsObject).getContent().getPath()).getFileName().toString();
@@ -859,7 +859,7 @@ public class DBLayerDeploy {
         }
     }
     
-    public DBItemDepSignatures saveOrUpdateSignature (Long invConfId, JSObject jsObject, String account, DeployType type) throws SOSHibernateException {
+    public DBItemDepSignatures saveOrUpdateSignature (Long invConfId, ControllerObject jsObject, String account, DeployType type) throws SOSHibernateException {
         DBItemDepSignatures dbItemSig = getSignature(invConfId);
         String signature = null;
         switch (type) {
@@ -1301,12 +1301,12 @@ public class DBLayerDeploy {
     }
     
     public List<DBItemDeploymentHistory> updateFailedDeploymentForImportDeploy(
-            Map<JSObject, DBItemDepSignatures> verifiedConfigurations, 
+            Map<ControllerObject, DBItemDepSignatures> verifiedConfigurations, 
             Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedReDeployables, 
             String controllerId, String account, String versionId, String errorMessage) {
         List<DBItemDeploymentHistory> depHistoryFailed = new ArrayList<DBItemDeploymentHistory>();
         if (verifiedConfigurations != null) {
-            for (JSObject jsObject : verifiedConfigurations.keySet()) {
+            for (ControllerObject jsObject : verifiedConfigurations.keySet()) {
                 DBItemInventoryConfiguration inventoryConfig = null;
                 DBItemDeploymentHistory newDepHistoryItem = new DBItemDeploymentHistory();
                 newDepHistoryItem.setAccount(account);
@@ -1421,7 +1421,7 @@ public class DBLayerDeploy {
         return depHistoryFailed;
     }
     
-    public List<DBItemDeploymentHistory> updateFailedDeploymentForUpdate(Map<DBItemInventoryConfiguration, JSObject> importedObjects,
+    public List<DBItemDeploymentHistory> updateFailedDeploymentForUpdate(Map<DBItemInventoryConfiguration, ControllerObject> importedObjects,
             String controllerId, String account, String versionId, String errorMessage) {
         List<DBItemDeploymentHistory> depHistoryFailed;
         try {

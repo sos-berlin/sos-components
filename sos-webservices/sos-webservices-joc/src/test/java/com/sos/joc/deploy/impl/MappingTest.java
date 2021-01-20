@@ -34,7 +34,7 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.ExcludeConfiguration;
-import com.sos.joc.model.publish.JSObject;
+import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.publish.RedeployFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.publish.mapper.FilterAttributesMapper;
@@ -81,7 +81,7 @@ public class MappingTest {
     }
 
     @Test
-    public void test02WorkflowToJSObject() {
+    public void test02WorkflowToControllerObject() {
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         Workflow ifElseWorkflow = null;
         try {
@@ -91,7 +91,7 @@ public class MappingTest {
         } catch (IOException e) {
             Assert.fail(e.toString());
         }
-        JSObject jsObject = new JSObject();
+        ControllerObject jsObject = new ControllerObject();
         jsObject.setContent(ifElseWorkflow);
         Assert.assertEquals("/test/IfElseWorkflow", ((Workflow) jsObject.getContent()).getPath());
         LOGGER.info("IfElse Workflow JSON mapped to java object successfully!");

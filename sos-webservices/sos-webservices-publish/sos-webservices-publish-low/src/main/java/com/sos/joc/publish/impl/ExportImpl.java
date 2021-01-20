@@ -23,7 +23,7 @@ import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.ExportShallowCopy;
 import com.sos.joc.model.publish.ExportForSigning;
-import com.sos.joc.model.publish.JSObject;
+import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
@@ -62,7 +62,7 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             ExportForSigning forSigning = filter.getForSigning();
             ExportShallowCopy shallowCopy = filter.getShallowCopy();
             
-            Set<JSObject> deployables = null;
+            Set<ControllerObject> deployables = null;
             Set<ConfigurationObject> releasables = null;
             final Set<UpdateableWorkflowJobAgentName> updateableAgentNames = new HashSet<UpdateableWorkflowJobAgentName>();
             String commitId = null;

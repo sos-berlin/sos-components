@@ -6,7 +6,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum JSObjectFileExtension {
+public enum ControllerObjectFileExtension {
     WORKFLOW_FILE_EXTENSION(".workflow.json"),
     WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION(".workflow.json.asc"),
     WORKFLOW_X509_SIGNATURE_FILE_EXTENSION(".workflow.json.sig"),
@@ -15,15 +15,15 @@ public enum JSObjectFileExtension {
     JOBCLASS_FILE_EXTENSION(".jobclass.json");
 
     private final String value;
-    private static final Map<String, JSObjectFileExtension> CONSTANTS = new HashMap<String, JSObjectFileExtension>();
+    private static final Map<String, ControllerObjectFileExtension> CONSTANTS = new HashMap<String, ControllerObjectFileExtension>();
 
     static {
-        for (JSObjectFileExtension c: values()) {
+        for (ControllerObjectFileExtension c: values()) {
             CONSTANTS.put(c.value, c);
         }
     }
 
-    private JSObjectFileExtension(String value) {
+    private ControllerObjectFileExtension(String value) {
         this.value = value;
     }
 
@@ -38,8 +38,8 @@ public enum JSObjectFileExtension {
     }
 
     @JsonCreator
-    public static JSObjectFileExtension fromValue(String value) {
-    	JSObjectFileExtension constant = CONSTANTS.get(value);
+    public static ControllerObjectFileExtension fromValue(String value) {
+    	ControllerObjectFileExtension constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {

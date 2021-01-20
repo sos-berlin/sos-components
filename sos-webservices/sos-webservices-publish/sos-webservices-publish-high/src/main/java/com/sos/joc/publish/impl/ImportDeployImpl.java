@@ -58,7 +58,7 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.joc.JocMetaInfo;
 import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.model.publish.ImportDeployFilter;
-import com.sos.joc.model.publish.JSObject;
+import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.publish.SignaturePath;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.publish.db.DBLayerDeploy;
@@ -123,7 +123,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             }
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             stream = body.getEntityAs(InputStream.class);
-            Map<JSObject, SignaturePath> objectsWithSignature = new HashMap<JSObject, SignaturePath>();
+            Map<ControllerObject, SignaturePath> objectsWithSignature = new HashMap<ControllerObject, SignaturePath>();
             JocMetaInfo jocMetaInfo = new JocMetaInfo();
             
             // process uploaded archive
@@ -144,11 +144,11 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             // process signature verification and save or update objects
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             dbLayer = new DBLayerDeploy(hibernateSession);
-            Map<JSObject, DBItemDepSignatures> importedObjects = 
-                    new HashMap<JSObject, DBItemDepSignatures>();
+            Map<ControllerObject, DBItemDepSignatures> importedObjects = 
+                    new HashMap<ControllerObject, DBItemDepSignatures>();
             String commitId = null;
             if (objectsWithSignature != null && !objectsWithSignature.isEmpty()) {
-                JSObject config = objectsWithSignature.keySet().stream().findFirst().get();
+                ControllerObject config = objectsWithSignature.keySet().stream().findFirst().get();
                 switch (config.getObjectType()) {
                 case WORKFLOW:
                     commitId = ((Workflow)config.getContent()).getVersionId();
@@ -171,7 +171,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             Set<java.nio.file.Path> folders = new HashSet<java.nio.file.Path>();
             folders = objectsWithSignature.keySet().stream().map(config -> config.getPath()).map(path -> Paths.get(path).getParent()).collect(Collectors.toSet());
             Set<DBItemInventoryConfiguration> objectsToCheckPathRenaming = new HashSet<DBItemInventoryConfiguration>();
-            for (JSObject config : objectsWithSignature.keySet()) {
+            for (ControllerObject config : objectsWithSignature.keySet()) {
                 SignaturePath signaturePath = objectsWithSignature.get(config);
                 switch(config.getObjectType()) {
                 case WORKFLOW:
@@ -296,7 +296,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
 
     private void processAfterAdd (
             Either<Problem, Void> either, 
-            Map<JSObject, DBItemDepSignatures> verifiedConfigurations,
+            Map<ControllerObject, DBItemDepSignatures> verifiedConfigurations,
             Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedReDeployables,
             String account,
             String versionIdForUpdate,
