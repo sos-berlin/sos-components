@@ -24,7 +24,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "calling",
     "waiting",
     "blocked",
-    "failed"
+    "failed",
+    "terminated"
 })
 public class OrdersSummary {
 
@@ -92,6 +93,14 @@ public class OrdersSummary {
      */
     @JsonProperty("failed")
     private Integer failed;
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("terminated")
+    private Integer terminated;
 
     /**
      * non negative integer
@@ -269,14 +278,36 @@ public class OrdersSummary {
         this.failed = failed;
     }
 
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("terminated")
+    public Integer getTerminated() {
+        return terminated;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("terminated")
+    public void setTerminated(Integer terminated) {
+        this.terminated = terminated;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("pending", pending).append("inProgress", inProgress).append("running", running).append("suspended", suspended).append("calling", calling).append("waiting", waiting).append("blocked", blocked).append("failed", failed).toString();
+        return new ToStringBuilder(this).append("pending", pending).append("inProgress", inProgress).append("running", running).append("suspended", suspended).append("calling", calling).append("waiting", waiting).append("blocked", blocked).append("failed", failed).append("terminated", terminated).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(running).append(inProgress).append(waiting).append(blocked).append(pending).append(calling).append(failed).append(suspended).toHashCode();
+        return new HashCodeBuilder().append(running).append(inProgress).append(waiting).append(blocked).append(pending).append(calling).append(failed).append(suspended).append(terminated).toHashCode();
     }
 
     @Override
@@ -288,7 +319,7 @@ public class OrdersSummary {
             return false;
         }
         OrdersSummary rhs = ((OrdersSummary) other);
-        return new EqualsBuilder().append(running, rhs.running).append(inProgress, rhs.inProgress).append(waiting, rhs.waiting).append(blocked, rhs.blocked).append(pending, rhs.pending).append(calling, rhs.calling).append(failed, rhs.failed).append(suspended, rhs.suspended).isEquals();
+        return new EqualsBuilder().append(running, rhs.running).append(inProgress, rhs.inProgress).append(waiting, rhs.waiting).append(blocked, rhs.blocked).append(pending, rhs.pending).append(calling, rhs.calling).append(failed, rhs.failed).append(suspended, rhs.suspended).append(terminated, rhs.terminated).isEquals();
     }
 
 }

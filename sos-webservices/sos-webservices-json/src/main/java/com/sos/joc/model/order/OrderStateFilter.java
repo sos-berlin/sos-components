@@ -13,7 +13,8 @@ public enum OrderStateFilter {
     suspended("suspended"),
     failed("failed"),
     blocked("blocked"),
-    waiting("waiting");
+    waiting("waiting"),
+    terminated("terminated");
     private final String value;
     private final static Map<String, OrderStateFilter> CONSTANTS = new HashMap<String, OrderStateFilter>();
 
