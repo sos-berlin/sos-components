@@ -183,6 +183,7 @@
 							</includes>
 							<excludes>
 								<exclude>**/workflowJobs-schema.json</exclude>
+								<exclude>**/signed/*.json</exclude>
 							</excludes>
 						</configuration>
 						<goals>
