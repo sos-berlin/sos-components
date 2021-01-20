@@ -18,6 +18,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
+import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -90,7 +91,6 @@ public class DBLayerSchedules {
 
         ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         Set<String> setOfWorkflows = new LinkedHashSet<String>();
-        boolean filteredByControllerIds = (filter.getListOfControllerIds() != null && filter.getListOfControllerIds().size() > 0);
         boolean selectedByWorkflowPaths = (filter.getListOfWorkflowPaths() != null && filter.getListOfWorkflowPaths().size() > 0);
 
         if (selectedByWorkflowPaths) {
@@ -115,17 +115,26 @@ public class DBLayerSchedules {
 
         }
 
-        if (filteredByControllerIds) {
-            FilterDeployHistory filterDeployHistory = new FilterDeployHistory();
-            filterDeployHistory.setType(ConfigurationType.WORKFLOW);
-            filterDeployHistory.setListOfControllerIds(filter.getListOfControllerIds());
-            filterDeployHistory.setState(DeploymentState.DEPLOYED);
+        FilterInventoryConfigurations filterInventoryConfigurations = new FilterInventoryConfigurations();
+        filterInventoryConfigurations.setListOfControllerIds(filter.getListOfControllerIds());
+        filterInventoryConfigurations.setDeployed(true);
+        filterInventoryConfigurations.setType(ConfigurationType.WORKFLOW);
 
-            DBLayerDeployHistory dbLayerDeploy = new DBLayerDeployHistory(sosHibernateSession);
-            List<DBItemDeploymentHistory> listOfWorkflows = dbLayerDeploy.getDeployments(filterDeployHistory, 0);
+        FilterDeployHistory filterDeployHistory = new FilterDeployHistory();
+        filterDeployHistory.setType(ConfigurationType.WORKFLOW);
+        filterDeployHistory.setListOfControllerIds(filter.getListOfControllerIds());
+        filterDeployHistory.setOperation(0);
 
-            for (DBItemDeploymentHistory dbItemDeploymentHistory : listOfWorkflows) {
-                setOfWorkflows.add(dbItemDeploymentHistory.getPath());
+        DBLayerDeployHistory dbLayerDeploy = new DBLayerDeployHistory(sosHibernateSession);
+        DBLayerInventoryConfigurations dbLayerInventoryConfigurations = new DBLayerInventoryConfigurations(sosHibernateSession);
+        List<DBItemInventoryConfiguration> listOfWorkflows = dbLayerInventoryConfigurations.getInventoryConfigurations(filterInventoryConfigurations,
+                0);
+
+        for (DBItemInventoryConfiguration dbItemInventoryConfiguration : listOfWorkflows) {
+            filterDeployHistory.setInventoryId(dbItemInventoryConfiguration.getId());
+            List<DBItemDeploymentHistory> l = dbLayerDeploy.getDeployments(filterDeployHistory, 0);
+            if (l.size() > 0) {
+                setOfWorkflows.add(dbItemInventoryConfiguration.getPath());
             }
         }
 
@@ -138,7 +147,7 @@ public class DBLayerSchedules {
             }
 
             if (schedule != null) {
-                if (!filteredByControllerIds || setOfWorkflows.contains(schedule.getWorkflowPath())) {
+                if (setOfWorkflows.contains(schedule.getWorkflowPath())) {
 
                     dbItemInventoryConfiguration.setSchedule(schedule);
                     filteredResultset.add(dbItemInventoryConfiguration);

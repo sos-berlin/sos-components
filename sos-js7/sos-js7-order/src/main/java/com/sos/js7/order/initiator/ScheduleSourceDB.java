@@ -11,6 +11,7 @@ import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderSelector;
 import com.sos.joc.model.dailyplan.DailyPlanOrderSelectorDef;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.js7.order.initiator.db.DBLayerSchedules;
 import com.sos.js7.order.initiator.db.FilterSchedules;
 import com.sos.webservices.order.initiator.model.Schedule;
@@ -41,7 +42,7 @@ public class ScheduleSourceDB extends ScheduleSource {
         SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("ScheduleSourceDB");
         List<Schedule> listOfSchedules = new ArrayList<Schedule>();
         DBLayerSchedules dbLayerSchedules = new DBLayerSchedules(sosHibernateSession);
-
+         
         filterSchedules.setListOfControllerIds(dailyPlanOrderSelector.getControllerIds());
         filterSchedules.setListOfFolders(dailyPlanOrderSelector.getSelector().getFolders());
         filterSchedules.setListOfWorkflowPaths(dailyPlanOrderSelector.getSelector().getWorkflowPaths());
@@ -51,6 +52,7 @@ public class ScheduleSourceDB extends ScheduleSource {
         for (DBItemInventoryReleasedConfiguration dbItemInventoryConfiguration : listOfSchedulesDbItems) {
             if (dbItemInventoryConfiguration.getSchedule() != null) {
                 if (dbItemInventoryConfiguration.getSchedule().getPlanOrderAutomatically()) {
+                    
                     listOfSchedules.add(dbItemInventoryConfiguration.getSchedule());
                 }
             }

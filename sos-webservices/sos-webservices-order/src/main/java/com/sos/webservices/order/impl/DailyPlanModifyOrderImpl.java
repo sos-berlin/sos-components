@@ -5,7 +5,9 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -131,6 +133,7 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
         SOSHibernateSession sosHibernateSession = null;
 
         try {
+            Set<String> modifiedVaribale = new HashSet<String>();
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER);
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
@@ -139,13 +142,16 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
             filter.setPlannedOrderId(dbItemDailyPlanOrder.getId());
             dbLayerOrderVariables.delete(filter);
             for (NameValuePair variable : dailyplanModifyOrder.getVariables()) {
-                DBItemDailyPlanVariables dbItemDailyPlanVariables = new DBItemDailyPlanVariables();
-                dbItemDailyPlanVariables.setCreated(new Date());
-                dbItemDailyPlanVariables.setModified(new Date());
-                dbItemDailyPlanVariables.setPlannedOrderId(dbItemDailyPlanOrder.getId());
-                dbItemDailyPlanVariables.setVariableName(variable.getName());
-                dbItemDailyPlanVariables.setVariableValue(variable.getValue());
-                sosHibernateSession.save(dbItemDailyPlanVariables);
+                if (!modifiedVaribale.contains(variable.getName())) {
+                    modifiedVaribale.add(variable.getName());
+                    DBItemDailyPlanVariables dbItemDailyPlanVariables = new DBItemDailyPlanVariables();
+                    dbItemDailyPlanVariables.setCreated(new Date());
+                    dbItemDailyPlanVariables.setModified(new Date());
+                    dbItemDailyPlanVariables.setPlannedOrderId(dbItemDailyPlanOrder.getId());
+                    dbItemDailyPlanVariables.setVariableName(variable.getName());
+                    dbItemDailyPlanVariables.setVariableValue(variable.getValue());
+                    sosHibernateSession.save(dbItemDailyPlanVariables);
+                }
             }
             Globals.commit(sosHibernateSession);
 

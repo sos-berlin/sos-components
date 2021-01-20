@@ -14,6 +14,8 @@ public class FilterDeployHistory extends SOSFilter {
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterDeployHistory.class);
     private ConfigurationType  type;
     private String path;
+    private Long inventoryId;
+    private Integer operation;
     private List<String> listOfControllerIds;
     private DeploymentState state;
     
@@ -52,5 +54,27 @@ public class FilterDeployHistory extends SOSFilter {
     public void setState(DeploymentState state) {
         this.state = state;
     }
+
+    
+    public Long getInventoryId() {
+        return inventoryId;
+    }
+
+    
+    public void setInventoryId(Long inventoryId) {
+        this.inventoryId = inventoryId;
+    }
+
+    
+    public Integer getOperation() {
+        return operation;
+    }
+
+    
+    public void setOperation(Integer operation) {
+        this.operation = operation;
+    }
+
+   
     
 }

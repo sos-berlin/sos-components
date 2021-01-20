@@ -5,6 +5,7 @@ import java.util.List;
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 
@@ -41,7 +42,22 @@ public class DBLayerDeployHistory {
             where += and + " path = :path";
             and = " and ";
         }
-
+    
+        if (filter.getListOfControllerIds() != null && filter.getListOfControllerIds().size() > 0) {
+            where += and + SearchStringHelper.getStringListSql(filter.getListOfControllerIds(), "controllerId");
+            and = " and ";
+        }
+        
+        if (filter.getInventoryId() != null) {
+            where += and + " inventoryConfigurationId = :inventoryConfigurationId";
+            and = " and ";
+        }
+        
+        if (filter.getOperation() != null) {
+            where += and + " operation = :operation";
+            and = " and ";
+        }
+         
         if (!"".equals(where.trim())) {
             where = " where " + where;
         }
@@ -58,6 +74,13 @@ public class DBLayerDeployHistory {
         if (filter.getState() != null) {
             query.setParameter("state", filter.getState().value());
         }
+        if (filter.getOperation() != null) {
+            query.setParameter("operation", filter.getOperation());
+        }
+        if (filter.getInventoryId() != null) {
+            query.setParameter("inventoryConfigurationId", filter.getInventoryId());
+        }
+      
         return query;
     }
 
