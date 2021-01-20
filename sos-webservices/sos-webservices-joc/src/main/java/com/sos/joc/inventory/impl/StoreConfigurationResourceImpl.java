@@ -7,6 +7,7 @@ import java.util.List;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.jobscheduler.model.lock.Lock;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -67,7 +68,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 checkRequiredParameter("path", in.getPath());
                 checkRequiredParameter("objectType", in.getObjectType());
                 java.nio.file.Path path = JocInventory.normalizePath(in.getPath());
-                
+
                 // Check Java variable name rules
                 for (int i = 0; i < path.getNameCount(); i++) {
                     if (i == path.getNameCount() - 1) {
@@ -76,7 +77,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                         CheckJavaVariableName.test("folder", path.getName(i).toString());
                     }
                 }
-                
+
                 // check if name is unique
                 if (!JocInventory.isFolder(in.getObjectType())) {
                     String name = path.getFileName().toString();
@@ -86,10 +87,10 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                                 namedItems.get(0).getPath()));
                     }
                 }
-                
+
                 // mkdirs if necessary
                 JocInventory.makeParentDirs(dbLayer, path.getParent());
-                
+
                 item = new DBItemInventoryConfiguration();
                 item.setType(in.getObjectType());
                 item = setProperties(in, item, true);
@@ -159,26 +160,27 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 item.setTitle(in.getConfiguration().getTitle());
 
                 switch (in.getObjectType()) {
-//                case WORKFLOW:
-//                    ((Workflow) in.getConfiguration()).setPath(item.getPath());
-//                    break;
-//                case SCHEDULE:
-//                    ((Schedule) in.getConfiguration()).setPath(item.getPath());
-//                    break;
+                // case WORKFLOW:
+                // ((Workflow) in.getConfiguration()).setPath(item.getPath());
+                // break;
+                // case SCHEDULE:
+                // ((Schedule) in.getConfiguration()).setPath(item.getPath());
+                // break;
                 case WORKINGDAYSCALENDAR:
                 case NONWORKINGDAYSCALENDAR:
-//                    Calendar calendar = (Calendar) in.getConfiguration();
-//                    calendar.setPath(item.getPath());
-//                    calendar.setType(CalendarType.fromValue(in.getObjectType().value()));
+                    // Calendar calendar = (Calendar) in.getConfiguration();
+                    // calendar.setPath(item.getPath());
+                    // calendar.setType(CalendarType.fromValue(in.getObjectType().value()));
                     ((ICalendarObject) in.getConfiguration()).setType(CalendarType.fromValue(in.getObjectType().value()));
                     break;
-//                case LOCK: // without Path
-//                    Lock lock = (Lock) in.getConfiguration();
-//                    lock.setId(item.getName());// TODO unique
-//                    if (lock.getLimit() == null) {
-//                        lock.setLimit(1);
-//                    }
-//                    break;
+                case LOCK: // without Path
+                    // TODO tmp solution - should be removed when validation works
+                    Lock lock = (Lock) in.getConfiguration();
+                    lock.setId(item.getName());// TODO unique
+                    if (lock.getLimit() == null) {
+                        lock.setLimit(1);
+                    }
+                    break;
                 default:
                     break;
                 }
