@@ -86,7 +86,7 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
             SOSHibernateException {
         validate(type, Globals.objectMapper.writeValueAsBytes(config), config);
     }
-
+    
     private static void validate(ConfigurationType type, byte[] configBytes, IConfigurationObject config) throws SOSJsonSchemaException, IOException,
             SOSHibernateException {
         JsonValidator.validate(configBytes, URI.create(JocInventory.SCHEMA_LOCATION.get(type)));
@@ -111,21 +111,22 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
     }
 
     private static void validateCalendarRefs(Schedule schedule) throws SOSHibernateException {
-        Set<String> calendarPaths = schedule.getCalendars().stream().map(AssignedCalendars::getCalendarPath).collect(Collectors.toSet());
+        Set<String> calendarNames = schedule.getCalendars().stream().map(AssignedCalendars::getCalendarPath).collect(Collectors.toSet());
         if (schedule.getNonWorkingCalendars() != null) {
-            calendarPaths.addAll(schedule.getNonWorkingCalendars().stream().map(AssignedNonWorkingCalendars::getCalendarPath).collect(Collectors
-                    .toSet()));
+            //temp.: map(JocInventory::pathToName)
+            calendarNames.addAll(schedule.getNonWorkingCalendars().stream().map(AssignedNonWorkingCalendars::getCalendarPath).map(
+                    JocInventory::pathToName).collect(Collectors.toSet()));
         }
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            List<DBItemInventoryConfiguration> dbCalendars = dbLayer.getCalendars(calendarPaths.stream());
+            List<DBItemInventoryConfiguration> dbCalendars = dbLayer.getCalendarsByNames(calendarNames.stream());
             if (dbCalendars == null || dbCalendars.isEmpty()) {
-                throw new JocConfigurationException("Missing assigned Calendars: " + calendarPaths.toString()); 
-            } else if (dbCalendars.size() < calendarPaths.size()) {
-                calendarPaths.removeAll(dbCalendars.stream().map(DBItemInventoryConfiguration::getPath).collect(Collectors.toSet()));
-                throw new JocConfigurationException("Missing assigned Calendars: " + calendarPaths.toString());
+                throw new JocConfigurationException("Missing assigned Calendars: " + calendarNames.toString()); 
+            } else if (dbCalendars.size() < calendarNames.size()) {
+                calendarNames.removeAll(dbCalendars.stream().map(DBItemInventoryConfiguration::getPath).collect(Collectors.toSet()));
+                throw new JocConfigurationException("Missing assigned Calendars: " + calendarNames.toString());
             }
         } finally {
             Globals.disconnect(session);

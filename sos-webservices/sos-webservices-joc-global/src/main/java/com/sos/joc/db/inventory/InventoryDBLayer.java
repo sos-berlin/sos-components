@@ -479,6 +479,8 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
+    // use getCalendarsByNames because Name should be unique and path could be wrong
+    @Deprecated
     public List<DBItemInventoryConfiguration> getCalendars(Stream<String> pathsStream) throws SOSHibernateException {
         Set<String> paths = pathsStream.map(String::toLowerCase).collect(Collectors.toSet());
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
@@ -489,6 +491,21 @@ public class InventoryDBLayer extends DBLayer {
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         if (!paths.isEmpty()) {
             query.setParameterList("paths", paths);
+        }
+        query.setParameterList("types", JocInventory.getCalendarTypes());
+        return getSession().getResultList(query);
+    }
+    
+    public List<DBItemInventoryConfiguration> getCalendarsByNames(Stream<String> namesStream) throws SOSHibernateException {
+        Set<String> names = namesStream.map(String::toLowerCase).collect(Collectors.toSet());
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where type in (:types)");
+        if (!names.isEmpty()) {
+            hql.append(" and lower(name) in (:names)");
+        }
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        if (!names.isEmpty()) {
+            query.setParameterList("names", names);
         }
         query.setParameterList("types", JocInventory.getCalendarTypes());
         return getSession().getResultList(query);

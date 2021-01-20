@@ -271,6 +271,10 @@ public class JocInventory {
         makeParentDirs(dbLayer, folder, null);
     }
     
+    public static String pathToName(String path) {
+        return Paths.get(path).getFileName().toString();
+    }
+    
     public static List<DBItemInventoryConfiguration> deleteEmptyFolders(InventoryDBLayer dbLayer, DBItemInventoryConfiguration folder) throws SOSHibernateException {
         List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(folder.getPath(), true, null);
         if (folderContent == null) {

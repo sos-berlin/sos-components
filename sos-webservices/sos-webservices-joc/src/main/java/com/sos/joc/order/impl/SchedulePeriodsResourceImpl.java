@@ -55,7 +55,7 @@ public class SchedulePeriodsResourceImpl extends JOCResourceImpl implements ISch
         SOSHibernateSession session = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, ScheduleDatesFilter.class);
+            JsonValidator.validate(filterBytes, ScheduleDatesFilter.class);
             ScheduleDatesFilter in = Globals.objectMapper.readValue(filterBytes, ScheduleDatesFilter.class);
             // TODO permission
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getPermissonsJocCockpit(null, accessToken).getOrder().getView().isStatus());
