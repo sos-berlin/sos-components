@@ -4,7 +4,6 @@ package com.sos.webservices.order.initiator.model;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.calendar.Frequencies;
 import com.sos.joc.model.calendar.Period;
@@ -14,6 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "calendarName",
     "calendarPath",
     "timeZone",
     "includes",
@@ -23,14 +23,21 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class AssignedCalendars {
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
+     * 
+     */
+    @JsonProperty("calendarName")
+    private String calendarName;
+    /**
+     * string without < and >
+     * <p>
+     * 
      * (Required)
      * 
      */
     @JsonProperty("calendarPath")
-    @JsonPropertyDescription("absolute path of an object.")
     private String calendarPath;
     @JsonProperty("timeZone")
     private String timeZone = "Etc/UTC";
@@ -59,9 +66,31 @@ public class AssignedCalendars {
     private List<Period> periods = null;
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
+     * 
+     */
+    @JsonProperty("calendarName")
+    public String getCalendarName() {
+        return calendarName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("calendarName")
+    public void setCalendarName(String calendarName) {
+        this.calendarName = calendarName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
      * (Required)
      * 
      */
@@ -71,9 +100,9 @@ public class AssignedCalendars {
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * (Required)
      * 
      */
@@ -158,12 +187,12 @@ public class AssignedCalendars {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("calendarPath", calendarPath).append("timeZone", timeZone).append("includes", includes).append("excludes", excludes).append("periods", periods).toString();
+        return new ToStringBuilder(this).append("calendarName", calendarName).append("calendarPath", calendarPath).append("timeZone", timeZone).append("includes", includes).append("excludes", excludes).append("periods", periods).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(timeZone).append(periods).append(calendarPath).append(includes).append(excludes).toHashCode();
+        return new HashCodeBuilder().append(calendarName).append(excludes).append(timeZone).append(periods).append(calendarPath).append(includes).toHashCode();
     }
 
     @Override
@@ -175,7 +204,7 @@ public class AssignedCalendars {
             return false;
         }
         AssignedCalendars rhs = ((AssignedCalendars) other);
-        return new EqualsBuilder().append(timeZone, rhs.timeZone).append(periods, rhs.periods).append(calendarPath, rhs.calendarPath).append(includes, rhs.includes).append(excludes, rhs.excludes).isEquals();
+        return new EqualsBuilder().append(calendarName, rhs.calendarName).append(excludes, rhs.excludes).append(timeZone, rhs.timeZone).append(periods, rhs.periods).append(calendarPath, rhs.calendarPath).append(includes, rhs.includes).isEquals();
     }
 
 }

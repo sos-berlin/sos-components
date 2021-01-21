@@ -23,6 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "path",
     "workflowPath",
+    "workflowName",
     "title",
     "documentationPath",
     "submitOrderToControllerWhenPlanned",
@@ -38,22 +39,28 @@ public class Schedule implements IConfigurationObject, IReleaseObject
      * path
      * <p>
      * absolute path of an object.
-     * (Required)
      * 
      */
     @JsonProperty("path")
     @JsonPropertyDescription("absolute path of an object.")
     private String path;
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * (Required)
      * 
      */
     @JsonProperty("workflowPath")
-    @JsonPropertyDescription("absolute path of an object.")
     private String workflowPath;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowName")
+    private String workflowName;
     /**
      * string without < and >
      * <p>
@@ -105,7 +112,6 @@ public class Schedule implements IConfigurationObject, IReleaseObject
      * path
      * <p>
      * absolute path of an object.
-     * (Required)
      * 
      */
     @JsonProperty("path")
@@ -117,7 +123,6 @@ public class Schedule implements IConfigurationObject, IReleaseObject
      * path
      * <p>
      * absolute path of an object.
-     * (Required)
      * 
      */
     @JsonProperty("path")
@@ -126,9 +131,9 @@ public class Schedule implements IConfigurationObject, IReleaseObject
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * (Required)
      * 
      */
@@ -138,15 +143,37 @@ public class Schedule implements IConfigurationObject, IReleaseObject
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * (Required)
      * 
      */
     @JsonProperty("workflowPath")
     public void setWorkflowPath(String workflowPath) {
         this.workflowPath = workflowPath;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowName")
+    public String getWorkflowName() {
+        return workflowName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowName")
+    public void setWorkflowName(String workflowName) {
+        this.workflowName = workflowName;
     }
 
     /**
@@ -283,12 +310,12 @@ public class Schedule implements IConfigurationObject, IReleaseObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("workflowPath", workflowPath).append("title", title).append("documentationPath", documentationPath).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("variables", variables).toString();
+        return new ToStringBuilder(this).append("path", path).append("workflowPath", workflowPath).append("workflowName", workflowName).append("title", title).append("documentationPath", documentationPath).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("variables", variables).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(documentationPath).append(planOrderAutomatically).append(path).append(variables).append(nonWorkingCalendars).append(workflowPath).append(calendars).append(submitOrderToControllerWhenPlanned).append(title).toHashCode();
+        return new HashCodeBuilder().append(documentationPath).append(planOrderAutomatically).append(path).append(variables).append(nonWorkingCalendars).append(workflowPath).append(calendars).append(submitOrderToControllerWhenPlanned).append(workflowName).append(title).toHashCode();
     }
 
     @Override
@@ -300,7 +327,7 @@ public class Schedule implements IConfigurationObject, IReleaseObject
             return false;
         }
         Schedule rhs = ((Schedule) other);
-        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(variables, rhs.variables).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(workflowPath, rhs.workflowPath).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(variables, rhs.variables).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(workflowPath, rhs.workflowPath).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(workflowName, rhs.workflowName).append(title, rhs.title).isEquals();
     }
 
 }

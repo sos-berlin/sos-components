@@ -43,13 +43,12 @@ public class CalendarDatesFilter {
     @JsonProperty("id")
     private Long id;
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path of an object.")
     private String path;
     /**
      * date
@@ -115,9 +114,9 @@ public class CalendarDatesFilter {
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
     @JsonProperty("path")
@@ -126,9 +125,9 @@ public class CalendarDatesFilter {
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
     @JsonProperty("path")

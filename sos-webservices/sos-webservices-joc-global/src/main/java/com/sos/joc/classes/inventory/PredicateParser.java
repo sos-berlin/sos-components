@@ -685,7 +685,7 @@ public class PredicateParser {
                 }
             } else {
                 throw new IllegalArgumentException(extendedErrMessage + "[" + tokens[0]
-                        + "] is not numeric. Expects variable(...).toNumber, argument(...).toNumber, returnCode or an unquoted number.");
+                        + "] is not numeric. Expects variable(...).toNumber, argument(...).toNumber, $returnCode or an unquoted number.");
             }
             break;
         case "matches":
@@ -753,7 +753,7 @@ public class PredicateParser {
                 }
             } else {
                 throw new IllegalArgumentException(extendedErrMessage + "[" + tokens[0]
-                        + "] is not numeric. Expects variable(...).toNumber, argument(...).toNumber, returnCode or an unquoted number.");
+                        + "] is not numeric. Expects variable(...).toNumber, argument(...).toNumber, $returnCode or an unquoted number.");
             }
             if (isNumeric(tokens[2])) {
                 if (tokens[2].endsWith(".toNumber")) {
@@ -761,7 +761,7 @@ public class PredicateParser {
                 }
             } else {
                 throw new IllegalArgumentException(extendedErrMessage + "[" + tokens[2]
-                        + "] is not numeric. Expects variable(...).toNumber, argument(...).toNumber, returnCode or an unquoted number.");
+                        + "] is not numeric. Expects variable(...).toNumber, argument(...).toNumber, $returnCode or an unquoted number.");
             }
             break;
         case "":
@@ -815,7 +815,7 @@ public class PredicateParser {
     }
 
     private static boolean isNumeric(String str) {
-        boolean isNumeric = "returnCode".equals(str) || str.endsWith(".toNumber");
+        boolean isNumeric = "$returnCode".equals(str) || "${returnCode}".equals(str) || str.endsWith(".toNumber");
         if (!isNumeric) {
             try {
                 Double.parseDouble(str);
