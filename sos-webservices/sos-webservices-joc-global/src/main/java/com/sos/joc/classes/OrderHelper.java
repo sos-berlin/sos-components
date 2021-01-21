@@ -40,7 +40,7 @@ public class OrderHelper {
             ExecutionException {
 
         try {
-            Either<Problem, Void> response = ControllerApi.of(controllerId).cancelOrders(listOfPlannedOrders.stream().map(dbItem -> OrderId.of(dbItem
+            Either<Problem, Void> response = ControllerApi.of(controllerId).cancelOrders(listOfPlannedOrders.stream().filter(dbItem->dbItem.getSubmitted()).map(dbItem -> OrderId.of(dbItem
                     .getOrderId())).collect(Collectors.toSet()), JCancelMode.freshOnly()).get(99, TimeUnit.SECONDS);
             ProblemHelper.throwProblemIfExist(response);
         } catch (TimeoutException e1) {
