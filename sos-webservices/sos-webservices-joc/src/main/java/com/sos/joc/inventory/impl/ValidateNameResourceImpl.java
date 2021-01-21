@@ -15,8 +15,10 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.inventory.resource.IValidateNameResource;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
 import com.sos.schema.JsonValidator;
 
@@ -50,6 +52,7 @@ public class ValidateNameResourceImpl extends JOCResourceImpl implements IValida
             checkRequiredParameter("path", in.getPath());
             checkRequiredParameter("objectType", in.getObjectType());
             java.nio.file.Path path = JocInventory.normalizePath(in.getPath());
+            String p = path.toString().replace('\\', '/');
             
             // Check Java variable name rules
             for (int i = 0; i < path.getNameCount(); i++) {
@@ -60,11 +63,15 @@ public class ValidateNameResourceImpl extends JOCResourceImpl implements IValida
                 }
             }
             
+            // Check folder permissions
+            if (JocInventory.isFolder(in.getObjectType()) && !folderPermissions.isPermittedForFolder(p)) {
+                throw new JocFolderPermissionsException("Access denied for folder: " + p);
+            }
+            
             // check if name is unique
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             if (JocInventory.isFolder(in.getObjectType())) {
-                String p = path.toString().replace('\\', '/');
                 DBItemInventoryConfiguration item = dbLayer.getConfiguration(p, in.getObjectType().intValue());
                 if (item != null) {
                     throw new JocObjectAlreadyExistException(String.format("The path '%s' is already used", p));

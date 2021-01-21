@@ -111,9 +111,10 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
     }
 
     private static void validateCalendarRefs(Schedule schedule) throws SOSHibernateException {
-        Set<String> calendarNames = schedule.getCalendars().stream().map(AssignedCalendars::getCalendarPath).collect(Collectors.toSet());
+        // temp.: map(JocInventory::pathToName)
+        Set<String> calendarNames = schedule.getCalendars().stream().map(AssignedCalendars::getCalendarPath).map(JocInventory::pathToName).collect(
+                Collectors.toSet());
         if (schedule.getNonWorkingCalendars() != null) {
-            //temp.: map(JocInventory::pathToName)
             calendarNames.addAll(schedule.getNonWorkingCalendars().stream().map(AssignedNonWorkingCalendars::getCalendarPath).map(
                     JocInventory::pathToName).collect(Collectors.toSet()));
         }
