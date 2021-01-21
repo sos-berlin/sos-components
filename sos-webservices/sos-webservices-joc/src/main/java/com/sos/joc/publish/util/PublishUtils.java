@@ -75,6 +75,7 @@ import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.jobscheduler.model.workflow.WorkflowEdit;
 import com.sos.jobscheduler.model.workflow.WorkflowPublish;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
@@ -1412,6 +1413,7 @@ public abstract class PublishUtils {
                     replaceAgentIdWithOrigAgentName(draft, updateableAgentNames, controllerId);
                 }
                 hibernateSession.update(draft);
+                JocInventory.postEvent(draft.getFolder());
             }
         } catch (SOSHibernateException | IOException e) {
             throw new JocSosHibernateException(e);
@@ -1430,6 +1432,7 @@ public abstract class PublishUtils {
                     replaceAgentIdWithOrigAgentName(configuration, updateableAgentNames, controllerId);
                 }
                 dbLayer.getSession().update(configuration);
+                JocInventory.postEvent(configuration.getFolder());
             }
         } catch (SOSHibernateException | IOException e) {
             throw new JocSosHibernateException(e);
