@@ -478,6 +478,17 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameterList("types", JocInventory.getCalendarTypes());
         return getSession().getSingleResult(query);
     }
+    
+    public DBItemInventoryConfiguration getCalendarByName(String name) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where lower(name)=:name");
+        hql.append(" and type in (:types)");
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("name", name.toLowerCase());
+        query.setParameterList("types", JocInventory.getCalendarTypes());
+        query.setMaxResults(1);
+        return getSession().getSingleResult(query);
+    }
 
     // use getCalendarsByNames because Name should be unique and path could be wrong
     @Deprecated

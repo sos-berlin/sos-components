@@ -63,14 +63,19 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
                     }
                     in.setPath(calendarItem.getPath());
                 } else {
-                    String calendarPath = Globals.normalizePath(in.getPath());
-                    calendarItem = dbLayer.getCalendar(calendarPath);
+                    java.nio.file.Path calendarPath = JocInventory.normalizePath(in.getPath());
+                    String calendarName = calendarPath.getFileName().toString();
+                    if (in.getPath().contains("/")) { // is path
+                        calendarItem = dbLayer.getCalendar(calendarPath.toString().replace('\\', '/'));
+                    } else { // is name
+                        calendarItem = dbLayer.getCalendarByName(calendarName);
+                    }
                     if (calendarItem == null) {
-                        throw new DBMissingDataException(String.format("calendar '%1$s' not found", calendarPath));
+                        throw new DBMissingDataException(String.format("calendar '%1$s' not found", calendarName));
                     }
                     in.setId(calendarItem.getId());
                 }
-                checkFolderPermissions(in.getPath());
+                checkFolderPermissions(calendarItem.getPath());
                 in.setCalendar(Globals.objectMapper.readValue(calendarItem.getContent(), Calendar.class));
             } else if (!SOSString.isEmpty(in.getCalendar().getPath())) {
                 checkFolderPermissions(in.getCalendar().getPath());

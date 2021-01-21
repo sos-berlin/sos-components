@@ -61,9 +61,15 @@ public class ValidateNameResourceImpl extends JOCResourceImpl implements IValida
             }
             
             // check if name is unique
-            if (!JocInventory.isFolder(in.getObjectType())) {
-                session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
-                InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+            if (JocInventory.isFolder(in.getObjectType())) {
+                String p = path.toString().replace('\\', '/');
+                DBItemInventoryConfiguration item = dbLayer.getConfiguration(p, in.getObjectType().intValue());
+                if (item != null) {
+                    throw new JocObjectAlreadyExistException(String.format("The path '%s' is already used", p));
+                }
+            } else {
                 String name = path.getFileName().toString();
                 List<DBItemInventoryConfiguration> namedItems = dbLayer.getConfigurationByName(name, in.getObjectType().intValue());
                 if (namedItems != null && !namedItems.isEmpty()) {
