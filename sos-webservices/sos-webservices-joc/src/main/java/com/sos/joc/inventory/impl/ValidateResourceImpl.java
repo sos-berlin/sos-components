@@ -126,7 +126,7 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
             if (dbCalendars == null || dbCalendars.isEmpty()) {
                 throw new JocConfigurationException("Missing assigned Calendars: " + calendarNames.toString()); 
             } else if (dbCalendars.size() < calendarNames.size()) {
-                calendarNames.removeAll(dbCalendars.stream().map(DBItemInventoryConfiguration::getPath).collect(Collectors.toSet()));
+                calendarNames.removeAll(dbCalendars.stream().map(DBItemInventoryConfiguration::getName).collect(Collectors.toSet()));
                 throw new JocConfigurationException("Missing assigned Calendars: " + calendarNames.toString());
             }
         } finally {
