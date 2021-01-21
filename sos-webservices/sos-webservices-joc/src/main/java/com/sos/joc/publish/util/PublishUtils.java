@@ -1141,6 +1141,7 @@ public abstract class PublishUtils {
                         Flux.fromIterable(updateItemOperationsVersioned)));
     }
 
+    @SuppressWarnings("incomplete-switch")
     private static void updateVersionIdOnDraftObject(DBItemInventoryConfiguration draft, String commitId)
             throws JsonParseException, JsonMappingException, IOException, JocNotImplementedException {
         switch (ConfigurationType.fromValue(draft.getType())) {
@@ -1158,11 +1159,11 @@ public abstract class PublishUtils {
             break;
         case JOBCLASS:
         case JUNCTION:
-        default:
             throw new JocNotImplementedException();
         }
     }
 
+    @SuppressWarnings("incomplete-switch")
     private static void updateVersionIdOnDeployedObject(DBItemDeploymentHistory deployed, String commitId, SOSHibernateSession session)
             throws JsonParseException, JsonMappingException, IOException, SOSHibernateException, JocNotImplementedException {
 
@@ -1174,8 +1175,8 @@ public abstract class PublishUtils {
             break;
         case LOCK:
             // TODO: locks and other objects
+            break;
         case JUNCTION:
-        default:
             throw new JocNotImplementedException();
         }
     }

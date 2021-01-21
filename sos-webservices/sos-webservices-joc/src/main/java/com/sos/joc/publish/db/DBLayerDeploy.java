@@ -46,21 +46,20 @@ import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.inventory.impl.ValidateResourceImpl;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
-import com.sos.joc.model.publish.DeploymentState;
-import com.sos.joc.model.publish.ExcludeConfiguration;
+import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.publish.DeployablesFilter;
 import com.sos.joc.model.publish.DeployablesValidFilter;
-import com.sos.joc.model.publish.ReleasablesFilter;
-import com.sos.joc.model.publish.ControllerObject;
+import com.sos.joc.model.publish.DeploymentState;
+import com.sos.joc.model.publish.ExcludeConfiguration;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.RedeployFilter;
+import com.sos.joc.model.publish.ReleasablesFilter;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.model.publish.SetVersionsFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
@@ -862,32 +861,36 @@ public class DBLayerDeploy {
     public DBItemDepSignatures saveOrUpdateSignature (Long invConfId, ControllerObject jsObject, String account, DeployType type) throws SOSHibernateException {
         DBItemDepSignatures dbItemSig = getSignature(invConfId);
         String signature = null;
-        switch (type) {
-            case WORKFLOW:
-                // Why cast WorkflowPublish?
-                signature = ((WorkflowPublish) jsObject).getSignedContent();
-                break;
-            case JUNCTION:
-            case LOCK:
-            default:
-                throw new JocNotImplementedException();
-        }
-        if (dbItemSig != null) {
-            dbItemSig.setAccount(account);
-            dbItemSig.setSignature(signature);
-            dbItemSig.setDepHistoryId(null);
-            dbItemSig.setModified(Date.from(Instant.now()));
-            session.update(dbItemSig);
+        signature = jsObject.getSignedContent();
+    //        switch (type) {
+    //            case WORKFLOW:
+    //                // Why cast WorkflowPublish?
+    //                signature = ((WorkflowPublish) jsObject).getSignedContent();
+    //                break;
+    //            case JUNCTION:
+    //            default:
+    //                throw new JocNotImplementedException();
+    //        }
+        if (signature != null && !signature.isEmpty()) {
+            if (dbItemSig != null) {
+                dbItemSig.setAccount(account);
+                dbItemSig.setSignature(signature);
+                dbItemSig.setDepHistoryId(null);
+                dbItemSig.setModified(Date.from(Instant.now()));
+                session.update(dbItemSig);
+            } else {
+                dbItemSig = new DBItemDepSignatures();
+                dbItemSig.setAccount(account);
+                dbItemSig.setSignature(signature);
+                dbItemSig.setDepHistoryId(null);
+                dbItemSig.setInvConfigurationId(invConfId);
+                dbItemSig.setModified(Date.from(Instant.now()));
+                session.save(dbItemSig);
+            }
+            return dbItemSig;
         } else {
-            dbItemSig = new DBItemDepSignatures();
-            dbItemSig.setAccount(account);
-            dbItemSig.setSignature(signature);
-            dbItemSig.setDepHistoryId(null);
-            dbItemSig.setInvConfigurationId(invConfId);
-            dbItemSig.setModified(Date.from(Instant.now()));
-            session.save(dbItemSig);
+            return null;
         }
-        return dbItemSig;
     }
     
     public DBItemDepSignatures getSignature(long invConfId) throws SOSHibernateException {
