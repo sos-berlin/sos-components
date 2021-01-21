@@ -27,6 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "deployType",
     "operation",
     "state",
+    "errorMessage",
     "deploymentDate",
     "deleteDate",
     "invConfigurationId",
@@ -106,6 +107,8 @@ public class DepHistoryItem {
      */
     @JsonProperty("state")
     private String state;
+    @JsonProperty("errorMessage")
+    private String errorMessage;
     @JsonProperty("deploymentDate")
     private Date deploymentDate;
     @JsonProperty("deleteDate")
@@ -325,6 +328,16 @@ public class DepHistoryItem {
         this.state = state;
     }
 
+    @JsonProperty("errorMessage")
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    @JsonProperty("errorMessage")
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
+
     @JsonProperty("deploymentDate")
     public Date getDeploymentDate() {
         return deploymentDate;
@@ -391,12 +404,12 @@ public class DepHistoryItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("account", account).append("path", path).append("folder", folder).append("controllerId", controllerId).append("commitId", commitId).append("version", version).append("deployType", deployType).append("operation", operation).append("state", state).append("deploymentDate", deploymentDate).append("deleteDate", deleteDate).append("invConfigurationId", invConfigurationId).append("deploymentId", deploymentId).toString();
+        return new ToStringBuilder(this).append("account", account).append("path", path).append("folder", folder).append("controllerId", controllerId).append("commitId", commitId).append("version", version).append("deployType", deployType).append("operation", operation).append("state", state).append("errorMessage", errorMessage).append("deploymentDate", deploymentDate).append("deleteDate", deleteDate).append("invConfigurationId", invConfigurationId).append("deploymentId", deploymentId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(commitId).append(invConfigurationId).append(version).append(deployType).append(path).append(folder).append(deploymentDate).append(deploymentId).append(state).append(operation).append(account).append(deleteDate).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(errorMessage).append(commitId).append(invConfigurationId).append(version).append(deployType).append(path).append(folder).append(deploymentDate).append(deploymentId).append(state).append(operation).append(account).append(deleteDate).toHashCode();
     }
 
     @Override
@@ -408,7 +421,7 @@ public class DepHistoryItem {
             return false;
         }
         DepHistoryItem rhs = ((DepHistoryItem) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(commitId, rhs.commitId).append(invConfigurationId, rhs.invConfigurationId).append(version, rhs.version).append(deployType, rhs.deployType).append(path, rhs.path).append(folder, rhs.folder).append(deploymentDate, rhs.deploymentDate).append(deploymentId, rhs.deploymentId).append(state, rhs.state).append(operation, rhs.operation).append(account, rhs.account).append(deleteDate, rhs.deleteDate).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(errorMessage, rhs.errorMessage).append(commitId, rhs.commitId).append(invConfigurationId, rhs.invConfigurationId).append(version, rhs.version).append(deployType, rhs.deployType).append(path, rhs.path).append(folder, rhs.folder).append(deploymentDate, rhs.deploymentDate).append(deploymentId, rhs.deploymentId).append(state, rhs.state).append(operation, rhs.operation).append(account, rhs.account).append(deleteDate, rhs.deleteDate).isEquals();
     }
 
 }

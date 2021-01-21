@@ -97,6 +97,9 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
         if(dbItem.getState() != null) {
             depHistoryItem.setState(DeploymentState.fromValue(dbItem.getState()).name());
         }
+        if (dbItem.getErrorMessage() != null && !dbItem.getErrorMessage().isEmpty()) {
+            depHistoryItem.setErrorMessage(dbItem.getErrorMessage());
+        }
         depHistoryItem.setVersion(dbItem.getVersion());
         return depHistoryItem;
         
