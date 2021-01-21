@@ -410,6 +410,7 @@ public abstract class PublishUtils {
                     sig.setModified(Date.from(Instant.now()));
                     if(deployed.getType() == DeployType.WORKFLOW.intValue()) {
                         Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
+//                        workflow.setPath(Paths.get(deployed.getPath()).getFileName().toString());
                         workflow.setPath(deployed.getPath());
                         deployed.setContent(om.writeValueAsString(workflow));
                     }
@@ -428,6 +429,7 @@ public abstract class PublishUtils {
                     sig.setModified(Date.from(Instant.now()));
                     if(deployed.getType() == DeployType.WORKFLOW.intValue()) {
                         Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
+//                      workflow.setPath(Paths.get(deployed.getPath()).getFileName().toString());
                         workflow.setPath(deployed.getPath());
                         deployed.setContent(om.writeValueAsString(workflow));
                     }
@@ -442,6 +444,7 @@ public abstract class PublishUtils {
 //                    X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                     if(deployed.getType() == ConfigurationType.WORKFLOW.intValue()) {
                         Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
+//                      workflow.setPath(Paths.get(deployed.getPath()).getFileName().toString());
                         workflow.setPath(deployed.getPath());
                         deployed.setContent(om.writeValueAsString(workflow));
                     }
@@ -1983,11 +1986,16 @@ public abstract class PublishUtils {
                                 if (controllerId != null && updateableAgentNames != null) {
                                     replaceAgentNameWithAgentId(workflow, updateableAgentNames, controllerId);
                                 }
+//                                workflow.setPath(Paths.get(deployable.getPath()).getFileName().toString());
+                                workflow.setPath(deployable.getPath());
                                 content = om.writeValueAsString(workflow);
                                 break;
                             case LOCK:
                                 extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
                                 Lock lock = (Lock) deployable.getContent();
+                                if(lock.getId() == null) {
+                                    lock.setId(Paths.get(deployable.getPath()).getFileName().toString());
+                                }
                                 content = om.writeValueAsString(lock);
                                 break;
                             case JUNCTION:
@@ -2079,11 +2087,14 @@ public abstract class PublishUtils {
                                 if (controllerId != null && updateableAgentNames != null) {
                                     replaceAgentNameWithAgentId(workflow, updateableAgentNames, controllerId);
                                 }
+//                              workflow.setPath(Paths.get(deployable.getPath()).getFileName().toString());
+                                workflow.setPath(deployable.getPath());
                                 content = om.writeValueAsString(workflow);
                                 break;
                             case LOCK:
                                 extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
                                 Lock lock = (Lock) deployable.getContent();
+                                lock.setId(Paths.get(deployable.getPath()).getFileName().toString());
                                 content = om.writeValueAsString(lock);
                                 break;
                             case JUNCTION:
