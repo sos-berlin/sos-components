@@ -158,9 +158,13 @@ public class DBLayerDailyPlannedOrders {
             where += and + "(";
             for (OrderStateText state : filter.getStates()) {
                 if (state.intValue() == OrderStateText.PLANNED.intValue()) {
-                    where += " p.submitted= 0 or";
+                    where += " p.submitted=0 or";
                 } else {
-                    where += " o.state = " + state.intValue() + " or";
+                    if (state.intValue() == OrderStateText.PENDING.intValue()) {
+                        where += " p.submitted=1 or";
+                    } else {
+                        where += " o.state = " + state.intValue() + " or";
+                    }
                 }
             }
             where += " 1=0)";
@@ -428,7 +432,7 @@ public class DBLayerDailyPlannedOrders {
         String id = "0000000000" + String.valueOf(dbItemDailyPlanOrders.getId());
         id = id.substring(id.length() - 10);
         String orderId = DailyPlanHelper.buildOrderId(dbItemDailyPlanOrders);
-        dbItemDailyPlanOrders.setOrderId(orderId.replaceAll("<id.*>", id));        
+        dbItemDailyPlanOrders.setOrderId(orderId.replaceAll("<id.*>", id));
         sosHibernateSession.update(dbItemDailyPlanOrders);
 
         return dbItemDailyPlanOrders;

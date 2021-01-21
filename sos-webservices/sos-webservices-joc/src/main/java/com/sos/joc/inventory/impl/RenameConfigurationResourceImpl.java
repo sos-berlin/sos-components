@@ -60,17 +60,27 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
             
             session.beginTransaction();
             DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, in, folderPermissions);
+            ConfigurationType type = config.getTypeAsEnum();
             
+            final java.nio.file.Path oldPath = Paths.get(config.getPath());
             final java.nio.file.Path p = Paths.get(config.getFolder()).resolve(in.getNewPath()).normalize();
             String newFolder = p.getParent().toString().replace('\\', '/');
             String newPath = p.toString().replace('\\', '/');
+            boolean isRename = !oldPath.getFileName().equals(p.getFileName());
             
             if (config.getPath().equals(newPath)) { // Nothing to do
                 return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             }
             
-            if (!folderPermissions.isPermittedForFolder(newFolder)) {
-                throw new JocFolderPermissionsException("Access denied for folder: " + newFolder);
+            // Check folder permissions
+            if (JocInventory.isFolder(type)) {
+                if (!folderPermissions.isPermittedForFolder(newPath)) {
+                    throw new JocFolderPermissionsException("Access denied for folder: " + newPath);
+                }
+            } else {
+                if (!folderPermissions.isPermittedForFolder(newFolder)) {
+                    throw new JocFolderPermissionsException("Access denied for folder: " + newFolder);
+                }
             }
             
             // Check Java variable name rules
@@ -82,9 +92,8 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 }
             }
 
-            if (config.getType() == ConfigurationType.FOLDER.intValue()) {
+            if (JocInventory.isFolder(type)) {
                 List<DBItemInventoryConfiguration> oldDBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null);
-                final java.nio.file.Path oldPath = Paths.get(config.getPath()); 
                 oldDBFolderContent = oldDBFolderContent.stream().map(oldItem -> {
                     setItem(oldItem, p.resolve(oldPath.relativize(Paths.get(oldItem.getPath()))));
                     return oldItem;
@@ -97,7 +106,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                     if (!newDBFolderContent.isEmpty()) {
                         if (in.getOverwrite()) {
                             for (DBItemInventoryConfiguration targetItem : newDBFolderContent) {
-                                session.delete(targetItem);
+                                JocInventory.deleteConfiguration(dbLayer, targetItem);
                             }
                         } else {
                             Map<Boolean, List<DBItemInventoryConfiguration>> map = newDBFolderContent.stream().collect(Collectors.groupingBy(
@@ -108,21 +117,21 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                             }
                             // delete all folder items
                             for (DBItemInventoryConfiguration targetItem : map.getOrDefault(true, Collections.emptyList())) {
-                                session.delete(targetItem);
+                                JocInventory.deleteConfiguration(dbLayer, targetItem);
                             }
                         }
                     }
                 }
                 if (newItem != null) {
-                    session.delete(newItem);
+                    JocInventory.deleteConfiguration(dbLayer, config);
                 }
                 
                 setItem(config, p);
                 createAuditLog(config);
-                session.update(config);
+                JocInventory.updateConfiguration(dbLayer, config);
                 JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId());
                 for (DBItemInventoryConfiguration item : oldDBFolderContent) {
-                    session.update(item);
+                    JocInventory.updateConfiguration(dbLayer, item);
                 }
                 JocInventory.postEvent(config.getFolder());
                 
@@ -131,7 +140,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 
                 if (targetItem != null) {
                     if (in.getOverwrite()) {
-                        session.delete(targetItem);
+                        JocInventory.deleteConfiguration(dbLayer, targetItem);
                     } else {
                         throw new JocObjectAlreadyExistException(String.format("%s %s already exists", ConfigurationType.fromValue(config.getType())
                                 .value().toLowerCase(), targetItem.getPath()));
@@ -148,9 +157,47 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                     }
                 }
                 
+                if (isRename) {  // deep rename if necessary
+                    switch (type) {
+                    case LOCK: // determine Workflows with Lock instructions
+                        List<DBItemInventoryConfiguration> workflows = dbLayer.getUsedWorkflowsByLockId(config.getName());
+                        if (workflows != null && !workflows.isEmpty()) {
+                            for (DBItemInventoryConfiguration workflow : workflows) {
+                                workflow.setContent(workflow.getContent().replaceAll("(\"lockId\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + p
+                                        .getFileName() + "\""));
+                                JocInventory.updateConfiguration(dbLayer, workflow);
+                            }
+                        }
+                        break;
+                    case WORKFLOW: // determine Schedules with Workflow reference
+                        List<DBItemInventoryConfiguration> schedules = dbLayer.getUsedSchedulesByWorkflowPath(config.getPath()); // TODO config.getName() if possible
+                        if (schedules != null && !schedules.isEmpty()) {
+                            for (DBItemInventoryConfiguration schedule : schedules) {
+                                schedule.setContent(schedule.getContent().replaceAll("(\"workflowPath\"\\s*:\\s*\")" + config.getPath() + "\"", "$1" + p
+                                        .toString().replace('\\', '/') + "\""));
+                                JocInventory.updateConfiguration(dbLayer, schedule);
+                            }
+                        }
+                        break;
+                    case WORKINGDAYSCALENDAR: // determine Schedules with Calendar reference
+                    case NONWORKINGDAYSCALENDAR:
+                        List<DBItemInventoryConfiguration> schedules1 = dbLayer.getUsedSchedulesByCalendarPath(config.getName());
+                        if (schedules1 != null && !schedules1.isEmpty()) {
+                            for (DBItemInventoryConfiguration schedule : schedules1) {
+                                schedule.setContent(schedule.getContent().replaceAll("(\"calendarPath\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + p
+                                        .getFileName() + "\""));
+                                JocInventory.updateConfiguration(dbLayer, schedule);
+                            }
+                        }
+                        break;
+                    default:
+                        break;
+                    }
+                }
+                
                 setItem(config, p);
                 createAuditLog(config);
-                session.update(config);
+                JocInventory.updateConfiguration(dbLayer, config);
                 JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId());
                 JocInventory.postEvent(config.getFolder());
             }
