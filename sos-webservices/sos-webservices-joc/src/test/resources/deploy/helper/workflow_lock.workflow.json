@@ -1,0 +1,31 @@
+{
+	"TYPE"            : "Workflow",
+	"path"            : "/workflow_lock",
+    "versionId"       : "1",
+	"instructions" : [
+		{
+			"TYPE" : "Lock",
+			"count" : 1,
+			"lockId" : "my_lock",
+			"lockedWorkflow" : {
+				"instructions" : [
+					{
+						"TYPE" : "Execute.Named",
+						"jobName" : "job1",
+						"label" : "label"
+					}
+				]
+			}
+		}
+	],
+	"jobs" : {
+		"job1" : {
+			"agentId" : "agent_name",
+			"executable" : {
+				"TYPE" : "ExecutableScript",
+				"script" : "dir"
+			},
+			"taskLimit" : 1
+		}
+	}
+}

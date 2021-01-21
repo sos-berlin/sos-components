@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -19,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.sign.keys.sign.SignObject;
 import com.sos.commons.sign.keys.verify.VerifySignature;
 import com.sos.commons.util.SOSString;
+import com.sos.jobscheduler.model.lock.Lock;
 import com.sos.jobscheduler.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.proxy.ProxyUser;
@@ -30,9 +29,12 @@ import js7.base.web.Uri;
 import js7.data.agent.AgentId;
 import js7.data.agent.AgentRef;
 import js7.data.item.VersionId;
+import js7.data.lock.LockId;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.data.agent.JAgentRef;
+import js7.proxy.javaapi.data.item.JSimpleItem;
 import js7.proxy.javaapi.data.item.JUpdateItemOperation;
+import js7.proxy.javaapi.data.lock.JLock;
 import reactor.core.publisher.Flux;
 
 public class DeployTest {
@@ -46,33 +48,76 @@ public class DeployTest {
     private static final Path PRIVATE_KEY_PGP = Paths.get("src/test/resources/sos.private-pgp-key.asc");
     private static final Path PUBLIC_KEY_PGP = Paths.get("src/test/resources/sos.public-pgp-key.asc");
 
-    private static final Path WORKFLOW = Paths.get("src/test/resources/deploy/helper/workflow_fork.workflow.json");
+    private static final Path WORKFLOW_WITH_FORK = Paths.get("src/test/resources/deploy/helper/workflow_fork.workflow.json");
+    private static final Path WORKFLOW_WITH_LOCK = Paths.get("src/test/resources/deploy/helper/workflow_lock.workflow.json");
 
-    private static JProxyTestClass proxy = null;
+    @Ignore
+    @Test
+    public void testDeployAgent() throws Exception {
+        JProxyTestClass proxy = new JProxyTestClass();
 
-    @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
-        LOGGER.info("---------- [@BeforeClass] ----------");
-        proxy = new JProxyTestClass();
-        LOGGER.info("---------- [@BeforeClass] ----------");
-    }
-
-    @AfterClass
-    public static void tearDownAfterClass() throws Exception {
-        LOGGER.info("---------- [@AfterClass] ----------");
-        if (proxy != null) {
+        try {
+            JControllerApi api = proxy.getControllerApi(ProxyUser.JOC, CONTROLLER_URI_PRIMARY);
+            addOrChangeAgent(api, "agent", AGENT_URI);
+        } catch (Throwable e) {
+            throw e;
+        } finally {
             proxy.close();
         }
-        LOGGER.info("---------- [@AfterClass] ----------");
     }
 
     @Ignore
     @Test
-    public void testDeployWorkflowWithPGP() throws Exception {
-        String versionId = "1";
+    public void testDeployLock() throws Exception {
+        JProxyTestClass proxy = new JProxyTestClass();
 
+        try {
+            Lock lock = new Lock();
+            lock.setId("my_lock");
+            lock.setLimit(1);
+
+            JControllerApi api = proxy.getControllerApi(ProxyUser.JOC, CONTROLLER_URI_PRIMARY);
+            addOrChangeSimpleItem(api, JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+        } catch (Throwable e) {
+            throw e;
+        } finally {
+            proxy.close();
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testDeployWorkflowWithFork() throws Exception {
+        JProxyTestClass proxy = new JProxyTestClass();
+
+        try {
+            JControllerApi api = proxy.getControllerApi(ProxyUser.JOC, CONTROLLER_URI_PRIMARY);
+            deployWorkflow(api, WORKFLOW_WITH_FORK, "1");
+        } catch (Throwable e) {
+            throw e;
+        } finally {
+            proxy.close();
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testDeployWorkflowWithLock() throws Exception {
+        JProxyTestClass proxy = new JProxyTestClass();
+
+        try {
+            JControllerApi api = proxy.getControllerApi(ProxyUser.JOC, CONTROLLER_URI_PRIMARY);
+            deployWorkflow(api, WORKFLOW_WITH_LOCK, "1");
+        } catch (Throwable e) {
+            throw e;
+        } finally {
+            proxy.close();
+        }
+    }
+
+    private void deployWorkflow(JControllerApi api, Path workflow, String versionId) throws Exception {
         // 1 - redefine Version (e.g. when already deployed)
-        Workflow w = Globals.objectMapper.readValue(Files.readAllBytes(WORKFLOW), Workflow.class);
+        Workflow w = Globals.objectMapper.readValue(Files.readAllBytes(workflow), Workflow.class);
         w.setVersionId(versionId);
 
         String workflowOriginal = Globals.objectMapper.writeValueAsString(w);
@@ -87,14 +132,11 @@ public class DeployTest {
                 workflowSigned));
 
         // 3 - deploy
-        JControllerApi api = proxy.getControllerApi(ProxyUser.JOC, CONTROLLER_URI_PRIMARY);
-        addOrChangeAgent(api, "agent");
-        addOrChangeItem(api, workflowOriginal, workflowSigned, SIGNATURE_TYPE_PGP, versionId);
-
+        addOrChangeSignedItem(api, workflowOriginal, workflowSigned, SIGNATURE_TYPE_PGP, versionId);
     }
 
-    private void addOrChangeAgent(JControllerApi api, String agentId) throws InterruptedException, ExecutionException {
-        JAgentRef agent = JAgentRef.apply(AgentRef.apply(AgentId.of(agentId), AGENT_URI));
+    private void addOrChangeAgent(JControllerApi api, String agentId, Uri agentUri) throws InterruptedException, ExecutionException {
+        JAgentRef agent = JAgentRef.apply(AgentRef.apply(AgentId.of(agentId), agentUri));
         List<JAgentRef> agents = Arrays.asList(agent);
 
         Either<Problem, Void> answer = api.updateItems(Flux.fromIterable(agents).map(JUpdateItemOperation::addOrChange)).get();
@@ -102,15 +144,23 @@ public class DeployTest {
 
     }
 
-    private void addOrChangeItem(JControllerApi api, String contentOriginal, String contentSigned, String signatureType, String versionId)
+    private void addOrChangeSignedItem(JControllerApi api, String contentOriginal, String contentSigned, String signatureType, String versionId)
             throws InterruptedException, ExecutionException {
-        Set<JUpdateItemOperation> items = new HashSet<JUpdateItemOperation>();
-        JUpdateItemOperation item = JUpdateItemOperation.addOrChange(SignedString.of(contentOriginal, signatureType, contentSigned));
-        items.add(item);
+        Set<JUpdateItemOperation> operations = new HashSet<JUpdateItemOperation>();
+        JUpdateItemOperation operation = JUpdateItemOperation.addOrChange(SignedString.of(contentOriginal, signatureType, contentSigned));
+        operations.add(operation);
 
         Either<Problem, Void> answer = api.updateItems(Flux.concat(Flux.just(JUpdateItemOperation.addVersion(VersionId.of(versionId))), Flux
-                .fromIterable(items))).get();
-        LOGGER.info("[addOrChangeItem][" + CONTROLLER_URI_PRIMARY + "]" + SOSString.toString(answer));
+                .fromIterable(operations))).get();
+        LOGGER.info("[addOrChangeSignedItem][" + CONTROLLER_URI_PRIMARY + "]" + SOSString.toString(answer));
     }
 
+    private void addOrChangeSimpleItem(JControllerApi api, JSimpleItem item) throws InterruptedException, ExecutionException {
+        Set<JUpdateItemOperation> operations = new HashSet<JUpdateItemOperation>();
+        JUpdateItemOperation operation = JUpdateItemOperation.addOrChangeSimple(item);
+        operations.add(operation);
+
+        Either<Problem, Void> answer = api.updateItems(Flux.concat(Flux.fromIterable(operations))).get();
+        LOGGER.info("[addOrChangeSimpleItem][" + CONTROLLER_URI_PRIMARY + "]" + SOSString.toString(answer));
+    }
 }

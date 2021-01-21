@@ -191,6 +191,7 @@ public class WorkflowSearcher {
         return r.stream().filter(l -> l.getLockId().matches(lockIdRegex)).collect(Collectors.toList());
     }
 
+    /** filter e.g.: l -> l.getLockId().equals("myLockId") && l.getCount() != null && l.getCount() > 10 */
     public List<Lock> getLockInstructions(Predicate<? super Lock> filter) {
         List<Lock> r = getLockInstructions();
         if (r == null || r.isEmpty() || filter == null) {
