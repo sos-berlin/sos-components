@@ -387,18 +387,7 @@ public class JocInventory {
             }
             // temp. because of rename error on root folder
             config.setPath(config.getPath().replace("//+", "/"));
-        } else if (name != null) {
-            List<DBItemInventoryConfiguration> configs = dbLayer.getConfigurationByName(name, type.intValue());
-            if (configs == null || configs.size() == 0) {
-                throw new DBMissingDataException(String.format("configuration not found: %s", name));
-            }
-            config = configs.get(0); // TODO
-            if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
-                throw new JocFolderPermissionsException("Access denied for folder: " + config.getFolder());
-            }
-            // temp. because of rename error on root folder
-            config.setPath(config.getPath().replace("//+", "/"));
-        } else {
+        } else if (path != null) {
             if (JocInventory.ROOT_FOLDER.equals(path) && ConfigurationType.FOLDER.equals(type)) {
                 config = new DBItemInventoryConfiguration();
                 config.setId(0L);
@@ -419,6 +408,17 @@ public class JocInventory {
                     throw new DBMissingDataException(String.format("%s not found: %s", type.value().toLowerCase(), path));
                 }
             }
+        } else {// name
+            List<DBItemInventoryConfiguration> configs = dbLayer.getConfigurationByName(name, type.intValue());
+            if (configs == null || configs.size() == 0) {
+                throw new DBMissingDataException(String.format("configuration not found: %s", name));
+            }
+            config = configs.get(0); // TODO
+            if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
+                throw new JocFolderPermissionsException("Access denied for folder: " + config.getFolder());
+            }
+            // temp. because of rename error on root folder
+            config.setPath(config.getPath().replace("//+", "/"));
         }
         return config;
     }
@@ -588,7 +588,7 @@ public class JocInventory {
             List<Long> workflows = configs.stream().filter(c -> c.getType().equals(ConfigurationType.WORKFLOW.intValue())).map(
                     DBItemInventoryConfiguration::getId).collect(Collectors.toList());
             if (workflows.size() > 0) {
-                InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+                // InventoryDBLayer dbLayer = new InventoryDBLayer(session);
                 // dbLayer.deleteSearchWorkflowByInventoryId(id, deployed)
             }
 
