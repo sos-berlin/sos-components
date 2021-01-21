@@ -165,7 +165,7 @@ public class JocInventory {
         }
         return result;
     }
-    
+
     public static boolean isFolder(ConfigurationType type) {
         return ConfigurationType.FOLDER.equals(type);
     }
@@ -236,7 +236,7 @@ public class JocInventory {
         }
         return (IConfigurationObject) Globals.objectMapper.readValue(content, CLASS_MAPPING.get(type));
     }
-    
+
     public static void makeParentDirs(InventoryDBLayer dbLayer, java.nio.file.Path parentFolder, Long auditLogId) throws SOSHibernateException {
         if (parentFolder != null) {
             String newFolder = parentFolder.toString().replace('\\', '/');
@@ -244,7 +244,7 @@ public class JocInventory {
                 DBItemInventoryConfiguration newDbFolder = dbLayer.getConfiguration(newFolder, ConfigurationType.FOLDER.intValue());
                 if (newDbFolder == null) {
                     newDbFolder = new DBItemInventoryConfiguration();
-                    //setItem(newDbFolder, parent);
+                    // setItem(newDbFolder, parent);
                     newDbFolder.setPath(newFolder);
                     newDbFolder.setFolder(parentFolder.getParent().toString().replace('\\', '/'));
                     newDbFolder.setName(parentFolder.getFileName().toString());
@@ -266,16 +266,17 @@ public class JocInventory {
             }
         }
     }
-    
+
     public static void makeParentDirs(InventoryDBLayer dbLayer, Path folder) throws SOSHibernateException {
         makeParentDirs(dbLayer, folder, null);
     }
-    
+
     public static String pathToName(String path) {
         return Paths.get(path).getFileName().toString();
     }
-    
-    public static List<DBItemInventoryConfiguration> deleteEmptyFolders(InventoryDBLayer dbLayer, DBItemInventoryConfiguration folder) throws SOSHibernateException {
+
+    public static List<DBItemInventoryConfiguration> deleteEmptyFolders(InventoryDBLayer dbLayer, DBItemInventoryConfiguration folder)
+            throws SOSHibernateException {
         List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(folder.getPath(), true, null);
         if (folderContent == null) {
             folderContent = new ArrayList<DBItemInventoryConfiguration>();
@@ -285,22 +286,23 @@ public class JocInventory {
         }
         return deleteEmptyFolders(dbLayer.getSession(), folderContent);
     }
-    
+
     public static List<DBItemInventoryConfiguration> deleteEmptyFolders(InventoryDBLayer dbLayer, String folder) throws SOSHibernateException {
         List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(folder, true, null);
         if (folderContent == null) {
-            folderContent = new ArrayList<DBItemInventoryConfiguration>(); 
+            folderContent = new ArrayList<DBItemInventoryConfiguration>();
         }
         if (!ROOT_FOLDER.equals(folder)) {
             DBItemInventoryConfiguration dbFolder = dbLayer.getConfiguration(folder, ConfigurationType.FOLDER.intValue());
             if (dbFolder != null) {
-                folderContent.add(dbFolder); 
+                folderContent.add(dbFolder);
             }
         }
         return deleteEmptyFolders(dbLayer.getSession(), folderContent);
     }
-    
-    private static List<DBItemInventoryConfiguration> deleteEmptyFolders(SOSHibernateSession session, List<DBItemInventoryConfiguration> folderContent) throws SOSHibernateException {
+
+    private static List<DBItemInventoryConfiguration> deleteEmptyFolders(SOSHibernateSession session,
+            List<DBItemInventoryConfiguration> folderContent) throws SOSHibernateException {
         List<DBItemInventoryConfiguration> deletedFolders = new ArrayList<>();
         if (!folderContent.isEmpty()) {
             LinkedHashSet<DBItemInventoryConfiguration> folders = folderContent.stream().filter(i -> ConfigurationType.FOLDER.intValue() == i
@@ -316,7 +318,7 @@ public class JocInventory {
         }
         return deletedFolders;
     }
-    
+
     public static void postEvent(String folder) {
         EventBus.getInstance().post(new InventoryEvent(folder));
     }
@@ -336,7 +338,7 @@ public class JocInventory {
                 folder = normalizeFolder(p.getParent());
             }
         }
-        
+
         public InventoryPath(final java.nio.file.Path inventoryPath, ConfigurationType type) {
             if (inventoryPath != null) {
                 path = inventoryPath.toString().replace('\\', '/');
@@ -369,10 +371,10 @@ public class JocInventory {
 
     public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, RequestFilter in,
             SOSShiroFolderPermissions folderPermissions) throws Exception {
-        return getConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), folderPermissions);
+        return getConfiguration(dbLayer, in.getId(), in.getPath(), in.getName(), in.getObjectType(), folderPermissions);
     }
 
-    public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, Long id, String path, ConfigurationType type,
+    public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, Long id, String path, String name, ConfigurationType type,
             SOSShiroFolderPermissions folderPermissions) throws Exception {
         DBItemInventoryConfiguration config = null;
         if (id != null) {
@@ -380,6 +382,17 @@ public class JocInventory {
             if (config == null) {
                 throw new DBMissingDataException(String.format("configuration not found: %s", id));
             }
+            if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
+                throw new JocFolderPermissionsException("Access denied for folder: " + config.getFolder());
+            }
+            // temp. because of rename error on root folder
+            config.setPath(config.getPath().replace("//+", "/"));
+        } else if (name != null) {
+            List<DBItemInventoryConfiguration> configs = dbLayer.getConfigurationByName(name, type.intValue());
+            if (configs == null || configs.size() == 0) {
+                throw new DBMissingDataException(String.format("configuration not found: %s", name));
+            }
+            config = configs.get(0); // TODO
             if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
                 throw new JocFolderPermissionsException("Access denied for folder: " + config.getFolder());
             }
@@ -409,7 +422,7 @@ public class JocInventory {
         }
         return config;
     }
-    
+
     public static Path normalizePath(String path) {
         return Paths.get(JocInventory.ROOT_FOLDER).resolve(path).normalize();
     }
@@ -476,7 +489,7 @@ public class JocInventory {
 
         String hash = hash(workflow);
         boolean deployed = deploymentIds != null;
-      
+
         DBItemSearchWorkflow item = dbLayer.getSearchWorkflow(inventoryId, deployed ? hash : null);
         if (item == null) {
             if (deleteDeployments) {
@@ -550,9 +563,9 @@ public class JocInventory {
 
         handleWorkflowSearch(dbLayer, item, config);
     }
-    
-    public static void insertConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item)
-            throws SOSHibernateException, JsonParseException, JsonMappingException, JsonProcessingException, IOException {
+
+    public static void insertConfiguration(InventoryDBLayer dbLayer, DBItemInventoryConfiguration item) throws SOSHibernateException,
+            JsonParseException, JsonMappingException, JsonProcessingException, IOException {
         insertConfiguration(dbLayer, item, null);
     }
 

@@ -20,6 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "id",
     "path",
+    "name",
     "objectType"
 })
 public class RequestFilter {
@@ -41,6 +42,14 @@ public class RequestFilter {
     @JsonProperty("path")
     @JsonPropertyDescription("absolute path of an object.")
     private String path;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("name")
+    private String name;
     /**
      * configuration types
      * <p>
@@ -95,6 +104,28 @@ public class RequestFilter {
     }
 
     /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("name")
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("name")
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
      * configuration types
      * <p>
      * 
@@ -118,12 +149,12 @@ public class RequestFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("objectType", objectType).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("objectType", objectType).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(id).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(name).append(path).append(id).append(objectType).toHashCode();
     }
 
     @Override
@@ -135,7 +166,7 @@ public class RequestFilter {
             return false;
         }
         RequestFilter rhs = ((RequestFilter) other);
-        return new EqualsBuilder().append(path, rhs.path).append(id, rhs.id).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(name, rhs.name).append(path, rhs.path).append(id, rhs.id).append(objectType, rhs.objectType).isEquals();
     }
 
 }
