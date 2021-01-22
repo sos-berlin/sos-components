@@ -27,6 +27,9 @@ public class DBItemDepConfiguration extends DBItem {
     @Column(name = "[PATH]", nullable = false)
     private String path;
 
+    @Column(name = "[NAME]", nullable = false)
+    private String name;
+
     @Column(name = "[FOLDER]", nullable = false)
     private String folder;
 
@@ -61,6 +64,13 @@ public class DBItemDepConfiguration extends DBItem {
     }
     public void setPath(String path) {
         this.path = path;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
     }
     
     public String getFolder() {
