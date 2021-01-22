@@ -32,7 +32,11 @@
 			<scope>test</scope>
 		</dependency>
 
-
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-raml</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
