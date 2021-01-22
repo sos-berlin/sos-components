@@ -62,7 +62,7 @@
                 </artifactItem>
               </artifactItems>
               <overWriteIfNewer>true</overWriteIfNewer>
-              <!--excludes>*META-INF*,META-INF/**,**/hibernate-examples/**</excludes -->
+              <!--excludes>**/inventory-schema-version.json</excludes-->
             </configuration>
           </execution>
           <execution>
@@ -81,7 +81,7 @@
                   <type>zip</type>
                 </artifactItem>
               </artifactItems>
-              <!--includes>**/hibernate-examples/**</includes -->
+              <!--excludes>**/api-schema-version.json</excludes-->
             </configuration>
           </execution>
         </executions>

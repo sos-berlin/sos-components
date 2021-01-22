@@ -34,6 +34,9 @@ public class DBItemDeploymentHistory extends DBItem {
     @Column(name = "[PATH]", nullable = false)
     private String path;
 
+    @Column(name = "[NAME]", nullable = false)
+    private String name;
+
     @Column(name = "[FOLDER]", nullable = false)
     private String folder;
 
@@ -101,6 +104,13 @@ public class DBItemDeploymentHistory extends DBItem {
         return path;
     }
     public void setPath(String path) {
+        this.path = path;
+    }
+    
+    public String getName() {
+        return path;
+    }
+    public void setName(String path) {
         this.path = path;
     }
     

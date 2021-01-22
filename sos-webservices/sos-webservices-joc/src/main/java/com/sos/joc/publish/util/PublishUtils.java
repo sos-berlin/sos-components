@@ -1227,6 +1227,7 @@ public abstract class PublishUtils {
                 // TODO: get Version to set here
                 newDeployedObject.setVersion(null);
                 newDeployedObject.setPath(draft.getPath());
+                newDeployedObject.setName(draft.getName());
                 newDeployedObject.setFolder(draft.getFolder());
                 newDeployedObject.setType(
                         PublishUtils.mapConfigurationType(ConfigurationType.fromValue(draft.getType())).intValue());
@@ -1278,7 +1279,14 @@ public abstract class PublishUtils {
                     } else {
                         original = dbLayerDeploy.getConfiguration(((WorkflowPublish)draft).getContent().getPath(), ConfigurationType.WORKFLOW.intValue());
                     }
-                    newDeployedObject.setPath(original.getPath());
+                    if (original.getPath() != null && !original.getPath().isEmpty()) {
+                        newDeployedObject.setPath(original.getPath());
+                    }
+                    if (original.getName() != null && !original.getName().isEmpty()) {
+                        newDeployedObject.setName(original.getName());
+                    } else {
+                        newDeployedObject.setName(Paths.get(original.getPath()).getFileName().toString());
+                    }
                     newDeployedObject.setFolder(original.getFolder());
                     newDeployedObject.setInvContent(original.getContent());
                     newDeployedObject.setInventoryConfigurationId(original.getId());

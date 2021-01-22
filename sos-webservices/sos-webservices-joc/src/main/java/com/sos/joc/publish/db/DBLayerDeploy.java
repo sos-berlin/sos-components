@@ -1260,6 +1260,11 @@ public class DBLayerDeploy {
                 newDepHistoryItem.setOperation(OperationType.UPDATE.value());
                 newDepHistoryItem.setState(DeploymentState.NOT_DEPLOYED.value());
                 newDepHistoryItem.setPath(inventoryConfig.getPath());
+                if (inventoryConfig.getName() != null && !inventoryConfig.getName().isEmpty()) {
+                    newDepHistoryItem.setName(inventoryConfig.getName());
+                } else {
+                    newDepHistoryItem.setName(Paths.get(inventoryConfig.getPath()).getFileName().toString());
+                }
                 newDepHistoryItem.setFolder(inventoryConfig.getFolder());
                 newDepHistoryItem.setSignedContent(verifiedConfigurations.get(inventoryConfig).getSignature());
                 newDepHistoryItem.setInvContent(inventoryConfig.getContent());
@@ -1350,6 +1355,11 @@ public class DBLayerDeploy {
                 newDepHistoryItem.setOperation(OperationType.UPDATE.value());
                 newDepHistoryItem.setState(DeploymentState.NOT_DEPLOYED.value());
                 newDepHistoryItem.setPath(inventoryConfig.getPath());
+                if (inventoryConfig.getName() != null && !inventoryConfig.getName().isEmpty()) {
+                    newDepHistoryItem.setName(inventoryConfig.getName());
+                } else {
+                    newDepHistoryItem.setName(Paths.get(inventoryConfig.getPath()).getFileName().toString());
+                }
                 newDepHistoryItem.setFolder(inventoryConfig.getFolder());
                 newDepHistoryItem.setSignedContent(verifiedConfigurations.get(jsObject).getSignature());
                 newDepHistoryItem.setInvContent(inventoryConfig.getContent());
@@ -1453,6 +1463,11 @@ public class DBLayerDeploy {
                 newDepHistoryItem.setOperation(OperationType.UPDATE.value());
                 newDepHistoryItem.setState(DeploymentState.NOT_DEPLOYED.value());
                 newDepHistoryItem.setPath(inventoryConfig.getPath());
+                if (inventoryConfig.getName() != null && !inventoryConfig.getName().isEmpty()) {
+                    newDepHistoryItem.setName(inventoryConfig.getName());
+                } else {
+                    newDepHistoryItem.setName(Paths.get(inventoryConfig.getPath()).getFileName().toString());
+                }
                 newDepHistoryItem.setFolder(inventoryConfig.getFolder());
                 newDepHistoryItem.setSignedContent(importedObjects.get(inventoryConfig).getSignedContent());
                 newDepHistoryItem.setErrorMessage(errorMessage);
