@@ -171,10 +171,10 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                         }
                         break;
                     case WORKFLOW: // determine Schedules with Workflow reference
-                        List<DBItemInventoryConfiguration> schedules = dbLayer.getUsedSchedulesByWorkflowPath(config.getPath()); // TODO config.getName() if possible
+                        List<DBItemInventoryConfiguration> schedules = dbLayer.getUsedSchedulesByWorkflowName(config.getName()); // TODO config.getName() if possible
                         if (schedules != null && !schedules.isEmpty()) {
                             for (DBItemInventoryConfiguration schedule : schedules) {
-                                schedule.setContent(schedule.getContent().replaceAll("(\"workflowPath\"\\s*:\\s*\")" + config.getPath() + "\"", "$1" + p
+                                schedule.setContent(schedule.getContent().replaceAll("(\"workflowName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + p
                                         .toString().replace('\\', '/') + "\""));
                                 JocInventory.updateConfiguration(dbLayer, schedule);
                             }
@@ -182,10 +182,10 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                         break;
                     case WORKINGDAYSCALENDAR: // determine Schedules with Calendar reference
                     case NONWORKINGDAYSCALENDAR:
-                        List<DBItemInventoryConfiguration> schedules1 = dbLayer.getUsedSchedulesByCalendarPath(config.getName());
+                        List<DBItemInventoryConfiguration> schedules1 = dbLayer.getUsedSchedulesByCalendarName(config.getName());
                         if (schedules1 != null && !schedules1.isEmpty()) {
                             for (DBItemInventoryConfiguration schedule : schedules1) {
-                                schedule.setContent(schedule.getContent().replaceAll("(\"calendarPath\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + p
+                                schedule.setContent(schedule.getContent().replaceAll("(\"calendarName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + p
                                         .getFileName() + "\""));
                                 JocInventory.updateConfiguration(dbLayer, schedule);
                             }
