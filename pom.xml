@@ -34,7 +34,7 @@
 		<!-- 3rd Party version properties and the dependencyManagement have to 
 			be reworked for 2.0.0 below configuration is only as an example -->
 		<jackson.version>2.9.10</jackson.version>
-		<jackson.databind.version>2.9.10.4</jackson.databind.version>
+		<jackson.databind.version>2.9.10.7</jackson.databind.version>
 		<jsonschema2pojo.version>0.5.1</jsonschema2pojo.version>
 		<junit.version>4.11</junit.version>
 		<slf4j.version>1.7.25</slf4j.version>
