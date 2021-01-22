@@ -86,14 +86,6 @@ public class WorkflowSearcherTest {
             LOGGER.info("           " + j.getJob().getDefaultArguments().getAdditionalProperties().get("xxx"));
         }
 
-        jobs = ws.getJobsByArgument("xxx");
-        LOGGER.info(" ");
-        LOGGER.info("[getJobsByArgument(xxx)][size] " + jobs.size());
-        for (WorkflowJob j : jobs) {
-            LOGGER.info("  JOB: " + j.getName());
-            LOGGER.info("           " + j.getJob().getDefaultArguments().getAdditionalProperties().get("xxx"));
-        }
-
         jobs = ws.getJobsByArgument("job_[0-9]_arg_[0-9].*");
         LOGGER.info(" ");
         LOGGER.info("[getJobsByArgument(job_[0-9]_arg_[0-9].*)][size] " + jobs.size());

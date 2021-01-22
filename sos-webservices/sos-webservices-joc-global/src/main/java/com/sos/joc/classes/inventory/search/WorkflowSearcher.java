@@ -24,6 +24,9 @@ import com.sos.jobscheduler.model.workflow.Workflow;
 public class WorkflowSearcher {
 
     private final Workflow workflow;
+    private List<Instruction> instructions;
+    private List<NamedJob> jobInstructions;
+    private List<WorkflowJob> jobs;
 
     public WorkflowSearcher(final Workflow workflow) {
         this.workflow = workflow;
@@ -53,19 +56,20 @@ public class WorkflowSearcher {
     }
 
     public List<WorkflowJob> getJobs(String jobNameRegex) {
-        if (jobNameRegex == null) {
-            return getJobsStream().map(this::map2WorkflowJob).collect(Collectors.toList());
+        setAllJobs();
+        if (jobNameRegex == null || jobs.isEmpty()) {
+            return jobs;
         }
-        return toWorkflowJobList(getJobsStream().filter(e -> e.getKey().matches(jobNameRegex)));
+        return jobs.stream().filter(j -> j.getName().matches(jobNameRegex)).collect(Collectors.toList());
     }
 
     public List<WorkflowJob> getUnusedJobs() {
         List<WorkflowJob> jobs = getJobs();
-        if (jobs == null || jobs.isEmpty()) {
+        if (jobs.isEmpty()) {
             return jobs;
         }
         List<NamedJob> namedJobs = getJobInstructions();
-        if (namedJobs == null || namedJobs.isEmpty()) {
+        if (namedJobs.isEmpty()) {
             return jobs;
         }
         List<String> namedJobNames = namedJobs.stream().map(j -> j.getJobName()).distinct().collect(Collectors.toList());
@@ -73,70 +77,86 @@ public class WorkflowSearcher {
     }
 
     public List<WorkflowJob> getJobsByAgentId(String agentIdRegex) {
-        if (agentIdRegex == null) {
-            return getJobs();
+        setAllJobs();
+        if (agentIdRegex == null || jobs.isEmpty()) {
+            return jobs;
         }
-        return toWorkflowJobList(getJobsStream().filter(e -> e.getValue().getAgentId() != null && e.getValue().getAgentId().matches(agentIdRegex)));
+        return jobs.stream().filter(j -> j.getJob().getAgentId() != null && j.getJob().getAgentId().matches(agentIdRegex)).collect(Collectors
+                .toList());
     }
 
     public List<WorkflowJob> getJobsByJobClass(String jobClassRegex) {
-        if (jobClassRegex == null) {
-            return getJobs();
+        setAllJobs();
+        if (jobClassRegex == null || jobs.isEmpty()) {
+            return jobs;
         }
-        return toWorkflowJobList(getJobsStream().filter(e -> e.getValue().getJobClass() != null && e.getValue().getJobClass().matches(
-                jobClassRegex)));
+        return jobs.stream().filter(j -> j.getJob().getJobClass() != null && j.getJob().getJobClass().matches(jobClassRegex)).collect(Collectors
+                .toList());
     }
 
     public List<WorkflowJob> getJobsByScript(String scriptRegex) {
-        if (scriptRegex == null) {
-            return getJobs();
+        setAllJobs();
+        if (scriptRegex == null || jobs.isEmpty()) {
+            return jobs;
         }
-        return toWorkflowJobList(getJobsStream().filter(e -> e.getValue().getExecutable() != null && e.getValue().getExecutable().getScript().matches(
-                scriptRegex)));
+        return jobs.stream().filter(j -> j.getJob().getExecutable() != null && j.getJob().getExecutable().getScript() != null && j.getJob()
+                .getExecutable().getScript().matches(scriptRegex)).collect(Collectors.toList());
     }
 
     public List<WorkflowJob> getJobsByArgument(String argNameRegex) {
-        if (argNameRegex == null) {
-            return getJobs();
+        setAllJobs();
+        if (argNameRegex == null || jobs.isEmpty()) {
+            return jobs;
         }
-        return toWorkflowJobList(getJobsStream().filter(e -> getJobArgumentsStream(e.getValue()).anyMatch(en -> en.getKey().matches(argNameRegex))));
+        return jobs.stream().filter(j -> getJobArgumentsStream(j.getJob()).anyMatch(a -> a.getKey().matches(argNameRegex))).collect(Collectors
+                .toList());
     }
 
     public List<WorkflowJob> getJobsByArgumentValue(String argValueRegex) {
-        if (argValueRegex == null) {
-            return getJobs();
+        setAllJobs();
+        if (argValueRegex == null || jobs.isEmpty()) {
+            return jobs;
         }
-        return toWorkflowJobList(getJobsStream().filter(e -> getJobArgumentsStream(e.getValue()).anyMatch(en -> en.getValue().matches(
-                argValueRegex))));
+        return jobs.stream().filter(j -> getJobArgumentsStream(j.getJob()).anyMatch(a -> a.getValue().matches(argValueRegex))).collect(Collectors
+                .toList());
     }
 
     public List<WorkflowJob> getJobsByArgumentAndValue(String argNameRegex, String argValueRegex) {
+        setAllJobs();
         if (argNameRegex == null || argValueRegex == null) {
             if (argNameRegex == null && argValueRegex == null) {
-                return getJobs();
+                return jobs;
             } else if (argValueRegex == null) {
                 return getJobsByArgument(argNameRegex);
             } else {
                 return getJobsByArgumentValue(argValueRegex);
             }
         }
-        return toWorkflowJobList(getJobsStream().filter(e -> getJobArgumentsStream(e.getValue()).anyMatch(en -> en.getKey().matches(argNameRegex)
-                && en.getValue().matches(argValueRegex))));
+
+        return jobs.stream().filter(j -> getJobArgumentsStream(j.getJob()).anyMatch(a -> a.getKey().matches(argNameRegex) && a.getValue().matches(
+                argValueRegex))).collect(Collectors.toList());
     }
 
     public WorkflowJob getJob(String jobName) {
-        return getJobsStream().filter(e -> e.getKey().equals(jobName)).map(this::map2WorkflowJob).findFirst().orElse(null);
+        setAllJobs();
+        if (jobName == null || jobs.isEmpty()) {
+            return null;
+        }
+        return jobs.stream().filter(j -> j.getName().matches(jobName)).findFirst().orElse(null);
     }
 
     public String getJobArgument(String jobName, String argName) {
         WorkflowJob job = getJob(jobName);
-        if (job != null) {
-            return getJobArgument(job.getJob(), argName);
+        if (job == null) {
+            return null;
         }
-        return null;
+        return getJobArgument(job.getJob(), argName);
     }
 
     public String getJobArgument(Job job, String argName) {
+        if (job == null || argName == null) {
+            return null;
+        }
         return getJobArgumentsStream(job).filter(e -> e.getKey().equals(argName)).map(Map.Entry::getValue).findFirst().orElse(null);
     }
 
@@ -146,10 +166,10 @@ public class WorkflowSearcher {
 
     public Map<String, String> getJobArguments(String jobName, String argNameRegex) {
         WorkflowJob job = getJob(jobName);
-        if (job != null) {
-            return getJobArguments(job.getJob(), argNameRegex);
+        if (job == null) {
+            return null;
         }
-        return null;
+        return getJobArguments(job.getJob(), argNameRegex);
     }
 
     public Map<String, String> getJobArguments(Job job) {
@@ -157,6 +177,9 @@ public class WorkflowSearcher {
     }
 
     public Map<String, String> getJobArguments(Job job, String argNameRegex) {
+        if (job == null) {
+            return null;
+        }
         if (argNameRegex == null) {
             return job.getDefaultArguments().getAdditionalProperties();
         }
@@ -165,27 +188,25 @@ public class WorkflowSearcher {
     }
 
     public List<Instruction> getInstructions(InstructionType... types) {
-        return getInstructions(workflow.getInstructions(), types);
-    }
-
-    public List<Instruction> getInstructions(List<Instruction> list, InstructionType... types) {
-        List<Instruction> result = new ArrayList<Instruction>();
+        setAllInstructions();
+        if (types.length == 0 || instructions.isEmpty()) {
+            return instructions;
+        }
         List<InstructionType> typesList = Arrays.stream(types).collect(Collectors.toList());
-        handleInstructions(result, list, typesList.size() == 0 ? null : typesList);
-        return result;
+        return instructions.stream().filter(i -> typesList.contains(i.getTYPE())).collect(Collectors.toList());
     }
 
     public List<Lock> getLockInstructions() {
         List<Instruction> r = getInstructions(InstructionType.LOCK);
-        if (r == null) {
-            return null;
+        if (r.isEmpty()) {
+            return new ArrayList<Lock>();
         }
         return r.stream().map(i -> (Lock) i).collect(Collectors.toList());
     }
 
     public List<Lock> getLockInstructions(String lockIdRegex) {
         List<Lock> r = getLockInstructions();
-        if (r == null || r.isEmpty() || lockIdRegex == null) {
+        if (r.isEmpty() || lockIdRegex == null) {
             return r;
         }
         return r.stream().filter(l -> l.getLockId().matches(lockIdRegex)).collect(Collectors.toList());
@@ -194,23 +215,20 @@ public class WorkflowSearcher {
     /** filter e.g.: l -> l.getLockId().equals("myLockId") && l.getCount() != null && l.getCount() > 10 */
     public List<Lock> getLockInstructions(Predicate<? super Lock> filter) {
         List<Lock> r = getLockInstructions();
-        if (r == null || r.isEmpty() || filter == null) {
+        if (r.isEmpty() || filter == null) {
             return r;
         }
         return r.stream().filter(filter).collect(Collectors.toList());
     }
 
     public List<NamedJob> getJobInstructions() {
-        List<Instruction> r = getInstructions(InstructionType.EXECUTE_NAMED);
-        if (r == null) {
-            return null;
-        }
-        return r.stream().map(i -> (NamedJob) i).collect(Collectors.toList());
+        setAllJobInstructions();
+        return jobInstructions;
     }
 
     public List<NamedJob> getJobInstructions(String jobNameRegex) {
         List<NamedJob> r = getJobInstructions();
-        if (r == null || r.isEmpty() || jobNameRegex == null) {
+        if (r.isEmpty() || jobNameRegex == null) {
             return r;
         }
         return r.stream().filter(j -> j.getJobName().matches(jobNameRegex)).collect(Collectors.toList());
@@ -218,7 +236,7 @@ public class WorkflowSearcher {
 
     public List<NamedJob> getJobInstructionsByLabel(String labelRegex) {
         List<NamedJob> r = getJobInstructions();
-        if (r == null || r.isEmpty() || labelRegex == null) {
+        if (r.isEmpty() || labelRegex == null) {
             return r;
         }
         return r.stream().filter(j -> j.getLabel().matches(labelRegex)).collect(Collectors.toList());
@@ -226,7 +244,7 @@ public class WorkflowSearcher {
 
     public List<NamedJob> getJobInstructionsByArgument(String argNameRegex) {
         List<NamedJob> r = getJobInstructions();
-        if (r == null || r.isEmpty() || argNameRegex == null) {
+        if (r.isEmpty() || argNameRegex == null) {
             return r;
         }
         return r.stream().filter(j -> getNamedJobArgumentsStream(j).anyMatch(en -> en.getKey().matches(argNameRegex))).collect(Collectors.toList());
@@ -234,7 +252,7 @@ public class WorkflowSearcher {
 
     public List<NamedJob> getJobInstructionsByArgumentValue(String argValueRegex) {
         List<NamedJob> r = getJobInstructions();
-        if (r == null || r.isEmpty() || argValueRegex == null) {
+        if (r.isEmpty() || argValueRegex == null) {
             return r;
         }
         return r.stream().filter(j -> getNamedJobArgumentsStream(j).anyMatch(en -> en.getValue().matches(argValueRegex))).collect(Collectors
@@ -253,14 +271,44 @@ public class WorkflowSearcher {
         }
 
         List<NamedJob> r = getJobInstructions();
-        if (r == null || r.isEmpty()) {
+        if (r.isEmpty()) {
             return r;
         }
         return r.stream().filter(j -> getNamedJobArgumentsStream(j).anyMatch(en -> en.getKey().matches(argNameRegex) && en.getValue().matches(
                 argValueRegex))).collect(Collectors.toList());
     }
 
-    private void handleInstructions(List<Instruction> result, List<Instruction> instructions, List<InstructionType> types) {
+    private void setAllInstructions() {
+        if (instructions == null) {
+            instructions = getAllInstructions(workflow.getInstructions());
+        }
+    }
+
+    private List<Instruction> getAllInstructions(List<Instruction> list) {
+        List<Instruction> result = new ArrayList<Instruction>();
+        handleInstructions(result, list);
+        return result == null ? new ArrayList<Instruction>() : result;
+    }
+
+    private void setAllJobInstructions() {
+        if (jobInstructions == null) {
+            List<Instruction> r = getInstructions(InstructionType.EXECUTE_NAMED);
+            if (r.size() == 0) {
+                jobInstructions = new ArrayList<NamedJob>();
+            } else {
+                jobInstructions = r.stream().map(i -> (NamedJob) i).collect(Collectors.toList());
+            }
+        }
+    }
+
+    public void setAllJobs() {
+        if (jobs == null) {
+            Stream<Entry<String, Job>> stream = getJobsStream();
+            jobs = stream == null ? new ArrayList<WorkflowJob>() : stream.map(this::map2WorkflowJob).collect(Collectors.toList());
+        }
+    }
+
+    private void handleInstructions(List<Instruction> result, List<Instruction> instructions) {
         if (instructions == null) {
             return;
         }
@@ -270,34 +318,30 @@ public class WorkflowSearcher {
             if (it == null) {
                 continue;
             }
-            if (types == null) {
-                result.add(in.cast());
-            } else if (types.contains(it)) {
-                result.add(in.cast());
-            }
+            result.add(in.cast());
             switch (it) {
             case IF:
                 IfElse ie = in.cast();
                 if (ie.getThen() != null) {
-                    handleInstructions(result, ie.getThen().getInstructions(), types);
+                    handleInstructions(result, ie.getThen().getInstructions());
                 }
                 if (ie.getElse() != null) {
-                    handleInstructions(result, ie.getElse().getInstructions(), types);
+                    handleInstructions(result, ie.getElse().getInstructions());
                 }
                 break;
             case LOCK:
                 Lock l = in.cast();
                 if (l.getLockedWorkflow() != null) {
-                    handleInstructions(result, l.getLockedWorkflow().getInstructions(), types);
+                    handleInstructions(result, l.getLockedWorkflow().getInstructions());
                 }
                 break;
             case TRY:
                 TryCatch tc = in.cast();
                 if (tc.getTry() != null) {
-                    handleInstructions(result, tc.getTry().getInstructions(), types);
+                    handleInstructions(result, tc.getTry().getInstructions());
                 }
                 if (tc.getCatch() != null) {
-                    handleInstructions(result, tc.getCatch().getInstructions(), types);
+                    handleInstructions(result, tc.getCatch().getInstructions());
                 }
                 break;
             case FORK:
@@ -305,7 +349,7 @@ public class WorkflowSearcher {
                 if (fj.getBranches() != null) {
                     for (Branch branch : fj.getBranches()) {
                         if (branch.getWorkflow() != null) {
-                            handleInstructions(result, branch.getWorkflow().getInstructions(), types);
+                            handleInstructions(result, branch.getWorkflow().getInstructions());
                         }
                     }
                 }
@@ -317,7 +361,7 @@ public class WorkflowSearcher {
     }
 
     private Stream<Entry<String, Job>> getJobsStream() {
-        return workflow.getJobs().getAdditionalProperties().entrySet().stream();
+        return workflow.getJobs() == null ? null : workflow.getJobs().getAdditionalProperties().entrySet().stream();
     }
 
     private Stream<Entry<String, String>> getJobArgumentsStream(Job job) {
@@ -332,10 +376,6 @@ public class WorkflowSearcher {
             return new HashSet<Entry<String, String>>().stream();
         }
         return job.getDefaultArguments().getAdditionalProperties().entrySet().stream();
-    }
-
-    private List<WorkflowJob> toWorkflowJobList(Stream<Entry<String, Job>> stream) {
-        return stream.map(this::map2WorkflowJob).collect(Collectors.toList());
     }
 
     private WorkflowJob map2WorkflowJob(Entry<String, Job> entry) {
