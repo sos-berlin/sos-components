@@ -84,13 +84,14 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
             }
             
             // Check Java variable name rules
-            for (int i = 0; i < p.getNameCount(); i++) {
-                if (i == p.getNameCount() - 1) {
-                    CheckJavaVariableName.test("name", p.getName(i).toString());
-                } else {
-                    CheckJavaVariableName.test("folder", p.getName(i).toString());
-                }
-            }
+//            for (int i = 0; i < p.getNameCount(); i++) {
+//                if (i == p.getNameCount() - 1) {
+//                    CheckJavaVariableName.test("name", p.getName(i).toString());
+//                } else {
+//                    CheckJavaVariableName.test("folder", p.getName(i).toString());
+//                }
+//            }
+            CheckJavaVariableName.test("name", p.getFileName().toString());
 
             if (JocInventory.isFolder(type)) {
                 List<DBItemInventoryConfiguration> oldDBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null);
