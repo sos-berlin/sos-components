@@ -1,12 +1,13 @@
 package com.sos.js7.order.initiator.classes;
 
+import com.sos.controller.model.order.FreshOrder;
+import com.sos.inventory.model.Schedule;
+import com.sos.inventory.model.calendar.Period;
+
 //import org.slf4j.Logger;
 //import org.slf4j.LoggerFactory;
 
-import com.sos.jobscheduler.model.order.FreshOrder;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
-import com.sos.joc.model.calendar.Period;
-import com.sos.webservices.order.initiator.model.Schedule;
  
 public class PlannedOrder{
 

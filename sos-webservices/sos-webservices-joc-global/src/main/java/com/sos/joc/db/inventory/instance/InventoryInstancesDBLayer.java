@@ -18,7 +18,7 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.model.common.JocSecurityLevel;
-import com.sos.joc.model.jobscheduler.Controller;
+import com.sos.joc.model.controller.Controller;
 
 public class InventoryInstancesDBLayer {
 

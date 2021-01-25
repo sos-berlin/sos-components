@@ -51,7 +51,7 @@ public class Workflow {
      */
     @JsonProperty("workflow")
     @JsonPropertyDescription("deploy object with fixed property 'TYPE':'Workflow'")
-    private com.sos.jobscheduler.model.workflow.Workflow workflow;
+    private com.sos.inventory.model.workflow.Workflow workflow;
 
     /**
      * timestamp
@@ -104,7 +104,7 @@ public class Workflow {
      * 
      */
     @JsonProperty("workflow")
-    public com.sos.jobscheduler.model.workflow.Workflow getWorkflow() {
+    public com.sos.inventory.model.workflow.Workflow getWorkflow() {
         return workflow;
     }
 
@@ -115,7 +115,7 @@ public class Workflow {
      * 
      */
     @JsonProperty("workflow")
-    public void setWorkflow(com.sos.jobscheduler.model.workflow.Workflow workflow) {
+    public void setWorkflow(com.sos.inventory.model.workflow.Workflow workflow) {
         this.workflow = workflow;
     }
 

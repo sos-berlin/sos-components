@@ -15,7 +15,7 @@ import com.sos.joc.classes.audit.ModifyJobSchedulerAudit;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.jobscheduler.UrlParameter;
+import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 
 import js7.proxy.javaapi.data.agent.JAgentRef;

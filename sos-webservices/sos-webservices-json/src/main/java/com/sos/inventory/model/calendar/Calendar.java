@@ -1,0 +1,419 @@
+
+package com.sos.inventory.model.calendar;
+
+import java.util.HashMap;
+import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.common.ICalendarObject;
+import com.sos.joc.model.common.IConfigurationObject;
+import com.sos.joc.model.common.IReleaseObject;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+
+
+/**
+ * calendar
+ * <p>
+ * 
+ * 
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({
+    "id",
+    "path",
+    "name",
+    "documentationPath",
+    "type",
+    "title",
+    "from",
+    "to",
+    "includes",
+    "excludes"
+})
+public class Calendar implements ICalendarObject, IConfigurationObject, IReleaseObject
+{
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    private Long id;
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
+    @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of an object.")
+    private String path;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("name")
+    private String name;
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
+    @JsonProperty("documentationPath")
+    @JsonPropertyDescription("absolute path of an object.")
+    private String documentationPath;
+    /**
+     * calendar type
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("type")
+    private CalendarType type;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    private String title;
+    /**
+     * date
+     * <p>
+     * ISO date YYYY-MM-DD
+     * 
+     */
+    @JsonProperty("from")
+    @JsonPropertyDescription("ISO date YYYY-MM-DD")
+    private String from;
+    /**
+     * date
+     * <p>
+     * ISO date YYYY-MM-DD
+     * 
+     */
+    @JsonProperty("to")
+    @JsonPropertyDescription("ISO date YYYY-MM-DD")
+    private String to;
+    /**
+     * frequencies
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("includes")
+    private Frequencies includes;
+    /**
+     * frequencies
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("excludes")
+    private Frequencies excludes;
+    @JsonIgnore
+    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public Calendar() {
+    }
+
+    /**
+     * 
+     * @param documentationPath
+     * @param path
+     * @param excludes
+     * @param name
+     * @param from
+     * @param includes
+     * @param id
+     * @param to
+     * @param type
+     * @param title
+     */
+    public Calendar(Long id, String path, String name, String documentationPath, CalendarType type, String title, String from, String to, Frequencies includes, Frequencies excludes) {
+        super();
+        this.id = id;
+        this.path = path;
+        this.name = name;
+        this.documentationPath = documentationPath;
+        this.type = type;
+        this.title = title;
+        this.from = from;
+        this.to = to;
+        this.includes = includes;
+        this.excludes = excludes;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("id")
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
+    @JsonProperty("path")
+    public String getPath() {
+        return path;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
+    @JsonProperty("path")
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("name")
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("name")
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
+    @JsonProperty("documentationPath")
+    public String getDocumentationPath() {
+        return documentationPath;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
+    @JsonProperty("documentationPath")
+    public void setDocumentationPath(String documentationPath) {
+        this.documentationPath = documentationPath;
+    }
+
+    /**
+     * calendar type
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("type")
+    public CalendarType getType() {
+        return type;
+    }
+
+    /**
+     * calendar type
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("type")
+    public void setType(CalendarType type) {
+        this.type = type;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    public String getTitle() {
+        return title;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    /**
+     * date
+     * <p>
+     * ISO date YYYY-MM-DD
+     * 
+     */
+    @JsonProperty("from")
+    public String getFrom() {
+        return from;
+    }
+
+    /**
+     * date
+     * <p>
+     * ISO date YYYY-MM-DD
+     * 
+     */
+    @JsonProperty("from")
+    public void setFrom(String from) {
+        this.from = from;
+    }
+
+    /**
+     * date
+     * <p>
+     * ISO date YYYY-MM-DD
+     * 
+     */
+    @JsonProperty("to")
+    public String getTo() {
+        return to;
+    }
+
+    /**
+     * date
+     * <p>
+     * ISO date YYYY-MM-DD
+     * 
+     */
+    @JsonProperty("to")
+    public void setTo(String to) {
+        this.to = to;
+    }
+
+    /**
+     * frequencies
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("includes")
+    public Frequencies getIncludes() {
+        return includes;
+    }
+
+    /**
+     * frequencies
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("includes")
+    public void setIncludes(Frequencies includes) {
+        this.includes = includes;
+    }
+
+    /**
+     * frequencies
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("excludes")
+    public Frequencies getExcludes() {
+        return excludes;
+    }
+
+    /**
+     * frequencies
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("excludes")
+    public void setExcludes(Frequencies excludes) {
+        this.excludes = excludes;
+    }
+
+    @JsonAnyGetter
+    public Map<String, Object> getAdditionalProperties() {
+        return this.additionalProperties;
+    }
+
+    @JsonAnySetter
+    public void setAdditionalProperty(String name, Object value) {
+        this.additionalProperties.put(name, value);
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("documentationPath", documentationPath).append("type", type).append("title", title).append("from", from).append("to", to).append("includes", includes).append("excludes", excludes).append("additionalProperties", additionalProperties).toString();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder().append(documentationPath).append(path).append(excludes).append(name).append(from).append(includes).append(id).append(to).append(additionalProperties).append(type).append(title).toHashCode();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof Calendar) == false) {
+            return false;
+        }
+        Calendar rhs = ((Calendar) other);
+        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(path, rhs.path).append(excludes, rhs.excludes).append(name, rhs.name).append(from, rhs.from).append(includes, rhs.includes).append(id, rhs.id).append(to, rhs.to).append(additionalProperties, rhs.additionalProperties).append(type, rhs.type).append(title, rhs.title).isEquals();
+    }
+
+}

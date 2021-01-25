@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.inventory.model.Schedule;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -26,19 +27,19 @@ public class ScheduleEdit
 {
 
     /**
-     * Order Template
+     * Schedule
      * <p>
-     * The order template for scheduling orders to JobScheduler
+     * The order template for scheduling orders to Controller
      * 
      */
     @JsonProperty("configuration")
-    @JsonPropertyDescription("The order template for scheduling orders to JobScheduler")
+    @JsonPropertyDescription("The order template for scheduling orders to Controller")
     private Schedule configuration;
 
     /**
-     * Order Template
+     * Schedule
      * <p>
-     * The order template for scheduling orders to JobScheduler
+     * The order template for scheduling orders to Controller
      * 
      */
     @JsonProperty("configuration")
@@ -47,9 +48,9 @@ public class ScheduleEdit
     }
 
     /**
-     * Order Template
+     * Schedule
      * <p>
-     * The order template for scheduling orders to JobScheduler
+     * The order template for scheduling orders to Controller
      * 
      */
     @JsonProperty("configuration")

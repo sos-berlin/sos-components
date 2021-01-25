@@ -4,19 +4,19 @@ import java.time.Instant;
 import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.sos.jobscheduler.model.cluster.ClusterState;
-import com.sos.jobscheduler.model.cluster.ClusterType;
-import com.sos.jobscheduler.model.command.Overview;
-import com.sos.jobscheduler.model.command.overview.SystemProperties;
+import com.sos.controller.model.cluster.ClusterState;
+import com.sos.controller.model.cluster.ClusterType;
+import com.sos.controller.model.command.Overview;
+import com.sos.controller.model.command.overview.SystemProperties;
 import com.sos.joc.Globals;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
-import com.sos.joc.model.jobscheduler.ComponentStateText;
-import com.sos.joc.model.jobscheduler.ConnectionStateText;
-import com.sos.joc.model.jobscheduler.Controller;
-import com.sos.joc.model.jobscheduler.OperatingSystem;
-import com.sos.joc.model.jobscheduler.Role;
+import com.sos.joc.model.controller.ComponentStateText;
+import com.sos.joc.model.controller.ConnectionStateText;
+import com.sos.joc.model.controller.Controller;
+import com.sos.joc.model.controller.OperatingSystem;
+import com.sos.joc.model.controller.Role;
 
 public class ControllerAnswer extends Controller {
 

@@ -7,16 +7,16 @@ import java.util.function.Predicate;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.sos.jobscheduler.model.cluster.ClusterType;
+import com.sos.controller.model.cluster.ClusterType;
 import com.sos.joc.Globals;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
-import com.sos.joc.model.jobscheduler.ClusterNodeState;
-import com.sos.joc.model.jobscheduler.ClusterNodeStateText;
-import com.sos.joc.model.jobscheduler.ClusterState;
-import com.sos.joc.model.jobscheduler.ComponentState;
-import com.sos.joc.model.jobscheduler.ComponentStateText;
-import com.sos.joc.model.jobscheduler.ConnectionState;
-import com.sos.joc.model.jobscheduler.ConnectionStateText;
+import com.sos.joc.model.controller.ClusterNodeState;
+import com.sos.joc.model.controller.ClusterNodeStateText;
+import com.sos.joc.model.controller.ClusterState;
+import com.sos.joc.model.controller.ComponentState;
+import com.sos.joc.model.controller.ComponentStateText;
+import com.sos.joc.model.controller.ConnectionState;
+import com.sos.joc.model.controller.ConnectionStateText;
 
 import js7.proxy.javaapi.data.cluster.JClusterState;
 
@@ -112,7 +112,7 @@ public class States {
         DBItemInventoryJSInstance controllerInstance = null;
         if (controllerInstances.size() > 1) { // is cluster
             controllerInstance = getActiveControllerNode(controllerInstances, Globals.objectMapper.readValue(jClusterState.toJson(),
-                    com.sos.jobscheduler.model.cluster.ClusterState.class));
+                    com.sos.controller.model.cluster.ClusterState.class));
         } else { // is standalone
             controllerInstance = controllerInstances.get(0);
         }
@@ -120,7 +120,7 @@ public class States {
     }
 
     public static DBItemInventoryJSInstance getActiveControllerNode(List<DBItemInventoryJSInstance> controllerInstances,
-            com.sos.jobscheduler.model.cluster.ClusterState clusterState) {
+            com.sos.controller.model.cluster.ClusterState clusterState) {
         DBItemInventoryJSInstance controllerInstance = null;
         if (clusterState != null) {
             switch (clusterState.getTYPE()) {

@@ -32,7 +32,7 @@ public class ExportForSigning {
     @JsonProperty("controllerId")
     private String controllerId;
     /**
-     * Filter for Deployable Objects
+     * Filter for valid Deployable Objects only
      * <p>
      * 
      * (Required)
@@ -66,7 +66,7 @@ public class ExportForSigning {
     }
 
     /**
-     * Filter for Deployable Objects
+     * Filter for valid Deployable Objects only
      * <p>
      * 
      * (Required)
@@ -78,7 +78,7 @@ public class ExportForSigning {
     }
 
     /**
-     * Filter for Deployable Objects
+     * Filter for valid Deployable Objects only
      * <p>
      * 
      * (Required)

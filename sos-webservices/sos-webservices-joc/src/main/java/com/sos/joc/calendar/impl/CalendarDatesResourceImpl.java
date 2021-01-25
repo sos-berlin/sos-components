@@ -4,6 +4,7 @@ import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
+import com.sos.inventory.model.calendar.Calendar;
 import com.sos.joc.Globals;
 import com.sos.joc.calendar.resource.ICalendarDatesResource;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -14,7 +15,6 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
-import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
 import com.sos.joc.model.calendar.Dates;
 import com.sos.joc.model.inventory.common.ConfigurationType;

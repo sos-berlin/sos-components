@@ -8,9 +8,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.sos.inventory.model.job.JobCriticality;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.HistoryStateText;
-import com.sos.joc.model.inventory.common.JobCriticality;
 
 public class HistoryFilter {
     

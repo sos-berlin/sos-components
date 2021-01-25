@@ -8,12 +8,12 @@ import java.util.List;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.model.instruction.ForkJoin;
-import com.sos.jobscheduler.model.instruction.IfElse;
-import com.sos.jobscheduler.model.instruction.Instruction;
-import com.sos.jobscheduler.model.instruction.Lock;
-import com.sos.jobscheduler.model.instruction.TryCatch;
-import com.sos.jobscheduler.model.workflow.Branch;
+import com.sos.inventory.model.instruction.ForkJoin;
+import com.sos.inventory.model.instruction.IfElse;
+import com.sos.inventory.model.instruction.Instruction;
+import com.sos.inventory.model.instruction.Lock;
+import com.sos.inventory.model.instruction.TryCatch;
+import com.sos.inventory.model.workflow.Branch;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -47,7 +47,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
-            com.sos.jobscheduler.model.workflow.Workflow item = addWorkflowPositions(dbLayer.getDeployedInventory(workflowFilter));
+            com.sos.inventory.model.workflow.Workflow item = addWorkflowPositions(dbLayer.getDeployedInventory(workflowFilter));
             if (item == null) {
                 throw new DBMissingDataException(String.format("Workflow '%s' doesn't exist", workflowFilter.getWorkflowId().getPath()));
             }
@@ -101,7 +101,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
 //        }
 //    }
     
-    private com.sos.jobscheduler.model.workflow.Workflow addWorkflowPositions(com.sos.jobscheduler.model.workflow.Workflow w) {
+    private com.sos.inventory.model.workflow.Workflow addWorkflowPositions(com.sos.inventory.model.workflow.Workflow w) {
         if (w == null) {
             return null;
         }

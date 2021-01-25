@@ -12,10 +12,10 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
+import com.sos.inventory.model.job.JobCriticality;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.common.HistorySeverity;
-import com.sos.joc.model.inventory.common.JobCriticality;
 import com.sos.joc.model.order.OrderStateText;
 
 @Entity

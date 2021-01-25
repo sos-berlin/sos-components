@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.model.deploy.DeployType;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.documentation.DocumentationDBLayer;

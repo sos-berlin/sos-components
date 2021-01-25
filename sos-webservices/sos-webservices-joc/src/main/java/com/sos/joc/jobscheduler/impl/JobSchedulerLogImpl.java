@@ -17,7 +17,7 @@ import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerLogResource;
-import com.sos.joc.model.jobscheduler.UrlParameter;
+import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 
 @Path("controller")

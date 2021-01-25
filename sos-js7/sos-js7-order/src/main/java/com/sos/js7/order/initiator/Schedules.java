@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.webservices.order.initiator.model.Schedule;
+import com.sos.inventory.model.Schedule;
  
  
 public class Schedules {

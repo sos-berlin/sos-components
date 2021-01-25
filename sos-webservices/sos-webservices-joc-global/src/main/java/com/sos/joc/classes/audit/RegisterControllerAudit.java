@@ -2,7 +2,7 @@ package com.sos.joc.classes.audit;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.jobscheduler.RegisterParameters;
+import com.sos.joc.model.controller.RegisterParameters;
 
 
 public class RegisterControllerAudit extends RegisterParameters implements IAuditLog {

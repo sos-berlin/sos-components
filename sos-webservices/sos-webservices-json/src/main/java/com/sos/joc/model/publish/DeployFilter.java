@@ -30,7 +30,7 @@ public class DeployFilter {
     @JsonProperty("controllerIds")
     private List<String> controllerIds = new ArrayList<String>();
     /**
-     * Filter for Deployable Objects
+     * Filter for valid Deployable Objects only
      * <p>
      * 
      * 
@@ -65,7 +65,7 @@ public class DeployFilter {
     }
 
     /**
-     * Filter for Deployable Objects
+     * Filter for valid Deployable Objects only
      * <p>
      * 
      * 
@@ -76,7 +76,7 @@ public class DeployFilter {
     }
 
     /**
-     * Filter for Deployable Objects
+     * Filter for valid Deployable Objects only
      * <p>
      * 
      * 

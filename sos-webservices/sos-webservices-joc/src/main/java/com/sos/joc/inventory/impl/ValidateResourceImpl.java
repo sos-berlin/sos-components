@@ -16,14 +16,17 @@ import javax.ws.rs.Path;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.jobscheduler.model.instruction.ForkJoin;
-import com.sos.jobscheduler.model.instruction.IfElse;
-import com.sos.jobscheduler.model.instruction.Instruction;
-import com.sos.jobscheduler.model.instruction.Lock;
-import com.sos.jobscheduler.model.instruction.NamedJob;
-import com.sos.jobscheduler.model.instruction.TryCatch;
-import com.sos.jobscheduler.model.workflow.Branch;
-import com.sos.jobscheduler.model.workflow.Workflow;
+import com.sos.inventory.model.Schedule;
+import com.sos.inventory.model.calendar.AssignedCalendars;
+import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
+import com.sos.inventory.model.instruction.ForkJoin;
+import com.sos.inventory.model.instruction.IfElse;
+import com.sos.inventory.model.instruction.Instruction;
+import com.sos.inventory.model.instruction.Lock;
+import com.sos.inventory.model.instruction.NamedJob;
+import com.sos.inventory.model.instruction.TryCatch;
+import com.sos.inventory.model.workflow.Branch;
+import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -40,9 +43,6 @@ import com.sos.joc.model.inventory.Validate;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
-import com.sos.webservices.order.initiator.model.AssignedCalendars;
-import com.sos.webservices.order.initiator.model.AssignedNonWorkingCalendars;
-import com.sos.webservices.order.initiator.model.Schedule;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class ValidateResourceImpl extends JOCResourceImpl implements IValidateResource {

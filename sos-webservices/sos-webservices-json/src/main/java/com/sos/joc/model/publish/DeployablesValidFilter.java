@@ -12,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Filter for Deployable Objects
+ * Filter for valid Deployable Objects only
  * <p>
  * 
  * 

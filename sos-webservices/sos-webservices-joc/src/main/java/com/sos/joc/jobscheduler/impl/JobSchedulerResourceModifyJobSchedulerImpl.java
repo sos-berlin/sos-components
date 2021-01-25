@@ -10,10 +10,10 @@ import javax.ws.rs.Path;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sos.jobscheduler.model.command.Abort;
-import com.sos.jobscheduler.model.command.ClusterAction;
-import com.sos.jobscheduler.model.command.Command;
-import com.sos.jobscheduler.model.command.Terminate;
+import com.sos.controller.model.command.Abort;
+import com.sos.controller.model.command.ClusterAction;
+import com.sos.controller.model.command.Command;
+import com.sos.controller.model.command.Terminate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCJsonCommand;
@@ -27,7 +27,7 @@ import com.sos.joc.exceptions.JobSchedulerNoResponseException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceModifyJobScheduler;
-import com.sos.joc.model.jobscheduler.UrlParameter;
+import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 

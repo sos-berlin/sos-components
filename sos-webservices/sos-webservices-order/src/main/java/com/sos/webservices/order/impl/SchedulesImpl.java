@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.inventory.model.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -19,7 +20,6 @@ import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderSelectorDef;
 import com.sos.js7.order.initiator.db.DBLayerSchedules;
 import com.sos.js7.order.initiator.db.FilterSchedules;
-import com.sos.webservices.order.initiator.model.Schedule;
 import com.sos.webservices.order.initiator.model.ScheduleSelector;
 import com.sos.webservices.order.initiator.model.SchedulesList;
 import com.sos.webservices.order.initiator.model.SchedulesSelector;

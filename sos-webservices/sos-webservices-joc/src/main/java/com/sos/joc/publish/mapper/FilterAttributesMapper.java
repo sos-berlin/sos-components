@@ -5,7 +5,7 @@ import java.util.Set;
 
 import org.hibernate.criterion.MatchMode;
 
-import com.sos.jobscheduler.model.deploy.DeployType;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.Configuration;

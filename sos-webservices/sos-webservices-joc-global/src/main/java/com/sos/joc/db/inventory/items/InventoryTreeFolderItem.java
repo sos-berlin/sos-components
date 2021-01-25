@@ -1,11 +1,11 @@
 package com.sos.joc.db.inventory.items;
 
+import com.sos.inventory.model.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ResponseFolderItem;
-import com.sos.webservices.order.initiator.model.Schedule;
 
 public class InventoryTreeFolderItem extends ResponseFolderItem {
 

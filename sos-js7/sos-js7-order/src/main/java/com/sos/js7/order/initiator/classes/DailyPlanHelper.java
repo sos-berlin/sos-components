@@ -10,8 +10,8 @@ import java.util.TimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.inventory.model.Schedule;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
-import com.sos.webservices.order.initiator.model.Schedule;
 
 public class DailyPlanHelper {
 

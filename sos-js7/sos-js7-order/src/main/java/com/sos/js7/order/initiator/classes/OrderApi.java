@@ -17,7 +17,8 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.exception.SOSException;
-import com.sos.jobscheduler.model.order.FreshOrder;
+import com.sos.controller.model.order.FreshOrder;
+import com.sos.inventory.model.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
@@ -39,7 +40,6 @@ import com.sos.joc.model.order.AddOrders;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
 import com.sos.js7.order.initiator.OrderListSynchronizer;
 import com.sos.webservices.order.initiator.model.NameValuePair;
-import com.sos.webservices.order.initiator.model.Schedule;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;

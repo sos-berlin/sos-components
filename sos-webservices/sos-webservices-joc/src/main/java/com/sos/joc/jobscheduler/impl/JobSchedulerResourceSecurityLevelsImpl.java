@@ -16,8 +16,8 @@ import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceSecurityLevels;
 import com.sos.joc.model.common.ControllerId;
-import com.sos.joc.model.jobscheduler.Controller;
-import com.sos.joc.model.jobscheduler.Controllers;
+import com.sos.joc.model.controller.Controller;
+import com.sos.joc.model.controller.Controllers;
 import com.sos.schema.JsonValidator;
 
 @Path("controllers")

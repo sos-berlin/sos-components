@@ -10,16 +10,16 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.sos.jobscheduler.model.instruction.ForkJoin;
-import com.sos.jobscheduler.model.instruction.IfElse;
-import com.sos.jobscheduler.model.instruction.Instruction;
-import com.sos.jobscheduler.model.instruction.InstructionType;
-import com.sos.jobscheduler.model.instruction.Lock;
-import com.sos.jobscheduler.model.instruction.NamedJob;
-import com.sos.jobscheduler.model.instruction.TryCatch;
-import com.sos.jobscheduler.model.job.Job;
-import com.sos.jobscheduler.model.workflow.Branch;
-import com.sos.jobscheduler.model.workflow.Workflow;
+import com.sos.inventory.model.instruction.ForkJoin;
+import com.sos.inventory.model.instruction.IfElse;
+import com.sos.inventory.model.instruction.Instruction;
+import com.sos.inventory.model.instruction.InstructionType;
+import com.sos.inventory.model.instruction.Lock;
+import com.sos.inventory.model.instruction.NamedJob;
+import com.sos.inventory.model.instruction.TryCatch;
+import com.sos.inventory.model.job.Job;
+import com.sos.inventory.model.workflow.Branch;
+import com.sos.inventory.model.workflow.Workflow;
 
 public class WorkflowSearcher {
 

@@ -12,11 +12,11 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
 import com.sos.commons.util.SOSString;
-import com.sos.jobscheduler.model.instruction.Instruction;
-import com.sos.jobscheduler.model.instruction.Lock;
-import com.sos.jobscheduler.model.instruction.NamedJob;
-import com.sos.jobscheduler.model.workflow.Workflow;
-import com.sos.joc.model.inventory.common.JobCriticality;
+import com.sos.inventory.model.instruction.Instruction;
+import com.sos.inventory.model.instruction.Lock;
+import com.sos.inventory.model.instruction.NamedJob;
+import com.sos.inventory.model.job.JobCriticality;
+import com.sos.inventory.model.workflow.Workflow;
 
 public class WorkflowConverter {
 
@@ -75,7 +75,7 @@ public class WorkflowConverter {
             argValues = new ArrayList<String>();
         }
 
-        public void process(com.sos.jobscheduler.model.workflow.Jobs jobs) {
+        public void process(com.sos.inventory.model.workflow.Jobs jobs) {
             handleJobs(jobs);
             removeDuplicates();
             toJson();
@@ -154,7 +154,7 @@ public class WorkflowConverter {
             return argValues;
         }
 
-        private void handleJobs(com.sos.jobscheduler.model.workflow.Jobs jobs) {
+        private void handleJobs(com.sos.inventory.model.workflow.Jobs jobs) {
             if (jobs == null || jobs.getAdditionalProperties() == null) {
                 return;
             }

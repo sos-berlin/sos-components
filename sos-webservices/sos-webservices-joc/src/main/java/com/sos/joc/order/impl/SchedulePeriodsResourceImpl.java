@@ -26,6 +26,10 @@ import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.inventory.model.calendar.AssignedCalendars;
+import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
+import com.sos.inventory.model.calendar.Calendar;
+import com.sos.inventory.model.calendar.Period;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -33,14 +37,10 @@ import com.sos.joc.classes.calendar.FrequencyResolver;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.calendar.Calendar;
-import com.sos.joc.model.calendar.Period;
 import com.sos.joc.model.dailyplan.RunTime;
 import com.sos.joc.model.order.ScheduleDatesFilter;
 import com.sos.joc.order.resource.ISchedulePeriodsResource;
 import com.sos.schema.JsonValidator;
-import com.sos.webservices.order.initiator.model.AssignedCalendars;
-import com.sos.webservices.order.initiator.model.AssignedNonWorkingCalendars;
 
 @Path("schedule")
 public class SchedulePeriodsResourceImpl extends JOCResourceImpl implements ISchedulePeriodsResource {

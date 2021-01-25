@@ -21,8 +21,8 @@ import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResource;
-import com.sos.joc.model.jobscheduler.JobScheduler200;
-import com.sos.joc.model.jobscheduler.UrlParameter;
+import com.sos.joc.model.controller.JobScheduler200;
+import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 
 @Path("controller")
