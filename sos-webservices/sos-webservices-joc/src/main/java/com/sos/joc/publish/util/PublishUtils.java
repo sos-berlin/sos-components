@@ -265,7 +265,7 @@ public abstract class PublishUtils {
                     sig.setModified(Date.from(Instant.now()));
                     if(draft.getType() == ConfigurationType.WORKFLOW.intValue()) {
                         Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
-                        if (workflow.getPath().startsWith("/")) {
+                        if (workflow.getPath() == null || workflow.getPath().startsWith("/")) {
                             workflow.setPath(draft.getName());
                             draft.setContent(om.writeValueAsString(workflow));
                         }
@@ -285,7 +285,7 @@ public abstract class PublishUtils {
                     sig.setModified(Date.from(Instant.now()));
                     if(draft.getType() == ConfigurationType.WORKFLOW.intValue()) {
                         Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
-                        if (workflow.getPath().startsWith("/")) {
+                        if (workflow.getPath() == null || workflow.getPath().startsWith("/")) {
                             workflow.setPath(draft.getName());
                             draft.setContent(om.writeValueAsString(workflow));
                         }
@@ -301,7 +301,7 @@ public abstract class PublishUtils {
 //                    X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                     if(draft.getType() == ConfigurationType.WORKFLOW.intValue()) {
                         Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
-                        if (workflow.getPath().startsWith("/")) {
+                        if (workflow.getPath() == null || workflow.getPath().startsWith("/")) {
                             workflow.setPath(draft.getName());
                             draft.setContent(om.writeValueAsString(workflow));
                         }
@@ -341,7 +341,7 @@ public abstract class PublishUtils {
                 sig.setModified(Date.from(Instant.now()));
                 if(unsignedDraft.getType() == ConfigurationType.WORKFLOW.intValue()) {
                     Workflow workflow = om.readValue(unsignedDraft.getContent(), Workflow.class);
-                    if (workflow.getPath().startsWith("/")) {
+                    if (workflow.getPath() == null || workflow.getPath().startsWith("/")) {
                         workflow.setPath(unsignedDraft.getName());
                         unsignedDraft.setContent(om.writeValueAsString(workflow));
                     }
@@ -361,7 +361,7 @@ public abstract class PublishUtils {
                 sig.setModified(Date.from(Instant.now()));
                 if(unsignedDraft.getType() == ConfigurationType.WORKFLOW.intValue()) {
                     Workflow workflow = om.readValue(unsignedDraft.getContent(), Workflow.class);
-                    if (workflow.getPath().startsWith("/")) {
+                    if (workflow.getPath() == null || workflow.getPath().startsWith("/")) {
                         workflow.setPath(unsignedDraft.getName());
                         unsignedDraft.setContent(om.writeValueAsString(workflow));
                     }
@@ -377,7 +377,7 @@ public abstract class PublishUtils {
 //                X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                 if(unsignedDraft.getType() == ConfigurationType.WORKFLOW.intValue()) {
                     Workflow workflow = om.readValue(unsignedDraft.getContent(), Workflow.class);
-                    if (workflow.getPath().startsWith("/")) {
+                    if (workflow.getPath() == null || workflow.getPath().startsWith("/")) {
                         workflow.setPath(unsignedDraft.getName());
                         unsignedDraft.setContent(om.writeValueAsString(workflow));
                     }
