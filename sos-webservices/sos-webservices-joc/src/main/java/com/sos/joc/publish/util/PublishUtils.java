@@ -263,8 +263,10 @@ public abstract class PublishUtils {
                     sig.setModified(Date.from(Instant.now()));
                     if(draft.getType() == ConfigurationType.WORKFLOW.intValue()) {
                         Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
-                        workflow.setPath(draft.getPath());
-                        draft.setContent(om.writeValueAsString(workflow));
+                        if (workflow.getPath().startsWith("/")) {
+                            workflow.setPath(draft.getName());
+                            draft.setContent(om.writeValueAsString(workflow));
+                        }
                     }
                     sig.setSignature(SignObject.signPGP(keyPair.getPrivateKey(), draft.getContent(), null));
                     signedDrafts.put(draft, sig);
@@ -281,8 +283,10 @@ public abstract class PublishUtils {
                     sig.setModified(Date.from(Instant.now()));
                     if(draft.getType() == ConfigurationType.WORKFLOW.intValue()) {
                         Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
-                        workflow.setPath(draft.getPath());
-                        draft.setContent(om.writeValueAsString(workflow));
+                        if (workflow.getPath().startsWith("/")) {
+                            workflow.setPath(draft.getName());
+                            draft.setContent(om.writeValueAsString(workflow));
+                        }
                     }
                     sig.setSignature(SignObject.signX509(kp.getPrivate(), draft.getContent()));
                     signedDrafts.put(draft, sig);
@@ -295,8 +299,10 @@ public abstract class PublishUtils {
 //                    X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                     if(draft.getType() == ConfigurationType.WORKFLOW.intValue()) {
                         Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
-                        workflow.setPath(draft.getPath());
-                        draft.setContent(om.writeValueAsString(workflow));
+                        if (workflow.getPath().startsWith("/")) {
+                            workflow.setPath(draft.getName());
+                            draft.setContent(om.writeValueAsString(workflow));
+                        }
                     }
                     sig.setSignature(SignObject.signX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, kp.getPrivate(), draft.getContent()));
                     signedDrafts.put(draft, sig);
@@ -333,8 +339,10 @@ public abstract class PublishUtils {
                 sig.setModified(Date.from(Instant.now()));
                 if(unsignedDraft.getType() == ConfigurationType.WORKFLOW.intValue()) {
                     Workflow workflow = om.readValue(unsignedDraft.getContent(), Workflow.class);
-                    workflow.setPath(unsignedDraft.getPath());
-                    unsignedDraft.setContent(om.writeValueAsString(workflow));
+                    if (workflow.getPath().startsWith("/")) {
+                        workflow.setPath(unsignedDraft.getName());
+                        unsignedDraft.setContent(om.writeValueAsString(workflow));
+                    }
                 }
                 sig.setSignature(SignObject.signPGP(keyPair.getPrivateKey(), unsignedDraftUpdated.getContent(), null));
                 signedDrafts.put(unsignedDraftUpdated, sig);
@@ -351,8 +359,10 @@ public abstract class PublishUtils {
                 sig.setModified(Date.from(Instant.now()));
                 if(unsignedDraft.getType() == ConfigurationType.WORKFLOW.intValue()) {
                     Workflow workflow = om.readValue(unsignedDraft.getContent(), Workflow.class);
-                    workflow.setPath(unsignedDraft.getPath());
-                    unsignedDraft.setContent(om.writeValueAsString(workflow));
+                    if (workflow.getPath().startsWith("/")) {
+                        workflow.setPath(unsignedDraft.getName());
+                        unsignedDraft.setContent(om.writeValueAsString(workflow));
+                    }
                 }
                 sig.setSignature(SignObject.signX509(kp.getPrivate(), unsignedDraftUpdated.getContent()));
                 signedDrafts.put(unsignedDraftUpdated, sig);
@@ -365,8 +375,10 @@ public abstract class PublishUtils {
 //                X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                 if(unsignedDraft.getType() == ConfigurationType.WORKFLOW.intValue()) {
                     Workflow workflow = om.readValue(unsignedDraft.getContent(), Workflow.class);
-                    workflow.setPath(unsignedDraft.getPath());
-                    unsignedDraft.setContent(om.writeValueAsString(workflow));
+                    if (workflow.getPath().startsWith("/")) {
+                        workflow.setPath(unsignedDraft.getName());
+                        unsignedDraft.setContent(om.writeValueAsString(workflow));
+                    }
                 }
                 sig.setSignature(SignObject.signX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, kp.getPrivate(), unsignedDraftUpdated.getContent()));
                 signedDrafts.put(unsignedDraftUpdated, sig);
@@ -1227,7 +1239,11 @@ public abstract class PublishUtils {
                 // TODO: get Version to set here
                 newDeployedObject.setVersion(null);
                 newDeployedObject.setPath(draft.getPath());
-                newDeployedObject.setName(draft.getName());
+                if (draft.getName() != null) {
+                    newDeployedObject.setName(draft.getName());
+                } else {
+                    newDeployedObject.setName(Paths.get(draft.getPath()).getFileName().toString());
+                }
                 newDeployedObject.setFolder(draft.getFolder());
                 newDeployedObject.setType(
                         PublishUtils.mapConfigurationType(ConfigurationType.fromValue(draft.getType())).intValue());
@@ -2911,4 +2927,93 @@ public abstract class PublishUtils {
             return false;
         }
     }
+    
+    public static void updatePathWithNameInContent(Set<? extends DBItem> configurations) {
+        configurations.stream().forEach(item -> {
+            if (item instanceof DBItemInventoryConfiguration) {
+                try {
+                    switch(((DBItemInventoryConfiguration) item).getTypeAsEnum()) {
+                    case WORKFLOW:
+                        Workflow workflow = Globals.objectMapper.readValue(((DBItemInventoryConfiguration) item).getContent(), Workflow.class);
+                        if (workflow.getPath() != null && workflow.getPath().startsWith("/")) {
+                            workflow.setPath(((DBItemInventoryConfiguration) item).getName());
+                            ((DBItemInventoryConfiguration) item).setContent(Globals.objectMapper.writeValueAsString(workflow));
+                        }
+                        break;
+                    case LOCK:
+                        Lock lock = Globals.objectMapper.readValue(((DBItemInventoryConfiguration) item).getContent(), Lock.class);
+                        lock.setId(((DBItemInventoryConfiguration) item).getName());
+                        ((DBItemInventoryConfiguration) item).setContent(Globals.objectMapper.writeValueAsString(lock));
+                        break;
+                    case JUNCTION:
+                        Junction junction = Globals.objectMapper.readValue(((DBItemInventoryConfiguration) item).getContent(), Junction.class);
+                        if (junction.getPath() != null && junction.getPath().startsWith("/")) {
+                            junction.setPath(((DBItemInventoryConfiguration) item).getName());
+                            ((DBItemInventoryConfiguration) item).setContent(Globals.objectMapper.writeValueAsString(junction));
+                        }
+                        break;
+                    case JOBCLASS:
+                        JobClass jobClass = Globals.objectMapper.readValue(((DBItemInventoryConfiguration) item).getContent(), JobClass.class);
+                        if (jobClass.getPath() != null && jobClass.getPath().startsWith("/")) {
+                            jobClass.setPath(((DBItemInventoryConfiguration) item).getName());
+                            ((DBItemInventoryConfiguration) item).setContent(Globals.objectMapper.writeValueAsString(jobClass));
+                        }
+                        break;
+                    case SCHEDULE:
+                        Schedule schedule = Globals.objectMapper.readValue(((DBItemInventoryConfiguration) item).getContent(), Schedule.class);
+                        schedule.setPath(((DBItemInventoryConfiguration) item).getName());
+                        ((DBItemInventoryConfiguration) item).setContent(Globals.objectMapper.writeValueAsString(schedule));
+                        break;
+                    case WORKINGDAYSCALENDAR:
+                    case NONWORKINGDAYSCALENDAR:
+                        Calendar calendar = Globals.objectMapper.readValue(((DBItemInventoryConfiguration) item).getContent(), Calendar.class);
+                        calendar.setPath(((DBItemInventoryConfiguration) item).getName());
+                        ((DBItemInventoryConfiguration) item).setContent(Globals.objectMapper.writeValueAsString(calendar));
+                        break;
+                    case JOB:
+                    case FOLDER:
+                        break;
+                    }
+                } catch (Exception e) {
+                    throw new JocDeployException(e);
+                }
+            } else if (item instanceof DBItemDeploymentHistory) {
+                try {
+                    switch(DeployType.fromValue(((DBItemDeploymentHistory)item).getType())) {
+                    case WORKFLOW:
+                        Workflow workflow = Globals.objectMapper.readValue(((DBItemDeploymentHistory) item).getContent(), Workflow.class);
+                        if (workflow.getPath().startsWith("/")) {
+                            workflow.setPath(((DBItemDeploymentHistory) item).getName());
+                            ((DBItemDeploymentHistory) item).setContent(Globals.objectMapper.writeValueAsString(workflow));
+                        }
+                        break;
+                    case LOCK:
+                        Lock lock = Globals.objectMapper.readValue(((DBItemDeploymentHistory) item).getContent(), Lock.class);
+                        if (lock.getId().startsWith("/")) {
+                            lock.setId(((DBItemDeploymentHistory) item).getName());
+                            ((DBItemDeploymentHistory) item).setContent(Globals.objectMapper.writeValueAsString(lock));
+                        }
+                        break;
+                    case JUNCTION:
+                        Junction junction = Globals.objectMapper.readValue(((DBItemDeploymentHistory) item).getContent(), Junction.class);
+                        if (junction.getPath().startsWith("/")) {
+                            junction.setPath(((DBItemDeploymentHistory) item).getName());
+                            ((DBItemDeploymentHistory) item).setContent(Globals.objectMapper.writeValueAsString(junction));
+                        }
+                        break;
+                    case JOBCLASS:
+                        JobClass jobClass = Globals.objectMapper.readValue(((DBItemDeploymentHistory) item).getContent(), JobClass.class);
+                        if (jobClass.getPath().startsWith("/")) {
+                            jobClass.setPath(((DBItemDeploymentHistory) item).getName());
+                            ((DBItemDeploymentHistory) item).setContent(Globals.objectMapper.writeValueAsString(jobClass));
+                        }
+                        break;
+                    }
+                } catch (Exception e) {
+                    throw new JocDeployException(e);
+                }
+            }
+        });
+    }
+
 }

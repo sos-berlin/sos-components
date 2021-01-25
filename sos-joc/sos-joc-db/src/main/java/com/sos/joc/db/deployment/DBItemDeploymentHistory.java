@@ -108,10 +108,10 @@ public class DBItemDeploymentHistory extends DBItem {
     }
     
     public String getName() {
-        return path;
+        return name;
     }
-    public void setName(String path) {
-        this.path = path;
+    public void setName(String name) {
+        this.name = name;
     }
     
     public String getFolder() {

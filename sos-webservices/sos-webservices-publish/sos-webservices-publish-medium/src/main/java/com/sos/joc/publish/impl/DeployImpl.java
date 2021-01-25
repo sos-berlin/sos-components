@@ -165,6 +165,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 }
 
                 if (unsignedDrafts != null) {
+                    // WORKAROUND: old items with leading slash
+                    PublishUtils.updatePathWithNameInContent(unsignedDrafts);
                     unsignedDrafts.stream()
                     .filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW))
                     .forEach(item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(item, controllerId, dbLayer)));
@@ -174,6 +176,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 // already deployed objects AgentName handling
                 // all items will be signed or re-signed with current versionId
                 if (unsignedReDeployables != null && !unsignedReDeployables.isEmpty()) {
+                    // WORKAROUND: old items with leading slash
+                    PublishUtils.updatePathWithNameInContent(unsignedReDeployables);
                     unsignedReDeployables.stream()
                     .filter(item -> ConfigurationType.WORKFLOW.equals(ConfigurationType.fromValue(item.getType())))
                     .forEach(item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(item, controllerId, dbLayer)));
