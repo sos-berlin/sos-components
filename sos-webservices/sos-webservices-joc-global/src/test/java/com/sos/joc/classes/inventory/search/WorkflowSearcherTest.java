@@ -14,11 +14,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
-import com.sos.jobscheduler.model.instruction.Instruction;
-import com.sos.jobscheduler.model.instruction.InstructionType;
-import com.sos.jobscheduler.model.instruction.Lock;
-import com.sos.jobscheduler.model.instruction.NamedJob;
-import com.sos.jobscheduler.model.workflow.Workflow;
+import com.sos.inventory.model.instruction.Instruction;
+import com.sos.inventory.model.instruction.InstructionType;
+import com.sos.inventory.model.instruction.NamedJob;
+import com.sos.inventory.model.instruction.Lock;
+import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.search.WorkflowSearcher.WorkflowJob;
 
