@@ -411,8 +411,8 @@ public abstract class PublishUtils {
                     sig.setModified(Date.from(Instant.now()));
                     if(deployed.getType() == DeployType.WORKFLOW.intValue()) {
                         Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
-//                        workflow.setPath(Paths.get(deployed.getPath()).getFileName().toString());
-                        workflow.setPath(deployed.getPath());
+                        workflow.setPath(Paths.get(deployed.getPath()).getFileName().toString());
+//                        workflow.setPath(deployed.getPath());
                         deployed.setContent(om.writeValueAsString(workflow));
                     }
                     sig.setSignature(SignObject.signPGP(keyPair.getPrivateKey(), deployed.getContent(), null));
@@ -430,8 +430,8 @@ public abstract class PublishUtils {
                     sig.setModified(Date.from(Instant.now()));
                     if(deployed.getType() == DeployType.WORKFLOW.intValue()) {
                         Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
-//                      workflow.setPath(Paths.get(deployed.getPath()).getFileName().toString());
-                        workflow.setPath(deployed.getPath());
+                      workflow.setPath(Paths.get(deployed.getPath()).getFileName().toString());
+//                        workflow.setPath(deployed.getPath());
                         deployed.setContent(om.writeValueAsString(workflow));
                     }
                     sig.setSignature(SignObject.signX509(kp.getPrivate(), deployed.getContent()));
@@ -445,8 +445,8 @@ public abstract class PublishUtils {
 //                    X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                     if(deployed.getType() == ConfigurationType.WORKFLOW.intValue()) {
                         Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
-//                      workflow.setPath(Paths.get(deployed.getPath()).getFileName().toString());
-                        workflow.setPath(deployed.getPath());
+                        workflow.setPath(Paths.get(deployed.getPath()).getFileName().toString());
+//                        workflow.setPath(deployed.getPath());
                         deployed.setContent(om.writeValueAsString(workflow));
                     }
                     sig.setSignature(SignObject.signX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, kp.getPrivate(), deployed.getContent()));
@@ -553,7 +553,7 @@ public abstract class PublishUtils {
         Boolean verified = false;
         verified = VerifySignature.verifyPGP(publicKey, signedDraft.getContent(), draftSignature.getSignature());
         if (!verified) {
-            LOGGER.trace(String.format("Signature of object %1$s could not be verified! Object will not be deployed.", signedDraft.getPath()));
+            LOGGER.trace(String.format("Signature of object with name %1$s could not be verified! Object will not be deployed.", signedDraft.getName()));
         } else {
             verifiedDraft = signedDraft;
         }
@@ -573,7 +573,7 @@ public abstract class PublishUtils {
         verified = VerifySignature.verifyPGP(publicKey, signedDeployment.getContent(), deployedSignature.getSignature());
         if (!verified) {
             LOGGER.trace(
-                    String.format("Signature of object %1$s could not be verified! Object will not be deployed.", signedDeployment.getPath()));
+                    String.format("Signature of object with name %1$s could not be verified! Object will not be deployed.", signedDeployment.getName()));
         } else {
             verifiedDeployment = signedDeployment;
         }
@@ -605,7 +605,7 @@ public abstract class PublishUtils {
             verified = VerifySignature.verifyX509(cert, signedDraft.getContent(), draftSignature.getSignature());
             if (!verified) {
                 LOGGER.trace(
-                        String.format("Signature of object %1$s could not be verified! Object will not be deployed.", signedDraft.getPath()));
+                        String.format("Signature of object with name %1$s could not be verified! Object will not be deployed.", signedDraft.getName()));
             } else {
                 verifiedDraft = signedDraft;
             }
@@ -613,7 +613,7 @@ public abstract class PublishUtils {
             verified = VerifySignature.verifyX509(publicKey, signedDraft.getContent(), draftSignature.getSignature());
             if (!verified) {
                 LOGGER.trace(
-                        String.format("Signature of object %1$s could not be verified! Object will not be deployed.", signedDraft.getPath()));
+                        String.format("Signature of object with name %1$s could not be verified! Object will not be deployed.", signedDraft.getName()));
             } else {
                 verifiedDraft = signedDraft;
             }
@@ -648,7 +648,7 @@ public abstract class PublishUtils {
             verified = VerifySignature.verifyX509(cert, signedDeployment.getContent(), deployedSignature.getSignature());
             if (!verified) {
                 LOGGER.trace(String.format(
-                        "Signature of object %1$s could not be verified! Object will not be deployed.", signedDeployment.getPath()));
+                        "Signature of object with name %1$s could not be verified! Object will not be deployed.", signedDeployment.getName()));
             } else {
                 verifiedDeployment = signedDeployment;
             }
@@ -656,7 +656,7 @@ public abstract class PublishUtils {
             verified = VerifySignature.verifyX509(publicKey, signedDeployment.getContent(), deployedSignature.getSignature());
             if (!verified) {
                 LOGGER.trace(String.format(
-                        "Signature of object %1$s could not be verified! Object will not be deployed.", signedDeployment.getPath()));
+                        "Signature of object with name %1$s could not be verified! Object will not be deployed.", signedDeployment.getName()));
             } else {
                 verifiedDeployment = signedDeployment;
             }
@@ -1106,7 +1106,7 @@ public abstract class PublishUtils {
         if (alreadyDeployedtoDelete != null) {
             updateItemOperationsVersioned.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
                     item -> JUpdateItemOperation.deleteVersioned(WorkflowPath.of(item.getPath()))
-                    ).collect(Collectors.toSet())
+                    ).filter(Objects::nonNull).collect(Collectors.toSet())
                 );
             updateItemOperationsSimple.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
                     item -> {
@@ -1275,9 +1275,9 @@ public abstract class PublishUtils {
                     String workflow = Globals.objectMapper.writeValueAsString(((WorkflowPublish)draft).getContent());
                     newDeployedObject.setContent(workflow);
                     if (draft.getPath() != null ) {
-                        original = dbLayerDeploy.getConfiguration(draft.getPath(), ConfigurationType.WORKFLOW.intValue());
+                        original = dbLayerDeploy.getConfigurationByPath(draft.getPath(), ConfigurationType.WORKFLOW.intValue());
                     } else {
-                        original = dbLayerDeploy.getConfiguration(((WorkflowPublish)draft).getContent().getPath(), ConfigurationType.WORKFLOW.intValue());
+                        original = dbLayerDeploy.getConfigurationByPath(((WorkflowPublish)draft).getContent().getPath(), ConfigurationType.WORKFLOW.intValue());
                     }
                     if (original.getPath() != null && !original.getPath().isEmpty()) {
                         newDeployedObject.setPath(original.getPath());
@@ -1295,9 +1295,14 @@ public abstract class PublishUtils {
                     String lock = Globals.objectMapper.writeValueAsString(((LockPublish)draft).getContent());
                     newDeployedObject.setContent(lock);
                     if(draft.getPath() != null) {
-                        original = dbLayerDeploy.getConfiguration(draft.getPath(), ConfigurationType.LOCK.intValue());
+                        original = dbLayerDeploy.getConfigurationByPath(draft.getPath(), ConfigurationType.LOCK.intValue());
                     }
                     newDeployedObject.setPath(original.getPath());
+                    if(original.getName() != null && !original.getName().isEmpty()) {
+                        newDeployedObject.setName(original.getName());
+                    } else {
+                        newDeployedObject.setName(Paths.get(original.getPath()).getFileName().toString());
+                    }
                     newDeployedObject.setFolder(original.getFolder());
                     newDeployedObject.setInvContent(original.getContent());
                     newDeployedObject.setInventoryConfigurationId(original.getId());
@@ -1306,11 +1311,16 @@ public abstract class PublishUtils {
                     String junction = Globals.objectMapper.writeValueAsString(((JunctionPublish)draft).getContent());
                     newDeployedObject.setContent(junction);
                     if (draft.getPath() != null ) {
-                        original = dbLayerDeploy.getConfiguration(draft.getPath(), ConfigurationType.JUNCTION.intValue());
+                        original = dbLayerDeploy.getConfigurationByPath(draft.getPath(), ConfigurationType.JUNCTION.intValue());
                     } else {
-                        original = dbLayerDeploy.getConfiguration(((JunctionPublish)draft).getContent().getPath(), ConfigurationType.JUNCTION.intValue());
+                        original = dbLayerDeploy.getConfigurationByPath(((JunctionPublish)draft).getContent().getPath(), ConfigurationType.JUNCTION.intValue());
                     }
                     newDeployedObject.setPath(original.getPath());
+                    if(original.getName() != null && !original.getName().isEmpty()) {
+                        newDeployedObject.setName(original.getName());
+                    } else {
+                        newDeployedObject.setName(Paths.get(original.getPath()).getFileName().toString());
+                    }
                     newDeployedObject.setFolder(original.getFolder());
                     newDeployedObject.setInvContent(original.getContent());
                     newDeployedObject.setInventoryConfigurationId(original.getId());
@@ -1319,11 +1329,16 @@ public abstract class PublishUtils {
                     String jobclass = Globals.objectMapper.writeValueAsString(((JobClassPublish)draft).getContent());
                     newDeployedObject.setContent(jobclass);
                     if (draft.getPath() != null ) {
-                        original = dbLayerDeploy.getConfiguration(draft.getPath(), ConfigurationType.JOBCLASS.intValue());
+                        original = dbLayerDeploy.getConfigurationByPath(draft.getPath(), ConfigurationType.JOBCLASS.intValue());
                     } else {
-                        original = dbLayerDeploy.getConfiguration(((JobClassPublish)draft).getContent().getPath(), ConfigurationType.JOBCLASS.intValue());
+                        original = dbLayerDeploy.getConfigurationByPath(((JobClassPublish)draft).getContent().getPath(), ConfigurationType.JOBCLASS.intValue());
                     }
                     newDeployedObject.setPath(original.getPath());
+                    if(original.getName() != null && !original.getName().isEmpty()) {
+                        newDeployedObject.setName(original.getName());
+                    } else {
+                        newDeployedObject.setName(Paths.get(original.getPath()).getFileName().toString());
+                    }
                     newDeployedObject.setFolder(original.getFolder());
                     newDeployedObject.setInvContent(original.getContent());
                     newDeployedObject.setInventoryConfigurationId(original.getId());
@@ -1436,7 +1451,7 @@ public abstract class PublishUtils {
             Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String controllerId, DBLayerDeploy dbLayer) {
         try {
             for (ControllerObject draft : drafts) {
-                DBItemInventoryConfiguration configuration = dbLayer.getConfiguration(draft.getPath(), mapDeployType(draft.getObjectType()));
+                DBItemInventoryConfiguration configuration = dbLayer.getConfigurationByPath(draft.getPath(), mapDeployType(draft.getObjectType()));
                 configuration.setDeployed(true);
                 configuration.setModified(Date.from(Instant.now()));
                 // update agentName with original in Workflow jobs before updating  agentId -> agentName
@@ -1998,8 +2013,7 @@ public abstract class PublishUtils {
                                 if (controllerId != null && updateableAgentNames != null) {
                                     replaceAgentNameWithAgentId(workflow, updateableAgentNames, controllerId);
                                 }
-//                                workflow.setPath(Paths.get(deployable.getPath()).getFileName().toString());
-                                workflow.setPath(deployable.getPath());
+                                workflow.setPath(Paths.get(deployable.getPath()).getFileName().toString());
                                 content = om.writeValueAsString(workflow);
                                 break;
                             case LOCK:
@@ -2099,8 +2113,8 @@ public abstract class PublishUtils {
                                 if (controllerId != null && updateableAgentNames != null) {
                                     replaceAgentNameWithAgentId(workflow, updateableAgentNames, controllerId);
                                 }
-//                              workflow.setPath(Paths.get(deployable.getPath()).getFileName().toString());
-                                workflow.setPath(deployable.getPath());
+                                workflow.setPath(Paths.get(deployable.getPath()).getFileName().toString());
+//                                workflow.setPath(deployable.getPath());
                                 content = om.writeValueAsString(workflow);
                                 break;
                             case LOCK:
@@ -2671,7 +2685,7 @@ public abstract class PublishUtils {
         try {
             ControllerObject jsObject = new ControllerObject();
 //            jsObject.setId(item.getId());
-            jsObject.setPath(item.getPath());
+            jsObject.setPath(item.getName());
             jsObject.setObjectType(PublishUtils.mapConfigurationType(ConfigurationType.fromValue(item.getType())));
             switch (jsObject.getObjectType()) {
             case WORKFLOW:
@@ -2711,7 +2725,7 @@ public abstract class PublishUtils {
         try {
             ControllerObject jsObject = new ControllerObject();
 //            jsObject.setId(item.getId());
-            jsObject.setPath(item.getPath());
+            jsObject.setPath(item.getName());
             jsObject.setObjectType(DeployType.fromValue(item.getType()));
             switch (jsObject.getObjectType()) {
             case WORKFLOW:

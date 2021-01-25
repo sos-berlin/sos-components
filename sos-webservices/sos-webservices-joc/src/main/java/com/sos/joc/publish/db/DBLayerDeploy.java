@@ -753,7 +753,7 @@ public class DBLayerDeploy {
         }
     }
     
-    public DBItemInventoryConfiguration getConfiguration(String path, ConfigurationType type) {
+    public DBItemInventoryConfiguration getConfigurationByPath(String path, ConfigurationType type) {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             hql.append(" where path = :path");
@@ -769,13 +769,45 @@ public class DBLayerDeploy {
         } 
     }
     
-    public DBItemInventoryConfiguration getConfiguration(String path, Integer type) {
+    public DBItemInventoryConfiguration getConfigurationByPath(String path, Integer type) {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             hql.append(" where path = :path");
             hql.append(" and type = :type");
             Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
             query.setParameter("path", path);
+            query.setParameter("type", type);
+            return query.getSingleResult();
+        } catch(NoResultException e) {
+            return null;
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        } 
+    }
+    
+    public DBItemInventoryConfiguration getConfigurationByName(String name, ConfigurationType type) {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            hql.append(" where name = :name");
+            hql.append(" and type = :type");
+            Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+            query.setParameter("name", name);
+            query.setParameter("type", type.intValue());
+            return query.getSingleResult();
+        } catch(NoResultException e) {
+            return null;
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        } 
+    }
+    
+    public DBItemInventoryConfiguration getConfigurationByName(String name, Integer type) {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            hql.append(" where name = :name");
+            hql.append(" and type = :type");
+            Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+            query.setParameter("name", name);
             query.setParameter("type", type);
             return query.getSingleResult();
         } catch(NoResultException e) {
@@ -1334,16 +1366,16 @@ public class DBLayerDeploy {
                 }
                 switch (jsObject.getObjectType()) {
                 case WORKFLOW:
-                    inventoryConfig = getConfiguration(((WorkflowPublish)jsObject).getContent().getPath(), ConfigurationType.WORKFLOW);
+                    inventoryConfig = getConfigurationByPath(((WorkflowPublish)jsObject).getContent().getPath(), ConfigurationType.WORKFLOW);
                     break;
                 case LOCK:
-                    inventoryConfig = getConfiguration(((LockPublish)jsObject).getPath(), ConfigurationType.LOCK);
+                    inventoryConfig = getConfigurationByPath(((LockPublish)jsObject).getPath(), ConfigurationType.LOCK);
                     break;
                 case JUNCTION:
-                    inventoryConfig = getConfiguration(((JunctionPublish)jsObject).getContent().getPath(), ConfigurationType.JUNCTION);
+                    inventoryConfig = getConfigurationByPath(((JunctionPublish)jsObject).getContent().getPath(), ConfigurationType.JUNCTION);
                     break;
                 case JOBCLASS:
-                    inventoryConfig = getConfiguration(((JobClassPublish)jsObject).getContent().getPath(), ConfigurationType.JOBCLASS);
+                    inventoryConfig = getConfigurationByPath(((JobClassPublish)jsObject).getContent().getPath(), ConfigurationType.JOBCLASS);
                     break;
                 }
                 newDepHistoryItem.setControllerInstanceId(controllerInstanceId);
@@ -1393,7 +1425,7 @@ public class DBLayerDeploy {
                 deploy.setErrorMessage(errorMessage);
                 // TODO: get Version to set here
                 deploy.setVersion(null);
-                DBItemInventoryConfiguration inventoryConfig = getConfiguration(deploy.getPath(), ConfigurationType.fromValue(deploy.getType()));
+                DBItemInventoryConfiguration inventoryConfig = getConfigurationByPath(deploy.getPath(), ConfigurationType.fromValue(deploy.getType()));
                 deploy.setInvContent(inventoryConfig.getContent());
                 deploy.setInventoryConfigurationId(inventoryConfig.getId());
                 try {

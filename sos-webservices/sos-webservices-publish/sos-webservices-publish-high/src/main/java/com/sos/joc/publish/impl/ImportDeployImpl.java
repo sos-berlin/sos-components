@@ -178,7 +178,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     WorkflowPublish workflowPublish = new WorkflowPublish();
                     workflowPublish.setContent((Workflow)config.getContent());
                     workflowPublish.setSignedContent(signaturePath.getSignature().getSignatureString());
-                    DBItemInventoryConfiguration workflowDbItem = dbLayer.getConfiguration(config.getPath(), ConfigurationType.WORKFLOW);
+                    DBItemInventoryConfiguration workflowDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.WORKFLOW);
                     objectsToCheckPathRenaming.add(workflowDbItem);
                     DBItemDepSignatures workflowDbItemSignature = dbLayer.saveOrUpdateSignature(
                             workflowDbItem.getId(), workflowPublish, account, DeployType.WORKFLOW);
