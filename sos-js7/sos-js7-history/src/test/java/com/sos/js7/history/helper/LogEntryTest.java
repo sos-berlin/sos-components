@@ -9,7 +9,7 @@ import java.nio.file.Paths;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.sos.jobscheduler.model.event.EventType;
+import com.sos.controller.model.event.EventType;
 
 public class LogEntryTest {
 

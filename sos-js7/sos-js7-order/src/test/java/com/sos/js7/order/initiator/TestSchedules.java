@@ -9,7 +9,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.webservices.order.initiator.model.Schedule;
+import com.sos.inventory.model.Schedule;
  
  
 

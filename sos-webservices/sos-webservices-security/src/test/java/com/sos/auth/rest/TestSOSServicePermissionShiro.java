@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import com.sos.joc.exceptions.JocException;
+
 import com.sos.joc.exceptions.SessionNotExistException;
 
 public class TestSOSServicePermissionShiro {

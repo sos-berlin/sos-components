@@ -27,7 +27,7 @@ import com.sos.js7.event.controller.configuration.controller.ControllerConfigura
                 run = false;
             } else {
                 try {
-                    Thread.sleep(1 * 1_000);
+                    Thread.sleep(1 * 1000);
                     counter = counter + 1;
                 } catch (InterruptedException e) {
 
@@ -42,7 +42,7 @@ import com.sos.js7.event.controller.configuration.controller.ControllerConfigura
                 run = false;
             } else {
                 try {
-                    Thread.sleep(seconds * 1_000);
+                    Thread.sleep(seconds * 1000);
                     counter = counter + 1;
                 } catch (InterruptedException e) {
 
@@ -67,7 +67,8 @@ import com.sos.js7.event.controller.configuration.controller.ControllerConfigura
         return list;
     }
 
-     @Test
+    @Ignore
+    @Test
     public void test() throws Exception {
         Globals.sosCockpitProperties = new JocCockpitProperties();
 

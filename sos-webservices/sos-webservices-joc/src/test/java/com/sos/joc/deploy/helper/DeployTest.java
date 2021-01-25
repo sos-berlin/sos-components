@@ -17,8 +17,8 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.sign.keys.sign.SignObject;
 import com.sos.commons.sign.keys.verify.VerifySignature;
 import com.sos.commons.util.SOSString;
-import com.sos.jobscheduler.model.lock.Lock;
-import com.sos.jobscheduler.model.workflow.Workflow;
+import com.sos.inventory.model.lock.Lock;
+import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.proxy.ProxyUser;
 

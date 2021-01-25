@@ -3,14 +3,13 @@ package com.sos.js7.order.initiator;
 import static org.junit.Assert.assertEquals;
 
 import java.text.ParseException;
-import java.util.Date;
 import java.util.Map;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
 import com.sos.commons.exception.SOSInvalidDataException;
-import com.sos.joc.model.calendar.Period;
+import com.sos.inventory.model.calendar.Period;
  
 //Test fails in nightly build
 @Ignore
