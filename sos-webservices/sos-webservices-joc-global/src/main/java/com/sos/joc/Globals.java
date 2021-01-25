@@ -145,7 +145,9 @@ public class Globals {
     }
 
     public static void readUnmodifiables() {
-        readVersion();
+        readJocCockpitVersion();
+        readApiSchemaVersion();
+        readInventorySchemaVersion();
         LOGGER.info("Security Level = " + Globals.getJocSecurityLevel().value());
     }
 
@@ -231,7 +233,7 @@ public class Globals {
         return p;
     }
 
-    private static void readVersion() {
+    private static void readJocCockpitVersion() {
         InputStream stream = null;
         String versionFile = "/version.json";
         LOGGER.info("Java version = " + System.getProperty("java.version"));
@@ -239,6 +241,50 @@ public class Globals {
             stream = Globals.class.getClassLoader().getResourceAsStream(versionFile);
             if (stream != null) {
                 LOGGER.info("JOC Cockpit version = " + Json.createReader(stream).readObject().getString("version", "unknown"));
+            } else {
+                LOGGER.warn(String.format("Version file %1$s not found in classpath", versionFile));
+            }
+        } catch (Exception e) {
+            LOGGER.warn(String.format("Error while reading %1$s from classpath: ", versionFile), e);
+        } finally {
+            try {
+                if (stream != null) {
+                    stream.close();
+                }
+            } catch (Exception e) {
+            }
+        }
+    }
+
+    private static void readApiSchemaVersion() {
+        InputStream stream = null;
+        String versionFile = "/api-schema-version.json";
+        try {
+            stream = Globals.class.getClassLoader().getResourceAsStream(versionFile);
+            if (stream != null) {
+                LOGGER.info("API schema version = " + Json.createReader(stream).readObject().getString("version", "unknown"));
+            } else {
+                LOGGER.warn(String.format("Version file %1$s not found in classpath", versionFile));
+            }
+        } catch (Exception e) {
+            LOGGER.warn(String.format("Error while reading %1$s from classpath: ", versionFile), e);
+        } finally {
+            try {
+                if (stream != null) {
+                    stream.close();
+                }
+            } catch (Exception e) {
+            }
+        }
+    }
+
+    private static void readInventorySchemaVersion() {
+        InputStream stream = null;
+        String versionFile = "/inventory-schema-version.json";
+        try {
+            stream = Globals.class.getClassLoader().getResourceAsStream(versionFile);
+            if (stream != null) {
+                LOGGER.info("Inventory schema version = " + Json.createReader(stream).readObject().getString("version", "unknown"));
             } else {
                 LOGGER.warn(String.format("Version file %1$s not found in classpath", versionFile));
             }

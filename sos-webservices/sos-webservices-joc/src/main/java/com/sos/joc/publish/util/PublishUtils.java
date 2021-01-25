@@ -84,6 +84,7 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocDeployException;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocImportException;
 import com.sos.joc.exceptions.JocMissingKeyException;
@@ -93,6 +94,7 @@ import com.sos.joc.exceptions.JocSignatureVerificationException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.keys.db.DBLayerKeys;
+import com.sos.joc.model.Version;
 import com.sos.joc.model.calendar.NonWorkingDaysCalendarEdit;
 import com.sos.joc.model.calendar.WorkingDaysCalendarEdit;
 import com.sos.joc.model.common.JocSecurityLevel;
@@ -109,10 +111,10 @@ import com.sos.joc.model.inventory.workflow.WorkflowPublish;
 import com.sos.joc.model.joc.JocMetaInfo;
 import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
+import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.publish.DeployablesFilter;
 import com.sos.joc.model.publish.DeployablesValidFilter;
 import com.sos.joc.model.publish.DeploymentState;
-import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.ReleasablesFilter;
 import com.sos.joc.model.sign.JocKeyPair;
@@ -2009,7 +2011,8 @@ public abstract class PublishUtils {
     }
 
     public static StreamingOutput writeZipFile (Set<ControllerObject> deployables, Set<ConfigurationObject> releasables, 
-            Set<UpdateableWorkflowJobAgentName> updateableAgentNames,String commitId, String controllerId, DBLayerDeploy dbLayer) {
+            Set<UpdateableWorkflowJobAgentName> updateableAgentNames,String commitId, String controllerId, DBLayerDeploy dbLayer,
+            Version jocVersion, Version apiVersion, Version inventoryVersion) {
         StreamingOutput streamingOutput = new StreamingOutput() {
             @Override
             public void write(OutputStream output) throws IOException {
@@ -2084,7 +2087,7 @@ public abstract class PublishUtils {
                             }
                         } 
                     }
-                    JocMetaInfo jocMetaInfo = getJocMetaInfo();
+                    JocMetaInfo jocMetaInfo = getJocMetaInfoFromVersionFiles(jocVersion, apiVersion, inventoryVersion);
                     if (!isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
                         String zipEntryName = JOC_META_INFO_FILENAME;
                         ZipEntry entry = new ZipEntry(zipEntryName);
@@ -2106,7 +2109,8 @@ public abstract class PublishUtils {
     }
     
     public static StreamingOutput writeTarGzipFile (Set<ControllerObject> deployables, Set<ConfigurationObject> releasables,
-            Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String commitId,  String controllerId, DBLayerDeploy dbLayer) {
+            Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String commitId,  String controllerId, DBLayerDeploy dbLayer,
+            Version jocVersion, Version apiVersion, Version inventoryVersion) {
         StreamingOutput streamingOutput = new StreamingOutput() {
             @Override
             public void write(OutputStream output) throws IOException {
@@ -2187,7 +2191,7 @@ public abstract class PublishUtils {
                             }
                         } 
                     }
-                    JocMetaInfo jocMetaInfo = getJocMetaInfo();
+                    JocMetaInfo jocMetaInfo = getJocMetaInfoFromVersionFiles(jocVersion, apiVersion, inventoryVersion);
                     if (!isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
                         String zipEntryName = JOC_META_INFO_FILENAME;
                         TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
@@ -2701,7 +2705,7 @@ public abstract class PublishUtils {
         try {
             ControllerObject jsObject = new ControllerObject();
 //            jsObject.setId(item.getId());
-            jsObject.setPath(item.getName());
+            jsObject.setPath(item.getPath());
             jsObject.setObjectType(PublishUtils.mapConfigurationType(ConfigurationType.fromValue(item.getType())));
             switch (jsObject.getObjectType()) {
             case WORKFLOW:
@@ -2741,7 +2745,7 @@ public abstract class PublishUtils {
         try {
             ControllerObject jsObject = new ControllerObject();
 //            jsObject.setId(item.getId());
-            jsObject.setPath(item.getName());
+            jsObject.setPath(item.getPath());
             jsObject.setObjectType(DeployType.fromValue(item.getType()));
             switch (jsObject.getObjectType()) {
             case WORKFLOW:
@@ -2902,7 +2906,7 @@ public abstract class PublishUtils {
         }
     }
     
-    private static JocMetaInfo getJocMetaInfo() {
+    private static JocMetaInfo getJocMetaInfoFromJocProperties() {
         Properties jocProperties = Globals.sosCockpitProperties.getProperties();
         JocMetaInfo jocMetaInfo = new JocMetaInfo();
         if (jocProperties.containsKey("joc_version")) {
@@ -2913,6 +2917,20 @@ public abstract class PublishUtils {
         }
         if(jocProperties.containsKey("api_version")) {
             jocMetaInfo.setApiVersion(jocProperties.getProperty("api_version"));
+        }
+        return jocMetaInfo;
+    }
+
+    private static JocMetaInfo getJocMetaInfoFromVersionFiles(Version jocVersion, Version apiVersion, Version inventoryVersion) {
+        JocMetaInfo jocMetaInfo = new JocMetaInfo();
+        if (jocVersion != null) {
+            jocMetaInfo.setJocVersion(jocVersion.getVersion());
+        }
+        if (inventoryVersion != null) {
+            jocMetaInfo.setInventorySchemaVersion(inventoryVersion.getVersion());
+        }
+        if(apiVersion != null) {
+            jocMetaInfo.setApiVersion(apiVersion.getVersion());
         }
         return jocMetaInfo;
     }
@@ -3016,4 +3034,24 @@ public abstract class PublishUtils {
         });
     }
 
+    public static Version readVersion(InputStream stream, String path) throws JocException {
+        try {
+            if (stream != null) {
+                return Globals.objectMapper.readValue(stream, Version.class);
+            } else {
+                return null;
+            }
+        } catch (JocException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new JocException(new JocError("JOC-002", String.format("Error while reading %1$s from classpath: ", path)), e);
+        } finally {
+            try {
+                if (stream != null) {
+                    stream.close();
+                }
+            } catch (Exception e) {
+            }
+        }
+    }
 }
