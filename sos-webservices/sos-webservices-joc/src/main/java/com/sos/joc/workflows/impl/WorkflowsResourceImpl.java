@@ -15,14 +15,14 @@ import java.util.stream.Stream;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.model.deploy.DeployType;
-import com.sos.jobscheduler.model.instruction.ForkJoin;
-import com.sos.jobscheduler.model.instruction.IfElse;
-import com.sos.jobscheduler.model.instruction.Instruction;
-import com.sos.jobscheduler.model.instruction.TryCatch;
-import com.sos.jobscheduler.model.workflow.Branch;
-import com.sos.jobscheduler.model.workflow.Workflow;
-import com.sos.jobscheduler.model.workflow.WorkflowId;
+import com.sos.controller.model.workflow.WorkflowId;
+import com.sos.inventory.model.deploy.DeployType;
+import com.sos.inventory.model.instruction.ForkJoin;
+import com.sos.inventory.model.instruction.IfElse;
+import com.sos.inventory.model.instruction.Instruction;
+import com.sos.inventory.model.instruction.TryCatch;
+import com.sos.inventory.model.workflow.Branch;
+import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -97,10 +97,9 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                     Predicate<String> regex = Pattern.compile(workflowsFilter.getRegex().replaceAll("%", ".*")).asPredicate();
                     contentsStream = contentsStream.filter(w -> regex.test(w.getPath()));
                 }
-                Stream<com.sos.jobscheduler.model.workflow.Workflow> workflowsStream = contentsStream.map(c -> {
+                Stream<Workflow> workflowsStream = contentsStream.map(c -> {
                     try {
-                        com.sos.jobscheduler.model.workflow.Workflow workflow = Globals.objectMapper.readValue(c.getContent(),
-                                com.sos.jobscheduler.model.workflow.Workflow.class);
+                        Workflow workflow = Globals.objectMapper.readValue(c.getContent(), Workflow.class);
                         workflow.setPath(c.getPath());
                         return addWorkflowPositions(workflow);
                     } catch (Exception e) {

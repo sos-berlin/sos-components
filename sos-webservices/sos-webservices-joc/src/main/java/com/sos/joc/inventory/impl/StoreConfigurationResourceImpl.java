@@ -7,7 +7,8 @@ import java.util.List;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.model.lock.Lock;
+import com.sos.inventory.model.calendar.CalendarType;
+import com.sos.inventory.model.lock.Lock;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -24,7 +25,6 @@ import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.inventory.resource.IStoreConfigurationResource;
 import com.sos.joc.model.common.ICalendarObject;
 import com.sos.joc.model.inventory.ConfigurationObject;
-import com.sos.joc.model.inventory.common.CalendarType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.schema.JsonValidator;

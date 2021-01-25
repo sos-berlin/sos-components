@@ -60,20 +60,15 @@ import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.sign.keys.sign.SignObject;
 import com.sos.commons.sign.keys.verify.VerifySignature;
-import com.sos.jobscheduler.model.deploy.DeployType;
-import com.sos.jobscheduler.model.job.Job;
-import com.sos.jobscheduler.model.jobclass.JobClass;
-import com.sos.jobscheduler.model.jobclass.JobClassEdit;
-import com.sos.jobscheduler.model.jobclass.JobClassPublish;
-import com.sos.jobscheduler.model.junction.Junction;
-import com.sos.jobscheduler.model.junction.JunctionEdit;
-import com.sos.jobscheduler.model.junction.JunctionPublish;
-import com.sos.jobscheduler.model.lock.Lock;
-import com.sos.jobscheduler.model.lock.LockEdit;
-import com.sos.jobscheduler.model.lock.LockPublish;
-import com.sos.jobscheduler.model.workflow.Workflow;
-import com.sos.jobscheduler.model.workflow.WorkflowEdit;
-import com.sos.jobscheduler.model.workflow.WorkflowPublish;
+import com.sos.inventory.model.Schedule;
+import com.sos.inventory.model.calendar.Calendar;
+import com.sos.inventory.model.calendar.CalendarType;
+import com.sos.inventory.model.deploy.DeployType;
+import com.sos.inventory.model.job.Job;
+import com.sos.inventory.model.jobclass.JobClass;
+import com.sos.inventory.model.junction.Junction;
+import com.sos.inventory.model.lock.Lock;
+import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
@@ -98,13 +93,19 @@ import com.sos.joc.exceptions.JocSignatureVerificationException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.keys.db.DBLayerKeys;
-import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.calendar.NonWorkingDaysCalendarEdit;
 import com.sos.joc.model.calendar.WorkingDaysCalendarEdit;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.ConfigurationObject;
-import com.sos.joc.model.inventory.common.CalendarType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.inventory.jobclass.JobClassEdit;
+import com.sos.joc.model.inventory.jobclass.JobClassPublish;
+import com.sos.joc.model.inventory.junction.JunctionEdit;
+import com.sos.joc.model.inventory.junction.JunctionPublish;
+import com.sos.joc.model.inventory.lock.LockEdit;
+import com.sos.joc.model.inventory.lock.LockPublish;
+import com.sos.joc.model.inventory.workflow.WorkflowEdit;
+import com.sos.joc.model.inventory.workflow.WorkflowPublish;
 import com.sos.joc.model.joc.JocMetaInfo;
 import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
@@ -114,16 +115,15 @@ import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.ReleasablesFilter;
-import com.sos.joc.model.publish.Signature;
-import com.sos.joc.model.publish.SignaturePath;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.sign.JocKeyType;
+import com.sos.joc.model.sign.Signature;
+import com.sos.joc.model.sign.SignaturePath;
 import com.sos.joc.publish.common.ConfigurationObjectFileExtension;
 import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
-import com.sos.webservices.order.initiator.model.Schedule;
 import com.sos.webservices.order.initiator.model.ScheduleEdit;
 
 import io.vavr.control.Either;
@@ -2796,7 +2796,7 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty (Workflow workflow) {
-        if (workflow.getDocumentationId() == null 
+        if (workflow.getDocumentationPath() == null 
                 && workflow.getInstructions() == null 
                 && workflow.getJobs() == null
                 && workflow.getPath() == null

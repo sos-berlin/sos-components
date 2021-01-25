@@ -23,7 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class ExportShallowCopy {
 
     /**
-     * Filter for Deployable Objects
+     * Filter for valid and invalid Deployable Objects
      * <p>
      * 
      * 
@@ -40,7 +40,7 @@ public class ExportShallowCopy {
     private ReleasablesFilter releasables;
 
     /**
-     * Filter for Deployable Objects
+     * Filter for valid and invalid Deployable Objects
      * <p>
      * 
      * 
@@ -51,7 +51,7 @@ public class ExportShallowCopy {
     }
 
     /**
-     * Filter for Deployable Objects
+     * Filter for valid and invalid Deployable Objects
      * <p>
      * 
      * 

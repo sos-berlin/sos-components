@@ -134,7 +134,6 @@
     		<groupId>org.typelevel</groupId>
     		<artifactId>cats-effect_2.13</artifactId>
     		<version>2.3.1</version>
-    		<scope>test</scope>
 		</dependency>
 	</dependencies>
 

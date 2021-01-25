@@ -8,18 +8,18 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import com.sos.jobscheduler.model.deploy.DeployType;
-import com.sos.jobscheduler.model.instruction.ForkJoin;
-import com.sos.jobscheduler.model.instruction.IfElse;
-import com.sos.jobscheduler.model.instruction.Instruction;
-import com.sos.jobscheduler.model.instruction.Instructions;
-import com.sos.jobscheduler.model.instruction.NamedJob;
-import com.sos.jobscheduler.model.instruction.OptionalInstructions;
-import com.sos.jobscheduler.model.job.ExecutableScript;
-import com.sos.jobscheduler.model.job.Job;
-import com.sos.jobscheduler.model.workflow.Branch;
-import com.sos.jobscheduler.model.workflow.Jobs;
-import com.sos.jobscheduler.model.workflow.Workflow;
+import com.sos.inventory.model.deploy.DeployType;
+import com.sos.inventory.model.instruction.ForkJoin;
+import com.sos.inventory.model.instruction.IfElse;
+import com.sos.inventory.model.instruction.Instruction;
+import com.sos.inventory.model.instruction.Instructions;
+import com.sos.inventory.model.instruction.NamedJob;
+import com.sos.inventory.model.instruction.OptionalInstructions;
+import com.sos.inventory.model.job.ExecutableScript;
+import com.sos.inventory.model.job.Job;
+import com.sos.inventory.model.workflow.Branch;
+import com.sos.inventory.model.workflow.Jobs;
+import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.model.publish.Config;
@@ -45,7 +45,7 @@ import com.sos.joc.model.publish.RedeployFilter;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.model.publish.SetVersionsFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
-import com.sos.joc.model.publish.Signature;
+import com.sos.joc.model.sign.Signature;
 
 public class DeploymentTestUtils {
 

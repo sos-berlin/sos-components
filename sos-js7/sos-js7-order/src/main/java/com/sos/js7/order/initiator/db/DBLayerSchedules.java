@@ -17,13 +17,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.inventory.model.Schedule;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DeploymentState;
-import com.sos.webservices.order.initiator.model.Schedule;
 
 public class DBLayerSchedules {
 

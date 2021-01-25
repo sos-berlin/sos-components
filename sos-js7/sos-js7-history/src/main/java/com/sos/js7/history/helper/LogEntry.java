@@ -5,7 +5,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.sos.commons.util.SOSString;
-import com.sos.jobscheduler.model.event.EventType;
+import com.sos.controller.model.event.EventType;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.history.controller.proxy.fatevent.FatForkedChild;
 import com.sos.js7.history.controller.proxy.fatevent.FatOutcome;

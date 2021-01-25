@@ -26,16 +26,16 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.exception.SOSMissingDataException;
+import com.sos.inventory.model.calendar.Frequencies;
+import com.sos.inventory.model.calendar.Holidays;
+import com.sos.inventory.model.calendar.MonthDays;
+import com.sos.inventory.model.calendar.Months;
+import com.sos.inventory.model.calendar.Repetition;
+import com.sos.inventory.model.calendar.RepetitionText;
+import com.sos.inventory.model.calendar.WeekDays;
+import com.sos.inventory.model.calendar.WeeklyDay;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
 import com.sos.joc.model.calendar.Dates;
-import com.sos.joc.model.calendar.Frequencies;
-import com.sos.joc.model.calendar.Holidays;
-import com.sos.joc.model.calendar.MonthDays;
-import com.sos.joc.model.calendar.Months;
-import com.sos.joc.model.calendar.Repetition;
-import com.sos.joc.model.calendar.RepetitionText;
-import com.sos.joc.model.calendar.WeekDays;
-import com.sos.joc.model.calendar.WeeklyDay;
 
 public class FrequencyResolver {
 
@@ -76,10 +76,10 @@ public class FrequencyResolver {
 
     public Dates resolve(String calendarJson, String from, String to) throws SOSMissingDataException, SOSInvalidDataException, JsonParseException,
             JsonMappingException, IOException {
-        return resolve(new ObjectMapper().readValue(calendarJson, com.sos.joc.model.calendar.Calendar.class), from, to);
+        return resolve(new ObjectMapper().readValue(calendarJson, com.sos.inventory.model.calendar.Calendar.class), from, to);
     }
 
-    public Dates resolve(com.sos.joc.model.calendar.Calendar calendar, String from, String to) throws SOSMissingDataException,
+    public Dates resolve(com.sos.inventory.model.calendar.Calendar calendar, String from, String to) throws SOSMissingDataException,
             SOSInvalidDataException {
         init(calendar, from, to);
         Dates d = new Dates();
@@ -117,7 +117,7 @@ public class FrequencyResolver {
         return resolve(calendarJson, df.format(Instant.now()), null);
     }
 
-    public Dates resolveFromToday(com.sos.joc.model.calendar.Calendar calendar) throws SOSMissingDataException, SOSInvalidDataException {
+    public Dates resolveFromToday(com.sos.inventory.model.calendar.Calendar calendar) throws SOSMissingDataException, SOSInvalidDataException {
         return resolve(calendar, df.format(Instant.now()), null);
     }
 
@@ -126,18 +126,18 @@ public class FrequencyResolver {
 		return resolve(calendarJson, df.format(ZonedDateTime.now(ZoneOffset.UTC).minusDays(1L)), null);
     }
 
-    public Dates resolveFromUTCYesterday(com.sos.joc.model.calendar.Calendar calendar) throws SOSMissingDataException, SOSInvalidDataException {
+    public Dates resolveFromUTCYesterday(com.sos.inventory.model.calendar.Calendar calendar) throws SOSMissingDataException, SOSInvalidDataException {
         return resolve(calendar, df.format(ZonedDateTime.now(ZoneOffset.UTC).minusDays(1L)), null);
     }
 
     public Dates resolveRestrictions(String basedCalendarJson, String calendarJson, String from, String to)
             throws SOSMissingDataException, SOSInvalidDataException, JsonParseException, JsonMappingException, IOException {
-        return resolveRestrictions(new ObjectMapper().readValue(basedCalendarJson, com.sos.joc.model.calendar.Calendar.class), new ObjectMapper()
-                .readValue(calendarJson, com.sos.joc.model.calendar.Calendar.class), from, to);
+        return resolveRestrictions(new ObjectMapper().readValue(basedCalendarJson, com.sos.inventory.model.calendar.Calendar.class), new ObjectMapper()
+                .readValue(calendarJson, com.sos.inventory.model.calendar.Calendar.class), from, to);
     }
 
-    public Dates resolveRestrictions(com.sos.joc.model.calendar.Calendar basedCalendar,
-            com.sos.joc.model.calendar.Calendar calendar, String from, String to) throws SOSMissingDataException, SOSInvalidDataException {
+    public Dates resolveRestrictions(com.sos.inventory.model.calendar.Calendar basedCalendar,
+            com.sos.inventory.model.calendar.Calendar calendar, String from, String to) throws SOSMissingDataException, SOSInvalidDataException {
         init(basedCalendar, from, to);
         Dates d = new Dates();
         d.setDates(new ArrayList<String>());
@@ -196,14 +196,14 @@ public class FrequencyResolver {
         return resolveRestrictions(basedCalendarJson, calendarJson, df.format(Instant.now()), null);
     }
     
-    public Dates resolveRestrictionsFromToday(com.sos.joc.model.calendar.Calendar basedCalendar, String calendarJson) throws SOSMissingDataException,
+    public Dates resolveRestrictionsFromToday(com.sos.inventory.model.calendar.Calendar basedCalendar, String calendarJson) throws SOSMissingDataException,
             SOSInvalidDataException, JsonParseException, JsonMappingException, IOException {
-        return resolveRestrictions(basedCalendar, new ObjectMapper().readValue(calendarJson, com.sos.joc.model.calendar.Calendar.class), df.format(
+        return resolveRestrictions(basedCalendar, new ObjectMapper().readValue(calendarJson, com.sos.inventory.model.calendar.Calendar.class), df.format(
                 Instant.now()), null);
     }
 
-    public Dates resolveRestrictionsFromToday(com.sos.joc.model.calendar.Calendar basedCalendar,
-            com.sos.joc.model.calendar.Calendar calendar) throws SOSMissingDataException, SOSInvalidDataException {
+    public Dates resolveRestrictionsFromToday(com.sos.inventory.model.calendar.Calendar basedCalendar,
+            com.sos.inventory.model.calendar.Calendar calendar) throws SOSMissingDataException, SOSInvalidDataException {
         return resolveRestrictions(basedCalendar, calendar, df.format(Instant.now()), null);
     }
     
@@ -212,18 +212,18 @@ public class FrequencyResolver {
         return resolveRestrictions(basedCalendarJson, calendarJson, df.format(ZonedDateTime.now(ZoneOffset.UTC).minusDays(1L)), null);
     }
 
-    public Dates resolveRestrictionsFromUTCYesterday(com.sos.joc.model.calendar.Calendar basedCalendar, String calendarJson)
+    public Dates resolveRestrictionsFromUTCYesterday(com.sos.inventory.model.calendar.Calendar basedCalendar, String calendarJson)
             throws SOSMissingDataException, SOSInvalidDataException, JsonParseException, JsonMappingException, IOException {
-        return resolveRestrictions(basedCalendar, new ObjectMapper().readValue(calendarJson, com.sos.joc.model.calendar.Calendar.class), df.format(
+        return resolveRestrictions(basedCalendar, new ObjectMapper().readValue(calendarJson, com.sos.inventory.model.calendar.Calendar.class), df.format(
                 ZonedDateTime.now(ZoneOffset.UTC).minusDays(1L)), null);
     }
 
-    public Dates resolveRestrictionsFromUTCYesterday(com.sos.joc.model.calendar.Calendar basedCalendar, com.sos.joc.model.calendar.Calendar calendar)
+    public Dates resolveRestrictionsFromUTCYesterday(com.sos.inventory.model.calendar.Calendar basedCalendar, com.sos.inventory.model.calendar.Calendar calendar)
             throws SOSMissingDataException, SOSInvalidDataException {
         return resolveRestrictions(basedCalendar, calendar, df.format(ZonedDateTime.now(ZoneOffset.UTC).minusDays(1L)), null);
     }
 
-    public void init(com.sos.joc.model.calendar.Calendar calendar, String from, String to) throws SOSMissingDataException, SOSInvalidDataException {
+    public void init(com.sos.inventory.model.calendar.Calendar calendar, String from, String to) throws SOSMissingDataException, SOSInvalidDataException {
         if (calendar != null) {
             setDateFrom(from, calendar.getFrom());
             setDateTo(to, calendar.getTo());
@@ -234,7 +234,7 @@ public class FrequencyResolver {
         }
     }
     
-    public void init(com.sos.joc.model.calendar.Calendar calendar) throws SOSMissingDataException, SOSInvalidDataException {
+    public void init(com.sos.inventory.model.calendar.Calendar calendar) throws SOSMissingDataException, SOSInvalidDataException {
         if (calendar != null) {
             setDateFrom(calendar.getFrom(), calendar.getFrom());
             setDateTo(calendar.getFrom(), calendar.getTo());

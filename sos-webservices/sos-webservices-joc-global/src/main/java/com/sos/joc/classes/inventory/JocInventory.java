@@ -28,12 +28,14 @@ import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSString;
-import com.sos.jobscheduler.model.instruction.InstructionType;
-import com.sos.jobscheduler.model.job.Job;
-import com.sos.jobscheduler.model.jobclass.JobClass;
-import com.sos.jobscheduler.model.junction.Junction;
-import com.sos.jobscheduler.model.lock.Lock;
-import com.sos.jobscheduler.model.workflow.Workflow;
+import com.sos.inventory.model.Schedule;
+import com.sos.inventory.model.calendar.Calendar;
+import com.sos.inventory.model.instruction.InstructionType;
+import com.sos.inventory.model.job.Job;
+import com.sos.inventory.model.jobclass.JobClass;
+import com.sos.inventory.model.junction.Junction;
+import com.sos.inventory.model.lock.Lock;
+import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.inventory.search.WorkflowConverter;
@@ -45,12 +47,10 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.inventory.InventoryEvent;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
-import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
 import com.sos.joc.model.inventory.folder.Folder;
-import com.sos.webservices.order.initiator.model.Schedule;
 
 public class JocInventory {
 

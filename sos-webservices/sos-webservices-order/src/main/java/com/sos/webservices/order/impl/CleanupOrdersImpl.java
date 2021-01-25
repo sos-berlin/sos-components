@@ -18,7 +18,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
-import com.sos.jobscheduler.model.order.OrderItem;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;

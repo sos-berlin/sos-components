@@ -14,6 +14,8 @@ import java.util.stream.Stream;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.inventory.model.calendar.Calendar;
+import com.sos.inventory.model.calendar.CalendarType;
 import com.sos.joc.Globals;
 import com.sos.joc.calendars.resource.ICalendarsResource;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -21,11 +23,9 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.calendar.Calendars;
 import com.sos.joc.model.calendar.CalendarsFilter;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.inventory.common.CalendarType;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;

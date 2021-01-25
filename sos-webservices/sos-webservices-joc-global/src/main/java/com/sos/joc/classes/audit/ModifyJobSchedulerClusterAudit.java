@@ -2,7 +2,7 @@ package com.sos.joc.classes.audit;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.jobscheduler.UrlParameter;
+import com.sos.joc.model.controller.UrlParameter;
 
 
 public class ModifyJobSchedulerClusterAudit extends UrlParameter implements IAuditLog {

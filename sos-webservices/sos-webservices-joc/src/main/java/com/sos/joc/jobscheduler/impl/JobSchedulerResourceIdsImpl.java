@@ -18,7 +18,7 @@ import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceIds;
-import com.sos.joc.model.jobscheduler.ControllerIds;
+import com.sos.joc.model.controller.ControllerIds;
 
 @Path("controller")
 public class JobSchedulerResourceIdsImpl extends JOCResourceImpl implements IJobSchedulerResourceIds {

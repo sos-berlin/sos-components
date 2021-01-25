@@ -12,7 +12,7 @@ import java.util.function.BiConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.jobscheduler.model.workflow.WorkflowId;
+import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.classes.event.EventServiceFactory.EventCondition;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyUser;

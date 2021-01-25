@@ -7,8 +7,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
-import com.sos.jobscheduler.model.cluster.ClusterState;
-import com.sos.jobscheduler.model.command.Overview;
+import com.sos.controller.model.cluster.ClusterState;
+import com.sos.controller.model.command.Overview;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;

@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.joc.classes.calendar.FrequencyResolver;
-import com.sos.joc.model.calendar.Calendar;
+import com.sos.inventory.model.calendar.Calendar;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
 import com.sos.joc.model.calendar.Dates;
 

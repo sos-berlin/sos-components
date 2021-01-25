@@ -10,9 +10,9 @@ import javax.ws.rs.Path;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.jobscheduler.model.cluster.ClusterState;
-import com.sos.jobscheduler.model.cluster.ClusterType;
-import com.sos.jobscheduler.model.command.ClusterSwitchOver;
+import com.sos.controller.model.cluster.ClusterState;
+import com.sos.controller.model.cluster.ClusterType;
+import com.sos.controller.model.command.ClusterSwitchOver;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -33,7 +33,7 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceModifyJobSchedulerCluster;
-import com.sos.joc.model.jobscheduler.UrlParameter;
+import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 
 import js7.base.web.Uri;

@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
-import com.sos.jobscheduler.model.workflow.WorkflowId;
+import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;

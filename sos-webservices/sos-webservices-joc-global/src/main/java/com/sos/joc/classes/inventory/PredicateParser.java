@@ -816,6 +816,10 @@ public class PredicateParser {
 
     private static boolean isNumeric(String str) {
         boolean isNumeric = "$returnCode".equals(str) || "${returnCode}".equals(str) || str.endsWith(".toNumber");
+//        if (!isNumeric) {
+//           String regex ="variable\\(\\s*[\"']returnCode[\"']\\s*(,\\s*label\\s*=\\s*[^\"']+\\s*|,\\s*default\\s*=\\s*[0-9]+\\s*){0,2}\\)";
+//           isNumeric = str.matches(regex);
+//        }
         if (!isNumeric) {
             try {
                 Double.parseDouble(str);

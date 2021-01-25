@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.webservices.order.initiator.model.Schedule;
+import com.sos.inventory.model.Schedule;
   
 public abstract class ScheduleSource {
 

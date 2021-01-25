@@ -10,8 +10,8 @@ import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.sos.jobscheduler.model.order.OrderItem;
-import com.sos.jobscheduler.model.workflow.HistoricOutcome;
+import com.sos.controller.model.order.OrderItem;
+import com.sos.controller.model.workflow.HistoricOutcome;
 import com.sos.joc.Globals;
 import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.model.order.OrderState;

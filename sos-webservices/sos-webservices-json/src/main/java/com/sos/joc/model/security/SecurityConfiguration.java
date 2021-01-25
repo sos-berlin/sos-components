@@ -15,7 +15,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * security_configuration
+ * Authentication configuration
  * <p>
  * 
  * 

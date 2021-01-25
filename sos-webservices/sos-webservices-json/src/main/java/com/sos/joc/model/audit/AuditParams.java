@@ -15,7 +15,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  * 
  */
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "comment",
     "timeSpent",

@@ -28,8 +28,13 @@ import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.jobscheduler.model.common.Variables;
-import com.sos.jobscheduler.model.order.FreshOrder;
+import com.sos.controller.model.common.Variables;
+import com.sos.controller.model.order.FreshOrder;
+import com.sos.inventory.model.Schedule;
+import com.sos.inventory.model.calendar.AssignedCalendars;
+import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
+import com.sos.inventory.model.calendar.Calendar;
+import com.sos.inventory.model.calendar.Period;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.calendar.FrequencyResolver;
@@ -45,9 +50,7 @@ import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.joc.model.calendar.Calendar;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
-import com.sos.joc.model.calendar.Period;
 import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 import com.sos.js7.order.initiator.classes.DailyPlanHelper;
 import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
@@ -56,9 +59,7 @@ import com.sos.js7.order.initiator.db.DBLayerDailyPlanSubmissionHistory;
 import com.sos.js7.order.initiator.db.DBLayerOrderVariables;
 import com.sos.js7.order.initiator.db.FilterDailyPlanSubmissionHistory;
 import com.sos.js7.order.initiator.db.FilterOrderVariables;
-import com.sos.webservices.order.initiator.model.AssignedNonWorkingCalendars;
 import com.sos.webservices.order.initiator.model.NameValuePair;
-import com.sos.webservices.order.initiator.model.Schedule;
 
 public class OrderInitiatorRunner extends TimerTask {
 
@@ -320,7 +321,7 @@ public class OrderInitiatorRunner extends TimerTask {
 
                     generateNonWorkingDays(dailyPlanDate, schedule, controllerId);
 
-                    for (com.sos.webservices.order.initiator.model.AssignedCalendars assignedCalendar : schedule.getCalendars()) {
+                    for (AssignedCalendars assignedCalendar : schedule.getCalendars()) {
 
                         if (assignedCalendar.getTimeZone() == null) {
                             assignedCalendar.setTimeZone(UTC);
