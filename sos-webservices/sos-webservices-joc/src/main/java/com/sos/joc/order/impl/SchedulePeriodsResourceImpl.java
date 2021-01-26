@@ -93,17 +93,17 @@ public class SchedulePeriodsResourceImpl extends JOCResourceImpl implements ISch
                 
                 if (workingDbCalendars != null && !workingDbCalendars.isEmpty()) {
                     // maybe filter by type
-                    Map<String, String> pathContentMap = workingDbCalendars.stream().collect(Collectors.toMap(DBItemInventoryConfiguration::getPath,
+                    Map<String, String> nameContentMap = workingDbCalendars.stream().collect(Collectors.toMap(DBItemInventoryConfiguration::getName,
                             DBItemInventoryConfiguration::getContent));
 
                     for (AssignedCalendars c : in.getCalendars()) {
-                        if (!pathContentMap.containsKey(c.getCalendarPath())) {
+                        if (!nameContentMap.containsKey(c.getCalendarName())) {
                             continue;
                         }
                         Calendar restrictions = new Calendar();
                         restrictions.setIncludes(c.getIncludes());
                         //restrictions.setExcludes(c.getExcludes());
-                        Calendar basedOn = Globals.objectMapper.readValue(pathContentMap.get(c.getCalendarPath()), Calendar.class);
+                        Calendar basedOn = Globals.objectMapper.readValue(nameContentMap.get(c.getCalendarName()), Calendar.class);
                         fr.resolveRestrictions(basedOn, restrictions, in.getDateFrom(), in.getDateTo()).getDates().stream().flatMap(
                                 date -> getPeriods(c.getPeriods(), nonWorkingDays, date, timezone)).collect(Collectors.toCollection(() -> periods));
                     }
@@ -134,14 +134,14 @@ public class SchedulePeriodsResourceImpl extends JOCResourceImpl implements ISch
 
             if (nonWorkingDbCalendars != null && !nonWorkingDbCalendars.isEmpty()) {
 
-                Map<String, String> pathContentMap = nonWorkingDbCalendars.stream().collect(Collectors.toMap(DBItemInventoryConfiguration::getPath,
+                Map<String, String> nameContentMap = nonWorkingDbCalendars.stream().collect(Collectors.toMap(DBItemInventoryConfiguration::getName,
                         DBItemInventoryConfiguration::getContent));
 
                 for (AssignedNonWorkingCalendars c : in.getNonWorkingCalendars()) {
-                    if (!pathContentMap.containsKey(c.getCalendarPath())) {
+                    if (!nameContentMap.containsKey(c.getCalendarName())) {
                         continue;
                     }
-                    Calendar basedOn = Globals.objectMapper.readValue(pathContentMap.get(c.getCalendarPath()), Calendar.class);
+                    Calendar basedOn = Globals.objectMapper.readValue(nameContentMap.get(c.getCalendarName()), Calendar.class);
                     nonWorkingDays.addAll(fr.resolve(basedOn, in.getDateFrom(), in.getDateTo()).getDates());
                 }
             }
