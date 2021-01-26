@@ -1,5 +1,6 @@
 package com.sos.joc.event;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.time.Instant;
@@ -95,9 +96,19 @@ public class EventBus {
                         try {
                             method.invoke(listener, evt);
                         } catch (IllegalAccessException e) {
-                            LOGGER.warn(String.format("EventBus tried to invoke method '%s' of listener '%s' but it is not 'public: %s'", method.getName(), listener.getClass().getName(), e.toString()));
+                            LOGGER.warn(String.format("EventBus tried to invoke method '%s' of listener '%s' but it is not 'public: %s'", method
+                                    .getName(), listener.getClass().getName(), e.toString()));
+                        } catch (InvocationTargetException e) {
+                            if (e.getCause() != null) {
+                                LOGGER.warn(String.format("EventBus tried to invoke method '%s' of listener '%s' caused by '%s': %s", method
+                                        .getName(), listener.getClass().getName(), evt.getClass().getSimpleName(), e.getCause().toString()));
+                            } else {
+                                LOGGER.warn(String.format("EventBus tried to invoke method '%s' of listener '%s' caused by '%s': %s", method
+                                        .getName(), listener.getClass().getName(), evt.getClass().getSimpleName(), e.toString()));
+                            }
                         } catch (Exception e) {
-                            LOGGER.warn(String.format("EventBus tried to invoke method '%s' of listener '%s': %s", method.getName(), listener.getClass().getName(), e.toString()));
+                            LOGGER.warn(String.format("EventBus tried to invoke method '%s' of listener '%s' caused by '%s': %s", method.getName(),
+                                    listener.getClass().getName(), evt.getClass().getSimpleName(), e.toString()));
                         }
                     }, threadNamePrefix + threadNameSuffix.incrementAndGet()).start();
                 }

@@ -223,7 +223,7 @@ public class ProxyContext {
 
     private String getLastErrorMessage(String defaultMessage) {
         if (lastProblem.isPresent()) {
-            return lastProblem.get().messageWithCause();
+            return lastProblem.get().message(); //messageWithCause();
         }
         return defaultMessage;
     }

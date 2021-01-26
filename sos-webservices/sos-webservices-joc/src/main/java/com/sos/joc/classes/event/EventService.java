@@ -121,11 +121,13 @@ public class EventService {
     public void doSomethingWithEvent(ProxyEvent evt) throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException,
             DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
             ExecutionException {
-        if (evt.getControllerId().equals(controllerId) && evt.getKey().equals(ProxyUser.JOC.name())) {
-            evtBus.close();
-            if (evt instanceof ProxyRestarted) {
-                evtBus = Proxy.of(controllerId).controllerEventBus();
-                evtBus.subscribe(eventsOfController, callbackOfController);
+        if (evt.getControllerId().equals(controllerId) && ProxyUser.JOC.name().equals(evt.getKey())) {
+            if (evtBus != null) {
+                evtBus.close();
+                if (evt instanceof ProxyRestarted) {
+                    evtBus = Proxy.of(controllerId).controllerEventBus();
+                    evtBus.subscribe(eventsOfController, callbackOfController);
+                }
             }
         }
     }
