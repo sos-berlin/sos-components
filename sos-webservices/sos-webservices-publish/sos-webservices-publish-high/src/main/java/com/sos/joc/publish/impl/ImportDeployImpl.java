@@ -7,7 +7,6 @@ import java.nio.file.Paths;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -57,8 +56,8 @@ import com.sos.joc.model.inventory.lock.LockPublish;
 import com.sos.joc.model.inventory.workflow.WorkflowPublish;
 import com.sos.joc.model.joc.JocMetaInfo;
 import com.sos.joc.model.publish.ArchiveFormat;
-import com.sos.joc.model.publish.ImportDeployFilter;
 import com.sos.joc.model.publish.ControllerObject;
+import com.sos.joc.model.publish.ImportDeployFilter;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.sign.SignaturePath;
 import com.sos.joc.publish.db.DBLayerDeploy;
@@ -313,7 +312,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                  if (verifiedConfigurations != null && !verifiedConfigurations.isEmpty()) {
                     deployedObjects.addAll(PublishUtils.cloneInvConfigurationsToDepHistoryItems(
                         verifiedConfigurations, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
-                    PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), null, controllerId, dbLayer);
+                    PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet(), controllerId, dbLayer);
                 }
                 if (verifiedReDeployables != null && !verifiedReDeployables.isEmpty()) {
                     deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(
@@ -395,20 +394,20 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
         }
     }
     
-    private void createAuditLogForEach(Collection<DBItemDeploymentHistory> depHistoryEntries, ImportDeployFilter filter, String controllerId,
-            boolean update, String commitId, String account) {
-        final Set<ImportDeployAudit> audits = new HashSet<ImportDeployAudit>();
-        audits.addAll(depHistoryEntries.stream().map(item -> { 
-            if (update) {
-                return new ImportDeployAudit(filter, update, controllerId, commitId, item.getId(),
-                        item.getPath(), String.format("object %1$s updated on controller %2$s", item.getPath(), controllerId), account);
-            } else {
-                return new ImportDeployAudit(filter, update, controllerId, commitId, item.getId(),
-                        item.getPath(), String.format("object %1$s deleted from controller %2$s", item.getPath(), controllerId), account);
-            }
-        }).collect(Collectors.toSet()));
-        audits.stream().forEach(audit -> logAuditMessage(audit));
-        audits.stream().forEach(audit -> storeAuditLogEntry(audit));
-    }
-
+//    private void createAuditLogForEach(Collection<DBItemDeploymentHistory> depHistoryEntries, ImportDeployFilter filter, String controllerId,
+//            boolean update, String commitId, String account) {
+//        final Set<ImportDeployAudit> audits = new HashSet<ImportDeployAudit>();
+//        audits.addAll(depHistoryEntries.stream().map(item -> { 
+//            if (update) {
+//                return new ImportDeployAudit(filter, update, controllerId, commitId, item.getId(),
+//                        item.getPath(), String.format("object %1$s updated on controller %2$s", item.getPath(), controllerId), account);
+//            } else {
+//                return new ImportDeployAudit(filter, update, controllerId, commitId, item.getId(),
+//                        item.getPath(), String.format("object %1$s deleted from controller %2$s", item.getPath(), controllerId), account);
+//            }
+//        }).collect(Collectors.toSet()));
+//        audits.stream().forEach(audit -> logAuditMessage(audit));
+//        audits.stream().forEach(audit -> storeAuditLogEntry(audit));
+//    }
+//
 }

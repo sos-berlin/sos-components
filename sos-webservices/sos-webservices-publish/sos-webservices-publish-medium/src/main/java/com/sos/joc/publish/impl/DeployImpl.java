@@ -48,6 +48,7 @@ import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.publish.db.DBLayerDeploy;
+import com.sos.joc.publish.mapper.DbItemConfWithOriginalContent;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.joc.publish.resource.IDeploy;
 import com.sos.joc.publish.util.PublishUtils;
@@ -110,6 +111,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 }
                 configurationDBItemsToStore.addAll(PublishUtils.getValidDeployableInventoryConfigurationsfromFolders(draftFoldersToStore, dbLayer));
             }
+            final Set<DbItemConfWithOriginalContent> cfgsDBItemsToStore = configurationDBItemsToStore.stream()
+                    .map(item -> new DbItemConfWithOriginalContent(item, item.getContent())).filter(Objects::nonNull).collect(Collectors.toSet());
             List<DBItemDeploymentHistory> depHistoryDBItemsToStore = null;
             if (!deployConfigsToStoreAgain.isEmpty()) {
                 depHistoryDBItemsToStore = dbLayer.getFilteredDeploymentHistory(deployConfigsToStoreAgain);
@@ -121,7 +124,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 depHistoryDBItemsToStore.addAll(PublishUtils.getLatestActiveDepHistoryEntriesFromFolders(deployFoldersToStoreAgain, dbLayer));
             }
             List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete = null;
-            if (!deployConfigsToDelete.isEmpty()) {
+            if (deployConfigsToDelete != null && !deployConfigsToDelete.isEmpty()) {
                 depHistoryDBItemsToDeployDelete = dbLayer.getFilteredDeploymentHistoryToDelete(deployConfigsToDelete);
             }
 
@@ -216,7 +219,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         PublishUtils.updateItemsAddOrUpdatePGP(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId, 
                                 dbLayer).thenAccept(either -> {
                                     processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account, 
-                                            versionIdForUpdate, controllerId, deployFilter);
+                                            versionIdForUpdate, controllerId, deployFilter, cfgsDBItemsToStore);
                         });//.get();
                         break;
                     case SOSKeyConstants.RSA_ALGORITHM_NAME:
@@ -225,7 +228,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         PublishUtils.updateItemsAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
                                 dbLayer,SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
                                     processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account, 
-                                            versionIdForUpdate, controllerId, deployFilter);
+                                            versionIdForUpdate, controllerId, deployFilter, cfgsDBItemsToStore);
                         });//.get();
                         break;
                     case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
@@ -234,7 +237,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         PublishUtils.updateItemsAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
                                 dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
                                     processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account, 
-                                            versionIdForUpdate, controllerId, deployFilter);
+                                            versionIdForUpdate, controllerId, deployFilter, cfgsDBItemsToStore);
                         });//.get();
                         break;
                     }
@@ -334,7 +337,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             String account,
             String versionIdForUpdate,
             String controllerId,
-            DeployFilter deployFilter) {
+            DeployFilter deployFilter,
+            Set<DbItemConfWithOriginalContent> cfgsDBItemsToStore) {
         // First create a new db session as the session of the parent web service can already been closed
         SOSHibernateSession newHibernateSession = null;
         try {
@@ -348,7 +352,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     deployedObjects.addAll(PublishUtils.cloneInvConfigurationsToDepHistoryItems(verifiedConfigurations,
                         updateableAgentNames, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
                     PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet().stream().collect(Collectors.toSet()),
-                            updateableAgentNames, controllerId, dbLayer.getSession());
+                            cfgsDBItemsToStore, controllerId, dbLayer.getSession());
                 }
                 if (verifiedReDeployables != null && !verifiedReDeployables.isEmpty()) {
                     deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(verifiedReDeployables, account, dbLayer, versionIdForUpdate,
