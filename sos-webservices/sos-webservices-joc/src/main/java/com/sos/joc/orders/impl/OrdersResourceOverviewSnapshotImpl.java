@@ -183,7 +183,12 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
     }
 
     private static boolean orderIsPermitted(String orderPath, Set<Folder> listOfFolders) {
-        return folderIsPermitted(Paths.get(orderPath).getParent().toString().replace('\\', '/'), listOfFolders);
+        // TODO order.workflowId().path().string() is only a name
+        return true;
+//      if (listOfFolders == null || listOfFolders.isEmpty()) {
+//      return true;
+//  }
+//      return folderIsPermitted(Paths.get(order.workflowId().path().string()).getParent().toString().replace('\\', '/'), listOfFolders);
     }
 
     private static boolean folderIsPermitted(String folder, Set<Folder> listOfFolders) {

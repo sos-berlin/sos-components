@@ -1,14 +1,12 @@
 package com.sos.joc.orders.impl;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -253,17 +251,19 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 //    }
     
     private static boolean orderIsPermitted(Order<Order.State> order, Set<Folder> listOfFolders) {
-        if (listOfFolders == null || listOfFolders.isEmpty()) {
-            return true;
-        }
-        return folderIsPermitted(Paths.get(order.workflowId().path().string()).getParent().toString().replace('\\', '/'), listOfFolders);
+        // TODO order.workflowId().path().string() is only a name
+        return true;
+//        if (listOfFolders == null || listOfFolders.isEmpty()) {
+//            return true;
+//        }
+//        return folderIsPermitted(Paths.get(order.workflowId().path().string()).getParent().toString().replace('\\', '/'), listOfFolders);
     }
     
-    private static boolean folderIsPermitted(String folder, Set<Folder> listOfFolders) {
-        Predicate<Folder> filter = f -> f.getFolder().equals(folder) || (f.getRecursive() && ("/".equals(f.getFolder()) || folder.startsWith(f
-                .getFolder() + "/")));
-        return listOfFolders.stream().parallel().anyMatch(filter);
-    }
+//    private static boolean folderIsPermitted(String folder, Set<Folder> listOfFolders) {
+//        Predicate<Folder> filter = f -> f.getFolder().equals(folder) || (f.getRecursive() && ("/".equals(f.getFolder()) || folder.startsWith(f
+//                .getFolder() + "/")));
+//        return listOfFolders.stream().parallel().anyMatch(filter);
+//    }
     
     private ModifyOrders initRequest(Action action, String accessToken, byte[] filterBytes) throws SOSJsonSchemaException, IOException {
         initLogging(API_CALL + "/" + action.name().toLowerCase(), filterBytes, accessToken);
