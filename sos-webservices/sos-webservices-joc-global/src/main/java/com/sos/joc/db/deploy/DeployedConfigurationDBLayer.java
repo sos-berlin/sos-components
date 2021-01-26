@@ -170,6 +170,28 @@ public class DeployedConfigurationDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
+    
+    public Map<String, String> getNamePathMapping(Collection<String> names, Integer type) throws SOSHibernateException {
+        if (names == null || names.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        StringBuilder hql = new StringBuilder("select path, name from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
+        hql.append(" where name in (:names)");
+        if (type != null) {
+            hql.append(" and type=:type");
+        }
+        Query<String[]> query = session.createQuery(hql.toString());
+        query.setParameterList("names", names);
+        if (type != null) {
+            query.setParameter("type", type);
+        }
+        
+        List<String[]> result = session.getResultList(query);
+        if (result != null) {
+            return result.stream().collect(Collectors.toMap(item -> item[1], item -> item[0]));
+        }
+        return Collections.emptyMap();
+    }
 
     public Set<Tree> getFoldersByFolderAndType(String controllerId, String folderName, Collection<Integer> types) throws DBConnectionRefusedException,
             DBInvalidDataException {

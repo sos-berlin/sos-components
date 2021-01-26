@@ -54,7 +54,7 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
                 DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
                 final Map<String, String> namePathMap = dbLayer.getNamePathMapping(Arrays.asList(jOrder.workflowId().path().toString()),
                         DeployType.WORKFLOW.intValue());
-                //checkFolderPermissions(optional.get().workflowId().path().string());
+                //checkFolderPermissions(optional.get().workflowId().path().string()); is only a name
                 return JOCDefaultResponse.responseStatus200(OrdersHelper.mapJOrderToOrderV(optional.get(), orderFilter.getCompact(), namePathMap, surveyDateMillis,
                         true));
             } else {

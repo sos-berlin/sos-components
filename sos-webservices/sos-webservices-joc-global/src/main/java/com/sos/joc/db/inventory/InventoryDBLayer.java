@@ -544,8 +544,7 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
     
-    public Map<String, String> getNamePathMapping(Collection<String> names, Integer type)
-            throws SOSHibernateException {
+    public Map<String, String> getNamePathMapping(Collection<String> names, Integer type) throws SOSHibernateException {
         if (names == null || names.isEmpty()) {
             return Collections.emptyMap();
         }

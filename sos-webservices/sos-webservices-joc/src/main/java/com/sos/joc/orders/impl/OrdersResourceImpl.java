@@ -1,6 +1,5 @@
 package com.sos.joc.orders.impl;
 
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
@@ -156,16 +155,18 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
     }
     
     private static boolean orderIsPermitted(Order<Order.State> order, Set<Folder> listOfFolders) {
-        if (listOfFolders == null || listOfFolders.isEmpty()) {
-            return true;
-        }
-        return folderIsPermitted(Paths.get(order.workflowId().path().string()).getParent().toString().replace('\\', '/'), listOfFolders);
+        return true;
+        // TODO order.workflowId().path().string() is only a name
+//        if (listOfFolders == null || listOfFolders.isEmpty()) {
+//            return true;
+//        }
+//        return folderIsPermitted(Paths.get(order.workflowId().path().string()).getParent().toString().replace('\\', '/'), listOfFolders);
     }
     
-    private static boolean folderIsPermitted(String folder, Set<Folder> listOfFolders) {
-        Predicate<Folder> filter = f -> f.getFolder().equals(folder) || (f.getRecursive() && ("/".equals(f.getFolder()) || folder.startsWith(f
-                .getFolder() + "/")));
-        return listOfFolders.stream().parallel().anyMatch(filter);
-    }
+//    private static boolean folderIsPermitted(String folder, Set<Folder> listOfFolders) {
+//        Predicate<Folder> filter = f -> f.getFolder().equals(folder) || (f.getRecursive() && ("/".equals(f.getFolder()) || folder.startsWith(f
+//                .getFolder() + "/")));
+//        return listOfFolders.stream().parallel().anyMatch(filter);
+//    }
 
 }
