@@ -4,6 +4,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -13,12 +14,16 @@ import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.workflow.WorkflowId;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.OrdersHelper;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderStateText;
@@ -44,6 +49,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
 
     @Override
     public JOCDefaultResponse postOrders(String accessToken, byte[] filterBytes) {
+        SOSHibernateSession session = null;
 		try {
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrdersFilterV.class);
@@ -66,7 +72,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()) && orderIsPermitted(o, folders));
             } else if (workflowIds != null && !workflowIds.isEmpty()) {
                 ordersFilter.setRegex(null);
-                Set<VersionedItemId<WorkflowPath>> workflowPaths = workflowIds.stream().map(w -> JWorkflowId.of(w.getPath(), w.getVersionId()).asScala())
+                Set<VersionedItemId<WorkflowPath>> workflowPaths = workflowIds.stream().map(w -> JWorkflowId.of(JocInventory.pathToName(w.getPath()), w.getVersionId()).asScala())
                         .collect(Collectors.toSet());
                 orderStream = currentState.ordersBy(o -> workflowPaths.contains(o.workflowId()) && orderIsPermitted(o, folders));
             } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
@@ -104,14 +110,22 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 orderStream = orderStream.filter(o -> regex.test(o.workflowId().path().string() + "/" + o.id().string()));
             }
             
+            List<JOrder> jOrders = orderStream.collect(Collectors.toList());
+            
             Long surveyDateMillis = currentState.eventId() / 1000;
             
             OrdersV entity = new OrdersV();
             entity.setSurveyDate(Date.from(Instant.ofEpochMilli(surveyDateMillis)));
-            Stream<Either<Exception, OrderV>> ordersV = orderStream.map(o -> {
+            // Path of name from db
+            session = Globals.createSosHibernateStatelessConnection(API_CALL);
+            DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
+            Set<String> names = jOrders.stream().map(o -> o.workflowId().path().string()).collect(Collectors.toSet());
+            final Map<String, String> namePathMap = dbLayer.getNamePathMapping(names, DeployType.WORKFLOW.intValue());
+            
+            Stream<Either<Exception, OrderV>> ordersV = jOrders.stream().map(o -> {
                 Either<Exception, OrderV> either = null;
                 try {
-                    OrderV order = OrdersHelper.mapJOrderToOrderV(o, ordersFilter.getCompact(), surveyDateMillis, false);
+                    OrderV order = OrdersHelper.mapJOrderToOrderV(o, ordersFilter.getCompact(), namePathMap, surveyDateMillis, false);
                     // special BLOCKED handling
                     if (withStatesFilter) {
                        if (lookingForBlocked && !lookingForPending && OrderStateText.PENDING.equals(order.getState().get_text())) {
@@ -136,6 +150,8 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(session);
         }
     }
     

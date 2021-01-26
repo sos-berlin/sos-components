@@ -9,12 +9,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.IAgentsResourceState;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -22,6 +24,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
@@ -77,6 +80,9 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             }
 
             //checkRequiredParameter("controllerId", controllerId);
+            
+//            Set<String> names = jOrders.stream().map(o -> o.workflowId().path().string()).collect(Collectors.toSet());
+//            final Map<String, String> namePathMap = dbLayer.getNamePathMapping(names, DeployType.WORKFLOW.intValue());
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
@@ -102,9 +108,13 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                         ordersCountPerAgent.putAll(jOrderStream.collect(Collectors.groupingBy(o -> o.attached().get().string(), Collectors.reducing(0,
                                 o -> 1, Integer::sum))));
                     } else {
-                        ordersPerAgent.putAll(jOrderStream.map(o -> {
+                        List<JOrder> jOrders = jOrderStream.collect(Collectors.toList());
+                        DeployedConfigurationDBLayer dbCLayer = new DeployedConfigurationDBLayer(connection);
+                        Set<String> names = jOrders.stream().map(o -> o.workflowId().path().string()).collect(Collectors.toSet());
+                        final Map<String, String> namePathMap = dbCLayer.getNamePathMapping(names, DeployType.WORKFLOW.intValue());
+                        ordersPerAgent.putAll(jOrders.stream().map(o -> {
                             try {
-                                return OrdersHelper.mapJOrderToOrderV(o, false, null, false);
+                                return OrdersHelper.mapJOrderToOrderV(o, false, namePathMap, null, false);
                             } catch (Exception e) {
                                 return null;
                             }

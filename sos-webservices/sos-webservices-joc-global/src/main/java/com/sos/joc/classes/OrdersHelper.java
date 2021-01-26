@@ -12,6 +12,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.controller.model.order.OrderItem;
 import com.sos.controller.model.workflow.HistoricOutcome;
+import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.Globals;
 import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.model.order.OrderState;
@@ -142,8 +143,8 @@ public class OrdersHelper {
         return state;
     }
 
-    public static OrderV mapJOrderToOrderV(JOrder jOrder, Boolean compact, Long surveyDateMillis, boolean withDates) throws JsonParseException,
-            JsonMappingException, IOException {
+    public static OrderV mapJOrderToOrderV(JOrder jOrder, Boolean compact, Map<String, String> namePathMap, Long surveyDateMillis, boolean withDates)
+            throws JsonParseException, JsonMappingException, IOException {
         // TODO mapping without ObjectMapper
         OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
         OrderV o = new OrderV();
@@ -169,7 +170,13 @@ public class OrdersHelper {
             o.setState(getState(oItem.getState().getTYPE(), oItem.getIsSuspended()));
         }
         o.setScheduledFor(scheduledFor);
-        o.setWorkflowId(oItem.getWorkflowPosition().getWorkflowId());
+        if (namePathMap != null) {
+            WorkflowId wId = oItem.getWorkflowPosition().getWorkflowId();
+            wId.setPath(namePathMap.getOrDefault(wId.getPath(), wId.getPath()));
+            o.setWorkflowId(wId);
+        } else {
+            o.setWorkflowId(oItem.getWorkflowPosition().getWorkflowId());
+        }
         if (withDates && surveyDateMillis != null) {
             o.setSurveyDate(Date.from(Instant.ofEpochMilli(surveyDateMillis)));
             o.setDeliveryDate(Date.from(Instant.now()));

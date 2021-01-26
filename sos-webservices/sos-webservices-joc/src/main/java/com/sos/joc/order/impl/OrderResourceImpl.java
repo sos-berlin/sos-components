@@ -1,14 +1,21 @@
 package com.sos.joc.order.impl;
 
+import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
+import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.exceptions.JobSchedulerObjectNotExistException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.order.OrderFilter;
@@ -26,6 +33,7 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
 
     @Override
     public JOCDefaultResponse postOrder(String accessToken, byte[] filterBytes) {
+        SOSHibernateSession session = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrderFilter.class);
@@ -41,8 +49,13 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
             Optional<JOrder> optional = currentState.idToOrder(OrderId.of(orderFilter.getOrderId()));
             
             if (optional.isPresent()) {
-                checkFolderPermissions(optional.get().workflowId().path().string());
-                return JOCDefaultResponse.responseStatus200(OrdersHelper.mapJOrderToOrderV(optional.get(), orderFilter.getCompact(), surveyDateMillis,
+                JOrder jOrder = optional.get();
+                session = Globals.createSosHibernateStatelessConnection(API_CALL);
+                DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
+                final Map<String, String> namePathMap = dbLayer.getNamePathMapping(Arrays.asList(jOrder.workflowId().path().toString()),
+                        DeployType.WORKFLOW.intValue());
+                //checkFolderPermissions(optional.get().workflowId().path().string());
+                return JOCDefaultResponse.responseStatus200(OrdersHelper.mapJOrderToOrderV(optional.get(), orderFilter.getCompact(), namePathMap, surveyDateMillis,
                         true));
             } else {
                 throw new JobSchedulerObjectNotExistException(String.format("unknown Order '%s'", orderFilter.getOrderId()));
@@ -53,6 +66,8 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(session);
         }
     }
 

@@ -15,6 +15,7 @@ import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
@@ -25,7 +26,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
@@ -95,13 +95,13 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                     deployables.addAll(getResponseStreamOfDeletedItem(dbLayer.getDeletedConfigurations(deployableTypes, in.getFolder(), in
                             .getRecursive(), deletedFolders), folders, permittedFolders));
                 }
-                if (!in.getWithoutDrafts() || !in.getWithoutDeployed()) {
+                //if (!in.getWithoutDrafts() || !in.getWithoutDeployed()) {
                     deployables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurationsWithAllDeployments(notDeletedIds), in
                             .getOnlyValidObjects(), permittedFolders, in.getWithoutDrafts(), in.getWithoutDeployed(), in.getLatest()));
-                } else {
-                    deployables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurationsWithMaxDeployment(notDeletedIds), in
-                            .getOnlyValidObjects(), permittedFolders));
-                }
+//                } else {
+//                    deployables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurationsWithMaxDeployment(notDeletedIds), in
+//                            .getOnlyValidObjects(), permittedFolders));
+//                }
             }
             ResponseDeployables result = new ResponseDeployables();
             result.setDeliveryDate(Date.from(Instant.now()));
@@ -151,6 +151,26 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
     private Set<ResponseDeployableTreeItem> getResponseStreamOfNotDeletedItem(Map<DBItemInventoryConfiguration, Set<InventoryDeploymentItem>> map,
             Boolean onlyValidObjects, Set<Folder> permittedFolders, Boolean withoutDrafts, Boolean withoutDeployed, Boolean onlyLatest) {
         if (map != null) {
+            Stream<DBItemInventoryConfiguration> toRemoveStream = null;
+            if (withoutDrafts) {  // contains only drafts which are already deployed
+                toRemoveStream = map.entrySet().stream().filter(entry -> ConfigurationType.FOLDER.intValue() != entry
+                        .getKey().getType() && !(entry.getValue() == null || entry.getValue().isEmpty())).map(entry -> entry.getKey());
+            }
+            if (withoutDeployed) {
+                toRemoveStream = map.entrySet().stream().filter(entry -> ConfigurationType.FOLDER.intValue() != entry.getKey().getType() && entry
+                        .getKey().getDeployed()).filter(entry -> onlyValidObjects && !(entry.getValue() != null && entry.getValue().iterator()
+                                .next() != null) && !entry.getKey().getValid()).map(entry -> entry.getKey());
+            } else {
+                toRemoveStream = map.entrySet().stream().filter(entry -> onlyValidObjects && !(entry.getValue() != null && entry.getValue().iterator()
+                        .next() != null) && !(entry.getValue() == null || entry.getValue().isEmpty()) && !entry.getKey().getValid()).map(
+                                entry -> entry.getKey());
+            }
+            if (toRemoveStream != null) {
+                for (DBItemInventoryConfiguration toRemove : toRemoveStream.collect(Collectors.toSet())) {
+                    map.remove(toRemove);
+                }
+            }
+            
             final Set<String> paths = map.keySet().stream().filter(item -> ConfigurationType.FOLDER.intValue() != item.getType()).map(item -> item
                     .getPath()).collect(Collectors.toSet());
             Predicate<Map.Entry<DBItemInventoryConfiguration, Set<InventoryDeploymentItem>>> folderIsNotEmpty = entry -> {
@@ -162,7 +182,8 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             };
             return map.entrySet().stream()
                     .filter(folderIsNotEmpty)
-                    .filter(entry -> !onlyValidObjects || (entry.getValue() != null && entry.getValue().iterator().next() != null) || entry.getKey().getValid())
+                    //.filter(entry -> withoutDeployed && !entry.getKey().getDeployed())
+                    //.filter(entry -> !onlyValidObjects || (entry.getValue() != null && entry.getValue().iterator().next() != null) || entry.getKey().getValid())
                     .filter(entry -> folderIsPermitted(entry.getKey().getFolder(), permittedFolders))
                     .map(entry -> {
                         DBItemInventoryConfiguration conf = entry.getKey();
@@ -195,28 +216,28 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
         }
     }
     
-    private Set<ResponseDeployableTreeItem> getResponseStreamOfNotDeletedItem(List<InventoryDeployablesTreeFolderItem> list,
-            Boolean onlyValidObjects, Set<Folder> permittedFolders) {
-        if (list != null) {
-            final Set<String> paths = list.stream().filter(item -> ConfigurationType.FOLDER.intValue() != item.getType()).map(item -> item
-                    .getConfiguration().getPath()).collect(Collectors.toSet());
-            Predicate<InventoryDeployablesTreeFolderItem> folderIsNotEmpty = item -> {
-                if (ConfigurationType.FOLDER.intValue() != item.getConfiguration().getType()) {
-                    return true;
-                } else {
-                    return folderIsNotEmpty(item.getConfiguration().getPath(), paths);
-                }
-            };
-            return list.stream()
-                    .filter(folderIsNotEmpty)
-                    .filter(item -> !onlyValidObjects || item.getDeployment() != null || item.getConfiguration().getValid())
-                    .filter(item -> folderIsPermitted(item.getConfiguration().getFolder(), permittedFolders))
-                    .map(item -> DeployableResourceImpl.getResponseDeployableTreeItem(item.getConfiguration()))
-                    .collect(Collectors.toSet());
-        } else {
-            return Collections.emptySet();
-        }
-    }
+//    private Set<ResponseDeployableTreeItem> getResponseStreamOfNotDeletedItem(List<InventoryDeployablesTreeFolderItem> list,
+//            Boolean onlyValidObjects, Set<Folder> permittedFolders) {
+//        if (list != null) {
+//            final Set<String> paths = list.stream().filter(item -> ConfigurationType.FOLDER.intValue() != item.getType()).map(item -> item
+//                    .getConfiguration().getPath()).collect(Collectors.toSet());
+//            Predicate<InventoryDeployablesTreeFolderItem> folderIsNotEmpty = item -> {
+//                if (ConfigurationType.FOLDER.intValue() != item.getConfiguration().getType()) {
+//                    return true;
+//                } else {
+//                    return folderIsNotEmpty(item.getConfiguration().getPath(), paths);
+//                }
+//            };
+//            return list.stream()
+//                    .filter(folderIsNotEmpty)
+//                    .filter(item -> !onlyValidObjects || item.getDeployment() != null || item.getConfiguration().getValid())
+//                    .filter(item -> folderIsPermitted(item.getConfiguration().getFolder(), permittedFolders))
+//                    .map(item -> DeployableResourceImpl.getResponseDeployableTreeItem(item.getConfiguration()))
+//                    .collect(Collectors.toSet());
+//        } else {
+//            return Collections.emptySet();
+//        }
+//    }
     
     private static boolean folderIsNotEmpty(String folder, Set<String> paths) {
         Predicate<String> filter = f -> f.startsWith((folder + "/").replaceAll("//+", "/"));
