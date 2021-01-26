@@ -1,2 +1,9 @@
 /target/
-/src/main/resources/
+/src/main/resources/raml/api/
+/src/main/resources/raml/controller/
+/src/main/resources/raml/inventory/
+/src/main/resources/raml/*.raml
+/src/main/resources/*.json
+/src/main/resources/com/sos/controller/
+/src/main/resources/com/sos/inventory/
+/src/main/resources/com/sos/joc/

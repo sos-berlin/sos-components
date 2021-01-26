@@ -23,6 +23,7 @@
 					<include>raml/api/schemas/**</include>
 					<include>raml/controller/schemas/**</include>
 					<include>raml/inventory/schemas/**</include>
+					<include>raml/sign/schemas/**</include>
 				</includes>
 			</resource>
 		</resources>
@@ -33,9 +34,9 @@
           <filesets>
             <fileset>
               <directory>${project.basedir}/src/main/resources</directory>
-              <includes>
-                <include>**/*</include>
-              </includes>
+              <excludes>
+                <exclude>**/sign/**</exclude>
+              </excludes>
               <followSymlinks>false</followSymlinks>
             </fileset>
           </filesets>
@@ -196,6 +197,32 @@
 						<configuration>
 							<sourceDirectory>${basedir}/src/main/resources/raml/inventory/schemas</sourceDirectory>
 							<targetPackage>com.sos.inventory.model</targetPackage>
+							<removeOldOutput>false</removeOldOutput>
+							<annotationStyle>jackson2</annotationStyle>
+							<propertyWordDelimiters>- </propertyWordDelimiters>
+							<includeAdditionalProperties>true</includeAdditionalProperties>
+							<initializeCollections>false</initializeCollections>
+							<!-- constructorsRequiredPropertiesOnly>true</constructorsRequiredPropertiesOnly -->
+							<includeConstructors>true</includeConstructors>
+							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
+							<addCompileSourceRoot>false</addCompileSourceRoot>
+							<includes>
+								<include>**/*.json</include>
+							</includes>
+							<excludes>
+								<exclude>**/workflowJobs-schema.json</exclude>
+							</excludes>
+						</configuration>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>generate-sign-model</id>
+						<phase>generate-sources</phase>
+						<configuration>
+							<sourceDirectory>${basedir}/src/main/resources/raml/sign/schemas</sourceDirectory>
+							<targetPackage>com.sos.sign.model</targetPackage>
 							<removeOldOutput>false</removeOldOutput>
 							<annotationStyle>jackson2</annotationStyle>
 							<propertyWordDelimiters>- </propertyWordDelimiters>

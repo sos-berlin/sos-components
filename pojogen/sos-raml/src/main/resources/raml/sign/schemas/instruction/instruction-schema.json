@@ -1,0 +1,15 @@
+{
+  "title": "abstract instruction",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.instruction.Instruction",
+  "type": "object",
+  "required": [
+    "TYPE"
+  ],
+  "properties": {
+    "TYPE": {
+      "$ref": "../../../inventory/schemas/instruction/instructionType-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

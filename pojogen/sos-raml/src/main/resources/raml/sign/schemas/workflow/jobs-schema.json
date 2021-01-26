@@ -1,0 +1,9 @@
+{
+  "title": "workflow jobs",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.workflow.Jobs",
+  "type": "object",
+  "additionalProperties": {
+  	"$ref": "../job/job-schema.json"
+  }
+}

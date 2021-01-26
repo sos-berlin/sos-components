@@ -1,0 +1,41 @@
+{
+  "title": "retry",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.instruction.RetryCatch",
+  "type": "object",
+  "required": [
+  	"try",
+  	"catch"
+  ],
+  "extends" : {
+    "$ref": "instruction-schema.json"
+  },
+  "propertyOrder": [
+  	"TYPE",
+    "maxTries",
+  	"retryDelays",
+  	"try",
+  	"catch"
+  ],
+  
+  "description": "instruction with fixed property 'TYPE':'Try' (with a retry object in the catch)",
+  "properties": {
+    "maxTries": {
+      "$ref": "../../../inventory/schemas/common/nonNegativeInteger-schema.json",
+      "default": 1
+    },
+    "retryDelays": {
+      "type": "array",
+      "items": {
+        "$ref": "../../../inventory/schemas/common/nonNegativeInteger-schema.json"
+      }
+    },
+    "try": {
+      "$ref": "instructions-schema.json"
+    },
+  	"catch": {
+  	  "$ref": "optionalInstructions-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

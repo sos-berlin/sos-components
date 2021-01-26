@@ -1,0 +1,29 @@
+{
+  "title": "job",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.instruction.NamedJob",
+  "type": "object",
+  "required": [
+  	"jobName",
+  	"label"
+  ],
+  "extends" : {
+    "$ref": "instruction-schema.json"
+  },
+  
+  "description": "instruction with fixed property 'TYPE':'Execute.Named'",
+  "properties": {
+  	"jobName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1
+    },
+    "defaultArguments": {
+      "$ref": "../../../inventory/schemas/common/variables-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,28 @@
+{
+  "title": "if",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.instruction.IfElse",
+  "type": "object",
+  "required": [
+  	"predicate",
+  	"then"
+  ],
+  "extends" : {
+    "$ref": "instruction-schema.json"
+  },
+  
+  "description": "instruction with fixed property 'TYPE':'If'",
+  "properties": {
+  	"predicate": {
+      "type": "string",
+      "minLength": 1
+    },
+    "then": {
+      "$ref": "instructions-schema.json"
+    },
+    "else": {
+      "$ref": "optionalInstructions-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

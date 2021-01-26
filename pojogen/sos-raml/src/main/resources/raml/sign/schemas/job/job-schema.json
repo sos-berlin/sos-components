@@ -1,0 +1,43 @@
+{
+  "title": "job",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.job.Job",
+  "type": "object",
+  "required": [
+    "agentId",
+    "executable",
+    "taskLimit"
+  ],
+  "properties": {
+    "agentId": {
+	  "$ref": "../../../inventory/schemas/common/string255-schema.json"
+	},
+	"executable": {
+	  "$ref": "../../../inventory/schemas/job/executableScript-schema.json"
+	},
+    "returnCodeMeaning": {
+      "$ref": "../../../inventory/schemas/job/jobReturnCode-schema.json"
+    },
+    "taskLimit": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 1
+    },
+    "timeout": {
+      "$ref": "../../../inventory/schemas/common/nonNegativeInteger-schema.json"
+    },
+    "graceTimeout": {
+      "$ref": "../../../inventory/schemas/common/nonNegativeInteger-schema.json"
+    },
+    "jobClass": {
+      "$ref": "../../../inventory/schemas/common/path-schema.json"
+    },
+    "defaultArguments": {
+      "$ref": "../../../inventory/schemas/common/variables-schema.json"
+    },
+    "env": {
+      "$ref": "../../../inventory/schemas/job/env-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

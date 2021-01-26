@@ -1,0 +1,45 @@
+{
+  "title": "jobClass",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.jobclass.JobClass",
+  "type": "object",
+  "javaInterfaces" : [
+    "com.sos.joc.model.common.IDeployObject"
+  ],
+  "required": [
+  	"TYPE",
+    "path",
+    "versionId"
+  ], 
+  "propertyOrder": [
+    "TYPE",
+    "path",
+    "versionId",
+    "maxProcesses",
+    "priority"
+  ],
+  
+  
+  "description": "deploy object with fixed property 'TYPE':'jobClass'",
+  "properties": {
+    "TYPE": {
+      "$ref": "../../../inventory/schemas/deploy/deployType-schema.json",
+      "default": "JobClass" 
+    },
+    "path": {
+      "$ref": "../../../inventory/schemas/common/string255-schema.json"
+    },
+    "versionId": {
+      "$ref": "../../../inventory/schemas/common/string255-schema.json"
+    },
+    "maxProcesses": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 30
+    },
+    "priority": {
+      "$ref": "../../../inventory/schemas/common/string100-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,13 @@
+{
+  "title": "implicit retry",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.instruction.RetryInCatch",
+  "type": "object",
+  "extends" : {
+    "$ref": "instruction-schema.json"
+  },
+  
+  "description": "instruction with fixed property 'TYPE':'Retry' (used in catch block of try instruction)",
+  
+  "additionalProperties": false
+}

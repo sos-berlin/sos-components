@@ -1,0 +1,19 @@
+{
+  "title": "instructions",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "javaType": "com.sos.sign.model.instruction.OptionalInstructions",
+  "description": "only for the validation, not used as pojo",
+  "required": [
+    "instructions"
+  ],
+  "properties": {
+    "instructions": {
+      "type": "array",
+      "items": {
+        "$ref": "instruction-schema.json"
+      }
+    }
+  },
+  "additionalProperties": false
+}

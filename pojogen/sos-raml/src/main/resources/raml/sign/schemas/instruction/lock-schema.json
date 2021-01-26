@@ -1,0 +1,27 @@
+{
+  "title": "lock",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.instruction.Lock",
+  "type": "object",
+  "required": [
+  	"lockId",
+  	"lockedWorkflow"
+  ],
+  "extends" : {
+    "$ref": "instruction-schema.json"
+  },
+  
+  "description": "instruction with fixed property 'TYPE':'Lock'",
+  "properties": {
+    "lockId": {
+      "$ref": "../../../inventory/schemas/common/string255-schema.json"
+    },
+    "lockedWorkflow": {
+      "$ref": "instructions-schema.json"
+    },
+    "count": {
+      "$ref": "../../../inventory/schemas/common/nonNegativeInteger-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

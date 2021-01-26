@@ -1,0 +1,21 @@
+{
+  "title": "try catch",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.instruction.TryCatch",
+  "type": "object",
+  "required": [
+  	"try",
+  	"catch"
+  ],
+  "extends" : {
+    "$ref": "retry-schema.json"
+  },
+  
+  "description": "instruction with fixed property 'TYPE':'Try'",
+  "propertyOrder": [
+  	"TYPE",
+    "try",
+  	"catch"
+  ],
+  "additionalProperties": false
+}

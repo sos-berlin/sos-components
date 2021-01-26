@@ -63,15 +63,15 @@ public class JocInventory {
         private static final long serialVersionUID = 1L;
 
         {
-            put(ConfigurationType.WORKINGDAYSCALENDAR, "classpath:/raml/api/schemas/calendar/calendar-schema.json");
-            put(ConfigurationType.NONWORKINGDAYSCALENDAR, "classpath:/raml/api/schemas/calendar/calendar-schema.json");
-            put(ConfigurationType.JOB, "classpath:/raml/controller/schemas/job/job-schema.json");
-            put(ConfigurationType.JOBCLASS, "classpath:/raml/controller/schemas/jobClass/jobClass-schema.json");
-            put(ConfigurationType.JUNCTION, "classpath:/raml/controller/schemas/junction/junction-schema.json");
-            put(ConfigurationType.LOCK, "classpath:/raml/controller/schemas/lock/lock-schema.json");
-            put(ConfigurationType.SCHEDULE, "classpath:/raml/api/schemas/orderManagement/orders/schedule-schema.json");
-            put(ConfigurationType.WORKFLOW, "classpath:/raml/controller/schemas/workflow/workflow-schema.json");
-            put(ConfigurationType.FOLDER, "classpath:/raml/controller/schemas/inventory/folder/folder-schema.json");
+            put(ConfigurationType.WORKINGDAYSCALENDAR, "classpath:/raml/inventory/schemas/calendar/calendar-schema.json");
+            put(ConfigurationType.NONWORKINGDAYSCALENDAR, "classpath:/raml/inventory/schemas/calendar/calendar-schema.json");
+            put(ConfigurationType.JOB, "classpath:/raml/inventory/schemas/job/job-schema.json");
+            put(ConfigurationType.JOBCLASS, "classpath:/raml/inventory/schemas/jobClass/jobClass-schema.json");
+            put(ConfigurationType.JUNCTION, "classpath:/raml/inventory/schemas/junction/junction-schema.json");
+            put(ConfigurationType.LOCK, "classpath:/raml/inventory/schemas/lock/lock-schema.json");
+            put(ConfigurationType.SCHEDULE, "classpath:/raml/inventory/schemas/schedule/schedule-schema.json");
+            put(ConfigurationType.WORKFLOW, "classpath:/raml/inventory/schemas/workflow/workflow-schema.json");
+            put(ConfigurationType.FOLDER, "classpath:/raml/api/schemas/inventory/folder-schema.json");
         }
     });
 
@@ -81,16 +81,16 @@ public class JocInventory {
                 private static final long serialVersionUID = 1L;
 
                 {
-                    // TODO put(InstructionType.AWAIT, "classpath:/raml/controller/schemas/instruction/await-schema.json");
-                    put(InstructionType.EXECUTE_NAMED, "classpath:/raml/controller/schemas/instruction/namedJob-schema.json");
-                    put(InstructionType.FAIL, "classpath:/raml/controller/schemas/instruction/fail-schema.json");
-                    put(InstructionType.FINISH, "classpath:/raml/controller/schemas/instruction/finish-schema.json");
-                    put(InstructionType.FORK, "classpath:/raml/controller/schemas/instruction/forkJoin-schema.json");
-                    put(InstructionType.IF, "classpath:/raml/controller/schemas/instruction/ifelse-schema.json");
-                    put(InstructionType.LOCK, "classpath:/raml/controller/schemas/instruction/lock-schema.json");
-                    // TODO put(InstructionType.PUBLISH, "classpath:/raml/controller/schemas/instruction/publish-schema.json");
-                    put(InstructionType.RETRY, "classpath:/raml/controller/schemas/instruction/retryInCatch-schema.json");
-                    put(InstructionType.TRY, "classpath:/raml/controller/schemas/instruction/retry-schema.json");
+                    // TODO put(InstructionType.AWAIT, "classpath:/raml/inventory/schemas/instruction/await-schema.json");
+                    put(InstructionType.EXECUTE_NAMED, "classpath:/raml/inventory/schemas/instruction/namedJob-schema.json");
+                    put(InstructionType.FAIL, "classpath:/raml/inventory/schemas/instruction/fail-schema.json");
+                    put(InstructionType.FINISH, "classpath:/raml/inventory/schemas/instruction/finish-schema.json");
+                    put(InstructionType.FORK, "classpath:/raml/inventory/schemas/instruction/forkJoin-schema.json");
+                    put(InstructionType.IF, "classpath:/raml/inventory/schemas/instruction/ifelse-schema.json");
+                    put(InstructionType.LOCK, "classpath:/raml/inventory/schemas/instruction/lock-schema.json");
+                    // TODO put(InstructionType.PUBLISH, "classpath:/raml/inventory/schemas/instruction/publish-schema.json");
+                    put(InstructionType.RETRY, "classpath:/raml/inventory/schemas/instruction/retryInCatch-schema.json");
+                    put(InstructionType.TRY, "classpath:/raml/inventory/schemas/instruction/retry-schema.json");
                 }
             });
 
