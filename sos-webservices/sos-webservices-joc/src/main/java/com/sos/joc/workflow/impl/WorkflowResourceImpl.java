@@ -17,6 +17,9 @@ import com.sos.inventory.model.workflow.Branch;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
@@ -24,6 +27,13 @@ import com.sos.joc.model.workflow.Workflow;
 import com.sos.joc.model.workflow.WorkflowFilter;
 import com.sos.joc.workflow.resource.IWorkflowResource;
 import com.sos.schema.JsonValidator;
+
+import io.vavr.control.Either;
+import js7.base.problem.Problem;
+import js7.data.workflow.WorkflowPath;
+import js7.proxy.javaapi.data.controller.JControllerState;
+import js7.proxy.javaapi.data.workflow.JWorkflow;
+import js7.proxy.javaapi.data.workflow.JWorkflowId;
 
 @Path("workflow")
 public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowResource {
@@ -33,7 +43,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
     
     
     @Override
-    public JOCDefaultResponse postWorkflow(String accessToken, byte[] filterBytes) {
+    public JOCDefaultResponse postWorkflowPermanent(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
@@ -74,32 +84,38 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
         }
     }
 
-//    public JOCDefaultResponse postWorkflowVolatile(String accessToken, byte[] filterBytes) {
-//        try {
-//            initLogging(API_CALL, filterBytes, accessToken);
-//            JsonValidator.validateFailFast(filterBytes, OrderFilter.class);
-//            WorkflowFilter workflowFilter = Globals.objectMapper.readValue(filterBytes, WorkflowFilter.class);
-//            JOCDefaultResponse jocDefaultResponse = initPermissions(workflowFilter.getJobschedulerId(),
-//                    getPermissonsJocCockpit(workflowFilter.getJobschedulerId(), accessToken).getOrder().getView().isStatus());
-//            if (jocDefaultResponse != null) {
-//                return jocDefaultResponse;
-//            }
-//
-//            JControllerState currentState = Proxy.of(workflowFilter.getJobschedulerId()).currentState();
-//            // Long surveyDateMillis = currentState.eventId() / 1000;
-//            Either<Problem, JWorkflow> response = currentState.idToWorkflow(JWorkflowId.of(workflowFilter.getWorkflowId().getPath(), workflowFilter
-//                    .getWorkflowId().getVersionId()));
-//            ProblemHelper.throwProblemIfExist(response);
-//
-//            return JOCDefaultResponse.responseStatus200(response.get().toJson());
-//
-//        } catch (JocException e) {
-//            e.addErrorMetaInfo(getJocError());
-//            return JOCDefaultResponse.responseStatusJSError(e);
-//        } catch (Exception e) {
-//            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-//        }
-//    }
+    public JOCDefaultResponse postWorkflowVolatile(String accessToken, byte[] filterBytes) {
+        try {
+            initLogging(API_CALL + "/v", filterBytes, accessToken);
+            JsonValidator.validateFailFast(filterBytes, WorkflowFilter.class);
+            WorkflowFilter workflowFilter = Globals.objectMapper.readValue(filterBytes, WorkflowFilter.class);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(workflowFilter.getControllerId(),
+                    getPermissonsJocCockpit(workflowFilter.getControllerId(), accessToken).getOrder().getView().isStatus());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+
+            String workflowName = JocInventory.pathToName(workflowFilter.getWorkflowId().getPath());
+            JControllerState currentState = Proxy.of(workflowFilter.getControllerId()).currentState();
+            
+            // Long surveyDateMillis = currentState.eventId() / 1000;
+            Either<Problem, JWorkflow> response = null;
+            if (workflowFilter.getWorkflowId().getVersionId() == null) {
+                response = currentState.pathToWorkflow(WorkflowPath.of(workflowName));
+            } else {
+                response = currentState.idToWorkflow(JWorkflowId.of(workflowName, workflowFilter.getWorkflowId().getVersionId()));
+            }
+            ProblemHelper.throwProblemIfExist(response);
+
+            return JOCDefaultResponse.responseStatus200(response.get().withPositions().toJson());
+
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
     
     private com.sos.inventory.model.workflow.Workflow addWorkflowPositions(com.sos.inventory.model.workflow.Workflow w) {
         if (w == null) {

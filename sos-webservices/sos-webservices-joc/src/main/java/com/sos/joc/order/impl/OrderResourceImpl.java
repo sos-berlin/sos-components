@@ -3,8 +3,6 @@ package com.sos.joc.order.impl;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
