@@ -124,9 +124,12 @@ import com.sos.joc.model.sign.SignaturePath;
 import com.sos.joc.publish.common.ConfigurationObjectFileExtension;
 import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
+import com.sos.joc.publish.mapper.DbItemConfWithOriginalContent;
+import com.sos.joc.publish.mapper.SignedInvConfWithContent;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.webservices.order.initiator.model.ScheduleEdit;
+import com.sun.mail.imap.protocol.Item;
 
 import io.vavr.control.Either;
 import js7.base.crypt.SignedString;
@@ -1447,39 +1450,40 @@ public abstract class PublishUtils {
         return deletedObjects;
     }
 
-    public static void prepareNextInvConfigGeneration(Set<DBItemInventoryConfiguration> drafts, 
-            Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String controllerId, SOSHibernateSession hibernateSession) {
+    public static void prepareNextInvConfigGeneration(Set<DBItemInventoryConfiguration> drafts, Set<DbItemConfWithOriginalContent> withOrigContent, 
+            String controllerId, SOSHibernateSession hibernateSession) {
         try {
             for (DBItemInventoryConfiguration draft : drafts) {
+                if (withOrigContent != null && !withOrigContent.isEmpty()) {
+                    withOrigContent.stream()
+                    .filter(item -> item.getInvCfg().getId().equals(draft.getId()))
+                    .forEach(item -> draft.setContent(item.getOriginalContent()));
+                }
                 draft.setDeployed(true);
                 draft.setModified(Date.from(Instant.now()));
                 // update agentName with original in Workflow jobs before updating  agentId -> agentName
-                if (updateableAgentNames != null && draft.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)) {
-                    replaceAgentIdWithOrigAgentName(draft, updateableAgentNames, controllerId);
-                }
+//                if (updateableAgentNames != null && draft.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)) {
+//                    replaceAgentIdWithOrigAgentName(draft, updateableAgentNames, controllerId);
+//                }
                 hibernateSession.update(draft);
                 JocInventory.postEvent(draft.getFolder());
             }
-        } catch (SOSHibernateException | IOException e) {
+        } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }
     }
 
-    public static void prepareNextInvConfigGeneration(Set<ControllerObject> drafts, 
-            Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String controllerId, DBLayerDeploy dbLayer) {
+    public static void prepareNextInvConfigGeneration(Set<ControllerObject> drafts, String controllerId, DBLayerDeploy dbLayer) {
         try {
             for (ControllerObject draft : drafts) {
-                DBItemInventoryConfiguration configuration = dbLayer.getConfigurationByPath(draft.getPath(), mapDeployType(draft.getObjectType()));
+                DBItemInventoryConfiguration configuration = dbLayer.getConfigurationByPath(draft.getPath(), 
+                        ConfigurationType.fromValue(draft.getObjectType().intValue()));
                 configuration.setDeployed(true);
                 configuration.setModified(Date.from(Instant.now()));
-                // update agentName with original in Workflow jobs before updating  agentId -> agentName
-                if (updateableAgentNames != null && draft.getObjectType().equals(DeployType.WORKFLOW)) {
-                    replaceAgentIdWithOrigAgentName(configuration, updateableAgentNames, controllerId);
-                }
                 dbLayer.getSession().update(configuration);
                 JocInventory.postEvent(configuration.getFolder());
             }
-        } catch (SOSHibernateException | IOException e) {
+        } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }
     }

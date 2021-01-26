@@ -5,7 +5,6 @@ import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,12 +26,10 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.DeployAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
-import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocError;
@@ -42,12 +39,13 @@ import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.OperationType;
+import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.publish.db.DBLayerDeploy;
+import com.sos.joc.publish.mapper.DbItemConfWithOriginalContent;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.joc.publish.resource.IDeploy;
 import com.sos.joc.publish.util.PublishUtils;
@@ -80,8 +78,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             dbLayer = new DBLayerDeploy(hibernateSession);
             // get all available controller instances
-            Map<String, List<DBItemInventoryJSInstance>> allControllers = dbLayer.getAllControllers().stream().collect(Collectors.groupingBy(
-                    DBItemInventoryJSInstance::getControllerId));
+//            Map<String, List<DBItemInventoryJSInstance>> allControllers = dbLayer.getAllControllers().stream().collect(Collectors.groupingBy(
+//                    DBItemInventoryJSInstance::getControllerId));
             // process filter
             Set<String> controllerIds = new HashSet<String>(deployFilter.getControllerIds());
             List<Configuration> draftConfigsToStore = getDraftConfigurationsToStoreFromFilter(deployFilter);
@@ -92,9 +90,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
              **/
             List<Configuration> deployConfigsToStoreAgain = getDeployConfigurationsToStoreFromFilter(deployFilter);
             List<Configuration> deployFoldersToStoreAgain = getDeployConfigurationFoldersToStoreFromFilter(deployFilter);
-            List<Configuration> deployConfigsToDelete = getDeployConfigurationsToDeleteFromFilter(deployFilter);
+            List<Configuration> deployConfigsToDelete = null;
             List<Config> foldersToDelete = null;
             if (deployFilter.getDelete() != null) {
+                deployConfigsToDelete = getDeployConfigurationsToDeleteFromFilter(deployFilter);
                 foldersToDelete = deployFilter.getDelete().getDeployConfigurations().stream().filter(item -> 
                     item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER)).collect(Collectors.toList());
             }
@@ -110,6 +109,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 }
                 configurationDBItemsToStore.addAll(PublishUtils.getValidDeployableInventoryConfigurationsfromFolders(draftFoldersToStore, dbLayer));
             }
+            final Set<DbItemConfWithOriginalContent> cfgsDBItemsToStore = configurationDBItemsToStore.stream()
+                    .map(item -> new DbItemConfWithOriginalContent(item, item.getContent())).filter(Objects::nonNull).collect(Collectors.toSet());
             List<DBItemDeploymentHistory> depHistoryDBItemsToStore = null;
             if (!deployConfigsToStoreAgain.isEmpty()) {
                 depHistoryDBItemsToStore = dbLayer.getFilteredDeploymentHistory(deployConfigsToStoreAgain);
@@ -121,7 +122,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 depHistoryDBItemsToStore.addAll(PublishUtils.getLatestActiveDepHistoryEntriesFromFolders(deployFoldersToStoreAgain, dbLayer));
             }
             List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete = null;
-            if (!deployConfigsToDelete.isEmpty()) {
+            if (deployConfigsToDelete != null && !deployConfigsToDelete.isEmpty()) {
                 depHistoryDBItemsToDeployDelete = dbLayer.getFilteredDeploymentHistoryToDelete(deployConfigsToDelete);
             }
 
@@ -214,7 +215,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         PublishUtils.updateItemsAddOrUpdatePGP(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
                                 dbLayer).thenAccept(either -> {
                                     processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account,
-                                            versionIdForUpdate, controllerId, deployFilter);
+                                            versionIdForUpdate, controllerId, deployFilter, cfgsDBItemsToStore);
                                 });// .get()
                         break;
                     case SOSKeyConstants.RSA_ALGORITHM_NAME:
@@ -223,7 +224,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         PublishUtils.updateItemsAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
                                 dbLayer, SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
                                     processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account,
-                                            versionIdForUpdate, controllerId, deployFilter);
+                                            versionIdForUpdate, controllerId, deployFilter, cfgsDBItemsToStore);
                                 });// .get()
                         break;
                     case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
@@ -232,7 +233,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         PublishUtils.updateItemsAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
                                 dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
                                     processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account,
-                                            versionIdForUpdate, controllerId, deployFilter);
+                                            versionIdForUpdate, controllerId, deployFilter, cfgsDBItemsToStore);
                                 });// .get()
                         break;
                     }
@@ -323,9 +324,16 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         }
     }
 
-    private void processAfterAdd(Either<Problem, Void> either, Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations,
-            Set<UpdateableWorkflowJobAgentName> updateableAgentNames, Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedReDeployables,
-            String account, String versionIdForUpdate, String controllerId, DeployFilter deployFilter) {
+    private void processAfterAdd(
+            Either<Problem, Void> either, 
+            Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations,
+            Set<UpdateableWorkflowJobAgentName> updateableAgentNames,
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedReDeployables,
+            String account, 
+            String versionIdForUpdate,
+            String controllerId, 
+            DeployFilter deployFilter, 
+            Set<DbItemConfWithOriginalContent> withOriginalContent) {
         // First create a new db session as the session of the parent web service can already been closed
         SOSHibernateSession newHibernateSession = null;
         try {
@@ -339,7 +347,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     deployedObjects.addAll(PublishUtils.cloneInvConfigurationsToDepHistoryItems(verifiedConfigurations,
                         updateableAgentNames, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
                     PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet().stream().collect(Collectors.toSet()),
-                            updateableAgentNames, controllerId, dbLayer.getSession());
+                            withOriginalContent, controllerId, dbLayer.getSession());
                 }
                 if (verifiedReDeployables != null && !verifiedReDeployables.isEmpty()) {
                     deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(verifiedReDeployables, account, dbLayer, versionIdForUpdate,
@@ -479,22 +487,22 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         }
     }
 
-    private void createAuditLogForEach(Collection<DBItemDeploymentHistory> depHistoryEntries, DeployFilter deployFilter, String controllerId,
-            boolean update, String commitId, String account) {
-        final Set<DeployAudit> audits = new HashSet<DeployAudit>(); 
-        audits.addAll(depHistoryEntries.stream().map(item -> {
-            if (update) {
-                return new DeployAudit(deployFilter, update, controllerId, commitId, item.getId(), item.getPath(), String.format(
-                        "object %1$s updated on controller %2$s", item.getPath(), controllerId), account);
-            } else {
-                return new DeployAudit(deployFilter, update, controllerId, commitId, item.getId(), item.getPath(), String.format(
-                        "object %1$s deleted from controller %2$s", item.getPath(), controllerId), account);
-            }
-        }).collect(Collectors.toSet()));
-        audits.stream().forEach(audit -> logAuditMessage(audit));
-        audits.stream().forEach(audit -> storeAuditLogEntry(audit));
-    }
-
+//    private void createAuditLogForEach(Collection<DBItemDeploymentHistory> depHistoryEntries, DeployFilter deployFilter, String controllerId,
+//            boolean update, String commitId, String account) {
+//        final Set<DeployAudit> audits = new HashSet<DeployAudit>(); 
+//        audits.addAll(depHistoryEntries.stream().map(item -> {
+//            if (update) {
+//                return new DeployAudit(deployFilter, update, controllerId, commitId, item.getId(), item.getPath(), String.format(
+//                        "object %1$s updated on controller %2$s", item.getPath(), controllerId), account);
+//            } else {
+//                return new DeployAudit(deployFilter, update, controllerId, commitId, item.getId(), item.getPath(), String.format(
+//                        "object %1$s deleted from controller %2$s", item.getPath(), controllerId), account);
+//            }
+//        }).collect(Collectors.toSet()));
+//        audits.stream().forEach(audit -> logAuditMessage(audit));
+//        audits.stream().forEach(audit -> storeAuditLogEntry(audit));
+//    }
+//
     private boolean checkAnyItemsStillExist(Set<DBItemDeploymentHistory> deployments, List<DBItemInventoryReleasedConfiguration> released,
             List<DBItemInventoryConfiguration> releaseables) {
         return checkDeploymentItemsStillExist(deployments) || checkReleasedItemsStillExist(released) || checkReleaseablesItemsStillExist(

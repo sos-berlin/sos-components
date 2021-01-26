@@ -48,6 +48,7 @@ import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.publish.db.DBLayerDeploy;
+import com.sos.joc.publish.mapper.DbItemConfWithOriginalContent;
 import com.sos.joc.publish.resource.IDeploy;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
@@ -103,6 +104,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             if (draftConfigsToStore != null) {
                 configurationDBItemsToStore = dbLayer.getFilteredInventoryConfiguration(draftConfigsToStore);
             }
+            final Set<DbItemConfWithOriginalContent> cfgsDBItemsToStore = configurationDBItemsToStore.stream()
+                    .map(item -> new DbItemConfWithOriginalContent(item, item.getContent())).filter(Objects::nonNull).collect(Collectors.toSet());
             List<DBItemDeploymentHistory> depHistoryDBItemsToStore = null;
             if (!deployConfigsToStoreAgain.isEmpty()) {
                 depHistoryDBItemsToStore = dbLayer.getFilteredDeploymentHistory(deployConfigsToStoreAgain);
@@ -200,27 +203,27 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     case SOSKeyConstants.PGP_ALGORITHM_NAME:
                         PublishUtils.updateItemsAddOrUpdatePGP(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId, 
                                 dbLayer).thenAccept(either -> {
-                                    processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, versionIdForUpdate, controllerId,
-                                            deployFilter);
-                                }).get();
+                                    processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, versionIdForUpdate, 
+                                            controllerId, deployFilter, cfgsDBItemsToStore);
+                                });
                         break;
                     case SOSKeyConstants.RSA_ALGORITHM_NAME:
                         cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                         signerDN = cert.getSubjectDN().getName();
-                        PublishUtils.updateItemsAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
-                                dbLayer, SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
-                                    processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, versionIdForUpdate, controllerId,
-                                            deployFilter);
-                                }).get();
+                        PublishUtils.updateItemsAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, 
+                                controllerId, dbLayer, SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
+                                    processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, versionIdForUpdate, 
+                                            controllerId, deployFilter, cfgsDBItemsToStore);
+                                });
                         break;
                     case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
                         cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                         signerDN = cert.getSubjectDN().getName();
-                        PublishUtils.updateItemsAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
-                                dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
-                                    processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, versionIdForUpdate, controllerId,
-                                            deployFilter);
-                                }).get();
+                        PublishUtils.updateItemsAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables,
+                                controllerId, dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
+                                    processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, versionIdForUpdate,
+                                            controllerId, deployFilter, cfgsDBItemsToStore);
+                                });
                         break;
                     }
                 }
@@ -312,7 +315,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             String account,
             String versionIdForUpdate,
             String controllerId,
-            DeployFilter deployFilter) {
+            DeployFilter deployFilter,
+            Set<DbItemConfWithOriginalContent> cfgsDBItemsToStore) {
         SOSHibernateSession newHibernateSession = null;
         try {
             newHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
@@ -325,7 +329,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     deployedObjects.addAll(PublishUtils.cloneInvConfigurationsToDepHistoryItems(verifiedConfigurations,
                         null, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
                     PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet().stream().collect(Collectors.toSet()),
-                            null, controllerId, dbLayer.getSession());
+                            cfgsDBItemsToStore, controllerId, dbLayer.getSession());
                 }
                 if (verifiedReDeployables != null && !verifiedReDeployables.isEmpty()) {
                     deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(verifiedReDeployables, account, dbLayer, versionIdForUpdate,
