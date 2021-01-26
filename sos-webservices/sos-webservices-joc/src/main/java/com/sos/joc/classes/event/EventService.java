@@ -118,7 +118,7 @@ public class EventService {
     }
     
     @Subscribe({ ProxyRestarted.class, ProxyRemoved.class })
-    public void doSomethingWithEvent(ProxyEvent evt) throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException,
+    public void processProxyEvent(ProxyEvent evt) throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException,
             DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
             ExecutionException {
         if (evt.getControllerId().equals(controllerId) && ProxyUser.JOC.name().equals(evt.getKey())) {

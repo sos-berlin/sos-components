@@ -1,6 +1,5 @@
 package com.sos.joc.orders.impl;
 
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
@@ -20,6 +19,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.OrdersHelper;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -173,8 +173,8 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
         Set<VersionedItemId<WorkflowPath>> wIds = new HashSet<>();
         if (workflowIds != null) {
             if (permittedFolders != null && !permittedFolders.isEmpty()) {
-                wIds = workflowIds.stream().filter(w -> folderIsPermitted(w.getPath(), permittedFolders)).map(w -> JWorkflowId.of(w.getPath(), w
-                        .getVersionId()).asScala()).collect(Collectors.toSet());
+                wIds = workflowIds.stream().filter(w -> folderIsPermitted(w.getPath(), permittedFolders)).map(w -> JWorkflowId.of(JocInventory
+                        .pathToName(w.getPath()), w.getVersionId()).asScala()).collect(Collectors.toSet());
             } else {
                 wIds = workflowIds.stream().map(w -> JWorkflowId.of(w.getPath(), w.getVersionId()).asScala()).collect(Collectors.toSet());
             }

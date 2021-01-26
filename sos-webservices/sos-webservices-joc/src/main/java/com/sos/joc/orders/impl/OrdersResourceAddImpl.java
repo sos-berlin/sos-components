@@ -21,6 +21,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.AddOrderAudit;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocException;
@@ -136,7 +137,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                 arguments.put(key, Value.of(a.get(key)));
             }
         }
-        return JFreshOrder.of(orderId, WorkflowPath.of(order.getWorkflowPath()), scheduledFor, arguments);
+        return JFreshOrder.of(orderId, WorkflowPath.of(JocInventory.pathToName(order.getWorkflowPath())), scheduledFor, arguments);
     }
 
 }

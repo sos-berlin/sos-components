@@ -85,8 +85,9 @@ public class SchedulePeriodsResourceImpl extends JOCResourceImpl implements ISch
                 
                 final List<String> nonWorkingDays = getNonWorkingDays(dbLayer, in);
 
-                List<DBItemInventoryConfiguration> workingDbCalendars = dbLayer.getCalendars(in.getCalendars().stream().map(
-                        AssignedCalendars::getCalendarPath));
+                // TODO dbLayer.getCalendarsByNames from release configuration???
+                List<DBItemInventoryConfiguration> workingDbCalendars = dbLayer.getCalendarsByNames(in.getCalendars().stream().map(
+                        AssignedCalendars::getCalendarName));
                 
                 SortedSet<Period> periods = new TreeSet<>(Comparator.comparing(p -> p.getSingleStart() == null ? p.getBegin() : p.getSingleStart()));
                 
@@ -128,8 +129,8 @@ public class SchedulePeriodsResourceImpl extends JOCResourceImpl implements ISch
         List<String> nonWorkingDays = new ArrayList<>();
         
         if (in.getNonWorkingCalendars() != null && !in.getNonWorkingCalendars().isEmpty()) {
-            List<DBItemInventoryConfiguration> nonWorkingDbCalendars = dbLayer.getCalendars(in.getNonWorkingCalendars().stream().map(
-                    AssignedNonWorkingCalendars::getCalendarPath));
+            List<DBItemInventoryConfiguration> nonWorkingDbCalendars = dbLayer.getCalendarsByNames(in.getNonWorkingCalendars().stream().map(
+                    AssignedNonWorkingCalendars::getCalendarName));
 
             if (nonWorkingDbCalendars != null && !nonWorkingDbCalendars.isEmpty()) {
 
