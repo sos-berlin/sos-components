@@ -14,12 +14,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
-import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.InstructionType;
-import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.instruction.Lock;
+import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.inventory.search.WorkflowSearcher.WorkflowInstruction;
 import com.sos.joc.classes.inventory.search.WorkflowSearcher.WorkflowJob;
 
 public class WorkflowSearcherTest {
@@ -153,106 +153,105 @@ public class WorkflowSearcherTest {
         Workflow w = (Workflow) Globals.objectMapper.readValue(getFileContent(WORKFLOW_FILE), Workflow.class);
         WorkflowSearcher ws = new WorkflowSearcher(w);
 
-        List<Instruction> instructions = ws.getInstructions();
+        List<WorkflowInstruction<?>> instructions = ws.getInstructions();
         LOGGER.info("[getInstructions()][size] " + instructions.size());
-        for (Instruction i : instructions) {
-            LOGGER.info("  INSTRUCTION: " + i.getTYPE());
+        for (WorkflowInstruction<?> i : instructions) {
+            LOGGER.info("  INSTRUCTION: " + SOSString.toString(i));
         }
 
         instructions = ws.getInstructions(InstructionType.PUBLISH, InstructionType.AWAIT, InstructionType.FORK);
         LOGGER.info(" ");
         LOGGER.info("[getInstructions(PUBLISH,AWAIT,FORK)][size] " + instructions.size());
-        for (Instruction i : instructions) {
-            LOGGER.info("  INSTRUCTION: " + i.getTYPE());
+        for (WorkflowInstruction<?> i : instructions) {
+            LOGGER.info("  INSTRUCTION: " + SOSString.toString(i));
         }
 
         instructions = ws.getInstructions(InstructionType.IF, InstructionType.LOCK);
         LOGGER.info(" ");
         LOGGER.info("[getInstructions(IF,LOCK)][size] " + instructions.size());
-        for (Instruction i : instructions) {
-            LOGGER.info("  INSTRUCTION: " + i.getTYPE());
+        for (WorkflowInstruction<?> i : instructions) {
+            LOGGER.info("  INSTRUCTION: " + SOSString.toString(i));
         }
 
-        List<Lock> locks = ws.getLockInstructions();
+        List<WorkflowInstruction<Lock>> locks = ws.getLockInstructions();
         LOGGER.info(" ");
         LOGGER.info("[getLockInstructions()][size] " + locks.size());
-        for (Lock l : locks) {
-            LOGGER.info("  LOCK: " + l.getLockId());
+        for (WorkflowInstruction<Lock> l : locks) {
+            LOGGER.info("  LOCK: " + l.getInstruction().getLockId());
         }
 
         locks = ws.getLockInstructions("lock_10");
         LOGGER.info(" ");
         LOGGER.info("[getLockInstructions(lock_10)][size] " + locks.size());
-        for (Lock l : locks) {
-            LOGGER.info("  LOCK: " + l.getLockId());
+        for (WorkflowInstruction<Lock> l : locks) {
+            LOGGER.info("  LOCK: " + l.getInstruction().getLockId());
         }
 
-        // Predicate<Lock> filter = isCountGreaterThan(1);
+        // Predicate<WorkflowInstruction<Lock>> filter = isCountGreaterThan(1);
         // locks = ws.getLockInstructions(filter);
-        locks = ws.getLockInstructions(l -> l.getCount() != null && l.getCount() > 0);
+        // locks = ws.getLockInstructions(l -> l.getInstruction().getCount() != null && l.getInstruction().getCount() > 0);
+        locks = ws.getLockInstructions(l -> {
+            Lock lock = l.getInstruction();
+            return lock.getCount() != null && lock.getCount() > 0;
+        });
         LOGGER.info(" ");
         LOGGER.info("[getLockInstructions(filter)][size] " + locks.size());
-        for (Lock l : locks) {
-            LOGGER.info("  LOCK: " + l.getLockId());
+        for (WorkflowInstruction<Lock> l : locks) {
+            LOGGER.info("  LOCK: " + l.getInstruction().getLockId());
         }
 
-        List<NamedJob> jobs = ws.getJobInstructions();
+        List<WorkflowInstruction<NamedJob>> jobs = ws.getJobInstructions();
         LOGGER.info(" ");
         LOGGER.info("[getJobInstructions()][size] " + jobs.size());
-        for (NamedJob j : jobs) {
-            LOGGER.info("  JOB: " + j.getJobName());
+        for (WorkflowInstruction<NamedJob> j : jobs) {
+            LOGGER.info("  JOB: " + SOSString.toString(j));
         }
 
         jobs = ws.getJobInstructions("job.*");
         LOGGER.info(" ");
         LOGGER.info("[getJobInstructions(job.*)][size] " + jobs.size());
-        for (NamedJob j : jobs) {
-            LOGGER.info("  JOB: " + j.getJobName());
+        for (WorkflowInstruction<NamedJob> j : jobs) {
+            LOGGER.info("  JOB: " + SOSString.toString(j));
         }
 
         jobs = ws.getJobInstructionsByLabel("job_10");
         LOGGER.info(" ");
         LOGGER.info("[getJobInstructionsByLabel(job_10)][size] " + jobs.size());
-        for (NamedJob j : jobs) {
-            LOGGER.info("  JOB: " + j.getJobName());
-            LOGGER.info("           " + j.getLabel());
+        for (WorkflowInstruction<NamedJob> j : jobs) {
+            LOGGER.info("  JOB: " + SOSString.toString(j));
         }
 
         jobs = ws.getJobInstructionsByLabel("job.*");
         LOGGER.info(" ");
         LOGGER.info("[getJobInstructionsByLabel(job.*)][size] " + jobs.size());
-        for (NamedJob j : jobs) {
-            LOGGER.info("  JOB: " + j.getJobName());
-            LOGGER.info("           " + j.getLabel());
+        for (WorkflowInstruction<NamedJob> j : jobs) {
+            LOGGER.info("  JOB: " + SOSString.toString(j));
         }
 
         jobs = ws.getJobInstructionsByArgument("job.*");
         LOGGER.info(" ");
         LOGGER.info("[getJobInstructionsByArgument(job.*)][size] " + jobs.size());
-        for (NamedJob j : jobs) {
-            LOGGER.info("  JOB: " + j.getJobName());
-            LOGGER.info("           " + j.getLabel());
+        for (WorkflowInstruction<NamedJob> j : jobs) {
+            LOGGER.info("  JOB: " + SOSString.toString(j));
         }
 
         jobs = ws.getJobInstructionsByArgumentValue("job.*");
         LOGGER.info(" ");
         LOGGER.info("[getJobInstructionsByArgumentValue(job.*)][size] " + jobs.size());
-        for (NamedJob j : jobs) {
-            LOGGER.info("  JOB: " + j.getJobName());
-            LOGGER.info("           " + j.getLabel());
+        for (WorkflowInstruction<NamedJob> j : jobs) {
+            LOGGER.info("  JOB: " + SOSString.toString(j));
         }
 
         jobs = ws.getJobInstructionsByArgumentAndValue("job.*", "job.*");
         LOGGER.info(" ");
         LOGGER.info("[getJobInstructionsByArgumentAndValue(job.*,job.*)][size] " + jobs.size());
-        for (NamedJob j : jobs) {
-            LOGGER.info("  JOB: " + j.getJobName());
-            LOGGER.info("           " + j.getLabel());
+        for (WorkflowInstruction<NamedJob> j : jobs) {
+            LOGGER.info("  JOB: " + SOSString.toString(j));
         }
     }
 
-    public static Predicate<Lock> isCountGreaterThan(int value) {
-        return l -> l.getCount() != null && l.getCount() > value;
+    public static Predicate<WorkflowInstruction<Lock>> isCountGreaterThan(int value) {
+        return l -> l.getInstruction().getCount() != null && l.getInstruction().getCount() > value;
     }
 
     private String getFileContent(Path file) throws Exception {

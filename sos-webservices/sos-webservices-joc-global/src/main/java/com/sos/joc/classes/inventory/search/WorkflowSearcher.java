@@ -10,6 +10,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.Instruction;
@@ -24,18 +25,37 @@ import com.sos.inventory.model.workflow.Workflow;
 public class WorkflowSearcher {
 
     private final Workflow workflow;
-    private List<Instruction> instructions;
-    private List<NamedJob> jobInstructions;
+    private List<WorkflowInstruction<? extends Instruction>> instructions;
+    private List<WorkflowInstruction<NamedJob>> jobInstructions;
     private List<WorkflowJob> jobs;
 
     public WorkflowSearcher(final Workflow workflow) {
         this.workflow = workflow;
     }
 
+    public class WorkflowInstruction<T extends Instruction> {
+
+        private final String postition;
+        private final T instruction;
+
+        public WorkflowInstruction(final String position, final T instruction) {
+            this.postition = position;
+            this.instruction = instruction;
+        }
+
+        public String getPosition() {
+            return postition;
+        }
+
+        public T getInstruction() {
+            return instruction;
+        }
+    }
+
     public class WorkflowJob {
 
-        private String name;
-        private Job job;
+        private final String name;
+        private final Job job;
 
         public WorkflowJob(final String name, final Job job) {
             this.name = name;
@@ -68,11 +88,11 @@ public class WorkflowSearcher {
         if (jobs.isEmpty()) {
             return jobs;
         }
-        List<NamedJob> namedJobs = getJobInstructions();
+        List<WorkflowInstruction<NamedJob>> namedJobs = getJobInstructions();
         if (namedJobs.isEmpty()) {
             return jobs;
         }
-        List<String> namedJobNames = namedJobs.stream().map(j -> j.getJobName()).distinct().collect(Collectors.toList());
+        List<String> namedJobNames = namedJobs.stream().map(j -> j.getInstruction().getJobName()).distinct().collect(Collectors.toList());
         return jobs.stream().filter(j -> !namedJobNames.contains(j.getName())).collect(Collectors.toList());
     }
 
@@ -187,79 +207,85 @@ public class WorkflowSearcher {
                 .getValue()));
     }
 
-    public List<Instruction> getInstructions(InstructionType... types) {
+    public List<WorkflowInstruction<? extends Instruction>> getInstructions(InstructionType... types) {
         setAllInstructions();
         if (types.length == 0 || instructions.isEmpty()) {
             return instructions;
         }
         List<InstructionType> typesList = Arrays.stream(types).collect(Collectors.toList());
-        return instructions.stream().filter(i -> typesList.contains(i.getTYPE())).collect(Collectors.toList());
+        return instructions.stream().filter(i -> typesList.contains(i.getInstruction().getTYPE())).collect(Collectors.toList());
     }
 
-    public List<Lock> getLockInstructions() {
-        List<Instruction> r = getInstructions(InstructionType.LOCK);
-        if (r.isEmpty()) {
-            return new ArrayList<Lock>();
-        }
-        return r.stream().map(i -> (Lock) i).collect(Collectors.toList());
+    @SuppressWarnings("unchecked")
+    public List<WorkflowInstruction<Lock>> getLockInstructions() {
+        return getInstructions(InstructionType.LOCK).stream().map(l -> {
+            return (WorkflowInstruction<Lock>) l;
+        }).collect(Collectors.toList());
     }
 
-    public List<Lock> getLockInstructions(String lockIdRegex) {
-        List<Lock> r = getLockInstructions();
+    public List<WorkflowInstruction<Lock>> getLockInstructions(String lockIdRegex) {
+        List<WorkflowInstruction<Lock>> r = getLockInstructions();
         if (r.isEmpty() || lockIdRegex == null) {
             return r;
         }
-        return r.stream().filter(l -> l.getLockId().matches(lockIdRegex)).collect(Collectors.toList());
+        return r.stream().filter(l -> l.getInstruction().getLockId().matches(lockIdRegex)).collect(Collectors.toList());
     }
 
-    /** filter e.g.: l -> l.getLockId().equals("myLockId") && l.getCount() != null && l.getCount() > 10 */
-    public List<Lock> getLockInstructions(Predicate<? super Lock> filter) {
-        List<Lock> r = getLockInstructions();
+    /** filter e.g.:
+     * 
+     * 1) l -> l.getInstruction().getLockId().equals("myLockId") && l -> l.getInstruction().getCount() != null && l.getInstruction().getCount() > 0
+     * 
+     * 2) l -> { Lock lock = l.getInstruction(); return lock.getCount() != null && lock.getCount() > 0; }
+     * 
+     * 3) Predicate<WorkflowInstruction<Lock>> filter = MyLockFilterFunction(1); */
+    public List<WorkflowInstruction<Lock>> getLockInstructions(Predicate<? super WorkflowInstruction<Lock>> filter) {
+        List<WorkflowInstruction<Lock>> r = getLockInstructions();
         if (r.isEmpty() || filter == null) {
             return r;
         }
         return r.stream().filter(filter).collect(Collectors.toList());
     }
 
-    public List<NamedJob> getJobInstructions() {
+    public List<WorkflowInstruction<NamedJob>> getJobInstructions() {
         setAllJobInstructions();
         return jobInstructions;
     }
 
-    public List<NamedJob> getJobInstructions(String jobNameRegex) {
-        List<NamedJob> r = getJobInstructions();
+    public List<WorkflowInstruction<NamedJob>> getJobInstructions(String jobNameRegex) {
+        List<WorkflowInstruction<NamedJob>> r = getJobInstructions();
         if (r.isEmpty() || jobNameRegex == null) {
             return r;
         }
-        return r.stream().filter(j -> j.getJobName().matches(jobNameRegex)).collect(Collectors.toList());
+        return r.stream().filter(j -> j.getInstruction().getJobName().matches(jobNameRegex)).collect(Collectors.toList());
     }
 
-    public List<NamedJob> getJobInstructionsByLabel(String labelRegex) {
-        List<NamedJob> r = getJobInstructions();
+    public List<WorkflowInstruction<NamedJob>> getJobInstructionsByLabel(String labelRegex) {
+        List<WorkflowInstruction<NamedJob>> r = getJobInstructions();
         if (r.isEmpty() || labelRegex == null) {
             return r;
         }
-        return r.stream().filter(j -> j.getLabel().matches(labelRegex)).collect(Collectors.toList());
+        return r.stream().filter(j -> j.getInstruction().getLabel().matches(labelRegex)).collect(Collectors.toList());
     }
 
-    public List<NamedJob> getJobInstructionsByArgument(String argNameRegex) {
-        List<NamedJob> r = getJobInstructions();
+    public List<WorkflowInstruction<NamedJob>> getJobInstructionsByArgument(String argNameRegex) {
+        List<WorkflowInstruction<NamedJob>> r = getJobInstructions();
         if (r.isEmpty() || argNameRegex == null) {
             return r;
         }
-        return r.stream().filter(j -> getNamedJobArgumentsStream(j).anyMatch(en -> en.getKey().matches(argNameRegex))).collect(Collectors.toList());
+        return r.stream().filter(j -> getNamedJobArgumentsStream(j.getInstruction()).anyMatch(en -> en.getKey().matches(argNameRegex))).collect(
+                Collectors.toList());
     }
 
-    public List<NamedJob> getJobInstructionsByArgumentValue(String argValueRegex) {
-        List<NamedJob> r = getJobInstructions();
+    public List<WorkflowInstruction<NamedJob>> getJobInstructionsByArgumentValue(String argValueRegex) {
+        List<WorkflowInstruction<NamedJob>> r = getJobInstructions();
         if (r.isEmpty() || argValueRegex == null) {
             return r;
         }
-        return r.stream().filter(j -> getNamedJobArgumentsStream(j).anyMatch(en -> en.getValue().matches(argValueRegex))).collect(Collectors
-                .toList());
+        return r.stream().filter(j -> getNamedJobArgumentsStream(j.getInstruction()).anyMatch(en -> en.getValue().matches(argValueRegex))).collect(
+                Collectors.toList());
     }
 
-    public List<NamedJob> getJobInstructionsByArgumentAndValue(String argNameRegex, String argValueRegex) {
+    public List<WorkflowInstruction<NamedJob>> getJobInstructionsByArgumentAndValue(String argNameRegex, String argValueRegex) {
         if (argNameRegex == null || argValueRegex == null) {
             if (argNameRegex == null && argValueRegex == null) {
                 return getJobInstructions();
@@ -270,12 +296,12 @@ public class WorkflowSearcher {
             }
         }
 
-        List<NamedJob> r = getJobInstructions();
+        List<WorkflowInstruction<NamedJob>> r = getJobInstructions();
         if (r.isEmpty()) {
             return r;
         }
-        return r.stream().filter(j -> getNamedJobArgumentsStream(j).anyMatch(en -> en.getKey().matches(argNameRegex) && en.getValue().matches(
-                argValueRegex))).collect(Collectors.toList());
+        return r.stream().filter(j -> getNamedJobArgumentsStream(j.getInstruction()).anyMatch(en -> en.getKey().matches(argNameRegex) && en.getValue()
+                .matches(argValueRegex))).collect(Collectors.toList());
     }
 
     private void setAllInstructions() {
@@ -284,19 +310,20 @@ public class WorkflowSearcher {
         }
     }
 
-    private List<Instruction> getAllInstructions(List<Instruction> list) {
-        List<Instruction> result = new ArrayList<Instruction>();
-        handleInstructions(result, list);
-        return result == null ? new ArrayList<Instruction>() : result;
+    private List<WorkflowInstruction<? extends Instruction>> getAllInstructions(List<Instruction> list) {
+        List<WorkflowInstruction<? extends Instruction>> result = new ArrayList<WorkflowInstruction<? extends Instruction>>();
+        handleInstructions(result, list, "");
+        return result == null ? new ArrayList<WorkflowInstruction<? extends Instruction>>() : result;
     }
 
+    @SuppressWarnings("unchecked")
     private void setAllJobInstructions() {
         if (jobInstructions == null) {
-            List<Instruction> r = getInstructions(InstructionType.EXECUTE_NAMED);
+            List<WorkflowInstruction<? extends Instruction>> r = getInstructions(InstructionType.EXECUTE_NAMED);
             if (r.size() == 0) {
-                jobInstructions = new ArrayList<NamedJob>();
+                jobInstructions = new ArrayList<WorkflowInstruction<NamedJob>>();
             } else {
-                jobInstructions = r.stream().map(i -> (NamedJob) i).collect(Collectors.toList());
+                jobInstructions = r.stream().map(i -> (WorkflowInstruction<NamedJob>) i).collect(Collectors.toList());
             }
         }
     }
@@ -308,40 +335,56 @@ public class WorkflowSearcher {
         }
     }
 
-    private void handleInstructions(List<Instruction> result, List<Instruction> instructions) {
+    private void handleInstructions(List<WorkflowInstruction<? extends Instruction>> result, List<Instruction> instructions, String parentPosition) {
         if (instructions == null) {
             return;
         }
 
+        int index = 0;
         for (Instruction in : instructions) {
             InstructionType it = in.getTYPE();
             if (it == null) {
                 continue;
             }
-            result.add(in.cast());
+
             switch (it) {
             case IF:
                 IfElse ie = in.cast();
                 if (ie.getThen() != null) {
-                    handleInstructions(result, ie.getThen().getInstructions());
+                    String position = getPosition(parentPosition, index, "ifthen");
+                    result.add(new WorkflowInstruction<IfElse>(position, ie));
+
+                    handleInstructions(result, ie.getThen().getInstructions(), position);
                 }
                 if (ie.getElse() != null) {
-                    handleInstructions(result, ie.getElse().getInstructions());
+                    String position = getPosition(parentPosition, index, "ifelse");
+                    result.add(new WorkflowInstruction<IfElse>(position, ie));
+
+                    handleInstructions(result, ie.getElse().getInstructions(), position);
                 }
                 break;
             case LOCK:
                 Lock l = in.cast();
                 if (l.getLockedWorkflow() != null) {
-                    handleInstructions(result, l.getLockedWorkflow().getInstructions());
+                    String position = getPosition(parentPosition, index, "lock");
+                    result.add(new WorkflowInstruction<Lock>(position, l));
+
+                    handleInstructions(result, l.getLockedWorkflow().getInstructions(), position);
                 }
                 break;
             case TRY:
                 TryCatch tc = in.cast();
                 if (tc.getTry() != null) {
-                    handleInstructions(result, tc.getTry().getInstructions());
+                    String position = getPosition(parentPosition, index, "try");
+                    result.add(new WorkflowInstruction<TryCatch>(position, tc));
+
+                    handleInstructions(result, tc.getTry().getInstructions(), position);
                 }
                 if (tc.getCatch() != null) {
-                    handleInstructions(result, tc.getCatch().getInstructions());
+                    String position = getPosition(parentPosition, index, "catch");
+                    result.add(new WorkflowInstruction<TryCatch>(position, tc));
+
+                    handleInstructions(result, tc.getCatch().getInstructions(), position);
                 }
                 break;
             case FORK:
@@ -349,15 +392,35 @@ public class WorkflowSearcher {
                 if (fj.getBranches() != null) {
                     for (Branch branch : fj.getBranches()) {
                         if (branch.getWorkflow() != null) {
-                            handleInstructions(result, branch.getWorkflow().getInstructions());
+                            String position = getPosition(parentPosition, index, "fork+" + branch.getId());
+                            result.add(new WorkflowInstruction<ForkJoin>(position, fj));
+
+                            handleInstructions(result, branch.getWorkflow().getInstructions(), position);
                         }
                     }
                 }
                 break;
+            case EXECUTE_NAMED:
+                result.add(new WorkflowInstruction<NamedJob>(getPosition(parentPosition, index, null), in.cast()));
+                break;
             default:
+
                 break;
             }
+            index += 1;
         }
+    }
+
+    private String getPosition(String parentPosition, int index, String position) {
+        StringBuilder sb = new StringBuilder();
+        if (!SOSString.isEmpty(parentPosition)) {
+            sb.append(parentPosition).append("/");
+        }
+        sb.append(String.valueOf(index));
+        if (!SOSString.isEmpty(position)) {
+            sb.append("/").append(position);
+        }
+        return sb.toString();
     }
 
     private Stream<Entry<String, Job>> getJobsStream() {

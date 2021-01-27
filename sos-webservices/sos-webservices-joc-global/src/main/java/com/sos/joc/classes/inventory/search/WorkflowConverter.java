@@ -17,6 +17,7 @@ import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.job.JobCriticality;
 import com.sos.inventory.model.workflow.Workflow;
+import com.sos.joc.classes.inventory.search.WorkflowSearcher.WorkflowInstruction;
 
 public class WorkflowConverter {
 
@@ -297,17 +298,18 @@ public class WorkflowConverter {
             if (instructions == null) {
                 return;
             }
-            List<NamedJob> jobs = searcher.getJobInstructions();
+            List<WorkflowInstruction<NamedJob>> jobs = searcher.getJobInstructions();
             if (jobs != null) {
-                for (NamedJob job : jobs) {
-                    if (!SOSString.isEmpty(job.getJobName())) {
-                        jobNames.add(job.getJobName());
+                for (WorkflowInstruction<NamedJob> job : jobs) {
+                    if (!SOSString.isEmpty(job.getInstruction().getJobName())) {
+                        jobNames.add(job.getInstruction().getJobName());
                     }
-                    if (!SOSString.isEmpty(job.getLabel())) {
-                        jobLabels.add(job.getLabel());
+                    if (!SOSString.isEmpty(job.getInstruction().getLabel())) {
+                        jobLabels.add(job.getInstruction().getLabel());
                     }
-                    if (job.getDefaultArguments() != null && job.getDefaultArguments().getAdditionalProperties() != null) {
-                        job.getDefaultArguments().getAdditionalProperties().forEach((name, value) -> {
+                    if (job.getInstruction().getDefaultArguments() != null && job.getInstruction().getDefaultArguments()
+                            .getAdditionalProperties() != null) {
+                        job.getInstruction().getDefaultArguments().getAdditionalProperties().forEach((name, value) -> {
                             if (!SOSString.isEmpty(name)) {
                                 jobArgNames.add(name);
                             }
@@ -324,16 +326,16 @@ public class WorkflowConverter {
             if (instructions == null) {
                 return;
             }
-            List<Lock> locks = searcher.getLockInstructions();
+            List<WorkflowInstruction<Lock>> locks = searcher.getLockInstructions();
             if (locks != null) {
-                for (Lock lock : locks) {
-                    if (!SOSString.isEmpty(lock.getLockId())) {
-                        lockIds.add(lock.getLockId());
+                for (WorkflowInstruction<Lock> lock : locks) {
+                    if (!SOSString.isEmpty(lock.getInstruction().getLockId())) {
+                        lockIds.add(lock.getInstruction().getLockId());
 
-                        Integer currentCount = lock.getCount() == null ? -1 : lock.getCount();
-                        Integer previousCount = this.locks.get(lock.getLockId());
+                        Integer currentCount = lock.getInstruction().getCount() == null ? -1 : lock.getInstruction().getCount();
+                        Integer previousCount = this.locks.get(lock.getInstruction().getLockId());
                         if (previousCount == null || currentCount > previousCount) {
-                            this.locks.put(lock.getLockId(), currentCount);
+                            this.locks.put(lock.getInstruction().getLockId(), currentCount);
                         }
                     }
                 }
