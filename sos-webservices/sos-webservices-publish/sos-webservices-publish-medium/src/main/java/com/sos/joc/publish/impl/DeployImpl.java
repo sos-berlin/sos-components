@@ -42,11 +42,11 @@ import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.OperationType;
+import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.DbItemConfWithOriginalContent;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
@@ -111,8 +111,13 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 }
                 configurationDBItemsToStore.addAll(PublishUtils.getValidDeployableInventoryConfigurationsfromFolders(draftFoldersToStore, dbLayer));
             }
-            final Set<DbItemConfWithOriginalContent> cfgsDBItemsToStore = configurationDBItemsToStore.stream()
-                    .map(item -> new DbItemConfWithOriginalContent(item, item.getContent())).filter(Objects::nonNull).collect(Collectors.toSet());
+            Set<DbItemConfWithOriginalContent> cfgsDBItemsToStore = null;
+            if (configurationDBItemsToStore != null) {
+                cfgsDBItemsToStore = configurationDBItemsToStore.stream()
+                        .map(item -> new DbItemConfWithOriginalContent(item, item.getContent()))
+                        .filter(Objects::nonNull).collect(Collectors.toSet());
+            }
+            final Set<DbItemConfWithOriginalContent> unmodified = cfgsDBItemsToStore;
             List<DBItemDeploymentHistory> depHistoryDBItemsToStore = null;
             if (!deployConfigsToStoreAgain.isEmpty()) {
                 depHistoryDBItemsToStore = dbLayer.getFilteredDeploymentHistory(deployConfigsToStoreAgain);
@@ -219,7 +224,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         PublishUtils.updateItemsAddOrUpdatePGP(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId, 
                                 dbLayer).thenAccept(either -> {
                                     processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account, 
-                                            versionIdForUpdate, controllerId, deployFilter, cfgsDBItemsToStore);
+                                            versionIdForUpdate, controllerId, deployFilter, unmodified);
                         });//.get();
                         break;
                     case SOSKeyConstants.RSA_ALGORITHM_NAME:
@@ -228,7 +233,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         PublishUtils.updateItemsAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
                                 dbLayer,SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
                                     processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account, 
-                                            versionIdForUpdate, controllerId, deployFilter, cfgsDBItemsToStore);
+                                            versionIdForUpdate, controllerId, deployFilter, unmodified);
                         });//.get();
                         break;
                     case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
@@ -237,7 +242,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         PublishUtils.updateItemsAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
                                 dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
                                     processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account, 
-                                            versionIdForUpdate, controllerId, deployFilter, cfgsDBItemsToStore);
+                                            versionIdForUpdate, controllerId, deployFilter, unmodified);
                         });//.get();
                         break;
                     }

@@ -109,8 +109,13 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 }
                 configurationDBItemsToStore.addAll(PublishUtils.getValidDeployableInventoryConfigurationsfromFolders(draftFoldersToStore, dbLayer));
             }
-            final Set<DbItemConfWithOriginalContent> cfgsDBItemsToStore = configurationDBItemsToStore.stream()
-                    .map(item -> new DbItemConfWithOriginalContent(item, item.getContent())).filter(Objects::nonNull).collect(Collectors.toSet());
+            Set<DbItemConfWithOriginalContent> cfgsDBItemsToStore = null;
+            if (configurationDBItemsToStore != null) {
+                cfgsDBItemsToStore = configurationDBItemsToStore.stream()
+                        .map(item -> new DbItemConfWithOriginalContent(item, item.getContent()))
+                        .filter(Objects::nonNull).collect(Collectors.toSet());
+            }
+            final Set<DbItemConfWithOriginalContent> unmodified = cfgsDBItemsToStore;
             List<DBItemDeploymentHistory> depHistoryDBItemsToStore = null;
             if (!deployConfigsToStoreAgain.isEmpty()) {
                 depHistoryDBItemsToStore = dbLayer.getFilteredDeploymentHistory(deployConfigsToStoreAgain);
@@ -215,7 +220,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         PublishUtils.updateItemsAddOrUpdatePGP(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
                                 dbLayer).thenAccept(either -> {
                                     processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account,
-                                            versionIdForUpdate, controllerId, deployFilter, cfgsDBItemsToStore);
+                                            versionIdForUpdate, controllerId, deployFilter, unmodified);
                                 });// .get()
                         break;
                     case SOSKeyConstants.RSA_ALGORITHM_NAME:
@@ -224,7 +229,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         PublishUtils.updateItemsAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
                                 dbLayer, SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
                                     processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account,
-                                            versionIdForUpdate, controllerId, deployFilter, cfgsDBItemsToStore);
+                                            versionIdForUpdate, controllerId, deployFilter, unmodified);
                                 });// .get()
                         break;
                     case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
@@ -233,7 +238,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         PublishUtils.updateItemsAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
                                 dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
                                     processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account,
-                                            versionIdForUpdate, controllerId, deployFilter, cfgsDBItemsToStore);
+                                            versionIdForUpdate, controllerId, deployFilter, unmodified);
                                 });// .get()
                         break;
                     }
