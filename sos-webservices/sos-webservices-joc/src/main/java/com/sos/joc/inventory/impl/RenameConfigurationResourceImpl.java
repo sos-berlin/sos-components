@@ -4,8 +4,10 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -67,6 +69,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
             String newFolder = p.getParent().toString().replace('\\', '/');
             String newPath = p.toString().replace('\\', '/');
             boolean isRename = !oldPath.getFileName().equals(p.getFileName());
+            Set<String> events = new HashSet<>();
             
             if (config.getPath().equals(newPath)) { // Nothing to do
                 return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -134,7 +137,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 for (DBItemInventoryConfiguration item : oldDBFolderContent) {
                     JocInventory.updateConfiguration(dbLayer, item);
                 }
-                JocInventory.postEvent(config.getFolder());
+                events.add(config.getFolder());
                 
             } else {
                 DBItemInventoryConfiguration targetItem = dbLayer.getConfiguration(newPath, config.getType());
@@ -166,7 +169,9 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                             for (DBItemInventoryConfiguration workflow : workflows) {
                                 workflow.setContent(workflow.getContent().replaceAll("(\"lockId\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + p
                                         .getFileName() + "\""));
+                                workflow.setDeployed(false);
                                 JocInventory.updateConfiguration(dbLayer, workflow);
+                                events.add(workflow.getFolder());
                             }
                         }
                         break;
@@ -175,8 +180,10 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                         if (schedules != null && !schedules.isEmpty()) {
                             for (DBItemInventoryConfiguration schedule : schedules) {
                                 schedule.setContent(schedule.getContent().replaceAll("(\"workflowName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + p
-                                        .toString().replace('\\', '/') + "\""));
+                                        .getFileName() + "\""));
+                                schedule.setReleased(false);
                                 JocInventory.updateConfiguration(dbLayer, schedule);
+                                events.add(schedule.getFolder());
                             }
                         }
                         break;
@@ -187,7 +194,9 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                             for (DBItemInventoryConfiguration schedule : schedules1) {
                                 schedule.setContent(schedule.getContent().replaceAll("(\"calendarName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + p
                                         .getFileName() + "\""));
+                                schedule.setReleased(false);
                                 JocInventory.updateConfiguration(dbLayer, schedule);
+                                events.add(schedule.getFolder());
                             }
                         }
                         break;
@@ -200,10 +209,13 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 createAuditLog(config);
                 JocInventory.updateConfiguration(dbLayer, config);
                 JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId());
-                JocInventory.postEvent(config.getFolder());
+                events.add(config.getFolder());
             }
             
             session.commit();
+            for (String event : events) {
+                JocInventory.postEvent(event);
+            }
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {
