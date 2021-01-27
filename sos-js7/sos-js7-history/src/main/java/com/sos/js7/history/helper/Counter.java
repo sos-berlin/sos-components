@@ -146,6 +146,12 @@ public class Counter {
         private int broken = 0;
         @SuppressWarnings("unused")
         private int finished = 0;
+        @SuppressWarnings("unused")
+        private int lockAcquired = 0;
+        @SuppressWarnings("unused")
+        private int lockQueued = 0;
+        @SuppressWarnings("unused")
+        private int lockReleased = 0;
 
         public void addStarted() {
             started += 1;
@@ -195,6 +201,17 @@ public class Counter {
             finished += 1;
         }
 
+        public void addLockAcquired() {
+            lockAcquired += 1;
+        }
+
+        public void addLockQueued() {
+            lockQueued += 1;
+        }
+
+        public void addLockReleased() {
+            lockReleased += 1;
+        }
     }
 
     public class OrderStep {

@@ -1,6 +1,6 @@
 {
 	"TYPE"            : "Workflow",
-	"path"            : "/workflow_lock",
+	"path"            : "workflow_lock",
     "versionId"       : "1",
 	"instructions" : [
 		{
@@ -20,7 +20,7 @@
 	],
 	"jobs" : {
 		"job1" : {
-			"agentId" : "agent_name",
+			"agentId" : "agent",
 			"executable" : {
 				"TYPE" : "ExecutableScript",
 				"script" : "dir"

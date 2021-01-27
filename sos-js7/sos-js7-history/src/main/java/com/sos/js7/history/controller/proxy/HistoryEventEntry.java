@@ -1,10 +1,12 @@
 package com.sos.js7.history.controller.proxy;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,8 +25,13 @@ import js7.data.agent.AgentId;
 import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
+import js7.data.lock.Lock;
+import js7.data.lock.LockId;
 import js7.data.order.Order.Fresh;
 import js7.data.order.OrderEvent;
+import js7.data.order.OrderEvent.OrderLockAcquired;
+import js7.data.order.OrderEvent.OrderLockQueued;
+import js7.data.order.OrderEvent.OrderLockReleased;
 import js7.data.order.OrderId;
 import js7.data.order.Outcome;
 import js7.data.order.Outcome.Completed;
@@ -35,6 +42,8 @@ import js7.data.workflow.instructions.executable.WorkflowJob.Name;
 import js7.proxy.javaapi.data.agent.JAgentRef;
 import js7.proxy.javaapi.data.controller.JControllerState;
 import js7.proxy.javaapi.data.controller.JEventAndControllerState;
+import js7.proxy.javaapi.data.lock.JLock;
+import js7.proxy.javaapi.data.lock.JLockState;
 import js7.proxy.javaapi.data.order.JOrder;
 import js7.proxy.javaapi.data.order.JOrder.Forked;
 import js7.proxy.javaapi.data.order.JOrderEvent;
@@ -43,6 +52,7 @@ import js7.proxy.javaapi.data.workflow.JWorkflow;
 import js7.proxy.javaapi.data.workflow.JWorkflowId;
 import js7.proxy.javaapi.data.workflow.position.JPosition;
 import js7.proxy.javaapi.data.workflow.position.JWorkflowPosition;
+import scala.Option;
 import scala.collection.JavaConverters;
 import scala.jdk.javaapi.OptionConverters;
 
@@ -232,6 +242,89 @@ public class HistoryEventEntry {
                 outcomeInfo = new OutcomeInfo(type, problem);
             }
             return outcomeInfo;
+        }
+
+        public OrderLock getOrderLock(OrderLockAcquired event) throws FatEventProblemException {
+            return getOrderLock(event.lockId(), event.count(), false);
+        }
+
+        public OrderLock getOrderLock(OrderLockQueued event) throws FatEventProblemException {
+            return getOrderLock(event.lockId(), event.count(), true);
+        }
+
+        public OrderLock getOrderLock(OrderLockReleased event) throws FatEventProblemException {
+            // count not available
+            return getOrderLock(event.lockId(), null, false);
+        }
+
+        private OrderLock getOrderLock(LockId lockId, Option<Object> count, boolean checkState) throws FatEventProblemException {
+            Lock l = null;
+            Collection<OrderId> orderIds = null;
+            List<OrderId> queuedOrderIds = null;
+            if (checkState) {
+                JLockState jl = getFromEither(state.idToLockState(lockId));
+                l = jl.lock();
+                orderIds = jl.orderIds();
+                queuedOrderIds = jl.queuedOrderIds();
+            } else {
+                JLock jl = getFromEither(state.idToLock(lockId));
+                l = jl.asScala();
+            }
+            return new OrderLock(l.id().string(), l.limit(), count == null ? null : OptionConverters.toJava(count), orderIds, queuedOrderIds);
+        }
+
+        public class OrderLock {
+
+            private final String lockId;
+            private final int limit;
+            private final Integer count;
+            private OrderLockState state;
+
+            private OrderLock(String lockId, int limit, Optional<Object> count, Collection<OrderId> orderIds, List<OrderId> queuedOrderIds) {
+                this.lockId = lockId;
+                this.limit = limit;
+                this.count = count != null && count.isPresent() ? (Integer) count.get() : null;
+                this.state = null;
+                if (orderIds != null || queuedOrderIds != null) {
+                    this.state = new OrderLockState(orderIds, queuedOrderIds);
+                }
+            }
+
+            public class OrderLockState {
+
+                private final List<String> orderIds;
+                private final List<String> queuedOrderIds;
+
+                private OrderLockState(Collection<OrderId> orderIds, List<OrderId> queuedOrderIds) {
+                    this.orderIds = orderIds == null ? null : orderIds.stream().map(o -> o.string()).collect(Collectors.toList());
+                    this.queuedOrderIds = queuedOrderIds == null ? null : queuedOrderIds.stream().map(o -> o.string()).collect(Collectors.toList());
+                }
+
+                public List<String> getOrderIds() {
+                    return orderIds;
+                }
+
+                public List<String> getQueuedOrderIds() {
+                    return queuedOrderIds;
+                }
+
+            }
+
+            public String getLockId() {
+                return lockId;
+            }
+
+            public int getLimit() {
+                return limit;
+            }
+
+            public Integer getCount() {
+                return count;
+            }
+
+            public OrderLockState getState() {
+                return state;
+            }
         }
 
         public class ForkedChild {

@@ -48,6 +48,7 @@ import com.sos.js7.history.controller.exception.FatEventOrderNotFoundException;
 import com.sos.js7.history.controller.exception.FatEventOrderStepNotFoundException;
 import com.sos.js7.history.controller.proxy.HistoryEventType;
 import com.sos.js7.history.controller.proxy.fatevent.AFatEvent;
+import com.sos.js7.history.controller.proxy.fatevent.AFatEventOrderLock;
 import com.sos.js7.history.controller.proxy.fatevent.AFatEventOrderProcessed;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventAgentCouplingFailed;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventAgentReady;
@@ -74,6 +75,8 @@ import com.sos.js7.history.helper.HistoryUtil;
 import com.sos.js7.history.helper.LogEntry;
 import com.sos.js7.history.helper.LogEntry.LogLevel;
 import com.sos.webservices.json.jobscheduler.history.order.Error;
+import com.sos.webservices.json.jobscheduler.history.order.Lock;
+import com.sos.webservices.json.jobscheduler.history.order.LockState;
 import com.sos.webservices.json.jobscheduler.history.order.OrderLogEntry;
 
 public class HistoryModel {
@@ -299,6 +302,18 @@ public class HistoryModel {
                     case OrderFinished:
                         orderProcessed(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderFinished, endedOrderSteps);
                         counter.getOrder().addFinished();
+                        break;
+                    case OrderLockAcquired:
+                        orderLock(dbLayer, (AFatEventOrderLock) entry, EventType.OrderLockAcquired);
+                        counter.getOrder().addLockAcquired();
+                        break;
+                    case OrderLockQueued:
+                        orderLock(dbLayer, (AFatEventOrderLock) entry, EventType.OrderLockQueued);
+                        counter.getOrder().addLockQueued();
+                        break;
+                    case OrderLockReleased:
+                        orderLock(dbLayer, (AFatEventOrderLock) entry, EventType.OrderLockReleased);
+                        counter.getOrder().addLockReleased();
                         break;
                     case EventWithProblem:
                         FatEventWithProblem ep = (FatEventWithProblem) entry;
@@ -541,7 +556,8 @@ public class HistoryModel {
 
             item.setWorkflowPath(entry.getWorkflowPath());
             item.setWorkflowVersionId(entry.getWorkflowVersionId());
-            item.setWorkflowPosition(HistoryPosition.getParentAsString(entry.getPosition()));
+            String position = HistoryPosition.getParentAsString(entry.getPosition());
+            item.setWorkflowPosition(SOSString.isEmpty(position) ? "0" : position);
             item.setWorkflowFolder(HistoryUtil.getFolderFromPath(item.getWorkflowPath()));
             item.setWorkflowName(HistoryUtil.getBasenameFromPath(item.getWorkflowPath()));
             item.setWorkflowTitle(null);// TODO
@@ -597,7 +613,7 @@ public class HistoryModel {
             dbLayer.setMainParentId(item.getId(), item.getMainParentId());
 
             CachedOrder co = new CachedOrder(item);
-            LogEntry le = new LogEntry(LogEntry.LogLevel.DETAIL, EventType.OrderStarted, entry.getEventDatetime(), null);
+            LogEntry le = new LogEntry(LogEntry.LogLevel.MAIN, EventType.OrderStarted, entry.getEventDatetime(), null);
             le.onOrder(co, item.getWorkflowPosition());
             storeLog2File(le);
             addCachedOrder(item.getOrderId(), co);
@@ -858,6 +874,16 @@ public class HistoryModel {
 
         LogEntry le = new LogEntry(LogEntry.LogLevel.MAIN, EventType.OrderResumeMarked, entry.getEventDatetime(), null);
         le.onOrder(co, null);
+        storeLog2File(le);
+    }
+
+    private void orderLock(DBLayerHistory dbLayer, AFatEventOrderLock entry, EventType eventType) throws Exception {
+        checkControllerTimezone(dbLayer);
+
+        CachedOrder co = getCachedOrder(dbLayer, entry.getOrderId(), entry.getEventDatetime(), entry.getEventId());
+
+        LogEntry le = new LogEntry(LogEntry.LogLevel.DETAIL, eventType, entry.getEventDatetime(), null);
+        le.onOrderLock(co, entry);
         storeLog2File(le);
     }
 
@@ -1431,6 +1457,23 @@ public class HistoryModel {
             error.setErrorCode(logEntry.getErrorCode());
             error.setErrorText(logEntry.getErrorText());
             entry.setError(error);
+        }
+        if (logEntry.getOrderLock() != null) {
+            Lock lock = new Lock();
+            lock.setLockId(logEntry.getOrderLock().getLockId());
+            lock.setLimit(logEntry.getOrderLock().getLimit());
+            lock.setCount(logEntry.getOrderLock().getCount());
+            if (logEntry.getOrderLock().getState() != null) {
+                LockState lockState = new LockState();
+
+                List<String> l = logEntry.getOrderLock().getState().getOrderIds();
+                lockState.setOrderIds(l == null || l.size() == 0 ? null : String.join(",", l));
+
+                l = logEntry.getOrderLock().getState().getQueuedOrderIds();
+                lockState.setQueuedOrderIds(l == null || l.size() == 0 ? null : String.join(",", l));
+                lock.setLockState(lockState);
+            }
+            entry.setLock(lock);
         }
         return entry;
     }

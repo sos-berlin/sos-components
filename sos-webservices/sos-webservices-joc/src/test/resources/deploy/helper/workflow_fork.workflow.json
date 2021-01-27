@@ -1,6 +1,6 @@
 {
     "TYPE"            : "Workflow",
-    "path"            : "/workflow_fork",
+    "path"            : "workflow_fork",
     "versionId"       : "1",
     "instructions"    : [ 
         {

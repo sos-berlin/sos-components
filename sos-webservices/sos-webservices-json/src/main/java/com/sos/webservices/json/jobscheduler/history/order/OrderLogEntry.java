@@ -29,7 +29,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "job",
     "taskId",
     "returnCode",
-    "error"
+    "error",
+    "lock"
 })
 public class OrderLogEntry {
 
@@ -85,6 +86,8 @@ public class OrderLogEntry {
     private Long returnCode;
     @JsonProperty("error")
     private Error error;
+    @JsonProperty("lock")
+    private Lock lock;
 
     /**
      * No args constructor for use in serialization
@@ -95,20 +98,21 @@ public class OrderLogEntry {
 
     /**
      * 
+     * @param orderId
+     * @param error
+     * @param agentDatetime
+     * @param logEvent
      * @param agentPath
      * @param returnCode
      * @param controllerDatetime
      * @param logLevel
-     * @param orderId
+     * @param lock
      * @param position
      * @param agentUrl
      * @param job
-     * @param error
-     * @param agentDatetime
      * @param taskId
-     * @param logEvent
      */
-    public OrderLogEntry(String controllerDatetime, String agentDatetime, String orderId, String logLevel, EventType logEvent, String position, String agentPath, String agentUrl, String job, Long taskId, Long returnCode, Error error) {
+    public OrderLogEntry(String controllerDatetime, String agentDatetime, String orderId, String logLevel, EventType logEvent, String position, String agentPath, String agentUrl, String job, Long taskId, Long returnCode, Error error, Lock lock) {
         super();
         this.controllerDatetime = controllerDatetime;
         this.agentDatetime = agentDatetime;
@@ -122,6 +126,7 @@ public class OrderLogEntry {
         this.taskId = taskId;
         this.returnCode = returnCode;
         this.error = error;
+        this.lock = lock;
     }
 
     /**
@@ -298,14 +303,24 @@ public class OrderLogEntry {
         this.error = error;
     }
 
+    @JsonProperty("lock")
+    public Lock getLock() {
+        return lock;
+    }
+
+    @JsonProperty("lock")
+    public void setLock(Lock lock) {
+        this.lock = lock;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerDatetime", controllerDatetime).append("agentDatetime", agentDatetime).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentPath", agentPath).append("agentUrl", agentUrl).append("job", job).append("taskId", taskId).append("returnCode", returnCode).append("error", error).toString();
+        return new ToStringBuilder(this).append("controllerDatetime", controllerDatetime).append("agentDatetime", agentDatetime).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentPath", agentPath).append("agentUrl", agentUrl).append("job", job).append("taskId", taskId).append("returnCode", returnCode).append("error", error).append("lock", lock).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(orderId).append(error).append(agentDatetime).append(logEvent).append(agentPath).append(returnCode).append(controllerDatetime).append(logLevel).append(position).append(agentUrl).append(job).append(taskId).toHashCode();
+        return new HashCodeBuilder().append(orderId).append(error).append(agentDatetime).append(logEvent).append(agentPath).append(returnCode).append(controllerDatetime).append(logLevel).append(lock).append(position).append(agentUrl).append(job).append(taskId).toHashCode();
     }
 
     @Override
@@ -317,7 +332,7 @@ public class OrderLogEntry {
             return false;
         }
         OrderLogEntry rhs = ((OrderLogEntry) other);
-        return new EqualsBuilder().append(orderId, rhs.orderId).append(error, rhs.error).append(agentDatetime, rhs.agentDatetime).append(logEvent, rhs.logEvent).append(agentPath, rhs.agentPath).append(returnCode, rhs.returnCode).append(controllerDatetime, rhs.controllerDatetime).append(logLevel, rhs.logLevel).append(position, rhs.position).append(agentUrl, rhs.agentUrl).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
+        return new EqualsBuilder().append(orderId, rhs.orderId).append(error, rhs.error).append(agentDatetime, rhs.agentDatetime).append(logEvent, rhs.logEvent).append(agentPath, rhs.agentPath).append(returnCode, rhs.returnCode).append(controllerDatetime, rhs.controllerDatetime).append(logLevel, rhs.logLevel).append(lock, rhs.lock).append(position, rhs.position).append(agentUrl, rhs.agentUrl).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
     }
 
 }

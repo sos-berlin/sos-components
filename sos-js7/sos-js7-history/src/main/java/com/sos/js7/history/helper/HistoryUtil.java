@@ -10,6 +10,9 @@ public class HistoryUtil {
     public static final String NEW_LINE = "\r\n";
 
     public static String getFolderFromPath(String path) {
+        if (!path.startsWith("/")) {
+            return "/";
+        }
         int li = path.lastIndexOf("/");
         if (li == 0) {
             return path.substring(0, 1);

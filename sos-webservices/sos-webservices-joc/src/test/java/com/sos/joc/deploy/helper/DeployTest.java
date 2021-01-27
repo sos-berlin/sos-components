@@ -41,7 +41,7 @@ public class DeployTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeployTest.class);
 
-    private static final String CONTROLLER_URI_PRIMARY = "http://localhost:4444";
+    private static final String CONTROLLER_URI_PRIMARY = "http://localhost:5444";
     private static final Uri AGENT_URI = Uri.of("http://localhost:4445");
 
     private static final String SIGNATURE_TYPE_PGP = "PGP";

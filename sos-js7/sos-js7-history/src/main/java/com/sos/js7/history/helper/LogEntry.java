@@ -7,6 +7,8 @@ import java.util.List;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.event.EventType;
 import com.sos.joc.model.order.OrderStateText;
+import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryOrder.OrderLock;
+import com.sos.js7.history.controller.proxy.fatevent.AFatEventOrderLock;
 import com.sos.js7.history.controller.proxy.fatevent.FatForkedChild;
 import com.sos.js7.history.controller.proxy.fatevent.FatOutcome;
 
@@ -37,6 +39,7 @@ public class LogEntry {
     private String errorCode;
     private String errorText;
     private Integer returnCode;
+    private OrderLock orderLock;
 
     public LogEntry(LogLevel level, EventType type, Date controllerDate, Date agentDate) {
         logLevel = level;
@@ -55,6 +58,11 @@ public class LogEntry {
         historyOrderId = order.getId();
         position = workflowPosition;
         chunk = order.getOrderId();
+    }
+
+    public void onOrderLock(CachedOrder order, AFatEventOrderLock entry) {
+        onOrder(order, "...", null); // position TODO
+        orderLock = entry.getOrderLock();
     }
 
     public void setError(String state, CachedOrderStep cos) {
@@ -248,5 +256,9 @@ public class LogEntry {
 
     public Integer getReturnCode() {
         return returnCode;
+    }
+
+    public OrderLock getOrderLock() {
+        return orderLock;
     }
 }
