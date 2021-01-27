@@ -139,8 +139,8 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
             Set<String> names = jOrders.stream().map(o -> o.workflowId().path().string()).collect(Collectors.toSet());
-            final Map<String, String> namePathMap = dbLayer.getNamePathMapping(names, DeployType.WORKFLOW.intValue());
-            
+            final Map<String, String> namePathMap = dbLayer.getNamePathMapping(ordersFilter.getControllerId(), names, DeployType.WORKFLOW.intValue());
+
             Stream<Either<Exception, OrderV>> ordersV = jOrders.stream().map(o -> {
                 Either<Exception, OrderV> either = null;
                 try {

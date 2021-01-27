@@ -50,8 +50,8 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
                 JOrder jOrder = optional.get();
                 session = Globals.createSosHibernateStatelessConnection(API_CALL);
                 DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
-                final Map<String, String> namePathMap = dbLayer.getNamePathMapping(Arrays.asList(jOrder.workflowId().path().toString()),
-                        DeployType.WORKFLOW.intValue());
+                final Map<String, String> namePathMap = dbLayer.getNamePathMapping(orderFilter.getControllerId(), Arrays.asList(jOrder.workflowId()
+                        .path().toString()), DeployType.WORKFLOW.intValue());
                 //checkFolderPermissions(optional.get().workflowId().path().string()); is only a name
                 return JOCDefaultResponse.responseStatus200(OrdersHelper.mapJOrderToOrderV(optional.get(), orderFilter.getCompact(), namePathMap, surveyDateMillis,
                         true));

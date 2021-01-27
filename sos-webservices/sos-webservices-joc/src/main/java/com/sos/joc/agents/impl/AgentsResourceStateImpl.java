@@ -111,7 +111,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                         List<JOrder> jOrders = jOrderStream.collect(Collectors.toList());
                         DeployedConfigurationDBLayer dbCLayer = new DeployedConfigurationDBLayer(connection);
                         Set<String> names = jOrders.stream().map(o -> o.workflowId().path().string()).collect(Collectors.toSet());
-                        final Map<String, String> namePathMap = dbCLayer.getNamePathMapping(names, DeployType.WORKFLOW.intValue());
+                        final Map<String, String> namePathMap = dbCLayer.getNamePathMapping(controllerId, names, DeployType.WORKFLOW.intValue());
                         ordersPerAgent.putAll(jOrders.stream().map(o -> {
                             try {
                                 return OrdersHelper.mapJOrderToOrderV(o, false, namePathMap, null, false);
