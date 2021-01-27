@@ -21,6 +21,8 @@ import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.inventory.path.PathFilter;
+import com.sos.joc.model.inventory.path.PathResponse;
 import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
@@ -647,5 +649,20 @@ public class DeploymentTestUtils {
         
         return filter;
     }
-    
+
+    public static PathFilter createExamplePathFilter () {
+        PathFilter filter = new PathFilter();
+        filter.setName("test_wf");
+        filter.setObjectType(ConfigurationType.WORKFLOW.toString());
+        filter.setUseDrafts(true);
+        return filter;
+    }
+
+    public static PathResponse createExamplePathResponse () {
+        PathResponse response = new PathResponse();
+        response.setPath("/_2021_01_18/test_wf");
+        response.setDeliveryDate(Date.from(Instant.now()));
+        return response;
+    }
+
 }

@@ -340,4 +340,20 @@ public class MappingTest {
         LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleSetVersionsFilter()));
     }
 
+    @Test
+    public void test16MapPathFilter () throws JsonProcessingException {
+        LOGGER.info("PathFilter Example");
+        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
+        LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExamplePathFilter()));
+    }
+
+    @Test
+    public void test17MapPathResponse () throws JsonProcessingException {
+        LOGGER.info("PathResponse Example");
+        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
+        DateFormat df = new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:ss.SSS'Z'");
+        om.setDateFormat(df);
+        LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExamplePathResponse()));
+    }
+
 }
