@@ -1,43 +1,54 @@
 {
 	"TYPE": "Workflow",
+	"path": "my_workflow",
 	"instructions": [
+		{
+			"TYPE": "Execute.Named",
+			"jobName": "job_first",
+			"label": "job_first label"
+		},
 		{
 			"TYPE": "Fork",
 			"branches": [
 				{
 					"id": "branch1",
-					"workflow" : {
-						"instructions" : [
+					"workflow": {
+						"instructions": [
 							{
-								"TYPE" : "Lock",
+								"TYPE": "Lock",
 								"lockId": "lock_1",
-								"count" : 1,
-								"lockedWorkflow" : {
-									"instructions" : [
+								"count": 1,
+								"lockedWorkflow": {
+									"instructions": [
 										{
-											"TYPE" : "Execute.Named",
-											"jobName" : "job_1",
-											"label" : "job_1 label"
+											"TYPE": "Execute.Named",
+											"jobName": "job_in_lock",
+											"label": "job_in_lock label"
 										}
 									]
 								}
+							},
+							{
+								"TYPE": "Execute.Named",
+								"jobName": "job_after_lock",
+								"label": "job_after_lock label"
 							}
 						]
 					}
 				},
 				{
 					"id": "branch2",
-					"workflow" : {
-						"instructions" : [
+					"workflow": {
+						"instructions": [
 							{
-								"TYPE" : "If",
-								"predicate" : "returnCode > 0",
-								"then" : {
-									"instructions" : [
+								"TYPE": "If",
+								"predicate": "returnCode > 0",
+								"then": {
+									"instructions": [
 										{
-											"TYPE" : "Execute.Named",
-											"jobName" : "job_2",
-											"label" : "job_2 label"
+											"TYPE": "Execute.Named",
+											"jobName": "job_2",
+											"label": "job_2 label"
 										}
 									]
 								}
@@ -46,6 +57,11 @@
 					}
 				}
 			]
+		},
+		{
+			"TYPE": "Execute.Named",
+			"jobName": "job_last",
+			"label": "job_last label"
 		}
 	],
 	"jobs": {
@@ -55,9 +71,9 @@
 				"TYPE": "ExecutableScript",
 				"script": "job_1 script"
 			},
-			"defaultArguments":{
-			    "job_1_arg_1" : "job_1_arg_1 value",
-			    "job_1_arg_2" : "job_1_arg_2 value"
+			"defaultArguments": {
+				"job_1_arg_1": "job_1_arg_1 value",
+				"job_1_arg_2": "job_1_arg_2 value"
 			},
 			"returnCodeMeaning": {
 				"success": [
@@ -106,6 +122,5 @@
 			},
 			"taskLimit": 1
 		}
-	},
-	"path": "/workflow"
+	}
 }
