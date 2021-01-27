@@ -160,8 +160,10 @@ public class OrderInitiatorRunner extends TimerTask {
             FilterDailyPlanSubmissions filter = new FilterDailyPlanSubmissions();
             filter.setControllerId(controllerId);
             filter.setDateFrom(calendar.getTime());
-            calendar.add(java.util.Calendar.DATE, 1);
-            filter.setDateTo(calendar.getTime());
+            java.util.Calendar calendarTo = java.util.Calendar.getInstance();
+            calendarTo.setTimeInMillis(calendar.getTimeInMillis());
+            calendarTo.add(java.util.Calendar.DATE, 1);
+            filter.setDateTo(calendarTo.getTime());
             List<DBItemDailyPlanSubmissions> listOfDailyPlanSubmissions = dbLayerDailyPlan.getDailyPlanSubmissions(filter, 0);
             return (listOfDailyPlanSubmissions.size() > 0);
 
@@ -176,7 +178,6 @@ public class OrderInitiatorRunner extends TimerTask {
         try {
             for (ControllerConfiguration controllerConfiguration : controllers) {
                 java.util.Calendar dailyPlanCalendar = calendar;
-                dailyPlanCalendar.add(java.util.Calendar.DATE, 1);
                 OrderInitiatorGlobals.orderInitiatorSettings.setControllerId(controllerConfiguration.getCurrent().getId());
                 OrderInitiatorGlobals.dailyPlanDate = dailyPlanCalendar.getTime();
                 ScheduleSource scheduleSource = new ScheduleSourceDB(controllerConfiguration.getCurrent().getId());
@@ -190,7 +191,6 @@ public class OrderInitiatorRunner extends TimerTask {
                     }
                     dailyPlanCalendar.add(java.util.Calendar.DATE, 1);
                     OrderInitiatorGlobals.dailyPlanDate = dailyPlanCalendar.getTime();
-
                 }
             }
         } catch (SOSHibernateException | IOException | DBConnectionRefusedException | DBInvalidDataException | DBMissingDataException
@@ -341,8 +341,8 @@ public class OrderInitiatorRunner extends TimerTask {
                             assignedCalendar.setTimeZone(UTC);
                         }
                         FrequencyResolver fr = new FrequencyResolver();
-                        LOGGER.debug("Generate dates for:" + assignedCalendar.getCalendarPath());
-                        CalendarCacheItem calendarCacheItem = calendarCache.get(assignedCalendar.getCalendarPath() + "#" + schedule.getPath());
+                        LOGGER.debug("Generate dates for:" + assignedCalendar.getCalendarName());
+                        CalendarCacheItem calendarCacheItem = calendarCache.get(assignedCalendar.getCalendarName() + "#" + schedule.getPath());
                         String actDateAsString = DailyPlanHelper.dateAsString(actDate);
                         String nextDateAsString = DailyPlanHelper.dateAsString(nextDate);
                         String dailyPlanDateAsString = DailyPlanHelper.dateAsString(dailyPlanDate);

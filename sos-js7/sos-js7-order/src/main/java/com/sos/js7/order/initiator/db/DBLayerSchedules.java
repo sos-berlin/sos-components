@@ -158,9 +158,9 @@ public class DBLayerSchedules {
                     dbItemInventoryConfiguration.setSchedule(schedule);
                     filteredResultset.add(dbItemInventoryConfiguration);
                 } else {
-                    String s = "Workflow " + schedule.getWorkflowName() + " is not deployed. scheduler->" + dbItemInventoryConfiguration.getContent();
+                    String s = "Workflow " + schedule.getWorkflowName() + " is not deployed. schedule->" + schedule.getPath()   ;
                     DBItemDailyPlanHistory dbItemDailyPlanHistory = new DBItemDailyPlanHistory();
-                    dbItemDailyPlanHistory.setCategory("ERROR");
+                    dbItemDailyPlanHistory.setCategory("WARN");
                     if (filter.getListOfControllerIds().size() > 0) {
                         dbItemDailyPlanHistory.setControllerId(filter.getListOfControllerIds().get(0));
                     }
@@ -170,7 +170,7 @@ public class DBLayerSchedules {
                     dbItemDailyPlanHistory.setUserAccount(OrderInitiatorGlobals.orderInitiatorSettings.getUserAccount());
                     dbLayerDailyPlanHistory.storeDailyPlanHistory(dbItemDailyPlanHistory);
 
-                    LOGGER.debug("Warn:" + s);
+                    LOGGER.warn("Warn:" + s);
                 }
             }
         }

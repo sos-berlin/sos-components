@@ -1,8 +1,6 @@
 package com.sos.js7.order.initiator;
 
-import java.io.File;
 import java.util.List;
-import java.util.Properties;
 import java.util.Timer;
 
 import org.slf4j.Logger;
@@ -83,10 +81,7 @@ public class OrderInitiatorMain extends JocClusterService {
         LOGGER.debug("Setting " + prop + "=" + val);
         return val;
     } 
-     
-    
-
-
+      
     private void setSettings() throws Exception {
         settings = new OrderInitiatorSettings();
         if (Globals.sosCockpitProperties == null) {
@@ -96,7 +91,7 @@ public class OrderInitiatorMain extends JocClusterService {
         LOGGER.debug("...Settings from " + getJocConfig().getResourceDirectory().resolve("joc.properties").normalize());
          
         settings.setDayAhead(getProperty(Globals.sosCockpitProperties, "daily_plan_day_ahead", "0"));
-        settings.setTimeZone(getProperty(Globals.sosCockpitProperties, "daily_plan_time_zone", "UTC"));
+        settings.setTimeZone(getProperty(Globals.sosCockpitProperties, "daily_plan_timezone", "UTC"));
         settings.setPeriodBegin(getProperty(Globals.sosCockpitProperties, "daily_plan_period_begin", "00:00"));
          
 
