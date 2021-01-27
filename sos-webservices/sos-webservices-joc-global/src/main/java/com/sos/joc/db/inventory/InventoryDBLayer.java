@@ -29,6 +29,7 @@ import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
@@ -986,5 +987,49 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
         query.setParameter("calendarName", "\"" + calendarName + "\"");
         return getSession().getResultList(query);
+    }
+    
+    public String getPathByNameFromInvConfigurations (String name, ConfigurationType type) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select path from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+        hql.append(" where name = :name");
+        hql.append(" and type = :type");
+        Query<String> query = getSession().createQuery(hql.toString());
+        query.setParameter("name", name);
+        query.setParameter("type", type.intValue());
+        return getSession().getSingleResult(query);
+        
+    }
+
+    public String getPathByNameFromInvReleasedConfigurations (String name, ConfigurationType type) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select path from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" ");
+        hql.append(" where name = :name");
+        hql.append(" and type = :type");
+        Query<String> query = getSession().createQuery(hql.toString());
+        query.setParameter("name", name);
+        query.setParameter("type", type.intValue());
+        return getSession().getSingleResult(query);
+        
+    }
+
+    public String getPathByNameFromDepHistory (String name, ConfigurationType type) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select path from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" ");
+        hql.append(" where name = :name");
+        hql.append(" and type = :type");
+        Query<String> query = getSession().createQuery(hql.toString());
+        query.setParameter("name", name);
+        query.setParameter("type", type.intValue());
+        return getSession().getSingleResult(query);
+    }
+
+    public String getPathByNameFromLatestActiveDepHistoryItem (String name, ConfigurationType type) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select dep.path from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
+        hql.append(" where dep.id = (select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
+        hql.append(" where history.name = :name");
+        hql.append(" and history.type = :type");
+        hql.append(" and history.operation = 0").append(")");
+        Query<String> query = getSession().createQuery(hql.toString());
+        query.setParameter("name", name);
+        query.setParameter("type", type.intValue());
+        return getSession().getSingleResult(query);
     }
 }

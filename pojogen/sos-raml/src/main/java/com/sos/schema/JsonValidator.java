@@ -108,6 +108,7 @@ public class JsonValidator {
             put("com.sos.joc.model.inventory.release.ReleasablesFilter", "inventory/release/request-releasables-schema.json");
             put("com.sos.joc.model.inventory.rename.RequestFilter", "inventory/rename/request-filter-schema.json");
             put("com.sos.joc.model.inventory.ConfigurationObject", "inventory/configurationObject-schema.json");
+            put("com.sos.joc.model.inventory.path.PathFilter","inventory/path/pathFilter-schema.json");
 
             put("com.sos.joc.model.publish.SetKeyFilter", "publish/setKey-schema.json");
             put("com.sos.joc.model.publish.GenerateKeyFilter", "publish/generateKey-schema.json");
