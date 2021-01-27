@@ -33,7 +33,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "job",
     "taskId",
     "returnCode",
-    "error"
+    "error",
+    "lock"
 })
 public class OrderLogItem {
 
@@ -99,6 +100,8 @@ public class OrderLogItem {
     private Long returnCode;
     @JsonProperty("error")
     private OrderLogItemError error;
+    @JsonProperty("lock")
+    private Lock lock;
 
     /**
      * datetime with timeOffset: format "yyyy-MM-dd' 'HH:mm:ss.SSSZ"
@@ -292,14 +295,24 @@ public class OrderLogItem {
         this.error = error;
     }
 
+    @JsonProperty("lock")
+    public Lock getLock() {
+        return lock;
+    }
+
+    @JsonProperty("lock")
+    public void setLock(Lock lock) {
+        this.lock = lock;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerDatetime", controllerDatetime).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentDatetime", agentDatetime).append("agentPath", agentPath).append("agentUrl", agentUrl).append("job", job).append("taskId", taskId).append("returnCode", returnCode).append("error", error).toString();
+        return new ToStringBuilder(this).append("controllerDatetime", controllerDatetime).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentDatetime", agentDatetime).append("agentPath", agentPath).append("agentUrl", agentUrl).append("job", job).append("taskId", taskId).append("returnCode", returnCode).append("error", error).append("lock", lock).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(orderId).append(error).append(agentDatetime).append(logEvent).append(agentPath).append(returnCode).append(controllerDatetime).append(logLevel).append(position).append(agentUrl).append(job).append(taskId).toHashCode();
+        return new HashCodeBuilder().append(orderId).append(error).append(agentDatetime).append(logEvent).append(agentPath).append(returnCode).append(controllerDatetime).append(logLevel).append(lock).append(position).append(agentUrl).append(job).append(taskId).toHashCode();
     }
 
     @Override
@@ -311,7 +324,7 @@ public class OrderLogItem {
             return false;
         }
         OrderLogItem rhs = ((OrderLogItem) other);
-        return new EqualsBuilder().append(orderId, rhs.orderId).append(error, rhs.error).append(agentDatetime, rhs.agentDatetime).append(logEvent, rhs.logEvent).append(agentPath, rhs.agentPath).append(returnCode, rhs.returnCode).append(controllerDatetime, rhs.controllerDatetime).append(logLevel, rhs.logLevel).append(position, rhs.position).append(agentUrl, rhs.agentUrl).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
+        return new EqualsBuilder().append(orderId, rhs.orderId).append(error, rhs.error).append(agentDatetime, rhs.agentDatetime).append(logEvent, rhs.logEvent).append(agentPath, rhs.agentPath).append(returnCode, rhs.returnCode).append(controllerDatetime, rhs.controllerDatetime).append(logLevel, rhs.logLevel).append(lock, rhs.lock).append(position, rhs.position).append(agentUrl, rhs.agentUrl).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
     }
 
     public enum LogEvent {
@@ -334,7 +347,10 @@ public class OrderLogItem {
         OrderAwoke("OrderAwoke"),
         OrderJoined("OrderJoined"),
         OrderSuspended("OrderSuspended"),
-        OrderBroken("OrderBroken");
+        OrderBroken("OrderBroken"),
+        OrderLockAcquired("OrderLockAcquired"),
+        OrderLockQueued("OrderLockQueued"),
+        OrderLockReleased("OrderLockReleased");
         private final String value;
         private final static Map<String, OrderLogItem.LogEvent> CONSTANTS = new HashMap<String, OrderLogItem.LogEvent>();
 

@@ -1641,11 +1641,13 @@ public class HistoryModel {
         }
     }
 
+    // TODO controllerId+orderId
     private String hashOrderConstraint(Long eventId, String orderId, String workflowPosition) {
         return SOSString.hash(new StringBuilder(controllerConfiguration.getCurrent().getId()).append(String.valueOf(eventId)).append(orderId).append(
                 workflowPosition).toString());
     }
 
+    // TODO controllerId+orderId+workflowPosition
     private String hashOrderStepConstraint(Long eventId, String orderId, String workflowPosition) {
         return hashOrderConstraint(eventId, orderId, workflowPosition);
     }

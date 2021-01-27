@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSPath;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.db.history.DBItemHistoryLog;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.Globals;
@@ -314,13 +315,13 @@ public class LogOrderContent {
 
         String agent = null;
         if (item.getLogEvent() == LogEvent.OrderProcessingStarted) {
-            if (item.getAgentUrl() != null && !item.getAgentUrl().isEmpty()) {
+            if (!SOSString.isEmpty(item.getAgentUrl())) {
                 info.add("url=" + item.getAgentUrl());
             }
-            if (item.getAgentPath() != null && !item.getAgentPath().isEmpty()) {
+            if (!SOSString.isEmpty(item.getAgentPath())) {
                 info.add("id=" + item.getAgentPath());
             }
-            if (item.getAgentPath() != null && !item.getAgentPath().isEmpty()) {
+            if (!SOSString.isEmpty(item.getAgentPath())) {
                 info.add("time=" + item.getAgentDatetime());
             }
             if (!info.isEmpty()) {
@@ -332,16 +333,16 @@ public class LogOrderContent {
         String error = null;
         if (item.getError() != null) {
             OrderLogItemError err = item.getError();
-            if (err.getErrorState() != null && !err.getErrorState().isEmpty()) {
+            if (!SOSString.isEmpty(err.getErrorState())) {
                 info.add("status=" + err.getErrorState());
             }
-            if (err.getErrorCode() != null && !err.getErrorCode().isEmpty()) {
+            if (!SOSString.isEmpty(err.getErrorCode())) {
                 info.add("code=" + err.getErrorCode());
             }
-            if (err.getErrorReason() != null && !err.getErrorReason().isEmpty()) {
+            if (!SOSString.isEmpty(err.getErrorReason())) {
                 info.add("reason=" + err.getErrorReason());
             }
-            if (err.getErrorText() != null && !err.getErrorText().isEmpty()) {
+            if (!SOSString.isEmpty(err.getErrorText())) {
                 info.add("msg=" + err.getErrorText());
             }
             if (!info.isEmpty()) {
@@ -350,13 +351,13 @@ public class LogOrderContent {
         }
 
         info.clear();
-        if (item.getOrderId() != null && !item.getOrderId().isEmpty()) {
+        if (!SOSString.isEmpty(item.getOrderId())) {
             info.add("id=" + item.getOrderId());
         }
-        if (item.getPosition() != null && !item.getPosition().isEmpty()) {
+        if (!SOSString.isEmpty(item.getPosition())) {
             info.add("pos=" + item.getPosition());
         }
-        if (item.getJob() != null && !item.getJob().isEmpty()) {
+        if (!SOSString.isEmpty(item.getJob())) {
             info.add("Job=" + item.getJob());
         }
         if (agent != null) {
@@ -368,6 +369,23 @@ public class LogOrderContent {
         if (error != null) {
             info.add(error);
         }
+        if (item.getLock() != null) {
+            info.add("LockId=" + item.getLock().getLockId());
+            info.add("limit=" + item.getLock().getLimit());
+            if (item.getLock().getCount() != null) {
+                info.add("count=" + item.getLock().getCount());
+            }
+            if (item.getLock().getLockState() != null) {
+                if (!SOSString.isEmpty(item.getLock().getLockState().getOrderIds())) {
+                    info.add("orders=" + item.getLock().getLockState().getOrderIds());
+                }
+                if (!SOSString.isEmpty(item.getLock().getLockState().getQueuedOrderIds())) {
+                    info.add("queued orders=" + item.getLock().getLockState().getQueuedOrderIds());
+                }
+            }
+
+        }
+
         String loglineAdditionals = "";
         if (!info.isEmpty()) {
             loglineAdditionals = info.stream().collect(Collectors.joining(", "));
