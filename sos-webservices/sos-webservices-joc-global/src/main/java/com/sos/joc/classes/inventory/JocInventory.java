@@ -334,9 +334,7 @@ public class JocInventory {
                 path = Globals.normalizePath(inventoryPath);
                 Path p = Paths.get(path);
                 name = p.getFileName().toString();
-                if (!isFolder(type)) {
-                    CheckJavaVariableName.test(type.value().toLowerCase(), name);
-                }
+                CheckJavaVariableName.test(type.value().toLowerCase(), name);
                 folder = normalizeFolder(p.getParent());
             }
         }
@@ -345,9 +343,7 @@ public class JocInventory {
             if (inventoryPath != null) {
                 path = inventoryPath.toString().replace('\\', '/');
                 name = inventoryPath.getFileName().toString();
-                if (!isFolder(type)) {
-                    CheckJavaVariableName.test(type.value().toLowerCase(), name);
-                }
+                CheckJavaVariableName.test(type.value().toLowerCase(), name);
                 folder = normalizeFolder(inventoryPath.getParent());
             }
         }

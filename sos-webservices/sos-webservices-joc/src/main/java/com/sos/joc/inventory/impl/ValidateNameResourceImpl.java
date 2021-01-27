@@ -55,14 +55,13 @@ public class ValidateNameResourceImpl extends JOCResourceImpl implements IValida
             String p = path.toString().replace('\\', '/');
             
             // Check Java variable name rules
-//            for (int i = 0; i < path.getNameCount(); i++) {
-//                if (i == path.getNameCount() - 1) {
-//                    CheckJavaVariableName.test("name", path.getName(i).toString());
-//                } else {
-//                    CheckJavaVariableName.test("folder", path.getName(i).toString());
-//                }
-//            }
-            CheckJavaVariableName.test("name", path.getFileName().toString());
+            for (int i = 0; i < path.getNameCount(); i++) {
+                if (i == path.getNameCount() - 1) {
+                    CheckJavaVariableName.test("name", path.getName(i).toString());
+                } else {
+                    CheckJavaVariableName.test("folder", path.getName(i).toString());
+                }
+            }
             
             // Check folder permissions
             if (JocInventory.isFolder(in.getObjectType()) && !folderPermissions.isPermittedForFolder(p)) {

@@ -70,14 +70,13 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 java.nio.file.Path path = JocInventory.normalizePath(in.getPath());
 
                 // Check Java variable name rules
-//                for (int i = 0; i < path.getNameCount(); i++) {
-//                    if (i == path.getNameCount() - 1) {
-//                        CheckJavaVariableName.test("name", path.getName(i).toString());
-//                    } else {
-//                        CheckJavaVariableName.test("folder", path.getName(i).toString());
-//                    }
-//                }
-                CheckJavaVariableName.test("name", path.getFileName().toString());
+                for (int i = 0; i < path.getNameCount(); i++) {
+                    if (i == path.getNameCount() - 1) {
+                        CheckJavaVariableName.test("name", path.getName(i).toString());
+                    } else {
+                        CheckJavaVariableName.test("folder", path.getName(i).toString());
+                    }
+                }
 
                 // check if name is unique
                 if (!JocInventory.isFolder(in.getObjectType())) {

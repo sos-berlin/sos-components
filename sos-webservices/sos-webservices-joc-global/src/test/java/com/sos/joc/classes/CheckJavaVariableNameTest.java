@@ -8,7 +8,7 @@ import org.junit.Test;
 
 public class CheckJavaVariableNameTest {
     
-    private String[] strings = {"こんにちは", "niño", "ha/lo", "final", "1st", null};
+    private String[] strings = {"こんにちは", "niño", "ha/lo", "final", "1st", null, "w.1", "2021-01-27", "come on", "see...more", "continue..."};
     
     private boolean test(String s) {
         try {
@@ -42,12 +42,37 @@ public class CheckJavaVariableNameTest {
     
     @Test
     public void test5() {
-        assertFalse(test(strings[4]));
+        assertTrue(test(strings[4]));
     }
     
     @Test
     public void test6() {
         assertFalse(test(strings[5]));
+    }
+    
+    @Test
+    public void test7() {
+        assertTrue(test(strings[6]));
+    }
+    
+    @Test
+    public void test8() {
+        assertTrue(test(strings[7]));
+    }
+    
+    @Test
+    public void test9() {
+        assertFalse(test(strings[8]));
+    }
+    
+    @Test
+    public void test10() {
+        assertFalse(test(strings[9]));
+    }
+    
+    @Test
+    public void test11() {
+        assertFalse(test(strings[10]));
     }
 
 }

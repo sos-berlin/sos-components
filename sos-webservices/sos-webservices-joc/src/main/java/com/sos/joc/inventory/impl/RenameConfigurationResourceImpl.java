@@ -87,14 +87,13 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
             }
             
             // Check Java variable name rules
-//            for (int i = 0; i < p.getNameCount(); i++) {
-//                if (i == p.getNameCount() - 1) {
-//                    CheckJavaVariableName.test("name", p.getName(i).toString());
-//                } else {
-//                    CheckJavaVariableName.test("folder", p.getName(i).toString());
-//                }
-//            }
-            CheckJavaVariableName.test("name", p.getFileName().toString());
+            for (int i = 0; i < p.getNameCount(); i++) {
+                if (i == p.getNameCount() - 1) {
+                    CheckJavaVariableName.test("name", p.getName(i).toString());
+                } else {
+                    CheckJavaVariableName.test("folder", p.getName(i).toString());
+                }
+            }
 
             if (JocInventory.isFolder(type)) {
                 List<DBItemInventoryConfiguration> oldDBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null);
@@ -140,26 +139,29 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 events.add(config.getFolder());
                 
             } else {
-                DBItemInventoryConfiguration targetItem = dbLayer.getConfiguration(newPath, config.getType());
-                
-                if (targetItem != null) {
-                    if (in.getOverwrite()) {
-                        JocInventory.deleteConfiguration(dbLayer, targetItem);
+                if (!newPath.equalsIgnoreCase(config.getPath())) { //if not only upper-lower case is changed then check if target exists
+                    DBItemInventoryConfiguration targetItem = dbLayer.getConfiguration(newPath, config.getType());
+                    
+                    if (targetItem != null) {
+                        if (in.getOverwrite()) {
+                            JocInventory.deleteConfiguration(dbLayer, targetItem);
+                        } else {
+                            throw new JocObjectAlreadyExistException(String.format("%s %s already exists", ConfigurationType.fromValue(config.getType())
+                                    .value().toLowerCase(), targetItem.getPath()));
+                        }
                     } else {
-                        throw new JocObjectAlreadyExistException(String.format("%s %s already exists", ConfigurationType.fromValue(config.getType())
-                                .value().toLowerCase(), targetItem.getPath()));
-                    }
-                } else {
-                    // check unique name
-                    List<DBItemInventoryConfiguration> namedItems = dbLayer.getConfigurationByName(p.getFileName().toString(), config.getType());
-                    if (namedItems != null) {
-                        namedItems.remove(config);
-                        if (!namedItems.isEmpty()) {
-                            throw new JocObjectAlreadyExistException(String.format("The name has to be unique: '%s' is already used in '%s'", p
-                                    .getFileName().toString(), namedItems.get(0).getPath()));
+                        // check unique name
+                        List<DBItemInventoryConfiguration> namedItems = dbLayer.getConfigurationByName(p.getFileName().toString(), config.getType());
+                        if (namedItems != null) {
+                            namedItems.remove(config);
+                            if (!namedItems.isEmpty()) {
+                                throw new JocObjectAlreadyExistException(String.format("The name has to be unique: '%s' is already used in '%s'", p
+                                        .getFileName().toString(), namedItems.get(0).getPath()));
+                            }
                         }
                     }
                 }
+                
                 
                 if (isRename) {  // deep rename if necessary
                     switch (type) {

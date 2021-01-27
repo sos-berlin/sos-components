@@ -18,13 +18,17 @@ public class CheckJavaVariableName {
             "char", "final", "interface", "static", "void", "class", "finally", "long", "strictfp", "volatile", "const", "float", "native", "super",
             "while");
     private static final Predicate<String> controlChars = Pattern.compile("[\\x00-\\x1F\\x7F\\x80-\\x9F]").asPredicate();
-    // punction and symbol chars without _
+    private static final Predicate<String> spaceChars = Pattern.compile("\\s").asPredicate();
+    // punction and symbol chars without ._-
     private static final Predicate<String> punctuationAndSymbolChars = Pattern.compile(
-            "[\\x20-\\x2F\\x3A-\\x40\\x5B-\\x5E\\x60\\x7B-\\x7E\\xA0-\\xBF\\xD7\\xF7]").asPredicate();
-    private static final Predicate<String> digits = Pattern.compile("\\d").asPredicate();
+            "[\\x21-\\x2C\\x2F\\x3A-\\x40\\x5B-\\x5E\\x60\\x7B-\\x7E\\xA0-\\xBF\\xD7\\xF7]").asPredicate();
+//    private static final Predicate<String> digits = Pattern.compile("\\d").asPredicate();
+    private static final Predicate<String> leadingHyphensAndDots = Pattern.compile("^[.-]").asPredicate();
+    private static final Predicate<String> trailingHyphensAndDots = Pattern.compile("[.-]$").asPredicate();
+    private static final Predicate<String> consecutiveHyphensAndDots = Pattern.compile("\\.\\.+|--+").asPredicate();
 
     private enum Result {
-        CONTROL, PUNCTUATION, DIGIT, RESERVED, EMPTY, OK
+        CONTROL, PUNCTUATION, DIGIT, SPACE, LEADING_OR_TRAILING, IN_A_ROW, RESERVED, EMPTY, OK
     }
     
 
@@ -34,10 +38,13 @@ public class CheckJavaVariableName {
 
         {
             put(Result.CONTROL, "Control characters are not allowed in '%s': '%s'");
-            put(Result.PUNCTUATION, "Punctuations (except '_') or symbols are not allowed in '%s': '%s'");
+            put(Result.PUNCTUATION, "Punctuations (except '_', '-' and '.') or symbols are not allowed in '%s': '%s'");
             put(Result.RESERVED, "'%s': '%s' is a reserved word and must not be used");
             put(Result.EMPTY, "'%s' must not be empty");
-            put(Result.DIGIT, "'%s': '%s' must not begin with a number");
+            //put(Result.DIGIT, "'%s': '%s' must not begin with a number");
+            put(Result.LEADING_OR_TRAILING, "'%s': '%s' must not begin or end with a hypen or dot");
+            put(Result.IN_A_ROW, "'%s': '%s' must not contain consecutive hyphens or dots");
+            put(Result.SPACE, "Spaces are not allowed in '%s': '%s'");
         }
     });
 
@@ -63,11 +70,20 @@ public class CheckJavaVariableName {
         if (value == null || value.isEmpty()) {
             return Either.left(errorMessages.get(Result.EMPTY));
         }
+        if (spaceChars.test(value)) {
+            return Either.left(errorMessages.get(Result.SPACE));
+        }
         if (punctuationAndSymbolChars.test(value)) {
             return Either.left(errorMessages.get(Result.PUNCTUATION));
         }
-        if (digits.test(value.substring(0, 1))) {
-            return Either.left(errorMessages.get(Result.DIGIT));
+//        if (digits.test(value.substring(0, 1))) {
+//            return Either.left(errorMessages.get(Result.DIGIT));
+//        }
+        if (leadingHyphensAndDots.test(value) || trailingHyphensAndDots.test(value)) {
+            return Either.left(errorMessages.get(Result.LEADING_OR_TRAILING));
+        }
+        if (consecutiveHyphensAndDots.test(value)) {
+            return Either.left(errorMessages.get(Result.IN_A_ROW));
         }
         if (controlChars.test(value)) {
             return Either.left(errorMessages.get(Result.CONTROL));
