@@ -67,7 +67,10 @@ public class SOSHibernateRegexp extends StandardSQLFunction {
             return "(case when (REGEXP_LIKE(" + property + "," + regexp + ")) then 1 else 0 end)";
         } else if (Dbms.PGSQL.equals(dbms)) {
             return "(case when (" + property + " ~ " + regexp + ") then 1 else 0 end)";
+        } else if (Dbms.H2.equals(dbms)) {
+            return "REGEXP_LIKE(" + property + "," + regexp + ")";
         }
+
         return NAME;
     }
 
