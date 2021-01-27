@@ -2,6 +2,7 @@ package com.sos.webservices.order.impl;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -50,8 +51,8 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
     private void submitOrdersToController(DailyPlanOrderFilter dailyPlanOrderFilter) throws JsonParseException, JsonMappingException,
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
             JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, IOException, ParseException, SOSException,
-            URISyntaxException, InterruptedException, ExecutionException, TimeoutException {       
-        
+            URISyntaxException, InterruptedException, ExecutionException, TimeoutException {
+
         OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
         orderInitiatorSettings.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
         orderInitiatorSettings.setOverwrite(false);
@@ -99,8 +100,29 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
                 filter.setDailyPlanDate(dailyPlanOrderFilter.getFilter().getDailyPlanDate());
                 filter.setListOfOrders(dailyPlanOrderFilter.getFilter().getOrderIds());
                 filter.setListOfSubmissionIds(dailyPlanOrderFilter.getFilter().getSubmissionHistoryIds());
-                filter.setListOfWorkflowPaths(dailyPlanOrderFilter.getFilter().getWorkflowPaths());
-                filter.setListOfSchedules(dailyPlanOrderFilter.getFilter().getSchedulePaths());
+
+                if (dailyPlanOrderFilter.getFilter().getSchedulePaths() != null) {
+                    if (dailyPlanOrderFilter.getFilter().getScheduleNames() == null) {
+                        dailyPlanOrderFilter.getFilter().setScheduleNames(new ArrayList<String>());
+                    }
+                    for (String path : dailyPlanOrderFilter.getFilter().getSchedulePaths()) {
+                        String name = Paths.get(path).getFileName().toString();
+                        dailyPlanOrderFilter.getFilter().getScheduleNames().add(name);
+                    }
+                }
+                if (dailyPlanOrderFilter.getFilter().getWorkflowPaths() != null) {
+                    if (dailyPlanOrderFilter.getFilter().getWorkflowNames() == null) {
+                        dailyPlanOrderFilter.getFilter().setWorkflowNames(new ArrayList<String>());
+                    }
+
+                    for (String path : dailyPlanOrderFilter.getFilter().getWorkflowPaths()) {
+                        String name = Paths.get(path).getFileName().toString();
+                        dailyPlanOrderFilter.getFilter().getWorkflowNames().add(name);
+                    }
+                }
+                
+                filter.setListOfWorkflowNames(dailyPlanOrderFilter.getFilter().getWorkflowNames());
+                filter.setListOfScheduleNames(dailyPlanOrderFilter.getFilter().getScheduleNames());
 
                 for (String controllerId : dailyPlanOrderFilter.getFilter().getControllerIds()) {
 

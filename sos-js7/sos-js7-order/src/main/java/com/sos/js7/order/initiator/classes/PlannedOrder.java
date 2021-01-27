@@ -4,16 +4,16 @@ import com.sos.controller.model.order.FreshOrder;
 import com.sos.inventory.model.Schedule;
 import com.sos.inventory.model.calendar.Period;
 
-//import org.slf4j.Logger;
-//import org.slf4j.LoggerFactory;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
 
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
- 
-public class PlannedOrder{
 
-   // private static final Logger LOGGER = LoggerFactory.getLogger(PlannedOrder.class);
+public class PlannedOrder {
+
+    // private static final Logger LOGGER = LoggerFactory.getLogger(PlannedOrder.class);
     private FreshOrder freshOrder;
-    private String controllerId; 
+    private String controllerId;
     private Long calendarId;
     private Long submissionHistoryId;
     private Period period;
@@ -29,9 +29,8 @@ public class PlannedOrder{
         this.storedInDb = storedInDb;
     }
 
-
     public PlannedOrder() {
-     }
+    }
 
     public PlannedOrder(DBItemDailyPlanOrders dbItemDailyPlannedOrders) {
         this.freshOrder = new FreshOrder();
@@ -41,9 +40,9 @@ public class PlannedOrder{
         this.schedule = new Schedule();
         schedule.setWorkflowPath((dbItemDailyPlannedOrders.getWorkflowPath()));
         schedule.setPath(dbItemDailyPlannedOrders.getSchedulePath());
-    }
+        schedule.setWorkflowName(dbItemDailyPlannedOrders.getWorkflowName());
 
-   
+    }
 
     public FreshOrder getFreshOrder() {
         return freshOrder;
@@ -98,16 +97,14 @@ public class PlannedOrder{
         PlannedOrderKey plannedOrderKey = new PlannedOrderKey();
         plannedOrderKey.setControllerId(this.getControllerId());
         plannedOrderKey.setOrderId(freshOrder.getId());
-        plannedOrderKey.setWorkflowPath(freshOrder.getWorkflowPath());
+        plannedOrderKey.setWorkflowName(freshOrder.getWorkflowPath());
         return plannedOrderKey;
     }
 
-    
     public String getControllerId() {
         return controllerId;
     }
 
-    
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
     }

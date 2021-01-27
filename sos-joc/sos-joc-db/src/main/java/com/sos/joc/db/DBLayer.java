@@ -30,8 +30,9 @@ import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.db.joc.DBItemJocLock;
 import com.sos.joc.db.joc.DBItemJocVariable;
+import com.sos.joc.db.orders.DBItemDailyPlanHistory;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
-import com.sos.joc.db.orders.DBItemDailyPlanSubmissionHistory;
+import com.sos.joc.db.orders.DBItemDailyPlanSubmissions;
 import com.sos.joc.db.orders.DBItemDailyPlanVariables;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.db.search.DBItemSearchWorkflow2DeploymentHistory;
@@ -97,9 +98,13 @@ public class DBLayer implements Serializable {
     public static final String DAILY_PLAN_ORDERS_TABLE_SEQUENCE = "SEQ_DPL_ORDERS";
     public static final String DAILY_PLAN_ORDERS_DBITEM = DBItemDailyPlanOrders.class.getSimpleName();
 
-    public static final String DAILY_PLAN_SUBMISSION_HISTORY_TABLE = "DPL_SUBMISSION_HISTORY";
-    public static final String DAILY_PLAN_SUBMISSION_HISTORY_SEQUENCE = "DPL_SUBHISTORY_SEQ";
-    public static final String DAILY_PLAN_SUBMISSION_HISTORY_DBITEM = DBItemDailyPlanSubmissionHistory.class.getSimpleName();
+    public static final String DAILY_PLAN_SUBMISSIONS_TABLE = "DPL_SUBMISSIONS";
+    public static final String DAILY_PLAN_SUBMISSIONS_SEQUENCE = "DPL_SUBHISTORY_SEQ";
+    public static final String DAILY_PLAN_SUBMISSIONS_DBITEM = DBItemDailyPlanSubmissions.class.getSimpleName();
+
+    public static final String DAILY_PLAN_HISTORY_TABLE = "DPL_HISTORY";
+    public static final String DAILY_PLAN_HISTORY_SEQUENCE = "DPL_HISTORY_SEQ";
+    public static final String DAILY_PLAN_HISTORY_DBITEM = DBItemDailyPlanHistory.class.getSimpleName();
 
     public static final String DAILY_PLAN_VARIABLES_TABLE = "DPL_ORDER_VARIABLES";
     public static final String DAILY_PLAN_VARIABLES_TABLE_SEQUENCE = "DPL_ORDER_VARIABLES_SEQ";
@@ -221,9 +226,10 @@ public class DBLayer implements Serializable {
     public static SOSClassList getOrderInitatorClassMapping() {
         SOSClassList cl = new SOSClassList();
         cl.add(DBItemInventoryJSInstance.class);
-        cl.add(DBItemDailyPlanSubmissionHistory.class);
+        cl.add(DBItemDailyPlanSubmissions.class);
         cl.add(DBItemDailyPlanOrders.class);
         cl.add(DBItemDailyPlanVariables.class);
+        cl.add(DBItemDailyPlanHistory.class);
         return cl;
     }
 

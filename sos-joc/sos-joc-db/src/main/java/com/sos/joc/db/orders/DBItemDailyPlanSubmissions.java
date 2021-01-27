@@ -16,15 +16,15 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.DAILY_PLAN_SUBMISSION_HISTORY_TABLE)
-@SequenceGenerator(name = DBLayer.DAILY_PLAN_SUBMISSION_HISTORY_SEQUENCE, sequenceName = DBLayer.DAILY_PLAN_SUBMISSION_HISTORY_SEQUENCE, allocationSize = 1)
+@Table(name = DBLayer.DAILY_PLAN_SUBMISSIONS_TABLE)
+@SequenceGenerator(name = DBLayer.DAILY_PLAN_SUBMISSIONS_SEQUENCE, sequenceName = DBLayer.DAILY_PLAN_SUBMISSIONS_SEQUENCE, allocationSize = 1)
 
-public class DBItemDailyPlanSubmissionHistory extends DBItem {
+public class DBItemDailyPlanSubmissions extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.DAILY_PLAN_SUBMISSION_HISTORY_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.DAILY_PLAN_SUBMISSIONS_SEQUENCE)
     @Column(name = "[ID]")
     private Long id;
 

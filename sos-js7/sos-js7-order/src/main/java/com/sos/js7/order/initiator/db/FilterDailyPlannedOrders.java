@@ -43,14 +43,14 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     private Date plannedStart;
     private Boolean isLate;
     private String controllerId;
-    private List<String> listOfWorkflowPaths;
-    private String workflowPath;
+    private List<String> listOfWorkflowNames;
+    private String workflowName;
     private List<Long> listOfSubmissionIds;
 
     private Long calendarId;
     private Long plannedOrderId;
-    private List<String> listOfSchedulePaths;
-    private String schedulePath;
+    private List<String> listOfScheduleNames;
+    private String scheduleName;
 
     public List<String> getListOfOrders() {
         return listOfOrders;
@@ -74,13 +74,7 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         listOfOrders.add(orderId);
     }
 
-    public List<String> getListOfWorkflowPaths() {
-        return listOfWorkflowPaths;
-    }
-
-    public void setListOfWorkflowPaths(List<String> listOfWorkflowPaths) {
-        this.listOfWorkflowPaths = listOfWorkflowPaths;
-    }
+  
 
     public void setDailyPlanDate(String dailyPlanDate) {
         if (dailyPlanDate != null) {
@@ -89,21 +83,13 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         }
     }
 
-    public void setListOfSchedules(List<String> listOfSchedules) {
-        this.listOfSchedulePaths = listOfSchedules;
-    }
-
-    public List<String> getListOfSchedules() {
-        return listOfSchedulePaths;
-    }
-    
-    public void addSchedulePath(String schedulePath) {
-        if (listOfSchedulePaths == null) {
-            listOfSchedulePaths = new ArrayList<String>();
+   
+    public void addScheduleName(String scheduleName) {
+        if (listOfScheduleNames == null) {
+            listOfScheduleNames = new ArrayList<String>();
         }
-        listOfSchedulePaths.add(schedulePath);
+        listOfScheduleNames.add(scheduleName);
     }
-
 
     private void setOrderPlanDateInterval() {
         String timeZone = Globals.sosCockpitProperties.getProperty("daily_plan_timezone", Globals.DEFAULT_TIMEZONE_DAILY_PLAN);
@@ -270,11 +256,11 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         this.setOfPlannedOrder = setOfPlannedOrder;
     }
 
-    public void addWorkflowPath(String workflowPath) {
-        if (this.listOfWorkflowPaths == null) {
-            this.listOfWorkflowPaths = new ArrayList<String>();
+    public void addWorkflowName(String workflowName) {
+        if (this.listOfWorkflowNames == null) {
+            this.listOfWorkflowNames = new ArrayList<String>();
         }
-        this.listOfWorkflowPaths.add(workflowPath);
+        this.listOfWorkflowNames.add(workflowName);
     }
 
     public void setStates(List<OrderStateText> states) {
@@ -289,47 +275,44 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         this.listOfSubmissionIds = listOfSubmissionIds;
     }
 
-    
-    public String getWorkflowPath() {
-        return workflowPath;
-    }
-
-    
-    public void setWorkflowPath(String workflowPath) {
-        this.workflowPath = workflowPath;
-    }
-
-    
-    public List<String> getListOfSchedulePaths() {
-        return listOfSchedulePaths;
-    }
-
-    
-    public void setListOfSchedulePaths(List<String> listOfSchedulePaths) {
-        this.listOfSchedulePaths = listOfSchedulePaths;
-    }
-
-    
-    public String getSchedulePath() {
-        return schedulePath;
-    }
-
-    
-    public void setSchedulePath(String schedulePath) {
-        this.schedulePath = schedulePath;
-    }
-
-    
     public Long getPlannedOrderId() {
         return plannedOrderId;
     }
 
-    
     public void setPlannedOrderId(Long plannedOrderId) {
         this.plannedOrderId = plannedOrderId;
     }
 
-    
- 
+    public List<String> getListOfWorkflowNames() {
+        return listOfWorkflowNames;
+    }
+
+    public void setListOfWorkflowNames(List<String> listOfWorkflowNames) {
+        this.listOfWorkflowNames = listOfWorkflowNames;
+    }
+
+    public List<String> getListOfScheduleNames() {
+        return listOfScheduleNames;
+    }
+
+    public void setListOfScheduleNames(List<String> listOfScheduleNames) {
+        this.listOfScheduleNames = listOfScheduleNames;
+    }
+
+    public String getWorkflowName() {
+        return workflowName;
+    }
+
+    public void setWorkflowName(String workflowName) {
+        this.workflowName = workflowName;
+    }
+
+    public String getScheduleName() {
+        return scheduleName;
+    }
+
+    public void setScheduleName(String scheduleName) {
+        this.scheduleName = scheduleName;
+    }
 
 }

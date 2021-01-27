@@ -1,6 +1,8 @@
 package com.sos.webservices.order.impl;
 
 import java.net.URISyntaxException;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -48,8 +50,30 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
         filter.setControllerId(dailyPlanOrderFilter.getControllerId());
         filter.setDailyPlanDate(dailyPlanOrderFilter.getFilter().getDailyPlanDate());
         filter.setListOfSubmissionIds(dailyPlanOrderFilter.getFilter().getSubmissionHistoryIds());
-        filter.setListOfWorkflowPaths(dailyPlanOrderFilter.getFilter().getWorkflowPaths());
-        filter.setListOfSchedules(dailyPlanOrderFilter.getFilter().getSchedulePaths());
+
+        if (dailyPlanOrderFilter.getFilter().getSchedulePaths() != null) {
+            if (dailyPlanOrderFilter.getFilter().getScheduleNames() == null) {
+                dailyPlanOrderFilter.getFilter().setScheduleNames(new ArrayList<String>());
+            }
+            for (String path : dailyPlanOrderFilter.getFilter().getSchedulePaths()) {
+                String name = Paths.get(path).getFileName().toString();
+                dailyPlanOrderFilter.getFilter().getScheduleNames().add(name);
+            }
+        }
+        if (dailyPlanOrderFilter.getFilter().getWorkflowPaths() != null) {
+            if (dailyPlanOrderFilter.getFilter().getWorkflowNames() == null) {
+                dailyPlanOrderFilter.getFilter().setWorkflowNames(new ArrayList<String>());
+            }
+
+            for (String path : dailyPlanOrderFilter.getFilter().getWorkflowPaths()) {
+                String name = Paths.get(path).getFileName().toString();
+                dailyPlanOrderFilter.getFilter().getWorkflowNames().add(name);
+            }
+        }
+
+        filter.setListOfWorkflowNames(dailyPlanOrderFilter.getFilter().getWorkflowNames());
+        filter.setListOfScheduleNames(dailyPlanOrderFilter.getFilter().getScheduleNames());
+
         return filter;
     }
 

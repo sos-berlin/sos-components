@@ -9,10 +9,10 @@ import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
    
-public interface IRelativeDateConverterResource {
+public interface IDailyPlanHistoryResource {
 
     @POST
-    @Path("convert_relative_dates")
+    @Path("history")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postConvertRelativeDates(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes)  ;
+    public JOCDefaultResponse postDailyPlanHistory(@HeaderParam("X-Access-Token") String accessToken,  byte[] filterBytes)  ;
 }

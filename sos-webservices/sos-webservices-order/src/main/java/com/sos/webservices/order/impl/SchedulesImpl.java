@@ -1,5 +1,6 @@
 package com.sos.webservices.order.impl;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,9 +16,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.dailyplan.DailyPlanOrderSelectorDef;
 import com.sos.js7.order.initiator.db.DBLayerSchedules;
 import com.sos.js7.order.initiator.db.FilterSchedules;
 import com.sos.webservices.order.initiator.model.ScheduleSelector;
@@ -31,9 +30,7 @@ public class SchedulesImpl extends JOCResourceImpl implements ISchedulesResource
     private static final Logger LOGGER = LoggerFactory.getLogger(SchedulesImpl.class);
     private static final String API_CALL = "./schedules";
 
-    private boolean isEmpty(List<?> l) {
-        return ((l == null) || (l.size() == 0));
-    }
+ 
 
     @Override
     public JOCDefaultResponse postSchedules(String xAccessToken, ScheduleSelector scheduleSelector) {
@@ -64,11 +61,31 @@ public class SchedulesImpl extends JOCResourceImpl implements ISchedulesResource
 
             DBLayerSchedules dbLayerSchedules = new DBLayerSchedules(sosHibernateSession);
             FilterSchedules filterSchedules = new FilterSchedules();
+
+            if (scheduleSelector.getSelector().getSchedulePaths() != null) {
+                if (scheduleSelector.getSelector().getScheduleNames() == null) {
+                    scheduleSelector.getSelector().setScheduleNames(new ArrayList<String>());
+                }
+                for (String path : scheduleSelector.getSelector().getSchedulePaths()) {
+                    String name = Paths.get(path).getFileName().toString();
+                    scheduleSelector.getSelector().getScheduleNames().add(name);
+                }
+            }
+            if (scheduleSelector.getSelector().getWorkflowPaths() != null) {
+                if (scheduleSelector.getSelector().getWorkflowNames() == null) {
+                    scheduleSelector.getSelector().setWorkflowNames(new ArrayList<String>());
+                }
+
+                for (String path : scheduleSelector.getSelector().getWorkflowPaths()) {
+                    String name = Paths.get(path).getFileName().toString();
+                    scheduleSelector.getSelector().getWorkflowNames().add(name);
+                }
+            }
             filterSchedules.setListOfControllerIds(scheduleSelector.getSelector().getControllerIds());
             filterSchedules.addControllerId(scheduleSelector.getControllerId());
-            filterSchedules.setListOfSchedules(scheduleSelector.getSelector().getSchedulePaths());
+            filterSchedules.setListOfScheduleNames(scheduleSelector.getSelector().getScheduleNames());
             filterSchedules.setListOfFolders(scheduleSelector.getSelector().getFolders());
-            filterSchedules.setListOfWorkflowPaths(scheduleSelector.getSelector().getWorkflowPaths());
+            filterSchedules.setListOfWorkflowNames(scheduleSelector.getSelector().getWorkflowNames());
 
             List<DBItemInventoryReleasedConfiguration> listOfSchedules = dbLayerSchedules.getSchedules(filterSchedules, 0);
             for (DBItemInventoryReleasedConfiguration dbItemInventoryConfiguration : listOfSchedules) {

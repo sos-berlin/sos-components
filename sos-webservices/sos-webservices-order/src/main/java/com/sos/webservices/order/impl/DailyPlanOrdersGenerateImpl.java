@@ -21,6 +21,9 @@ import com.sos.js7.order.initiator.OrderInitiatorRunner;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
 import com.sos.js7.order.initiator.ScheduleSource;
 import com.sos.js7.order.initiator.ScheduleSourceDB;
+import com.sos.js7.order.initiator.ScheduleSourceFile;
+import com.sos.js7.order.initiator.classes.DailyPlanHelper;
+import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 import com.sos.webservices.order.resource.IDailyPlanOrdersGenerateResource;
 
 @Path("daily_plan")
@@ -77,11 +80,13 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
                 }
             }
 
+            OrderInitiatorGlobals.dailyPlanDate =  DailyPlanHelper.getDailyPlanDateAsDate(DailyPlanHelper.stringAsDate(dailyPlanOrderSelector.getDailyPlanDate()).getTime());
             for (String controllerId : dailyPlanOrderSelector.getControllerIds()) {
                 orderInitiatorSettings.setControllerId(controllerId);
 
                 ScheduleSource scheduleSource = null;
                 scheduleSource = new ScheduleSourceDB(dailyPlanOrderSelector);
+ 
                 orderInitiatorRunner.readSchedules(scheduleSource);
                 orderInitiatorRunner.generateDailyPlan(dailyPlanOrderSelector.getDailyPlanDate(), dailyPlanOrderSelector.getWithSubmit());
 
@@ -94,12 +99,9 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
         } catch (JocException e) {
-            //LOGGER.error(getJocError().getMessage(), e);
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            //e.printStackTrace();
-            //LOGGER.error(getJocError().getMessage(), e);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
 

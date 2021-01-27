@@ -3,7 +3,7 @@ package com.sos.js7.order.initiator.classes;
 public class PlannedOrderKey {
 
     private String controllerId;
-    private String workflowPath;
+    private String workflowName;
     private String orderId;
 
     public String getJobschedulerId() {
@@ -14,12 +14,12 @@ public class PlannedOrderKey {
         this.controllerId = controllerId;
     }
 
-    public String getWorkflowPath() {
-        return workflowPath;
+    public String getWorkflowName() {
+        return workflowName;
     }
 
-    public void setWorkflowPath(String workflowPath) {
-        this.workflowPath = workflowPath;
+    public void setWorkflowName(String workflowName) {
+        this.workflowName = workflowName;
     }
 
     public String getOrderId() {
@@ -36,7 +36,7 @@ public class PlannedOrderKey {
         int result = 1;
         result = prime * result + ((controllerId == null) ? 0 : controllerId.hashCode());
         result = prime * result + ((orderId == null) ? 0 : orderId.hashCode());
-        result = prime * result + ((workflowPath == null) ? 0 : workflowPath.hashCode());
+        result = prime * result + ((workflowName == null) ? 0 : workflowName.hashCode());
         return result;
     }
 
@@ -52,7 +52,7 @@ public class PlannedOrderKey {
             return false;
         }
         PlannedOrderKey other = (PlannedOrderKey) obj;
-        return (controllerId.equals(other.controllerId) && orderId.equals(other.orderId) && workflowPath.equals(other.workflowPath));
+        return (controllerId.equals(other.controllerId) && orderId.equals(other.orderId) && workflowName.equals(other.workflowName));
 
     }
 

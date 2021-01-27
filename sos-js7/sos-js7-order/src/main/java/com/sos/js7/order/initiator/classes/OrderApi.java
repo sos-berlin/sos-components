@@ -54,7 +54,7 @@ import reactor.core.publisher.Flux;
 
 public class OrderApi {
 
-    public static void addOrders(AddOrders startOrders, String userAccount) throws JocConfigurationException, DBConnectionRefusedException,
+    public static void addOrders__not_used____(AddOrders startOrders, String userAccount) throws JocConfigurationException, DBConnectionRefusedException,
             DBOpenSessionException, JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, DBMissingDataException,
             DBInvalidDataException, JsonProcessingException, SOSException, URISyntaxException, ParseException, InterruptedException,
             ExecutionException, TimeoutException {

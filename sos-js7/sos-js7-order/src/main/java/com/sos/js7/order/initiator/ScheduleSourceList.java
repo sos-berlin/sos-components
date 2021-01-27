@@ -1,6 +1,7 @@
 package com.sos.js7.order.initiator;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,19 +33,13 @@ public class ScheduleSourceList extends ScheduleSource {
 
         filterSchedules.addControllerId(controllerId);
         for (String schedulePath : this.schedules) {
-            filterSchedules.addSchedulePath(schedulePath);
+            filterSchedules.addScheduleName(Paths.get(schedulePath).getFileName().toString());
         }
 
-        // ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         List<DBItemInventoryReleasedConfiguration> listOfSchedulesDbItems = dbLayerSchedules.getSchedules(filterSchedules, 0);
         for (DBItemInventoryReleasedConfiguration dbItemInventoryConfiguration : listOfSchedulesDbItems) {
-            // Schedule schedule = objectMapper.readValue(dbItemInventoryConfiguration.getContent().replaceAll("\"suppress\"", "\"SUPPRESS\""),
-            // Schedule.class);
-            // schedule.setPath(dbItemInventoryConfiguration.getPath());
-            // if (schedule.getControllerId().equals(this.controllerId)) {
             listOfSchedules.add(dbItemInventoryConfiguration.getSchedule());
-            // }
         }
 
         return listOfSchedules;

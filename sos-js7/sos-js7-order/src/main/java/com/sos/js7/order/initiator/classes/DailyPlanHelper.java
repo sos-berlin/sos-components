@@ -29,10 +29,16 @@ public class DailyPlanHelper {
         return dateS;
     }
     
-    public static String getDailyPlanDate(Long startTime) {
+    public static String getDailyPlanDateAsString(Long startTime) {
         java.util.Calendar calendar = java.util.Calendar.getInstance(TimeZone.getTimeZone(UTC));
         calendar.setTime(new Date(startTime));
         return DailyPlanHelper.dateAsString(calendar.getTime());
+    }
+
+    public static Date getDailyPlanDateAsDate(Long startTime) {
+        java.util.Calendar calendar = java.util.Calendar.getInstance(TimeZone.getTimeZone(UTC));
+        calendar.setTime(new Date(startTime));
+        return calendar.getTime();
     }
 
 
@@ -101,7 +107,7 @@ public class DailyPlanHelper {
         if (shortScheduleName.length() > 30) {
             shortScheduleName = shortScheduleName.substring(0, 30);
         }
-        return "#" + getDailyPlanDate(startTime) + "#P" + "<id" + startTime + ">-" + shortScheduleName;
+        return "#" + getDailyPlanDateAsString(startTime) + "#P" + "<id" + startTime + ">-" + shortScheduleName;
     }
     
     public static String buildOrderId(DBItemDailyPlanOrders dbItemDailyPlanOrders) {

@@ -13,17 +13,17 @@ public class FilterSchedules extends SOSFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterSchedules.class);
     private List<String> listOfControllerIds;
-    private List<String> listOfWorkflowPaths;
+    private List<String> listOfWorkflowNames;
     private List<Folder> listOfFolders;
     private Boolean released;
     private Boolean deleted;
-    private List<String> listOfSchedules;
+    private List<String> listOfScheduleNames;
 
-    public void addSchedulePath(String schedulePath) {
-        if (listOfSchedules == null) {
-            listOfSchedules = new ArrayList<String>();
+    public void addScheduleName(String scheduleName) {
+        if (listOfScheduleNames == null) {
+            listOfScheduleNames = new ArrayList<String>();
         }
-        listOfSchedules.add(schedulePath);
+        listOfScheduleNames.add(scheduleName);
     }
 
     public Boolean getReleased() {
@@ -67,27 +67,20 @@ public class FilterSchedules extends SOSFilter {
         }
     }
 
-    public List<String> getListOfSchedules() {
-        return listOfSchedules;
+    public List<String> getListOfWorkflowNames() {
+        return listOfWorkflowNames;
     }
 
-    public void setListOfSchedules(List<String> listOfSchedules) {
-        this.listOfSchedules = listOfSchedules;
+    public void setListOfWorkflowNames(List<String> listOfWorkflowNames) {
+        this.listOfWorkflowNames = listOfWorkflowNames;
     }
 
-    public List<String> getListOfWorkflowPaths() {
-        return listOfWorkflowPaths;
+    public List<String> getListOfScheduleNames() {
+        return listOfScheduleNames;
     }
 
-    public void setListOfWorkflowPaths(List<String> listOfWorkflowPaths) {
-        this.listOfWorkflowPaths = listOfWorkflowPaths;
-    }
-
-    public void addWorkflowPath(String workflowPath) {
-        if (listOfWorkflowPaths == null) {
-            listOfWorkflowPaths = new ArrayList<String>();
-        }
-        listOfWorkflowPaths.add(workflowPath);
+    public void setListOfScheduleNames(List<String> listOfScheduleNames) {
+        this.listOfScheduleNames = listOfScheduleNames;
     }
 
 }

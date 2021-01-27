@@ -13,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Plannd Orders
+ * Planned Orders
  * <p>
  * 
  * 

@@ -15,23 +15,23 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
-import com.sos.joc.db.orders.DBItemDailyPlanSubmissionHistory;
+import com.sos.joc.db.orders.DBItemDailyPlanSubmissions;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.dailyplan.DailyPlanSubmissionHistory;
-import com.sos.joc.model.dailyplan.DailyPlanSubmissionHistoryFilter;
-import com.sos.joc.model.dailyplan.DailyPlanSubmissionHistoryItem;
-import com.sos.js7.order.initiator.db.DBLayerDailyPlanSubmissionHistory;
-import com.sos.js7.order.initiator.db.FilterDailyPlanSubmissionHistory;
-import com.sos.webservices.order.resource.IDailyPlanSubmissionsHistoryResource;
+import com.sos.joc.model.dailyplan.DailyPlanSubmissions;
+import com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter;
+import com.sos.joc.model.dailyplan.DailyPlanSubmissionsItem;
+import com.sos.js7.order.initiator.db.DBLayerDailyPlanSubmissions;
+import com.sos.js7.order.initiator.db.FilterDailyPlanSubmissions;
+import com.sos.webservices.order.resource.IDailyPlanSubmissionsResource;
 
 @Path("daily_plan")
-public class DailyPlanSubmissionsHistoryImpl extends JOCResourceImpl implements IDailyPlanSubmissionsHistoryResource {
+public class DailyPlanSubmissionsImpl extends JOCResourceImpl implements IDailyPlanSubmissionsResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanSubmissionsHistoryImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanSubmissionsImpl.class);
     private static final String API_CALL = "./daily_plan/submissions";
 
     @Override
-    public JOCDefaultResponse postDailyPlanSubmissionHistory(String xAccessToken, DailyPlanSubmissionHistoryFilter dailyPlanSubmissionHistoryFilter)
+    public JOCDefaultResponse postDailyPlanSubmissionHistory(String xAccessToken, DailyPlanSubmissionsFilter dailyPlanSubmissionHistoryFilter)
             throws JocException {
         SOSHibernateSession sosHibernateSession = null;
         try {
@@ -48,11 +48,11 @@ public class DailyPlanSubmissionsHistoryImpl extends JOCResourceImpl implements 
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
 
-            DBLayerDailyPlanSubmissionHistory dbLayerDailyPlan = new DBLayerDailyPlanSubmissionHistory(sosHibernateSession);
+            DBLayerDailyPlanSubmissions dbLayerDailyPlan = new DBLayerDailyPlanSubmissions(sosHibernateSession);
 
             Globals.beginTransaction(sosHibernateSession);
 
-            FilterDailyPlanSubmissionHistory filter = new FilterDailyPlanSubmissionHistory();
+            FilterDailyPlanSubmissions filter = new FilterDailyPlanSubmissions();
             filter.setControllerId(dailyPlanSubmissionHistoryFilter.getControllerId());
             if (dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom() != null) {
                 Date fromDate = JobSchedulerDate.getDateFrom(dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom(),
@@ -67,12 +67,12 @@ public class DailyPlanSubmissionsHistoryImpl extends JOCResourceImpl implements 
 
             filter.setSortMode("desc");
             filter.setOrderCriteria("id");
-            DailyPlanSubmissionHistory dailyPlanSubmissionHistory = new DailyPlanSubmissionHistory();
-            List<DailyPlanSubmissionHistoryItem> result = new ArrayList<DailyPlanSubmissionHistoryItem>();
+            DailyPlanSubmissions dailyPlanSubmissionHistory = new DailyPlanSubmissions();
+            List<DailyPlanSubmissionsItem> result = new ArrayList<DailyPlanSubmissionsItem>();
 
-            List<DBItemDailyPlanSubmissionHistory> listOfDailyPlanSubmissions = dbLayerDailyPlan.getDailyPlanSubmissions(filter, 0);
-            for (DBItemDailyPlanSubmissionHistory dbItemDailySubmissionHistory : listOfDailyPlanSubmissions) {
-                DailyPlanSubmissionHistoryItem p = new DailyPlanSubmissionHistoryItem();
+            List<DBItemDailyPlanSubmissions> listOfDailyPlanSubmissions = dbLayerDailyPlan.getDailyPlanSubmissions(filter, 0);
+            for (DBItemDailyPlanSubmissions dbItemDailySubmissionHistory : listOfDailyPlanSubmissions) {
+                DailyPlanSubmissionsItem p = new DailyPlanSubmissionsItem();
                 p.setSubmissionHistoryId(dbItemDailySubmissionHistory.getId());
                 p.setControllerId(dbItemDailySubmissionHistory.getControllerId());
                 p.setDailyPlanDate(dbItemDailySubmissionHistory.getSubmissionForDate());

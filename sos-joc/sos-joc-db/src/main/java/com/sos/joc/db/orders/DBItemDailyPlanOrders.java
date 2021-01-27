@@ -44,11 +44,17 @@ public class DBItemDailyPlanOrders extends DBItem {
     @Column(name = "[WORKFLOW_PATH]", nullable = false)
     private String workflowPath;
 
+    @Column(name = "[WORKFLOW_NAME]", nullable = false)
+    private String workflowName;
+
     @Column(name = "[ORDER_ID]", nullable = false)
     private String orderId;
 
     @Column(name = "[SCHEDULE_PATH]", nullable = false)
     private String schedulePath;
+
+    @Column(name = "[SCHEDULE_NAME]", nullable = false)
+    private String scheduleName;
 
     @Column(name = "[CALENDAR_ID]", nullable = false)
     private Long calendarId;
@@ -130,6 +136,22 @@ public class DBItemDailyPlanOrders extends DBItem {
 
     public String getOrderId() {
         return orderId;
+    }
+
+    public void setScheduleName(String scheduleName) {
+        this.scheduleName = scheduleName;
+    }
+
+    public String getScheduleName() {
+        return scheduleName;
+    }
+
+    public void setWorkflowName(String workflowName) {
+        this.workflowName = workflowName;
+    }
+
+    public String getWorkflowName() {
+        return workflowName;
     }
 
     public void setSchedulePath(String schedulePath) {

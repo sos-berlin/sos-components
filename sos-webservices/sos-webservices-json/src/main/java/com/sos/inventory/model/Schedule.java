@@ -82,9 +82,9 @@ public class Schedule implements IConfigurationObject, IReleaseObject
     @JsonPropertyDescription("absolute path of an object.")
     private String documentationPath;
     @JsonProperty("submitOrderToControllerWhenPlanned")
-    private Boolean submitOrderToControllerWhenPlanned;
+    private Boolean submitOrderToControllerWhenPlanned = false;
     @JsonProperty("planOrderAutomatically")
-    private Boolean planOrderAutomatically;
+    private Boolean planOrderAutomatically = false;
     /**
      * Assigned Calendars
      * <p>

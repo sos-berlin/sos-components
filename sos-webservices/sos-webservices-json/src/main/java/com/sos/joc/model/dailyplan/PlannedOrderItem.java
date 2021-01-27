@@ -55,6 +55,7 @@ public class PlannedOrderItem {
      * path
      * <p>
      * absolute path of an object.
+     * (Required)
      * 
      */
     @JsonProperty("workflowPath")
@@ -195,6 +196,7 @@ public class PlannedOrderItem {
      * path
      * <p>
      * absolute path of an object.
+     * (Required)
      * 
      */
     @JsonProperty("workflowPath")
@@ -206,6 +208,7 @@ public class PlannedOrderItem {
      * path
      * <p>
      * absolute path of an object.
+     * (Required)
      * 
      */
     @JsonProperty("workflowPath")

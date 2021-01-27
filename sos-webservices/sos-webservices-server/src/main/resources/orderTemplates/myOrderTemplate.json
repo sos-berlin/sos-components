@@ -1,23 +1,16 @@
 {
-	"hostName": "LAPTOP-7RSACSCV",
-	"port": 40444,
-	"masterId": "scheduler_joc_cockpit",
-	"orderName": "myOrderName",
-	"workflowPath": "/testw",
+ 
+	"workflowName": "testw",
 	"calendars": [
 		{
 			"calendarPath": "/Every Day",
 			"periods": [
 				{
-					"single_start": "15:00",
-					"whenHoliday": "ignoreHoliday"
-				},
+					"singleStart": "15:00"				},
 				{
 					"begin": "16:00",
 					"end": "18:00",
-					"repeat": "00:05:00",
-					"whenHoliday": "ignoreHoliday"
-				}
+					"repeat": "00:05:00"				}
 			]
 		}
 	],

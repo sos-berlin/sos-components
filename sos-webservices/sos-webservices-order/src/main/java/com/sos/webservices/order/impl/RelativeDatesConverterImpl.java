@@ -32,7 +32,7 @@ import com.sos.webservices.order.resource.IDailyPlanOrdersGenerateResource;
 import com.sos.webservices.order.resource.IRelativeDateConverterResource;
 
 
-@Path("daily_plan")
+@Path("utilities")
 public class RelativeDatesConverterImpl extends JOCResourceImpl implements IRelativeDateConverterResource {
  
     private static final Logger LOGGER = LoggerFactory.getLogger(RelativeDatesConverterImpl.class);

@@ -18,12 +18,15 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.Schedule;
+import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
+import com.sos.joc.db.orders.DBItemDailyPlanHistory;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DeploymentState;
+import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 
 public class DBLayerSchedules {
 
@@ -48,8 +51,8 @@ public class DBLayerSchedules {
         String and = " and (";
         String kzu = "";
 
-        if (filter.getListOfSchedules() != null && filter.getListOfSchedules().size() > 0) {
-            where += and + SearchStringHelper.getStringListSql(filter.getListOfSchedules(), "path");
+        if (filter.getListOfScheduleNames() != null && filter.getListOfScheduleNames().size() > 0) {
+            where += and + SearchStringHelper.getStringListSql(filter.getListOfScheduleNames(), "name");
             and = " or ";
             kzu = ")";
         }
@@ -80,6 +83,7 @@ public class DBLayerSchedules {
     public List<DBItemInventoryReleasedConfiguration> getSchedules(FilterSchedules filter, final int limit) throws SOSHibernateException,
             JsonParseException, JsonMappingException, IOException {
 
+        DBLayerDailyPlanHistory dbLayerDailyPlanHistory = new DBLayerDailyPlanHistory(sosHibernateSession);
         String q = "from " + DBItemInventoryReleasedConfiguration + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
         Query<DBItemInventoryReleasedConfiguration> query = sosHibernateSession.createQuery(q);
 
@@ -91,23 +95,23 @@ public class DBLayerSchedules {
 
         ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         Set<String> setOfWorkflows = new LinkedHashSet<String>();
-        boolean selectedByWorkflowPaths = (filter.getListOfWorkflowPaths() != null && filter.getListOfWorkflowPaths().size() > 0);
+        boolean selectedByWorkflowNames = (filter.getListOfWorkflowNames() != null && filter.getListOfWorkflowNames().size() > 0);
 
-        if (selectedByWorkflowPaths) {
-            FilterSchedules filterSelectByWorkflowPaths = new FilterSchedules();
+        if (selectedByWorkflowNames) {
+            FilterSchedules filterSelectByWorkflowNames = new FilterSchedules();
 
-            q = "from " + DBItemInventoryReleasedConfiguration + getWhere(filterSelectByWorkflowPaths) + filter.getOrderCriteria() + filter
+            q = "from " + DBItemInventoryReleasedConfiguration + getWhere(filterSelectByWorkflowNames) + filter.getOrderCriteria() + filter
                     .getSortMode();
             query = sosHibernateSession.createQuery(q);
 
             if (limit > 0) {
                 query.setMaxResults(limit);
             }
-            List<DBItemInventoryReleasedConfiguration> resultsetByWorkflowPaths = sosHibernateSession.getResultList(query);
-            for (DBItemInventoryReleasedConfiguration dbItemInventoryConfiguration : resultsetByWorkflowPaths) {
+            List<DBItemInventoryReleasedConfiguration> resultsetByWorkflowNames = sosHibernateSession.getResultList(query);
+            for (DBItemInventoryReleasedConfiguration dbItemInventoryConfiguration : resultsetByWorkflowNames) {
                 Schedule schedule = objectMapper.readValue(dbItemInventoryConfiguration.getContent(), Schedule.class);
 
-                if (filter.getListOfWorkflowPaths().contains(schedule.getWorkflowPath())) {
+                if (filter.getListOfWorkflowNames().contains(schedule.getWorkflowName())) {
                     dbItemInventoryConfiguration.setSchedule(schedule);
                     resultset.add(dbItemInventoryConfiguration);
                 }
@@ -135,7 +139,7 @@ public class DBLayerSchedules {
             filterDeployHistory.setInventoryId(dbItemInventoryConfiguration.getId());
             List<DBItemDeploymentHistory> l = dbLayerDeploy.getDeployments(filterDeployHistory, 0);
             if (l.size() > 0) {
-                setOfWorkflows.add(dbItemInventoryConfiguration.getPath());
+                setOfWorkflows.add(dbItemInventoryConfiguration.getName());
             }
         }
 
@@ -145,15 +149,28 @@ public class DBLayerSchedules {
                 schedule = dbItemInventoryConfiguration.getSchedule();
             } else {
                 schedule = objectMapper.readValue(dbItemInventoryConfiguration.getContent(), Schedule.class);
+                schedule.setPath(dbItemInventoryConfiguration.getPath());
             }
 
             if (schedule != null) {
-                if (setOfWorkflows.contains(schedule.getWorkflowPath())) {
+                if (setOfWorkflows.contains(schedule.getWorkflowName())) {
 
                     dbItemInventoryConfiguration.setSchedule(schedule);
                     filteredResultset.add(dbItemInventoryConfiguration);
                 } else {
-                    LOGGER.debug("Warn: schedule is null " + dbItemInventoryConfiguration.getContent());
+                    String s = "Workflow " + schedule.getWorkflowName() + " is not deployed. scheduler->" + dbItemInventoryConfiguration.getContent();
+                    DBItemDailyPlanHistory dbItemDailyPlanHistory = new DBItemDailyPlanHistory();
+                    dbItemDailyPlanHistory.setCategory("ERROR");
+                    if (filter.getListOfControllerIds().size() > 0) {
+                        dbItemDailyPlanHistory.setControllerId(filter.getListOfControllerIds().get(0));
+                    }
+                    dbItemDailyPlanHistory.setCreated(JobSchedulerDate.nowInUtc());
+                    dbItemDailyPlanHistory.setMessage(s);
+                    dbItemDailyPlanHistory.setDailyPlanDate(OrderInitiatorGlobals.dailyPlanDate);
+                    dbItemDailyPlanHistory.setUserAccount(OrderInitiatorGlobals.orderInitiatorSettings.getUserAccount());
+                    dbLayerDailyPlanHistory.storeDailyPlanHistory(dbItemDailyPlanHistory);
+
+                    LOGGER.debug("Warn:" + s);
                 }
             }
         }

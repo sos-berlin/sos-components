@@ -8,13 +8,13 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.model.dailyplan.DailyPlanSubmissionHistoryFilter;
-  
-public interface IDailyPlanSubmissionsHistoryResource {
+import com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter;
+   
+public interface IDailyPlanSubmissionsResource {
 
     @POST
     @Path("submissions")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postDailyPlanSubmissionHistory(@HeaderParam("X-Access-Token") String accessToken,
-            DailyPlanSubmissionHistoryFilter dailyPlanSubmissionHistoryFilter) throws Exception;
+            DailyPlanSubmissionsFilter dailyPlanSubmissionsFilter) throws Exception;
 }

@@ -13,7 +13,7 @@ public class FilterDeployHistory extends SOSFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterDeployHistory.class);
     private ConfigurationType  type;
-    private String path;
+    private String name;
     private Long inventoryId;
     private Integer operation;
     private List<String> listOfControllerIds;
@@ -27,12 +27,12 @@ public class FilterDeployHistory extends SOSFilter {
         this.type = type;
     }
     
-    public String getPath() {
-        return path;
+    public String getName() {
+        return name;
     }
     
-    public void setPath(String path) {
-        this.path = path;
+    public void setName(String name) {
+        this.name = name;
     }
 
     

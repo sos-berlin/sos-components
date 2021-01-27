@@ -15,8 +15,10 @@ public class DBItemDailyPlanWithHistory {
     private Long submissionHistoryId;
     private String controllerId;
     private String workflowPath;
+    private String workflowName;
     private String orderId;
     private String schedulePath;
+    private String scheduleName;
     private Long calendarId;
     private boolean submitted;
     private Date submitTime;
@@ -235,6 +237,26 @@ public class DBItemDailyPlanWithHistory {
 
     public void setEndTime(Date endTime) {
         this.endTime = endTime;
+    }
+
+    
+    public String getWorkflowName() {
+        return workflowName;
+    }
+
+    
+    public void setWorkflowName(String workflowName) {
+        this.workflowName = workflowName;
+    }
+
+    
+    public String getScheduleName() {
+        return scheduleName;
+    }
+
+    
+    public void setScheduleName(String scheduleName) {
+        this.scheduleName = scheduleName;
     }
 
 }

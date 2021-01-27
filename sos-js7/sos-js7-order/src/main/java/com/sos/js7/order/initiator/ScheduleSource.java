@@ -19,11 +19,11 @@ public abstract class ScheduleSource {
     protected boolean checkMandatory(Schedule schedule) {
         if (schedule.getPath() == null ) {
             LOGGER.warn("Adding order for workflow: " + schedule.getWorkflowPath()
-                    + " --> scheduleName: must not be null or empty.");
+                    + " --> schedulePath: must not be null or empty.");
             return false;
         }
-        if (schedule.getWorkflowPath() == null || schedule.getWorkflowPath().isEmpty()) {
-            LOGGER.warn("Adding order: " + schedule.getPath()  + " --> workflowPath: must not be null or empty.");
+        if (schedule.getWorkflowName() == null || schedule.getWorkflowName().isEmpty()) {
+            LOGGER.warn("Adding order: " + schedule.getPath()  + " --> workflowName: must not be null or empty.");
             return false;
         }
 

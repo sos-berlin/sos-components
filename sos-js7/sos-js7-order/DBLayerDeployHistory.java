@@ -19,8 +19,8 @@ public class DBLayerDeployHistory {
         this.sosHibernateSession = session;
     }
 
-    public FilterDailyPlanHistory resetFilter() {
-        FilterDailyPlanHistory filter = new FilterDailyPlanHistory();
+    public FilterDailyPlanHistoryp resetFilter() {
+        FilterDailyPlanHistoryp filter = new FilterDailyPlanHistoryp();
         return filter;
     }
 

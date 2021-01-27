@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.joc.db.orders.DBItemDailyPlanSubmissionHistory;
+import com.sos.joc.db.orders.DBItemDailyPlanSubmissions;
 import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
 
 public class DBLayerOrderVariables {
@@ -78,7 +78,7 @@ public class DBLayerOrderVariables {
     public int delete(FilterOrderVariables filter) throws SOSHibernateException {
         int row = 0;
         String hql = "delete from " + DBItemDailyPlanVariables + " where plannedOrderId = :plannedOrderId";
-        Query<DBItemDailyPlanSubmissionHistory> query = sosHibernateSession.createQuery(hql);
+        Query<DBItemDailyPlanSubmissions> query = sosHibernateSession.createQuery(hql);
         query.setParameter("plannedOrderId", filter.getPlannedOrderId());
         row = row + sosHibernateSession.executeUpdate(query);
         return row;
@@ -87,7 +87,7 @@ public class DBLayerOrderVariables {
     public int update(Long oldId, Long newId) throws SOSHibernateException {
         int row = 0;
         String hql = "update  " + DBItemDailyPlanVariables + " set plannedOrderId=:newId where plannedOrderId = :oldId";
-        Query<DBItemDailyPlanSubmissionHistory> query = sosHibernateSession.createQuery(hql);
+        Query<DBItemDailyPlanSubmissions> query = sosHibernateSession.createQuery(hql);
         query.setParameter("newId", newId);
         query.setParameter("oldId", oldId);
         row = row + sosHibernateSession.executeUpdate(query);
