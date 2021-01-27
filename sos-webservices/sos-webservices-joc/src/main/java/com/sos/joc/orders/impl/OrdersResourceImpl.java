@@ -19,6 +19,7 @@ import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
@@ -62,17 +63,18 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             List<String> orders = ordersFilter.getOrderIds();
             List<WorkflowId> workflowIds = ordersFilter.getWorkflowIds();
             boolean withFolderFilter = ordersFilter.getFolders() != null && !ordersFilter.getFolders().isEmpty();
+            boolean withOrderIdFilter = orders != null && !orders.isEmpty();
             final Set<Folder> folders = addPermittedFolder(ordersFilter.getFolders());
             
             JControllerState currentState = Proxy.of(ordersFilter.getControllerId()).currentState();
             Stream<JOrder> orderStream = null;
-            if (orders != null && !orders.isEmpty()) {
+            if (withOrderIdFilter) {
                 ordersFilter.setRegex(null);
                 orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()) && orderIsPermitted(o, folders));
             } else if (workflowIds != null && !workflowIds.isEmpty()) {
                 ordersFilter.setRegex(null);
-                Set<VersionedItemId<WorkflowPath>> workflowPaths = workflowIds.stream().map(w -> JWorkflowId.of(JocInventory.pathToName(w.getPath()), w.getVersionId()).asScala())
-                        .collect(Collectors.toSet());
+                Set<VersionedItemId<WorkflowPath>> workflowPaths = workflowIds.stream().map(w -> JWorkflowId.of(JocInventory.pathToName(w.getPath()),
+                        w.getVersionId()).asScala()).collect(Collectors.toSet());
                 orderStream = currentState.ordersBy(o -> workflowPaths.contains(o.workflowId()) && orderIsPermitted(o, folders));
             } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
                 // no folder permissions
@@ -102,6 +104,24 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                             .state().getClass())));
                 }
 
+            }
+            
+            // OrderIds beat dateTo
+            if (!withOrderIdFilter && ordersFilter.getDateTo() != null && !ordersFilter.getDateTo().isEmpty()) {
+                // only necessary if fresh orders in orderStream
+                if (!withStatesFilter || lookingForPending) {
+                    Instant dateTo = JobSchedulerDate.getInstantFromDateStr(ordersFilter.getDateTo(), true, ordersFilter.getTimeZone());
+                    final Instant until = (dateTo.isBefore(Instant.now())) ? Instant.now() : dateTo;
+                    orderStream = orderStream.filter(o -> {
+                        Order.State state = o.asScala().state();
+                        if (OrderStateText.PENDING.equals(OrdersHelper.getGroupedState(state.getClass()))) {
+                            if (!state.maybeDelayedUntil().isEmpty() && state.maybeDelayedUntil().get().toInstant().isAfter(until)) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    });
+                }
             }
 
             if (ordersFilter.getRegex() != null && !ordersFilter.getRegex().isEmpty()) {

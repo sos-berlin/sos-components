@@ -180,15 +180,15 @@ public class DeployedConfigurationDBLayer {
         if (type != null) {
             hql.append(" and type=:type");
         }
-        Query<String[]> query = session.createQuery(hql.toString());
+        Query<Object[]> query = session.createQuery(hql.toString());
         query.setParameterList("names", names);
         if (type != null) {
             query.setParameter("type", type);
         }
         
-        List<String[]> result = session.getResultList(query);
+        List<Object[]> result = session.getResultList(query);
         if (result != null) {
-            return result.stream().collect(Collectors.toMap(item -> item[1], item -> item[0]));
+            return result.stream().collect(Collectors.toMap(item -> (String) item[1], item -> (String) item[0]));
         }
         return Collections.emptyMap();
     }

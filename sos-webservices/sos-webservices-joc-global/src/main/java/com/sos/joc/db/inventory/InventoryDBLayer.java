@@ -553,15 +553,15 @@ public class InventoryDBLayer extends DBLayer {
         if (type != null) {
             hql.append(" and type=:type");
         }
-        Query<String[]> query = getSession().createQuery(hql.toString());
+        Query<Object[]> query = getSession().createQuery(hql.toString());
         query.setParameterList("names", names);
         if (type != null) {
             query.setParameter("type", type);
         }
         
-        List<String[]> result = getSession().getResultList(query);
+        List<Object[]> result = getSession().getResultList(query);
         if (result != null) {
-            return result.stream().collect(Collectors.toMap(item -> item[1], item -> item[0]));
+            return result.stream().collect(Collectors.toMap(item -> (String) item[1], item -> (String) item[0]));
         }
         return Collections.emptyMap();
     }

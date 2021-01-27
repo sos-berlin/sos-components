@@ -201,7 +201,7 @@ public class SchedulePeriodsResourceImpl extends JOCResourceImpl implements ISch
         }
         
         if (period.getSingleStart() != null) {
-            p.setSingleStart(isoFormatter.format(ZonedDateTime.of(LocalDateTime.parse(date + "T" + period.getSingleStart(), dateTimeFormatter),
+            p.setSingleStart(isoFormatter.format(ZonedDateTime.of(LocalDateTime.parse(date + "T" + normalizeTime(period.getSingleStart()), dateTimeFormatter),
                     timezone)));
             return p;
         }
@@ -210,12 +210,16 @@ public class SchedulePeriodsResourceImpl extends JOCResourceImpl implements ISch
             String begin = period.getBegin();
             if (begin == null || begin.isEmpty()) {
                 begin = "00:00:00";
+            } else {
+                begin = normalizeTime(begin);
             }
 
             p.setBegin(isoFormatter.format(ZonedDateTime.of(LocalDateTime.parse(date + "T" + begin, dateTimeFormatter), timezone)));
             String end = period.getEnd();
             if (end == null || end.isEmpty()) {
                 end = "24:00:00";
+            } else {
+                end = normalizeTime(end);
             }
             if (end.startsWith("24:00")) {
                 p.setEnd(isoFormatter.format(ZonedDateTime.of(LocalDateTime.parse(date + "T23:59:59", dateTimeFormatter).plusSeconds(1L), timezone)));
@@ -225,6 +229,12 @@ public class SchedulePeriodsResourceImpl extends JOCResourceImpl implements ISch
             return p;
         }
         return null;
+    }
+    
+    private static String normalizeTime(String time) {
+        String[] ss = (time + ":00:00:00").split(":", 3);
+        ss[2] = ss[2].substring(0, 2);
+        return String.format("%2s:%2s:%2s", ss[0], ss[1], ss[2]).replace(' ', '0');
     }
 
 }

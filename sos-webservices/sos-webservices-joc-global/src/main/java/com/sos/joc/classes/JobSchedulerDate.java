@@ -4,7 +4,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -170,7 +169,7 @@ public class JobSchedulerDate {
                 .withZoneSameInstant(ZoneId.of("UTC")).toInstant());
     }
 
-    private static Instant getInstantFromDateStr(String dateStr, boolean dateTo, String timeZone) throws JobSchedulerInvalidResponseDataException {
+    public static Instant getInstantFromDateStr(String dateStr, boolean dateTo, String timeZone) throws JobSchedulerInvalidResponseDataException {
         Pattern offsetPattern = Pattern.compile(
                 "(\\d{2,4}-\\d{1,2}-\\d{1,2}T\\d{1,2}:\\d{1,2}:\\d{1,2}(?:\\.\\d+)?|(?:\\s*[+-]?\\d+\\s*[smhdwMy])+)([+-][0-9:]+|Z)?$");
         Pattern dateTimePattern = Pattern.compile("(?:([+-]?\\d+)\\s*([smhdwMy])\\s*)");

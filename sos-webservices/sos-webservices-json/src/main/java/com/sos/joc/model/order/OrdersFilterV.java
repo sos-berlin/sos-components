@@ -28,7 +28,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "compact",
     "regex",
     "states",
-    "folders"
+    "folders",
+    "dateTo",
+    "timeZone"
 })
 public class OrdersFilterV {
 
@@ -73,6 +75,22 @@ public class OrdersFilterV {
      */
     @JsonProperty("folders")
     private List<Folder> folders = new ArrayList<Folder>();
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
+    @JsonProperty("dateTo")
+    @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
+    private String dateTo;
+    /**
+     * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+     * 
+     */
+    @JsonProperty("timeZone")
+    @JsonPropertyDescription("see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
+    private String timeZone;
 
     /**
      * filename
@@ -194,14 +212,54 @@ public class OrdersFilterV {
         this.folders = folders;
     }
 
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
+    @JsonProperty("dateTo")
+    public String getDateTo() {
+        return dateTo;
+    }
+
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
+    @JsonProperty("dateTo")
+    public void setDateTo(String dateTo) {
+        this.dateTo = dateTo;
+    }
+
+    /**
+     * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+     * 
+     */
+    @JsonProperty("timeZone")
+    public String getTimeZone() {
+        return timeZone;
+    }
+
+    /**
+     * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+     * 
+     */
+    @JsonProperty("timeZone")
+    public void setTimeZone(String timeZone) {
+        this.timeZone = timeZone;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("compact", compact).append("regex", regex).append("states", states).append("folders", folders).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("compact", compact).append("regex", regex).append("states", states).append("folders", folders).append("dateTo", dateTo).append("timeZone", timeZone).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowIds).append(regex).append(folders).append(controllerId).append(compact).append(orderIds).append(states).toHashCode();
+        return new HashCodeBuilder().append(workflowIds).append(regex).append(folders).append(controllerId).append(compact).append(dateTo).append(timeZone).append(orderIds).append(states).toHashCode();
     }
 
     @Override
@@ -213,7 +271,7 @@ public class OrdersFilterV {
             return false;
         }
         OrdersFilterV rhs = ((OrdersFilterV) other);
-        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(regex, rhs.regex).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(orderIds, rhs.orderIds).append(states, rhs.states).isEquals();
+        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(regex, rhs.regex).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).append(orderIds, rhs.orderIds).append(states, rhs.states).isEquals();
     }
 
 }
