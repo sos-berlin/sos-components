@@ -61,7 +61,7 @@ public class LogEntry {
     }
 
     public void onOrderLock(CachedOrder order, AFatEventOrderLock entry) {
-        onOrder(order, "...", null); // position TODO
+        onOrder(order, ".", null); // position TODO
         orderLock = entry.getOrderLock();
     }
 

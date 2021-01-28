@@ -370,20 +370,21 @@ public class LogOrderContent {
             info.add(error);
         }
         if (item.getLock() != null) {
-            info.add("LockId=" + item.getLock().getLockId());
-            info.add("limit=" + item.getLock().getLimit());
+            List<String> lock = new ArrayList<String>();
+            lock.add("LockId=" + item.getLock().getLockId());
+            lock.add("limit=" + item.getLock().getLimit());
             if (item.getLock().getCount() != null) {
-                info.add("count=" + item.getLock().getCount());
+                lock.add("count=" + item.getLock().getCount());
             }
             if (item.getLock().getLockState() != null) {
                 if (!SOSString.isEmpty(item.getLock().getLockState().getOrderIds())) {
-                    info.add("orders=" + item.getLock().getLockState().getOrderIds());
+                    lock.add("orders=" + item.getLock().getLockState().getOrderIds());
                 }
                 if (!SOSString.isEmpty(item.getLock().getLockState().getQueuedOrderIds())) {
-                    info.add("queued orders=" + item.getLock().getLockState().getQueuedOrderIds());
+                    lock.add("queued orders=" + item.getLock().getLockState().getQueuedOrderIds());
                 }
             }
-
+            info.add(lock.stream().collect(Collectors.joining(", ", "Lock (", ")")));
         }
 
         String loglineAdditionals = "";
