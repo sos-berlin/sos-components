@@ -5,7 +5,6 @@ import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,7 +26,6 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.DeployAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -42,11 +40,11 @@ import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.OperationType;
+import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.DbItemConfWithOriginalContent;
 import com.sos.joc.publish.resource.IDeploy;
@@ -97,6 +95,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             if (deployFilter.getDelete() != null) {
                 foldersToDelete = deployFilter.getDelete().getDeployConfigurations().stream()
                 .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER)).collect(Collectors.toList());
+                foldersToDelete = PublishUtils.handleFolders(foldersToDelete, dbLayer);
             }
 
             // read all objects provided in the filter from the database
@@ -499,22 +498,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         } finally {
             Globals.disconnect(newHibernateSession);
         }
-    }
-    
-    private void createAuditLogForEach(Collection<DBItemDeploymentHistory> depHistoryEntries, DeployFilter deployFilter, String controllerId,
-            boolean update, String commitId, String account) {
-        final Set<DeployAudit> audits = new HashSet<DeployAudit>(); 
-        audits.addAll(depHistoryEntries.stream().map(item -> {
-            if (update) {
-                return new DeployAudit(deployFilter, update, controllerId, commitId, item.getId(), item.getPath(), String.format(
-                        "object %1$s updated on controller %2$s", item.getPath(), controllerId), account);
-            } else {
-                return new DeployAudit(deployFilter, update, controllerId, commitId, item.getId(), item.getPath(), String.format(
-                        "object %1$s deleted from controller %2$s", item.getPath(), controllerId), account);
-            }
-        }).collect(Collectors.toSet()));
-        audits.stream().forEach(audit -> logAuditMessage(audit));
-        audits.stream().forEach(audit -> storeAuditLogEntry(audit));
     }
     
     private boolean checkAnyItemsStillExist (

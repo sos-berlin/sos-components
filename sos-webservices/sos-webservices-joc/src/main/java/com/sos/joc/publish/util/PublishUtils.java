@@ -1122,7 +1122,7 @@ public abstract class PublishUtils {
         Set<JUpdateItemOperation> updateItemOperationsSimple = new HashSet<JUpdateItemOperation>();
         if (alreadyDeployedtoDelete != null) {
             updateItemOperationsVersioned.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
-                    item -> JUpdateItemOperation.deleteVersioned(WorkflowPath.of(item.getPath()))
+                    item -> JUpdateItemOperation.deleteVersioned(WorkflowPath.of(item.getName()))
                     ).filter(Objects::nonNull).collect(Collectors.toSet())
                 );
             updateItemOperationsSimple.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
@@ -3057,5 +3057,21 @@ public abstract class PublishUtils {
             } catch (Exception e) {
             }
         }
+    }
+
+    public static List<Config> handleFolders(List<Config> foldersIn, DBLayerDeploy dbLayer) {
+        List<Config> foldersOut = new ArrayList<Config>();
+        foldersIn.stream().forEach(item -> {
+            List<DBItemInventoryConfiguration> dbItems = dbLayer.getInvConfigurationFolders(item.getConfiguration().getPath(), true);
+            foldersOut.addAll(dbItems.stream().map(dbItem -> {
+                Config config = new Config();
+                Configuration configuration = new Configuration();
+                configuration.setPath(dbItem.getPath());
+                configuration.setObjectType(ConfigurationType.FOLDER);
+                config.setConfiguration(configuration);
+                return config;
+            }).filter(Objects::nonNull).collect(Collectors.toList()));
+        });
+        return foldersOut;
     }
 }

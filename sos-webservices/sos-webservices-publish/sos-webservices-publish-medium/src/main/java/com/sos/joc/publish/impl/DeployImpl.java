@@ -98,6 +98,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             if (deployFilter.getDelete() != null) {
                 foldersToDelete = deployFilter.getDelete().getDeployConfigurations().stream()
                 .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER)).collect(Collectors.toList());
+                foldersToDelete = PublishUtils.handleFolders(foldersToDelete, dbLayer);
             }
 
             // read all objects provided in the filter from the database
@@ -510,22 +511,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         }
     }
 
-    private void createAuditLogForEach(Collection<DBItemDeploymentHistory> depHistoryEntries, DeployFilter deployFilter, String controllerId,
-            boolean update, String commitId, String account) {
-        final Set<DeployAudit> audits = new HashSet<DeployAudit>(); 
-        audits.addAll(depHistoryEntries.stream().map(item -> {
-            if (update) {
-                return new DeployAudit(deployFilter, update, controllerId, commitId, item.getId(), item.getPath(), String.format(
-                        "object %1$s updated on controller %2$s", item.getPath(), controllerId), account);
-            } else {
-                return new DeployAudit(deployFilter, update, controllerId, commitId, item.getId(), item.getPath(), String.format(
-                        "object %1$s deleted from controller %2$s", item.getPath(), controllerId), account);
-            }
-        }).collect(Collectors.toSet()));
-        audits.stream().forEach(audit -> logAuditMessage(audit));
-        audits.stream().forEach(audit -> storeAuditLogEntry(audit));
-    }
-    
     private boolean checkAnyItemsStillExist (
             Set<DBItemDeploymentHistory> deployments, 
             List<DBItemInventoryReleasedConfiguration> released, 
@@ -555,4 +540,5 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         }
         return false;
     }
+    
 }
