@@ -81,8 +81,14 @@ public class EventServiceFactory {
         }
         
         public void signalAll() {
-            this.eventArrived.signalAll();
-            this.hold.set(false);
+            try {
+                this.eventArrived.signalAll();
+                this.hold.set(false);
+            } catch (IllegalMonitorStateException e) {
+                LOGGER.warn("IllegalMonitorStateException at signalAll");
+            } catch (Exception e) {
+                //
+            }
         }
 
         public void await() throws InterruptedException {

@@ -283,16 +283,7 @@ public class EventService {
             }
             if (atLeastOneConditionIsHold() && EventServiceFactory.lock.tryLock(200L, TimeUnit.MILLISECONDS)) {
                 try {
-                    //conditions.stream().parallel().forEach(EventCondition::signalAll);
-                    for (EventCondition cond : conditions) {
-                        try {
-                            cond.signalAll();
-                        } catch (IllegalMonitorStateException e) {
-                            LOGGER.warn("IllegalMonitorStateException at signalAll for one of " + conditions.size() + " conditions");
-                        } catch (Exception e) {
-                            //
-                        }
-                    }
+                    conditions.stream().forEach(EventCondition::signalAll); //without .parallel()
                 } catch (Exception e) {
                     LOGGER.warn(e.toString());
                 } finally {
