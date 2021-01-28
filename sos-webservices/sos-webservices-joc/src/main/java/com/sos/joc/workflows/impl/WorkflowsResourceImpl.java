@@ -20,6 +20,7 @@ import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.Instruction;
+import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.Workflow;
@@ -158,6 +159,10 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                     if (tc.getCatch() != null) {
                         setWorkflowPositions(extendArray(pos, "catch+0"), tc.getCatch().getInstructions());
                     }
+                    break;
+                case LOCK:
+                    Lock l = inst.cast();
+                    setWorkflowPositions(extendArray(pos, "lock"), l.getLockedWorkflow().getInstructions());
                     break;
                 default:
                     break;

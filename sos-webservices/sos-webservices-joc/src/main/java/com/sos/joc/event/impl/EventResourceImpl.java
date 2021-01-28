@@ -2,21 +2,29 @@ package com.sos.joc.event.impl;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
 import org.apache.shiro.session.InvalidSessionException;
 import org.apache.shiro.session.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -24,6 +32,7 @@ import com.sos.joc.classes.event.EventCallable;
 import com.sos.joc.classes.event.EventCallableOfCurrentController;
 import com.sos.joc.classes.event.EventServiceFactory;
 import com.sos.joc.classes.event.EventServiceFactory.EventCondition;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.event.resource.IEventResource;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JocException;
@@ -31,6 +40,8 @@ import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.event.Controller;
 import com.sos.joc.model.event.Event;
+import com.sos.joc.model.event.EventSnapshot;
+import com.sos.joc.model.event.EventType;
 import com.sos.joc.model.event.Events;
 import com.sos.joc.model.event.RegisterEvent;
 import com.sos.schema.JsonValidator;
@@ -39,6 +50,9 @@ import com.sos.schema.JsonValidator;
 public class EventResourceImpl extends JOCResourceImpl implements IEventResource {
 
     private static final String API_CALL = "./events";
+    private static final List<EventType> eventTypesforNameToPathMapping = Arrays.asList(EventType.LOCK, EventType.WORKFLOW);
+    private static final Logger LOGGER = LoggerFactory.getLogger(EventResourceImpl.class);
+    
 
     @Override
     public JOCDefaultResponse postEvent(String accessToken, byte[] inBytes) {
@@ -46,6 +60,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
         Events entity = new Events();
         Map<String, Event> eventList = new HashMap<String, Event>();
         Session session = null;
+        SOSHibernateSession connection = null;
         
         try {
             initLogging(API_CALL, inBytes, accessToken);
@@ -68,6 +83,8 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
                 throw new JocMissingRequiredParameterException("undefined 'controllers'");
             }
             
+            DeployedConfigurationDBLayer dbCLayer = new DeployedConfigurationDBLayer(connection);
+            
             //Long defaultEventId = Instant.now().toEpochMilli() * 1000;
             long defaultEventId = Instant.now().getEpochSecond();
             List<EventCallable> tasks = new ArrayList<EventCallable>();
@@ -89,12 +106,9 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
                 try {
                     for (Future<Event> result : executorService.invokeAll(tasks)) {
                         try {
-                            Event evt = result.get();
-                            if (!currentControllerId.equals(evt.getControllerId())) {
-                                evt.setEventSnapshots(Collections.emptyList());
-                            }
+                            Event evt = processAfter(result.get(), currentControllerId, dbCLayer);
                             eventList.put(evt.getControllerId(), evt);
-                        } catch (ExecutionException e) {
+                        } catch (Exception e) {
                             if (e.getCause() instanceof JocException) {
                                 throw (JocException) e.getCause();
                             } else {
@@ -125,6 +139,8 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             entity.setDeliveryDate(Date.from(Instant.now()));
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(connection);
         }
         return JOCDefaultResponse.responseStatus200(entity);
     }
@@ -139,6 +155,49 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
         jsEvent.setControllerId(controller.getControllerId());
         jsEvent.setEventSnapshots(Collections.emptyList());
         return jsEvent;
+    }
+    
+    private Event processAfter(Event evt, String currentControllerId, DeployedConfigurationDBLayer dbCLayer) {
+        if (!currentControllerId.equals(evt.getControllerId())) {
+            evt.setEventSnapshots(Collections.emptyList());
+        }
+        // map workflow name to workflow path etc.
+        Map<EventType, Set<String>> m = evt.getEventSnapshots().stream().filter(e -> eventTypesforNameToPathMapping.contains(e.getObjectType())).map(
+                e -> {
+                    if (e.getWorkflow() != null) {
+                        e.setPath(e.getWorkflow().getPath());
+                    }
+                    return e;
+                }).filter(e -> e.getPath() != null).collect(Collectors.groupingBy(EventSnapshot::getObjectType, Collectors.mapping(
+                        EventSnapshot::getPath, Collectors.toSet())));
+        Map<String, String> namePathWorkflowMap;
+        Map<String, String> namePathLockMap;
+        try {
+            namePathWorkflowMap = dbCLayer.getNamePathMapping(evt.getControllerId(), m.get(EventType.WORKFLOW), DeployType.WORKFLOW
+                    .intValue());
+        } catch (SOSHibernateException e1) {
+            namePathWorkflowMap = Collections.emptyMap();
+            LOGGER.warn(e1.toString());
+        }
+        try {
+            namePathLockMap = dbCLayer.getNamePathMapping(evt.getControllerId(), m.get(EventType.LOCK), DeployType.LOCK.intValue());
+        } catch (SOSHibernateException e1) {
+            namePathLockMap = Collections.emptyMap();
+            LOGGER.warn(e1.toString());
+        }
+        for (EventSnapshot e : evt.getEventSnapshots()) {
+            if (e.getWorkflow() != null) {
+                String name = e.getWorkflow().getPath();
+                if (name != null) {
+                    e.getWorkflow().setPath(namePathWorkflowMap.getOrDefault(name, name));
+                }
+            } else if (EventType.WORKFLOW.equals(e.getObjectType()) && e.getPath() != null) {
+                e.setPath(namePathWorkflowMap.getOrDefault(e.getPath(), e.getPath()));
+            } else if (EventType.LOCK.equals(e.getObjectType()) && e.getPath() != null) {
+                e.setPath(namePathLockMap.getOrDefault(e.getPath(), e.getPath()));
+            }
+        }
+        return evt;
     }
 
 }

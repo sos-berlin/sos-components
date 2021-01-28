@@ -34,8 +34,8 @@ import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.common.Err;
-import com.sos.joc.model.event.EventSnapshot;
 import com.sos.joc.model.event.Event;
+import com.sos.joc.model.event.EventSnapshot;
 
 public class EventServiceFactory {
     
@@ -43,8 +43,10 @@ public class EventServiceFactory {
     private static boolean isDebugEnabled = LOGGER.isDebugEnabled();
     private static EventServiceFactory eventServiceFactory;
     private volatile Map<String, EventService> eventServices = new ConcurrentHashMap<>();
-    private final static long cleanupPeriodInMillis = TimeUnit.MINUTES.toMillis(6);
+    private final static long cleanupPeriodInMillis = TimeUnit.MINUTES.toMillis(3);
+//    private volatile CopyOnWriteArraySet<EventCondition> conditions = new CopyOnWriteArraySet<>();
     protected static Lock lock = new ReentrantLock();
+    
     
     public enum Mode {
         IMMEDIATLY, TRUE, FALSE;
@@ -79,14 +81,20 @@ public class EventServiceFactory {
         }
         
         public void signalAll() {
-            this.eventArrived.signalAll();
-            this.hold.set(false);
+            try {
+                this.eventArrived.signalAll();
+                this.hold.set(false);
+            } catch (IllegalMonitorStateException e) {
+                LOGGER.warn("IllegalMonitorStateException at signalAll");
+            } catch (Exception e) {
+                //
+            }
         }
 
         public void await() throws InterruptedException {
             this.unhold.set(false);
             this.hold.set(true);
-            this.eventArrived.await(6, TimeUnit.MINUTES);
+            this.eventArrived.await(cleanupPeriodInMillis - 1000, TimeUnit.MILLISECONDS);
         }
     }
     
@@ -131,7 +139,7 @@ public class EventServiceFactory {
         }
         try {
             service = getEventService(controllerId);
-            service.addCondition(eventArrived);
+            //service.addCondition(eventArrived);
             //service.setIsCurrentController(isCurrentController);
             SortedSet<Long> evtIds = new TreeSet<>(Comparator.comparing(Long::longValue));
             Set<EventSnapshot> evt = new HashSet<>();
@@ -142,7 +150,7 @@ public class EventServiceFactory {
                     LOGGER.debug("waiting for Events for " + controllerId + ": maxdelay " + delay + "ms");
                 }
                 ScheduledFuture<Void> watchdog = startWatchdog(delay, eventArrived);
-                mode = waitingForEvents(eventArrived);
+                mode = waitingForEvents(eventArrived, service);
                 if (!watchdog.isDone()) {
                     watchdog.cancel(false);
                     if (isDebugEnabled) {
@@ -202,15 +210,20 @@ public class EventServiceFactory {
         return events;
     }
     
-    private synchronized Mode waitingForEvents(EventCondition eventArrived) {
+    private static Mode waitingForEvents(EventCondition eventArrived, EventService service) {
         try {
             if (eventArrived.isUnHold() && lock.tryLock(200L, TimeUnit.MILLISECONDS)) { // with timeout
                 try {
-                    //LOGGER.info("Waiting for Events ");
+                    // LOGGER.info("Waiting for Events ");
+                    service.addCondition(eventArrived);
                     eventArrived.await();
                 } catch (InterruptedException e1) {
                 } finally {
-                    lock.unlock();
+                    try {
+                        lock.unlock();
+                    } catch (IllegalMonitorStateException e) {
+                        LOGGER.warn("IllegalMonitorStateException at unlock lock after await");
+                    }
                 }
             }
         } catch (InterruptedException e) {
@@ -252,13 +265,17 @@ public class EventServiceFactory {
         }
     }
     
-    protected static synchronized void signalEvent(EventCondition eventArrived) {
+    protected synchronized static void signalEvent(EventCondition eventArrived) {
         try {
             if (lock.tryLock(2L, TimeUnit.SECONDS)) {
                 try {
                     eventArrived.signalAll();
                 } finally {
-                    lock.unlock();
+                    try {
+                        lock.unlock();
+                    } catch (IllegalMonitorStateException e) {
+                        LOGGER.warn("IllegalMonitorStateException at unlock lock after signal");
+                    }
                 }
             }
         } catch (InterruptedException e) {

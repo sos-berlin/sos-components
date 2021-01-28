@@ -1991,6 +1991,30 @@ public class DBLayerDeploy {
         } 
     }
     
+    public  List<DBItemInventoryConfiguration> getInvConfigurationFolders(String path, boolean recursive) {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            if (recursive) {
+                hql.append(" where path like :path");
+            } else {
+                hql.append(" where path = :path");
+            }
+            hql.append(" and type = :type");
+            Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+            if(recursive) {
+                query.setParameter("path", MatchMode.START.toMatchString(path));
+            } else {
+                query.setParameter("path", path);
+            }
+            query.setParameter("type", ConfigurationType.FOLDER.intValue());
+            return query.getResultList();
+        } catch(NoResultException e) {
+            return null;
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        } 
+    }
+    
     public List<DBItemInventoryReleasedConfiguration> getReleasedConfigurations (String folder) {
         try {
             StringBuilder hql = new StringBuilder("from ")

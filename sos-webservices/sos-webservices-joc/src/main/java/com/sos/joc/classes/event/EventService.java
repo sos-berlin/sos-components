@@ -190,7 +190,7 @@ public class EventService {
                 eventSnapshot.setEventType("OrderStateChanged");
                 if (evt instanceof OrderAdded) {
                     eventSnapshot.setEventType("OrderAdded");
-                } else if (evt instanceof OrderTerminated || evt instanceof OrderRemoved$) {
+                } else if (evt instanceof OrderTerminated) { //|| evt instanceof OrderRemoved$) {
                     eventSnapshot.setEventType("OrderTerminated");
 //                } else if (evt instanceof OrderRemoved$) {
 //                    eventSnapshot.setEventType("OrderRemoved");
@@ -283,11 +283,15 @@ public class EventService {
             }
             if (atLeastOneConditionIsHold() && EventServiceFactory.lock.tryLock(200L, TimeUnit.MILLISECONDS)) {
                 try {
-                    conditions.stream().parallel().forEach(EventCondition::signalAll);
+                    conditions.stream().forEach(EventCondition::signalAll); //without .parallel()
                 } catch (Exception e) {
                     LOGGER.warn(e.toString());
                 } finally {
-                    EventServiceFactory.lock.unlock();
+                    try {
+                        EventServiceFactory.lock.unlock();
+                    } catch (IllegalMonitorStateException e) {
+                        LOGGER.warn("IllegalMonitorStateException at unlock lock after signalAll");
+                    }
                 }
             }
         } catch (InterruptedException e) {
