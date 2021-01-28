@@ -52,23 +52,21 @@ public class PlannedOrderItem {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date surveyDate;
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * (Required)
      * 
      */
     @JsonProperty("workflowPath")
-    @JsonPropertyDescription("absolute path of an object.")
     private String workflowPath;
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
     @JsonProperty("schedulePath")
-    @JsonPropertyDescription("absolute path of an object.")
     private String schedulePath;
     /**
      * 
@@ -193,9 +191,9 @@ public class PlannedOrderItem {
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * (Required)
      * 
      */
@@ -205,9 +203,9 @@ public class PlannedOrderItem {
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * (Required)
      * 
      */
@@ -217,9 +215,9 @@ public class PlannedOrderItem {
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
     @JsonProperty("schedulePath")
@@ -228,9 +226,9 @@ public class PlannedOrderItem {
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
     @JsonProperty("schedulePath")

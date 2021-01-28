@@ -91,7 +91,7 @@ public class OrderInitiatorMain extends JocClusterService {
         LOGGER.debug("...Settings from " + getJocConfig().getResourceDirectory().resolve("joc.properties").normalize());
          
         settings.setDayAhead(getProperty(Globals.sosCockpitProperties, "daily_plan_day_ahead", "0"));
-        settings.setTimeZone(getProperty(Globals.sosCockpitProperties, "daily_plan_timezone", "UTC"));
+        settings.setTimeZone(getProperty(Globals.sosCockpitProperties, "daily_plan_time_zone", "UTC"));
         settings.setPeriodBegin(getProperty(Globals.sosCockpitProperties, "daily_plan_period_begin", "00:00"));
          
 

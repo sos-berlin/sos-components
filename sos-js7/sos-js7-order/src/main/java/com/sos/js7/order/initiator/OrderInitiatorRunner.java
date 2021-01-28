@@ -110,44 +110,49 @@ public class OrderInitiatorRunner extends TimerTask {
             IOException, ParseException, SOSException, URISyntaxException, JobSchedulerConnectionResetException,
             JobSchedulerConnectionRefusedException, InterruptedException, ExecutionException, TimeoutException {
 
-        SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("submitOrders");
-        DBLayerOrderVariables dbLayerOrderVariables = new DBLayerOrderVariables(sosHibernateSession);
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("submitOrders");
+            DBLayerOrderVariables dbLayerOrderVariables = new DBLayerOrderVariables(sosHibernateSession);
 
-        OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer();
-        for (DBItemDailyPlanOrders dbItemDailyPlanOrders : listOfPlannedOrders) {
-            PlannedOrder p = new PlannedOrder();
-            Schedule schedule = new Schedule();
-            schedule.setPath(dbItemDailyPlanOrders.getSchedulePath());
-            schedule.setWorkflowPath(dbItemDailyPlanOrders.getWorkflowPath());
-            schedule.setWorkflowName(dbItemDailyPlanOrders.getWorkflowName());
-            schedule.setSubmitOrderToControllerWhenPlanned(true);
-            p.setControllerId(dbItemDailyPlanOrders.getControllerId());
+            OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer();
+            for (DBItemDailyPlanOrders dbItemDailyPlanOrders : listOfPlannedOrders) {
+                PlannedOrder p = new PlannedOrder();
+                Schedule schedule = new Schedule();
+                schedule.setPath(dbItemDailyPlanOrders.getSchedulePath());
+                schedule.setWorkflowPath(dbItemDailyPlanOrders.getWorkflowPath());
+                schedule.setWorkflowName(dbItemDailyPlanOrders.getWorkflowName());
+                schedule.setSubmitOrderToControllerWhenPlanned(true);
+                p.setControllerId(dbItemDailyPlanOrders.getControllerId());
 
-            FilterOrderVariables filterOrderVariables = new FilterOrderVariables();
+                FilterOrderVariables filterOrderVariables = new FilterOrderVariables();
 
-            filterOrderVariables.setPlannedOrderId(dbItemDailyPlanOrders.getId());
-            List<NameValuePair> variables = new ArrayList<NameValuePair>();
-            List<DBItemDailyPlanVariables> listOfOrderVariables = dbLayerOrderVariables.getOrderVariables(filterOrderVariables, 0);
-            for (DBItemDailyPlanVariables orderVariable : listOfOrderVariables) {
-                NameValuePair variable = new NameValuePair();
-                variable.setName(orderVariable.getVariableName());
-                variable.setValue(orderVariable.getVariableValue());
-                variables.add(variable);
+                filterOrderVariables.setPlannedOrderId(dbItemDailyPlanOrders.getId());
+                List<NameValuePair> variables = new ArrayList<NameValuePair>();
+                List<DBItemDailyPlanVariables> listOfOrderVariables = dbLayerOrderVariables.getOrderVariables(filterOrderVariables, 0);
+                for (DBItemDailyPlanVariables orderVariable : listOfOrderVariables) {
+                    NameValuePair variable = new NameValuePair();
+                    variable.setName(orderVariable.getVariableName());
+                    variable.setValue(orderVariable.getVariableValue());
+                    variables.add(variable);
+                }
+
+                schedule.setVariables(variables);
+
+                FreshOrder freshOrder = buildFreshOrder(schedule, dbItemDailyPlanOrders.getPlannedStart().getTime());
+                freshOrder.setId(dbItemDailyPlanOrders.getOrderId());
+                p.setSchedule(schedule);
+                p.setFreshOrder(freshOrder);
+                p.setCalendarId(dbItemDailyPlanOrders.getCalendarId());
+                p.setStoredInDb(true);
+
+                orderListSynchronizer.add(p);
             }
-
-            schedule.setVariables(variables);
-
-            FreshOrder freshOrder = buildFreshOrder(schedule, dbItemDailyPlanOrders.getPlannedStart().getTime());
-            freshOrder.setId(dbItemDailyPlanOrders.getOrderId());
-            p.setSchedule(schedule);
-            p.setFreshOrder(freshOrder);
-            p.setCalendarId(dbItemDailyPlanOrders.getCalendarId());
-            p.setStoredInDb(true);
-
-            orderListSynchronizer.add(p);
-        }
-        if (orderListSynchronizer.getListOfPlannedOrders().size() > 0) {
-            orderListSynchronizer.submitOrdersToController();
+            if (orderListSynchronizer.getListOfPlannedOrders().size() > 0) {
+                orderListSynchronizer.submitOrdersToController();
+            }
+        } finally {
+            Globals.disconnect(sosHibernateSession);
         }
     }
 
@@ -235,10 +240,11 @@ public class OrderInitiatorRunner extends TimerTask {
             JsonMappingException, IOException, DBConnectionRefusedException, DBInvalidDataException, JocConfigurationException,
             DBOpenSessionException, SOSHibernateException {
 
-        SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("OrderInitiatorRunner");
-        DBLayerInventoryConfigurations dbLayer = new DBLayerInventoryConfigurations(sosHibernateSession);
+        SOSHibernateSession sosHibernateSession = null;
 
         try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("OrderInitiatorRunner");
+            DBLayerInventoryConfigurations dbLayer = new DBLayerInventoryConfigurations(sosHibernateSession);
             FilterInventoryConfigurations filter = new FilterInventoryConfigurations();
             filter.setName(calendarName);
             filter.setReleased(true);
@@ -315,11 +321,12 @@ public class OrderInitiatorRunner extends TimerTask {
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties("/order_configuration.properties");
         }
-        SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("OrderInitiatorRunner");
         Date actDate = dailyPlanDate;
         Date nextDate = DailyPlanHelper.getNextDay(dailyPlanDate);
+        SOSHibernateSession sosHibernateSession = null;
 
         try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("OrderInitiatorRunner");
             DBItemDailyPlanSubmissions dbItemDailyPlanSubmissionHistory = null;
             OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer();
             Map<String, CalendarCacheItem> calendarCache = new HashMap<String, CalendarCacheItem>();
@@ -424,6 +431,7 @@ public class OrderInitiatorRunner extends TimerTask {
         dbItemDailyPlanHistory.setControllerId(controllerId);
         dbItemDailyPlanHistory.setCreated(JobSchedulerDate.nowInUtc());
         dbItemDailyPlanHistory.setDailyPlanDate(dateForPlan);
+        dbItemDailyPlanHistory.setSubmissionTime(OrderInitiatorGlobals.submissionTime);
         dbItemDailyPlanHistory.setUserAccount(OrderInitiatorGlobals.orderInitiatorSettings.getUserAccount());
         dbLayerDailyPlanHistory.storeDailyPlanHistory(dbItemDailyPlanHistory);
 

@@ -2,8 +2,10 @@ package com.sos.js7.order.initiator.db;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.query.Query;
@@ -94,7 +96,6 @@ public class DBLayerSchedules {
         List<DBItemInventoryReleasedConfiguration> resultset = sosHibernateSession.getResultList(query);
 
         ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        Set<String> setOfWorkflows = new LinkedHashSet<String>();
         boolean selectedByWorkflowNames = (filter.getListOfWorkflowNames() != null && filter.getListOfWorkflowNames().size() > 0);
 
         if (selectedByWorkflowNames) {
@@ -135,11 +136,12 @@ public class DBLayerSchedules {
         List<DBItemInventoryConfiguration> listOfWorkflows = dbLayerInventoryConfigurations.getInventoryConfigurations(filterInventoryConfigurations,
                 0);
 
+        Map<String,String>  workflowPaths = new HashMap<String,String>();
         for (DBItemInventoryConfiguration dbItemInventoryConfiguration : listOfWorkflows) {
             filterDeployHistory.setInventoryId(dbItemInventoryConfiguration.getId());
             List<DBItemDeploymentHistory> l = dbLayerDeploy.getDeployments(filterDeployHistory, 0);
             if (l.size() > 0) {
-                setOfWorkflows.add(dbItemInventoryConfiguration.getName());
+                workflowPaths.put(dbItemInventoryConfiguration.getName(),dbItemInventoryConfiguration.getPath());
             }
         }
 
@@ -153,8 +155,8 @@ public class DBLayerSchedules {
             }
 
             if (schedule != null) {
-                if (setOfWorkflows.contains(schedule.getWorkflowName())) {
-
+                if (workflowPaths.get(schedule.getWorkflowName()) != null) {
+                    schedule.setWorkflowPath(workflowPaths.get(schedule.getWorkflowName()));
                     dbItemInventoryConfiguration.setSchedule(schedule);
                     filteredResultset.add(dbItemInventoryConfiguration);
                 } else {
@@ -166,6 +168,7 @@ public class DBLayerSchedules {
                     }
                     dbItemDailyPlanHistory.setCreated(JobSchedulerDate.nowInUtc());
                     dbItemDailyPlanHistory.setMessage(s);
+                    dbItemDailyPlanHistory.setSubmissionTime(OrderInitiatorGlobals.submissionTime);
                     dbItemDailyPlanHistory.setDailyPlanDate(OrderInitiatorGlobals.dailyPlanDate);
                     dbItemDailyPlanHistory.setUserAccount(OrderInitiatorGlobals.orderInitiatorSettings.getUserAccount());
                     dbLayerDailyPlanHistory.storeDailyPlanHistory(dbItemDailyPlanHistory);

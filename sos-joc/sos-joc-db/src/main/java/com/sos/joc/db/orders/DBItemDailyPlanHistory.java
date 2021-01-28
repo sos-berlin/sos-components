@@ -46,6 +46,10 @@ public class DBItemDailyPlanHistory extends DBItem {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[DAILY_PLAN_DATE]", nullable = false)
     private Date dailyPlanDate;
+    
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "[SUBMISSION_TIME]", nullable = false)
+    private Date submissionTime;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[CREATED]", nullable = false)
@@ -119,6 +123,16 @@ public class DBItemDailyPlanHistory extends DBItem {
     
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    
+    public Date getSubmissionTime() {
+        return submissionTime;
+    }
+
+    
+    public void setSubmissionTime(Date submissionTime) {
+        this.submissionTime = submissionTime;
     }
 
 }

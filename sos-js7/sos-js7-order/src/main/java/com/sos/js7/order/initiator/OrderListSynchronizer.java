@@ -12,7 +12,6 @@ import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.yaml.snakeyaml.scanner.Constant;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -41,8 +40,7 @@ import com.sos.js7.order.initiator.classes.PlannedOrderKey;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlanHistory;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
- 
-import akka.util.LineNumbers.Constants;
+
 import js7.data.order.OrderId;
 
 public class OrderListSynchronizer {
@@ -69,8 +67,9 @@ public class OrderListSynchronizer {
 
         if (listOfDurations.get(plannedOrder.uniqueOrderkey()) == null) {
 
-            SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("calculateDurations");
+            SOSHibernateSession sosHibernateSession = null;
             try {
+                sosHibernateSession = Globals.createSosHibernateStatelessConnection("calculateDurations");
 
                 FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
                 DBLayerDailyPlannedOrders dbLayerDailyPlan = new DBLayerDailyPlannedOrders(sosHibernateSession);
@@ -117,16 +116,15 @@ public class OrderListSynchronizer {
                 addedOrders.add(p);
             }
         }
-        
-        SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("submitOrdersToController");
+        SOSHibernateSession sosHibernateSession = null;
 
-        sosHibernateSession.setAutoCommit(false);
-        Globals.beginTransaction(sosHibernateSession);
-
-        DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
-        OrderApi.addOrderToController(addedOrders);
-        Globals.beginTransaction(sosHibernateSession);
         try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("submitOrdersToController");
+            sosHibernateSession.setAutoCommit(false);
+            Globals.beginTransaction(sosHibernateSession);
+
+            DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
+            OrderApi.addOrderToController(addedOrders);
 
             Set<OrderId> setOfOrderIds = OrderApi.getNotMarkWithRemoveOrdersWhenTerminated();
 
@@ -143,8 +141,9 @@ public class OrderListSynchronizer {
                 dbItemDailyPlanHistory.setCategory("SUBMITTED");
                 dbItemDailyPlanHistory.setControllerId(addedOrder.getControllerId());
                 dbItemDailyPlanHistory.setCreated(JobSchedulerDate.nowInUtc());
-                dbItemDailyPlanHistory.setDailyPlanDate(DailyPlanHelper.getDailyPlanDateAsDate(addedOrder.getFreshOrder().getScheduledFor()));
+                dbItemDailyPlanHistory.setDailyPlanDate(OrderInitiatorGlobals.dailyPlanDate);
                 dbItemDailyPlanHistory.setOrderId(addedOrder.getFreshOrder().getId());
+                dbItemDailyPlanHistory.setSubmissionTime(OrderInitiatorGlobals.submissionTime);
                 dbItemDailyPlanHistory.setUserAccount(OrderInitiatorGlobals.orderInitiatorSettings.getUserAccount());
                 dbLayerDailyPlanHistory.storeDailyPlanHistory(dbItemDailyPlanHistory);
             }
@@ -161,19 +160,21 @@ public class OrderListSynchronizer {
         LOGGER.debug("... addPlannedOrderToDB");
 
         calculateDurations();
-        SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("addPlannedOrderToDB");
-        DBLayerDailyPlannedOrders dbLayerDailyPlan = new DBLayerDailyPlannedOrders(sosHibernateSession);
-        sosHibernateSession.setAutoCommit(false);
-
-        Globals.beginTransaction(sosHibernateSession);
+        SOSHibernateSession sosHibernateSession = null;
         try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("addPlannedOrderToDB");
+            DBLayerDailyPlannedOrders dbLayerDailyPlan = new DBLayerDailyPlannedOrders(sosHibernateSession);
+            sosHibernateSession.setAutoCommit(false);
+
+            Globals.beginTransaction(sosHibernateSession);
 
             DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
             if (OrderInitiatorGlobals.orderInitiatorSettings.isOverwrite()) {
+                LOGGER.debug("Overwrite orders");
                 for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
                     FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
                     filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
-                    LOGGER.debug("----> " + plannedOrder.getFreshOrder().getScheduledFor() + ":" + new Date(plannedOrder.getFreshOrder()
+                    LOGGER.debug("----> Remove: " + plannedOrder.getFreshOrder().getScheduledFor() + ":" + new Date(plannedOrder.getFreshOrder()
                             .getScheduledFor()));
                     filter.setControllerId(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
                     filter.addWorkflowName(plannedOrder.getFreshOrder().getWorkflowPath());

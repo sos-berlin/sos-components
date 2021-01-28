@@ -42,7 +42,7 @@ public class ScheduleSourceDB extends ScheduleSource {
     @Override
     public List<Schedule> fillListOfSchedules() throws IOException, SOSHibernateException {
         FilterSchedules filterSchedules = new FilterSchedules();
-        
+
         if (dailyPlanOrderSelector.getSelector().getSchedulePaths() != null) {
             if (dailyPlanOrderSelector.getSelector().getScheduleNames() == null) {
                 dailyPlanOrderSelector.getSelector().setScheduleNames(new ArrayList<String>());
@@ -61,29 +61,32 @@ public class ScheduleSourceDB extends ScheduleSource {
                 String name = Paths.get(path).getFileName().toString();
                 dailyPlanOrderSelector.getSelector().getWorkflowNames().add(name);
             }
-        }        
-        
-        SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("ScheduleSourceDB");
-        List<Schedule> listOfSchedules = new ArrayList<Schedule>();
-        DBLayerSchedules dbLayerSchedules = new DBLayerSchedules(sosHibernateSession);
-         
-        filterSchedules.setListOfControllerIds(dailyPlanOrderSelector.getControllerIds());
-        filterSchedules.setListOfFolders(dailyPlanOrderSelector.getSelector().getFolders());
-        filterSchedules.setListOfWorkflowNames(dailyPlanOrderSelector.getSelector().getWorkflowNames());
-        filterSchedules.setListOfScheduleNames(dailyPlanOrderSelector.getSelector().getScheduleNames());
-        
-
-        List<DBItemInventoryReleasedConfiguration> listOfSchedulesDbItems = dbLayerSchedules.getSchedules(filterSchedules, 0);
-        for (DBItemInventoryReleasedConfiguration dbItemInventoryConfiguration : listOfSchedulesDbItems) {
-            if (dbItemInventoryConfiguration.getSchedule() != null) {
-                if (fromService || dbItemInventoryConfiguration.getSchedule().getPlanOrderAutomatically()) {
-                    
-                    listOfSchedules.add(dbItemInventoryConfiguration.getSchedule());
-                }
-            }
         }
 
-        return listOfSchedules;
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("ScheduleSourceDB");
+            List<Schedule> listOfSchedules = new ArrayList<Schedule>();
+            DBLayerSchedules dbLayerSchedules = new DBLayerSchedules(sosHibernateSession);
+
+            filterSchedules.setListOfControllerIds(dailyPlanOrderSelector.getControllerIds());
+            filterSchedules.setListOfFolders(dailyPlanOrderSelector.getSelector().getFolders());
+            filterSchedules.setListOfWorkflowNames(dailyPlanOrderSelector.getSelector().getWorkflowNames());
+            filterSchedules.setListOfScheduleNames(dailyPlanOrderSelector.getSelector().getScheduleNames());
+
+            List<DBItemInventoryReleasedConfiguration> listOfSchedulesDbItems = dbLayerSchedules.getSchedules(filterSchedules, 0);
+            for (DBItemInventoryReleasedConfiguration dbItemInventoryConfiguration : listOfSchedulesDbItems) {
+                if (dbItemInventoryConfiguration.getSchedule() != null) {
+                    if (fromService || dbItemInventoryConfiguration.getSchedule().getPlanOrderAutomatically()) {
+
+                        listOfSchedules.add(dbItemInventoryConfiguration.getSchedule());
+                    }
+                }
+            }
+            return listOfSchedules;
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
     }
 
     @Override

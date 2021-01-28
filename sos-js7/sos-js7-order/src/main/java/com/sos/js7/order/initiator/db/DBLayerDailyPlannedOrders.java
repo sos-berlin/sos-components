@@ -375,8 +375,8 @@ public class DBLayerDailyPlannedOrders {
             dbItemDailyPlannedOrders.setRepeatInterval(plannedOrder.getPeriod().getRepeat());
         }
         dbItemDailyPlannedOrders.setControllerId(plannedOrder.getControllerId());
-        dbItemDailyPlannedOrders.setWorkflowPath(plannedOrder.getFreshOrder().getWorkflowPath());
-        dbItemDailyPlannedOrders.setWorkflowName(Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString());
+        dbItemDailyPlannedOrders.setWorkflowPath(plannedOrder.getSchedule().getWorkflowPath());
+        dbItemDailyPlannedOrders.setWorkflowName(plannedOrder.getFreshOrder().getWorkflowPath());
         dbItemDailyPlannedOrders.setSubmitted(false);
         dbItemDailyPlannedOrders.setSubmissionHistoryId(plannedOrder.getSubmissionHistoryId());
         dbItemDailyPlannedOrders.setCalendarId(plannedOrder.getCalendarId());

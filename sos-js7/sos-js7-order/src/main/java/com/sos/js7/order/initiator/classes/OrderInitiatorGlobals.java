@@ -8,5 +8,6 @@ public class OrderInitiatorGlobals {
 
     public static OrderInitiatorSettings orderInitiatorSettings;
     public static Date dailyPlanDate;
-   
+    public static Date submissionTime;
+
 }

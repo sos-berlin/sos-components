@@ -9,7 +9,9 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.joc.Globals;
 import com.sos.joc.db.orders.DBItemDailyPlanSubmissions;
+import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 
 public class DBLayerDailyPlanSubmissions {
 
@@ -113,7 +115,8 @@ public class DBLayerDailyPlanSubmissions {
     }
 
     public void storePlan(DBItemDailyPlanSubmissions dbItemDailyPlanSubmissions) throws SOSHibernateException {
-        dbItemDailyPlanSubmissions.setCreated(new Date());
+        OrderInitiatorGlobals.submissionTime = new Date(); 
+        dbItemDailyPlanSubmissions.setCreated(OrderInitiatorGlobals.submissionTime);
         sosHibernateSession.save(dbItemDailyPlanSubmissions);
     }
 
