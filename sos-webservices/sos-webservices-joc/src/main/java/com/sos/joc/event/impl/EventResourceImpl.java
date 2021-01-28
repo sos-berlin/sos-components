@@ -107,7 +107,10 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
                     for (Future<Event> result : executorService.invokeAll(tasks)) {
                         try {
                             Event evt = result.get();
-                            evt = processAfter(evt, currentControllerId, dbCLayer);
+                            if (!currentControllerId.equals(evt.getControllerId())) {
+                                evt.setEventSnapshots(Collections.emptyList());
+                            }
+                            //evt = processAfter(evt, currentControllerId, dbCLayer);
                             eventList.put(evt.getControllerId(), evt);
                         } catch (Exception e) {
                             if (e.getCause() instanceof JocException) {
