@@ -19,6 +19,8 @@ import javax.ws.rs.Path;
 
 import org.apache.shiro.session.InvalidSessionException;
 import org.apache.shiro.session.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -49,6 +51,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
 
     private static final String API_CALL = "./events";
     private static final List<EventType> eventTypesforNameToPathMapping = Arrays.asList(EventType.LOCK, EventType.WORKFLOW);
+    private static final Logger LOGGER = LoggerFactory.getLogger(EventResourceImpl.class);
     
 
     @Override
@@ -174,11 +177,13 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
                     .intValue());
         } catch (SOSHibernateException e1) {
             namePathWorkflowMap = Collections.emptyMap();
+            LOGGER.warn(e1.toString());
         }
         try {
             namePathLockMap = dbCLayer.getNamePathMapping(evt.getControllerId(), m.get(EventType.LOCK), DeployType.LOCK.intValue());
         } catch (SOSHibernateException e1) {
             namePathLockMap = Collections.emptyMap();
+            LOGGER.warn(e1.toString());
         }
         for (EventSnapshot e : evt.getEventSnapshots()) {
             if (e.getWorkflow() != null) {
