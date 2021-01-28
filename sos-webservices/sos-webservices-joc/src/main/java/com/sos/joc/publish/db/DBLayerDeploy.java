@@ -217,6 +217,24 @@ public class DBLayerDeploy {
         }
     }
 
+    public Long getInventoryConfigurationIdByNameAndType(String name, Integer type)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("select id from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            sql.append(" where name = :name");
+            sql.append(" and type = :type");
+            Query<Long> query = session.createQuery(sql.toString());
+            query.setParameter("name", name);
+            query.setParameter("type", type);
+            return session.getSingleResult(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
     public List<DBItemInventoryConfiguration> getAllInventoryConfigurations() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
@@ -484,7 +502,22 @@ public class DBLayerDeploy {
                 query.setParameter("path" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), deployConfigurations.get(i).getPath());
                 query.setParameter("type" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), deployConfigurations.get(i).getObjectType().intValue());
             }
-            return query.getResultList();
+            List<DBItemDeploymentHistory> dbItems = query.getResultList();
+            if (dbItems != null && !dbItems.isEmpty()) {
+                return dbItems;
+            } else {
+                // check if configuration(s) exists with the given path(s) and get deployments with the configurations id
+                List<DBItemDeploymentHistory> dbItemsByConfId = new ArrayList<DBItemDeploymentHistory>();
+                deployConfigurations.stream().forEach(item -> {
+                    try {
+                        dbItemsByConfId.add(getLatestActiveDepHistoryItem(getConfigurationByName(Paths.get(item.getPath()).getFileName().toString(), item.getObjectType()).getId()));
+                    } catch (SOSHibernateException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                });
+                return dbItemsByConfId;
+            }
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -785,6 +818,20 @@ public class DBLayerDeploy {
         } 
     }
     
+    public DBItemInventoryConfiguration getConfiguration(Long id) {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            hql.append(" where id = :id");
+            Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+            query.setParameter("id", id);
+            return query.getSingleResult();
+        } catch(NoResultException e) {
+            return null;
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        } 
+    }
+    
     public DBItemInventoryConfiguration getConfigurationByName(String name, ConfigurationType type) {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
@@ -1068,6 +1115,17 @@ public class DBLayerDeploy {
         return session.getSingleResult(query);
     }
 
+    public DBItemDeploymentHistory getLatestActiveDepHistoryItem (Long configurationId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
+        hql.append(" where dep.id = (select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
+        hql.append(" where history.inventoryConfigurationId = :cid");
+        hql.append(" and history.state = 0");
+        hql.append(" and history.operation = 0").append(")");
+        Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
+        query.setParameter("cid", configurationId);
+        return session.getSingleResult(query);
+    }
+
     public DBItemDeploymentHistory getLatestActiveDepHistoryItem (DBItemInventoryConfiguration invConfig) throws SOSHibernateException {
         return getLatestActiveDepHistoryItem(invConfig.getPath(), invConfig.getTypeAsEnum());
     }
@@ -1142,6 +1200,38 @@ public class DBLayerDeploy {
                 hql.append(" where history.folder = :folder");
             }
             hql.append(" and history.state = 0")
+                .append(" and history.path = dep.path group by history.path")
+                .append(")");
+            Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
+            if (recursive) {
+                query.setParameter("folder", MatchMode.START.toMatchString(folder));
+            } else {
+                query.setParameter("folder", folder);
+            }
+            return session.getResultList(query);
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+    }
+
+    public List<DBItemDeploymentHistory> getLatestActiveDepHistoryItemsFromFolder (String folder) {
+        return getLatestActiveDepHistoryItemsFromFolder(folder, false);
+    }
+
+    public List<DBItemDeploymentHistory> getLatestActiveDepHistoryItemsFromFolder (String folder, boolean recursive) {
+        try {
+            StringBuilder hql = new StringBuilder("select dep from ")
+                    .append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
+            hql.append(" where dep.id = (")
+                .append("select max(history.id) from ")
+                .append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
+            if (recursive) {
+                hql.append(" where history.folder like :folder");
+            } else {
+                hql.append(" where history.folder = :folder");
+            }
+            hql.append(" and history.state = 0")
+                .append(" and operation = 0")
                 .append(" and history.path = dep.path group by history.path")
                 .append(")");
             Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());

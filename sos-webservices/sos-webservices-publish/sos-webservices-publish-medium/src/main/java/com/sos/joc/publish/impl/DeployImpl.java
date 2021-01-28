@@ -5,7 +5,6 @@ import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,7 +26,6 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.DeployAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -196,7 +194,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 }
                 List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkPathRenamingForUpdate(
                         verifiedConfigurations.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm());
-                if (toDeleteForRename != null) {
+                if (toDeleteForRename != null && !toDeleteForRename.isEmpty()) {
                     toDeleteForRename.addAll(PublishUtils.checkPathRenamingForUpdate(
                             verifiedReDeployables.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm()));
                 } else {
@@ -409,7 +407,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
             if (either.isRight()) {
                 Set<Long> configurationIdsToDelete = itemsToDelete.stream()
-                        .map(item -> dbLayer.getInventoryConfigurationIdByPathAndType(item.getPath(), item.getType()))
+                        .map(item -> item.getInventoryConfigurationId())
                         .collect(Collectors.toSet());
                 Set<DBItemDeploymentHistory> deletedDeployItems = 
                         PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer);

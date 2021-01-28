@@ -115,7 +115,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 depHistoryDBItemsToStore = dbLayer.getFilteredDeploymentHistory(deployConfigsToStoreAgain);
             }
             List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete = null;
-            if (deployConfigsToDelete != null) {
+            if (deployConfigsToDelete != null && !deployConfigsToDelete.isEmpty()) {
                 depHistoryDBItemsToDeployDelete = dbLayer.getFilteredDeploymentHistoryToDelete(deployConfigsToDelete);
             }
 
@@ -169,7 +169,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 // determine all (latest) entries from the given folders
                 List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkPathRenamingForUpdate(verifiedConfigurations.keySet(),
                         controllerId, dbLayer, keyPair.getKeyAlgorithm());
-                if (toDeleteForRename != null) {
+                if (toDeleteForRename != null && !toDeleteForRename.isEmpty()) {
                     toDeleteForRename.addAll(PublishUtils.checkPathRenamingForUpdate(verifiedReDeployables.keySet(), controllerId, dbLayer, 
                             keyPair.getKeyAlgorithm()));
                 } else {
@@ -267,11 +267,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     dbLayer.cleanupCommitIdsForRedeployments(verifiedReDeployables.keySet());
                 }
             }
-//            if (hasErrors) {
-//                return JOCDefaultResponse.responseStatus419(listOfErrors);
-//            } else {
+
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
-//            }
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -372,8 +369,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     
     private void processAfterDelete (
             Either<Problem, Void> either, 
-            List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete, 
-            String controller, 
+            List<DBItemDeploymentHistory> itemsToDelete, 
+            String controllerId, 
             String account, 
             String versionIdForDelete,
             DeployFilter deployFilter) {
@@ -382,20 +379,20 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             newHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
             if (either.isRight()) {
-                Set<Long> draftConfigsToDelete = depHistoryDBItemsToDeployDelete.stream()
-                        .map(DBItemDeploymentHistory::getInventoryConfigurationId).collect(Collectors.toSet());
+                Set<Long> configurationIdsToDelete = itemsToDelete.stream()
+                        .map(item -> item.getInventoryConfigurationId())
+                        .collect(Collectors.toSet());
                 Set<DBItemDeploymentHistory> deletedDeployItems = 
-                        PublishUtils.updateDeletedDepHistory(depHistoryDBItemsToDeployDelete, dbLayer);
-                JocInventory.deleteConfigurations(draftConfigsToDelete);
-//                createAuditLogForEach(deletedDeployItems, deployFilter, controller, false, versionIdForDelete, account);
-                JocInventory.deleteConfigurations(draftConfigsToDelete);
+                        PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer);
+//                createAuditLogForEach(deletedDeployItems, deployFilter, controllerId, false, versionIdForDelete, account);
+                JocInventory.deleteConfigurations(configurationIdsToDelete);
                 JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);
             } else if (either.isLeft()) {
-                String message = String.format("Response from Controller \"%1$s:\": %2$s", controller, either.getLeft().message());
+                String message = String.format("Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
                 LOGGER.warn(message);
                 // updateRepo command is atomic, therefore all items are rejected
                 List<DBItemDeploymentHistory> failedDeployDeleteItems = dbLayer.updateFailedDeploymentForDelete(
-                        depHistoryDBItemsToDeployDelete, controller, account, versionIdForDelete, either.getLeft().message());
+                        itemsToDelete, controllerId, account, versionIdForDelete, either.getLeft().message());
                 // if not successful the objects and the related controllerId have to be stored 
                 // in a submissions table for reprocessing
                 dbLayer.createSubmissionForFailedDeployments(failedDeployDeleteItems);
@@ -430,8 +427,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 Set<Long> configurationIdsToDelete = itemsToDelete.stream()
                         .map(item -> dbLayer.getInventoryConfigurationIdByPathAndType(item.getPath(), item.getType()))
                         .collect(Collectors.toSet());
-                Set<DBItemDeploymentHistory> deletedDeployItems = 
-                        PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer);
+                foldersToDelete.stream()
+                    .forEach(item -> configurationIdsToDelete.addAll(
+                        dbLayer.getDeployableInventoryConfigurationIdsByFolder(item.getConfiguration().getPath(), item.getConfiguration().getRecursive())));
+                Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer);
 //                createAuditLogForEach(deletedDeployItems, deployFilter, controllerId, false, versionIdForDelete, account);
                 JocInventory.deleteConfigurations(configurationIdsToDelete);
                 JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);

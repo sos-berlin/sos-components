@@ -125,11 +125,9 @@ import com.sos.joc.publish.common.ConfigurationObjectFileExtension;
 import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.DbItemConfWithOriginalContent;
-import com.sos.joc.publish.mapper.SignedInvConfWithContent;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.webservices.order.initiator.model.ScheduleEdit;
-import com.sun.mail.imap.protocol.Item;
 
 import io.vavr.control.Either;
 import js7.base.crypt.SignedString;
@@ -1436,7 +1434,6 @@ public abstract class PublishUtils {
         try {
             for (DBItemDeploymentHistory delete : toDelete) {
                 delete.setId(null);
-                delete.setInventoryConfigurationId(dbLayer.getInventoryConfigurationIdByPathAndType(delete.getPath(), delete.getType()));
                 delete.setOperation(OperationType.DELETE.value());
                 delete.setState(DeploymentState.DEPLOYED.value());
                 delete.setDeleteDate(Date.from(Instant.now()));
@@ -1539,7 +1536,7 @@ public abstract class PublishUtils {
                 invConf = dbLayer.getSession().get(DBItemInventoryConfiguration.class, depHistory.getInventoryConfigurationId());
             }
             // if so, check if the paths of both are the same
-            if (depHistory != null && !depHistory.getPath().equals(invConf.getPath())) {
+            if (depHistory != null && invConf != null && !depHistory.getName().equals(invConf.getName())) {
                 // if not, delete the old deployed item via updateRepo before deploy of the new configuration
                 depHistory.setCommitId(versionId);
                 alreadyDeployedToDelete.add(depHistory);
@@ -2507,9 +2504,8 @@ public abstract class PublishUtils {
     
     public static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesFromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
         List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
-        folders.stream().forEach(item -> entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(item.getPath(), item.getRecursive())));
-        return entries.stream()
-                .filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
+        folders.stream().forEach(item -> entries.addAll(dbLayer.getLatestActiveDepHistoryItemsFromFolder(item.getPath(), item.getRecursive())));
+        return entries.stream().collect(Collectors.toSet());
     }
     
     public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesDeleteForFolder(Config folder, String controllerId,
