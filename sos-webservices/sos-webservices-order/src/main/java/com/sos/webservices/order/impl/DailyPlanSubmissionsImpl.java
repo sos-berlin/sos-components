@@ -31,7 +31,7 @@ public class DailyPlanSubmissionsImpl extends JOCResourceImpl implements IDailyP
     private static final String API_CALL = "./daily_plan/submissions";
 
     @Override
-    public JOCDefaultResponse postDailyPlanSubmissionHistory(String xAccessToken, DailyPlanSubmissionsFilter dailyPlanSubmissionHistoryFilter)
+    public JOCDefaultResponse postDailyPlanSubmissions(String xAccessToken, DailyPlanSubmissionsFilter dailyPlanSubmissionHistoryFilter)
             throws JocException {
         SOSHibernateSession sosHibernateSession = null;
         try {
@@ -67,7 +67,7 @@ public class DailyPlanSubmissionsImpl extends JOCResourceImpl implements IDailyP
 
             filter.setSortMode("desc");
             filter.setOrderCriteria("id");
-            DailyPlanSubmissions dailyPlanSubmissionHistory = new DailyPlanSubmissions();
+            DailyPlanSubmissions dailyPlanSubmissions = new DailyPlanSubmissions();
             List<DailyPlanSubmissionsItem> result = new ArrayList<DailyPlanSubmissionsItem>();
 
             List<DBItemDailyPlanSubmissions> listOfDailyPlanSubmissions = dbLayerDailyPlan.getDailyPlanSubmissions(filter, 0);
@@ -80,10 +80,10 @@ public class DailyPlanSubmissionsImpl extends JOCResourceImpl implements IDailyP
                 result.add(p);
             }
 
-            dailyPlanSubmissionHistory.setSubmissionHistoryItems(result);
-            dailyPlanSubmissionHistory.setDeliveryDate(Date.from(Instant.now()));
+            dailyPlanSubmissions.setSubmissionHistoryItems(result);
+            dailyPlanSubmissions.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(dailyPlanSubmissionHistory);
+            return JOCDefaultResponse.responseStatus200(dailyPlanSubmissions);
 
         } catch (JocException e) {
             LOGGER.error(getJocError().getMessage(), e);

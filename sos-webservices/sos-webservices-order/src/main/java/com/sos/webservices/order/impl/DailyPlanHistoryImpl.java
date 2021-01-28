@@ -38,7 +38,8 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
     @Override
     public JOCDefaultResponse postDailyPlanHistory(String accessToken, byte[] filterBytes) throws JocException {
         SOSHibernateSession sosHibernateSession = null;
-        try {
+        return null;
+      /*  try {
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilter.class);
             DailyPlanSubmissionsFilter dailyPlanSubmissionsFilter = Globals.objectMapper.readValue(filterBytes, DailyPlanSubmissionsFilter.class);
@@ -142,6 +143,7 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
+        */
     }
 
 }

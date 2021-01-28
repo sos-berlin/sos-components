@@ -15,6 +15,6 @@ public interface IDailyPlanSubmissionsResource {
     @POST
     @Path("submissions")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postDailyPlanSubmissionHistory(@HeaderParam("X-Access-Token") String accessToken,
+    public JOCDefaultResponse postDailyPlanSubmissions(@HeaderParam("X-Access-Token") String accessToken,
             DailyPlanSubmissionsFilter dailyPlanSubmissionsFilter) throws Exception;
 }
