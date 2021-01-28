@@ -18,6 +18,7 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
+import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
 import com.sos.joc.event.bean.inventory.InventoryEvent;
 import com.sos.joc.event.bean.problem.ProblemEvent;
 import com.sos.joc.event.bean.proxy.ProxyEvent;
@@ -81,20 +82,23 @@ public class EventService {
     private JControllerEventBus evtBus = null;
     private volatile CopyOnWriteArraySet<EventCondition> conditions = new CopyOnWriteArraySet<>();
 
-    public EventService(String controllerId) throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException,
-            DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
-            ExecutionException {
+    public EventService(String controllerId) {
         this.controllerId = controllerId;
         EventBus.getInstance().register(this);
         startEventService();
     }
 
-    public void startEventService() throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, DBMissingDataException,
-            JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
-        if (evtBus == null) {
-            evtBus = Proxy.of(controllerId).controllerEventBus();
+    public void startEventService() {
+        try {
+            if (evtBus == null) {
+                evtBus = Proxy.of(controllerId).controllerEventBus();
+                if (evtBus != null) {
+                    evtBus.subscribe(eventsOfController, callbackOfController);
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.warn(e.toString());
         }
-        evtBus.subscribe(eventsOfController, callbackOfController);
     }
 
     public void addCondition(EventCondition cond) {
@@ -122,11 +126,15 @@ public class EventService {
             DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
             ExecutionException {
         if (evt.getControllerId().equals(controllerId) && ProxyUser.JOC.name().equals(evt.getKey())) {
+            LOGGER.info("try to restart EventBus");
             if (evtBus != null) {
                 evtBus.close();
+                evtBus = null;
                 if (evt instanceof ProxyRestarted) {
                     evtBus = Proxy.of(controllerId).controllerEventBus();
-                    evtBus.subscribe(eventsOfController, callbackOfController);
+                    if (evtBus != null) {
+                        evtBus.subscribe(eventsOfController, callbackOfController);
+                    }
                 }
             }
         }
@@ -156,8 +164,8 @@ public class EventService {
         addEvent(eventSnapshot);
     }
     
-    @Subscribe({ com.sos.joc.event.bean.cluster.ClusterEvent.class })
-    public void createEvent(com.sos.joc.event.bean.cluster.ClusterEvent evt) {
+    @Subscribe({ ActiveClusterChangedEvent.class })
+    public void createEvent(ActiveClusterChangedEvent evt) {
         EventSnapshot eventSnapshot = new EventSnapshot();
         eventSnapshot.setEventId(evt.getEventId());
         eventSnapshot.setEventType("JOCStateChanged");

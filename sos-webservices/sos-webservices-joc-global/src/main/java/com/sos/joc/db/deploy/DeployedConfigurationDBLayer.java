@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -193,7 +194,15 @@ public class DeployedConfigurationDBLayer {
         }
         List<Object[]> result = session.getResultList(query);
         if (result != null) {
-            return result.stream().collect(Collectors.toMap(item -> (String) item[1], item -> (String) item[0]));
+            try {
+                return result.stream().collect(Collectors.toMap(item -> (String) item[1], item -> (String) item[0]));
+            } catch (IllegalStateException e) {
+                Map<String, String> m = new HashMap<>();
+                for (Object[] item : result) {
+                    m.put((String) item[1], (String) item[0]);
+                }
+                return m;
+            }
         }
         return Collections.emptyMap();
     }

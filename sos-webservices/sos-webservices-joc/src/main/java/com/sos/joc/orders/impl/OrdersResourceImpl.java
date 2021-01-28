@@ -123,25 +123,34 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     });
                 }
             }
-
-            if (ordersFilter.getRegex() != null && !ordersFilter.getRegex().isEmpty()) {
-                Predicate<String> regex = Pattern.compile(ordersFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE).asPredicate();
-                orderStream = orderStream.filter(o -> regex.test(o.workflowId().path().string() + "/" + o.id().string()));
-            }
             
             List<JOrder> jOrders = orderStream.collect(Collectors.toList());
             
-            Long surveyDateMillis = currentState.eventId() / 1000;
-            
-            OrdersV entity = new OrdersV();
-            entity.setSurveyDate(Date.from(Instant.ofEpochMilli(surveyDateMillis)));
             // Path of name from db
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
             Set<String> names = jOrders.stream().map(o -> o.workflowId().path().string()).collect(Collectors.toSet());
             final Map<String, String> namePathMap = dbLayer.getNamePathMapping(ordersFilter.getControllerId(), names, DeployType.WORKFLOW.intValue());
 
-            Stream<Either<Exception, OrderV>> ordersV = jOrders.stream().map(o -> {
+            Stream<JOrder> jOrderStream = jOrders.stream();
+            
+            if (ordersFilter.getRegex() != null && !ordersFilter.getRegex().isEmpty()) {
+                Predicate<String> regex = Pattern.compile(ordersFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE).asPredicate();
+                if (namePathMap != null) {
+                    jOrderStream = jOrderStream.filter(o -> regex.test(namePathMap.getOrDefault(o.workflowId().path().string(), o.workflowId().path()
+                            .string()) + "/" + o.id().string()));
+                } else {
+                    jOrderStream = jOrderStream.filter(o -> regex.test(o.workflowId().path().string() + "/" + o.id().string()));
+                }
+            }
+            
+            
+            Long surveyDateMillis = currentState.eventId() / 1000;
+            
+            OrdersV entity = new OrdersV();
+            entity.setSurveyDate(Date.from(Instant.ofEpochMilli(surveyDateMillis)));
+
+            Stream<Either<Exception, OrderV>> ordersV = jOrderStream.map(o -> {
                 Either<Exception, OrderV> either = null;
                 try {
                     OrderV order = OrdersHelper.mapJOrderToOrderV(o, ordersFilter.getCompact(), namePathMap, surveyDateMillis, false);

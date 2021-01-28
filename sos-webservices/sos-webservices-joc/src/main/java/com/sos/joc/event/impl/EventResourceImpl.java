@@ -83,7 +83,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
                 throw new JocMissingRequiredParameterException("undefined 'controllers'");
             }
             
-            DeployedConfigurationDBLayer dbCLayer = new DeployedConfigurationDBLayer(connection);
+            final DeployedConfigurationDBLayer dbCLayer = new DeployedConfigurationDBLayer(connection);
             
             //Long defaultEventId = Instant.now().toEpochMilli() * 1000;
             long defaultEventId = Instant.now().getEpochSecond();
@@ -106,11 +106,8 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
                 try {
                     for (Future<Event> result : executorService.invokeAll(tasks)) {
                         try {
-                            //Event evt = processAfter(result.get(), currentControllerId, dbCLayer);
                             Event evt = result.get();
-                            if (!currentControllerId.equals(evt.getControllerId())) {
-                                evt.setEventSnapshots(Collections.emptyList());
-                            }
+                            evt = processAfter(evt, currentControllerId, dbCLayer);
                             eventList.put(evt.getControllerId(), evt);
                         } catch (Exception e) {
                             if (e.getCause() instanceof JocException) {
@@ -161,10 +158,15 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
         return jsEvent;
     }
     
-    private Event processAfter(Event evt, String currentControllerId, DeployedConfigurationDBLayer dbCLayer) {
+    public static Event processAfter(Event evt, String currentControllerId, DeployedConfigurationDBLayer dbCLayer) {
+        if (evt.getEventSnapshots() == null || evt.getEventSnapshots().isEmpty()) {
+            return evt;
+        }
         if (!currentControllerId.equals(evt.getControllerId())) {
             evt.setEventSnapshots(Collections.emptyList());
+            return evt;
         }
+        
         // map workflow name to workflow path etc.
         Map<EventType, Set<String>> m = evt.getEventSnapshots().stream().filter(e -> eventTypesforNameToPathMapping.contains(e.getObjectType())).map(
                 e -> {
@@ -174,20 +176,28 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
                     return e;
                 }).filter(e -> e.getPath() != null).collect(Collectors.groupingBy(EventSnapshot::getObjectType, Collectors.mapping(
                         EventSnapshot::getPath, Collectors.toSet())));
-        Map<String, String> namePathWorkflowMap;
-        Map<String, String> namePathLockMap;
+        Map<String, String> namePathWorkflowMap = null;
+        Map<String, String> namePathLockMap = null;
         try {
-            namePathWorkflowMap = dbCLayer.getNamePathMapping(evt.getControllerId(), m.get(EventType.WORKFLOW), DeployType.WORKFLOW
+            if (dbCLayer != null) {
+                namePathWorkflowMap = dbCLayer.getNamePathMapping(evt.getControllerId(), m.get(EventType.WORKFLOW), DeployType.WORKFLOW
                     .intValue());
+            }
         } catch (SOSHibernateException e1) {
-            namePathWorkflowMap = Collections.emptyMap();
             LOGGER.warn(e1.toString());
         }
         try {
-            namePathLockMap = dbCLayer.getNamePathMapping(evt.getControllerId(), m.get(EventType.LOCK), DeployType.LOCK.intValue());
+            if (dbCLayer != null) {
+                namePathLockMap = dbCLayer.getNamePathMapping(evt.getControllerId(), m.get(EventType.LOCK), DeployType.LOCK.intValue());
+            }
         } catch (SOSHibernateException e1) {
-            namePathLockMap = Collections.emptyMap();
             LOGGER.warn(e1.toString());
+        }
+        if (namePathWorkflowMap == null) {
+            namePathWorkflowMap = Collections.emptyMap();
+        }
+        if (namePathLockMap == null) {
+            namePathLockMap = Collections.emptyMap();
         }
         for (EventSnapshot e : evt.getEventSnapshots()) {
             if (e.getWorkflow() != null) {
@@ -195,7 +205,8 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
                 if (name != null) {
                     e.getWorkflow().setPath(namePathWorkflowMap.getOrDefault(name, name));
                 }
-            } else if (EventType.WORKFLOW.equals(e.getObjectType()) && e.getPath() != null) {
+            }
+            if (EventType.WORKFLOW.equals(e.getObjectType()) && e.getPath() != null) {
                 e.setPath(namePathWorkflowMap.getOrDefault(e.getPath(), e.getPath()));
             } else if (EventType.LOCK.equals(e.getObjectType()) && e.getPath() != null) {
                 e.setPath(namePathLockMap.getOrDefault(e.getPath(), e.getPath()));

@@ -10,7 +10,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -25,13 +24,6 @@ import org.apache.shiro.session.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.joc.exceptions.DBConnectionRefusedException;
-import com.sos.joc.exceptions.DBInvalidDataException;
-import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
-import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
-import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.common.Err;
 import com.sos.joc.model.event.Event;
@@ -102,13 +94,11 @@ public class EventServiceFactory {
         return EventServiceFactory.getInstance()._getEvents(controllerId, eventId, accessToken, eventArrived, session, isCurrentController);
     }
     
-    public EventService getEventService(String controllerId) throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException,
-            DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
-            ExecutionException {
+    public EventService getEventService(String controllerId) {
         synchronized (eventServices) {
             if (!eventServices.containsKey(controllerId)) {
                 eventServices.put(controllerId, new EventService(controllerId));
-                // cleanup old event each 6 minutes
+                // cleanup old event each 3 minutes
                 new Timer().scheduleAtFixedRate(new TimerTask() {
 
                     @Override
@@ -119,7 +109,9 @@ public class EventServiceFactory {
 
                 }, cleanupPeriodInMillis, cleanupPeriodInMillis);
             }
-            return eventServices.get(controllerId);
+            EventService es = eventServices.get(controllerId);
+            es.startEventService();
+            return es;
         }
     }
     
