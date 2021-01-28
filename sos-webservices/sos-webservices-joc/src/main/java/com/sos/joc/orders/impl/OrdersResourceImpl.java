@@ -110,7 +110,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             if (!withOrderIdFilter && ordersFilter.getDateTo() != null && !ordersFilter.getDateTo().isEmpty()) {
                 // only necessary if fresh orders in orderStream
                 if (!withStatesFilter || lookingForPending) {
-                    Instant dateTo = JobSchedulerDate.getInstantFromDateStr(ordersFilter.getDateTo(), true, ordersFilter.getTimeZone());
+                    Instant dateTo = JobSchedulerDate.getInstantFromDateStr(ordersFilter.getDateTo(), false, ordersFilter.getTimeZone());
                     final Instant until = (dateTo.isBefore(Instant.now())) ? Instant.now() : dateTo;
                     orderStream = orderStream.filter(o -> {
                         Order.State state = o.asScala().state();

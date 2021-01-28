@@ -83,6 +83,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
                 throw new JocMissingRequiredParameterException("undefined 'controllers'");
             }
             
+            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             final DeployedConfigurationDBLayer dbCLayer = new DeployedConfigurationDBLayer(connection);
             
             //Long defaultEventId = Instant.now().toEpochMilli() * 1000;
@@ -106,11 +107,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
                 try {
                     for (Future<Event> result : executorService.invokeAll(tasks)) {
                         try {
-                            Event evt = result.get();
-                            if (!currentControllerId.equals(evt.getControllerId())) {
-                                evt.setEventSnapshots(Collections.emptyList());
-                            }
-                            //evt = processAfter(evt, currentControllerId, dbCLayer);
+                            Event evt = processAfter(result.get(), currentControllerId, dbCLayer);
                             eventList.put(evt.getControllerId(), evt);
                         } catch (Exception e) {
                             if (e.getCause() instanceof JocException) {
