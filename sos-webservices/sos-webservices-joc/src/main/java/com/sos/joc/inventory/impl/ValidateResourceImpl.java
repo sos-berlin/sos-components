@@ -2,13 +2,17 @@ package com.sos.joc.inventory.impl;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -93,6 +97,7 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
         if (ConfigurationType.WORKFLOW.equals(type)) {
             JsonValidator.validateStrict(configBytes, URI.create("classpath:/raml/inventory/schemas/workflow/workflowJobs-schema.json"));
             validateInstructions(((Workflow) config).getInstructions(), "instructions", new HashMap<String, String>());
+            validateLockRefs(new String(configBytes, StandardCharsets.UTF_8));
         } else if (ConfigurationType.SCHEDULE.equals(type)) {
             validateCalendarRefs((Schedule) config);
         }
@@ -111,16 +116,14 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
     }
 
     private static void validateCalendarRefs(Schedule schedule) throws SOSHibernateException {
-        // temp.: map(JocInventory::pathToName)
-        Set<String> calendarNames = schedule.getCalendars().stream().map(AssignedCalendars::getCalendarName).map(JocInventory::pathToName).collect(
-                Collectors.toSet());
+        Set<String> calendarNames = schedule.getCalendars().stream().map(AssignedCalendars::getCalendarName).collect(Collectors.toSet());
         if (schedule.getNonWorkingCalendars() != null && !schedule.getNonWorkingCalendars().isEmpty()) {
-            calendarNames.addAll(schedule.getNonWorkingCalendars().stream().map(AssignedNonWorkingCalendars::getCalendarName).map(
-                    JocInventory::pathToName).collect(Collectors.toSet()));
+            calendarNames.addAll(schedule.getNonWorkingCalendars().stream().map(AssignedNonWorkingCalendars::getCalendarName).collect(Collectors
+                    .toSet()));
         }
         SOSHibernateSession session = null;
         try {
-            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+            session = Globals.createSosHibernateStatelessConnection("validate");
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             List<DBItemInventoryConfiguration> dbCalendars = dbLayer.getCalendarsByNames(calendarNames.stream());
             if (dbCalendars == null || dbCalendars.isEmpty()) {
@@ -133,6 +136,32 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
             Globals.disconnect(session);
         }
 
+    }
+    
+    private static void validateLockRefs(String json) throws SOSHibernateException {
+        Matcher m = Pattern.compile("\"lockId\"\\s*:\\s*\"([^\"]+)\"").matcher(json);
+        Set<String> locks = new HashSet<>();
+        while (m.find()) {
+            if (m.group(1) != null && !m.group(1).isEmpty()) {
+                locks.add(m.group(1));
+            }
+        }
+        if (!locks.isEmpty()) {
+            SOSHibernateSession session = null;
+            try {
+                session = Globals.createSosHibernateStatelessConnection("validate");
+                InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+                List<DBItemInventoryConfiguration> dbLocks = dbLayer.getConfigurationByNames(locks.stream(), ConfigurationType.LOCK.intValue());
+                if (dbLocks == null || dbLocks.isEmpty()) {
+                    throw new JocConfigurationException("Missing assigned Locks: " + locks.toString()); 
+                } else if (dbLocks.size() < dbLocks.size()) {
+                    locks.removeAll(dbLocks.stream().map(DBItemInventoryConfiguration::getName).collect(Collectors.toSet()));
+                    throw new JocConfigurationException("Missing assigned Locks: " + locks.toString());
+                }
+            } finally {
+                Globals.disconnect(session);
+            }
+        }
     }
 
     private static void validateInstructions(Collection<Instruction> instructions, String position, Map<String, String> labels)

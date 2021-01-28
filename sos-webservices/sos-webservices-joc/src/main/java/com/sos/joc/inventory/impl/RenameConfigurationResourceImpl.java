@@ -68,7 +68,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
             final java.nio.file.Path p = Paths.get(config.getFolder()).resolve(in.getNewPath()).normalize();
             String newFolder = p.getParent().toString().replace('\\', '/');
             String newPath = p.toString().replace('\\', '/');
-            boolean isRename = !oldPath.getFileName().equals(p.getFileName());
+            boolean isRename = !oldPath.getFileName().toString().equals(p.getFileName().toString());
             Set<String> events = new HashSet<>();
             
             if (config.getPath().equals(newPath)) { // Nothing to do
