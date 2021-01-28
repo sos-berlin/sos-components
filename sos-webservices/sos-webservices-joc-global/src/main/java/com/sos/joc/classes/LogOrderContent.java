@@ -371,17 +371,17 @@ public class LogOrderContent {
         }
         if (item.getLock() != null) {
             List<String> lock = new ArrayList<String>();
-            lock.add("LockId=" + item.getLock().getLockId());
+            lock.add("id=" + item.getLock().getLockId());
             lock.add("limit=" + item.getLock().getLimit());
             if (item.getLock().getCount() != null) {
                 lock.add("count=" + item.getLock().getCount());
             }
             if (item.getLock().getLockState() != null) {
                 if (!SOSString.isEmpty(item.getLock().getLockState().getOrderIds())) {
-                    lock.add("orders=" + item.getLock().getLockState().getOrderIds());
+                    lock.add("orderIds=" + item.getLock().getLockState().getOrderIds());
                 }
                 if (!SOSString.isEmpty(item.getLock().getLockState().getQueuedOrderIds())) {
-                    lock.add("queued orders=" + item.getLock().getLockState().getQueuedOrderIds());
+                    lock.add("queuedOrderIds=" + item.getLock().getLockState().getQueuedOrderIds());
                 }
             }
             info.add(lock.stream().collect(Collectors.joining(", ", "Lock (", ")")));
