@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,6 +25,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.deploy.items.NumOfDeployment;
+import com.sos.joc.db.inventory.items.InventoryNamePath;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -176,7 +176,8 @@ public class DeployedConfigurationDBLayer {
         if (names == null || names.isEmpty()) {
             return Collections.emptyMap();
         }
-        StringBuilder hql = new StringBuilder("select path, name from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
+        StringBuilder hql = new StringBuilder("select new ").append(InventoryNamePath.class.getName());
+        hql.append("(name, path) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
         hql.append(" where name in (:names)");
         if (controllerId != null) {
             hql.append(" and controllerId=:controllerId");
@@ -184,7 +185,7 @@ public class DeployedConfigurationDBLayer {
         if (type != null) {
             hql.append(" and type=:type");
         }
-        Query<Object[]> query = session.createQuery(hql.toString());
+        Query<InventoryNamePath> query = session.createQuery(hql.toString());
         query.setParameterList("names", names);
         if (controllerId != null) {
             query.setParameter("controllerId", controllerId);
@@ -192,33 +193,9 @@ public class DeployedConfigurationDBLayer {
         if (type != null) {
             query.setParameter("type", type);
         }
-        List<Object[]> result = session.getResultList(query);
+        List<InventoryNamePath> result = session.getResultList(query);
         if (result != null) {
-            try {
-                return result.stream().collect(Collectors.toMap(item -> (String) item[1], item -> (String) item[0]));
-            } catch (IllegalStateException e) {
-                Map<String, String> m = new HashMap<>();
-                for (Object[] item : result) {
-                    m.put((String) item[1], (String) item[0]);
-                }
-                return m;
-            }
-        }
-        return Collections.emptyMap();
-    }
-    
-    public Map<String, String> getNamePathMapping(Integer type) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select path, name from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
-        if (type != null) {
-            hql.append(" where type=:type");
-        }
-        Query<Object[]> query = session.createQuery(hql.toString());
-        if (type != null) {
-            query.setParameter("type", type);
-        }
-        List<Object[]> result = session.getResultList(query);
-        if (result != null) {
-            return result.stream().collect(Collectors.toMap(item -> (String) item[1], item -> (String) item[0]));
+            return result.stream().distinct().collect(Collectors.toMap(InventoryNamePath::getName, InventoryNamePath::getPath));
         }
         return Collections.emptyMap();
     }
