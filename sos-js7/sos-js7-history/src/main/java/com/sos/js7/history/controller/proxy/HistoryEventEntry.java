@@ -244,6 +244,20 @@ public class HistoryEventEntry {
             return outcomeInfo;
         }
 
+        public OutcomeInfo getOutcomeInfo(Option<Outcome.NotSucceeded> problem) throws Exception {
+            if (problem == null) {
+                return getOutcomeInfo(OutcomeType.failed, null);
+            }
+            Optional<Outcome.NotSucceeded> op = OptionConverters.toJava(problem);
+            if (!op.isPresent()) {
+                return getOutcomeInfo(OutcomeType.failed, null);
+            }
+            if (outcomeInfo == null) {
+                outcomeInfo = new OutcomeInfo(OutcomeType.failed, op.get());
+            }
+            return outcomeInfo;
+        }
+
         public OrderLock getOrderLock(OrderLockAcquired event) throws FatEventProblemException {
             return getOrderLock(event.lockId(), event.count(), false);
         }
@@ -389,24 +403,7 @@ public class HistoryEventEntry {
                         type = OutcomeType.succeeded;
                     }
                 } else if (outcome instanceof Disrupted) {
-                    Disrupted c = (Disrupted) outcome;
-                    isSucceeded = c.isSucceeded();
-                    isFailed = c.isFailed();
-                    type = OutcomeType.disrupted;
-                    if (isFailed) {
-                        try {
-                            setError(c.reason().problem());
-                        } catch (Throwable e) {
-                            LOGGER.warn(e.toString(), e);
-                        }
-
-                        if (SOSString.isEmpty(errorMessage) && outcome instanceof Failed) {
-                            Optional<String> em = OptionConverters.toJava(((Failed) outcome).errorMessage());
-                            if (em.isPresent()) {
-                                errorMessage = em.get();
-                            }
-                        }
-                    }
+                    handleDisrupted(outcome, (Disrupted) outcome);
                 }
             }
 
@@ -422,6 +419,34 @@ public class HistoryEventEntry {
                     break;
                 default:
                     break;
+                }
+            }
+
+            private OutcomeInfo(OutcomeType type, Outcome.NotSucceeded problem) {
+                this.type = type;
+                if (problem instanceof Disrupted) {
+                    handleDisrupted(null, (Disrupted) problem);
+                }
+            }
+
+            private void handleDisrupted(Outcome outcome, Disrupted problem) {
+                returnCode = 0;
+                isSucceeded = problem.isSucceeded();
+                isFailed = problem.isFailed();
+                type = OutcomeType.disrupted;
+                if (isFailed) {
+                    try {
+                        setError(problem.reason().problem());
+                    } catch (Throwable e) {
+                        LOGGER.warn(e.toString(), e);
+                    }
+
+                    if (SOSString.isEmpty(errorMessage) && outcome != null && outcome instanceof Failed) {
+                        Optional<String> em = OptionConverters.toJava(((Failed) outcome).errorMessage());
+                        if (em.isPresent()) {
+                            errorMessage = em.get();
+                        }
+                    }
                 }
             }
 

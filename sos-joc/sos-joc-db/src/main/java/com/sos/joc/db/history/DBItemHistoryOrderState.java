@@ -96,7 +96,11 @@ public class DBItemHistoryOrderState extends DBItem {
 
     @Transient
     public OrderStateText getStateAsEnum() {
-        return OrderStateText.fromValue(state);
+        try {
+            return OrderStateText.fromValue(state);
+        } catch (Throwable e) {
+            return OrderStateText.UNKNOWN;
+        }
     }
 
     public void setState(Integer val) {

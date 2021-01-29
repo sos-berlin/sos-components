@@ -282,7 +282,7 @@ public class HistoryModel {
                         counter.getOrder().addSuspended();
                         break;
                     case OrderSuspendMarked:
-                        orderNotCompleted(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderSuspendMarked, endedOrderSteps);
+                        // orderNotCompleted(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderSuspendMarked, endedOrderSteps);
                         counter.getOrder().addSuspendMarked();
                         break;
                     case OrderCancelled:
@@ -556,8 +556,7 @@ public class HistoryModel {
 
             item.setWorkflowPath(entry.getWorkflowPath());
             item.setWorkflowVersionId(entry.getWorkflowVersionId());
-            String position = HistoryPosition.getParentAsString(entry.getPosition());
-            item.setWorkflowPosition(SOSString.isEmpty(position) ? "0" : position);
+            item.setWorkflowPosition(SOSString.isEmpty(entry.getPosition()) ? "0" : entry.getPosition());
             item.setWorkflowFolder(HistoryUtil.getFolderFromPath(item.getWorkflowPath()));
             item.setWorkflowName(HistoryUtil.getBasenameFromPath(item.getWorkflowPath()));
             item.setWorkflowTitle(null);// TODO
@@ -575,7 +574,7 @@ public class HistoryModel {
 
             item.setStartTimePlanned(entry.getPlanned() == null ? entry.getEventDatetime() : entry.getPlanned());
             item.setStartTime(entry.getEventDatetime());
-            item.setStartWorkflowPosition(HistoryPosition.asString(entry.getPosition()));
+            item.setStartWorkflowPosition(item.getWorkflowPosition());
             item.setStartEventId(String.valueOf(entry.getEventId()));
             item.setStartParameters(entry.getArgumentsAsJsonString());
 
@@ -633,16 +632,18 @@ public class HistoryModel {
 
     private void orderProcessed(DBLayerHistory dbLayer, AFatEventOrderProcessed entry, EventType eventType,
             Map<String, CachedOrderStep> endedOrderSteps) throws Exception {
-        orderUpdate(dbLayer, eventType, entry.getEventId(), entry.getOrderId(), entry.getEventDatetime(), entry.getOutcome(), endedOrderSteps, true);
+        orderUpdate(dbLayer, eventType, entry.getEventId(), entry.getOrderId(), entry.getEventDatetime(), entry.getOutcome(), entry.getPosition(),
+                endedOrderSteps, true);
     }
 
     private void orderNotCompleted(DBLayerHistory dbLayer, AFatEventOrderProcessed entry, EventType eventType,
             Map<String, CachedOrderStep> endedOrderSteps) throws Exception {
-        orderUpdate(dbLayer, eventType, entry.getEventId(), entry.getOrderId(), entry.getEventDatetime(), entry.getOutcome(), endedOrderSteps, false);
+        orderUpdate(dbLayer, eventType, entry.getEventId(), entry.getOrderId(), entry.getEventDatetime(), entry.getOutcome(), entry.getPosition(),
+                endedOrderSteps, false);
     }
 
     private CachedOrder orderUpdate(DBLayerHistory dbLayer, EventType eventType, Long eventId, String orderId, Date eventDate, FatOutcome outcome,
-            Map<String, CachedOrderStep> endedOrderSteps, boolean completeOrder) throws Exception {
+            String position, Map<String, CachedOrderStep> endedOrderSteps, boolean completeOrder) throws Exception {
 
         CachedOrder co = null;
         if (EventType.OrderCancelled.equals(eventType)) {
@@ -677,14 +678,21 @@ public class HistoryModel {
             }
             Date startTime = null;
             String startEventId = null;
-            String orderErrorText = SOSString.isEmpty(le.getErrorText()) ? null : String.format("[%s][%s]%s", cos.getJobName(), cos
-                    .getWorkflowPosition(), le.getErrorText());
+            String orderErrorText = null;
+            if (cos == null) {
+                orderErrorText = SOSString.isEmpty(le.getErrorText()) ? null : le.getErrorText();
+            } else {
+                orderErrorText = SOSString.isEmpty(le.getErrorText()) ? null : String.format("[%s][%s]%s", cos.getJobName(), cos
+                        .getWorkflowPosition(), le.getErrorText());
+            }
+
             String stateErrorText = null;
             switch (eventType) {
             case OrderJoined:
                 if (le.isError()) {
                     co.setHasStates(true);
                 }
+                le.setLogLevel(LogLevel.DETAIL);
                 break;
             case OrderBroken:
             case OrderCancelled:
@@ -709,7 +717,7 @@ public class HistoryModel {
                 saveOrderState(dbLayer, co, le.getState(), eventDate, eventId, le.getErrorCode(), stateErrorText);
             }
 
-            le.onOrder(co, co.getWorkflowPosition());
+            le.onOrder(co, position == null ? co.getWorkflowPosition() : position);
             Path log = storeLog2File(le);
             // if (completeOrder && co.getParentId().longValue() == 0L) {
             if (completeOrder) {
@@ -811,15 +819,15 @@ public class HistoryModel {
             le.setLogLevel(LogLevel.MAIN);
             break;
         case OrderSuspendMarked:
-            le.setState(OrderStateText.SUSPENDMARKED.intValue());
+            le.setState(OrderStateText.SUSPENDED.intValue());// TODO check
             le.setLogLevel(LogLevel.INFO);
             break;
         case OrderResumed:
-            le.setState(OrderStateText.RESUMED.intValue());
+            le.setState(OrderStateText.RUNNING.intValue());// TODO check
             le.setLogLevel(LogLevel.MAIN);
             break;
         case OrderResumeMarked:
-            le.setState(OrderStateText.RESUMEMARKED.intValue());
+            le.setState(OrderStateText.RUNNING.intValue()); // TODO check
             le.setLogLevel(LogLevel.INFO);
             break;
         case OrderFinished:
@@ -849,7 +857,7 @@ public class HistoryModel {
         checkControllerTimezone(dbLayer);
 
         CachedOrder co = getCachedOrder(dbLayer, entry.getOrderId(), entry.getEventDatetime(), entry.getEventId());
-        co.setState(OrderStateText.RESUMED.intValue());
+        co.setState(OrderStateText.RUNNING.intValue());
         co.setHasStates(true);
         // addCachedOrder(co.getOrderId(), co);
 
@@ -862,15 +870,14 @@ public class HistoryModel {
     }
 
     private void orderResumeMarked(DBLayerHistory dbLayer, FatEventOrderResumeMarked entry) throws Exception {
-        checkControllerTimezone(dbLayer);
+        // checkControllerTimezone(dbLayer);
 
         CachedOrder co = getCachedOrder(dbLayer, entry.getOrderId(), entry.getEventDatetime(), entry.getEventId());
-        co.setState(OrderStateText.RESUMEMARKED.intValue());
-        co.setHasStates(true);
-        // addCachedOrder(co.getOrderId(), co);
+        // co.setState(OrderStateText.RESUMEMARKED.intValue());
+        // co.setHasStates(true);
 
-        dbLayer.updateOrderOnResumed(co.getId(), co.getState(), entry.getEventDatetime());
-        saveOrderState(dbLayer, co, co.getState(), entry.getEventDatetime(), entry.getEventId(), null, null);
+        // dbLayer.updateOrderOnResumed(co.getId(), co.getState(), entry.getEventDatetime());
+        // saveOrderState(dbLayer, co, co.getState(), entry.getEventDatetime(), entry.getEventId(), null, null);
 
         LogEntry le = new LogEntry(LogEntry.LogLevel.MAIN, EventType.OrderResumeMarked, entry.getEventDatetime(), null);
         le.onOrder(co, null);
@@ -896,9 +903,8 @@ public class HistoryModel {
 
         dbLayer.updateOrderOnFork(co.getId(), co.getState(), entry.getEventDatetime());
 
-        String parentPosition = HistoryPosition.getParentAsString(entry.getPosition());
         LogEntry le = new LogEntry(LogEntry.LogLevel.DETAIL, EventType.OrderForked, entry.getEventDatetime(), null);
-        le.onOrder(co, parentPosition, entry.getChilds());
+        le.onOrder(co, entry.getPosition(), entry.getChilds());
         storeLog2File(le);
 
         for (FatForkedChild fc : entry.getChilds()) {
@@ -920,7 +926,7 @@ public class HistoryModel {
 
             item.setWorkflowPath(entry.getWorkflowPath());
             item.setWorkflowVersionId(entry.getWorkflowVersionId());
-            item.setWorkflowPosition(HistoryPosition.getParentAsString(entry.getPosition()));// TODO erweitern um branch
+            item.setWorkflowPosition(HistoryPosition.asString(forkOrder.getPosition()));
             item.setWorkflowFolder(HistoryUtil.getFolderFromPath(item.getWorkflowPath()));
             item.setWorkflowName(HistoryUtil.getBasenameFromPath(item.getWorkflowPath()));
             item.setWorkflowTitle(null);// TODO
@@ -937,7 +943,7 @@ public class HistoryModel {
             item.setStartCause(OrderStartCause.fork.name());// TODO
             item.setStartTimePlanned(entry.getEventDatetime());
             item.setStartTime(entry.getEventDatetime());
-            item.setStartWorkflowPosition(HistoryPosition.asString(entry.getPosition()));
+            item.setStartWorkflowPosition(SOSString.isEmpty(entry.getPosition()) ? "0" : entry.getPosition());
             item.setStartEventId(String.valueOf(entry.getEventId()));
             item.setStartParameters(entry.getArgumentsAsJsonString()); // TODO or forkOrder arguments ???
 
@@ -993,16 +999,14 @@ public class HistoryModel {
         checkControllerTimezone(dbLayer);
 
         Date endTime = entry.getEventDatetime();
-        CachedOrder fco = null;
-
         for (FatForkedChild child : entry.getChilds()) {
-            fco = orderUpdate(dbLayer, EventType.OrderJoined, entry.getEventId(), child.getOrderId(), endTime, entry.getOutcome(), endedOrderSteps,
+            orderUpdate(dbLayer, EventType.OrderJoined, entry.getEventId(), child.getOrderId(), endTime, entry.getOutcome(), null, endedOrderSteps,
                     true);
         }
 
         LogEntry le = new LogEntry(LogEntry.LogLevel.DETAIL, EventType.OrderJoined, HistoryUtil.getEventIdAsDate(entry.getEventId()), null);
         CachedOrder co = getCachedOrder(dbLayer, entry.getOrderId(), entry.getEventDatetime(), entry.getEventId());
-        le.onOrderJoined(co, fco.getWorkflowPosition(), entry.getChilds().stream().map(s -> s.getOrderId()).collect(Collectors.toList()), entry
+        le.onOrderJoined(co, entry.getPosition(), entry.getChilds().stream().map(s -> s.getOrderId()).collect(Collectors.toList()), entry
                 .getOutcome());
         storeLog2File(le);
     }
@@ -1028,7 +1032,7 @@ public class HistoryModel {
 
             item.setWorkflowPath(entry.getWorkflowPath());
             item.setWorkflowVersionId(entry.getWorkflowVersionId());
-            item.setWorkflowPosition(HistoryPosition.asString(entry.getPosition()));
+            item.setWorkflowPosition(entry.getPosition());
             item.setWorkflowFolder(HistoryUtil.getFolderFromPath(item.getWorkflowPath()));
             item.setWorkflowName(HistoryUtil.getBasenameFromPath(item.getWorkflowPath()));
 

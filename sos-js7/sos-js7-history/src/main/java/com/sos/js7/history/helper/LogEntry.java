@@ -56,12 +56,12 @@ public class LogEntry {
         orderId = order.getOrderId();
         historyOrderMainParentId = order.getMainParentId();
         historyOrderId = order.getId();
-        position = workflowPosition;
+        position = SOSString.isEmpty(workflowPosition) ? "0" : workflowPosition;
         chunk = order.getOrderId();
     }
 
     public void onOrderLock(CachedOrder order, AFatEventOrderLock entry) {
-        onOrder(order, ".", null); // position TODO
+        onOrder(order, entry.getPosition(), null);
         orderLock = entry.getOrderLock();
     }
 

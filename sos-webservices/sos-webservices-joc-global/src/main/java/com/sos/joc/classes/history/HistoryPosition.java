@@ -1,5 +1,6 @@
 package com.sos.joc.classes.history;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -16,29 +17,9 @@ public class HistoryPosition {
         return null;
     }
 
-    public static String getParentAsString(List<?> positions) {// 0->0, 1/fork_1/0 -> 1/fork_1
-        if (positions == null || positions.size() < 1) {
-            return null;
-        }
-        // if (pos.size() == 1) {
-        // return pos.get(0).toString();
-        // }
-        return positions.stream().limit(positions.size() - 1).map(o -> o.toString()).collect(Collectors.joining(DELIMITER));
-    }
-
-    public static Integer getRetry(List<?> positions) {
-        if (positions != null) {
-            Optional<?> r = positions.stream().filter(f -> f.toString().startsWith("try+")).findFirst();
-            if (r.isPresent()) {
-                return Integer.parseInt(r.get().toString().substring(3));// TODO check
-            }
-        }
-        return 0;
-    }
-
-    public static Integer getLast(List<?> positions) {
-        if (positions != null && positions.size() > 0) {
-            return (Integer) positions.get(positions.size() - 1);
+    public static Integer getRetry(String position) {
+        if (position != null) {
+            return getRetry(Arrays.asList(position.split(DELIMITER)));
         }
         return 0;
     }
@@ -47,6 +28,17 @@ public class HistoryPosition {
         try {
             return Integer.parseInt(Stream.of(position.split(DELIMITER)).reduce((first, last) -> last).get());
         } catch (Throwable e) {
+        }
+        return 0;
+    }
+
+    // TODO to remove
+    private static Integer getRetry(List<?> positions) {
+        if (positions != null) {
+            Optional<?> r = positions.stream().filter(f -> f.toString().startsWith("try+")).findFirst();
+            if (r.isPresent()) {
+                return Integer.parseInt(r.get().toString().substring(3));// TODO check
+            }
         }
         return 0;
     }

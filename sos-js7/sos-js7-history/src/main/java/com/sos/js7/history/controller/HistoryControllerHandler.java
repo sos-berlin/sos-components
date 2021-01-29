@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,6 +78,7 @@ import js7.proxy.data.ProxyEvent;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.data.controller.JEventAndControllerState;
 import js7.proxy.javaapi.data.order.JOrder.Forked;
+import js7.proxy.javaapi.data.order.JOrderEvent.JOrderFailed;
 import js7.proxy.javaapi.data.order.JOrderEvent.JOrderForked;
 import js7.proxy.javaapi.data.order.JOrderEvent.JOrderJoined;
 import js7.proxy.javaapi.data.order.JOrderEvent.JOrderProcessed;
@@ -279,13 +281,17 @@ public class HistoryControllerHandler {
                 order = entry.getCheckedOrder();
                 JOrderForked jof = (JOrderForked) entry.getJOrderEvent();
 
+                List<Object> position = order.getWorkflowInfo().getPosition().asList();
                 childs = new ArrayList<FatForkedChild>();
                 jof.children().forEach(c -> {
-                    childs.add(new FatForkedChild(c.orderId().string(), c.branchId().string()));
+                    String branchId = c.branchId().string();
+                    List<Object> childPosition = position.stream().collect(Collectors.toList());
+                    childPosition.add("fork+" + branchId);
+                    childs.add(new FatForkedChild(c.orderId().string(), branchId, childPosition));
                 });
                 event = new FatEventOrderForked(entry.getEventId(), entry.getEventDate());
-                event.set(order.getOrderId(), order.getWorkflowInfo().getPath(), order.getWorkflowInfo().getVersionId(), order.getWorkflowInfo()
-                        .getPosition().asList(), order.getArguments(), childs);
+                event.set(order.getOrderId(), order.getWorkflowInfo().getPath(), order.getWorkflowInfo().getVersionId(), position, order
+                        .getArguments(), childs);
                 break;
 
             case OrderJoined:
@@ -293,7 +299,7 @@ public class HistoryControllerHandler {
                 childs = new ArrayList<FatForkedChild>();
                 Forked f = order.getForked();
                 for (OrderId id : f.childOrderIds()) {
-                    childs.add(new FatForkedChild(id.string(), null));
+                    childs.add(new FatForkedChild(id.string(), null, null));
                 }
 
                 JOrderJoined joj = (JOrderJoined) entry.getJOrderEvent();
@@ -334,7 +340,7 @@ public class HistoryControllerHandler {
                 break;
 
             case OrderStepProcessed:
-                order = entry.getOrder();
+                order = entry.getCheckedOrder();
 
                 JOrderProcessed op = (JOrderProcessed) entry.getJOrderEvent();
                 oi = order.getOutcomeInfo(op.outcome());
@@ -344,26 +350,26 @@ public class HistoryControllerHandler {
                             .getErrorCode(), oi.getErrorMessage());
                 }
                 event = new FatEventOrderStepProcessed(entry.getEventId(), entry.getEventDate());
-                event.set(order.getOrderId(), outcome);
+                event.set(order.getOrderId(), outcome, order.getWorkflowInfo().getPosition().asList());
                 break;
 
             case OrderFailed:
-                order = entry.getOrder();
+                order = entry.getCheckedOrder();
 
-                // JOrderFailed of = (JOrderFailed) entry.getJOrderEvent();
-                oi = order.getOutcomeInfo(OutcomeType.failed, null);
-                // TODO read failed cause ..
+                JOrderFailed of = (JOrderFailed) entry.getJOrderEvent();
+                oi = order.getOutcomeInfo(of.outcome());
                 outcome = null;
                 if (oi != null) {
                     outcome = new FatOutcome(oi.getType(), oi.getReturnCode(), oi.isSucceeded(), oi.isFailed(), oi.getNamedValues(), oi
                             .getErrorCode(), oi.getErrorMessage());
                 }
+
                 event = new FatEventOrderFailed(entry.getEventId(), entry.getEventDate());
-                event.set(order.getOrderId(), outcome);
+                event.set(order.getOrderId(), outcome, order.getWorkflowInfo().getPosition().asList());
                 break;
 
             case OrderBroken:
-                order = entry.getOrder();
+                order = entry.getCheckedOrder();
                 OrderBroken ob = (OrderBroken) entry.getEvent();
 
                 oi = order.getOutcomeInfo(OutcomeType.broken, ob.problem());
@@ -373,7 +379,7 @@ public class HistoryControllerHandler {
                             .getErrorCode(), oi.getErrorMessage());
                 }
                 event = new FatEventOrderBroken(entry.getEventId(), entry.getEventDate());
-                event.set(order.getOrderId(), outcome);
+                event.set(order.getOrderId(), outcome, order.getWorkflowInfo().getPosition().asList());
                 break;
 
             case OrderSuspended:
@@ -405,14 +411,14 @@ public class HistoryControllerHandler {
                 break;
 
             case OrderFinished:
-                order = entry.getOrder();
+                order = entry.getCheckedOrder();
 
                 event = new FatEventOrderFinished(entry.getEventId(), entry.getEventDate());
-                event.set(order.getOrderId());
+                event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition().asList());
                 break;
 
             case OrderCancelled:
-                order = entry.getOrder();
+                order = entry.getCheckedOrder();
                 Boolean isStarted = null;
                 try {
                     isStarted = entry.getCheckedOrderFromPreviousState().isStarted();
@@ -420,28 +426,31 @@ public class HistoryControllerHandler {
                     LOGGER.warn(String.format("[%s][%s][PreviousState]%s", entry.getEventType().name(), order.getOrderId(), e.toString()), e);
                 }
                 event = new FatEventOrderCancelled(entry.getEventId(), entry.getEventDate(), isStarted);
-                event.set(order.getOrderId());
+                event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition().asList());
                 break;
 
             case OrderLockAcquired:
                 order = entry.getCheckedOrder();
 
                 ol = order.getOrderLock((OrderLockAcquired) entry.getEvent());
-                event = new FatEventOrderLockAcquired(entry.getEventId(), entry.getEventDate(), order.getOrderId(), ol);
+                event = new FatEventOrderLockAcquired(entry.getEventId(), entry.getEventDate(), order.getOrderId(), ol, order.getWorkflowInfo()
+                        .getPosition().asList());
                 break;
 
             case OrderLockQueued:
                 order = entry.getCheckedOrder();
 
                 ol = order.getOrderLock((OrderLockQueued) entry.getEvent());
-                event = new FatEventOrderLockQueued(entry.getEventId(), entry.getEventDate(), order.getOrderId(), ol);
+                event = new FatEventOrderLockQueued(entry.getEventId(), entry.getEventDate(), order.getOrderId(), ol, order.getWorkflowInfo()
+                        .getPosition().asList());
                 break;
 
             case OrderLockReleased:
                 order = entry.getCheckedOrder();
 
                 ol = order.getOrderLock((OrderLockReleased) entry.getEvent());
-                event = new FatEventOrderLockReleased(entry.getEventId(), entry.getEventDate(), order.getOrderId(), ol);
+                event = new FatEventOrderLockReleased(entry.getEventId(), entry.getEventDate(), order.getOrderId(), ol, order.getWorkflowInfo()
+                        .getPosition().asList());
                 break;
 
             default:
