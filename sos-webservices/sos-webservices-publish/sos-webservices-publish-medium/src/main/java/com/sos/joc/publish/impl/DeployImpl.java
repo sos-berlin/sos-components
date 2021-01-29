@@ -104,7 +104,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 if (configurationDBItemsToStore == null) {
                     configurationDBItemsToStore = new ArrayList<DBItemInventoryConfiguration>();
                 }
-                configurationDBItemsToStore.addAll(PublishUtils.getValidDeployableInventoryConfigurationsfromFolders(draftFoldersToStore, dbLayer));
+                configurationDBItemsToStore.addAll(PublishUtils.getValidDeployableDraftInventoryConfigurationsfromFolders(draftFoldersToStore, dbLayer));
             }
             Set<DbItemConfWithOriginalContent> cfgsDBItemsToStore = null;
             if (configurationDBItemsToStore != null) {
@@ -121,7 +121,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 if (depHistoryDBItemsToStore == null) {
                     depHistoryDBItemsToStore = new ArrayList<DBItemDeploymentHistory>();
                 }
-                depHistoryDBItemsToStore.addAll(PublishUtils.getLatestActiveDepHistoryEntriesFromFolders(deployFoldersToStoreAgain, dbLayer));
+                depHistoryDBItemsToStore.addAll(PublishUtils.getLatestActiveDepHistoryEntriesWithoutDraftsFromFolders(deployFoldersToStoreAgain, dbLayer));
             }
             List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete = null;
             if (deployConfigsToDelete != null && !deployConfigsToDelete.isEmpty()) {

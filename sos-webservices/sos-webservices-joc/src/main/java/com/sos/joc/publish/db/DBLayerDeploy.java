@@ -238,6 +238,24 @@ public class DBLayerDeploy {
         }
     }
 
+    public Boolean getInventoryConfigurationDeployedByNameAndType(String name, Integer type)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("select deployed from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            sql.append(" where name = :name");
+            sql.append(" and type = :type");
+            Query<Boolean> query = session.createQuery(sql.toString());
+            query.setParameter("name", name);
+            query.setParameter("type", type);
+            return session.getSingleResult(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
     public List<DBItemInventoryConfiguration> getAllInventoryConfigurations() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
@@ -274,6 +292,10 @@ public class DBLayerDeploy {
 
     public List<DBItemInventoryConfiguration> getValidDeployableInventoryConfigurationsByFolder(String folder, boolean recursive) {
         return getInventoryConfigurationsByFolder(folder, true, false, recursive, true);
+    }
+
+    public List<DBItemInventoryConfiguration> getValidDeployableDraftInventoryConfigurationsByFolder(String folder, boolean recursive) {
+        return getDraftInventoryConfigurationsByFolder(folder, true, false, recursive, true);
     }
 
     public List<DBItemInventoryConfiguration> getReleasableInventoryConfigurationsByFolder(String folder) {
@@ -333,6 +355,47 @@ public class DBLayerDeploy {
             if (onlyValid) {
                 hql.append(" and valid = true");
             }
+            Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
+            if (recursive) {
+                query.setParameter("folder", MatchMode.START.toMatchString(folder));
+            } else {
+                query.setParameter("folder", folder);
+            }
+            if (onlyDeployables) {
+                query.setParameterList("types", Arrays.asList(new Integer[] {
+                        ConfigurationType.WORKFLOW.intValue(), 
+                        ConfigurationType.JUNCTION.intValue(),
+                        ConfigurationType.JOBCLASS.intValue(),
+                        ConfigurationType.LOCK.intValue()}));
+            } else if (onlyReleasables) {
+                query.setParameterList("types", Arrays.asList(new Integer[] {
+                        ConfigurationType.SCHEDULE.intValue(), 
+                        ConfigurationType.WORKINGDAYSCALENDAR.intValue(),
+                        ConfigurationType.NONWORKINGDAYSCALENDAR.intValue()}));
+            }
+            return session.getResultList(query);
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        } 
+    }
+        
+    private List<DBItemInventoryConfiguration> getDraftInventoryConfigurationsByFolder(String folder, boolean onlyDeployables, boolean onlyReleasables,
+            boolean recursive, boolean onlyValid) {
+        try {
+            StringBuilder hql = new StringBuilder();
+            hql.append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            if (recursive) {
+                hql.append(" where folder like :folder");
+            } else {
+                hql.append(" where folder = :folder");
+            }
+            if (onlyDeployables || onlyReleasables) {
+              hql.append(" and type in (:types)");  
+            } 
+            if (onlyValid) {
+                hql.append(" and valid = true");
+            }
+            hql.append(" and deployed = false");
             Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
             if (recursive) {
                 query.setParameter("folder", MatchMode.START.toMatchString(folder));

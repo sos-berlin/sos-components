@@ -1381,7 +1381,7 @@ public abstract class PublishUtils {
     public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToRedeployed(
             Map<DBItemDeploymentHistory, DBItemDepSignatures> redeployedWithSignature, String account, DBLayerDeploy dbLayerDeploy,
             String commitId, String controllerId, Date deploymentDate) {
-        Set<DBItemDeploymentHistory> deployedObjects;
+        Set<DBItemDeploymentHistory> deployedObjects = null;
         try {
             DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
             deployedObjects = new HashSet<DBItemDeploymentHistory>();
@@ -2483,6 +2483,12 @@ public abstract class PublishUtils {
         return entries.stream().collect(Collectors.toSet());
     }
     
+    public static Set<DBItemInventoryConfiguration> getValidDeployableDraftInventoryConfigurationsfromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
+        List<DBItemInventoryConfiguration> entries = new ArrayList<DBItemInventoryConfiguration>();
+        folders.stream().forEach(item -> entries.addAll(dbLayer.getValidDeployableDraftInventoryConfigurationsByFolder(item.getPath(), item.getRecursive())));
+        return entries.stream().collect(Collectors.toSet());
+    }
+    
     public static Set<DBItemInventoryConfiguration> getReleasableInventoryConfigurationsfromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
         List<DBItemInventoryConfiguration> entries = new ArrayList<DBItemInventoryConfiguration>();
         folders.stream().forEach(item -> entries.addAll(dbLayer.getReleasableInventoryConfigurationsByFolder(item.getPath(), item.getRecursive())));
@@ -2506,6 +2512,12 @@ public abstract class PublishUtils {
         List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
         folders.stream().forEach(item -> entries.addAll(dbLayer.getLatestActiveDepHistoryItemsFromFolder(item.getPath(), item.getRecursive())));
         return entries.stream().collect(Collectors.toSet());
+    }
+    
+    public static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesWithoutDraftsFromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
+        Set<DBItemDeploymentHistory> allLatest = getLatestActiveDepHistoryEntriesFromFolders(folders, dbLayer);
+        return allLatest.stream()
+                .filter(item -> dbLayer.getInventoryConfigurationDeployedByNameAndType(item.getName(), item.getType())).collect(Collectors.toSet());
     }
     
     public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesDeleteForFolder(Config folder, String controllerId,
