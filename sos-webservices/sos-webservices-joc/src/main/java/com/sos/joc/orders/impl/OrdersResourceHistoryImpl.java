@@ -14,8 +14,6 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 
 import org.hibernate.ScrollableResults;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
@@ -41,10 +39,7 @@ import com.sos.schema.JsonValidator;
 
 @Path(WebservicePaths.ORDERS)
 public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrdersResourceHistory {
-
-    // tmp , to remove ..
-    private static final Logger LOGGER = LoggerFactory.getLogger(OrdersResourceHistoryImpl.class);
-
+    
     @Override
     public JOCDefaultResponse postOrdersHistory(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
@@ -131,18 +126,18 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                     }
                     sr = dbLayer.getMainOrders();
 
-                    // tmp outputs to remove...
-                    int i = 0;
-                    int logStep = 1_000;
-                    String range = "order";
-                    LOGGER.info(String.format("[%s]start read and map ..", range));
+                    // tmp outputs to check performance ...
+                    // int i = 0;
+                    // int logStep = 1_000;
+                    // String range = "order";
+                    // LOGGER.info(String.format("[%s]start read and map ..", range));
                     while (sr.next()) {
-                        i++;
+                        // i++;
 
                         DBItemHistoryOrder item = (DBItemHistoryOrder) sr.get(0);
-                        if (i == 1) {
-                            LOGGER.info(String.format(" [%s][%s]first entry retrieved", range, i));
-                        }
+                        // if (i == 1) {
+                        // LOGGER.info(String.format(" [%s][%s]first entry retrieved", range, i));
+                        // }
 
                         if (in.getControllerId().isEmpty() && !getPermissonsJocCockpit(item.getControllerId(), accessToken).getHistory().getView()
                                 .isStatus()) {
@@ -153,11 +148,11 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                         }
                         history.add(HistoryMapper.map2OrderHistoryItem(item));
 
-                        if (i == 1 || i % logStep == 0) {
-                            LOGGER.info(String.format(" [%s][%s]entries processed", range, i));
-                        }
+                        // if (i == 1 || i % logStep == 0) {
+                        // LOGGER.info(String.format(" [%s][%s]entries processed", range, i));
+                        // }
                     }
-                    LOGGER.info(String.format("[%s][%s]end read and map", range, i));
+                    // LOGGER.info(String.format("[%s][%s]end read and map", range, i));
                 } catch (Exception e) {
                     throw e;
                 } finally {

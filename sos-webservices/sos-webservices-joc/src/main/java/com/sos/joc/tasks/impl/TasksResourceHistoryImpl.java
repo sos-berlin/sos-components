@@ -14,8 +14,6 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 
 import org.hibernate.ScrollableResults;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
@@ -42,9 +40,6 @@ import com.sos.schema.JsonValidator;
 
 @Path(WebservicePaths.TASKS)
 public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksResourceHistory {
-
-    // tmp , to remove ..
-    private static final Logger LOGGER = LoggerFactory.getLogger(TasksResourceHistoryImpl.class);
 
     @Override
     public JOCDefaultResponse postTasksHistory(String accessToken, byte[] inBytes) {
@@ -157,21 +152,21 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                     }
 
                     if (sr != null) {
-                        // tmp outputs to remove...
-                        int i = 0;
-                        int logStep = 1_000;
-                        String range = "task";
-                        LOGGER.info(String.format("[%s]start read and map ..", range));
+                        // tmp outputs to check performance...
+                        // int i = 0;
+                        // int logStep = 1_000;
+                        // String range = "task";
+                        // LOGGER.info(String.format("[%s]start read and map ..", range));
                         while (sr.next()) {
-                            i++;
+                            // i++;
 
                             DBItemHistoryOrderStep step = (DBItemHistoryOrderStep) sr.get(0);
-                            if (i == 1) {
-                                LOGGER.info(String.format(" [%s][%s]first entry retrieved", range, i));
-                            }
+                            // if (i == 1) {
+                            // LOGGER.info(String.format(" [%s][%s]first entry retrieved", range, i));
+                            // }
 
-                            if (in.getControllerId().isEmpty() && !getPermissonsJocCockpit(step.getControllerId(), accessToken).getHistory()
-                                    .getView().isStatus()) {
+                            if (in.getControllerId().isEmpty() && !getPermissonsJocCockpit(step.getControllerId(), accessToken).getHistory().getView()
+                                    .isStatus()) {
                                 continue;
                             }
                             if (matcher != null && !matcher.reset(step.getWorkflowPath() + "," + step.getJobName()).find()) {
@@ -179,12 +174,12 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                             }
                             history.add(HistoryMapper.map2TaskHistoryItem(step));
 
-                            if (i == 1 || i % logStep == 0) {
-                                LOGGER.info(String.format(" [%s][%s]entries processed", range, i));
-                            }
+                            // if (i == 1 || i % logStep == 0) {
+                            // LOGGER.info(String.format(" [%s][%s]entries processed", range, i));
+                            // }
 
                         }
-                        LOGGER.info(String.format("[%s][%s]end read and map", range, i));
+                        // LOGGER.info(String.format("[%s][%s]end read and map", range, i));
                     }
                 } catch (Exception e) {
                     throw e;

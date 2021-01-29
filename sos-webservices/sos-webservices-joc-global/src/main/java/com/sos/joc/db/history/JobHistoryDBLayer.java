@@ -14,8 +14,6 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.ScrollableResults;
 import org.hibernate.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
@@ -28,9 +26,6 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.common.HistoryStateText;
 
 public class JobHistoryDBLayer {
-
-    // tmp , to remove ..
-    private static final Logger LOGGER = LoggerFactory.getLogger(JobHistoryDBLayer.class);
 
     private SOSHibernateSession session;
     private HistoryFilter filter;
@@ -74,9 +69,6 @@ public class JobHistoryDBLayer {
             if (filter.getLimit() > 0) {
                 query.setMaxResults(filter.getLimit());
             }
-
-            // tmp. to remove
-            LOGGER.info(session.getSQLString(query));
 
             return session.scroll(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -167,9 +159,6 @@ public class JobHistoryDBLayer {
                 query.setMaxResults(filter.getLimit());
             }
             filter.setMainOrder(isMainOrder);
-
-            // tmp. to remove
-            LOGGER.info(session.getSQLString(query));
 
             return session.scroll(query);
         } catch (SOSHibernateInvalidSessionException ex) {
