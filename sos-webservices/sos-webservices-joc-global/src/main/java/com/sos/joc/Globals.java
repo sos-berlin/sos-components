@@ -62,6 +62,8 @@ public class Globals {
     public static String servletContextContextPath = null; // /joc
     public static String defaultProfileAccount = null;
     public static String loginClientId = "";
+    public static String loginUserName = "";
+    
     public static long maxSizeOfLogsToDisplay = 1024 * 1024 * 10L; // 10MB
     public static long timeoutToDeleteTempFiles = 1000 * 60 * 3L;
     public static int httpConnectionTimeout = 2000;

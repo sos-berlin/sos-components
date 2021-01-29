@@ -216,6 +216,7 @@ public class SOSServicePermissionShiro {
             @HeaderParam("X-CLIENT-ID") String loginClientId, @QueryParam("user") String user, @QueryParam("pwd") String pwd) throws JocException,
             SOSHibernateException {
         Globals.loginClientId = loginClientId;
+
         MDC.put("context", ThreadCtx);
         try {
             return login(request, basicAuthorization, user, pwd);
@@ -624,6 +625,8 @@ public class SOSServicePermissionShiro {
 
             currentUser.setAuthorization(basicAuthorization);
             currentUser.setHttpServletRequest(request);
+
+            Globals.loginUserName = currentUser.getUsername();
 
             SOSShiroCurrentUserAnswer sosShiroCurrentUserAnswer = authenticate();
 
