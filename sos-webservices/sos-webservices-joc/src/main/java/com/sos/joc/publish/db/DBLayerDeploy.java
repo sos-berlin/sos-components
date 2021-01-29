@@ -68,7 +68,6 @@ import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.mapper.FilterAttributesMapper;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
-import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
@@ -554,7 +553,7 @@ public class DBLayerDeploy {
             hql.append(" where ");
             for (Integer i=0; i < deployConfigurations.size(); i++) {
                 hql.append("(")
-                    .append("path = : path").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7))
+                    .append("path = :path").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7))
                     .append(" and ")
                     .append("type = :type").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7))
                     .append(")");
@@ -562,7 +561,6 @@ public class DBLayerDeploy {
                     hql.append(" or ");
                 }
             }
-            hql.append(" group by path");
             Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
             for (Integer i=0; i < deployConfigurations.size(); i++) {
                 query.setParameter("path" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), deployConfigurations.get(i).getPath());
