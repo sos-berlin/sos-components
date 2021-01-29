@@ -12,23 +12,21 @@ public class HistorySeverity {
         switch (state) {
         case FINISHED:
             return SUCCESSFUL;
-        case PLANNED:
-        case PENDING:
-        case RUNNING:
-        case WAITING:
-        case BLOCKED:
-        case SUSPENDED:
-            return INCOMPLETE;
         case BROKEN:
         case CANCELLED:
         case FAILED:
         case UNKNOWN:
             return FAILED;
+        default:
+            return INCOMPLETE;
         }
-        return FAILED;
     }
 
     public static int map2DbSeverity(Integer state) {
-        return map2DbSeverity(OrderStateText.fromValue(state));
+        try {
+            return map2DbSeverity(OrderStateText.fromValue(state));
+        } catch (Throwable e) {
+            return map2DbSeverity(OrderStateText.UNKNOWN);
+        }
     }
 }

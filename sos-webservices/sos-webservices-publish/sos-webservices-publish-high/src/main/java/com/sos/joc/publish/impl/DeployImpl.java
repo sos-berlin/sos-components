@@ -1,10 +1,8 @@
 package com.sos.joc.publish.impl;
 
-import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,23 +19,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
-import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
-import com.sos.joc.exceptions.BulkError;
-import com.sos.joc.exceptions.JocError;
+import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.keys.db.DBLayerKeys;
-import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.Config;
@@ -60,8 +57,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     private static final String API_CALL = "./inventory/deployment/deploy";
     private static final Logger LOGGER = LoggerFactory.getLogger(DeployImpl.class);
     private DBLayerDeploy dbLayer = null;
-//    private boolean hasErrors = false;
-    private List<Err419> listOfErrors = new ArrayList<Err419>();
 
     @Override
     public JOCDefaultResponse postDeploy(String xAccessToken, byte[] filter) throws Exception {
@@ -352,16 +347,11 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 // if not successful the objects and the related controllerId have to be stored 
                 // in a submissions table for reprocessing
                 dbLayer.createSubmissionForFailedDeployments(failedDeployUpdateItems);
-//                hasErrors = true;
-                if (either.getLeft().codeOrNull() != null) {
-                    listOfErrors.add(
-                            new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), either.getLeft().message()), "/"));
-                } else {
-                    listOfErrors.add(new BulkError().get(new JocError(either.getLeft().message()), "/"));
-                }
+                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
             }
-        } catch (IOException e) {
-            LOGGER.error(e.getMessage(), e);;
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+            ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(e.toString())), getAccessToken(), getJocError(), controllerId);
         } finally {
             Globals.disconnect(newHibernateSession);
         }
@@ -396,16 +386,11 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 // if not successful the objects and the related controllerId have to be stored 
                 // in a submissions table for reprocessing
                 dbLayer.createSubmissionForFailedDeployments(failedDeployDeleteItems);
-//                hasErrors = true;
-                if (either.getLeft().codeOrNull() != null) {
-                    listOfErrors.add(
-                            new BulkError().get(new JocError(either.getLeft().message()), "/"));
-                } else {
-                    listOfErrors.add(
-                            new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), 
-                                    either.getLeft().message()), "/"));
-                }
+                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
             }
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+            ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(e.toString())), getAccessToken(), getJocError(), controllerId);
         } finally {
             Globals.disconnect(newHibernateSession);
         }
@@ -439,39 +424,19 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         // check if deployable objects still exist in the folder
                         Set<DBItemDeploymentHistory> stillActiveDeployments = 
                                 PublishUtils.getLatestDepHistoryEntriesActiveForFolder(folder, dbLayer);
-                        // check if releasable objects still exist in the folder
-                        List<DBItemInventoryReleasedConfiguration> stillActiveReleased = dbLayer.
-                                getReleasedConfigurations(folder.getConfiguration().getPath());
-                        List<DBItemInventoryConfiguration> stillActiveReleasables = dbLayer
-                                .getReleasableConfigurations(folder.getConfiguration().getPath());
-                        if (checkAnyItemsStillExist(
-                                stillActiveDeployments, 
-                                stillActiveReleased, 
-                                stillActiveReleasables)) {
-                            if (checkDeploymentItemsStillExist(stillActiveDeployments)) {
-                                LOGGER.warn(String
-                                        .format("removed folder \"%1$s\" can´t be deleted from inventory. Deployments still exist on controller %2$s.", 
-                                                folder.getConfiguration().getPath(), controllerId));
-                            }
-                            if (checkReleasedItemsStillExist(stillActiveReleased)) {
-                                LOGGER.warn(String
-                                        .format("removed folder \"%1$s\" can´t be deleted from inventory, released objects still exist.", 
-                                                folder.getConfiguration().getPath()));
-                            }
-                            if (checkReleaseablesItemsStillExist(stillActiveReleasables)) {
-                                LOGGER.warn(String
-                                        .format("removed folder \"%1$s\" can´t be deleted from inventory, releasable objects still exist.", 
-                                                folder.getConfiguration().getPath()));
-                            }
+                        if (checkDeploymentItemsStillExist(stillActiveDeployments)) {
+                            String controllersFormatted = stillActiveDeployments.stream()
+                                    .map(item -> item.getControllerId()).collect(Collectors.joining(", "));
+                            LOGGER.warn(String.format(
+                                    "removed folder \"%1$s\" can´t be deleted from inventory. Deployments still exist on controllers %2$s.", folder
+                                            .getConfiguration().getPath(), controllersFormatted));
                         } else {
-                            // no active items still exist in dep history, inv configurations and inv released configurations
-                            // folder can be safely deleted from inventory
-                            DBItemInventoryConfiguration folderConfig = dbLayer
-                                    .getInvConfigurationFolder(folder.getConfiguration().getPath());
-                            if(folderConfig != null) {
-                                JocInventory.deleteConfigurations(
-                                        new HashSet<Long>(Arrays.asList(folderConfig.getId())));
-                            }
+                            try {
+                                JocInventory.deleteEmptyFolders(new InventoryDBLayer(newHibernateSession), folder.getConfiguration().getPath());
+                            } catch (SOSHibernateException e) {
+                                ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(e.toString())), getAccessToken(), getJocError(),
+                                        controllerId);
+                           }
                         }
                     }
                 }
@@ -484,30 +449,16 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 // if not successful the objects and the related controllerId have to be stored 
                 // in a submissions table for reprocessing
                 dbLayer.createSubmissionForFailedDeployments(failedDeployDeleteItems);
-//                hasErrors = true;
-                if (either.getLeft().codeOrNull() != null) {
-                    listOfErrors.add(
-                            new BulkError().get(new JocError(either.getLeft().message()), "/"));
-                } else {
-                    listOfErrors.add(
-                            new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), 
-                                    either.getLeft().message()), "/"));
-                }
+                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
             }
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+            ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(e.toString())), getAccessToken(), getJocError(), controllerId);
         } finally {
             Globals.disconnect(newHibernateSession);
         }
     }
     
-    private boolean checkAnyItemsStillExist (
-            Set<DBItemDeploymentHistory> deployments, 
-            List<DBItemInventoryReleasedConfiguration> released, 
-            List<DBItemInventoryConfiguration> releaseables) {
-        return checkDeploymentItemsStillExist(deployments)
-                || checkReleasedItemsStillExist(released)
-                || checkReleaseablesItemsStillExist(releaseables);
-    }
-
     private boolean checkDeploymentItemsStillExist (Set<DBItemDeploymentHistory> deployments) {
         if (deployments != null && !deployments.isEmpty()) {
             return true;
@@ -515,17 +466,4 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         return false;
     }
 
-    private boolean checkReleasedItemsStillExist (List<DBItemInventoryReleasedConfiguration> released) {
-        if (released != null && !released.isEmpty()) {
-            return true;
-        }
-        return false;
-    }
-
-    private boolean checkReleaseablesItemsStillExist (List<DBItemInventoryConfiguration> releaseables) {
-        if(releaseables != null && !releaseables.isEmpty()) {
-            return true;
-        }
-        return false;
-    }
 }

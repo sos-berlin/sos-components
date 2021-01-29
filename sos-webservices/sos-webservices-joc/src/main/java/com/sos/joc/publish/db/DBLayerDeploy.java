@@ -733,13 +733,12 @@ public class DBLayerDeploy {
             existingConfiguration = session.getSingleResult(query);
             boolean valid = false;
             try {
-                ValidateResourceImpl.validate(configuration.getObjectType(), 
-                        Globals.objectMapper.writeValueAsBytes(configuration.getConfiguration()));
+                ValidateResourceImpl.validate(configuration.getObjectType(), configuration.getConfiguration());
                 valid = true;
             } catch (SOSJsonSchemaException | IOException e) {
                 valid = false;
             }
-            // check if imported agentName is known 
+            // check if imported agentName is known. Has to be removed, when the Validator takes over the check!
             if (configuration.getObjectType().equals(ConfigurationType.WORKFLOW)) {
                 Workflow workflow = (Workflow)configuration.getConfiguration();
                 boolean allAgentNamesKnown = true;
@@ -754,8 +753,6 @@ public class DBLayerDeploy {
                 }
                 if (!allAgentNamesKnown) {
                     valid = false;
-                    configuration.setValid(valid);
-                    configuration.setInvalidMsg("Agent name or alias not known in this instance. Update configuration or add a suitable agent alias.");
                 }
             }
             if (overwrite) {

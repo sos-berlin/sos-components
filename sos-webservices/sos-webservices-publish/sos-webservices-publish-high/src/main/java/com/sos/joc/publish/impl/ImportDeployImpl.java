@@ -1,6 +1,5 @@
 package com.sos.joc.publish.impl;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
 import java.nio.file.Paths;
@@ -33,14 +32,13 @@ import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.ImportDeployAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-import com.sos.joc.exceptions.BulkError;
-import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
@@ -74,8 +72,6 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
     private static final Logger LOGGER = LoggerFactory.getLogger(ImportDeployImpl.class);
     private static final String API_CALL = "./inventory/deployment/import_deploy";
     private DBLayerDeploy dbLayer = null;
-    private boolean hasErrors = false;
-    private List<Err419> listOfErrors = new ArrayList<Err419>();
 
     @Override
     public JOCDefaultResponse postImportDeploy(String xAccessToken,
@@ -240,44 +236,37 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                             processAfterDelete(either, toDelete, controllerId, account, commitIdForDeleteRenamed, null);
                     }).get();
             }
-//            for (Controller controller : controllers) {
-                // call updateRepo command via ControllerApi for given controllers
-                String signerDN = null;
-                X509Certificate cert = null;
-                switch(keyPair.getKeyAlgorithm()) {
-                case SOSKeyConstants.PGP_ALGORITHM_NAME:
-                    PublishUtils.updateItemsAddOrUpdatePGP2(commitIdForUpdate, importedObjects, null, controllerId, dbLayer)
-                        .thenAccept(either -> {
+            String signerDN = null;
+            X509Certificate cert = null;
+            switch(keyPair.getKeyAlgorithm()) {
+            case SOSKeyConstants.PGP_ALGORITHM_NAME:
+                PublishUtils.updateItemsAddOrUpdatePGP2(commitIdForUpdate, importedObjects, null, controllerId, dbLayer)
+                    .thenAccept(either -> {
+                        processAfterAdd(either, importedObjects, null, account, commitIdForUpdate, controllerId, deploymentDate, filter);
+                });
+                break;
+            case SOSKeyConstants.RSA_ALGORITHM_NAME:
+                cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+                signerDN = cert.getSubjectDN().getName();
+                PublishUtils.updateItemsAddOrUpdateWithX509_2(commitIdForUpdate, importedObjects, null, controllerId, dbLayer,
+                        SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
                             processAfterAdd(either, importedObjects, null, account, commitIdForUpdate, controllerId, deploymentDate, filter);
-                    });
-                    break;
-                case SOSKeyConstants.RSA_ALGORITHM_NAME:
-                    cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                    signerDN = cert.getSubjectDN().getName();
-                    PublishUtils.updateItemsAddOrUpdateWithX509_2(commitIdForUpdate, importedObjects, null, controllerId, dbLayer,
-                            SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
-                                processAfterAdd(either, importedObjects, null, account, commitIdForUpdate, controllerId, deploymentDate, filter);
-                    });
-                    break;
-                case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
-                    cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                    signerDN = cert.getSubjectDN().getName();
-                    PublishUtils.updateItemsAddOrUpdateWithX509_2(commitIdForUpdate, importedObjects, null, controllerId, dbLayer,
-                            SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
-                                processAfterAdd(either, importedObjects, null, account, commitIdForUpdate, controllerId, deploymentDate, filter);
-                    });
-                    break;
-                }
-//            }
-            if (hasErrors) {
-                return JOCDefaultResponse.responseStatus419(listOfErrors);
-            } else {
-                if (importedObjects != null && !importedObjects.isEmpty()) {
-                    dbLayer.cleanupSignatures(importedObjects.keySet().stream().map(item -> importedObjects.get(item)).collect(Collectors.toSet()));
-                    dbLayer.cleanupCommitIdsForConfigurations(commitId);
-                }
-                return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+                });
+                break;
+            case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
+                cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+                signerDN = cert.getSubjectDN().getName();
+                PublishUtils.updateItemsAddOrUpdateWithX509_2(commitIdForUpdate, importedObjects, null, controllerId, dbLayer,
+                        SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
+                            processAfterAdd(either, importedObjects, null, account, commitIdForUpdate, controllerId, deploymentDate, filter);
+                });
+                break;
             }
+            if (importedObjects != null && !importedObjects.isEmpty()) {
+                dbLayer.cleanupSignatures(importedObjects.keySet().stream().map(item -> importedObjects.get(item)).collect(Collectors.toSet()));
+                dbLayer.cleanupCommitIdsForConfigurations(commitId);
+            }
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -319,7 +308,6 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                         verifiedReDeployables, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
                 }
                 if (!deployedObjects.isEmpty()) {
-//                    createAuditLogForEach(deployedObjects, filter, controllerId, true, versionIdForUpdate, account);
                     LOGGER.info(String.format("Update command send to Controller \"%1$s\".", controllerId));
                     JocInventory.handleWorkflowSearch(newHibernateSession, deployedObjects, false);
                 }
@@ -334,16 +322,11 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 // if not successful the objects and the related controllerId have to be stored 
                 // in a submissions table for reprocessing
                 dbLayer.createSubmissionForFailedDeployments(failedDeployUpdateItems);
-                hasErrors = true;
-                if (either.getLeft().codeOrNull() != null) {
-                    listOfErrors.add(
-                            new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), either.getLeft().message()), "/"));
-                } else {
-                    listOfErrors.add(new BulkError().get(new JocError(either.getLeft().message()), "/"));
-                }
+                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
+            ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(e.toString())), getAccessToken(), getJocError(), controllerId);
         } finally {
             Globals.disconnect(newHibernateSession);
         }
@@ -352,7 +335,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
     private void processAfterDelete (
             Either<Problem, Void> either, 
             List<DBItemDeploymentHistory> itemsToDelete, 
-            String controller, 
+            String controllerId, 
             String account, 
             String versionIdForDelete,
             ImportDeployFilter filter) {
@@ -365,49 +348,25 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                         .collect(Collectors.toSet());
                 Set<DBItemDeploymentHistory> deletedDeployItems = 
                         PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer);
-                if (filter != null) {
-//                    createAuditLogForEach(deletedDeployItems, filter, controller, false, versionIdForDelete, account);
-                }
                 JocInventory.deleteConfigurations(configurationIdsToDelete);
                 JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);
             } else if (either.isLeft()) {
-                String message = String.format("Response from Controller \"%1$s:\": %2$s", controller, either.getLeft().message());
+                String message = String.format("Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
                 LOGGER.warn(message);
                 // updateRepo command is atomic, therefore all items are rejected
                 List<DBItemDeploymentHistory> failedDeployDeleteItems = dbLayer.updateFailedDeploymentForDelete(
-                        itemsToDelete, controller, account, versionIdForDelete, either.getLeft().message());
+                        itemsToDelete, controllerId, account, versionIdForDelete, either.getLeft().message());
                 // if not successful the objects and the related controllerId have to be stored 
                 // in a submissions table for reprocessing
                 dbLayer.createSubmissionForFailedDeployments(failedDeployDeleteItems);
-                hasErrors = true;
-                if (either.getLeft().codeOrNull() != null) {
-                    listOfErrors.add(
-                            new BulkError().get(new JocError(either.getLeft().message()), "/"));
-                } else {
-                    listOfErrors.add(
-                            new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), 
-                                    either.getLeft().message()), "/"));
-                }
+                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
             }
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+            ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(e.toString())), getAccessToken(), getJocError(), controllerId);
         } finally {
             Globals.disconnect(newHibernateSession);
         }
     }
     
-//    private void createAuditLogForEach(Collection<DBItemDeploymentHistory> depHistoryEntries, ImportDeployFilter filter, String controllerId,
-//            boolean update, String commitId, String account) {
-//        final Set<ImportDeployAudit> audits = new HashSet<ImportDeployAudit>();
-//        audits.addAll(depHistoryEntries.stream().map(item -> { 
-//            if (update) {
-//                return new ImportDeployAudit(filter, update, controllerId, commitId, item.getId(),
-//                        item.getPath(), String.format("object %1$s updated on controller %2$s", item.getPath(), controllerId), account);
-//            } else {
-//                return new ImportDeployAudit(filter, update, controllerId, commitId, item.getId(),
-//                        item.getPath(), String.format("object %1$s deleted from controller %2$s", item.getPath(), controllerId), account);
-//            }
-//        }).collect(Collectors.toSet()));
-//        audits.stream().forEach(audit -> logAuditMessage(audit));
-//        audits.stream().forEach(audit -> storeAuditLogEntry(audit));
-//    }
-//
 }
