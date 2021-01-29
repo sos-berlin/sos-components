@@ -23,7 +23,8 @@ public enum OrderStateText2 {
     Finished("Finished"),
     Cancelled("Cancelled"),
     ProcessingKilled("ProcessingKilled"),
-    Suspended("Suspended");
+    Suspended("Suspended"),
+    WaitingForLock("WaitingForLock");
     private final String value;
     private final static Map<String, OrderStateText2> CONSTANTS = new HashMap<String, OrderStateText2>();
 

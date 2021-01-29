@@ -18,9 +18,6 @@ public class HistorySeverity {
         case WAITING:
         case BLOCKED:
         case SUSPENDED:
-        case RESUMED:
-        case SUSPENDMARKED:
-        case RESUMEMARKED:
             return INCOMPLETE;
         case BROKEN:
         case CANCELLED:

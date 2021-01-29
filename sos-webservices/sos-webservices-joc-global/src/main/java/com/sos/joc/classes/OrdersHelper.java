@@ -76,6 +76,7 @@ public class OrdersHelper {
             put("Cancelled", OrderStateText.CANCELLED);
             put("ProcessingCancelled", OrderStateText.CANCELLED);
             put("Blocked", OrderStateText.BLOCKED);
+            put("Calling", OrderStateText.CALLING);
         }
     });
 
@@ -84,22 +85,20 @@ public class OrdersHelper {
         // consider 'blocked' as further grouped state
         private static final long serialVersionUID = 1L;
 
-        {
+        {  
             put(OrderStateText.PLANNED, 4);
             put(OrderStateText.PENDING, 1);
-            put(OrderStateText.WAITING, 3);
+            put(OrderStateText.WAITING, 8);
             put(OrderStateText.FAILED, 2);
-            put(OrderStateText.SUSPENDED, 2);
-            put(OrderStateText.SUSPENDMARKED, 2);
+            put(OrderStateText.SUSPENDED, 5);
             put(OrderStateText.CANCELLED, 2);
             put(OrderStateText.BROKEN, 2);
             put(OrderStateText.RUNNING, 0);
-            put(OrderStateText.INPROGRESS, 0);
-            put(OrderStateText.FINISHED, 0);
-            put(OrderStateText.RESUMED, 0);
-            put(OrderStateText.RESUMEMARKED, 0);
-            put(OrderStateText.BLOCKED, 3);
-            put(OrderStateText.UNKNOWN, 4);
+            put(OrderStateText.INPROGRESS, 3);
+            put(OrderStateText.FINISHED, 6);
+            put(OrderStateText.BLOCKED, 7);
+            put(OrderStateText.CALLING, 9);
+            put(OrderStateText.UNKNOWN, 2);
         }
     });
 
