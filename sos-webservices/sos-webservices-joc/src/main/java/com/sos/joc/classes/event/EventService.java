@@ -189,24 +189,29 @@ public class EventService {
                 if (opt.isPresent()) {
                     WorkflowId w = mapWorkflowId(opt.get().workflowId());
                     addEvent(createWorkflowEventOfOrder(eventId, w));
-                    eventSnapshot.setPath(orderId.string());
-                    eventSnapshot.setWorkflow(w);
-                } else {
-                    eventSnapshot.setPath(orderId.string());
-                }
-                eventSnapshot.setObjectType(EventType.ORDER);
-                eventSnapshot.setEventType("OrderStateChanged");
-                if (evt instanceof OrderAdded) {
-                    eventSnapshot.setEventType("OrderAdded");
-                } else if (evt instanceof OrderTerminated) { //|| evt instanceof OrderRemoved$) {
-                    eventSnapshot.setEventType("OrderTerminated");
-//                } else if (evt instanceof OrderRemoved$) {
-//                    eventSnapshot.setEventType("OrderRemoved");
-                } else if (evt instanceof OrderProcessingStarted$ || evt instanceof OrderProcessed || evt instanceof OrderProcessingKilled$) {
-                    if (opt.isPresent()) {
-                        addEvent(createTaskEventOfOrder(eventId, mapWorkflowId(opt.get().workflowId())));
+                    if (evt instanceof OrderProcessingStarted$ || evt instanceof OrderProcessed || evt instanceof OrderProcessingKilled$) {
+                        addEvent(createTaskEventOfOrder(eventId, w));
                     }
                 }
+//                if (opt.isPresent()) {
+//                    WorkflowId w = mapWorkflowId(opt.get().workflowId());
+//                    addEvent(createWorkflowEventOfOrder(eventId, w));
+//                    eventSnapshot.setPath(orderId.string());
+//                    eventSnapshot.setWorkflow(w);
+//                    eventSnapshot.setObjectType(EventType.ORDER);
+//                }
+//                eventSnapshot.setEventType("OrderStateChanged");
+//                if (evt instanceof OrderAdded) {
+//                    eventSnapshot.setEventType("OrderAdded");
+//                } else if (evt instanceof OrderTerminated) { //|| evt instanceof OrderRemoved$) {
+//                    eventSnapshot.setEventType("OrderTerminated");
+////                } else if (evt instanceof OrderRemoved$) {
+////                    eventSnapshot.setEventType("OrderRemoved");
+//                } else if (evt instanceof OrderProcessingStarted$ || evt instanceof OrderProcessed || evt instanceof OrderProcessingKilled$) {
+//                    if (opt.isPresent()) {
+//                        addEvent(createTaskEventOfOrder(eventId, mapWorkflowId(opt.get().workflowId())));
+//                    }
+//                }
                 
             } else if (evt instanceof ControllerEvent || evt instanceof ClusterEvent) {
                 eventSnapshot.setEventType("ControllerStateChanged");

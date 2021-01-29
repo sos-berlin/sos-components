@@ -2,12 +2,12 @@ package com.sos.joc.event.impl;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -50,7 +50,7 @@ import com.sos.schema.JsonValidator;
 public class EventResourceImpl extends JOCResourceImpl implements IEventResource {
 
     private static final String API_CALL = "./events";
-    private static final List<EventType> eventTypesforNameToPathMapping = Arrays.asList(EventType.LOCK, EventType.WORKFLOW);
+//    private static final List<EventType> eventTypesforNameToPathMapping = Arrays.asList(EventType.LOCK, EventType.WORKFLOW);
     private static final Logger LOGGER = LoggerFactory.getLogger(EventResourceImpl.class);
     
 
@@ -168,27 +168,37 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
         }
         
         // map workflow name to workflow path etc.
-        Map<EventType, Set<String>> m = evt.getEventSnapshots().stream().filter(e -> eventTypesforNameToPathMapping.contains(e.getObjectType())).map(
-                e -> {
-                    if (e.getWorkflow() != null) {
-                        e.setPath(e.getWorkflow().getPath());
-                    }
-                    return e;
-                }).filter(e -> e.getPath() != null).collect(Collectors.groupingBy(EventSnapshot::getObjectType, Collectors.mapping(
-                        EventSnapshot::getPath, Collectors.toSet())));
+//        Map<EventType, Set<String>> m = evt.getEventSnapshots().stream().filter(e -> eventTypesforNameToPathMapping.contains(e.getObjectType())).map(
+//                e -> {
+//                    if (e.getWorkflow() != null) {
+//                        e.setPath(e.getWorkflow().getPath());
+//                    }
+//                    return e;
+//                }).filter(e -> e.getPath() != null).collect(Collectors.groupingBy(EventSnapshot::getObjectType, Collectors.mapping(
+//                        EventSnapshot::getPath, Collectors.toSet())));
+        
+        Set<String> workflowNames = evt.getEventSnapshots().stream().filter(e -> EventType.WORKFLOW.equals(e.getObjectType())).map(e -> (e
+                .getWorkflow() != null) ? e.getWorkflow().getPath() : e.getPath()).filter(Objects::nonNull).collect(Collectors.toSet());
+
+        Set<String> lockNames = evt.getEventSnapshots().stream().filter(e -> EventType.LOCK.equals(e.getObjectType())).map(EventSnapshot::getPath)
+                .filter(Objects::nonNull).collect(Collectors.toSet());
+
         Map<String, String> namePathWorkflowMap = null;
         Map<String, String> namePathLockMap = null;
         try {
             if (dbCLayer != null) {
-                namePathWorkflowMap = dbCLayer.getNamePathMapping(evt.getControllerId(), m.get(EventType.WORKFLOW), DeployType.WORKFLOW
-                    .intValue());
+//                namePathWorkflowMap = dbCLayer.getNamePathMapping(evt.getControllerId(), m.get(EventType.WORKFLOW), DeployType.WORKFLOW
+//                    .intValue());
+                namePathWorkflowMap = dbCLayer.getNamePathMapping(evt.getControllerId(), workflowNames, DeployType.WORKFLOW
+                        .intValue());
             }
         } catch (SOSHibernateException e1) {
             LOGGER.warn(e1.toString());
         }
         try {
             if (dbCLayer != null) {
-                namePathLockMap = dbCLayer.getNamePathMapping(evt.getControllerId(), m.get(EventType.LOCK), DeployType.LOCK.intValue());
+//                namePathLockMap = dbCLayer.getNamePathMapping(evt.getControllerId(), m.get(EventType.LOCK), DeployType.LOCK.intValue());
+                namePathLockMap = dbCLayer.getNamePathMapping(evt.getControllerId(), lockNames, DeployType.LOCK.intValue());
             }
         } catch (SOSHibernateException e1) {
             LOGGER.warn(e1.toString());
