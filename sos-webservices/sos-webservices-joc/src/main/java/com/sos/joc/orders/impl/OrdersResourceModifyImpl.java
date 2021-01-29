@@ -198,7 +198,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     dbItemDailyPlanHistory.setDailyPlanDate(listOfPlanHistory.get(0).getDailyPlanDate());
                     dbItemDailyPlanHistory.setOrderId(orderId);
                     dbItemDailyPlanHistory.setSubmissionTime(listOfPlanHistory.get(0).getSubmissionTime());
-                    dbItemDailyPlanHistory.setUserAccount(Globals.loginClientId);
+                    dbItemDailyPlanHistory.setUserAccount(Globals.loginUserName);
                     dbLayerDailyPlanHistory.storeDailyPlanHistory(dbItemDailyPlanHistory);                } 
             }
 
