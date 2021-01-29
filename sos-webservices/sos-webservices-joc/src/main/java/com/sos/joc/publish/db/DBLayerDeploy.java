@@ -27,6 +27,8 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.inventory.model.deploy.DeployType;
+import com.sos.inventory.model.job.Job;
+import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -66,6 +68,7 @@ import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.mapper.FilterAttributesMapper;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
+import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
@@ -730,10 +733,30 @@ public class DBLayerDeploy {
             existingConfiguration = session.getSingleResult(query);
             boolean valid = false;
             try {
-                ValidateResourceImpl.validate(configuration.getObjectType(), Globals.objectMapper.writeValueAsBytes(configuration.getConfiguration()));
+                ValidateResourceImpl.validate(configuration.getObjectType(), 
+                        Globals.objectMapper.writeValueAsBytes(configuration.getConfiguration()));
                 valid = true;
             } catch (SOSJsonSchemaException | IOException e) {
                 valid = false;
+            }
+            // check if imported agentName is known 
+            if (configuration.getObjectType().equals(ConfigurationType.WORKFLOW)) {
+                Workflow workflow = (Workflow)configuration.getConfiguration();
+                boolean allAgentNamesKnown = true;
+                for (String jobname : workflow.getJobs().getAdditionalProperties().keySet()) {
+                    Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
+                    String agentName = job.getAgentId();
+                    boolean agentNameKnown = checkAgentNamePresent(agentName);
+                    if (!agentNameKnown) {
+                        allAgentNamesKnown = false;
+                        break;
+                    }
+                }
+                if (!allAgentNamesKnown) {
+                    valid = false;
+                    configuration.setValid(valid);
+                    configuration.setInvalidMsg("Agent name or alias not known in this instance. Update configuration or add a suitable agent alias.");
+                }
             }
             if (overwrite) {
                 if (existingConfiguration != null) {
@@ -2153,4 +2176,29 @@ public class DBLayerDeploy {
         } 
     }
     
+    private boolean checkAgentNamePresent (String agentName) {
+        try {
+            StringBuilder instanceHql = new StringBuilder("select agentName from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
+            instanceHql.append(" where agentName = :agentName");
+            Query<String> instanceQuery = getSession().createQuery(instanceHql.toString());
+            instanceQuery.setParameter("agentName", agentName);
+            List<String> instanceResults = instanceQuery.getResultList();
+            if (instanceResults != null && !instanceResults.isEmpty()) {
+                return true;
+            } else {
+                StringBuilder aliasHql = new StringBuilder("select agentName from ").append(DBLayer.DBITEM_INV_AGENT_NAMES);
+                aliasHql.append(" where agentName = :agentName");
+                Query<String> aliasQuery = getSession().createQuery(aliasHql.toString());
+                aliasQuery.setParameter("agentName", agentName);
+                List<String> aliasResults = aliasQuery.getResultList();
+                if(aliasResults != null && !aliasResults.isEmpty()) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        } 
+    }
 }
