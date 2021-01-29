@@ -2,7 +2,6 @@
 package com.sos.joc.model.dailyplan;
 
 import java.util.Date;
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -13,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * dailyPlanSubmissionHistoryItem
+ * dailyPlanSubmissionsItem
  * <p>
  * 
  * 
@@ -23,11 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "controllerId",
     "submissionHistoryId",
     "dailyPlanDate",
-    "submissionTime",
-    "submittedOrders",
-    "canceledOrders",
-    "warnMessages",
-    "errorMessages"
+    "submissionTime"
 })
 public class DailyPlanSubmissionsItem {
 
@@ -66,14 +61,6 @@ public class DailyPlanSubmissionsItem {
     @JsonProperty("submissionTime")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date submissionTime;
-    @JsonProperty("submittedOrders")
-    private List<String> submittedOrders = null;
-    @JsonProperty("canceledOrders")
-    private List<String> canceledOrders = null;
-    @JsonProperty("warnMessages")
-    private List<String> warnMessages = null;
-    @JsonProperty("errorMessages")
-    private List<String> errorMessages = null;
 
     /**
      * path
@@ -163,54 +150,14 @@ public class DailyPlanSubmissionsItem {
         this.submissionTime = submissionTime;
     }
 
-    @JsonProperty("submittedOrders")
-    public List<String> getSubmittedOrders() {
-        return submittedOrders;
-    }
-
-    @JsonProperty("submittedOrders")
-    public void setSubmittedOrders(List<String> submittedOrders) {
-        this.submittedOrders = submittedOrders;
-    }
-
-    @JsonProperty("canceledOrders")
-    public List<String> getCanceledOrders() {
-        return canceledOrders;
-    }
-
-    @JsonProperty("canceledOrders")
-    public void setCanceledOrders(List<String> canceledOrders) {
-        this.canceledOrders = canceledOrders;
-    }
-
-    @JsonProperty("warnMessages")
-    public List<String> getWarnMessages() {
-        return warnMessages;
-    }
-
-    @JsonProperty("warnMessages")
-    public void setWarnMessages(List<String> warnMessages) {
-        this.warnMessages = warnMessages;
-    }
-
-    @JsonProperty("errorMessages")
-    public List<String> getErrorMessages() {
-        return errorMessages;
-    }
-
-    @JsonProperty("errorMessages")
-    public void setErrorMessages(List<String> errorMessages) {
-        this.errorMessages = errorMessages;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("submissionHistoryId", submissionHistoryId).append("dailyPlanDate", dailyPlanDate).append("submissionTime", submissionTime).append("submittedOrders", submittedOrders).append("canceledOrders", canceledOrders).append("warnMessages", warnMessages).append("errorMessages", errorMessages).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("submissionHistoryId", submissionHistoryId).append("dailyPlanDate", dailyPlanDate).append("submissionTime", submissionTime).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(errorMessages).append(dailyPlanDate).append(controllerId).append(warnMessages).append(submissionHistoryId).append(submittedOrders).append(canceledOrders).append(submissionTime).toHashCode();
+        return new HashCodeBuilder().append(dailyPlanDate).append(controllerId).append(submissionTime).append(submissionHistoryId).toHashCode();
     }
 
     @Override
@@ -222,7 +169,7 @@ public class DailyPlanSubmissionsItem {
             return false;
         }
         DailyPlanSubmissionsItem rhs = ((DailyPlanSubmissionsItem) other);
-        return new EqualsBuilder().append(errorMessages, rhs.errorMessages).append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(warnMessages, rhs.warnMessages).append(submissionHistoryId, rhs.submissionHistoryId).append(submittedOrders, rhs.submittedOrders).append(canceledOrders, rhs.canceledOrders).append(submissionTime, rhs.submissionTime).isEquals();
+        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(submissionTime, rhs.submissionTime).append(submissionHistoryId, rhs.submissionHistoryId).isEquals();
     }
 
 }

@@ -26,6 +26,7 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.orders.DBItemDailyPlanHistory;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.dailyplan.DailyPlanHistoryCategories;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
@@ -162,7 +163,7 @@ public class DBLayerSchedules {
                 } else {
                     String s = "Workflow " + schedule.getWorkflowName() + " is not deployed. schedule->" + schedule.getPath()   ;
                     DBItemDailyPlanHistory dbItemDailyPlanHistory = new DBItemDailyPlanHistory();
-                    dbItemDailyPlanHistory.setCategory("WARN");
+                    dbItemDailyPlanHistory.setCategory(DailyPlanHistoryCategories.WARN.name());
                     if (filter.getListOfControllerIds().size() > 0) {
                         dbItemDailyPlanHistory.setControllerId(filter.getListOfControllerIds().get(0));
                     }

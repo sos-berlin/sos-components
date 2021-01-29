@@ -32,6 +32,7 @@ import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JobSchedulerObjectNotExistException;
 import com.sos.joc.exceptions.JocConfigurationException;
+import com.sos.joc.model.dailyplan.DailyPlanHistoryCategories;
 import com.sos.js7.order.initiator.classes.DailyPlanHelper;
 import com.sos.js7.order.initiator.classes.OrderApi;
 import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
@@ -138,7 +139,7 @@ public class OrderListSynchronizer {
             DBLayerDailyPlanHistory dbLayerDailyPlanHistory = new DBLayerDailyPlanHistory(sosHibernateSession);
             for (PlannedOrder addedOrder : addedOrders) {
                 DBItemDailyPlanHistory dbItemDailyPlanHistory = new DBItemDailyPlanHistory();
-                dbItemDailyPlanHistory.setCategory("SUBMITTED");
+                dbItemDailyPlanHistory.setCategory(DailyPlanHistoryCategories.SUBMITTED.name());
                 dbItemDailyPlanHistory.setControllerId(addedOrder.getControllerId());
                 dbItemDailyPlanHistory.setCreated(JobSchedulerDate.nowInUtc());
                 dbItemDailyPlanHistory.setDailyPlanDate(OrderInitiatorGlobals.dailyPlanDate);

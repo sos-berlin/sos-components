@@ -13,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * dailyPlanHistoryItem
+ * DailyPlanHistoryItem
  * <p>
  * 
  * 
@@ -45,7 +45,7 @@ public class DailyPlanHistoryItem {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date dailyPlanDate;
     @JsonProperty("submissions")
-    private List<DailyPlanSubmissionsItem> submissions = null;
+    private List<DailyPlanSubmissionTimes> submissions = null;
 
     /**
      * path
@@ -92,12 +92,12 @@ public class DailyPlanHistoryItem {
     }
 
     @JsonProperty("submissions")
-    public List<DailyPlanSubmissionsItem> getSubmissions() {
+    public List<DailyPlanSubmissionTimes> getSubmissions() {
         return submissions;
     }
 
     @JsonProperty("submissions")
-    public void setSubmissions(List<DailyPlanSubmissionsItem> submissions) {
+    public void setSubmissions(List<DailyPlanSubmissionTimes> submissions) {
         this.submissions = submissions;
     }
 

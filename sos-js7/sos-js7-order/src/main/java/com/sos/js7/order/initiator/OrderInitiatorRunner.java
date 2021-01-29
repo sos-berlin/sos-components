@@ -417,7 +417,6 @@ public class OrderInitiatorRunner extends TimerTask {
             throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException, ParseException {
 
         DBLayerDailyPlanSubmissions dbLayer = new DBLayerDailyPlanSubmissions(sosHibernateSession);
-        DBLayerDailyPlanHistory dbLayerDailyPlanHistory = new DBLayerDailyPlanHistory(sosHibernateSession);
         DBItemDailyPlanSubmissions dbItemDailyPlanSubmissionHistory = new DBItemDailyPlanSubmissions();
         dbItemDailyPlanSubmissionHistory.setControllerId(controllerId);
         dbItemDailyPlanSubmissionHistory.setSubmissionForDate(dateForPlan);
@@ -425,15 +424,6 @@ public class OrderInitiatorRunner extends TimerTask {
 
         Globals.beginTransaction(sosHibernateSession);
         dbLayer.storePlan(dbItemDailyPlanSubmissionHistory);
-
-        DBItemDailyPlanHistory dbItemDailyPlanHistory = new DBItemDailyPlanHistory();
-        dbItemDailyPlanHistory.setCategory("GENERATE");
-        dbItemDailyPlanHistory.setControllerId(controllerId);
-        dbItemDailyPlanHistory.setCreated(JobSchedulerDate.nowInUtc());
-        dbItemDailyPlanHistory.setDailyPlanDate(dateForPlan);
-        dbItemDailyPlanHistory.setSubmissionTime(OrderInitiatorGlobals.submissionTime);
-        dbItemDailyPlanHistory.setUserAccount(OrderInitiatorGlobals.orderInitiatorSettings.getUserAccount());
-        dbLayerDailyPlanHistory.storeDailyPlanHistory(dbItemDailyPlanHistory);
 
         Globals.commit(sosHibernateSession);
         return dbItemDailyPlanSubmissionHistory;

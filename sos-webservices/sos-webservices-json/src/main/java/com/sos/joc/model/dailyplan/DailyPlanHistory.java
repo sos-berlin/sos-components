@@ -13,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * dailyPlanSubmissionHistory
+ * DailyPlanHistory
  * <p>
  * 
  * 
@@ -21,7 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
-    "dailyPlanHistoryItems"
+    "dailyPlans"
 })
 public class DailyPlanHistory {
 
@@ -35,8 +35,8 @@ public class DailyPlanHistory {
     @JsonProperty("deliveryDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
-    @JsonProperty("dailyPlanHistoryItems")
-    private List<DailyPlanHistoryItem> dailyPlanHistoryItems = null;
+    @JsonProperty("dailyPlans")
+    private List<DailyPlanHistoryItem> dailyPlans = null;
 
     /**
      * timestamp
@@ -62,24 +62,24 @@ public class DailyPlanHistory {
         this.deliveryDate = deliveryDate;
     }
 
-    @JsonProperty("dailyPlanHistoryItems")
-    public List<DailyPlanHistoryItem> getDailyPlanHistoryItems() {
-        return dailyPlanHistoryItems;
+    @JsonProperty("dailyPlans")
+    public List<DailyPlanHistoryItem> getDailyPlans() {
+        return dailyPlans;
     }
 
-    @JsonProperty("dailyPlanHistoryItems")
-    public void setDailyPlanHistoryItems(List<DailyPlanHistoryItem> dailyPlanHistoryItems) {
-        this.dailyPlanHistoryItems = dailyPlanHistoryItems;
+    @JsonProperty("dailyPlans")
+    public void setDailyPlans(List<DailyPlanHistoryItem> dailyPlans) {
+        this.dailyPlans = dailyPlans;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("dailyPlanHistoryItems", dailyPlanHistoryItems).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("dailyPlans", dailyPlans).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(dailyPlanHistoryItems).toHashCode();
+        return new HashCodeBuilder().append(deliveryDate).append(dailyPlans).toHashCode();
     }
 
     @Override
@@ -91,7 +91,7 @@ public class DailyPlanHistory {
             return false;
         }
         DailyPlanHistory rhs = ((DailyPlanHistory) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(dailyPlanHistoryItems, rhs.dailyPlanHistoryItems).isEquals();
+        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(dailyPlans, rhs.dailyPlans).isEquals();
     }
 
 }

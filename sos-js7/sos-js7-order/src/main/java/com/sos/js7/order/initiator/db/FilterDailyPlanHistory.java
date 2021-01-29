@@ -12,6 +12,7 @@ public class FilterDailyPlanHistory extends SOSFilter {
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterDailyPlanHistory.class);
     private String controllerId;
     private String category;
+    private String orderId;
     private Date dailyPlanDate;
     private Date dailyPlanDateFrom;
     private Date dailyPlanDateTo;
@@ -58,6 +59,16 @@ public class FilterDailyPlanHistory extends SOSFilter {
     
     public void setDailyPlanDateTo(Date dailyPlanDateTo) {
         this.dailyPlanDateTo = dailyPlanDateTo;
+    }
+
+    
+    public String getOrderId() {
+        return orderId;
+    }
+
+    
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
     }
         
    

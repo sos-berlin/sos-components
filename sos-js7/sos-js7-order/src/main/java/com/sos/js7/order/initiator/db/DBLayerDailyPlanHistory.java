@@ -14,7 +14,7 @@ import com.sos.joc.db.orders.DBItemDailyPlanHistory;
 public class DBLayerDailyPlanHistory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerDailyPlanHistory.class);
-    private static final String DBItemDailyPlanHistory = DBLayerDailyPlanHistory.class.getSimpleName();
+    private static final String DBItemDailyPlanHistory = DBItemDailyPlanHistory.class.getSimpleName();
     private final SOSHibernateSession sosHibernateSession;
 
     public DBLayerDailyPlanHistory(SOSHibernateSession session) {
@@ -51,6 +51,11 @@ public class DBLayerDailyPlanHistory {
             and = " and ";
         }
 
+        if (filter.getOrderId() != null && !"".equals(filter.getOrderId())) {
+            where += and + " orderId = :orderId";
+            and = " and ";
+        }
+
         if (filter.getCategory() != null && !"".equals(filter.getCategory())) {
             where += and + " category = :category";
             and = " and ";
@@ -76,6 +81,10 @@ public class DBLayerDailyPlanHistory {
 
         if (filter.getControllerId() != null && !"".equals(filter.getControllerId())) {
             query.setParameter("controllerId", filter.getControllerId());
+        }
+
+        if (filter.getOrderId() != null && !"".equals(filter.getOrderId())) {
+            query.setParameter("orderId", filter.getOrderId());
         }
 
         if (filter.getCategory() != null && !"".equals(filter.getCategory())) {
