@@ -38,6 +38,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.PredicateParser;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
@@ -82,24 +83,37 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
         }
     }
 
-    public static void validate(ConfigurationType type, byte[] configBytes) throws SOSJsonSchemaException, IOException, SOSHibernateException {
+    public static void validate(ConfigurationType type, byte[] configBytes) throws SOSJsonSchemaException, IOException, SOSHibernateException,
+            JocConfigurationException {
         validate(type, configBytes, (IConfigurationObject) Globals.objectMapper.readValue(configBytes, JocInventory.CLASS_MAPPING.get(type)));
     }
 
     public static void validate(ConfigurationType type, IConfigurationObject config) throws SOSJsonSchemaException, IOException,
-            SOSHibernateException {
+            SOSHibernateException, JocConfigurationException {
         validate(type, Globals.objectMapper.writeValueAsBytes(config), config);
     }
     
     private static void validate(ConfigurationType type, byte[] configBytes, IConfigurationObject config) throws SOSJsonSchemaException, IOException,
-            SOSHibernateException {
+            SOSHibernateException, JocConfigurationException {
         JsonValidator.validate(configBytes, URI.create(JocInventory.SCHEMA_LOCATION.get(type)));
-        if (ConfigurationType.WORKFLOW.equals(type)) {
-            JsonValidator.validateStrict(configBytes, URI.create("classpath:/raml/inventory/schemas/workflow/workflowJobs-schema.json"));
-            validateInstructions(((Workflow) config).getInstructions(), "instructions", new HashMap<String, String>());
-            validateLockRefs(new String(configBytes, StandardCharsets.UTF_8));
-        } else if (ConfigurationType.SCHEDULE.equals(type)) {
-            validateCalendarRefs((Schedule) config);
+        if (ConfigurationType.WORKFLOW.equals(type) || ConfigurationType.SCHEDULE.equals(type)) {
+            SOSHibernateSession session = null;
+            try {
+                session = Globals.createSosHibernateStatelessConnection("validate");
+                InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+                if (ConfigurationType.WORKFLOW.equals(type)) {
+                    InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(session);
+                    JsonValidator.validateStrict(configBytes, URI.create("classpath:/raml/inventory/schemas/workflow/workflowJobs-schema.json"));
+                    validateInstructions(((Workflow) config).getInstructions(), "instructions", new HashMap<String, String>());
+                    validateLockRefs(new String(configBytes, StandardCharsets.UTF_8), dbLayer);
+                    validateAgentRefs(new String(configBytes, StandardCharsets.UTF_8), agentDBLayer);
+                } else if (ConfigurationType.SCHEDULE.equals(type)) {
+                    validateWorkflowRef(((Schedule) config).getWorkflowName(), dbLayer);
+                    validateCalendarRefs((Schedule) config, dbLayer);
+                }
+            } finally {
+                Globals.disconnect(session);
+            }
         }
     }
 
@@ -114,31 +128,47 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
         }
         return v;
     }
+    
+    private static void validateWorkflowRef(String workflowName, InventoryDBLayer dbLayer) throws JocConfigurationException, SOSHibernateException {
+        List<DBItemInventoryConfiguration> workflowPaths = dbLayer.getConfigurationByName(workflowName, ConfigurationType.WORKFLOW.intValue());
+        if (workflowPaths == null || !workflowPaths.stream().anyMatch(w -> workflowName.equals(w.getName()))) {
+            throw new JocConfigurationException("Missing assigned Workflow: " + workflowName); 
+        }
+    }
 
-    private static void validateCalendarRefs(Schedule schedule) throws SOSHibernateException {
+    private static void validateCalendarRefs(Schedule schedule, InventoryDBLayer dbLayer) throws SOSHibernateException, JocConfigurationException {
         Set<String> calendarNames = schedule.getCalendars().stream().map(AssignedCalendars::getCalendarName).collect(Collectors.toSet());
         if (schedule.getNonWorkingCalendars() != null && !schedule.getNonWorkingCalendars().isEmpty()) {
             calendarNames.addAll(schedule.getNonWorkingCalendars().stream().map(AssignedNonWorkingCalendars::getCalendarName).collect(Collectors
                     .toSet()));
         }
-        SOSHibernateSession session = null;
-        try {
-            session = Globals.createSosHibernateStatelessConnection("validate");
-            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            List<DBItemInventoryConfiguration> dbCalendars = dbLayer.getCalendarsByNames(calendarNames.stream());
-            if (dbCalendars == null || dbCalendars.isEmpty()) {
-                throw new JocConfigurationException("Missing assigned Calendars: " + calendarNames.toString()); 
-            } else if (dbCalendars.size() < calendarNames.size()) {
-                calendarNames.removeAll(dbCalendars.stream().map(DBItemInventoryConfiguration::getName).collect(Collectors.toSet()));
-                throw new JocConfigurationException("Missing assigned Calendars: " + calendarNames.toString());
-            }
-        } finally {
-            Globals.disconnect(session);
+        List<DBItemInventoryConfiguration> dbCalendars = dbLayer.getCalendarsByNames(calendarNames.stream());
+        if (dbCalendars == null || dbCalendars.isEmpty()) {
+            throw new JocConfigurationException("Missing assigned Calendars: " + calendarNames.toString()); 
+        } else if (dbCalendars.size() < calendarNames.size()) {
+            calendarNames.removeAll(dbCalendars.stream().map(DBItemInventoryConfiguration::getName).collect(Collectors.toSet()));
+            throw new JocConfigurationException("Missing assigned Calendars: " + calendarNames.toString());
         }
 
     }
     
-    private static void validateLockRefs(String json) throws SOSHibernateException {
+    private static void validateAgentRefs(String json, InventoryAgentInstancesDBLayer dbLayer) throws SOSHibernateException, JocConfigurationException {
+        Matcher m = Pattern.compile("\"agentId\"\\s*:\\s*\"([^\"]+)\"").matcher(json);
+        Set<String> agents = new HashSet<>();
+        while (m.find()) {
+            if (m.group(1) != null && !m.group(1).isEmpty()) {
+                agents.add(m.group(1));
+            }
+        }
+        if (!agents.isEmpty()) {
+            agents.removeAll(dbLayer.getEnabledAgentNames());
+            if (!agents.isEmpty()) {
+                throw new JocConfigurationException("Missing assigned Agents: " + agents.toString());
+            }
+        }
+    }
+    
+    private static void validateLockRefs(String json, InventoryDBLayer dbLayer) throws SOSHibernateException, JocConfigurationException {
         Matcher m = Pattern.compile("\"lockId\"\\s*:\\s*\"([^\"]+)\"").matcher(json);
         Set<String> locks = new HashSet<>();
         while (m.find()) {
@@ -147,19 +177,14 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
             }
         }
         if (!locks.isEmpty()) {
-            SOSHibernateSession session = null;
-            try {
-                session = Globals.createSosHibernateStatelessConnection("validate");
-                InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-                List<DBItemInventoryConfiguration> dbLocks = dbLayer.getConfigurationByNames(locks.stream(), ConfigurationType.LOCK.intValue());
-                if (dbLocks == null || dbLocks.isEmpty()) {
-                    throw new JocConfigurationException("Missing assigned Locks: " + locks.toString()); 
-                } else if (dbLocks.size() < dbLocks.size()) {
-                    locks.removeAll(dbLocks.stream().map(DBItemInventoryConfiguration::getName).collect(Collectors.toSet()));
+            List<DBItemInventoryConfiguration> dbLocks = dbLayer.getConfigurationByNames(locks.stream(), ConfigurationType.LOCK.intValue());
+            if (dbLocks == null || dbLocks.isEmpty()) {
+                throw new JocConfigurationException("Missing assigned Locks: " + locks.toString());
+            } else {
+                locks.removeAll(dbLocks.stream().map(DBItemInventoryConfiguration::getName).collect(Collectors.toSet()));
+                if (!dbLocks.isEmpty()) {
                     throw new JocConfigurationException("Missing assigned Locks: " + locks.toString());
                 }
-            } finally {
-                Globals.disconnect(session);
             }
         }
     }
