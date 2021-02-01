@@ -12,6 +12,8 @@ import com.sos.joc.model.common.HistoryStateText;
 import com.sos.joc.model.job.TaskHistoryItem;
 import com.sos.joc.model.order.OrderHistoryItem;
 import com.sos.joc.model.order.OrderHistoryStateItem;
+import com.sos.joc.model.order.OrderState;
+import com.sos.joc.model.order.OrderStateText;
 
 public class HistoryMapper {
 
@@ -87,19 +89,28 @@ public class HistoryMapper {
         return HistoryPosition.getLast(item.getStartWorkflowPosition());
     }
 
-    private static HistoryState getState(Integer severity) {
+    private static HistoryState getState(Integer historySeverity) {
         HistoryState state = new HistoryState();
-        state.setSeverity(severity);
 
-        switch (severity.intValue()) {
+        OrderState os;
+        switch (historySeverity.intValue()) {
         case HistorySeverity.SUCCESSFUL:
             state.set_text(HistoryStateText.SUCCESSFUL);
+
+            os = OrdersHelper.getState(OrderStateText.FINISHED);
+            state.setSeverity(os.getSeverity());
             break;
         case HistorySeverity.INCOMPLETE:
             state.set_text(HistoryStateText.INCOMPLETE);
+
+            os = OrdersHelper.getState(OrderStateText.INPROGRESS);
+            state.setSeverity(os.getSeverity());
             break;
         case HistorySeverity.FAILED:
             state.set_text(HistoryStateText.FAILED);
+
+            os = OrdersHelper.getState(OrderStateText.FAILED);
+            state.setSeverity(os.getSeverity());
             break;
         }
         return state;
