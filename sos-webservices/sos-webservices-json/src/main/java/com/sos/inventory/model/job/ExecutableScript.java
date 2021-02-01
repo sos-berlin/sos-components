@@ -39,7 +39,7 @@ public class ExecutableScript {
      * 
      */
     @JsonProperty("TYPE")
-    private ExecutableScript.TYPE tYPE = ExecutableScript.TYPE.fromValue("ExecutableScript");
+    private ExecutableScript.TYPE tYPE = ExecutableScript.TYPE.fromValue("ScriptExecutable");
 
     /**
      * No args constructor for use in serialization
@@ -116,7 +116,8 @@ public class ExecutableScript {
 
     public enum TYPE {
 
-        ExecutableScript("ExecutableScript");
+        ExecutableScript("ExecutableScript"),
+        ScriptExecutable("ScriptExecutable");
         private final String value;
         private final static Map<String, ExecutableScript.TYPE> CONSTANTS = new HashMap<String, ExecutableScript.TYPE>();
 
