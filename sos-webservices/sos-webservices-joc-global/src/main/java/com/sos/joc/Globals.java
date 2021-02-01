@@ -5,7 +5,6 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -63,6 +62,9 @@ public class Globals {
     public static String defaultProfileAccount = null;
     public static String loginClientId = "";
     public static String loginUserName = "";
+    public static String jocVersion = "";
+    public static String apiVersion = "";
+    public static String inventoryVersion = "";
     
     public static long maxSizeOfLogsToDisplay = 1024 * 1024 * 10L; // 10MB
     public static long timeoutToDeleteTempFiles = 1000 * 60 * 3L;
@@ -238,21 +240,25 @@ public class Globals {
     private static void readJocCockpitVersion() {
         InputStream stream = null;
         String versionFile = "/version.json";
+        String version = "";
         LOGGER.info("Java version = " + System.getProperty("java.version"));
         try {
             // search in WEB-INF/classes of the web app
             stream = Globals.class.getClassLoader().getResourceAsStream(versionFile);
             if (stream != null) {
-                LOGGER.info("JOC Cockpit version = " + Json.createReader(stream).readObject().getString("version", "unknown"));
+                version = Json.createReader(stream).readObject().getString("version", "unknown");
+                LOGGER.info("JOC Cockpit version = " + version);
             } else {
                 // fallback: search in root folder of the web app 
                 stream = Globals.class.getResourceAsStream(versionFile);
                 if (stream != null) {
-                    LOGGER.info("JOC Cockpit version = " + Json.createReader(stream).readObject().getString("version", "unknown"));
+                    version = Json.createReader(stream).readObject().getString("version", "unknown");
+                    LOGGER.info("JOC Cockpit version = " + version);
                 } else {
                     LOGGER.warn(String.format("Version file %1$s not found in classpath", versionFile));
                 }
             }
+            jocVersion = version;
         } catch (Exception e) {
             LOGGER.warn(String.format("Error while reading %1$s from classpath: ", versionFile), e);
         } finally {
@@ -268,20 +274,24 @@ public class Globals {
     private static void readApiSchemaVersion() {
         InputStream stream = null;
         String versionFile = "/api-schema-version.json";
+        String version = "";
         try {
             // search in WEB-INF/classes of the web app
             stream = Globals.class.getClassLoader().getResourceAsStream(versionFile);
             if (stream != null) {
-                LOGGER.info("API schema version = " + Json.createReader(stream).readObject().getString("version", "unknown"));
+                version = Json.createReader(stream).readObject().getString("version", "unknown");
+                LOGGER.info("API schema version = " + version);
             } else {
                 // fallback: search in root folder of the web app 
                 stream = Globals.class.getResourceAsStream(versionFile);
                 if (stream != null) {
-                    LOGGER.info("API schema version = " + Json.createReader(stream).readObject().getString("version", "unknown"));
+                    version = Json.createReader(stream).readObject().getString("version", "unknown");
+                    LOGGER.info("API schema version = " + version);
                 } else {
                     LOGGER.warn(String.format("Version file %1$s not found in classpath", versionFile));
                 }
             }
+            apiVersion = version;
         } catch (Exception e) {
             LOGGER.warn(String.format("Error while reading %1$s from classpath: ", versionFile), e);
         } finally {
@@ -297,20 +307,24 @@ public class Globals {
     private static void readInventorySchemaVersion() {
         InputStream stream = null;
         String versionFile = "/inventory-schema-version.json";
+        String version = "";
         try {
             // fallback: search in root folder of the web app 
             stream = Globals.class.getClassLoader().getResourceAsStream(versionFile);
             if (stream != null) {
-                LOGGER.info("Inventory schema version = " + Json.createReader(stream).readObject().getString("version", "unknown"));
+                version = Json.createReader(stream).readObject().getString("version", "unknown");
+                LOGGER.info("Inventory schema version = " + version);
             } else {
                 // Workaround for Grizzly
                 stream = Globals.class.getResourceAsStream(versionFile);
                 if (stream != null) {
-                    LOGGER.info("Inventory schema version = " + Json.createReader(stream).readObject().getString("version", "unknown"));
+                    version = Json.createReader(stream).readObject().getString("version", "unknown");
+                    LOGGER.info("Inventory schema version = " + version);
                 } else {
                     LOGGER.warn(String.format("Version file %1$s not found in classpath", versionFile));
                 }
             }
+            inventoryVersion = version;
         } catch (Exception e) {
             LOGGER.warn(String.format("Error while reading %1$s from classpath: ", versionFile), e);
         } finally {
