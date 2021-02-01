@@ -374,7 +374,6 @@ public class HistoryEventEntry {
                 if (outcome instanceof Completed) {
                     Completed c = (Completed) outcome;
 
-                    returnCode = 0;
                     if (c.namedValues() != null) {
                         namedValues = JavaConverters.asJava(c.namedValues());
                         try {
@@ -400,6 +399,9 @@ public class HistoryEventEntry {
                             LOGGER.warn(String.format("[not handled failed type]%s", SOSString.toString(outcome)));
                         }
                     } else {
+                        if (returnCode != null) {
+                            returnCode = 0;
+                        }
                         type = OutcomeType.succeeded;
                     }
                 } else if (outcome instanceof Disrupted) {
@@ -413,7 +415,7 @@ public class HistoryEventEntry {
                 switch (type) {
                 case failed:
                 case broken:
-                    returnCode = 0;
+                    returnCode = null;
                     isSucceeded = false;
                     isFailed = true;
                     break;
@@ -430,7 +432,7 @@ public class HistoryEventEntry {
             }
 
             private void handleDisrupted(Outcome outcome, Disrupted problem) {
-                returnCode = 0;
+                returnCode = null;
                 isSucceeded = problem.isSucceeded();
                 isFailed = problem.isFailed();
                 type = OutcomeType.disrupted;

@@ -383,17 +383,17 @@ public class HistoryControllerHandler {
                 break;
 
             case OrderSuspended:
-                order = entry.getOrder();
+                order = entry.getCheckedOrder();
 
                 event = new FatEventOrderSuspended(entry.getEventId(), entry.getEventDate());
-                event.set(order.getOrderId());
+                event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition().asList());
                 break;
 
             case OrderSuspendMarked:
-                order = entry.getOrder();
+                order = entry.getCheckedOrder();
 
                 event = new FatEventOrderSuspendMarked(entry.getEventId(), entry.getEventDate());
-                event.set(order.getOrderId());
+                event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition().asList());
                 break;
 
             case OrderResumed:
@@ -404,10 +404,10 @@ public class HistoryControllerHandler {
                 break;
 
             case OrderResumeMarked:
-                order = entry.getOrder();
+                order = entry.getCheckedOrder();
 
                 event = new FatEventOrderResumeMarked(entry.getEventId(), entry.getEventDate());
-                event.set(order.getOrderId());
+                event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition().asList());
                 break;
 
             case OrderFinished:

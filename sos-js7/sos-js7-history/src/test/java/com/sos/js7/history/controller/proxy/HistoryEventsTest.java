@@ -77,7 +77,7 @@ public class HistoryEventsTest {
     private static final String CONTROLLER_URI_PRIMARY = "http://localhost:5444";
     private static final String CONTROLLER_ID = "js7.x";
     private static final int MAX_EXECUTION_TIME = 20; // seconds
-    private static final Long START_EVENT_ID = 1611853757438000L;
+    private static final Long START_EVENT_ID = 1611933032992003L;
 
     private EventFluxStopper stopper = new EventFluxStopper();
 
@@ -202,6 +202,9 @@ public class HistoryEventsTest {
 
                 JOrderJoined joj = (JOrderJoined) entry.getJOrderEvent();
                 oi = order.getOutcomeInfo(joj.outcome());
+
+                LOGGER.info("AA:" + SOSString.toString(joj.outcome()));
+
                 outcome = null;
                 if (oi != null) {
                     outcome = new FatOutcome(oi.getType(), oi.getReturnCode(), oi.isSucceeded(), oi.isFailed(), oi.getNamedValues(), oi
@@ -284,14 +287,14 @@ public class HistoryEventsTest {
                 order = entry.getOrder();
 
                 event = new FatEventOrderSuspended(entry.getEventId(), entry.getEventDate());
-                event.set(order.getOrderId());
+                event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition().asList());
                 break;
 
             case OrderSuspendMarked:
-                order = entry.getOrder();
+                order = entry.getCheckedOrder();
 
                 event = new FatEventOrderSuspendMarked(entry.getEventId(), entry.getEventDate());
-                event.set(order.getOrderId());
+                event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition().asList());
                 break;
 
             case OrderResumed:
@@ -302,10 +305,10 @@ public class HistoryEventsTest {
                 break;
 
             case OrderResumeMarked:
-                order = entry.getOrder();
+                order = entry.getCheckedOrder();
 
                 event = new FatEventOrderResumeMarked(entry.getEventId(), entry.getEventDate());
-                event.set(order.getOrderId());
+                event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition().asList());
                 break;
 
             case OrderFinished:
@@ -339,8 +342,6 @@ public class HistoryEventsTest {
 
             case OrderLockQueued:
                 order = entry.getCheckedOrder();
-
-                LOGGER.info("WI:" + SOSString.toString(order.getWorkflowInfo().getPosition().asList()));
 
                 ol = order.getOrderLock((OrderLockQueued) entry.getEvent());
                 event = new FatEventOrderLockQueued(entry.getEventId(), entry.getEventDate(), order.getOrderId(), ol, order.getWorkflowInfo()

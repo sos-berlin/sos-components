@@ -103,11 +103,12 @@ public class LogOrderContent {
         orderLog.setComplete(false);
         orderLog.setEventId(Instant.now().toEpochMilli() * 1000);
         try {
-            Path orderLogLines = Paths.get("logs", "history", mainParentHistoryId.toString(), historyId + ".log");
-            if (Files.exists(orderLogLines)) {
-                orderLog.setLogEvents(Arrays.asList(Globals.objectMapper.readValue(SOSPath.readFile(orderLogLines, Collectors.joining(",", "[", "]")),
+            Path logFile = Paths.get("logs", "history", mainParentHistoryId.toString(), historyId + ".log");
+            if (Files.exists(logFile)) {
+                LOGGER.debug(String.format("[%s]LOG file found", logFile));
+                orderLog.setLogEvents(Arrays.asList(Globals.objectMapper.readValue(SOSPath.readFile(logFile, Collectors.joining(",", "[", "]")),
                         OrderLogItem[].class)));
-                unCompressedLength = Files.size(orderLogLines);
+                unCompressedLength = Files.size(logFile);
                 // no running log if OrderFailed or OrderSuspended etc. (later with events)
                 int numOfLogEvents = orderLog.getLogEvents().size();
                 if (numOfLogEvents > 0) {
@@ -121,6 +122,8 @@ public class LogOrderContent {
                 }
                 return orderLog;
             } else {
+                LOGGER.debug(String.format("[%s]LOG file not found. try to read fron db...", logFile));
+
                 // only for the rare moment that the file is deleted and now in the database
                 return getLogFromDb();
             }

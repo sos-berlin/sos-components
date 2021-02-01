@@ -57,7 +57,6 @@ import com.sos.js7.history.controller.proxy.fatevent.FatEventControllerShutDown;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderCancelled;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderForked;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderJoined;
-import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderResumeMarked;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderResumed;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStarted;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStepProcessed;
@@ -246,8 +245,13 @@ public class HistoryModel {
                         counter.getOrder().addResumed();
                         break;
                     case OrderResumeMarked:
-                        orderResumeMarked(dbLayer, (FatEventOrderResumeMarked) entry);
+                        orderLog(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderResumeMarked);
                         counter.getOrder().addResumeMarked();
+                        break;
+                    case OrderSuspendMarked:
+                        // orderNotCompleted(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderSuspendMarked, endedOrderSteps);
+                        orderLog(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderSuspendMarked);
+                        counter.getOrder().addSuspendMarked();
                         break;
                     case OrderForked:
                         orderForked(dbLayer, (FatEventOrderForked) entry);
@@ -280,10 +284,6 @@ public class HistoryModel {
                     case OrderSuspended:
                         orderNotCompleted(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderSuspended, endedOrderSteps);
                         counter.getOrder().addSuspended();
-                        break;
-                    case OrderSuspendMarked:
-                        // orderNotCompleted(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderSuspendMarked, endedOrderSteps);
-                        counter.getOrder().addSuspendMarked();
                         break;
                     case OrderCancelled:
                         FatEventOrderCancelled oc = (FatEventOrderCancelled) entry;
@@ -673,17 +673,20 @@ public class HistoryModel {
                 endEventId = String.valueOf(eventId);
             }
 
-            if (le.isError() && SOSString.isEmpty(le.getErrorText()) && cos != null) {
-                le.setErrorText(cos.getStdErr());
+            if (le.isError() && SOSString.isEmpty(le.getErrorText())) {
+                if (cos != null && cos.getError() != null && !SOSString.isEmpty(cos.getStdErr())) {
+                    // le.setErrorText(cos.getStdErr());
+                    le.setErrorText(String.format("[%s][%s]%s", cos.getJobName(), cos.getWorkflowPosition(), cos.getStdErr()));
+                }
             }
             Date startTime = null;
             String startEventId = null;
-            String orderErrorText = null;
+            String orderErrorText = le.getErrorText();
             if (cos == null) {
-                orderErrorText = SOSString.isEmpty(le.getErrorText()) ? null : le.getErrorText();
+                // orderErrorText = SOSString.isEmpty(le.getErrorText()) ? null : le.getErrorText();
             } else {
-                orderErrorText = SOSString.isEmpty(le.getErrorText()) ? null : String.format("[%s][%s]%s", cos.getJobName(), cos
-                        .getWorkflowPosition(), le.getErrorText());
+                // orderErrorText = SOSString.isEmpty(le.getErrorText()) ? null : String.format("[%s][%s]%s", cos.getJobName(), cos
+                // .getWorkflowPosition(), le.getErrorText());
             }
 
             String stateErrorText = null;
@@ -869,18 +872,13 @@ public class HistoryModel {
         storeLog2File(le);
     }
 
-    private void orderResumeMarked(DBLayerHistory dbLayer, FatEventOrderResumeMarked entry) throws Exception {
-        // checkControllerTimezone(dbLayer);
+    private void orderLog(DBLayerHistory dbLayer, AFatEventOrderProcessed entry, EventType eventType) throws Exception {
+        checkControllerTimezone(dbLayer);
 
         CachedOrder co = getCachedOrder(dbLayer, entry.getOrderId(), entry.getEventDatetime(), entry.getEventId());
-        // co.setState(OrderStateText.RESUMEMARKED.intValue());
-        // co.setHasStates(true);
 
-        // dbLayer.updateOrderOnResumed(co.getId(), co.getState(), entry.getEventDatetime());
-        // saveOrderState(dbLayer, co, co.getState(), entry.getEventDatetime(), entry.getEventId(), null, null);
-
-        LogEntry le = new LogEntry(LogEntry.LogLevel.MAIN, EventType.OrderResumeMarked, entry.getEventDatetime(), null);
-        le.onOrder(co, null);
+        LogEntry le = new LogEntry(LogEntry.LogLevel.DETAIL, eventType, entry.getEventDatetime(), null);
+        le.onOrder(co, entry.getPosition());
         storeLog2File(le);
     }
 
