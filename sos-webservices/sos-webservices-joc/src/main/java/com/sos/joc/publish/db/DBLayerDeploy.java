@@ -1249,7 +1249,7 @@ public class DBLayerDeploy {
             }
             hql.append(" and history.controllerId = :controllerId")
                 .append(" and history.state = 0")
-                .append(" and history.path = dep.path group by history.path")
+                .append(" and history.path = dep.path")
                 .append(")");
             Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
             if (recursive) {
@@ -1263,6 +1263,7 @@ public class DBLayerDeploy {
             throw new JocSosHibernateException(e);
         }
     }
+
 
     public List<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolder (String folder) {
         return getLatestDepHistoryItemsFromFolder(folder, false);
@@ -1281,7 +1282,7 @@ public class DBLayerDeploy {
                 hql.append(" where history.folder = :folder");
             }
             hql.append(" and history.state = 0")
-                .append(" and history.path = dep.path group by history.path")
+                .append(" and history.path = dep.path")
                 .append(")");
             Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
             if (recursive) {
@@ -1313,7 +1314,7 @@ public class DBLayerDeploy {
             }
             hql.append(" and history.state = 0")
                 .append(" and operation = 0")
-                .append(" and history.path = dep.path group by history.path")
+                .append(" and history.path = dep.path")
                 .append(")");
             Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
             if (recursive) {
@@ -1341,7 +1342,7 @@ public class DBLayerDeploy {
             }
             hql.append(" and history.controllerId = dep.controllerId")
                 .append(" and history.state = 0")
-                .append(" and history.path = dep.path group by history.path")
+                .append(" and history.path = dep.path")
                 .append(")");
             Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
             if (recursive) {
@@ -1415,7 +1416,7 @@ public class DBLayerDeploy {
     public Long getLatestDeploymentFromConfigurationId(Long configurationId, Long controllerId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
         hql.append(" where inventoryConfigurationId = :configurationId");
-        hql.append(" and controllerId = :controllerId group by id");
+        hql.append(" and controllerId = :controllerId");
         Query<Long> query = session.createQuery(hql.toString());
         query.setParameter("configurationId", configurationId);
         query.setParameter("controllerId", controllerId);
@@ -1426,7 +1427,7 @@ public class DBLayerDeploy {
         if (configurationIds != null && !configurationIds.isEmpty()) {
             StringBuilder hql = new StringBuilder("select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
             hql.append(" where inventoryConfigurationId in (:configurationIds)");
-            hql.append(" and controllerId = :controllerId group by id");
+            hql.append(" and controllerId = :controllerId");
             Query<Long> query = session.createQuery(hql.toString());
             query.setParameter("configurationIds", configurationIds);
             query.setParameter("controllerId", controllerId);
@@ -1714,28 +1715,6 @@ public class DBLayerDeploy {
             throw new JocSosHibernateException(e);
         }
         return depHistoryFailed;
-    }
-    
-    public DBItemDeploymentHistory getDeployedInventory(String controllerId, Integer type, String path) {
-        try {
-            StringBuilder sql = new StringBuilder();
-            sql.append("select a.* from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as a inner join (");
-            sql.append(" select controllerId, type, path, max(id) as id from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            sql.append(" group by controllerId, type, path ) as b on a.id = b.id");
-            sql.append(" where a.operation = 0");
-            sql.append(" and a.controllerId = :controllerId");
-            sql.append(" and a.type = :type");
-            sql.append(" and a.path = :path");
-            Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
-            query.setParameter("controllerId", controllerId);
-            query.setParameter("type", type);
-            query.setParameter("path", path);
-            return session.getSingleResult(query);
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
     }
     
     public void createSubmissionForFailedDeployments(List<DBItemDeploymentHistory> failedDeployments) {
