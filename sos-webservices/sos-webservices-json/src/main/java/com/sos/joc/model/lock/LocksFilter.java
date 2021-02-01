@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.Folder;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -14,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * locksFilter
+ * workflowsFilter
  * <p>
  * 
  * 
@@ -22,30 +21,22 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "locks",
-    "regex",
+    "lockPaths",
     "folders"
 })
 public class LocksFilter {
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("controllerId")
     private String controllerId;
-    @JsonProperty("locks")
-    private List<LockPath> locks = new ArrayList<LockPath>();
-    /**
-     * filter with regex
-     * <p>
-     * regular expression to filter JobScheduler objects by matching the path
-     * 
-     */
-    @JsonProperty("regex")
-    @JsonPropertyDescription("regular expression to filter JobScheduler objects by matching the path")
-    private String regex;
+    @JsonProperty("lockPaths")
+    private List<String> lockPaths = new ArrayList<String>();
     /**
      * folders
      * <p>
@@ -56,6 +47,8 @@ public class LocksFilter {
     private List<Folder> folders = new ArrayList<Folder>();
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -66,6 +59,8 @@ public class LocksFilter {
     }
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -75,36 +70,14 @@ public class LocksFilter {
         this.controllerId = controllerId;
     }
 
-    @JsonProperty("locks")
-    public List<LockPath> getLocks() {
-        return locks;
+    @JsonProperty("lockPaths")
+    public List<String> getLockPaths() {
+        return lockPaths;
     }
 
-    @JsonProperty("locks")
-    public void setLocks(List<LockPath> locks) {
-        this.locks = locks;
-    }
-
-    /**
-     * filter with regex
-     * <p>
-     * regular expression to filter JobScheduler objects by matching the path
-     * 
-     */
-    @JsonProperty("regex")
-    public String getRegex() {
-        return regex;
-    }
-
-    /**
-     * filter with regex
-     * <p>
-     * regular expression to filter JobScheduler objects by matching the path
-     * 
-     */
-    @JsonProperty("regex")
-    public void setRegex(String regex) {
-        this.regex = regex;
+    @JsonProperty("lockPaths")
+    public void setLockPaths(List<String> lockPaths) {
+        this.lockPaths = lockPaths;
     }
 
     /**
@@ -131,12 +104,12 @@ public class LocksFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("locks", locks).append("regex", regex).append("folders", folders).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("lockPaths", lockPaths).append("folders", folders).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(regex).append(folders).append(controllerId).append(locks).toHashCode();
+        return new HashCodeBuilder().append(folders).append(controllerId).append(lockPaths).toHashCode();
     }
 
     @Override
@@ -148,7 +121,7 @@ public class LocksFilter {
             return false;
         }
         LocksFilter rhs = ((LocksFilter) other);
-        return new EqualsBuilder().append(regex, rhs.regex).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(locks, rhs.locks).isEquals();
+        return new EqualsBuilder().append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(lockPaths, rhs.lockPaths).isEquals();
     }
 
 }
