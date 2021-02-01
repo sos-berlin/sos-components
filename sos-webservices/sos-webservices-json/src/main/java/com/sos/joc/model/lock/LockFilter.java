@@ -35,6 +35,7 @@ public class LockFilter {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("lockPath")
@@ -68,6 +69,7 @@ public class LockFilter {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("lockPath")
@@ -79,6 +81,7 @@ public class LockFilter {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("lockPath")
