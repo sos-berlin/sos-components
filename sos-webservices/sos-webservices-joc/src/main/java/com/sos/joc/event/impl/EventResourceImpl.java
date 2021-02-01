@@ -98,29 +98,42 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
                 if (currentControllerId.equals(controller.getControllerId())) {
                     tasks.add(new EventCallableOfCurrentController(session, evt.getEventId(), evt.getControllerId(), accessToken, eventArrived));
                 } else {
-                    tasks.add(new EventCallable(session, evt.getEventId(), evt.getControllerId(), accessToken, eventArrived));
+                    // only current controller -> tasks.size == 1
+                    //tasks.add(new EventCallable(session, evt.getEventId(), evt.getControllerId(), accessToken, eventArrived));
+                    Event event = new Event();
+                    event.setControllerId(evt.getControllerId());
+                    event.setNotifications(null);
+                    eventList.put(evt.getControllerId(), event);
                 }
             }
             
             if (!tasks.isEmpty()) {
-                ExecutorService executorService = Executors.newFixedThreadPool(tasks.size());
-                try {
-                    for (Future<Event> result : executorService.invokeAll(tasks)) {
-                        try {
-                            Event evt = processAfter(result.get(), currentControllerId, dbCLayer);
-                            eventList.put(evt.getControllerId(), evt);
-                        } catch (Exception e) {
-                            if (e.getCause() instanceof JocException) {
-                                throw (JocException) e.getCause();
-                            } else {
-                                throw (Exception) e.getCause();
+                if (tasks.size() == 1) {
+                    Event evt = processAfter(tasks.get(0).call(), currentControllerId, dbCLayer);
+                    for (Map.Entry<String, Event> e : eventList.entrySet()) {
+                        e.getValue().setEventId(evt.getEventId());
+                    }
+                    eventList.put(evt.getControllerId(), evt);
+                } else {
+                    ExecutorService executorService = Executors.newFixedThreadPool(tasks.size());
+                    try {
+                        for (Future<Event> result : executorService.invokeAll(tasks)) {
+                            try {
+                                Event evt = processAfter(result.get(), currentControllerId, dbCLayer);
+                                eventList.put(evt.getControllerId(), evt);
+                            } catch (Exception e) {
+                                if (e.getCause() instanceof JocException) {
+                                    throw (JocException) e.getCause();
+                                } else {
+                                    throw (Exception) e.getCause();
+                                }
                             }
                         }
+                    } catch (ExecutionException e) {
+                        throw (Exception) e.getCause();
+                    } finally {
+                        executorService.shutdown();
                     }
-                } catch (ExecutionException e) {
-                    throw (Exception) e.getCause();
-                } finally {
-                    executorService.shutdown();
                 }
             }
 

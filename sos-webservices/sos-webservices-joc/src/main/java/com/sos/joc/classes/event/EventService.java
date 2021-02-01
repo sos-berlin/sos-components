@@ -188,10 +188,15 @@ public class EventService {
                 Optional<JOrder> opt = currentState.idToOrder(orderId);
                 if (opt.isPresent()) {
                     WorkflowId w = mapWorkflowId(opt.get().workflowId());
+                    LOGGER.info("OrderEvent received with Workflow: " + evt.getClass().getSimpleName());
+                    LOGGER.info("try add WorkflowEvent id/workflow: " + eventId + "/" + w.getPath());
                     addEvent(createWorkflowEventOfOrder(eventId, w));
                     if (evt instanceof OrderProcessingStarted$ || evt instanceof OrderProcessed || evt instanceof OrderProcessingKilled$) {
+                        LOGGER.info("try add JOBEvent id/workflow: " + eventId + "/" + w.getPath());
                         addEvent(createTaskEventOfOrder(eventId, w));
                     }
+                } else {
+                    LOGGER.info("OrderEvent received without Workflow: " + evt.getClass().getSimpleName());
                 }
 //                if (opt.isPresent()) {
 //                    WorkflowId w = mapWorkflowId(opt.get().workflowId());
@@ -280,9 +285,10 @@ public class EventService {
 
     private void addEvent(EventSnapshot eventSnapshot) {
         if (events.add(eventSnapshot)) {
-            if (isDebugEnabled) {
-                LOGGER.debug("add event for " + controllerId + ": " + eventSnapshot.toString());
-            }
+//            if (isDebugEnabled) {
+//                LOGGER.debug("add event for " + controllerId + ": " + eventSnapshot.toString());
+//            }
+            LOGGER.info("add Event id: " + eventSnapshot.getEventId());
             if (atLeastOneConditionIsHold()) {
                 signalAll();
             }
@@ -314,6 +320,7 @@ public class EventService {
     }
 
     protected EventServiceFactory.Mode hasOldEvent(Long eventId, EventCondition eventArrived) {
+        LOGGER.info(events.toString());
         if (events.stream().parallel().anyMatch(e -> eventId < e.getEventId())) {
             if (isDebugEnabled) {
                 LOGGER.debug("has old Event for " + controllerId + ": true");
