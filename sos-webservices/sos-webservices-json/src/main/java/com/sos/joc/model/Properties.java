@@ -28,7 +28,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "defaultProfileAccount",
     "apiVersion",
     "inventoryVersion",
-    "jocVersion",
     "forceCommentsForAuditLog",
     "comments",
     "showViews"
@@ -77,13 +76,6 @@ public class Properties {
      */
     @JsonProperty("inventoryVersion")
     private String inventoryVersion;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jocVersion")
-    private String jocVersion;
     /**
      * 
      * (Required)
@@ -229,26 +221,6 @@ public class Properties {
      * (Required)
      * 
      */
-    @JsonProperty("jocVersion")
-    public String getJocVersion() {
-        return jocVersion;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("jocVersion")
-    public void setJocVersion(String jocVersion) {
-        this.jocVersion = jocVersion;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("forceCommentsForAuditLog")
     public Boolean getForceCommentsForAuditLog() {
         return forceCommentsForAuditLog;
@@ -306,12 +278,12 @@ public class Properties {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("title", title).append("securityLevel", securityLevel).append("defaultProfileAccount", defaultProfileAccount).append("apiVersion", apiVersion).append("inventoryVersion", inventoryVersion).append("jocVersion", jocVersion).append("forceCommentsForAuditLog", forceCommentsForAuditLog).append("comments", comments).append("showViews", showViews).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("title", title).append("securityLevel", securityLevel).append("defaultProfileAccount", defaultProfileAccount).append("apiVersion", apiVersion).append("inventoryVersion", inventoryVersion).append("forceCommentsForAuditLog", forceCommentsForAuditLog).append("comments", comments).append("showViews", showViews).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(securityLevel).append(forceCommentsForAuditLog).append(apiVersion).append(comments).append(inventoryVersion).append(showViews).append(deliveryDate).append(title).append(jocVersion).append(defaultProfileAccount).toHashCode();
+        return new HashCodeBuilder().append(securityLevel).append(forceCommentsForAuditLog).append(apiVersion).append(comments).append(inventoryVersion).append(showViews).append(deliveryDate).append(title).append(defaultProfileAccount).toHashCode();
     }
 
     @Override
@@ -323,7 +295,7 @@ public class Properties {
             return false;
         }
         Properties rhs = ((Properties) other);
-        return new EqualsBuilder().append(securityLevel, rhs.securityLevel).append(forceCommentsForAuditLog, rhs.forceCommentsForAuditLog).append(apiVersion, rhs.apiVersion).append(comments, rhs.comments).append(inventoryVersion, rhs.inventoryVersion).append(showViews, rhs.showViews).append(deliveryDate, rhs.deliveryDate).append(title, rhs.title).append(jocVersion, rhs.jocVersion).append(defaultProfileAccount, rhs.defaultProfileAccount).isEquals();
+        return new EqualsBuilder().append(securityLevel, rhs.securityLevel).append(forceCommentsForAuditLog, rhs.forceCommentsForAuditLog).append(apiVersion, rhs.apiVersion).append(comments, rhs.comments).append(inventoryVersion, rhs.inventoryVersion).append(showViews, rhs.showViews).append(deliveryDate, rhs.deliveryDate).append(title, rhs.title).append(defaultProfileAccount, rhs.defaultProfileAccount).isEquals();
     }
 
 }

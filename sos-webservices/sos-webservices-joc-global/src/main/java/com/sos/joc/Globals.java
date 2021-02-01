@@ -62,7 +62,6 @@ public class Globals {
     public static String defaultProfileAccount = null;
     public static String loginClientId = "";
     public static String loginUserName = "";
-    public static String jocVersion = "";
     public static String apiVersion = "";
     public static String inventoryVersion = "";
     
@@ -258,7 +257,6 @@ public class Globals {
                     LOGGER.warn(String.format("Version file %1$s not found in classpath", versionFile));
                 }
             }
-            jocVersion = version;
         } catch (Exception e) {
             LOGGER.warn(String.format("Error while reading %1$s from classpath: ", versionFile), e);
         } finally {
