@@ -232,7 +232,7 @@ public class EventServiceFactory {
         //LOGGER.info("Clone events for " + e.toString());
         EventSnapshot es = new EventSnapshot();
         es.setAccessToken(e.getAccessToken());
-        es.setEventId(e.getEventId()); //null??
+        es.setEventId(null);
         es.setEventType(e.getEventType());
         es.setMessage(e.getMessage());
         es.setObjectType(e.getObjectType());
