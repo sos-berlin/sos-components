@@ -8,13 +8,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.model.dailyplan.DailyPlanOrderSelector;
 
 public interface IDailyPlanOrdersGenerateResource {
 
     @POST
     @Path("orders/generate")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postOrdersGenerate(@HeaderParam("X-Access-Token") String accessToken, DailyPlanOrderSelector dailyPlanOrderSelector)
+    public JOCDefaultResponse postOrdersGenerate(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes)
             throws Exception;
 }

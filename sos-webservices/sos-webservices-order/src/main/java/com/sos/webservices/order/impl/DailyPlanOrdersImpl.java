@@ -22,6 +22,7 @@ import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
+import com.sos.joc.model.dailyplan.DailyPlanOrderSelector;
 import com.sos.joc.model.dailyplan.Period;
 import com.sos.joc.model.dailyplan.PlannedOrderItem;
 import com.sos.joc.model.dailyplan.PlannedOrders;
@@ -29,6 +30,7 @@ import com.sos.joc.model.order.OrderState;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
+import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.resource.IDailyPlanOrdersResource;
 
 @Path("daily_plan")
@@ -80,11 +82,16 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
     }
 
     @Override
-    public JOCDefaultResponse postDailyPlan(String xAccessToken, DailyPlanOrderFilter dailyPlanOrderFilter) throws JocException {
+    public JOCDefaultResponse postDailyPlan(String accessToken, byte[] filterBytes) throws JocException {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, dailyPlanOrderFilter, xAccessToken, dailyPlanOrderFilter.getControllerId(),
-                    getPermissonsJocCockpit(getControllerId(xAccessToken, dailyPlanOrderFilter.getControllerId()), xAccessToken).getDailyPlan()
+
+            initLogging(API_CALL, filterBytes, accessToken);
+            JsonValidator.validateFailFast(filterBytes, DailyPlanOrderSelector.class);
+            DailyPlanOrderFilter dailyPlanOrderFilter = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
+
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, dailyPlanOrderFilter, accessToken, dailyPlanOrderFilter.getControllerId(),
+                    getPermissonsJocCockpit(getControllerId(accessToken, dailyPlanOrderFilter.getControllerId()), accessToken).getDailyPlan()
                             .getView().isStatus());
 
             if (jocDefaultResponse != null) {
@@ -128,7 +135,7 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
                     dailyPlanOrderFilter.getFilter().getWorkflowNames().add(name);
                 }
             }
-            
+
             filter.setControllerId(dailyPlanOrderFilter.getControllerId());
             filter.setListOfWorkflowNames(dailyPlanOrderFilter.getFilter().getWorkflowNames());
             filter.setListOfSubmissionIds(dailyPlanOrderFilter.getFilter().getSubmissionHistoryIds());
@@ -159,15 +166,16 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
 
             if (hasPermission) {
                 List<DBItemDailyPlanWithHistory> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanWithHistoryList(filter, 0);
-                
+
                 for (DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory : listOfPlannedOrders) {
 
                     boolean add = true;
                     PlannedOrderItem p = createPlanItem(dbItemDailyPlanWithHistory);
-                    if (dailyPlanOrderFilter.getFilter().getStates() != null && !stateFilterContainsPending && dbItemDailyPlanWithHistory.getOrderHistoryId() == null) {
+                    if (dailyPlanOrderFilter.getFilter().getStates() != null && !stateFilterContainsPending && dbItemDailyPlanWithHistory
+                            .getOrderHistoryId() == null) {
                         add = false;
                     }
- 
+
                     if (add) {
                         result.add(p);
                     }

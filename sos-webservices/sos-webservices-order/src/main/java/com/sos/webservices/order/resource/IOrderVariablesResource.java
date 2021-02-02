@@ -15,5 +15,5 @@ public interface IOrderVariablesResource {
     @POST
     @Path("variables")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postOrderVariables(@HeaderParam("X-Access-Token") String accessToken, OrderFilter orderFilter)  ;
+    public JOCDefaultResponse postOrderVariables(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes)  ;
 }

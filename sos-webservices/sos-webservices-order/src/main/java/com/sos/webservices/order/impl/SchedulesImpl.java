@@ -17,8 +17,10 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter;
 import com.sos.js7.order.initiator.db.DBLayerSchedules;
 import com.sos.js7.order.initiator.db.FilterSchedules;
+import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.initiator.model.ScheduleSelector;
 import com.sos.webservices.order.initiator.model.SchedulesList;
 import com.sos.webservices.order.initiator.model.SchedulesSelector;
@@ -30,16 +32,18 @@ public class SchedulesImpl extends JOCResourceImpl implements ISchedulesResource
     private static final Logger LOGGER = LoggerFactory.getLogger(SchedulesImpl.class);
     private static final String API_CALL = "./schedules";
 
- 
-
     @Override
-    public JOCDefaultResponse postSchedules(String xAccessToken, ScheduleSelector scheduleSelector) {
+    public JOCDefaultResponse postSchedules(String accessToken, byte[] filterBytes) {
         SOSHibernateSession sosHibernateSession = null;
         LOGGER.debug("reading list of schedules");
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, scheduleSelector, xAccessToken, scheduleSelector.getControllerId(),
-                    getPermissonsJocCockpit(getControllerId(xAccessToken, scheduleSelector.getControllerId()), xAccessToken).getWorkflow()
-                            .getExecute().isAddOrder());
+            initLogging(API_CALL, filterBytes, accessToken);
+            JsonValidator.validateFailFast(filterBytes, DailyPlanSubmissionsFilter.class);
+            ScheduleSelector scheduleSelector = Globals.objectMapper.readValue(filterBytes, ScheduleSelector.class);
+
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, scheduleSelector, accessToken, scheduleSelector.getControllerId(),
+                    getPermissonsJocCockpit(getControllerId(accessToken, scheduleSelector.getControllerId()), accessToken).getWorkflow().getExecute()
+                            .isAddOrder());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -54,7 +58,6 @@ public class SchedulesImpl extends JOCResourceImpl implements ISchedulesResource
                 scheduleSelector.getSelector().getFolders().add(root);
             }
 
-          
             SchedulesList schedulesList = new SchedulesList();
             schedulesList.setSchedules(new ArrayList<Schedule>());
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);

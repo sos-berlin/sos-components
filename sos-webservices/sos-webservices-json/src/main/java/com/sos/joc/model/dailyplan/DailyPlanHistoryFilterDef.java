@@ -21,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "haveMessage",
     "dateFrom",
     "dateTo",
+    "categories",
     "controllerIds"
 })
 public class DailyPlanHistoryFilterDef {
@@ -31,6 +32,8 @@ public class DailyPlanHistoryFilterDef {
     private String dateFrom;
     @JsonProperty("dateTo")
     private String dateTo;
+    @JsonProperty("categories")
+    private List<DailyPlanHistoryCategories> categories = null;
     @JsonProperty("controllerIds")
     private List<String> controllerIds = null;
 
@@ -64,6 +67,16 @@ public class DailyPlanHistoryFilterDef {
         this.dateTo = dateTo;
     }
 
+    @JsonProperty("categories")
+    public List<DailyPlanHistoryCategories> getCategories() {
+        return categories;
+    }
+
+    @JsonProperty("categories")
+    public void setCategories(List<DailyPlanHistoryCategories> categories) {
+        this.categories = categories;
+    }
+
     @JsonProperty("controllerIds")
     public List<String> getControllerIds() {
         return controllerIds;
@@ -76,12 +89,12 @@ public class DailyPlanHistoryFilterDef {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("haveMessage", haveMessage).append("dateFrom", dateFrom).append("dateTo", dateTo).append("controllerIds", controllerIds).toString();
+        return new ToStringBuilder(this).append("haveMessage", haveMessage).append("dateFrom", dateFrom).append("dateTo", dateTo).append("categories", categories).append("controllerIds", controllerIds).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dateTo).append(dateFrom).append(haveMessage).append(controllerIds).toHashCode();
+        return new HashCodeBuilder().append(dateTo).append(categories).append(dateFrom).append(haveMessage).append(controllerIds).toHashCode();
     }
 
     @Override
@@ -93,7 +106,7 @@ public class DailyPlanHistoryFilterDef {
             return false;
         }
         DailyPlanHistoryFilterDef rhs = ((DailyPlanHistoryFilterDef) other);
-        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(dateFrom, rhs.dateFrom).append(haveMessage, rhs.haveMessage).append(controllerIds, rhs.controllerIds).isEquals();
+        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(categories, rhs.categories).append(dateFrom, rhs.dateFrom).append(haveMessage, rhs.haveMessage).append(controllerIds, rhs.controllerIds).isEquals();
     }
 
 }

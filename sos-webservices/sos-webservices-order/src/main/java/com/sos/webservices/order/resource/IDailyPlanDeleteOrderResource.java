@@ -8,19 +8,18 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 
 public interface IDailyPlanDeleteOrderResource {
 
     @POST
     @Path("orders/delete")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postDeleteOrders(@HeaderParam("X-Access-Token") String accessToken, DailyPlanOrderFilter dailyPlanOrderFilter)
+    public JOCDefaultResponse postDeleteOrders(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes)
             throws Exception;
 
     @POST
     @Path("orders/cancel")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postCancelOrders(@HeaderParam("X-Access-Token") String accessToken, DailyPlanOrderFilter dailyPlanOrderFilter)
+    public JOCDefaultResponse postCancelOrders(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes)
             throws Exception;
 }

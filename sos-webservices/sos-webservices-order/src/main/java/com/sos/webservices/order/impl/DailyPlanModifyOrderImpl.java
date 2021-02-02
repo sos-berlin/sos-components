@@ -48,6 +48,7 @@ import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.DBLayerOrderVariables;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterOrderVariables;
+import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.initiator.model.NameValuePair;
 import com.sos.webservices.order.resource.IDailyPlanModifyOrder;
 
@@ -58,13 +59,18 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
     private static final String API_CALL_MODIFY_ORDER = "./daily_plan/orders/modify";
 
     @Override
-    public JOCDefaultResponse postModifyOrder(String xAccessToken, DailyPlanModifyOrder dailyplanModifyOrder) throws JocException {
+    public JOCDefaultResponse postModifyOrder(String accessToken,  byte[] filterBytes) throws JocException {
+           
         LOGGER.debug("Change start time for orders from the daily plan");
 
         try {
+            initLogging(API_CALL_MODIFY_ORDER, filterBytes, accessToken);
+            JsonValidator.validateFailFast(filterBytes, DailyPlanModifyOrder.class);
+            DailyPlanModifyOrder dailyplanModifyOrder = Globals.objectMapper.readValue(filterBytes, DailyPlanModifyOrder.class);
 
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_MODIFY_ORDER, dailyplanModifyOrder, xAccessToken, dailyplanModifyOrder
-                    .getControllerId(), getPermissonsJocCockpit(getControllerId(xAccessToken, dailyplanModifyOrder.getControllerId()), xAccessToken)
+
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL_MODIFY_ORDER, dailyplanModifyOrder, accessToken, dailyplanModifyOrder
+                    .getControllerId(), getPermissonsJocCockpit(getControllerId(accessToken, dailyplanModifyOrder.getControllerId()), accessToken)
                             .getDailyPlan().getView().isStatus());
 
             if (jocDefaultResponse != null) {

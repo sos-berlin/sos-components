@@ -29,12 +29,12 @@ public class DailyPlanHistoryFilter {
     /**
      * Daily Plan  Submissions Filter Definition
      * <p>
-     * Define the filter To get submissions from the daily plan
+     * Define the filter To get the daily plan history
      * 
      */
     @JsonProperty("filter")
-    @JsonPropertyDescription("Define the filter To get submissions from the daily plan")
-    private DailyPlanSubmissionsFilterDef filter;
+    @JsonPropertyDescription("Define the filter To get the daily plan history")
+    private DailyPlanHistoryFilterDef filter;
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
@@ -56,22 +56,22 @@ public class DailyPlanHistoryFilter {
     /**
      * Daily Plan  Submissions Filter Definition
      * <p>
-     * Define the filter To get submissions from the daily plan
+     * Define the filter To get the daily plan history
      * 
      */
     @JsonProperty("filter")
-    public DailyPlanSubmissionsFilterDef getFilter() {
+    public DailyPlanHistoryFilterDef getFilter() {
         return filter;
     }
 
     /**
      * Daily Plan  Submissions Filter Definition
      * <p>
-     * Define the filter To get submissions from the daily plan
+     * Define the filter To get the daily plan history
      * 
      */
     @JsonProperty("filter")
-    public void setFilter(DailyPlanSubmissionsFilterDef filter) {
+    public void setFilter(DailyPlanHistoryFilterDef filter) {
         this.filter = filter;
     }
 

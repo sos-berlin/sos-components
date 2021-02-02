@@ -36,10 +36,12 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
+import com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter;
 import com.sos.js7.order.initiator.OrderInitiatorRunner;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
+import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.resource.IDailyPlanSubmitOrderResource;
 
 @Path("daily_plan")
@@ -120,7 +122,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
                         dailyPlanOrderFilter.getFilter().getWorkflowNames().add(name);
                     }
                 }
-                
+
                 filter.setListOfWorkflowNames(dailyPlanOrderFilter.getFilter().getWorkflowNames());
                 filter.setListOfScheduleNames(dailyPlanOrderFilter.getFilter().getScheduleNames());
 
@@ -140,11 +142,15 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
     }
 
     @Override
-    public JOCDefaultResponse postSubmitOrders(String xAccessToken, DailyPlanOrderFilter dailyPlanOrderFilter) throws JocException {
+    public JOCDefaultResponse postSubmitOrders(String accessToken, byte[] filterBytes) throws JocException {
         LOGGER.debug("Submit orders to JS7 controller");
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, dailyPlanOrderFilter, xAccessToken, dailyPlanOrderFilter.getControllerId(),
-                    getPermissonsJocCockpit(this.getControllerId(xAccessToken, dailyPlanOrderFilter.getControllerId()), xAccessToken).getDailyPlan()
+            initLogging(API_CALL, filterBytes, accessToken);
+            JsonValidator.validateFailFast(filterBytes, DailyPlanSubmissionsFilter.class);
+            DailyPlanOrderFilter dailyPlanOrderFilter = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
+
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, dailyPlanOrderFilter, accessToken, dailyPlanOrderFilter.getControllerId(),
+                    getPermissonsJocCockpit(this.getControllerId(accessToken, dailyPlanOrderFilter.getControllerId()), accessToken).getDailyPlan()
                             .getView().isStatus());
 
             if (jocDefaultResponse != null) {
@@ -169,9 +175,6 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
         }
     }
 
-    @Override
-    public JOCDefaultResponse postSubmitOrders2(String accessToken, DailyPlanOrderFilter dailyPlanOrderFilter) throws Exception {
-        return postSubmitOrders(accessToken, dailyPlanOrderFilter);
-    }
+   
 
 }

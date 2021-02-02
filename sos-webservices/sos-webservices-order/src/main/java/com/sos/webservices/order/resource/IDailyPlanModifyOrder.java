@@ -15,7 +15,7 @@ public interface IDailyPlanModifyOrder {
     @POST
     @Path("orders/modify")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postModifyOrder(@HeaderParam("X-Access-Token") String accessToken, DailyPlanModifyOrder dailyPlanModifyOrder)
+    public JOCDefaultResponse postModifyOrder(@HeaderParam("X-Access-Token") String accessToken,  byte[] filterBytes)
             throws Exception;
  
 

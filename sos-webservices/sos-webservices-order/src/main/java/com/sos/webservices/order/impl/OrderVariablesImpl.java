@@ -15,9 +15,11 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.orders.DBItemDailyPlanVariables;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter;
 import com.sos.joc.model.order.OrderFilter;
 import com.sos.js7.order.initiator.db.DBLayerOrderVariables;
 import com.sos.js7.order.initiator.db.FilterOrderVariables;
+import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.initiator.model.NameValuePair;
 import com.sos.webservices.order.initiator.model.OrderVariables;
 import com.sos.webservices.order.resource.IOrderVariablesResource;
@@ -29,12 +31,16 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
     private static final String API_CALL = "./orders/variables";
 
     @Override
-    public JOCDefaultResponse postOrderVariables(String xAccessToken, OrderFilter orderFilter) {
+    public JOCDefaultResponse postOrderVariables(String accessToken, byte[] filterBytes) {
         LOGGER.debug("list order variables");
         SOSHibernateSession sosHibernateSession = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, "", xAccessToken, orderFilter.getControllerId(), getPermissonsJocCockpit(
-                    getControllerId(xAccessToken,orderFilter.getControllerId()), xAccessToken).getOrder().getView().isStatus());
+            initLogging(API_CALL, filterBytes, accessToken);
+            JsonValidator.validateFailFast(filterBytes, DailyPlanSubmissionsFilter.class);
+            OrderFilter orderFilter = Globals.objectMapper.readValue(filterBytes, OrderFilter.class);
+
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, "", accessToken, orderFilter.getControllerId(), getPermissonsJocCockpit(
+                    getControllerId(accessToken, orderFilter.getControllerId()), accessToken).getOrder().getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -42,10 +48,10 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
 
             checkRequiredParameter("orderId", orderFilter.getOrderId());
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            
+
             DBLayerOrderVariables dbLayerOrderVariables = new DBLayerOrderVariables(sosHibernateSession);
             FilterOrderVariables filterOrderVariables = new FilterOrderVariables();
-             
+
             filterOrderVariables.setOrderId(orderFilter.getOrderId());
             OrderVariables variables = new OrderVariables();
             List<DBItemDailyPlanVariables> listOfOrderVariables = dbLayerOrderVariables.getOrderVariables(filterOrderVariables, 0);

@@ -21,9 +21,9 @@ import com.sos.js7.order.initiator.OrderInitiatorRunner;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
 import com.sos.js7.order.initiator.ScheduleSource;
 import com.sos.js7.order.initiator.ScheduleSourceDB;
-import com.sos.js7.order.initiator.ScheduleSourceFile;
 import com.sos.js7.order.initiator.classes.DailyPlanHelper;
 import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
+import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.resource.IDailyPlanOrdersGenerateResource;
 
 @Path("daily_plan")
@@ -33,11 +33,15 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
     private static final String API_CALL = "./daily_plan/orders/generate";
 
     @Override
-    public JOCDefaultResponse postOrdersGenerate(String xAccessToken, DailyPlanOrderSelector dailyPlanOrderSelector) throws JocException {
+    public JOCDefaultResponse postOrdersGenerate(String accessToken, byte[] filterBytes) throws JocException {
         LOGGER.debug("Generate the orders for the daily plan");
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, dailyPlanOrderSelector, xAccessToken, dailyPlanOrderSelector.getControllerId(),
-                    getPermissonsJocCockpit(getControllerId(xAccessToken, dailyPlanOrderSelector.getControllerId()), xAccessToken).getDailyPlan()
+            initLogging(API_CALL, filterBytes, accessToken);
+            JsonValidator.validateFailFast(filterBytes, DailyPlanOrderSelector.class);
+            DailyPlanOrderSelector dailyPlanOrderSelector = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderSelector.class);
+
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, dailyPlanOrderSelector, accessToken, dailyPlanOrderSelector.getControllerId(),
+                    getPermissonsJocCockpit(getControllerId(accessToken, dailyPlanOrderSelector.getControllerId()), accessToken).getDailyPlan()
                             .getView().isStatus());
 
             if (jocDefaultResponse != null) {
@@ -54,7 +58,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
                 dailyPlanOrderSelector.getSelector().setFolders(new ArrayList<Folder>());
                 dailyPlanOrderSelector.getSelector().getFolders().add(root);
             }
-            
+
             Set<Folder> folders = addPermittedFolder(dailyPlanOrderSelector.getSelector().getFolders());
             dailyPlanOrderSelector.getSelector().setFolders(new ArrayList<Folder>());
             for (Folder folder : folders) {
@@ -80,13 +84,14 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
                 }
             }
 
-            OrderInitiatorGlobals.dailyPlanDate =  DailyPlanHelper.getDailyPlanDateAsDate(DailyPlanHelper.stringAsDate(dailyPlanOrderSelector.getDailyPlanDate()).getTime());
+            OrderInitiatorGlobals.dailyPlanDate = DailyPlanHelper.getDailyPlanDateAsDate(DailyPlanHelper.stringAsDate(dailyPlanOrderSelector
+                    .getDailyPlanDate()).getTime());
             for (String controllerId : dailyPlanOrderSelector.getControllerIds()) {
                 orderInitiatorSettings.setControllerId(controllerId);
 
                 ScheduleSource scheduleSource = null;
                 scheduleSource = new ScheduleSourceDB(dailyPlanOrderSelector);
- 
+
                 orderInitiatorRunner.readSchedules(scheduleSource);
                 orderInitiatorRunner.generateDailyPlan(dailyPlanOrderSelector.getDailyPlanDate(), dailyPlanOrderSelector.getWithSubmit());
 

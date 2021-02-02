@@ -22,6 +22,7 @@ import com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissionsItem;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlanSubmissions;
 import com.sos.js7.order.initiator.db.FilterDailyPlanSubmissions;
+import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.resource.IDailyPlanSubmissionsResource;
 
 @Path("daily_plan")
@@ -31,13 +32,18 @@ public class DailyPlanSubmissionsImpl extends JOCResourceImpl implements IDailyP
     private static final String API_CALL = "./daily_plan/submissions";
 
     @Override
-    public JOCDefaultResponse postDailyPlanSubmissions(String xAccessToken, DailyPlanSubmissionsFilter dailyPlanSubmissionHistoryFilter)
-            throws JocException {
+    public JOCDefaultResponse postDailyPlanSubmissions(String accessToken, byte[] filterBytes) throws JocException {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, dailyPlanSubmissionHistoryFilter, xAccessToken, getControllerId(xAccessToken,
+
+            initLogging(API_CALL, filterBytes, accessToken);
+            JsonValidator.validateFailFast(filterBytes, DailyPlanSubmissionsFilter.class);
+            DailyPlanSubmissionsFilter dailyPlanSubmissionHistoryFilter = Globals.objectMapper.readValue(filterBytes,
+                    DailyPlanSubmissionsFilter.class);
+
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, dailyPlanSubmissionHistoryFilter, accessToken, getControllerId(accessToken,
                     dailyPlanSubmissionHistoryFilter.getControllerId()), getPermissonsJocCockpit(dailyPlanSubmissionHistoryFilter.getControllerId(),
-                            xAccessToken).getDailyPlan().getView().isStatus());
+                            accessToken).getDailyPlan().getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -98,4 +104,61 @@ public class DailyPlanSubmissionsImpl extends JOCResourceImpl implements IDailyP
         }
     }
 
+    @Override
+    public JOCDefaultResponse postDeleteDailyPlanSubmissions(String accessToken, byte[] filterBytes) throws JocException {
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+            initLogging(API_CALL, filterBytes, accessToken);
+            JsonValidator.validateFailFast(filterBytes, DailyPlanSubmissionsFilter.class);
+            DailyPlanSubmissionsFilter dailyPlanSubmissionHistoryFilter = Globals.objectMapper.readValue(filterBytes,
+                    DailyPlanSubmissionsFilter.class);
+
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, dailyPlanSubmissionHistoryFilter, accessToken, getControllerId(accessToken,
+                    dailyPlanSubmissionHistoryFilter.getControllerId()), getPermissonsJocCockpit(dailyPlanSubmissionHistoryFilter.getControllerId(),
+                            accessToken).getDailyPlan().getView().isStatus());
+
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+
+            this.checkRequiredParameter("filter", dailyPlanSubmissionHistoryFilter.getFilter());
+            this.checkRequiredParameter("dateTo", dailyPlanSubmissionHistoryFilter.getFilter().getDateTo());
+
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+
+            DBLayerDailyPlanSubmissions dbLayerDailyPlan = new DBLayerDailyPlanSubmissions(sosHibernateSession);
+
+            sosHibernateSession.setAutoCommit(false);
+            Globals.beginTransaction(sosHibernateSession);
+
+            FilterDailyPlanSubmissions filter = new FilterDailyPlanSubmissions();
+            filter.setControllerId(dailyPlanSubmissionHistoryFilter.getControllerId());
+            if (dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom() != null) {
+                Date fromDate = JobSchedulerDate.getDateFrom(dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom(),
+                        dailyPlanSubmissionHistoryFilter.getTimeZone());
+                filter.setDateFrom(fromDate);
+            }
+            if (dailyPlanSubmissionHistoryFilter.getFilter().getDateTo() != null) {
+                Date toDate = JobSchedulerDate.getDateTo(dailyPlanSubmissionHistoryFilter.getFilter().getDateTo(), dailyPlanSubmissionHistoryFilter
+                        .getTimeZone());
+                filter.setDateTo(toDate);
+            }
+
+            dbLayerDailyPlan.delete(filter);
+            Globals.commit(sosHibernateSession);
+
+            return JOCDefaultResponse.responseStatusJSOk(new Date());
+
+        } catch (JocException e) {
+            LOGGER.error(getJocError().getMessage(), e);
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            e.printStackTrace();
+            LOGGER.error(getJocError().getMessage(), e);
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
+    }
 }

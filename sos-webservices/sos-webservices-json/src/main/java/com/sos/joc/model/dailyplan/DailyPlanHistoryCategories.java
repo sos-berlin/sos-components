@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum DailyPlanHistoryCategories {
 
     SUBMITTED("SUBMITTED"),
+    NOT_SUBMITTED("NOT-SUBMITTED"),
     CANCELED("CANCELED"),
     ERROR("ERROR"),
     WARN("WARN");

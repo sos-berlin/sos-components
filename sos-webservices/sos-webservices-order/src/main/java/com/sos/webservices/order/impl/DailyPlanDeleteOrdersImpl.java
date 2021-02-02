@@ -1,5 +1,6 @@
 package com.sos.webservices.order.impl;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -12,7 +13,9 @@ import javax.ws.rs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -35,6 +38,7 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
+import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.resource.IDailyPlanDeleteOrderResource;
 
 @Path("daily_plan")
@@ -138,12 +142,16 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
     }
 
     @Override
-    public JOCDefaultResponse postDeleteOrders(String xAccessToken, DailyPlanOrderFilter dailyPlanOrderFilter) throws JocException {
+    public JOCDefaultResponse postDeleteOrders(String accessToken,byte[] filterBytes)  {
+ 
         LOGGER.debug("Delete orders from the daily plan");
         try {
+            initLogging(API_CALL_DELETE, filterBytes, accessToken);
+            DailyPlanOrderFilter dailyPlanOrderFilter = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
+            JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_DELETE, dailyPlanOrderFilter, xAccessToken, dailyPlanOrderFilter.getControllerId(),
-                    getPermissonsJocCockpit(getControllerId(xAccessToken, dailyPlanOrderFilter.getControllerId()), xAccessToken).getDailyPlan()
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL_DELETE, dailyPlanOrderFilter, accessToken, dailyPlanOrderFilter.getControllerId(),
+                    getPermissonsJocCockpit(getControllerId(accessToken, dailyPlanOrderFilter.getControllerId()), accessToken).getDailyPlan()
                             .getView().isStatus());
 
             if (jocDefaultResponse != null) {
@@ -168,11 +176,16 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
     }
 
     @Override
-    public JOCDefaultResponse postCancelOrders(String xAccessToken, DailyPlanOrderFilter dailyPlanOrderFilter) throws JocException {
+    public JOCDefaultResponse postCancelOrders(String accessToken, byte[] filterBytes) throws JocException {
         LOGGER.debug("cancel orders from controller");
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_CANCEL, dailyPlanOrderFilter, xAccessToken, dailyPlanOrderFilter.getControllerId(),
-                    getPermissonsJocCockpit(dailyPlanOrderFilter.getControllerId(), xAccessToken).getDailyPlan().getView().isStatus());
+            initLogging(API_CALL_CANCEL, filterBytes, accessToken);
+            DailyPlanOrderFilter dailyPlanOrderFilter = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
+            JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilter.class);
+
+            
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL_CANCEL, dailyPlanOrderFilter, accessToken, dailyPlanOrderFilter.getControllerId(),
+                    getPermissonsJocCockpit(dailyPlanOrderFilter.getControllerId(), accessToken).getDailyPlan().getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

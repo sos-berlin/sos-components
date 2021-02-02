@@ -1,17 +1,20 @@
 package com.sos.js7.order.initiator.db;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.db.SOSFilter;
 
+
 public class FilterDailyPlanHistory extends SOSFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterDailyPlanHistory.class);
     private String controllerId;
-    private String category;
+    private List<String> categories;
     private String orderId;
     private Date dailyPlanDate;
     private Date dailyPlanDateFrom;
@@ -25,12 +28,11 @@ public class FilterDailyPlanHistory extends SOSFilter {
         this.controllerId = controllerId;
     }
     
-    public String getCategory() {
-        return category;
-    }
-    
-    public void setCategory(String category) {
-        this.category = category;
+    public void addCategory(String category) {
+        if (categories == null) {
+            categories = new ArrayList<String> ();
+        }
+        categories.add(category);
     }
     
     public Date getDailyPlanDate() {
@@ -69,6 +71,11 @@ public class FilterDailyPlanHistory extends SOSFilter {
     
     public void setOrderId(String orderId) {
         this.orderId = orderId;
+    }
+
+    
+    public List<String> getCategories() {
+        return categories;
     }
         
    

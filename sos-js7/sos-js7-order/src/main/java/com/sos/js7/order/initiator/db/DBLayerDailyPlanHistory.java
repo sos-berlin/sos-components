@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.orders.DBItemDailyPlanHistory;
 
@@ -56,8 +57,13 @@ public class DBLayerDailyPlanHistory {
             and = " and ";
         }
 
-        if (filter.getCategory() != null && !"".equals(filter.getCategory())) {
+        if (filter.getCategories() != null && filter.getCategories().size() == 1) {
             where += and + " category = :category";
+            and = " and ";
+        }
+        
+        if (filter.getCategories() != null && filter.getCategories().size() > 1) {
+            where += and + SearchStringHelper.getStringListSql(filter.getCategories(), "category");
             and = " and ";
         }
 
@@ -87,8 +93,8 @@ public class DBLayerDailyPlanHistory {
             query.setParameter("orderId", filter.getOrderId());
         }
 
-        if (filter.getCategory() != null && !"".equals(filter.getCategory())) {
-            query.setParameter("category", filter.getCategory());
+        if (filter.getCategories() != null && filter.getCategories().size() == 1) {
+            query.setParameter("category", filter.getCategories().get(0));
         }
 
         return query;

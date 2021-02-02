@@ -8,18 +8,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 
 public interface IDailyPlanSubmitOrderResource {
 
-    @POST
-    @Path("submit_orders")
-    @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postSubmitOrders2(@HeaderParam("X-Access-Token") String accessToken,
-            DailyPlanOrderFilter dailyPlanOrderFilter) throws Exception;
+   
     @POST
     @Path("orders/submit")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postSubmitOrders(@HeaderParam("X-Access-Token") String accessToken,
-            DailyPlanOrderFilter dailyPlanOrderFilter) throws Exception;
+    public JOCDefaultResponse postSubmitOrders(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes) throws Exception;
 }

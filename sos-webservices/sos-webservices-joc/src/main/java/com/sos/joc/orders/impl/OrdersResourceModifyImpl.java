@@ -187,7 +187,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             for (String orderId : modifyOrders.getOrderIds()) {
                 FilterDailyPlanHistory filterDailyPlanHistory = new FilterDailyPlanHistory();
                 filterDailyPlanHistory.setControllerId(modifyOrders.getControllerId());
-                filterDailyPlanHistory.setCategory(DailyPlanHistoryCategories.SUBMITTED.name());
+                filterDailyPlanHistory.addCategory(DailyPlanHistoryCategories.SUBMITTED.name());
                 filterDailyPlanHistory.setOrderId(orderId);
                 List<DBItemDailyPlanHistory> listOfPlanHistory = dbLayerDailyPlanHistory.getDailyPlanHistory(filterDailyPlanHistory, 0);
                 if (listOfPlanHistory.size() > 0) {
