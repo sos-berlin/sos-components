@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.controller.model.workflow.WorkflowId;
-import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.event.EventServiceFactory.EventCondition;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyUser;
@@ -36,7 +35,6 @@ import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.event.EventSnapshot;
 import com.sos.joc.model.event.EventType;
-import com.sos.joc.model.order.OrderStateText;
 
 import js7.controller.data.events.AgentRefStateEvent;
 import js7.controller.data.events.ControllerEvent;
@@ -206,9 +204,8 @@ public class EventService {
                 } else {
 //                    LOGGER.info("OrderEvent received without Workflow: " + evt.getClass().getSimpleName());
                     if (evt instanceof OrderRemoved$) {
-                        LOGGER.info("OrderRemoved received");
                         if (unremovedTerminatedOrders.containsKey(orderId.string())) {
-                            LOGGER.info("try add WorkflowEvent: " + eventId + "/" + unremovedTerminatedOrders.get(orderId.string()));
+//                            LOGGER.info("try add WorkflowEvent: " + eventId + "/" + unremovedTerminatedOrders.get(orderId.string()));
                             addEvent(createWorkflowEventOfOrder(eventId, unremovedTerminatedOrders.get(orderId.string())));
                             unremovedTerminatedOrders.remove(orderId.string());
                         }
