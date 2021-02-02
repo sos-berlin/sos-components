@@ -76,7 +76,7 @@ public class EventServiceFactory {
             try {
                 this.eventArrived.signalAll();
                 this.hold.set(false);
-                LOGGER.info("signalAll");
+//                LOGGER.info("signalAll");
             } catch (IllegalMonitorStateException e) {
                 LOGGER.warn("IllegalMonitorStateException at signalAll");
             } catch (Exception e) {
@@ -127,9 +127,9 @@ public class EventServiceFactory {
         events.setControllerId(controllerId);
         events.setEventId(eventId); //default
         EventService service = null;
-        //if (isDebugEnabled) {
-            LOGGER.info("Listen Events of '" + controllerId + "' since " + eventId);
-        //}
+        if (isDebugEnabled) {
+            LOGGER.debug("Listen Events of '" + controllerId + "' since " + eventId);
+        }
         try {
             service = getEventService(controllerId);
             //service.addCondition(eventArrived);
@@ -207,7 +207,7 @@ public class EventServiceFactory {
         try {
             if (eventArrived.isUnHold() && lock.tryLock(200L, TimeUnit.MILLISECONDS)) { // with timeout
                 try {
-                    LOGGER.info("Waiting for Events ");
+//                    LOGGER.info("Waiting for Events ");
                     service.addCondition(eventArrived);
                     eventArrived.await();
                 } catch (InterruptedException e1) {
