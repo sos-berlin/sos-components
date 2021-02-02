@@ -89,7 +89,7 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
                 Stream<Lock> stream = contents.stream().map(c -> {
                     try {
                         Lock item = Globals.objectMapper.readValue(c.getContent(), Lock.class);
-                        // item.setId(JocInventory.pathToName(c.getPath()));
+                        item.setPath(c.getPath());
                         return item;
                     } catch (Exception e) {
                         // TODO

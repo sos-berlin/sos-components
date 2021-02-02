@@ -24,6 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "TYPE",
     "id",
     "limit",
+    "path",
     "documentationPath",
     "title"
 })
@@ -59,6 +60,15 @@ public class Lock implements IConfigurationObject, IDeployObject
      * absolute path of an object.
      * 
      */
+    @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of an object.")
+    private String path;
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
     @JsonProperty("documentationPath")
     @JsonPropertyDescription("absolute path of an object.")
     private String documentationPath;
@@ -81,15 +91,17 @@ public class Lock implements IConfigurationObject, IDeployObject
     /**
      * 
      * @param documentationPath
+     * @param path
      * @param limit
      * @param id
      * 
      * @param title
      */
-    public Lock(String id, Integer limit, String documentationPath, String title) {
+    public Lock(String id, Integer limit, String path, String documentationPath, String title) {
         super();
         this.id = id;
         this.limit = limit;
+        this.path = path;
         this.documentationPath = documentationPath;
         this.title = title;
     }
@@ -153,6 +165,28 @@ public class Lock implements IConfigurationObject, IDeployObject
      * absolute path of an object.
      * 
      */
+    @JsonProperty("path")
+    public String getPath() {
+        return path;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
+    @JsonProperty("path")
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
     @JsonProperty("documentationPath")
     public String getDocumentationPath() {
         return documentationPath;
@@ -193,12 +227,12 @@ public class Lock implements IConfigurationObject, IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("id", id).append("limit", limit).append("documentationPath", documentationPath).append("title", title).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("id", id).append("limit", limit).append("path", path).append("documentationPath", documentationPath).append("title", title).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(limit).append(documentationPath).append(id).append(tYPE).append(title).toHashCode();
+        return new HashCodeBuilder().append(documentationPath).append(path).append(limit).append(id).append(tYPE).append(title).toHashCode();
     }
 
     @Override
@@ -210,7 +244,7 @@ public class Lock implements IConfigurationObject, IDeployObject
             return false;
         }
         Lock rhs = ((Lock) other);
-        return new EqualsBuilder().append(limit, rhs.limit).append(documentationPath, rhs.documentationPath).append(id, rhs.id).append(tYPE, rhs.tYPE).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(path, rhs.path).append(limit, rhs.limit).append(id, rhs.id).append(tYPE, rhs.tYPE).append(title, rhs.title).isEquals();
     }
 
 }

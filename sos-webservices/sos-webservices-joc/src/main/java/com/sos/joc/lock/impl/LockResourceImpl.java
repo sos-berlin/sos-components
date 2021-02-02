@@ -55,10 +55,10 @@ public class LockResourceImpl extends JOCResourceImpl implements ILockResource {
             if (content != null && content.getContent() != null && !content.getContent().isEmpty()) {
                 lock = Globals.objectMapper.readValue(content.getContent(), com.sos.inventory.model.lock.Lock.class);
             }
-
             if (lock == null) {
                 throw new DBMissingDataException(String.format("Lock '%s' doesn't exist", filter.getLockPath()));
             }
+            lock.setPath(content.getPath());
 
             Lock answer = new Lock();
             answer.setDeliveryDate(new Date());
