@@ -2,6 +2,7 @@ package com.sos.joc.event.impl;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -24,17 +25,26 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.event.EventCallable;
 import com.sos.joc.classes.event.EventCallableOfCurrentController;
 import com.sos.joc.classes.event.EventServiceFactory;
 import com.sos.joc.classes.event.EventServiceFactory.EventCondition;
+import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.event.resource.IEventResource;
+import com.sos.joc.exceptions.DBConnectionRefusedException;
+import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.exceptions.DBMissingDataException;
+import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
+import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
+import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.SessionNotExistException;
@@ -44,13 +54,15 @@ import com.sos.joc.model.event.EventSnapshot;
 import com.sos.joc.model.event.EventType;
 import com.sos.joc.model.event.Events;
 import com.sos.joc.model.event.RegisterEvent;
+import com.sos.joc.model.order.OrderStateText;
 import com.sos.schema.JsonValidator;
+
+import js7.proxy.javaapi.data.workflow.JWorkflowId;
 
 @Path("events")
 public class EventResourceImpl extends JOCResourceImpl implements IEventResource {
 
     private static final String API_CALL = "./events";
-//    private static final List<EventType> eventTypesforNameToPathMapping = Arrays.asList(EventType.LOCK, EventType.WORKFLOW);
     private static final Logger LOGGER = LoggerFactory.getLogger(EventResourceImpl.class);
     
 
@@ -64,7 +76,6 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
         
         try {
             initLogging(API_CALL, inBytes, accessToken);
-            // TODO register RegisterEvent at validator?
             JsonValidator.validateFailFast(inBytes, RegisterEvent.class);
             RegisterEvent in = Globals.objectMapper.readValue(inBytes, RegisterEvent.class);
             JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getJS7Controller().getView().isStatus());
@@ -86,23 +97,25 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             final DeployedConfigurationDBLayer dbCLayer = new DeployedConfigurationDBLayer(connection);
             
-            //Long defaultEventId = Instant.now().toEpochMilli() * 1000;
             long defaultEventId = Instant.now().getEpochSecond();
             List<EventCallable> tasks = new ArrayList<EventCallable>();
             
             String currentControllerId = in.getControllers().get(0).getControllerId();
             EventCondition eventArrived = EventServiceFactory.createCondition();
             for (Controller controller : in.getControllers()) {
+                boolean firstCall = controller.getEventId() == null || controller.getEventId() <= 0L;
                 Event evt = initEvent(controller, defaultEventId);
                 eventList.put(controller.getControllerId(), evt);
                 if (currentControllerId.equals(controller.getControllerId())) {
-                    tasks.add(new EventCallableOfCurrentController(session, evt.getEventId(), evt.getControllerId(), accessToken, eventArrived));
+                    tasks.add(new EventCallableOfCurrentController(session, evt.getEventId(), evt.getControllerId(), accessToken, eventArrived,
+                            getTerminatedOrders(evt.getControllerId(), firstCall)));
                 } else {
                     // only current controller -> tasks.size == 1
                     //tasks.add(new EventCallable(session, evt.getEventId(), evt.getControllerId(), accessToken, eventArrived));
                     Event event = new Event();
                     event.setControllerId(evt.getControllerId());
                     event.setNotifications(null);
+                    event.setEventId(0L);
                     eventList.put(evt.getControllerId(), event);
                 }
             }
@@ -110,9 +123,6 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             if (!tasks.isEmpty()) {
                 if (tasks.size() == 1) {
                     Event evt = processAfter(tasks.get(0).call(), currentControllerId, dbCLayer);
-                    for (Map.Entry<String, Event> e : eventList.entrySet()) {
-                        e.getValue().setEventId(evt.getEventId());
-                    }
                     eventList.put(evt.getControllerId(), evt);
                 } else {
                     ExecutorService executorService = Executors.newFixedThreadPool(tasks.size());
@@ -180,16 +190,6 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             return evt;
         }
         
-        // map workflow name to workflow path etc.
-//        Map<EventType, Set<String>> m = evt.getEventSnapshots().stream().filter(e -> eventTypesforNameToPathMapping.contains(e.getObjectType())).map(
-//                e -> {
-//                    if (e.getWorkflow() != null) {
-//                        e.setPath(e.getWorkflow().getPath());
-//                    }
-//                    return e;
-//                }).filter(e -> e.getPath() != null).collect(Collectors.groupingBy(EventSnapshot::getObjectType, Collectors.mapping(
-//                        EventSnapshot::getPath, Collectors.toSet())));
-        
         Set<String> workflowNames = evt.getEventSnapshots().stream().filter(e -> EventType.WORKFLOW.equals(e.getObjectType())).map(e -> (e
                 .getWorkflow() != null) ? e.getWorkflow().getPath() : e.getPath()).filter(Objects::nonNull).collect(Collectors.toSet());
 
@@ -200,8 +200,6 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
         Map<String, String> namePathLockMap = null;
         try {
             if (dbCLayer != null) {
-//                namePathWorkflowMap = dbCLayer.getNamePathMapping(evt.getControllerId(), m.get(EventType.WORKFLOW), DeployType.WORKFLOW
-//                    .intValue());
                 namePathWorkflowMap = dbCLayer.getNamePathMapping(evt.getControllerId(), workflowNames, DeployType.WORKFLOW
                         .intValue());
             }
@@ -210,7 +208,6 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
         }
         try {
             if (dbCLayer != null) {
-//                namePathLockMap = dbCLayer.getNamePathMapping(evt.getControllerId(), m.get(EventType.LOCK), DeployType.LOCK.intValue());
                 namePathLockMap = dbCLayer.getNamePathMapping(evt.getControllerId(), lockNames, DeployType.LOCK.intValue());
             }
         } catch (SOSHibernateException e1) {
@@ -236,6 +233,24 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             }
         }
         return evt;
+    }
+    
+    private WorkflowId mapWorkflowId(JWorkflowId workflowId) {
+        WorkflowId w = new WorkflowId();
+        w.setPath(workflowId.path().string());
+        w.setVersionId(workflowId.versionId().string());
+        return w;
+    }
+    
+    private Map<String, WorkflowId> getTerminatedOrders(String controllerId, boolean firstCall) throws JobSchedulerConnectionResetException,
+            JobSchedulerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
+            DBConnectionRefusedException, ExecutionException {
+        if (!firstCall) {
+           return Collections.emptyMap(); 
+        }
+        final List<OrderStateText> states = Arrays.asList(OrderStateText.CANCELLED, OrderStateText.FINISHED);
+        return Proxy.of(controllerId).currentState().ordersBy(o -> states.contains(OrdersHelper.getGroupedState(o.state().getClass())))
+            .collect(Collectors.toMap(o -> o.id().string(), o -> mapWorkflowId(o.workflowId())));
     }
 
 }

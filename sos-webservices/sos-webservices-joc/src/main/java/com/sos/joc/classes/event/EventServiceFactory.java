@@ -24,6 +24,7 @@ import org.apache.shiro.session.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.common.Err;
 import com.sos.joc.model.event.Event;
@@ -91,8 +92,10 @@ public class EventServiceFactory {
         }
     }
     
-    public static Event getEvents(String controllerId, Long eventId, String accessToken, EventCondition eventArrived, Session session, boolean isCurrentController) {
-        return EventServiceFactory.getInstance()._getEvents(controllerId, eventId, accessToken, eventArrived, session, isCurrentController);
+    public static Event getEvents(String controllerId, Long eventId, String accessToken, EventCondition eventArrived, Session session,
+            Map<String, WorkflowId> terminatedOrders, boolean isCurrentController) {
+        return EventServiceFactory.getInstance()._getEvents(controllerId, eventId, accessToken, eventArrived, session, terminatedOrders,
+                isCurrentController);
     }
     
     public EventService getEventService(String controllerId) {
@@ -121,7 +124,7 @@ public class EventServiceFactory {
     }
     
     private Event _getEvents(String controllerId, Long eventId, String accessToken, EventCondition eventArrived, Session session,
-            boolean isCurrentController) {
+            Map<String, WorkflowId> terminatedOrders, boolean isCurrentController) {
         Event events = new Event();
         events.setNotifications(null); // TODO not yet implemented
         events.setControllerId(controllerId);
@@ -132,6 +135,7 @@ public class EventServiceFactory {
         }
         try {
             service = getEventService(controllerId);
+            service.setTerminatedOrders(terminatedOrders);
             //service.addCondition(eventArrived);
             //service.setIsCurrentController(isCurrentController);
             SortedSet<Long> evtIds = new TreeSet<>(Comparator.comparing(Long::longValue));

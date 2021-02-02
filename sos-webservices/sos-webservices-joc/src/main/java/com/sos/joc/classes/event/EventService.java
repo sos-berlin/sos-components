@@ -2,7 +2,9 @@ package com.sos.joc.classes.event;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -13,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.controller.model.workflow.WorkflowId;
+import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.event.EventServiceFactory.EventCondition;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyUser;
@@ -33,6 +36,7 @@ import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.event.EventSnapshot;
 import com.sos.joc.model.event.EventType;
+import com.sos.joc.model.order.OrderStateText;
 
 import js7.controller.data.events.AgentRefStateEvent;
 import js7.controller.data.events.ControllerEvent;
@@ -81,6 +85,7 @@ public class EventService {
     private AtomicBoolean isCurrentController = new AtomicBoolean(false);
     private JControllerEventBus evtBus = null;
     private volatile CopyOnWriteArraySet<EventCondition> conditions = new CopyOnWriteArraySet<>();
+    private volatile Map<String, WorkflowId> unremovedTerminatedOrders = new ConcurrentHashMap<>();
 
     public EventService(String controllerId) {
         this.controllerId = controllerId;
@@ -190,13 +195,24 @@ public class EventService {
                     WorkflowId w = mapWorkflowId(opt.get().workflowId());
 //                    LOGGER.info("OrderEvent received with Workflow: " + evt.getClass().getSimpleName());
 //                    LOGGER.info("try add WorkflowEvent id/workflow: " + eventId + "/" + w.getPath());
+                    if (evt instanceof OrderTerminated) {
+                        unremovedTerminatedOrders.put(orderId.string(), w);
+                    }
                     addEvent(createWorkflowEventOfOrder(eventId, w));
                     if (evt instanceof OrderProcessingStarted$ || evt instanceof OrderProcessed || evt instanceof OrderProcessingKilled$) {
 //                        LOGGER.info("try add JOBEvent id/workflow: " + eventId + "/" + w.getPath());
                         addEvent(createTaskEventOfOrder(eventId, w));
                     }
-//                } else {
+                } else {
 //                    LOGGER.info("OrderEvent received without Workflow: " + evt.getClass().getSimpleName());
+                    if (evt instanceof OrderRemoved$) {
+                        LOGGER.info("OrderRemoved received");
+                        if (unremovedTerminatedOrders.containsKey(orderId.string())) {
+                            LOGGER.info("try add WorkflowEvent: " + eventId + "/" + unremovedTerminatedOrders.get(orderId.string()));
+                            addEvent(createWorkflowEventOfOrder(eventId, unremovedTerminatedOrders.get(orderId.string())));
+                            unremovedTerminatedOrders.remove(orderId.string());
+                        }
+                    }
                 }
 //                if (opt.isPresent()) {
 //                    WorkflowId w = mapWorkflowId(opt.get().workflowId());
@@ -336,6 +352,12 @@ public class EventService {
             LOGGER.debug("has old Event for " + controllerId + ": false");
         }
         return EventServiceFactory.Mode.FALSE;
+    }
+
+    protected void setTerminatedOrders(Map<String, WorkflowId> terminatedOrders) {
+        if (terminatedOrders != null && !terminatedOrders.isEmpty()) {
+            unremovedTerminatedOrders.putAll(terminatedOrders);
+        }
     }
 
 //    protected EventServiceFactory.Mode hasEvent(Condition eventArrived) {
