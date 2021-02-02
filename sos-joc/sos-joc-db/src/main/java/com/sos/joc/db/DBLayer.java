@@ -7,6 +7,7 @@ import com.sos.commons.util.SOSClassList;
 import com.sos.joc.db.deployment.DBItemDepCommitIds;
 import com.sos.joc.db.deployment.DBItemDepConfiguration;
 import com.sos.joc.db.deployment.DBItemDepKeys;
+import com.sos.joc.db.deployment.DBItemDepNamePaths;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDepVersions;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -183,6 +184,9 @@ public class DBLayer implements Serializable {
 
     public static final String DBITEM_DEP_CONFIGURATIONS = DBItemDepConfiguration.class.getSimpleName();
     public static final String TABLE_DEP_CONFIGURATIONS = "DEP_CONFIGURATIONS";
+    
+    public static final String DBITEM_DEP_NAMEPATHS = DBItemDepNamePaths.class.getSimpleName();
+    public static final String TABLE_DEP_NAMEPATHS = "DEP_NAMEPATHS";
 
     /** XMLEDITOR Tables */
     public static final String DBITEM_XML_EDITOR_CONFIGURATIONS = DBItemXmlEditorConfiguration.class.getSimpleName();
@@ -261,6 +265,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemDepConfiguration.class);
         cl.add(DBItemDeploymentSubmission.class);
         cl.add(DBItemDepCommitIds.class);
+        cl.add(DBItemDepNamePaths.class);
 
         cl.merge(getHistoryClassMapping().getClasses());
         cl.merge(getOrderInitatorClassMapping().getClasses());

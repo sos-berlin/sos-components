@@ -67,7 +67,7 @@ public class DeployedConfigurationDBLayer {
         }
         try {
             StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
-            hql.append("(path, content) from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append("(path, invContent) from ").append(DBLayer.DBITEM_DEP_HISTORY);
             hql.append(" where controllerId = :controllerId");
             hql.append(" and type = :type");
             hql.append(" and path = :path");
@@ -162,7 +162,7 @@ public class DeployedConfigurationDBLayer {
     public List<DeployedContent> getDeployedInventoryWithCommitIds(DeployedConfigurationFilter filter) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
-            hql.append("(path, content) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(getWhere(filter));
+            hql.append("(path, invContent) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(getWhere(filter));
             Query<DeployedContent> query = createQuery(hql.toString(), filter);
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -177,7 +177,7 @@ public class DeployedConfigurationDBLayer {
             return Collections.emptyMap();
         }
         StringBuilder hql = new StringBuilder("select new ").append(InventoryNamePath.class.getName());
-        hql.append("(name, path) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
+        hql.append("(name, path) from ").append(DBLayer.DBITEM_DEP_NAMEPATHS);
         hql.append(" where name in (:names)");
         if (controllerId != null) {
             hql.append(" and controllerId=:controllerId");
