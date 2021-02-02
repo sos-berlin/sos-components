@@ -182,7 +182,7 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
                 throw new JocConfigurationException("Missing assigned Locks: " + locks.toString());
             } else {
                 locks.removeAll(dbLocks.stream().map(DBItemInventoryConfiguration::getName).collect(Collectors.toSet()));
-                if (!dbLocks.isEmpty()) {
+                if (!locks.isEmpty()) {
                     throw new JocConfigurationException("Missing assigned Locks: " + locks.toString());
                 }
             }
