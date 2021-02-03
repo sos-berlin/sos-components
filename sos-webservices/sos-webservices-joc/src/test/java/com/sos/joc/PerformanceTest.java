@@ -188,7 +188,7 @@ public class PerformanceTest {
             instructions.add(createJobInstruction(jobName, workflowPath));
             jobs.getAdditionalProperties().put(jobName, createTestJob(agentRefPath, jobScript));
         }
-        return null;// new Workflow(workflowPath, null, instructions, null, null, jobs);
+        return new Workflow(workflowPath, null, null, instructions, null, null, jobs);
     }
     
     private void deployWorkflow(Workflow workflow, Path deployPath) throws IOException, InterruptedException {
