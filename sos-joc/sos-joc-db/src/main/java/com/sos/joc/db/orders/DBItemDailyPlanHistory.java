@@ -12,6 +12,8 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.hibernate.annotations.Type;
+
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
@@ -37,8 +39,9 @@ public class DBItemDailyPlanHistory extends DBItem {
     @Column(name = "[ORDER_ID]", nullable = false)
     private String orderId;
 
-    @Column(name = "[CATEGORY]", nullable = false)
-    private String category;
+    @Column(name = "[SUBMITTED]", nullable = false)
+    @Type(type = "numeric_boolean")
+    private boolean submitted;
 
     @Column(name = "[MESSAGE]", nullable = false)
     private String message;
@@ -46,7 +49,7 @@ public class DBItemDailyPlanHistory extends DBItem {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[DAILY_PLAN_DATE]", nullable = false)
     private Date dailyPlanDate;
-    
+
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[SUBMISSION_TIME]", nullable = false)
     private Date submissionTime;
@@ -95,44 +98,36 @@ public class DBItemDailyPlanHistory extends DBItem {
         this.created = created;
     }
 
-    
     public String getOrderId() {
         return orderId;
     }
 
-    
     public void setOrderId(String orderId) {
         this.orderId = orderId;
     }
 
-    
-    public String getCategory() {
-        return category;
-    }
-
-    
-    public void setCategory(String category) {
-        this.category = category;
-    }
-
-    
     public String getMessage() {
         return message;
     }
 
-    
     public void setMessage(String message) {
         this.message = message;
     }
 
-    
     public Date getSubmissionTime() {
         return submissionTime;
     }
 
-    
     public void setSubmissionTime(Date submissionTime) {
         this.submissionTime = submissionTime;
+    }
+
+    public boolean isSubmitted() {
+        return submitted;
+    }
+
+    public void setSubmitted(boolean submitted) {
+        this.submitted = submitted;
     }
 
 }

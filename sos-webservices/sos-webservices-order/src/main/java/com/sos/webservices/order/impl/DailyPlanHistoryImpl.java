@@ -21,12 +21,10 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.orders.DBItemDailyPlanHistory;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.dailyplan.DailyPlanHistory;
-import com.sos.joc.model.dailyplan.DailyPlanHistoryCategories;
 import com.sos.joc.model.dailyplan.DailyPlanHistoryFilter;
 import com.sos.joc.model.dailyplan.DailyPlanHistoryItem;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissionTimes;
-import com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlanHistory;
 import com.sos.js7.order.initiator.db.FilterDailyPlanHistory;
 import com.sos.schema.JsonValidator;
@@ -35,6 +33,8 @@ import com.sos.webservices.order.resource.IDailyPlanHistoryResource;
 @Path("daily_plan")
 public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanHistoryResource {
 
+    private static final String ERROR = "ERROR:";
+    private static final String WARN = "WARN:";
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanHistoryImpl.class);
     private static final String API_CALL = "./daily_plan/history";
 
@@ -63,13 +63,9 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             FilterDailyPlanHistory filter = new FilterDailyPlanHistory();
             filter.setControllerId(dailyPlanHistoryFilter.getControllerId());
 
-            Boolean haveMessage = null;
-            if (dailyPlanHistoryFilter.getFilter() != null) {
-                haveMessage = dailyPlanHistoryFilter.getFilter().getHaveMessage();
-                for (DailyPlanHistoryCategories dailyPlanHistoryCategories : dailyPlanHistoryFilter.getFilter().getCategories()) {
-                    filter.addCategory(dailyPlanHistoryCategories.value());
-                }
-
+             if (dailyPlanHistoryFilter.getFilter() != null) {
+ 
+                filter.setSubmitted(dailyPlanHistoryFilter.getFilter().getSubmitted());
                 if ((dailyPlanHistoryFilter.getFilter().getDateTo() != null) && (dailyPlanHistoryFilter.getFilter().getDateFrom() == null)) {
                     Date date = JobSchedulerDate.getDateFrom(dailyPlanHistoryFilter.getFilter().getDateFrom(), dailyPlanHistoryFilter.getTimeZone());
                     filter.setDailyPlanDate(date);
@@ -98,46 +94,35 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
 
             for (DBItemDailyPlanHistory dbItemDailySubmissionHistory : listOfDailyPlanSubmissions) {
 
-                boolean addItem = false;
-                if ((haveMessage == null) || ((haveMessage && (dbItemDailySubmissionHistory.getMessage() != null && !"".equals(
-                        dbItemDailySubmissionHistory.getMessage()))) || (!haveMessage && (dbItemDailySubmissionHistory.getMessage() == null || ""
-                                .equals(dbItemDailySubmissionHistory.getMessage()))))) {
-                    addItem = true;
+                if (mapOfSubmissionTimesByDate.get(dbItemDailySubmissionHistory.getDailyPlanDate()) == null) {
+                    Map<Date, DailyPlanSubmissionTimes> mapOfSubmissionTimes = new HashMap<Date, DailyPlanSubmissionTimes>();
+                    mapOfSubmissionTimesByDate.put(dbItemDailySubmissionHistory.getDailyPlanDate(), mapOfSubmissionTimes);
                 }
-                if (addItem) {
-                    if (mapOfSubmissionTimesByDate.get(dbItemDailySubmissionHistory.getDailyPlanDate()) == null) {
-                        Map<Date, DailyPlanSubmissionTimes> mapOfSubmissionTimes = new HashMap<Date, DailyPlanSubmissionTimes>();
-                        mapOfSubmissionTimesByDate.put(dbItemDailySubmissionHistory.getDailyPlanDate(), mapOfSubmissionTimes);
-                    }
-                    Map<Date, DailyPlanSubmissionTimes> mapOfSubmissionTimes = mapOfSubmissionTimesByDate.get(dbItemDailySubmissionHistory
-                            .getDailyPlanDate());
+                Map<Date, DailyPlanSubmissionTimes> mapOfSubmissionTimes = mapOfSubmissionTimesByDate.get(dbItemDailySubmissionHistory
+                        .getDailyPlanDate());
 
-                    if (mapOfSubmissionTimes.get(dbItemDailySubmissionHistory.getSubmissionTime()) == null) {
+                if (mapOfSubmissionTimes.get(dbItemDailySubmissionHistory.getSubmissionTime()) == null) {
 
-                        DailyPlanSubmissionTimes p = new DailyPlanSubmissionTimes();
-                        p.setSubmissionTime(dbItemDailySubmissionHistory.getSubmissionTime());
-                        p.setCanceledOrders(new ArrayList<String>());
-                        p.setErrorMessages(new ArrayList<String>());
-                        p.setSubmittedOrders(new ArrayList<String>());
-                        p.setWarnMessages(new ArrayList<String>());
-                        mapOfSubmissionTimes.put(dbItemDailySubmissionHistory.getSubmissionTime(), p);
-                    }
+                    DailyPlanSubmissionTimes p = new DailyPlanSubmissionTimes();
+                    p.setSubmissionTime(dbItemDailySubmissionHistory.getSubmissionTime());
+                    p.setErrorMessages(new ArrayList<String>());
+                    p.setOrderIds(new ArrayList<String>());
+                    p.setWarnMessages(new ArrayList<String>());
+                    mapOfSubmissionTimes.put(dbItemDailySubmissionHistory.getSubmissionTime(), p);
+                }
 
-                    DailyPlanSubmissionTimes dailyPlanSubmissionTimes = mapOfSubmissionTimes.get(dbItemDailySubmissionHistory.getSubmissionTime());
+                DailyPlanSubmissionTimes dailyPlanSubmissionTimes = mapOfSubmissionTimes.get(dbItemDailySubmissionHistory.getSubmissionTime());
+                dailyPlanSubmissionTimes.getOrderIds().add(dbItemDailySubmissionHistory.getOrderId());
 
-                    if (DailyPlanHistoryCategories.CANCELED.name().equals(dbItemDailySubmissionHistory.getCategory())) {
-                        dailyPlanSubmissionTimes.getCanceledOrders().add(dbItemDailySubmissionHistory.getOrderId());
+                if (dbItemDailySubmissionHistory.getMessage() != null) {
+                    if (dbItemDailySubmissionHistory.getMessage().startsWith(WARN)) {
+                        dailyPlanSubmissionTimes.getWarnMessages().add(dbItemDailySubmissionHistory.getMessage().substring(WARN.length() - 1));
                     }
-                    if (DailyPlanHistoryCategories.SUBMITTED.name().equals(dbItemDailySubmissionHistory.getCategory())) {
-                        dailyPlanSubmissionTimes.getSubmittedOrders().add(dbItemDailySubmissionHistory.getOrderId());
-                    }
-                    if (DailyPlanHistoryCategories.ERROR.name().equals(dbItemDailySubmissionHistory.getCategory())) {
-                        dailyPlanSubmissionTimes.getErrorMessages().add(dbItemDailySubmissionHistory.getMessage());
-                    }
-                    if (DailyPlanHistoryCategories.WARN.name().equals(dbItemDailySubmissionHistory.getCategory())) {
-                        dailyPlanSubmissionTimes.getWarnMessages().add(dbItemDailySubmissionHistory.getMessage());
+                    if (dbItemDailySubmissionHistory.getMessage().startsWith(ERROR)) {
+                        dailyPlanSubmissionTimes.getErrorMessages().add(dbItemDailySubmissionHistory.getMessage().substring(ERROR.length() - 1));
                     }
                 }
+
             }
 
             for (Entry<Date, Map<Date, DailyPlanSubmissionTimes>> entry : mapOfSubmissionTimesByDate.entrySet()) {
@@ -158,7 +143,9 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
 
             return JOCDefaultResponse.responseStatus200(dailyPlanHistory);
 
-        } catch (JocException e) {
+        } catch (
+
+        JocException e) {
             LOGGER.error(getJocError().getMessage(), e);
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);

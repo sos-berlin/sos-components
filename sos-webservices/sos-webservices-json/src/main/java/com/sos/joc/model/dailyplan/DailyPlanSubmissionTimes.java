@@ -21,8 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "submissionTime",
-    "submittedOrders",
-    "canceledOrders",
+    "orderIds",
     "warnMessages",
     "errorMessages"
 })
@@ -37,10 +36,8 @@ public class DailyPlanSubmissionTimes {
     @JsonProperty("submissionTime")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date submissionTime;
-    @JsonProperty("submittedOrders")
-    private List<String> submittedOrders = null;
-    @JsonProperty("canceledOrders")
-    private List<String> canceledOrders = null;
+    @JsonProperty("orderIds")
+    private List<String> orderIds = null;
     @JsonProperty("warnMessages")
     private List<String> warnMessages = null;
     @JsonProperty("errorMessages")
@@ -68,24 +65,14 @@ public class DailyPlanSubmissionTimes {
         this.submissionTime = submissionTime;
     }
 
-    @JsonProperty("submittedOrders")
-    public List<String> getSubmittedOrders() {
-        return submittedOrders;
+    @JsonProperty("orderIds")
+    public List<String> getOrderIds() {
+        return orderIds;
     }
 
-    @JsonProperty("submittedOrders")
-    public void setSubmittedOrders(List<String> submittedOrders) {
-        this.submittedOrders = submittedOrders;
-    }
-
-    @JsonProperty("canceledOrders")
-    public List<String> getCanceledOrders() {
-        return canceledOrders;
-    }
-
-    @JsonProperty("canceledOrders")
-    public void setCanceledOrders(List<String> canceledOrders) {
-        this.canceledOrders = canceledOrders;
+    @JsonProperty("orderIds")
+    public void setOrderIds(List<String> orderIds) {
+        this.orderIds = orderIds;
     }
 
     @JsonProperty("warnMessages")
@@ -110,12 +97,12 @@ public class DailyPlanSubmissionTimes {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("submissionTime", submissionTime).append("submittedOrders", submittedOrders).append("canceledOrders", canceledOrders).append("warnMessages", warnMessages).append("errorMessages", errorMessages).toString();
+        return new ToStringBuilder(this).append("submissionTime", submissionTime).append("orderIds", orderIds).append("warnMessages", warnMessages).append("errorMessages", errorMessages).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(errorMessages).append(submittedOrders).append(canceledOrders).append(warnMessages).append(submissionTime).toHashCode();
+        return new HashCodeBuilder().append(errorMessages).append(orderIds).append(warnMessages).append(submissionTime).toHashCode();
     }
 
     @Override
@@ -127,7 +114,7 @@ public class DailyPlanSubmissionTimes {
             return false;
         }
         DailyPlanSubmissionTimes rhs = ((DailyPlanSubmissionTimes) other);
-        return new EqualsBuilder().append(errorMessages, rhs.errorMessages).append(submittedOrders, rhs.submittedOrders).append(canceledOrders, rhs.canceledOrders).append(warnMessages, rhs.warnMessages).append(submissionTime, rhs.submissionTime).isEquals();
+        return new EqualsBuilder().append(errorMessages, rhs.errorMessages).append(orderIds, rhs.orderIds).append(warnMessages, rhs.warnMessages).append(submissionTime, rhs.submissionTime).isEquals();
     }
 
 }

@@ -19,19 +19,15 @@ import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
-import com.sos.joc.db.orders.DBItemDailyPlanHistory;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.dailyplan.DailyPlanHistoryCategories;
 import com.sos.joc.model.order.ModifyOrders;
 import com.sos.joc.orders.resource.IOrdersResourceModify;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlanHistory;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
-import com.sos.js7.order.initiator.db.FilterDailyPlanHistory;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
@@ -182,24 +178,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             filter.setSubmitted(false);
             dbLayerDailyPlannedOrders.setSubmitted(filter);
             
-            
-            for (String orderId : modifyOrders.getOrderIds()) {
-                FilterDailyPlanHistory filterDailyPlanHistory = new FilterDailyPlanHistory();
-                filterDailyPlanHistory.setControllerId(modifyOrders.getControllerId());
-                filterDailyPlanHistory.addCategory(DailyPlanHistoryCategories.SUBMITTED.name());
-                filterDailyPlanHistory.setOrderId(orderId);
-                List<DBItemDailyPlanHistory> listOfPlanHistory = dbLayerDailyPlanHistory.getDailyPlanHistory(filterDailyPlanHistory, 0);
-                if (listOfPlanHistory.size() > 0) {
-                    DBItemDailyPlanHistory dbItemDailyPlanHistory = new DBItemDailyPlanHistory();
-                    dbItemDailyPlanHistory.setCategory(DailyPlanHistoryCategories.CANCELED.name());
-                    dbItemDailyPlanHistory.setControllerId(modifyOrders.getControllerId());
-                    dbItemDailyPlanHistory.setCreated(JobSchedulerDate.nowInUtc());
-                    dbItemDailyPlanHistory.setDailyPlanDate(listOfPlanHistory.get(0).getDailyPlanDate());
-                    dbItemDailyPlanHistory.setOrderId(orderId);
-                    dbItemDailyPlanHistory.setSubmissionTime(listOfPlanHistory.get(0).getSubmissionTime());
-                    dbItemDailyPlanHistory.setUserAccount(Globals.loginUserName);
-                    dbLayerDailyPlanHistory.storeDailyPlanHistory(dbItemDailyPlanHistory);                } 
-            }
+    
 
             Globals.commit(sosHibernateSession);
         } finally {

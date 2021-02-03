@@ -9,75 +9,62 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.db.SOSFilter;
 
-
 public class FilterDailyPlanHistory extends SOSFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterDailyPlanHistory.class);
     private String controllerId;
-    private List<String> categories;
+    private Boolean submitted;
     private String orderId;
     private Date dailyPlanDate;
     private Date dailyPlanDateFrom;
     private Date dailyPlanDateTo;
-    
+
     public String getControllerId() {
         return controllerId;
     }
-    
+
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
     }
-    
-    public void addCategory(String category) {
-        if (categories == null) {
-            categories = new ArrayList<String> ();
-        }
-        categories.add(category);
-    }
-    
+
     public Date getDailyPlanDate() {
         return dailyPlanDate;
     }
-    
+
     public void setDailyPlanDate(Date dailyPlanDate) {
         this.dailyPlanDate = dailyPlanDate;
     }
 
-    
     public Date getDailyPlanDateFrom() {
         return dailyPlanDateFrom;
     }
 
-    
     public void setDailyPlanDateFrom(Date dailyPlanDateFrom) {
         this.dailyPlanDateFrom = dailyPlanDateFrom;
     }
 
-    
     public Date getDailyPlanDateTo() {
         return dailyPlanDateTo;
     }
 
-    
     public void setDailyPlanDateTo(Date dailyPlanDateTo) {
         this.dailyPlanDateTo = dailyPlanDateTo;
     }
 
-    
     public String getOrderId() {
         return orderId;
     }
 
-    
     public void setOrderId(String orderId) {
         this.orderId = orderId;
     }
 
-    
-    public List<String> getCategories() {
-        return categories;
+    public Boolean getSubmitted() {
+        return submitted;
     }
-        
-   
-    
+
+    public void setSubmitted(Boolean submitted) {
+        this.submitted = submitted;
+    }
+
 }

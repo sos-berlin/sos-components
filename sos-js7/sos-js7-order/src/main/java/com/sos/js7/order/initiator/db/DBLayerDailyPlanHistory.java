@@ -1,6 +1,5 @@
 package com.sos.js7.order.initiator.db;
 
-import java.util.Date;
 import java.util.List;
 
 import org.hibernate.query.Query;
@@ -8,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.orders.DBItemDailyPlanHistory;
 
@@ -47,6 +45,11 @@ public class DBLayerDailyPlanHistory {
             and = " and ";
         }
 
+        if (filter.getSubmitted() != null) {
+            where += and + " submitted = :submitted";
+            and = " and ";
+        }
+
         if (filter.getControllerId() != null && !"".equals(filter.getControllerId())) {
             where += and + " controllerId = :controllerId";
             and = " and ";
@@ -54,16 +57,6 @@ public class DBLayerDailyPlanHistory {
 
         if (filter.getOrderId() != null && !"".equals(filter.getOrderId())) {
             where += and + " orderId = :orderId";
-            and = " and ";
-        }
-
-        if (filter.getCategories() != null && filter.getCategories().size() == 1) {
-            where += and + " category = :category";
-            and = " and ";
-        }
-        
-        if (filter.getCategories() != null && filter.getCategories().size() > 1) {
-            where += and + SearchStringHelper.getStringListSql(filter.getCategories(), "category");
             and = " and ";
         }
 
@@ -92,9 +85,9 @@ public class DBLayerDailyPlanHistory {
         if (filter.getOrderId() != null && !"".equals(filter.getOrderId())) {
             query.setParameter("orderId", filter.getOrderId());
         }
-
-        if (filter.getCategories() != null && filter.getCategories().size() == 1) {
-            query.setParameter("category", filter.getCategories().get(0));
+        
+        if (filter.getSubmitted() != null) {
+            query.setParameter("submitted", filter.getSubmitted());
         }
 
         return query;

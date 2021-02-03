@@ -3,10 +3,8 @@ package com.sos.js7.order.initiator.db;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
@@ -26,7 +24,6 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.orders.DBItemDailyPlanHistory;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.dailyplan.DailyPlanHistoryCategories;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
@@ -161,13 +158,13 @@ public class DBLayerSchedules {
                     dbItemInventoryConfiguration.setSchedule(schedule);
                     filteredResultset.add(dbItemInventoryConfiguration);
                 } else {
-                    String s = "Workflow " + schedule.getWorkflowName() + " is not deployed. schedule->" + schedule.getPath()   ;
+                    String s = "WARN:Workflow " + schedule.getWorkflowName() + " is not deployed. schedule->" + schedule.getPath()   ;
                     DBItemDailyPlanHistory dbItemDailyPlanHistory = new DBItemDailyPlanHistory();
-                    dbItemDailyPlanHistory.setCategory(DailyPlanHistoryCategories.WARN.name());
                     if (filter.getListOfControllerIds().size() > 0) {
                         dbItemDailyPlanHistory.setControllerId(filter.getListOfControllerIds().get(0));
                     }
                     dbItemDailyPlanHistory.setCreated(JobSchedulerDate.nowInUtc());
+                    dbItemDailyPlanHistory.setSubmitted(false);
                     dbItemDailyPlanHistory.setMessage(s);
                     dbItemDailyPlanHistory.setSubmissionTime(OrderInitiatorGlobals.submissionTime);
                     dbItemDailyPlanHistory.setDailyPlanDate(OrderInitiatorGlobals.dailyPlanDate);
