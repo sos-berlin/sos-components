@@ -26,6 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "executable",
     "returnCodeMeaning",
     "taskLimit",
+    "v1Compatible",
     "timeout",
     "graceTimeout",
     "jobClass",
@@ -67,6 +68,8 @@ public class Job {
      */
     @JsonProperty("taskLimit")
     private Integer taskLimit = 1;
+    @JsonProperty("v1Compatible")
+    private Boolean v1Compatible = true;
     /**
      * non negative integer
      * <p>
@@ -128,14 +131,16 @@ public class Job {
      * @param jobClass
      * @param env
      * @param executable
+     * @param v1Compatible
      * @param timeout
      */
-    public Job(String agentId, ExecutableScript executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, String jobClass, Variables defaultArguments, Environment env) {
+    public Job(String agentId, ExecutableScript executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Boolean v1Compatible, Integer timeout, Integer graceTimeout, String jobClass, Variables defaultArguments, Environment env) {
         super();
         this.agentId = agentId;
         this.executable = executable;
         this.returnCodeMeaning = returnCodeMeaning;
         this.taskLimit = taskLimit;
+        this.v1Compatible = v1Compatible;
         this.timeout = timeout;
         this.graceTimeout = graceTimeout;
         this.jobClass = jobClass;
@@ -231,6 +236,16 @@ public class Job {
     @JsonProperty("taskLimit")
     public void setTaskLimit(Integer taskLimit) {
         this.taskLimit = taskLimit;
+    }
+
+    @JsonProperty("v1Compatible")
+    public Boolean getV1Compatible() {
+        return v1Compatible;
+    }
+
+    @JsonProperty("v1Compatible")
+    public void setV1Compatible(Boolean v1Compatible) {
+        this.v1Compatible = v1Compatible;
     }
 
     /**
@@ -345,12 +360,12 @@ public class Job {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentId", agentId).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("taskLimit", taskLimit).append("timeout", timeout).append("graceTimeout", graceTimeout).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("env", env).toString();
+        return new ToStringBuilder(this).append("agentId", agentId).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("taskLimit", taskLimit).append("v1Compatible", v1Compatible).append("timeout", timeout).append("graceTimeout", graceTimeout).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("env", env).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(returnCodeMeaning).append(taskLimit).append(agentId).append(graceTimeout).append(defaultArguments).append(jobClass).append(env).append(executable).append(timeout).toHashCode();
+        return new HashCodeBuilder().append(returnCodeMeaning).append(taskLimit).append(agentId).append(graceTimeout).append(defaultArguments).append(jobClass).append(env).append(executable).append(v1Compatible).append(timeout).toHashCode();
     }
 
     @Override
@@ -362,7 +377,7 @@ public class Job {
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(returnCodeMeaning, rhs.returnCodeMeaning).append(taskLimit, rhs.taskLimit).append(agentId, rhs.agentId).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(jobClass, rhs.jobClass).append(env, rhs.env).append(executable, rhs.executable).append(timeout, rhs.timeout).isEquals();
+        return new EqualsBuilder().append(returnCodeMeaning, rhs.returnCodeMeaning).append(taskLimit, rhs.taskLimit).append(agentId, rhs.agentId).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(jobClass, rhs.jobClass).append(env, rhs.env).append(executable, rhs.executable).append(v1Compatible, rhs.v1Compatible).append(timeout, rhs.timeout).isEquals();
     }
 
 }
