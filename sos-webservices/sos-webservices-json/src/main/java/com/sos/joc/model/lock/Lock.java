@@ -6,13 +6,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.lock.common.LockEntry;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * workflow
+ * lock response
  * <p>
  * 
  * 
@@ -44,14 +45,13 @@ public class Lock {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date surveyDate;
     /**
-     * lock
+     * lock entry
      * <p>
-     * deploy object with fixed property 'TYPE':'Lock'
+     * 
      * 
      */
     @JsonProperty("lock")
-    @JsonPropertyDescription("deploy object with fixed property 'TYPE':'Lock'")
-    private com.sos.inventory.model.lock.Lock lock;
+    private LockEntry lock;
 
     /**
      * timestamp
@@ -98,24 +98,24 @@ public class Lock {
     }
 
     /**
-     * lock
+     * lock entry
      * <p>
-     * deploy object with fixed property 'TYPE':'Lock'
+     * 
      * 
      */
     @JsonProperty("lock")
-    public com.sos.inventory.model.lock.Lock getLock() {
+    public LockEntry getLock() {
         return lock;
     }
 
     /**
-     * lock
+     * lock entry
      * <p>
-     * deploy object with fixed property 'TYPE':'Lock'
+     * 
      * 
      */
     @JsonProperty("lock")
-    public void setLock(com.sos.inventory.model.lock.Lock lock) {
+    public void setLock(LockEntry lock) {
         this.lock = lock;
     }
 

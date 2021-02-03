@@ -12,26 +12,34 @@ import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
-import com.sos.inventory.model.lock.Lock;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.lock.common.LockEntryHelper;
 import com.sos.joc.locks.resource.ILocksResource;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.lock.Locks;
 import com.sos.joc.model.lock.LocksFilter;
+import com.sos.joc.model.lock.common.LockEntry;
 import com.sos.schema.JsonValidator;
+
+import js7.proxy.javaapi.data.controller.JControllerState;
 
 @Path("locks")
 public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource {
 
     private static final String API_CALL = "./locks";
+    private static final Logger LOGGER = LoggerFactory.getLogger(LocksResourceImpl.class);
 
     @Override
     public JOCDefaultResponse postLocks(String accessToken, byte[] filterBytes) {
@@ -83,23 +91,25 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
             } else {
                 contents = dbLayer.getDeployedInventory(dbFilter);
             }
+            Globals.disconnect(session);
+            session = null;
 
-            Locks locks = new Locks();
+            Locks answer = new Locks();
+            LockEntryHelper helper = new LockEntryHelper(filter.getControllerId());
+            JControllerState controllerState = Proxy.of(filter.getControllerId()).currentState();
             if (contents != null) {
-                Stream<Lock> stream = contents.stream().map(c -> {
+                Stream<LockEntry> stream = contents.stream().map(dc -> {
                     try {
-                        Lock item = Globals.objectMapper.readValue(c.getContent(), Lock.class);
-                        item.setPath(c.getPath());
-                        return item;
-                    } catch (Exception e) {
-                        // TODO
+                        return helper.getLockEntry(controllerState, dc, dc.getPath());
+                    } catch (Throwable e) {
+                        LOGGER.error(String.format("[%s]%s", dc == null ? "unknown" : dc.getPath(), e.toString()), e);
                         return null;
                     }
                 }).filter(Objects::nonNull);
-                locks.setLocks(stream.collect(Collectors.toList()));
+                answer.setLocks(stream.collect(Collectors.toList()));
             }
-            locks.setDeliveryDate(Date.from(Instant.now()));
-            return locks;
+            answer.setDeliveryDate(Date.from(Instant.now()));
+            return answer;
         } catch (Throwable e) {
             throw e;
         } finally {

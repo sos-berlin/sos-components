@@ -8,14 +8,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.lock.Lock;
+import com.sos.joc.model.lock.common.LockEntry;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * workflow
+ * locks response
  * <p>
  * 
  * 
@@ -47,7 +47,7 @@ public class Locks {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date surveyDate;
     @JsonProperty("locks")
-    private List<Lock> locks = new ArrayList<Lock>();
+    private List<LockEntry> locks = new ArrayList<LockEntry>();
 
     /**
      * timestamp
@@ -94,12 +94,12 @@ public class Locks {
     }
 
     @JsonProperty("locks")
-    public List<Lock> getLocks() {
+    public List<LockEntry> getLocks() {
         return locks;
     }
 
     @JsonProperty("locks")
-    public void setLocks(List<Lock> locks) {
+    public void setLocks(List<LockEntry> locks) {
         this.locks = locks;
     }
 

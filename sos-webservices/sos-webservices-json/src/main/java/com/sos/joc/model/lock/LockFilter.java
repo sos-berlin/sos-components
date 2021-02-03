@@ -10,7 +10,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * workflowFilter
+ * lock request filter
  * <p>
  * 
  * 
