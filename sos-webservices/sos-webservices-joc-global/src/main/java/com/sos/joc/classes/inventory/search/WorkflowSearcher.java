@@ -2,7 +2,6 @@ package com.sos.joc.classes.inventory.search;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -137,7 +136,7 @@ public class WorkflowSearcher {
         if (argValueRegex == null || jobs.isEmpty()) {
             return jobs;
         }
-        return jobs.stream().filter(j -> getJobArgumentsStream(j.getJob()).anyMatch(a -> a.getValue().matches(argValueRegex))).collect(Collectors
+        return jobs.stream().filter(j -> getJobArgumentsStream(j.getJob()).anyMatch(a -> a.getValue().toString().matches(argValueRegex))).collect(Collectors
                 .toList());
     }
 
@@ -153,7 +152,7 @@ public class WorkflowSearcher {
             }
         }
 
-        return jobs.stream().filter(j -> getJobArgumentsStream(j.getJob()).anyMatch(a -> a.getKey().matches(argNameRegex) && a.getValue().matches(
+        return jobs.stream().filter(j -> getJobArgumentsStream(j.getJob()).anyMatch(a -> a.getKey().matches(argNameRegex) && a.getValue().toString().matches(
                 argValueRegex))).collect(Collectors.toList());
     }
 
@@ -165,7 +164,7 @@ public class WorkflowSearcher {
         return jobs.stream().filter(j -> j.getName().matches(jobName)).findFirst().orElse(null);
     }
 
-    public String getJobArgument(String jobName, String argName) {
+    public Object getJobArgument(String jobName, String argName) {
         WorkflowJob job = getJob(jobName);
         if (job == null) {
             return null;
@@ -173,18 +172,18 @@ public class WorkflowSearcher {
         return getJobArgument(job.getJob(), argName);
     }
 
-    public String getJobArgument(Job job, String argName) {
+    public Object getJobArgument(Job job, String argName) {
         if (job == null || argName == null) {
             return null;
         }
         return getJobArgumentsStream(job).filter(e -> e.getKey().equals(argName)).map(Map.Entry::getValue).findFirst().orElse(null);
     }
 
-    public Map<String, String> getJobArguments(String jobName) {
+    public Map<String, Object> getJobArguments(String jobName) {
         return getJobArguments(jobName, null);
     }
 
-    public Map<String, String> getJobArguments(String jobName, String argNameRegex) {
+    public Map<String, Object> getJobArguments(String jobName, String argNameRegex) {
         WorkflowJob job = getJob(jobName);
         if (job == null) {
             return null;
@@ -192,11 +191,11 @@ public class WorkflowSearcher {
         return getJobArguments(job.getJob(), argNameRegex);
     }
 
-    public Map<String, String> getJobArguments(Job job) {
+    public Map<String, Object> getJobArguments(Job job) {
         return getJobArguments(job, null);
     }
 
-    public Map<String, String> getJobArguments(Job job, String argNameRegex) {
+    public Map<String, Object> getJobArguments(Job job, String argNameRegex) {
         if (job == null) {
             return null;
         }
@@ -281,7 +280,7 @@ public class WorkflowSearcher {
         if (r.isEmpty() || argValueRegex == null) {
             return r;
         }
-        return r.stream().filter(j -> getNamedJobArgumentsStream(j.getInstruction()).anyMatch(en -> en.getValue().matches(argValueRegex))).collect(
+        return r.stream().filter(j -> getNamedJobArgumentsStream(j.getInstruction()).anyMatch(en -> en.getValue().toString().matches(argValueRegex))).collect(
                 Collectors.toList());
     }
 
@@ -300,7 +299,7 @@ public class WorkflowSearcher {
         if (r.isEmpty()) {
             return r;
         }
-        return r.stream().filter(j -> getNamedJobArgumentsStream(j.getInstruction()).anyMatch(en -> en.getKey().matches(argNameRegex) && en.getValue()
+        return r.stream().filter(j -> getNamedJobArgumentsStream(j.getInstruction()).anyMatch(en -> en.getKey().matches(argNameRegex) && en.getValue().toString()
                 .matches(argValueRegex))).collect(Collectors.toList());
     }
 
@@ -427,16 +426,16 @@ public class WorkflowSearcher {
         return workflow.getJobs() == null ? null : workflow.getJobs().getAdditionalProperties().entrySet().stream();
     }
 
-    private Stream<Entry<String, String>> getJobArgumentsStream(Job job) {
+    private Stream<Entry<String, Object>> getJobArgumentsStream(Job job) {
         if (job == null || job.getDefaultArguments() == null) {
-            return new HashSet<Entry<String, String>>().stream();
+            return Stream.empty(); //new HashSet<Entry<String, String>>().stream();
         }
         return job.getDefaultArguments().getAdditionalProperties().entrySet().stream();
     }
 
-    private Stream<Entry<String, String>> getNamedJobArgumentsStream(NamedJob job) {
+    private Stream<Entry<String, Object>> getNamedJobArgumentsStream(NamedJob job) {
         if (job == null || job.getDefaultArguments() == null) {
-            return new HashSet<Entry<String, String>>().stream();
+            return Stream.empty(); //new HashSet<Entry<String, String>>().stream();
         }
         return job.getDefaultArguments().getAdditionalProperties().entrySet().stream();
     }

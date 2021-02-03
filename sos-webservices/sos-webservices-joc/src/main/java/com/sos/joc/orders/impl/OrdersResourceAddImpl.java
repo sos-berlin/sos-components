@@ -41,6 +41,7 @@ import js7.data.workflow.WorkflowPath;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.data.order.JFreshOrder;
 import reactor.core.publisher.Flux;
+import scala.math.BigDecimal;
 
 @Path("orders")
 public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersResourceAdd {
@@ -132,9 +133,22 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
         Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order.getTimeZone());
         Map<String, Value> arguments = new HashMap<>();
         if (order.getArguments() != null) {
-            Map<String, String> a = order.getArguments().getAdditionalProperties();
+            Map<String, Object> a = order.getArguments().getAdditionalProperties();
             for(String key : a.keySet()) {
-                arguments.put(key, Value.of(a.get(key)));
+                Object val = a.get(key);
+                if (val instanceof String) {
+                    arguments.put(key, Value.of((String) val));
+                } else if (val instanceof Boolean) {
+                    arguments.put(key, Value.of((Boolean) val));
+                } else if (val instanceof Integer) {
+                    arguments.put(key, Value.of((Integer) val));
+                } else if (val instanceof Long) {
+                    arguments.put(key, Value.of((Long) val));
+                } else if (val instanceof Double) {
+                    arguments.put(key, Value.of(BigDecimal.valueOf((Double) val)));
+                } else if (val instanceof BigDecimal) {
+                    arguments.put(key, Value.of((BigDecimal) val));
+                }
             }
         }
         return JFreshOrder.of(orderId, WorkflowPath.of(JocInventory.pathToName(order.getWorkflowPath())), scheduledFor, arguments);

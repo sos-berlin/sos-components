@@ -26,6 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "TYPE",
     "path",
     "versionId",
+    "orderRequirements",
     "instructions",
     "title",
     "documentationPath",
@@ -58,6 +59,14 @@ public class Workflow implements IConfigurationObject, IDeployObject
      */
     @JsonProperty("versionId")
     private String versionId;
+    /**
+     * orderRequirements
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("orderRequirements")
+    private OrderRequirements orderRequirements;
     /**
      * 
      * (Required)
@@ -105,14 +114,16 @@ public class Workflow implements IConfigurationObject, IDeployObject
      * @param path
      * @param instructions
      * @param versionId
+     * @param orderRequirements
      * @param jobs
      * 
      * @param title
      */
-    public Workflow(String path, String versionId, List<Instruction> instructions, String title, String documentationPath, Jobs jobs) {
+    public Workflow(String path, String versionId, OrderRequirements orderRequirements, List<Instruction> instructions, String title, String documentationPath, Jobs jobs) {
         super();
         this.path = path;
         this.versionId = versionId;
+        this.orderRequirements = orderRequirements;
         this.instructions = instructions;
         this.title = title;
         this.documentationPath = documentationPath;
@@ -172,6 +183,28 @@ public class Workflow implements IConfigurationObject, IDeployObject
     @JsonProperty("versionId")
     public void setVersionId(String versionId) {
         this.versionId = versionId;
+    }
+
+    /**
+     * orderRequirements
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("orderRequirements")
+    public OrderRequirements getOrderRequirements() {
+        return orderRequirements;
+    }
+
+    /**
+     * orderRequirements
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("orderRequirements")
+    public void setOrderRequirements(OrderRequirements orderRequirements) {
+        this.orderRequirements = orderRequirements;
     }
 
     /**
@@ -264,12 +297,12 @@ public class Workflow implements IConfigurationObject, IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("versionId", versionId).append("instructions", instructions).append("title", title).append("documentationPath", documentationPath).append("jobs", jobs).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("versionId", versionId).append("orderRequirements", orderRequirements).append("instructions", instructions).append("title", title).append("documentationPath", documentationPath).append("jobs", jobs).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(documentationPath).append(path).append(instructions).append(versionId).append(jobs).append(tYPE).append(title).toHashCode();
+        return new HashCodeBuilder().append(documentationPath).append(path).append(instructions).append(versionId).append(orderRequirements).append(jobs).append(tYPE).append(title).toHashCode();
     }
 
     @Override
@@ -281,7 +314,7 @@ public class Workflow implements IConfigurationObject, IDeployObject
             return false;
         }
         Workflow rhs = ((Workflow) other);
-        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(path, rhs.path).append(instructions, rhs.instructions).append(versionId, rhs.versionId).append(jobs, rhs.jobs).append(tYPE, rhs.tYPE).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(path, rhs.path).append(instructions, rhs.instructions).append(versionId, rhs.versionId).append(orderRequirements, rhs.orderRequirements).append(jobs, rhs.jobs).append(tYPE, rhs.tYPE).append(title, rhs.title).isEquals();
     }
 
 }

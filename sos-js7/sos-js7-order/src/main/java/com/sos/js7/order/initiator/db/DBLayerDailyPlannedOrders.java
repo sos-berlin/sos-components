@@ -351,12 +351,12 @@ public class DBLayerDailyPlannedOrders {
 
     public void storeVariables(PlannedOrder plannedOrder, Long id) throws SOSHibernateException {
         DBItemDailyPlanVariables dbItemDailyPlanVariables = new DBItemDailyPlanVariables();
-        for (Entry<String, String> variable : plannedOrder.getFreshOrder().getArguments().getAdditionalProperties().entrySet()) {
+        for (Entry<String, Object> variable : plannedOrder.getFreshOrder().getArguments().getAdditionalProperties().entrySet()) {
             dbItemDailyPlanVariables.setCreated(JobSchedulerDate.nowInUtc());
             dbItemDailyPlanVariables.setModified(JobSchedulerDate.nowInUtc());
             dbItemDailyPlanVariables.setPlannedOrderId(id);
             dbItemDailyPlanVariables.setVariableName(variable.getKey());
-            dbItemDailyPlanVariables.setVariableValue(variable.getValue());
+            dbItemDailyPlanVariables.setVariableValue(variable.getValue().toString());
             sosHibernateSession.save(dbItemDailyPlanVariables);
         }
     }

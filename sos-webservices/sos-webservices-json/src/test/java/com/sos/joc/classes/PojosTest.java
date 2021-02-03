@@ -2,6 +2,7 @@ package com.sos.joc.classes;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -132,5 +133,26 @@ public class PojosTest {
 	    System.out.println(new String(workflowBytes, StandardCharsets.UTF_8));
 	    assertEquals("readInventoryRequestWithWorkflowTest", workflow.getTYPE(), DeployType.WORKFLOW);
 	}
+	
+    @Test
+    public void readAndWriteVariables() throws IOException {
+        Variables vars = new Variables(0);
+        vars.setAdditionalProperty("myString", "MyStringValue");
+        vars.setAdditionalProperty("myNumber", 4711);
+        vars.setAdditionalProperty("myBoolean", true);
+        System.out.println(vars.getAdditionalProperties().get("myString").getClass());
+        System.out.println(vars.getAdditionalProperties().get("myNumber").getClass());
+        System.out.println(vars.getAdditionalProperties().get("myBoolean").getClass());
+        System.out.println(objectMapper.writeValueAsString(vars));
+        String json = "{\"returnCode\":0,\"myString\":\"MyStringValue\",\"myBoolean\":true,\"myNumber\":4711}\"";
+        vars = objectMapper.readValue(json, Variables.class);
+        System.out.println(vars.getAdditionalProperties().get("myString").getClass());
+        System.out.println(vars.getAdditionalProperties().get("myNumber").getClass());
+        System.out.println(vars.getAdditionalProperties().get("myBoolean").getClass());
+        System.out.println(vars.getAdditionalProperties().get("myString").toString());
+        System.out.println(vars.getAdditionalProperties().get("myNumber").toString());
+        System.out.println(vars.getAdditionalProperties().get("myBoolean").toString());
+
+    }
 
 }

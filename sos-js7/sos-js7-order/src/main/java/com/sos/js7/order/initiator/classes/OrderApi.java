@@ -51,6 +51,7 @@ import js7.proxy.javaapi.data.order.JFreshOrder;
 import js7.proxy.javaapi.data.order.JOrder;
 import js7.proxy.javaapi.data.order.JOrderPredicates;
 import reactor.core.publisher.Flux;
+import scala.math.BigDecimal;
 
 public class OrderApi {
 
@@ -75,10 +76,10 @@ public class OrderApi {
             schedule.setVariables(new ArrayList<NameValuePair>());
             schedule.setSubmitOrderToControllerWhenPlanned(true);
             schedule.setWorkflowPath(startOrder.getWorkflowPath());
-            for (Entry<String, String> v : startOrder.getArguments().getAdditionalProperties().entrySet()) {
+            for (Entry<String, Object> v : startOrder.getArguments().getAdditionalProperties().entrySet()) {
                 NameValuePair nameValuePair = new NameValuePair();
                 nameValuePair.setName(v.getKey());
-                nameValuePair.setValue(v.getValue());
+                nameValuePair.setValue(v.getValue().toString());
                 schedule.getVariables().add(nameValuePair);
             }
 
@@ -101,9 +102,22 @@ public class OrderApi {
         OrderId orderId = OrderId.of(order.getId());
         Map<String, Value> arguments = new HashMap<>();
         if (order.getArguments() != null) {
-            Map<String, String> a = order.getArguments().getAdditionalProperties();
+            Map<String, Object> a = order.getArguments().getAdditionalProperties();
             for (String key : a.keySet()) {
-                arguments.put(key, Value.of(a.get(key)));
+                Object val = a.get(key);
+                if (val instanceof String) {
+                    arguments.put(key, Value.of((String) val));
+                } else if (val instanceof Boolean) {
+                    arguments.put(key, Value.of((Boolean) val));
+                } else if (val instanceof Integer) {
+                    arguments.put(key, Value.of((Integer) val));
+                } else if (val instanceof Long) {
+                    arguments.put(key, Value.of((Long) val));
+                } else if (val instanceof Double) {
+                    arguments.put(key, Value.of(BigDecimal.valueOf((Double) val)));
+                } else if (val instanceof BigDecimal) {
+                    arguments.put(key, Value.of((BigDecimal) val));
+                }
             }
         }
         Optional<Instant> scheduledFor = Optional.empty();

@@ -1,5 +1,7 @@
 package com.sos.joc.classes.inventory.search;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -59,7 +61,7 @@ public class WorkflowConverter {
         private List<String> criticalities;
         private List<String> scripts;
         private List<String> argNames;
-        private List<String> argValues;
+        private List<Object> argValues;
 
         private JsonObject mainInfo;
         private JsonObject scriptInfo;
@@ -73,7 +75,7 @@ public class WorkflowConverter {
             criticalities = new ArrayList<String>();
             scripts = new ArrayList<String>();
             argNames = new ArrayList<String>();
-            argValues = new ArrayList<String>();
+            argValues = new ArrayList<Object>();
         }
 
         public void process(com.sos.inventory.model.workflow.Jobs jobs) {
@@ -107,7 +109,7 @@ public class WorkflowConverter {
         private void jsonArgInfo() {
             JsonObjectBuilder builder = Json.createObjectBuilder();
             jsonAddStringValues(builder, "names", argNames);
-            jsonAddStringValues(builder, "values", argValues);
+            jsonAddObjectValues(builder, "values", argValues);
             argInfo = builder.build();
         }
 
@@ -151,7 +153,7 @@ public class WorkflowConverter {
             return argNames;
         }
 
-        public List<String> getArgValues() {
+        public List<Object> getArgValues() {
             return argValues;
         }
 
@@ -189,7 +191,7 @@ public class WorkflowConverter {
                         if (!SOSString.isEmpty(name)) {
                             argNames.add(name);
                         }
-                        if (!SOSString.isEmpty(value)) {
+                        if (value != null) {
                             argValues.add(value);
                         }
                     });
@@ -217,7 +219,7 @@ public class WorkflowConverter {
         private Map<String, Integer> locks;
 
         private List<String> jobArgNames;
-        private List<String> jobArgValues;
+        private List<Object> jobArgValues;
 
         private JsonObject mainInfo;
         private JsonObject argInfo;
@@ -229,7 +231,7 @@ public class WorkflowConverter {
             locks = new HashMap<String, Integer>();
 
             jobArgNames = new ArrayList<String>();
-            jobArgValues = new ArrayList<String>();
+            jobArgValues = new ArrayList<Object>();
         }
 
         public void process(List<Instruction> instructions) {
@@ -258,7 +260,7 @@ public class WorkflowConverter {
         private void jsonArgInfo() {
             JsonObjectBuilder builder = Json.createObjectBuilder();
             jsonAddStringValues(builder, "jobArgNames", jobArgNames);
-            jsonAddStringValues(builder, "jobArgvalues", jobArgValues);
+            jsonAddObjectValues(builder, "jobArgvalues", jobArgValues);
             argInfo = builder.build();
         }
 
@@ -290,7 +292,7 @@ public class WorkflowConverter {
             return jobArgNames;
         }
 
-        public List<String> getJobArgValues() {
+        public List<Object> getJobArgValues() {
             return jobArgValues;
         }
 
@@ -313,7 +315,7 @@ public class WorkflowConverter {
                             if (!SOSString.isEmpty(name)) {
                                 jobArgNames.add(name);
                             }
-                            if (!SOSString.isEmpty(value)) {
+                            if (value != null) {
                                 jobArgValues.add(value);
                             }
                         });
@@ -356,17 +358,45 @@ public class WorkflowConverter {
     private static <T> List<T> removeDuplicates(List<T> list) {
         return list.stream().distinct().collect(Collectors.toList());
     }
-
+    
     private static void jsonAddStringValues(JsonObjectBuilder builder, String key, List<String> list) {
         if (list.size() > 0) {
             builder.add(key, getJsonArray(list));
         }
     }
-
+    
     private static JsonArrayBuilder getJsonArray(List<String> list) {
         JsonArrayBuilder b = Json.createArrayBuilder();
         for (String n : list) {
             b.add(n);
+        }
+        return b;
+    }
+
+    private static void jsonAddObjectValues(JsonObjectBuilder builder, String key, List<Object> list) {
+        if (list.size() > 0) {
+            builder.add(key, getJsonArrayFromObjects(list));
+        }
+    }
+
+    private static JsonArrayBuilder getJsonArrayFromObjects(List<Object> list) {
+        JsonArrayBuilder b = Json.createArrayBuilder();
+        for (Object n : list) {
+            if (n instanceof String) {
+                b.add((String) n);
+            } else if (n instanceof Boolean) {
+                b.add((Boolean) n);
+            } else if (n instanceof Integer) {
+                b.add((Integer) n);
+            } else if (n instanceof BigInteger) {
+                b.add((BigInteger) n);
+            } else if (n instanceof Long) {
+                b.add((Long) n);
+            } else if (n instanceof Double) {
+                b.add((Double) n);
+            } else if (n instanceof BigDecimal) {
+                b.add((BigDecimal) n);
+            }
         }
         return b;
     }

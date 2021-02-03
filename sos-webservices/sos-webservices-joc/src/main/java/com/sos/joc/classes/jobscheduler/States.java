@@ -36,7 +36,7 @@ public class States {
             componentState.setSeverity(2);
             break;
         case unknown:
-            componentState.setSeverity(3);
+            componentState.setSeverity(2);
             break;
         }
         return componentState;
@@ -56,7 +56,7 @@ public class States {
             connectionState.setSeverity(2);
             break;
         case unknown:
-            connectionState.setSeverity(3);
+            connectionState.setSeverity(2);
             break;
         }
         return connectionState;
@@ -68,7 +68,7 @@ public class States {
         }
         ClusterNodeState clusterNodeState = new ClusterNodeState();
         if (isActive == null) {
-            clusterNodeState.setSeverity(3);
+            clusterNodeState.setSeverity(2);
             clusterNodeState.set_text(ClusterNodeStateText.unknown);
         } else if (isActive) {
             clusterNodeState.setSeverity(0);
@@ -83,7 +83,7 @@ public class States {
     public static ClusterState getClusterState(ClusterType state) {
         ClusterState clusterState = new ClusterState();
         if (state == null) {
-            clusterState.setSeverity(3);
+            clusterState.setSeverity(2);
             clusterState.set_text("ClusterUnknown");
             return clusterState;
         }

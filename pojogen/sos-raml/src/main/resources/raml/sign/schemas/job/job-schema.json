@@ -23,6 +23,10 @@
       "minimum": 1,
       "default": 1
     },
+    "v1Compatible": {
+      "type": "boolean",
+      "default": true
+    },
     "timeout": {
       "$ref": "../../../inventory/schemas/common/nonNegativeInteger-schema.json"
     },

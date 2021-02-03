@@ -29,7 +29,7 @@ public class Variables {
     @JsonProperty("returnCode")
     private Integer returnCode;
     @JsonIgnore
-    private Map<String, String> additionalProperties = new HashMap<String, String>();
+    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
@@ -58,12 +58,12 @@ public class Variables {
     }
 
     @JsonAnyGetter
-    public Map<String, String> getAdditionalProperties() {
+    public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
     }
 
     @JsonAnySetter
-    public void setAdditionalProperty(String name, String value) {
+    public void setAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
     }
 
