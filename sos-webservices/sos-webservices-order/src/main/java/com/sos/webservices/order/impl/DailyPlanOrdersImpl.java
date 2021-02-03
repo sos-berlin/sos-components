@@ -146,11 +146,11 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
 
             filter.setLate(dailyPlanOrderFilter.getFilter().getLate());
 
-            boolean stateFilterContainsPending = false;
+            boolean stateFilterContainsPendingOrPlanned = false;
             if (dailyPlanOrderFilter.getFilter().getStates() != null) {
                 for (OrderStateText state : dailyPlanOrderFilter.getFilter().getStates()) {
-                    if (state.equals(OrderStateText.PENDING)) {
-                        stateFilterContainsPending = true;
+                    if (state.equals(OrderStateText.PENDING) || state.equals(OrderStateText.PLANNED)) {
+                        stateFilterContainsPendingOrPlanned = true;
                     }
                     filter.addState(state);
                 }
@@ -171,7 +171,7 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
 
                     boolean add = true;
                     PlannedOrderItem p = createPlanItem(dbItemDailyPlanWithHistory);
-                    if (dailyPlanOrderFilter.getFilter().getStates() != null && !stateFilterContainsPending && dbItemDailyPlanWithHistory
+                    if (dailyPlanOrderFilter.getFilter().getStates() != null && !stateFilterContainsPendingOrPlanned && dbItemDailyPlanWithHistory
                             .getOrderHistoryId() == null) {
                         add = false;
                     }

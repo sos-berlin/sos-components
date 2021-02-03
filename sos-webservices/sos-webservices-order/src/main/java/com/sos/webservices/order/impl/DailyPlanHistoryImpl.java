@@ -67,7 +67,7 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
  
                 filter.setSubmitted(dailyPlanHistoryFilter.getFilter().getSubmitted());
                 if ((dailyPlanHistoryFilter.getFilter().getDateTo() != null) && (dailyPlanHistoryFilter.getFilter().getDateFrom() == null)) {
-                    Date date = JobSchedulerDate.getDateFrom(dailyPlanHistoryFilter.getFilter().getDateFrom(), dailyPlanHistoryFilter.getTimeZone());
+                    Date date = JobSchedulerDate.getDateFrom(dailyPlanHistoryFilter.getFilter().getDateTo(), dailyPlanHistoryFilter.getTimeZone());
                     filter.setDailyPlanDate(date);
                 } else {
 
@@ -77,9 +77,9 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
                         filter.setDailyPlanDateTo(toDate);
                     }
                     if (dailyPlanHistoryFilter.getFilter().getDateFrom() != null) {
-                        Date toDate = JobSchedulerDate.getDateTo(dailyPlanHistoryFilter.getFilter().getDateTo(), dailyPlanHistoryFilter
+                        Date fromDate = JobSchedulerDate.getDateFrom(dailyPlanHistoryFilter.getFilter().getDateFrom(), dailyPlanHistoryFilter
                                 .getTimeZone());
-                        filter.setDailyPlanDateFrom(toDate);
+                        filter.setDailyPlanDateFrom(fromDate);
                     }
                 }
             }
@@ -116,10 +116,10 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
 
                 if (dbItemDailySubmissionHistory.getMessage() != null) {
                     if (dbItemDailySubmissionHistory.getMessage().startsWith(WARN)) {
-                        dailyPlanSubmissionTimes.getWarnMessages().add(dbItemDailySubmissionHistory.getMessage().substring(WARN.length() - 1));
+                        dailyPlanSubmissionTimes.getWarnMessages().add(dbItemDailySubmissionHistory.getMessage().substring(WARN.length()));
                     }
                     if (dbItemDailySubmissionHistory.getMessage().startsWith(ERROR)) {
-                        dailyPlanSubmissionTimes.getErrorMessages().add(dbItemDailySubmissionHistory.getMessage().substring(ERROR.length() - 1));
+                        dailyPlanSubmissionTimes.getErrorMessages().add(dbItemDailySubmissionHistory.getMessage().substring(ERROR.length()));
                     }
                 }
 

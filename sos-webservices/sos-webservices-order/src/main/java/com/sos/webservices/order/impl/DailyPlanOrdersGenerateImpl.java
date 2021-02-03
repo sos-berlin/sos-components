@@ -73,6 +73,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
             orderInitiatorSettings.setTimeZone(Globals.sosCockpitProperties.getProperty("daily_plan_timezone", Globals.DEFAULT_TIMEZONE_DAILY_PLAN));
             orderInitiatorSettings.setPeriodBegin(Globals.sosCockpitProperties.getProperty("daily_plan_period_begin",
                     Globals.DEFAULT_PERIOD_DAILY_PLAN));
+            
 
             OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings, false);
             if (dailyPlanOrderSelector.getControllerIds() == null) {
@@ -86,6 +87,8 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
 
             OrderInitiatorGlobals.dailyPlanDate = DailyPlanHelper.getDailyPlanDateAsDate(DailyPlanHelper.stringAsDate(dailyPlanOrderSelector
                     .getDailyPlanDate()).getTime());
+            OrderInitiatorGlobals.submissionTime = new Date();
+            
             for (String controllerId : dailyPlanOrderSelector.getControllerIds()) {
                 orderInitiatorSettings.setControllerId(controllerId);
 

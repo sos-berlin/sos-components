@@ -99,6 +99,7 @@ public class OrderInitiatorRunner extends TimerTask {
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
             IOException, ParseException, SOSException, URISyntaxException, JobSchedulerConnectionResetException,
             JobSchedulerConnectionRefusedException, InterruptedException, ExecutionException, TimeoutException {
+       
         orderListSynchronizer = calculateStartTimes(DailyPlanHelper.stringAsDate(dailyPlanDate));
         if (orderListSynchronizer.getListOfPlannedOrders().size() > 0) {
             orderListSynchronizer.addPlannedOrderToControllerAndDB(withSubmit);
@@ -215,6 +216,7 @@ public class OrderInitiatorRunner extends TimerTask {
         if (!createdPlans.contains(DailyPlanHelper.getDayOfYear(calendar)) && now.after(calendar)) {
             createdPlans.add(DailyPlanHelper.getDayOfYear(calendar));
             try {
+                OrderInitiatorGlobals.submissionTime = new Date();
                 createPlan(calendar);
             } catch (JobSchedulerConnectionResetException | JobSchedulerConnectionRefusedException | ParseException | SOSException
                     | URISyntaxException | InterruptedException | ExecutionException | TimeoutException e) {

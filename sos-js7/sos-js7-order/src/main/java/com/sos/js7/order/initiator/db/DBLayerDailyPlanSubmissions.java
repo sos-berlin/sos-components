@@ -115,7 +115,6 @@ public class DBLayerDailyPlanSubmissions {
     }
 
     public void storePlan(DBItemDailyPlanSubmissions dbItemDailyPlanSubmissions) throws SOSHibernateException {
-        OrderInitiatorGlobals.submissionTime = new Date(); 
         dbItemDailyPlanSubmissions.setCreated(OrderInitiatorGlobals.submissionTime);
         sosHibernateSession.save(dbItemDailyPlanSubmissions);
     }

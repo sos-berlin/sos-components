@@ -36,16 +36,13 @@ public class SOSDuration implements Comparable<SOSDuration> {
     }
 
     @Override
+    public boolean equals(Object o) {
+        return getDurationInMillis().equals(((SOSDuration) o).getDurationInMillis());
+    }
+
+    @Override
     public int compareTo(SOSDuration o) {
-        if (getDurationInMillis() == o.getDurationInMillis()) {
-            return 0;
-        } else {
-            if (getDurationInMillis() > o.getDurationInMillis()) {
-                return 1;
-            } else {
-                    return -1;
-            }
-        }
+        return Long.compare(getDurationInMillis(), o.getDurationInMillis());
     }
 
 }
