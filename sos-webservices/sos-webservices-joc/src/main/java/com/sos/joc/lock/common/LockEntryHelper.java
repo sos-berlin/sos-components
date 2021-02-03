@@ -122,8 +122,9 @@ public class LockEntryHelper {
 
     private LockWorkflow getLockWorkflow(Map<String, LockWorkflow> workflows, LockOrder lo) {
         String workflowName = lo.getOrder().getWorkflowId().getPath();
+        LockWorkflow lw = null;
         if (!workflows.containsKey(workflowName)) {
-            LockWorkflow lw = new LockWorkflow();
+            lw = new LockWorkflow();
             SOSHibernateSession session = null;
             try {
                 session = Globals.createSosHibernateStatelessConnection("getLockWorkflow");
@@ -136,7 +137,6 @@ public class LockEntryHelper {
                     lw.setPath(workflowName);
                 } else {
                     lw.setPath(namePathMap.get(workflowName));
-                    lo.getOrder().getWorkflowId().setPath(lw.getPath());
                 }
 
             } catch (Throwable e) {
@@ -149,8 +149,14 @@ public class LockEntryHelper {
             }
             lw.setVersionId(lo.getOrder().getWorkflowId().getVersionId());
             workflows.put(workflowName, lw);
+        } else {
+            lw = workflows.get(workflowName);
         }
-        return workflows.get(workflowName);
+        try {
+            lo.getOrder().getWorkflowId().setPath(lw.getPath());
+        } catch (Throwable e) {
+        }
+        return lw;
     }
 
     private WorkflowLock getWorkflowLock(Map<String, Integer> shared, String lockId, String orderId) {
