@@ -198,28 +198,31 @@ public class OrdersHelper {
 
         Set<String> keys = args.keySet().stream().filter(arg -> !params.containsKey(arg)).collect(Collectors.toSet());
         if (!keys.isEmpty()) {
-            throw new JocMissingRequiredParameterException("Arguments " + keys.toString() + " aren't declared in the workflow");
+            if (keys.size() == 1) {
+                throw new JocMissingRequiredParameterException("Variable " + keys.iterator().next() + " isn't declared in the workflow");
+            }
+            throw new JocMissingRequiredParameterException("Variables " + keys.toString() + " aren't declared in the workflow");
         }
         
         for (Map.Entry<String, Parameter> param : params.entrySet()) {
             if (param.getValue().getDefault() == null && !args.containsKey(param.getKey())) { // required
-                throw new JocMissingRequiredParameterException("Argument '" + param.getKey() + "' is missing but required");
+                throw new JocMissingRequiredParameterException("Variable '" + param.getKey() + "' is missing but required");
             }
             if (args.containsKey(param.getKey())) {
                 switch (param.getValue().getType()) {
                 case String:
                     if ((args.get(param.getKey()) instanceof String) == false) {
-                        throw new JocMissingRequiredParameterException("Argument '" + param.getKey() + "' has wrong datatype");
+                        throw new JocMissingRequiredParameterException("Variable '" + param.getKey() + "' has wrong datatype. A string is expected.");
                     }
                     break;
                 case Boolean:
                     if ((args.get(param.getKey()) instanceof Boolean) == false) {
-                        throw new JocMissingRequiredParameterException("Argument '" + param.getKey() + "' has wrong datatype");
+                        throw new JocMissingRequiredParameterException("Variable '" + param.getKey() + "' has wrong datatype. 'true' or 'false' are expected.");
                     }
                     break;
                 case Number:
                     if (args.get(param.getKey()) instanceof String || args.get(param.getKey()) instanceof Boolean) {
-                        throw new JocMissingRequiredParameterException("Argument '" + param.getKey() + "' has wrong datatype");
+                        throw new JocMissingRequiredParameterException("Variable '" + param.getKey() + "' has wrong datatype. A number is expected.");
                     }
                     break;
                 }
