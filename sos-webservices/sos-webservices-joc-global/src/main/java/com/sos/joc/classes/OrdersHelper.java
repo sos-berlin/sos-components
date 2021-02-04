@@ -7,14 +7,22 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.controller.model.common.Variables;
 import com.sos.controller.model.order.OrderItem;
 import com.sos.controller.model.workflow.HistoricOutcome;
 import com.sos.controller.model.workflow.WorkflowId;
+import com.sos.inventory.model.workflow.OrderRequirements;
+import com.sos.inventory.model.workflow.Parameter;
+import com.sos.inventory.model.workflow.Parameters;
 import com.sos.joc.Globals;
 import com.sos.joc.db.history.common.HistorySeverity;
+import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.order.OrderState;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrderV;
@@ -85,7 +93,7 @@ public class OrdersHelper {
         // consider 'blocked' as further grouped state
         private static final long serialVersionUID = 1L;
 
-        {  
+        {
             put(OrderStateText.PLANNED, 4);
             put(OrderStateText.PENDING, 1);
             put(OrderStateText.WAITING, 8);
@@ -159,7 +167,7 @@ public class OrdersHelper {
         }
         Either<Problem, AgentId> opt = jOrder.attached();
         if (opt.isRight()) {
-           o.setAgentId(opt.get().string()); 
+            o.setAgentId(opt.get().string());
         }
         o.setPosition(oItem.getWorkflowPosition().getPosition());
         Long scheduledFor = oItem.getState().getScheduledFor();
@@ -181,6 +189,42 @@ public class OrdersHelper {
             o.setDeliveryDate(Date.from(Instant.now()));
         }
         return o;
+    }
+
+    public static void checkArguments(Variables arguments, OrderRequirements orderRequirements) throws JocException {
+        final Map<String, Parameter> params = (orderRequirements != null && orderRequirements.getParameters() != null) ? orderRequirements
+                .getParameters().getAdditionalProperties() : Collections.emptyMap();
+        final Map<String, Object> args = (arguments != null) ? arguments.getAdditionalProperties() : Collections.emptyMap();
+
+        Set<String> keys = args.keySet().stream().filter(arg -> !params.containsKey(arg)).collect(Collectors.toSet());
+        if (!keys.isEmpty()) {
+            throw new JocMissingRequiredParameterException("Arguments " + keys.toString() + " aren't declared in the workflow");
+        }
+        
+        for (Map.Entry<String, Parameter> param : params.entrySet()) {
+            if (param.getValue().getDefault() == null && !args.containsKey(param.getKey())) { // required
+                throw new JocMissingRequiredParameterException("Argument '" + param.getKey() + "' is missing but required");
+            }
+            if (args.containsKey(param.getKey())) {
+                switch (param.getValue().getType()) {
+                case String:
+                    if ((args.get(param.getKey()) instanceof String) == false) {
+                        throw new JocMissingRequiredParameterException("Argument '" + param.getKey() + "' has wrong datatype");
+                    }
+                    break;
+                case Boolean:
+                    if ((args.get(param.getKey()) instanceof Boolean) == false) {
+                        throw new JocMissingRequiredParameterException("Argument '" + param.getKey() + "' has wrong datatype");
+                    }
+                    break;
+                case Number:
+                    if (args.get(param.getKey()) instanceof String || args.get(param.getKey()) instanceof Boolean) {
+                        throw new JocMissingRequiredParameterException("Argument '" + param.getKey() + "' has wrong datatype");
+                    }
+                    break;
+                }
+            }
+        }
     }
 
 }

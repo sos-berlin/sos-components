@@ -20,10 +20,11 @@ import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
+import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.AddOrderAudit;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.classes.proxy.ControllerApi;
+import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
@@ -34,13 +35,17 @@ import com.sos.joc.model.order.AddOrders;
 import com.sos.joc.model.order.OrderIds;
 import com.sos.joc.orders.resource.IOrdersResourceAdd;
 import com.sos.schema.JsonValidator;
+import com.sos.sign.model.workflow.Workflow;
 
 import io.vavr.control.Either;
+import js7.base.problem.Problem;
 import js7.data.order.OrderId;
 import js7.data.value.Value;
 import js7.data.workflow.WorkflowPath;
-import js7.proxy.javaapi.JControllerApi;
+import js7.proxy.javaapi.JControllerProxy;
+import js7.proxy.javaapi.data.controller.JControllerState;
 import js7.proxy.javaapi.data.order.JFreshOrder;
+import js7.proxy.javaapi.data.workflow.JWorkflow;
 import reactor.core.publisher.Flux;
 
 @Path("orders")
@@ -70,7 +75,8 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             Predicate<AddOrder> permissions = order -> canAdd(order.getWorkflowPath(), permittedFolders);
 
-            // TODO Further predicate to check if workflow exists?
+            final JControllerProxy proxy = Proxy.of(addOrders.getControllerId());
+            final JControllerState currentState = proxy.currentState();
             
             final String yyyymmdd = formatter.format(Instant.now());
 
@@ -78,6 +84,10 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                 Either<Err419, JFreshOrder> either = null;
                 try {
                     CheckJavaVariableName.test("orderName", order.getOrderName());
+                    Either<Problem, JWorkflow> e = currentState.pathToWorkflow(WorkflowPath.of(JocInventory.pathToName(order.getWorkflowPath())));
+                    ProblemHelper.throwProblemIfExist(e);
+                    Workflow workflow = Globals.objectMapper.readValue(e.get().toJson(), Workflow.class);
+                    OrdersHelper.checkArguments(order.getArguments(), workflow.getOrderRequirements());
                     JFreshOrder o = mapToFreshOrder(order, yyyymmdd);
                     AddOrderAudit orderAudit = new AddOrderAudit(order, addOrders, o.id().string());
                     logAuditMessage(orderAudit);
@@ -96,10 +106,9 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             if (result.containsKey(true) && !result.get(true).isEmpty()) {
                 final Map<OrderId, JFreshOrder> freshOrders = result.get(true).stream().map(Either::get).collect(Collectors.toMap(JFreshOrder::id,
                         Function.identity()));
-                final JControllerApi controllerApi = ControllerApi.of(addOrders.getControllerId());
-                controllerApi.addOrders(Flux.fromIterable(freshOrders.values())).thenAccept(either -> {
+                proxy.api().addOrders(Flux.fromIterable(freshOrders.values())).thenAccept(either -> {
                     if (either.isRight()) {
-                        controllerApi.removeOrdersWhenTerminated(freshOrders.keySet()).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e,
+                        proxy.api().removeOrdersWhenTerminated(freshOrders.keySet()).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e,
                                 accessToken, getJocError(), addOrders.getControllerId()));
                     } else {
                         ProblemHelper.postProblemEventIfExist(either, accessToken, getJocError(), addOrders.getControllerId());
