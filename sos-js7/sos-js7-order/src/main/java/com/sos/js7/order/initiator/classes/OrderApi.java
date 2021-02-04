@@ -76,11 +76,13 @@ public class OrderApi {
             schedule.setVariables(new ArrayList<NameValuePair>());
             schedule.setSubmitOrderToControllerWhenPlanned(true);
             schedule.setWorkflowPath(startOrder.getWorkflowPath());
-            for (Entry<String, Object> v : startOrder.getArguments().getAdditionalProperties().entrySet()) {
-                NameValuePair nameValuePair = new NameValuePair();
-                nameValuePair.setName(v.getKey());
-                nameValuePair.setValue(v.getValue().toString());
-                schedule.getVariables().add(nameValuePair);
+            if (startOrder.getArguments() != null) {
+                for (Entry<String, Object> v : startOrder.getArguments().getAdditionalProperties().entrySet()) {
+                    NameValuePair nameValuePair = new NameValuePair();
+                    nameValuePair.setName(v.getKey());
+                    nameValuePair.setValue(v.getValue());
+                    schedule.getVariables().add(nameValuePair);
+                }
             }
 
             plannedOrder.setSchedule(schedule);

@@ -156,7 +156,7 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
                 dbItemDailyPlanVariables.setModified(new Date());
                 dbItemDailyPlanVariables.setPlannedOrderId(dbItemDailyPlanOrder.getId());
                 dbItemDailyPlanVariables.setVariableName(variable.getName());
-                dbItemDailyPlanVariables.setVariableValue(variable.getValue());
+                dbItemDailyPlanVariables.setVariableValue(variable.getValue().toString());
                 sosHibernateSession.save(dbItemDailyPlanVariables);
             }
             Globals.commit(sosHibernateSession);

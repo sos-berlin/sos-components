@@ -28,7 +28,7 @@ public class NameValuePair {
      * 
      */
     @JsonProperty("value")
-    private String value;
+    private Object value;
 
     /**
      * 
@@ -56,7 +56,7 @@ public class NameValuePair {
      * 
      */
     @JsonProperty("value")
-    public String getValue() {
+    public Object getValue() {
         return value;
     }
 
@@ -66,7 +66,7 @@ public class NameValuePair {
      * 
      */
     @JsonProperty("value")
-    public void setValue(String value) {
+    public void setValue(Object value) {
         this.value = value;
     }
 
