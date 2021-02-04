@@ -3,7 +3,6 @@ package com.sos.js7.order.initiator;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -61,7 +60,6 @@ import com.sos.js7.order.initiator.db.DBLayerOrderVariables;
 import com.sos.js7.order.initiator.db.FilterDailyPlanSubmissions;
 import com.sos.js7.order.initiator.db.FilterInventoryConfigurations;
 import com.sos.js7.order.initiator.db.FilterOrderVariables;
-import com.sos.webservices.order.initiator.model.NameValuePair;
 
 public class OrderInitiatorRunner extends TimerTask {
 
@@ -126,13 +124,13 @@ public class OrderInitiatorRunner extends TimerTask {
                 FilterOrderVariables filterOrderVariables = new FilterOrderVariables();
 
                 filterOrderVariables.setPlannedOrderId(dbItemDailyPlanOrders.getId());
-                List<NameValuePair> variables = new ArrayList<NameValuePair>();
+                Variables variables = new Variables();
                 List<DBItemDailyPlanVariables> listOfOrderVariables = dbLayerOrderVariables.getOrderVariables(filterOrderVariables, 0);
-                for (DBItemDailyPlanVariables orderVariable : listOfOrderVariables) {
-                    NameValuePair variable = new NameValuePair();
-                    variable.setName(orderVariable.getVariableName());
-                    variable.setValue(orderVariable.getVariableValue());
-                    variables.add(variable);
+                if (listOfOrderVariables != null) {
+                    for (DBItemDailyPlanVariables orderVariable : listOfOrderVariables) {
+                        // TODO db should know the datatype -> cast vale with datatype
+                        variables.setAdditionalProperty(orderVariable.getVariableName(), orderVariable.getVariableValue());
+                    }
                 }
 
                 schedule.setVariables(variables);
@@ -265,14 +263,10 @@ public class OrderInitiatorRunner extends TimerTask {
     }
 
     private FreshOrder buildFreshOrder(Schedule o, Long startTime) {
-        Variables variables = new Variables();
-        for (NameValuePair param : o.getVariables()) {
-            variables.setAdditionalProperty(param.getName(), param.getValue());
-        }
         FreshOrder freshOrder = new FreshOrder();
         freshOrder.setId(DailyPlanHelper.buildOrderId(o, startTime));
         freshOrder.setScheduledFor(startTime);
-        freshOrder.setArguments(variables);
+        freshOrder.setArguments(o.getVariables());
         freshOrder.setWorkflowPath(o.getWorkflowName());
         return freshOrder;
     }

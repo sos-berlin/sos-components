@@ -2,11 +2,11 @@
 package com.sos.webservices.order.initiator.model;
 
 import java.util.Date;
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.controller.model.common.Variables;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -36,14 +36,15 @@ public class OrderVariables {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
     /**
-     * params or environment variables
+     * key-value pairs
      * <p>
-     * 
+     * a map for arbitrary key-value pairs
      * (Required)
      * 
      */
     @JsonProperty("variables")
-    private List<NameValuePair> variables = null;
+    @JsonPropertyDescription("a map for arbitrary key-value pairs")
+    private Variables variables;
 
     /**
      * timestamp
@@ -70,26 +71,26 @@ public class OrderVariables {
     }
 
     /**
-     * params or environment variables
+     * key-value pairs
      * <p>
-     * 
+     * a map for arbitrary key-value pairs
      * (Required)
      * 
      */
     @JsonProperty("variables")
-    public List<NameValuePair> getVariables() {
+    public Variables getVariables() {
         return variables;
     }
 
     /**
-     * params or environment variables
+     * key-value pairs
      * <p>
-     * 
+     * a map for arbitrary key-value pairs
      * (Required)
      * 
      */
     @JsonProperty("variables")
-    public void setVariables(List<NameValuePair> variables) {
+    public void setVariables(Variables variables) {
         this.variables = variables;
     }
 

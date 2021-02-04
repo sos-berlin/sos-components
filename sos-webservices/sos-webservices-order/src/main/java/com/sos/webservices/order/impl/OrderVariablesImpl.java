@@ -1,6 +1,5 @@
 package com.sos.webservices.order.impl;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -10,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.controller.model.common.Variables;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -20,7 +20,6 @@ import com.sos.joc.model.order.OrderFilter;
 import com.sos.js7.order.initiator.db.DBLayerOrderVariables;
 import com.sos.js7.order.initiator.db.FilterOrderVariables;
 import com.sos.schema.JsonValidator;
-import com.sos.webservices.order.initiator.model.NameValuePair;
 import com.sos.webservices.order.initiator.model.OrderVariables;
 import com.sos.webservices.order.resource.IOrderVariablesResource;
 
@@ -53,16 +52,17 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
             FilterOrderVariables filterOrderVariables = new FilterOrderVariables();
 
             filterOrderVariables.setOrderId(orderFilter.getOrderId());
-            OrderVariables variables = new OrderVariables();
+            OrderVariables orderVariables = new OrderVariables();
             List<DBItemDailyPlanVariables> listOfOrderVariables = dbLayerOrderVariables.getOrderVariables(filterOrderVariables, 0);
-            variables.setDeliveryDate(new Date());
-            variables.setVariables(new ArrayList<NameValuePair>());
-            for (DBItemDailyPlanVariables orderVariable : listOfOrderVariables) {
-                NameValuePair variable = new NameValuePair();
-                variable.setName(orderVariable.getVariableName());
-                variable.setValue(orderVariable.getVariableValue());
-                variables.getVariables().add(variable);
+            orderVariables.setDeliveryDate(new Date());
+            Variables variables = new Variables();
+            if (listOfOrderVariables != null) {
+                for (DBItemDailyPlanVariables orderVariable : listOfOrderVariables) {
+                    // TODO db should know datatype then cast value
+                    variables.setAdditionalProperty(orderVariable.getVariableName(), orderVariable.getVariableValue());
+                }
             }
+            orderVariables.setVariables(variables);
 
             return JOCDefaultResponse.responseStatus200(variables);
 

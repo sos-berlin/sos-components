@@ -6,11 +6,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.controller.model.common.Variables;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.common.IReleaseObject;
-import com.sos.webservices.order.initiator.model.NameValuePair;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -103,13 +103,14 @@ public class Schedule implements IConfigurationObject, IReleaseObject
     @JsonProperty("nonWorkingCalendars")
     private List<AssignedNonWorkingCalendars> nonWorkingCalendars = null;
     /**
-     * params or environment variables
+     * key-value pairs
      * <p>
-     * 
+     * a map for arbitrary key-value pairs
      * 
      */
     @JsonProperty("variables")
-    private List<NameValuePair> variables = null;
+    @JsonPropertyDescription("a map for arbitrary key-value pairs")
+    private Variables variables;
 
     /**
      * path
@@ -290,24 +291,24 @@ public class Schedule implements IConfigurationObject, IReleaseObject
     }
 
     /**
-     * params or environment variables
+     * key-value pairs
      * <p>
-     * 
+     * a map for arbitrary key-value pairs
      * 
      */
     @JsonProperty("variables")
-    public List<NameValuePair> getVariables() {
+    public Variables getVariables() {
         return variables;
     }
 
     /**
-     * params or environment variables
+     * key-value pairs
      * <p>
-     * 
+     * a map for arbitrary key-value pairs
      * 
      */
     @JsonProperty("variables")
-    public void setVariables(List<NameValuePair> variables) {
+    public void setVariables(Variables variables) {
         this.variables = variables;
     }
 

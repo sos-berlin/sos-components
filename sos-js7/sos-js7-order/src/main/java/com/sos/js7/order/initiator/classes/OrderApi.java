@@ -4,10 +4,8 @@ import java.math.BigDecimal;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -40,12 +38,14 @@ import com.sos.joc.model.order.AddOrder;
 import com.sos.joc.model.order.AddOrders;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
 import com.sos.js7.order.initiator.OrderListSynchronizer;
-import com.sos.webservices.order.initiator.model.NameValuePair;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.controller.data.ControllerCommand.AddOrdersResponse;
 import js7.data.order.OrderId;
+import js7.data.value.BooleanValue;
+import js7.data.value.NumberValue;
+import js7.data.value.StringValue;
 import js7.data.value.Value;
 import js7.data.workflow.WorkflowPath;
 import js7.proxy.javaapi.data.order.JFreshOrder;
@@ -73,17 +73,9 @@ public class OrderApi {
             plannedOrder.setControllerId(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
             Schedule schedule = new Schedule();
             schedule.setPath(startOrder.getOrderName());
-            schedule.setVariables(new ArrayList<NameValuePair>());
+            schedule.setVariables(startOrder.getArguments());
             schedule.setSubmitOrderToControllerWhenPlanned(true);
             schedule.setWorkflowPath(startOrder.getWorkflowPath());
-            if (startOrder.getArguments() != null) {
-                for (Entry<String, Object> v : startOrder.getArguments().getAdditionalProperties().entrySet()) {
-                    NameValuePair nameValuePair = new NameValuePair();
-                    nameValuePair.setName(v.getKey());
-                    nameValuePair.setValue(v.getValue());
-                    schedule.getVariables().add(nameValuePair);
-                }
-            }
 
             plannedOrder.setSchedule(schedule);
             FreshOrder freshOrder = new FreshOrder();
@@ -108,17 +100,17 @@ public class OrderApi {
             for (String key : a.keySet()) {
                 Object val = a.get(key);
                 if (val instanceof String) {
-                    arguments.put(key, Value.of((String) val));
+                    arguments.put(key, StringValue.of((String) val));
                 } else if (val instanceof Boolean) {
-                    arguments.put(key, Value.of((Boolean) val));
+                    arguments.put(key, BooleanValue.of((Boolean) val));
                 } else if (val instanceof Integer) {
-                    arguments.put(key, Value.of((Integer) val));
+                    arguments.put(key, NumberValue.of((Integer) val));
                 } else if (val instanceof Long) {
-                    arguments.put(key, Value.of((Long) val));
+                    arguments.put(key, NumberValue.of((Long) val));
                 } else if (val instanceof Double) {
-                    arguments.put(key, Value.of(scala.math.BigDecimal.javaBigDecimal2bigDecimal(BigDecimal.valueOf((Double) val))));
+                    arguments.put(key, NumberValue.of(scala.math.BigDecimal.javaBigDecimal2bigDecimal(BigDecimal.valueOf((Double) val))));
                 } else if (val instanceof BigDecimal) {
-                    arguments.put(key, Value.of(scala.math.BigDecimal.javaBigDecimal2bigDecimal((BigDecimal) val)));
+                    arguments.put(key, NumberValue.of(scala.math.BigDecimal.javaBigDecimal2bigDecimal((BigDecimal) val)));
                 }
             }
         }
