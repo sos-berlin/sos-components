@@ -25,6 +25,7 @@ import com.sos.joc.model.dailyplan.DailyPlanHistoryFilter;
 import com.sos.joc.model.dailyplan.DailyPlanHistoryItem;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissionTimes;
+import com.sos.joc.model.dailyplan.DailyplanHistoryOrderItem;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlanHistory;
 import com.sos.js7.order.initiator.db.FilterDailyPlanHistory;
 import com.sos.schema.JsonValidator;
@@ -106,13 +107,18 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
                     DailyPlanSubmissionTimes p = new DailyPlanSubmissionTimes();
                     p.setSubmissionTime(dbItemDailySubmissionHistory.getSubmissionTime());
                     p.setErrorMessages(new ArrayList<String>());
-                    p.setOrderIds(new ArrayList<String>());
+                    p.setOrderIds(new ArrayList<DailyplanHistoryOrderItem>());
                     p.setWarnMessages(new ArrayList<String>());
                     mapOfSubmissionTimes.put(dbItemDailySubmissionHistory.getSubmissionTime(), p);
                 }
+                DailyplanHistoryOrderItem dailyplanHistoryOrderItem = new DailyplanHistoryOrderItem();
+                dailyplanHistoryOrderItem.setOrderId(dbItemDailySubmissionHistory.getOrderId());
+                dailyplanHistoryOrderItem.setScheduledFor(dbItemDailySubmissionHistory.getScheduledFor());
+                dailyplanHistoryOrderItem.setSubmitted(dbItemDailySubmissionHistory.isSubmitted());
+                dailyplanHistoryOrderItem.setWorkflowPath(dbItemDailySubmissionHistory.getWorkflowPath());
 
                 DailyPlanSubmissionTimes dailyPlanSubmissionTimes = mapOfSubmissionTimes.get(dbItemDailySubmissionHistory.getSubmissionTime());
-                dailyPlanSubmissionTimes.getOrderIds().add(dbItemDailySubmissionHistory.getOrderId());
+                dailyPlanSubmissionTimes.getOrderIds().add(dailyplanHistoryOrderItem);
 
                 if (dbItemDailySubmissionHistory.getMessage() != null) {
                     if (dbItemDailySubmissionHistory.getMessage().startsWith(WARN)) {

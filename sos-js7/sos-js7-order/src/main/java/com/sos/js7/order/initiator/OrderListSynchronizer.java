@@ -142,6 +142,8 @@ public class OrderListSynchronizer {
                 dbItemDailyPlanHistory.setCreated(JobSchedulerDate.nowInUtc());
                 dbItemDailyPlanHistory.setDailyPlanDate(OrderInitiatorGlobals.dailyPlanDate);
                 dbItemDailyPlanHistory.setOrderId(addedOrder.getFreshOrder().getId());
+                dbItemDailyPlanHistory.setScheduledFor(new Date(addedOrder.getFreshOrder().getScheduledFor()));
+                dbItemDailyPlanHistory.setWorkflowPath(addedOrder.getSchedule().getWorkflowPath());
                 dbItemDailyPlanHistory.setSubmissionTime(OrderInitiatorGlobals.submissionTime);
                 dbItemDailyPlanHistory.setUserAccount(OrderInitiatorGlobals.orderInitiatorSettings.getUserAccount());
                 dbLayerDailyPlanHistory.storeDailyPlanHistory(dbItemDailyPlanHistory);

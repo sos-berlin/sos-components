@@ -37,7 +37,7 @@ public class DailyPlanSubmissionTimes {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date submissionTime;
     @JsonProperty("orderIds")
-    private List<String> orderIds = null;
+    private List<DailyplanHistoryOrderItem> orderIds = null;
     @JsonProperty("warnMessages")
     private List<String> warnMessages = null;
     @JsonProperty("errorMessages")
@@ -66,12 +66,12 @@ public class DailyPlanSubmissionTimes {
     }
 
     @JsonProperty("orderIds")
-    public List<String> getOrderIds() {
+    public List<DailyplanHistoryOrderItem> getOrderIds() {
         return orderIds;
     }
 
     @JsonProperty("orderIds")
-    public void setOrderIds(List<String> orderIds) {
+    public void setOrderIds(List<DailyplanHistoryOrderItem> orderIds) {
         this.orderIds = orderIds;
     }
 

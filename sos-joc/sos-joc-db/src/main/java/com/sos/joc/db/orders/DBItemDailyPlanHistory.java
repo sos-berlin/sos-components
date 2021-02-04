@@ -36,8 +36,15 @@ public class DBItemDailyPlanHistory extends DBItem {
     @Column(name = "[USER_ACCOUNT]", nullable = false)
     private String userAccount;
 
-    @Column(name = "[ORDER_ID]", nullable = false)
+    @Column(name = "[ORDER_ID]", nullable = true)
     private String orderId;
+
+    @Column(name = "[WORKLOW_PATH]", nullable = true)
+    private String workflowPath;
+    
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "[SCHEDULED_FOR]", nullable = true)
+    private Date scheduledFor;
 
     @Column(name = "[SUBMITTED]", nullable = false)
     @Type(type = "numeric_boolean")
@@ -128,6 +135,26 @@ public class DBItemDailyPlanHistory extends DBItem {
 
     public void setSubmitted(boolean submitted) {
         this.submitted = submitted;
+    }
+
+    
+    public String getWorkflowPath() {
+        return workflowPath;
+    }
+
+    
+    public void setWorkflowPath(String workflowPath) {
+        this.workflowPath = workflowPath;
+    }
+
+    
+    public Date getScheduledFor() {
+        return scheduledFor;
+    }
+
+    
+    public void setScheduledFor(Date scheduledFor) {
+        this.scheduledFor = scheduledFor;
     }
 
 }
