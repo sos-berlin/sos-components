@@ -32,6 +32,7 @@ import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDepCommitIds;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
@@ -41,11 +42,11 @@ import com.sos.joc.db.deployment.DBItemDeploymentSubmission;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
+import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocSosHibernateException;
-import com.sos.joc.inventory.impl.ValidateResourceImpl;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.jobclass.JobClassPublish;
@@ -771,17 +772,17 @@ public class DBLayerDeploy {
     }
 
     public void saveOrUpdateInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId,
-            String folder) {
-        saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, false, folder);
+            String folder, Set<String> agentNames) {
+        saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, false, folder, agentNames);
     }
     
     public void saveOrUpdateInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId,
-            boolean overwrite) {
-        saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, overwrite, null);   
+            boolean overwrite, Set<String> agentNames) {
+        saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, overwrite, null, agentNames);   
     }
     
     public void saveOrUpdateInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId,
-            boolean overwrite, String folder) {
+            boolean overwrite, String folder, Set<String> agentNames) {
         try {
             DBItemInventoryConfiguration existingConfiguration = null;
             StringBuilder hql = new StringBuilder(" from ");
@@ -794,7 +795,7 @@ public class DBLayerDeploy {
             existingConfiguration = session.getSingleResult(query);
             boolean valid = false;
             try {
-                ValidateResourceImpl.validate(configuration.getObjectType(), configuration.getConfiguration());
+                Validator.validate(configuration.getObjectType(), configuration.getConfiguration(), new InventoryDBLayer(session), agentNames);
                 valid = true;
             } catch (SOSJsonSchemaException | IOException e) {
                 valid = false;

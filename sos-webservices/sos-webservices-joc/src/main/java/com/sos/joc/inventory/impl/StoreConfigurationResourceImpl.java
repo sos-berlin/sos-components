@@ -16,6 +16,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.InventoryAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JocInventory.InventoryPath;
+import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
@@ -62,7 +63,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             DBItemInventoryConfiguration item;
             try {
                 item = JocInventory.getConfiguration(dbLayer, in.getId(), in.getPath(), null, in.getObjectType(), folderPermissions);
-                item = setProperties(in, item, false);
+                item = setProperties(in, item, dbLayer, false);
                 JocInventory.updateConfiguration(dbLayer, item, in.getConfiguration());
             } catch (DBMissingDataException e) {
                 checkRequiredParameter("path", in.getPath());
@@ -93,7 +94,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
 
                 item = new DBItemInventoryConfiguration();
                 item.setType(in.getObjectType());
-                item = setProperties(in, item, true);
+                item = setProperties(in, item, dbLayer, true);
                 item.setCreated(Date.from(Instant.now()));
                 createAuditLog(item, in.getObjectType());
                 JocInventory.insertConfiguration(dbLayer, item, in.getConfiguration());
@@ -131,7 +132,8 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         }
     }
 
-    private DBItemInventoryConfiguration setProperties(ConfigurationObject in, DBItemInventoryConfiguration item, boolean isNew) throws Exception {
+    private DBItemInventoryConfiguration setProperties(ConfigurationObject in, DBItemInventoryConfiguration item, InventoryDBLayer dbLayer,
+            boolean isNew) throws Exception {
 
         if (isNew) {
             InventoryPath path = new InventoryPath(in.getPath(), in.getObjectType());
@@ -184,7 +186,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 default:
                     break;
                 }
-                validate(item, in);
+                validate(item, in, dbLayer);
             }
         }
 
@@ -194,11 +196,11 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         return item;
     }
 
-    private void validate(DBItemInventoryConfiguration item, ConfigurationObject in) {
+    private void validate(DBItemInventoryConfiguration item, ConfigurationObject in, InventoryDBLayer dbLayer) {
 
         try {
             item.setContent(JocInventory.toString(in.getConfiguration()));
-            ValidateResourceImpl.validate(in.getObjectType(), in.getConfiguration());
+            Validator.validate(in.getObjectType(), in.getConfiguration(), dbLayer, null);
             item.setValid(true);
         } catch (Throwable e) {
             item.setValid(false);

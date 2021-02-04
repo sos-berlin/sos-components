@@ -20,6 +20,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.ImportAudit;
+import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
@@ -102,6 +103,8 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
+            InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(hibernateSession);
+            Set<String> agentNames = agentDbLayer.getEnabledAgentNames();
             ImportAudit importAudit = new ImportAudit(filter, 
                     String.format("%1$d configuration object(s) imported with profile %2$s", configurations.size(), account));
             logAuditMessage(importAudit);
@@ -112,10 +115,10 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                     item.setPath(filter.getTargetFolder() + item.getPath());
                     return item;
                 }).forEach(item -> dbLayer.saveOrUpdateInventoryConfiguration(
-                        item, account, dbItemAuditLog.getId(), filter.getOverwrite(), filter.getTargetFolder()));
+                        item, account, dbItemAuditLog.getId(), filter.getOverwrite(), filter.getTargetFolder(), agentNames));
             } else {
                 configurations.stream().forEach(item -> dbLayer.saveOrUpdateInventoryConfiguration(
-                        item, account, dbItemAuditLog.getId(), filter.getOverwrite()));
+                        item, account, dbItemAuditLog.getId(), filter.getOverwrite(), agentNames));
             }
             folders = configurations.stream().map(cfg -> cfg.getPath()).map(path -> Paths.get(path).getParent()).collect(Collectors.toSet());
             dbLayer.createInvConfigurationsDBItemsForFoldersIfNotExists(PublishUtils.updateSetOfPathsWithParents(folders), dbItemAuditLog.getId());
