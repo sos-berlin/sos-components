@@ -32,7 +32,7 @@ public class Parameter {
     @JsonProperty("type")
     private ParameterType type;
     @JsonProperty("default")
-    private String _default;
+    private Object _default;
 
     /**
      * No args constructor for use in serialization
@@ -46,7 +46,7 @@ public class Parameter {
      * @param _default
      * @param type
      */
-    public Parameter(ParameterType type, String _default) {
+    public Parameter(ParameterType type, Object _default) {
         super();
         this.type = type;
         this._default = _default;
@@ -77,12 +77,12 @@ public class Parameter {
     }
 
     @JsonProperty("default")
-    public String getDefault() {
+    public Object getDefault() {
         return _default;
     }
 
     @JsonProperty("default")
-    public void setDefault(String _default) {
+    public void setDefault(Object _default) {
         this._default = _default;
     }
 
