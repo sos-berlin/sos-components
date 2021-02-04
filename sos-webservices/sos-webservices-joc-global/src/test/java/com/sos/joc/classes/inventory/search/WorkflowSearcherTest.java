@@ -126,25 +126,25 @@ public class WorkflowSearcherTest {
         LOGGER.info(" ");
         LOGGER.info("[getJob(job_1)] " + SOSString.toString(job));
 
-        //String value = ws.getJobArgument("job_10", "xxx");
-        //LOGGER.info(" ");
-        //LOGGER.info("[getJobArgument(job_10,xxx)] " + value);
+        Object value = ws.getJobArgument("job_10", "xxx");
+        LOGGER.info(" ");
+        LOGGER.info("[getJobArgument(job_10,xxx)] " + value);
 
-        //value = ws.getJobArgument("job_1", "job_1_arg_1");
-        //LOGGER.info(" ");
-        //LOGGER.info("[getJobArgument(job_1,job_1_arg_1)] " + value);
+        value = ws.getJobArgument("job_1", "job_1_arg_1");
+        LOGGER.info(" ");
+        LOGGER.info("[getJobArgument(job_1,job_1_arg_1)] " + value);
 
-        //Map<String, String> values = ws.getJobArguments("job_10");
-        //LOGGER.info(" ");
-        //LOGGER.info("[getJobArguments(job_10)] " + values);
+        Map<String, Object> values = ws.getJobArguments("job_10");
+        LOGGER.info(" ");
+        LOGGER.info("[getJobArguments(job_10)] " + values);
 
-        //values = ws.getJobArguments("job_1");
-        //LOGGER.info(" ");
-        //LOGGER.info("[getJobArguments(job_1)] " + values);
+        values = ws.getJobArguments("job_1");
+        LOGGER.info(" ");
+        LOGGER.info("[getJobArguments(job_1)] " + values);
 
-        //values = ws.getJobArguments("job_1", ".*");
-        //LOGGER.info(" ");
-        //LOGGER.info("[getJobArguments(job_1,.*)] " + values);
+        values = ws.getJobArguments("job_1", ".*");
+        LOGGER.info(" ");
+        LOGGER.info("[getJobArguments(job_1,.*)] " + values);
     }
 
     @Ignore

@@ -1,6 +1,17 @@
 {
 	"TYPE": "Workflow",
 	"path": "my_workflow",
+	"orderRequirements": {
+		"parameters": {
+			"myString": {
+				"type": "String",
+				"default": "DEFAULT"
+			},
+			"myNumber": {
+				"type": "Number"
+			}
+		}
+	},
 	"instructions": [
 		{
 			"TYPE": "Execute.Named",
@@ -88,6 +99,11 @@
 			"executable": {
 				"TYPE": "ExecutableScript",
 				"script": "job_2 script"
+			},
+			"defaultArguments": {
+				"job_2_arg_1": true,
+				"job_2_arg_2": 1,
+				"job_2_arg_3": 1.50
 			},
 			"returnCodeMeaning": {
 				"success": [

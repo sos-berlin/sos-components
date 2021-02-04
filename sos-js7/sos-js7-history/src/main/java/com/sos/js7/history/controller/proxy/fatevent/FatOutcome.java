@@ -1,11 +1,10 @@
 package com.sos.js7.history.controller.proxy.fatevent;
 
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.sos.js7.event.controller.EventMeta;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.OutcomeType;
+import com.sos.js7.history.helper.HistoryUtil;
 
 import js7.data.value.Value;
 
@@ -51,11 +50,7 @@ public class FatOutcome {
     }
 
     public String getNamedValuesAsJsonString() throws JsonProcessingException {
-        Map<String, String> map = null;
-        if (namedValues != null) {
-            map = namedValues.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().toString()));
-        }
-        return EventMeta.map2Json(map);
+        return HistoryUtil.map2Json(namedValues);
     }
 
     public String getErrorCode() {
