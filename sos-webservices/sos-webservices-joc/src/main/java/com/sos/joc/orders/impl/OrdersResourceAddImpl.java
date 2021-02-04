@@ -1,5 +1,6 @@
 package com.sos.joc.orders.impl;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -41,7 +42,6 @@ import js7.data.workflow.WorkflowPath;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.data.order.JFreshOrder;
 import reactor.core.publisher.Flux;
-import scala.math.BigDecimal;
 
 @Path("orders")
 public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersResourceAdd {
@@ -145,9 +145,9 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                 } else if (val instanceof Long) {
                     arguments.put(key, Value.of((Long) val));
                 } else if (val instanceof Double) {
-                    arguments.put(key, Value.of(BigDecimal.valueOf((Double) val)));
+                    arguments.put(key, Value.of(scala.math.BigDecimal.javaBigDecimal2bigDecimal(BigDecimal.valueOf((Double) val))));
                 } else if (val instanceof BigDecimal) {
-                    arguments.put(key, Value.of((BigDecimal) val));
+                    arguments.put(key, Value.of(scala.math.BigDecimal.javaBigDecimal2bigDecimal((BigDecimal) val)));
                 }
             }
         }

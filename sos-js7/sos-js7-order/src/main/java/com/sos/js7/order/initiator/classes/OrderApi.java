@@ -1,5 +1,6 @@
 package com.sos.js7.order.initiator.classes;
 
+import java.math.BigDecimal;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.time.Instant;
@@ -51,7 +52,6 @@ import js7.proxy.javaapi.data.order.JFreshOrder;
 import js7.proxy.javaapi.data.order.JOrder;
 import js7.proxy.javaapi.data.order.JOrderPredicates;
 import reactor.core.publisher.Flux;
-import scala.math.BigDecimal;
 
 public class OrderApi {
 
@@ -114,9 +114,9 @@ public class OrderApi {
                 } else if (val instanceof Long) {
                     arguments.put(key, Value.of((Long) val));
                 } else if (val instanceof Double) {
-                    arguments.put(key, Value.of(BigDecimal.valueOf((Double) val)));
+                    arguments.put(key, Value.of(scala.math.BigDecimal.javaBigDecimal2bigDecimal(BigDecimal.valueOf((Double) val))));
                 } else if (val instanceof BigDecimal) {
-                    arguments.put(key, Value.of((BigDecimal) val));
+                    arguments.put(key, Value.of(scala.math.BigDecimal.javaBigDecimal2bigDecimal((BigDecimal) val)));
                 }
             }
         }
