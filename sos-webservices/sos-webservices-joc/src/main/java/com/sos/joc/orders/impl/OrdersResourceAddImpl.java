@@ -87,7 +87,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     Either<Problem, JWorkflow> e = currentState.pathToWorkflow(WorkflowPath.of(JocInventory.pathToName(order.getWorkflowPath())));
                     ProblemHelper.throwProblemIfExist(e);
                     Workflow workflow = Globals.objectMapper.readValue(e.get().toJson(), Workflow.class);
-                    OrdersHelper.checkArguments(order.getArguments(), workflow.getOrderRequirements());
+                    order.setArguments(OrdersHelper.checkArguments(order.getArguments(), workflow.getOrderRequirements()));
                     JFreshOrder o = mapToFreshOrder(order, yyyymmdd);
                     AddOrderAudit orderAudit = new AddOrderAudit(order, addOrders, o.id().string());
                     logAuditMessage(orderAudit);

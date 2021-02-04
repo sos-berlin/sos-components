@@ -1,6 +1,7 @@
 package com.sos.joc.classes;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
@@ -18,7 +19,6 @@ import com.sos.controller.model.workflow.HistoricOutcome;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.workflow.OrderRequirements;
 import com.sos.inventory.model.workflow.Parameter;
-import com.sos.inventory.model.workflow.Parameters;
 import com.sos.joc.Globals;
 import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.exceptions.JocException;
@@ -191,10 +191,10 @@ public class OrdersHelper {
         return o;
     }
 
-    public static void checkArguments(Variables arguments, OrderRequirements orderRequirements) throws JocException {
+    public static Variables checkArguments(Variables arguments, OrderRequirements orderRequirements) throws JocException {
         final Map<String, Parameter> params = (orderRequirements != null && orderRequirements.getParameters() != null) ? orderRequirements
                 .getParameters().getAdditionalProperties() : Collections.emptyMap();
-        final Map<String, Object> args = (arguments != null) ? arguments.getAdditionalProperties() : Collections.emptyMap();
+        Map<String, Object> args = (arguments != null) ? arguments.getAdditionalProperties() : Collections.emptyMap();
 
         Set<String> keys = args.keySet().stream().filter(arg -> !params.containsKey(arg)).collect(Collectors.toSet());
         if (!keys.isEmpty()) {
@@ -209,25 +209,48 @@ public class OrdersHelper {
                 throw new JocMissingRequiredParameterException("Variable '" + param.getKey() + "' is missing but required");
             }
             if (args.containsKey(param.getKey())) {
+                Object curArg = args.get(param.getKey());
                 switch (param.getValue().getType()) {
                 case String:
-                    if ((args.get(param.getKey()) instanceof String) == false) {
+                    if ((curArg instanceof String) == false) {
                         throw new JocMissingRequiredParameterException("Variable '" + param.getKey() + "' has wrong datatype. A string is expected.");
                     }
                     break;
                 case Boolean:
-                    if ((args.get(param.getKey()) instanceof Boolean) == false) {
-                        throw new JocMissingRequiredParameterException("Variable '" + param.getKey() + "' has wrong datatype. 'true' or 'false' are expected.");
+                    if ((curArg instanceof Boolean) == false) {
+                        if (curArg instanceof String) {
+                            String strArg = (String) curArg;
+                            if ("true".equals(strArg)) {
+                                arguments.setAdditionalProperty(param.getKey(), Boolean.TRUE);
+                            } else if ("false".equals(strArg)) {
+                                arguments.setAdditionalProperty(param.getKey(), Boolean.FALSE);
+                            } else {
+                                throw new JocMissingRequiredParameterException("Variable '" + param.getKey()
+                                        + "' has wrong datatype. 'true' or 'false' are expected.");
+                            }
+                        } else {
+                            throw new JocMissingRequiredParameterException("Variable '" + param.getKey()
+                                    + "' has wrong datatype. 'true' or 'false' are expected.");
+                        }
                     }
                     break;
                 case Number:
-                    if (args.get(param.getKey()) instanceof String || args.get(param.getKey()) instanceof Boolean) {
+                    if (curArg instanceof Boolean) {
                         throw new JocMissingRequiredParameterException("Variable '" + param.getKey() + "' has wrong datatype. A number is expected.");
+                    }
+                    if (curArg instanceof String) {
+                        try {
+                            BigDecimal number = new BigDecimal((String) curArg);
+                            arguments.setAdditionalProperty(param.getKey(), number);
+                        } catch (NumberFormatException e) {
+                            throw new JocMissingRequiredParameterException("Variable '" + param.getKey() + "' has wrong datatype. A number is expected.");
+                        }
                     }
                     break;
                 }
             }
         }
+        return arguments;
     }
 
 }
