@@ -2,22 +2,31 @@
 package com.sos.joc.model.event;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.Err;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+
+/**
+ * event
+ * <p>
+ * 
+ * 
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
     "error",
     "eventId",
     "eventSnapshots",
-    "notifications"
+    "deliveryDate"
 })
 public class Event {
 
@@ -41,14 +50,28 @@ public class Event {
      * non negative long
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("eventId")
     private Long eventId;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("eventSnapshots")
     private List<EventSnapshot> eventSnapshots = new ArrayList<EventSnapshot>();
-    @JsonProperty("notifications")
-    private List<EventSnapshot> notifications = new ArrayList<EventSnapshot>();
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
+     * 
+     */
+    @JsonProperty("deliveryDate")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
+    private Date deliveryDate;
 
     /**
      * filename
@@ -98,6 +121,7 @@ public class Event {
      * non negative long
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("eventId")
@@ -109,6 +133,7 @@ public class Event {
      * non negative long
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("eventId")
@@ -116,34 +141,58 @@ public class Event {
         this.eventId = eventId;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("eventSnapshots")
     public List<EventSnapshot> getEventSnapshots() {
         return eventSnapshots;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("eventSnapshots")
     public void setEventSnapshots(List<EventSnapshot> eventSnapshots) {
         this.eventSnapshots = eventSnapshots;
     }
 
-    @JsonProperty("notifications")
-    public List<EventSnapshot> getNotifications() {
-        return notifications;
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
+     * 
+     */
+    @JsonProperty("deliveryDate")
+    public Date getDeliveryDate() {
+        return deliveryDate;
     }
 
-    @JsonProperty("notifications")
-    public void setNotifications(List<EventSnapshot> notifications) {
-        this.notifications = notifications;
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
+     * 
+     */
+    @JsonProperty("deliveryDate")
+    public void setDeliveryDate(Date deliveryDate) {
+        this.deliveryDate = deliveryDate;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("error", error).append("eventId", eventId).append("eventSnapshots", eventSnapshots).append("notifications", notifications).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("error", error).append("eventId", eventId).append("eventSnapshots", eventSnapshots).append("deliveryDate", deliveryDate).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(eventId).append(controllerId).append(error).append(eventSnapshots).append(notifications).toHashCode();
+        return new HashCodeBuilder().append(eventId).append(controllerId).append(error).append(eventSnapshots).append(deliveryDate).toHashCode();
     }
 
     @Override
@@ -155,7 +204,7 @@ public class Event {
             return false;
         }
         Event rhs = ((Event) other);
-        return new EqualsBuilder().append(eventId, rhs.eventId).append(controllerId, rhs.controllerId).append(error, rhs.error).append(eventSnapshots, rhs.eventSnapshots).append(notifications, rhs.notifications).isEquals();
+        return new EqualsBuilder().append(eventId, rhs.eventId).append(controllerId, rhs.controllerId).append(error, rhs.error).append(eventSnapshots, rhs.eventSnapshots).append(deliveryDate, rhs.deliveryDate).isEquals();
     }
 
 }

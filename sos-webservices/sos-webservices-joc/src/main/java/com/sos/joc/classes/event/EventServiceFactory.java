@@ -39,6 +39,7 @@ public class EventServiceFactory {
     private final static long cleanupPeriodInMillis = TimeUnit.MINUTES.toMillis(3);
 //    private volatile CopyOnWriteArraySet<EventCondition> conditions = new CopyOnWriteArraySet<>();
     protected static Lock lock = new ReentrantLock();
+    public static AtomicBoolean isClosed = new AtomicBoolean(false);
     
     
     public enum Mode {
@@ -92,10 +93,17 @@ public class EventServiceFactory {
         }
     }
     
-    public static Event getEvents(String controllerId, Long eventId, String accessToken, EventCondition eventArrived, Session session,
-            Map<String, WorkflowId> terminatedOrders, boolean isCurrentController) {
-        return EventServiceFactory.getInstance()._getEvents(controllerId, eventId, accessToken, eventArrived, session, terminatedOrders,
-                isCurrentController);
+    public static void closeEventServices() {
+        LOGGER.info("closing all event services");
+        EventServiceFactory.getInstance().eventServices.values().stream().forEach(service -> {
+            service.close();
+        });
+        EventServiceFactory.isClosed.set(true);
+    }
+    
+    public static Event getEvents(String controllerId, Long eventId, String accessToken, Session session,
+            Map<String, WorkflowId> terminatedOrders) {
+        return EventServiceFactory.getInstance()._getEvents(controllerId, eventId, accessToken, session, terminatedOrders);
     }
     
     public EventService getEventService(String controllerId) {
@@ -123,16 +131,15 @@ public class EventServiceFactory {
         return new EventCondition(lock.newCondition());
     }
     
-    private Event _getEvents(String controllerId, Long eventId, String accessToken, EventCondition eventArrived, Session session,
-            Map<String, WorkflowId> terminatedOrders, boolean isCurrentController) {
+    private Event _getEvents(String controllerId, Long eventId, String accessToken, Session session, Map<String, WorkflowId> terminatedOrders) {
         Event events = new Event();
-        events.setNotifications(null); // TODO not yet implemented
         events.setControllerId(controllerId);
         events.setEventId(eventId); //default
         EventService service = null;
         if (isDebugEnabled) {
             LOGGER.debug("Listen Events of '" + controllerId + "' since " + eventId);
         }
+        EventCondition eventArrived = createCondition();
         try {
             service = getEventService(controllerId);
             service.setTerminatedOrders(terminatedOrders);

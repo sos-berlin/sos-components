@@ -90,6 +90,13 @@ public class EventService {
         EventBus.getInstance().register(this);
         startEventService();
     }
+    
+    protected void close() {
+        if (evtBus != null) {
+            evtBus.close();
+        }
+        signalAll();
+    }
 
     public void startEventService() {
         try {

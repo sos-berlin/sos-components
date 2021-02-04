@@ -57,7 +57,8 @@ public class JsonValidator {
             put("DocumentationsFilter", "docu/documentationsFilter-schema.json");
             put("DocumentationImport", "docu/documentationImport-schema.json");
             
-            put("RegisterEvent", "event/register-schema.json");
+            put("RegisterEvent", "event/register-schema.json"); //obsolete
+            put("Controller", "event/controllerFilter-schema.json");
             
 
             put("ControllerId", "common/controllerId-schema.json");

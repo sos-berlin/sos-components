@@ -19,8 +19,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "eventId",
     "path",
+    "eventId",
     "eventType",
     "objectType",
     "workflow",
@@ -29,14 +29,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class EventSnapshot {
 
-    /**
-     * eventId/1000=milliseconds of UTC time
-     * (Required)
-     * 
-     */
-    @JsonProperty("eventId")
-    @JsonPropertyDescription("eventId/1000=milliseconds of UTC time")
-    private Long eventId;
     /**
      * path
      * <p>
@@ -47,12 +39,20 @@ public class EventSnapshot {
     @JsonPropertyDescription("absolute path of an object.")
     private String path;
     /**
-     * e.g. OrderStateChanged, OrderAdded, OrderTerminated, JOCStateChanged, ControllerStateChanged, WorkflowStateChanged, JobStateChanged
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("eventId")
+    private Long eventId;
+    /**
+     * e.g. JOCStateChanged, ControllerStateChanged, WorkflowStateChanged, JobStateChanged, InventoryUpdated
      * (Required)
      * 
      */
     @JsonProperty("eventType")
-    @JsonPropertyDescription("e.g. OrderStateChanged, OrderAdded, OrderTerminated, JOCStateChanged, ControllerStateChanged, WorkflowStateChanged, JobStateChanged")
+    @JsonPropertyDescription("e.g. JOCStateChanged, ControllerStateChanged, WorkflowStateChanged, JobStateChanged, InventoryUpdated")
     private String eventType;
     /**
      * event types
@@ -77,26 +77,6 @@ public class EventSnapshot {
     private String message;
 
     /**
-     * eventId/1000=milliseconds of UTC time
-     * (Required)
-     * 
-     */
-    @JsonProperty("eventId")
-    public Long getEventId() {
-        return eventId;
-    }
-
-    /**
-     * eventId/1000=milliseconds of UTC time
-     * (Required)
-     * 
-     */
-    @JsonProperty("eventId")
-    public void setEventId(Long eventId) {
-        this.eventId = eventId;
-    }
-
-    /**
      * path
      * <p>
      * absolute path of an object.
@@ -119,7 +99,29 @@ public class EventSnapshot {
     }
 
     /**
-     * e.g. OrderStateChanged, OrderAdded, OrderTerminated, JOCStateChanged, ControllerStateChanged, WorkflowStateChanged, JobStateChanged
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("eventId")
+    public Long getEventId() {
+        return eventId;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("eventId")
+    public void setEventId(Long eventId) {
+        this.eventId = eventId;
+    }
+
+    /**
+     * e.g. JOCStateChanged, ControllerStateChanged, WorkflowStateChanged, JobStateChanged, InventoryUpdated
      * (Required)
      * 
      */
@@ -129,7 +131,7 @@ public class EventSnapshot {
     }
 
     /**
-     * e.g. OrderStateChanged, OrderAdded, OrderTerminated, JOCStateChanged, ControllerStateChanged, WorkflowStateChanged, JobStateChanged
+     * e.g. JOCStateChanged, ControllerStateChanged, WorkflowStateChanged, JobStateChanged, InventoryUpdated
      * (Required)
      * 
      */
@@ -206,12 +208,12 @@ public class EventSnapshot {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("eventId", eventId).append("path", path).append("eventType", eventType).append("objectType", objectType).append("workflow", workflow).append("accessToken", accessToken).append("message", message).toString();
+        return new ToStringBuilder(this).append("path", path).append("eventId", eventId).append("eventType", eventType).append("objectType", objectType).append("workflow", workflow).append("accessToken", accessToken).append("message", message).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(eventId).append(path).append(workflow).append(eventType).append(accessToken).append(message).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(path).append(eventId).append(workflow).append(eventType).append(accessToken).append(message).append(objectType).toHashCode();
     }
 
     @Override
@@ -223,7 +225,7 @@ public class EventSnapshot {
             return false;
         }
         EventSnapshot rhs = ((EventSnapshot) other);
-        return new EqualsBuilder().append(eventId, rhs.eventId).append(path, rhs.path).append(workflow, rhs.workflow).append(eventType, rhs.eventType).append(accessToken, rhs.accessToken).append(message, rhs.message).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(eventId, rhs.eventId).append(workflow, rhs.workflow).append(eventType, rhs.eventType).append(accessToken, rhs.accessToken).append(message, rhs.message).append(objectType, rhs.objectType).isEquals();
     }
 
 }
