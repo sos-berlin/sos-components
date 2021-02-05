@@ -202,8 +202,8 @@ public class Validator {
         }
     }
 
-    private static void validateInstructions(Collection<Instruction> instructions, String position, OrderRequirements orderRequirements, Map<String, String> labels)
-            throws SOSJsonSchemaException, JsonProcessingException, IOException, JocConfigurationException {
+    private static void validateInstructions(Collection<Instruction> instructions, String position, OrderRequirements orderRequirements,
+            Map<String, String> labels) throws SOSJsonSchemaException, JsonProcessingException, IOException, JocConfigurationException {
         if (instructions != null) {
             int index = 0;
             for (Instruction inst : instructions) {
@@ -291,7 +291,7 @@ public class Validator {
                 }
                 if (invalid) {
                     throw new JocConfigurationException(String.format(
-                            "$.orderRequirements.parameters['%s'].default: Wrong datatype %s (%s is expected).", key, _default.getClass()
+                            "$.orderRequirements.parameters['%s'].default: Wrong data type %s (%s is expected).", key, _default.getClass()
                                     .getSimpleName(), value.getType().value()));
                 }
             }
@@ -332,7 +332,7 @@ public class Validator {
                         break;
                     }
                     if (invalid) {
-                        throw new JocConfigurationException(String.format("%s['%s']: Wrong datatype %s (%s is expected).", key, position, curArg
+                        throw new JocConfigurationException(String.format("%s['%s']: Wrong data type %s (%s is expected).", key, position, curArg
                                 .getClass().getSimpleName(), value.getType().value()));
                     }
                 }

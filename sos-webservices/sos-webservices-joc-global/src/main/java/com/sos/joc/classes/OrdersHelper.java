@@ -21,6 +21,7 @@ import com.sos.inventory.model.workflow.OrderRequirements;
 import com.sos.inventory.model.workflow.Parameter;
 import com.sos.joc.Globals;
 import com.sos.joc.db.history.common.HistorySeverity;
+import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.order.OrderState;
@@ -204,6 +205,7 @@ public class OrdersHelper {
             throw new JocMissingRequiredParameterException("Variables " + keys.toString() + " aren't declared in the workflow");
         }
         
+        boolean invalid = false;
         for (Map.Entry<String, Parameter> param : params.entrySet()) {
             if (param.getValue().getDefault() == null && !args.containsKey(param.getKey())) { // required
                 throw new JocMissingRequiredParameterException("Variable '" + param.getKey() + "' is missing but required");
@@ -213,7 +215,7 @@ public class OrdersHelper {
                 switch (param.getValue().getType()) {
                 case String:
                     if ((curArg instanceof String) == false) {
-                        throw new JocMissingRequiredParameterException("Variable '" + param.getKey() + "' has wrong datatype. A string is expected.");
+                        invalid = true;
                     }
                     break;
                 case Boolean:
@@ -225,28 +227,29 @@ public class OrdersHelper {
                             } else if ("false".equals(strArg)) {
                                 arguments.setAdditionalProperty(param.getKey(), Boolean.FALSE);
                             } else {
-                                throw new JocMissingRequiredParameterException("Variable '" + param.getKey()
-                                        + "' has wrong datatype. 'true' or 'false' are expected.");
+                                invalid = true;
                             }
                         } else {
-                            throw new JocMissingRequiredParameterException("Variable '" + param.getKey()
-                                    + "' has wrong datatype. 'true' or 'false' are expected.");
+                            invalid = true;
                         }
                     }
                     break;
                 case Number:
                     if (curArg instanceof Boolean) {
-                        throw new JocMissingRequiredParameterException("Variable '" + param.getKey() + "' has wrong datatype. A number is expected.");
-                    }
-                    if (curArg instanceof String) {
+                        invalid = true;
+                    } else if (curArg instanceof String) {
                         try {
                             BigDecimal number = new BigDecimal((String) curArg);
                             arguments.setAdditionalProperty(param.getKey(), number);
                         } catch (NumberFormatException e) {
-                            throw new JocMissingRequiredParameterException("Variable '" + param.getKey() + "' has wrong datatype. A number is expected.");
+                            invalid = true;
                         }
                     }
                     break;
+                }
+                if (invalid) {
+                    throw new JocMissingRequiredParameterException(String.format("Variable '%s': Wrong data type %s (%s is expected).", param
+                            .getKey(), curArg.getClass().getSimpleName(), param.getValue().getType().value()));
                 }
             }
         }
