@@ -120,13 +120,13 @@ public class DBLayerSchedules {
 
         FilterInventoryConfigurations filterInventoryConfigurations = new FilterInventoryConfigurations();
         filterInventoryConfigurations.setListOfControllerIds(filter.getListOfControllerIds());
-        filterInventoryConfigurations.setDeployed(true);
         filterInventoryConfigurations.setType(ConfigurationType.WORKFLOW);
 
         FilterDeployHistory filterDeployHistory = new FilterDeployHistory();
+        filterDeployHistory.setOrderCriteria("deploymentDate");
+        filterDeployHistory.setSortMode("desc");
         filterDeployHistory.setType(ConfigurationType.WORKFLOW);
         filterDeployHistory.setListOfControllerIds(filter.getListOfControllerIds());
-        filterDeployHistory.setOperation(0);
         filterDeployHistory.setState(DeploymentState.DEPLOYED);
 
         DBLayerDeployHistory dbLayerDeploy = new DBLayerDeployHistory(sosHibernateSession);
@@ -134,12 +134,14 @@ public class DBLayerSchedules {
         List<DBItemInventoryConfiguration> listOfWorkflows = dbLayerInventoryConfigurations.getInventoryConfigurations(filterInventoryConfigurations,
                 0);
 
-        Map<String,String>  workflowPaths = new HashMap<String,String>();
+        Map<String, String> workflowPaths = new HashMap<String, String>();
         for (DBItemInventoryConfiguration dbItemInventoryConfiguration : listOfWorkflows) {
             filterDeployHistory.setInventoryId(dbItemInventoryConfiguration.getId());
             List<DBItemDeploymentHistory> l = dbLayerDeploy.getDeployments(filterDeployHistory, 0);
             if (l.size() > 0) {
-                workflowPaths.put(dbItemInventoryConfiguration.getName(),dbItemInventoryConfiguration.getPath());
+                if (l.get(0).getOperation() == 0) {
+                    workflowPaths.put(dbItemInventoryConfiguration.getName(), dbItemInventoryConfiguration.getPath());
+                }
             }
         }
 
@@ -158,7 +160,7 @@ public class DBLayerSchedules {
                     dbItemInventoryConfiguration.setSchedule(schedule);
                     filteredResultset.add(dbItemInventoryConfiguration);
                 } else {
-                    String s = "WARN:Workflow " + schedule.getWorkflowName() + " is not deployed. schedule->" + schedule.getPath()   ;
+                    String s = "WARN:Workflow " + schedule.getWorkflowName() + " is not deployed. schedule->" + schedule.getPath();
                     DBItemDailyPlanHistory dbItemDailyPlanHistory = new DBItemDailyPlanHistory();
                     if (filter.getListOfControllerIds().size() > 0) {
                         dbItemDailyPlanHistory.setControllerId(filter.getListOfControllerIds().get(0));
