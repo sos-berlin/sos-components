@@ -1,7 +1,6 @@
 package com.sos.joc.db.history;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -161,28 +160,6 @@ public class JobHistoryDBLayer {
             filter.setMainOrder(isMainOrder);
 
             return session.scroll(query);
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
-    }
-
-    public List<DBItemHistoryOrder> getChildOrders(Collection<Long> historyOrderMainParentIds) throws DBConnectionRefusedException,
-            DBInvalidDataException {
-        try {
-            List<DBItemHistoryOrder> childOrders = null;
-            if (historyOrderMainParentIds != null && !historyOrderMainParentIds.isEmpty()) {
-                String hql = new StringBuilder().append("from ").append(DBLayer.DBITEM_HISTORY_ORDER).append(
-                        " where historyOrderMainParentId in (:historyOrderMainParentIds) and parentId != 0 order by startEventId desc").toString();
-                Query<DBItemHistoryOrder> query = session.createQuery(hql);
-                query.setParameterList("historyOrderMainParentIds", historyOrderMainParentIds);
-                childOrders = session.getResultList(query);
-            }
-            if (childOrders == null) {
-                childOrders = new ArrayList<DBItemHistoryOrder>();
-            }
-            return childOrders;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
