@@ -38,9 +38,6 @@
     },
     "defaultArguments": {
       "$ref": "../../../inventory/schemas/common/variables-schema.json"
-    },
-    "env": {
-      "$ref": "../../../inventory/schemas/job/env-schema.json"
     }
   },
   "additionalProperties": false
