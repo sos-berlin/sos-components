@@ -97,7 +97,7 @@ public class SchedulesImpl extends JOCResourceImpl implements ISchedulesResource
                 }
             }
 
-            return JOCDefaultResponse.responseStatus200(schedulesList);
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(schedulesList));
 
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
