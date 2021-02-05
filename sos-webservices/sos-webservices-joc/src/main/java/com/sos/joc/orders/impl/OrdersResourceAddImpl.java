@@ -40,6 +40,9 @@ import com.sos.sign.model.workflow.Workflow;
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.order.OrderId;
+import js7.data.value.BooleanValue;
+import js7.data.value.NumberValue;
+import js7.data.value.StringValue;
 import js7.data.value.Value;
 import js7.data.workflow.WorkflowPath;
 import js7.proxy.javaapi.JControllerProxy;
@@ -146,17 +149,17 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             for(String key : a.keySet()) {
                 Object val = a.get(key);
                 if (val instanceof String) {
-                    arguments.put(key, Value.of((String) val));
+                    arguments.put(key, StringValue.of((String) val));
                 } else if (val instanceof Boolean) {
-                    arguments.put(key, Value.of((Boolean) val));
+                    arguments.put(key, BooleanValue.of((Boolean) val));
                 } else if (val instanceof Integer) {
-                    arguments.put(key, Value.of((Integer) val));
+                    arguments.put(key, NumberValue.of((Integer) val));
                 } else if (val instanceof Long) {
-                    arguments.put(key, Value.of((Long) val));
+                    arguments.put(key, NumberValue.of((Long) val));
                 } else if (val instanceof Double) {
-                    arguments.put(key, Value.of(scala.math.BigDecimal.javaBigDecimal2bigDecimal(BigDecimal.valueOf((Double) val))));
+                    arguments.put(key, NumberValue.of(scala.math.BigDecimal.javaBigDecimal2bigDecimal(BigDecimal.valueOf((Double) val))));
                 } else if (val instanceof BigDecimal) {
-                    arguments.put(key, Value.of(scala.math.BigDecimal.javaBigDecimal2bigDecimal((BigDecimal) val)));
+                    arguments.put(key, NumberValue.of(scala.math.BigDecimal.javaBigDecimal2bigDecimal((BigDecimal) val)));
                 }
             }
         }

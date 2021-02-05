@@ -22,7 +22,6 @@ import com.sos.inventory.model.workflow.Parameter;
 import com.sos.joc.Globals;
 import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.order.OrderState;
 import com.sos.joc.model.order.OrderStateText;
@@ -192,7 +191,8 @@ public class OrdersHelper {
         return o;
     }
 
-    public static Variables checkArguments(Variables arguments, OrderRequirements orderRequirements) throws JocException {
+    public static Variables checkArguments(Variables arguments, OrderRequirements orderRequirements) throws JocMissingRequiredParameterException,
+            JocConfigurationException {
         final Map<String, Parameter> params = (orderRequirements != null && orderRequirements.getParameters() != null) ? orderRequirements
                 .getParameters().getAdditionalProperties() : Collections.emptyMap();
         Map<String, Object> args = (arguments != null) ? arguments.getAdditionalProperties() : Collections.emptyMap();
@@ -248,7 +248,7 @@ public class OrdersHelper {
                     break;
                 }
                 if (invalid) {
-                    throw new JocMissingRequiredParameterException(String.format("Variable '%s': Wrong data type %s (%s is expected).", param
+                    throw new JocConfigurationException(String.format("Variable '%s': Wrong data type %s (%s is expected).", param
                             .getKey(), curArg.getClass().getSimpleName(), param.getValue().getType().value()));
                 }
             }
