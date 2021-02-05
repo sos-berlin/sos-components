@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.controller.model.common.Variables;
-import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.JobReturnCode;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -30,8 +29,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "timeout",
     "graceTimeout",
     "jobClass",
-    "defaultArguments",
-    "env"
+    "defaultArguments"
 })
 public class Job {
 
@@ -104,15 +102,6 @@ public class Job {
     @JsonProperty("defaultArguments")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables defaultArguments;
-    /**
-     * key-value pairs particulraly to assign parameters to environemnt
-     * <p>
-     * a map for arbitrary key-value pairs
-     * 
-     */
-    @JsonProperty("env")
-    @JsonPropertyDescription("a map for arbitrary key-value pairs")
-    private Environment env;
 
     /**
      * No args constructor for use in serialization
@@ -129,12 +118,11 @@ public class Job {
      * @param graceTimeout
      * @param defaultArguments
      * @param jobClass
-     * @param env
      * @param executable
      * @param v1Compatible
      * @param timeout
      */
-    public Job(String agentId, ExecutableScript executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Boolean v1Compatible, Integer timeout, Integer graceTimeout, String jobClass, Variables defaultArguments, Environment env) {
+    public Job(String agentId, ExecutableScript executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Boolean v1Compatible, Integer timeout, Integer graceTimeout, String jobClass, Variables defaultArguments) {
         super();
         this.agentId = agentId;
         this.executable = executable;
@@ -145,7 +133,6 @@ public class Job {
         this.graceTimeout = graceTimeout;
         this.jobClass = jobClass;
         this.defaultArguments = defaultArguments;
-        this.env = env;
     }
 
     /**
@@ -336,36 +323,14 @@ public class Job {
         this.defaultArguments = defaultArguments;
     }
 
-    /**
-     * key-value pairs particulraly to assign parameters to environemnt
-     * <p>
-     * a map for arbitrary key-value pairs
-     * 
-     */
-    @JsonProperty("env")
-    public Environment getEnv() {
-        return env;
-    }
-
-    /**
-     * key-value pairs particulraly to assign parameters to environemnt
-     * <p>
-     * a map for arbitrary key-value pairs
-     * 
-     */
-    @JsonProperty("env")
-    public void setEnv(Environment env) {
-        this.env = env;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentId", agentId).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("taskLimit", taskLimit).append("v1Compatible", v1Compatible).append("timeout", timeout).append("graceTimeout", graceTimeout).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("env", env).toString();
+        return new ToStringBuilder(this).append("agentId", agentId).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("taskLimit", taskLimit).append("v1Compatible", v1Compatible).append("timeout", timeout).append("graceTimeout", graceTimeout).append("jobClass", jobClass).append("defaultArguments", defaultArguments).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(returnCodeMeaning).append(taskLimit).append(agentId).append(graceTimeout).append(defaultArguments).append(jobClass).append(env).append(executable).append(v1Compatible).append(timeout).toHashCode();
+        return new HashCodeBuilder().append(returnCodeMeaning).append(taskLimit).append(agentId).append(graceTimeout).append(defaultArguments).append(jobClass).append(executable).append(v1Compatible).append(timeout).toHashCode();
     }
 
     @Override
@@ -377,7 +342,7 @@ public class Job {
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(returnCodeMeaning, rhs.returnCodeMeaning).append(taskLimit, rhs.taskLimit).append(agentId, rhs.agentId).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(jobClass, rhs.jobClass).append(env, rhs.env).append(executable, rhs.executable).append(v1Compatible, rhs.v1Compatible).append(timeout, rhs.timeout).isEquals();
+        return new EqualsBuilder().append(returnCodeMeaning, rhs.returnCodeMeaning).append(taskLimit, rhs.taskLimit).append(agentId, rhs.agentId).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(jobClass, rhs.jobClass).append(executable, rhs.executable).append(v1Compatible, rhs.v1Compatible).append(timeout, rhs.timeout).isEquals();
     }
 
 }

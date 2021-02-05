@@ -6,6 +6,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonValue;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -22,6 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "script",
+    "env",
     "TYPE"
 })
 public class ExecutableScript {
@@ -33,6 +35,15 @@ public class ExecutableScript {
      */
     @JsonProperty("script")
     private String script;
+    /**
+     * key-value pairs particulraly to assign parameters to environemnt
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("env")
+    @JsonPropertyDescription("a map for arbitrary key-value pairs")
+    private Environment env;
     /**
      * 
      * (Required)
@@ -48,8 +59,15 @@ public class ExecutableScript {
     public ExecutableScript() {
     }
 
-    public ExecutableScript(String script) {
+    /**
+     * 
+     * @param env
+     * @param script
+     */
+    public ExecutableScript(String script, Environment env) {
+        super();
         this.script = script;
+        this.env = env;
     }
 
     /**
@@ -70,6 +88,28 @@ public class ExecutableScript {
     @JsonProperty("script")
     public void setScript(String script) {
         this.script = script;
+    }
+
+    /**
+     * key-value pairs particulraly to assign parameters to environemnt
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("env")
+    public Environment getEnv() {
+        return env;
+    }
+
+    /**
+     * key-value pairs particulraly to assign parameters to environemnt
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("env")
+    public void setEnv(Environment env) {
+        this.env = env;
     }
 
     /**
@@ -94,12 +134,12 @@ public class ExecutableScript {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("script", script).append("tYPE", tYPE).toString();
+        return new ToStringBuilder(this).append("script", script).append("env", env).append("tYPE", tYPE).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(tYPE).append(script).toHashCode();
+        return new HashCodeBuilder().append(env).append(tYPE).append(script).toHashCode();
     }
 
     @Override
@@ -111,12 +151,11 @@ public class ExecutableScript {
             return false;
         }
         ExecutableScript rhs = ((ExecutableScript) other);
-        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(script, rhs.script).isEquals();
+        return new EqualsBuilder().append(env, rhs.env).append(tYPE, rhs.tYPE).append(script, rhs.script).isEquals();
     }
 
     public enum TYPE {
 
-        ExecutableScript("ExecutableScript"),
         ScriptExecutable("ScriptExecutable");
         private final String value;
         private final static Map<String, ExecutableScript.TYPE> CONSTANTS = new HashMap<String, ExecutableScript.TYPE>();
