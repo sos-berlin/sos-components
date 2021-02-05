@@ -899,18 +899,18 @@ public abstract class PublishUtils {
     public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509(
             String commitId,  Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts,
             Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer,
-            String signatureAlgorithm, String signerDN)
+            String signatureAlgorithm, String certificate)
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         Set<JUpdateItemOperation> updateRepoOperationsVersioned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateRepoOperationsSimple = new HashSet<JUpdateItemOperation>();
         if (drafts != null) {
             updateRepoOperationsVersioned.addAll(
                     drafts.keySet().stream().filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(
-                            item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithSignedId(
+                            item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(
                                     item.getContent(),
                                     drafts.get(item).getSignature(),
                                     signatureAlgorithm,
-                                    SignerId.of(signerDN)))
+                                    certificate))
                             ).collect(Collectors.toSet())
                     );
             updateRepoOperationsSimple.addAll(
@@ -943,11 +943,11 @@ public abstract class PublishUtils {
         if (alreadyDeployed != null) {
             updateRepoOperationsVersioned.addAll(
                     alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
-                            item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithSignedId(
+                            item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(
                                     item.getContent(),
                                     alreadyDeployed.get(item).getSignature(),
                                     signatureAlgorithm,
-                                    SignerId.of(signerDN)))
+                                    certificate))
                             ).collect(Collectors.toSet())
                     );
             updateRepoOperationsSimple.addAll(
@@ -986,7 +986,7 @@ public abstract class PublishUtils {
     public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509_2(
             String commitId,  Map<ControllerObject, DBItemDepSignatures> drafts,
             Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer,
-            String signatureAlgorithm, String signerDN)
+            String signatureAlgorithm, String certificate)
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         Set<JUpdateItemOperation> updateItemsOperationsVersioned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
@@ -994,11 +994,11 @@ public abstract class PublishUtils {
             updateItemsOperationsVersioned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.WORKFLOW)).map(
                     item -> {
                         try {
-                            return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithSignedId(
+                            return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(
                                     om.writeValueAsString(((WorkflowPublish)item).getContent()),
                                     drafts.get(item).getSignature(),
                                     signatureAlgorithm,
-                                    SignerId.of(signerDN)));
+                                    certificate));
                         } catch (JsonProcessingException e1) {
                             throw new JocDeployException(e1);
                         }
@@ -1034,7 +1034,7 @@ public abstract class PublishUtils {
                                 item.getContent(),
                                 alreadyDeployed.get(item).getSignature(),
                                 signatureAlgorithm,
-                                SignerId.of(signerDN)));
+                                SignerId.of(certificate)));
                     }).collect(Collectors.toSet()));
             updateItemsOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
                             item -> {
@@ -1068,17 +1068,17 @@ public abstract class PublishUtils {
     }
 
     public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509(
-            String commitId,  List<DBItemDeploymentHistory> alreadyDeployed, String controllerId, String signatureAlgorithm, String signerDN)
+            String commitId,  List<DBItemDeploymentHistory> alreadyDeployed, String controllerId, String signatureAlgorithm, String certificate)
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         Set<JUpdateItemOperation> updateItemsOperationsVersioned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
         updateItemsOperationsVersioned.addAll(alreadyDeployed.stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
                 item -> {
-                    return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithSignedId(
+                    return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(
                             item.getContent(),
                             item.getSignedContent(),
                             signatureAlgorithm,
-                            SignerId.of(signerDN)));
+                            certificate));
                 }).collect(Collectors.toSet()));
         updateItemsOperationsSimple.addAll(alreadyDeployed.stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
                         item -> {

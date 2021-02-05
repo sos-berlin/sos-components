@@ -247,7 +247,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                 signerDN = cert.getSubjectDN().getName();
                 PublishUtils.updateItemsAddOrUpdateWithX509_2(commitIdForUpdate, importedObjects, null, controllerId, dbLayer,
-                        SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
+                        SOSKeyConstants.RSA_SIGNER_ALGORITHM, keyPair.getCertificate()).thenAccept(either -> {
                             processAfterAdd(either, importedObjects, null, account, commitIdForUpdate, controllerId, deploymentDate, filter);
                 });
                 break;
@@ -255,7 +255,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                 signerDN = cert.getSubjectDN().getName();
                 PublishUtils.updateItemsAddOrUpdateWithX509_2(commitIdForUpdate, importedObjects, null, controllerId, dbLayer,
-                        SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
+                        SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair.getCertificate()).thenAccept(either -> {
                             processAfterAdd(either, importedObjects, null, account, commitIdForUpdate, controllerId, deploymentDate, filter);
                 });
                 break;

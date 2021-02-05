@@ -215,7 +215,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                         signerDN = cert.getSubjectDN().getName();
                         PublishUtils.updateItemsAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, 
-                                controllerId, dbLayer, SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
+                                controllerId, dbLayer, SOSKeyConstants.RSA_SIGNER_ALGORITHM, keyPair.getCertificate()).thenAccept(either -> {
                                     processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, versionIdForUpdate, 
                                             controllerId, deployFilter, unmodified);
                                 });
@@ -224,7 +224,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                         signerDN = cert.getSubjectDN().getName();
                         PublishUtils.updateItemsAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables,
-                                controllerId, dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
+                                controllerId, dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair.getCertificate()).thenAccept(either -> {
                                     processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, versionIdForUpdate,
                                             controllerId, deployFilter, unmodified);
                                 });
