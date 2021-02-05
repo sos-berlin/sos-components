@@ -130,8 +130,12 @@ public class LockEntryHelper {
 
     private LockWorkflow getLockWorkflow(Map<String, LockWorkflow> workflows, LockOrder lo) {
         String workflowName = lo.getOrder().getWorkflowId().getPath();
+        String workflowId = workflowName + lo.getOrder().getWorkflowId().getVersionId();
         LockWorkflow lw = null;
-        if (!workflows.containsKey(workflowName)) {
+
+        if (workflows.containsKey(workflowId)) {
+            lw = workflows.get(workflowId);
+        } else {
             lw = new LockWorkflow();
             SOSHibernateSession session = null;
             try {
@@ -156,9 +160,8 @@ public class LockEntryHelper {
                 }
             }
             workflows.put(workflowName, lw);
-        } else {
-            lw = workflows.get(workflowName);
         }
+
         try {
             lw.setVersionId(lo.getOrder().getWorkflowId().getVersionId());
             lo.getOrder().getWorkflowId().setPath(lw.getPath());
@@ -182,9 +185,9 @@ public class LockEntryHelper {
     private WorkflowLock getWorkflowLock(JControllerState controllerState, JOrder jo, LockOrder lo, Map<String, WorkflowLock> queuedWorkflowLocks,
             String lockId) {
 
-        String key = lo.getOrder().getWorkflowId().getPath() + lo.getOrder().getWorkflowId().getVersionId();
-        if (queuedWorkflowLocks.containsKey(key)) {
-            return queuedWorkflowLocks.get(key);
+        String workflowId = lo.getOrder().getWorkflowId().getPath() + lo.getOrder().getWorkflowId().getVersionId();
+        if (queuedWorkflowLocks.containsKey(workflowId)) {
+            return queuedWorkflowLocks.get(workflowId);
         }
 
         WorkflowLock l = new WorkflowLock();
@@ -206,12 +209,12 @@ public class LockEntryHelper {
                 }
             }
         } catch (Throwable e) {
-            LOGGER.error(String.format("[LockId=%s][%s]%s", lockId, key, e.toString()), e);
+            LOGGER.error(String.format("[LockId=%s][%s]%s", lockId, workflowId, e.toString()), e);
         }
         if (l.getType() == null) {
             l.setType(WorkflowLockType.UNKNOWN);
         }
-        queuedWorkflowLocks.put(key, l);
+        queuedWorkflowLocks.put(workflowId, l);
         return l;
     }
 
