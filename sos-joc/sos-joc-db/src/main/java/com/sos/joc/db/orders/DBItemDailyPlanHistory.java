@@ -39,7 +39,7 @@ public class DBItemDailyPlanHistory extends DBItem {
     @Column(name = "[ORDER_ID]", nullable = true)
     private String orderId;
 
-    @Column(name = "[WORKLOW_PATH]", nullable = true)
+    @Column(name = "[WORKFLOW_PATH]", nullable = true)
     private String workflowPath;
     
     @Temporal(TemporalType.TIMESTAMP)

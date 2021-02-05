@@ -132,7 +132,6 @@ public class DBLayerDailyPlannedOrders {
             and = " and ";
         }
 
-
         if (filter.getListOfWorkflowNames() != null && filter.getListOfWorkflowNames().size() > 0) {
             where += and + SearchStringHelper.getStringListSql(filter.getListOfWorkflowNames(), "p.workflowName");
             and = " and ";
@@ -173,7 +172,6 @@ public class DBLayerDailyPlannedOrders {
             and = " and ";
         }
 
-       
         if (filter.getListOfSubmissionIds() != null && filter.getListOfSubmissionIds().size() > 0) {
             where += and + SearchStringHelper.getLongSetSql(filter.getListOfSubmissionIds(), "p.submissionHistoryId");
             and = " and ";
@@ -351,13 +349,15 @@ public class DBLayerDailyPlannedOrders {
 
     public void storeVariables(PlannedOrder plannedOrder, Long id) throws SOSHibernateException {
         DBItemDailyPlanVariables dbItemDailyPlanVariables = new DBItemDailyPlanVariables();
-        for (Entry<String, Object> variable : plannedOrder.getFreshOrder().getArguments().getAdditionalProperties().entrySet()) {
-            dbItemDailyPlanVariables.setCreated(JobSchedulerDate.nowInUtc());
-            dbItemDailyPlanVariables.setModified(JobSchedulerDate.nowInUtc());
-            dbItemDailyPlanVariables.setPlannedOrderId(id);
-            dbItemDailyPlanVariables.setVariableName(variable.getKey());
-            dbItemDailyPlanVariables.setVariableValue(variable.getValue().toString());
-            sosHibernateSession.save(dbItemDailyPlanVariables);
+        if (plannedOrder.getFreshOrder().getArguments() != null) {
+            for (Entry<String, Object> variable : plannedOrder.getFreshOrder().getArguments().getAdditionalProperties().entrySet()) {
+                dbItemDailyPlanVariables.setCreated(JobSchedulerDate.nowInUtc());
+                dbItemDailyPlanVariables.setModified(JobSchedulerDate.nowInUtc());
+                dbItemDailyPlanVariables.setPlannedOrderId(id);
+                dbItemDailyPlanVariables.setVariableName(variable.getKey());
+                dbItemDailyPlanVariables.setVariableValue(variable.getValue().toString());
+                sosHibernateSession.save(dbItemDailyPlanVariables);
+            }
         }
     }
 
