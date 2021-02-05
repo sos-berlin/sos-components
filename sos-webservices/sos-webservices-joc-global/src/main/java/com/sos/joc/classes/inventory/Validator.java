@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.controller.model.common.Variables;
 import com.sos.inventory.model.Schedule;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
@@ -26,6 +28,9 @@ import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.workflow.Branch;
+import com.sos.inventory.model.workflow.Jobs;
+import com.sos.inventory.model.workflow.OrderRequirements;
+import com.sos.inventory.model.workflow.Parameter;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -117,8 +122,9 @@ public class Validator {
                     }
                     Workflow workflow = (Workflow) config; 
                     JsonValidator.validateStrict(configBytes, URI.create("classpath:/raml/inventory/schemas/workflow/workflowJobs-schema.json"));
-                    //Map<String, Parameter> parameters = getParameters(workflow);
-                    validateInstructions(workflow.getInstructions(), "instructions", new HashMap<String, String>());
+                    validateOrderRequirements(workflow.getOrderRequirements());
+                    validateInstructions(workflow.getInstructions(), "instructions", workflow.getOrderRequirements(), new HashMap<String, String>());
+                    validateJobArguments(workflow.getJobs(), workflow.getOrderRequirements());
                     validateLockRefs(new String(configBytes, StandardCharsets.UTF_8), dbLayer);
                     validateAgentRefs(new String(configBytes, StandardCharsets.UTF_8), agentDBLayer, enabledAgentNames);
                 } else if (ConfigurationType.SCHEDULE.equals(type)) {
@@ -130,14 +136,6 @@ public class Validator {
             }
         }
     }
-    
-//    private static Map<String, Parameter> getParameters(Workflow workflow) {
-//        Map<String, Parameter> parameters = Collections.emptyMap();
-//        if (workflow != null && workflow.getOrderRequirements() != null && workflow.getOrderRequirements().getParameters() != null) {
-//            parameters = workflow.getOrderRequirements().getParameters().getAdditionalProperties();
-//        }
-//        return parameters;
-//    }
     
     private static void validateWorkflowRef(String workflowName, InventoryDBLayer dbLayer) throws JocConfigurationException, SOSHibernateException {
         List<DBItemInventoryConfiguration> workflowPaths = dbLayer.getConfigurationByName(workflowName, ConfigurationType.WORKFLOW.intValue());
@@ -204,8 +202,8 @@ public class Validator {
         }
     }
 
-    private static void validateInstructions(Collection<Instruction> instructions, String position, Map<String, String> labels)
-            throws SOSJsonSchemaException, JsonProcessingException, IOException {
+    private static void validateInstructions(Collection<Instruction> instructions, String position, OrderRequirements orderRequirements, Map<String, String> labels)
+            throws SOSJsonSchemaException, JsonProcessingException, IOException, JocConfigurationException {
         if (instructions != null) {
             int index = 0;
             for (Instruction inst : instructions) {
@@ -233,6 +231,7 @@ public class Validator {
                     } else {
                         labels.put(nj.getLabel(), "$." + instPosition + "label");
                     }
+                    validateArguments(nj.getDefaultArguments(), orderRequirements, "$." + instPosition + "defaultArguments");
                     break;
                 case FORK:
                     ForkJoin fj = inst.cast();
@@ -240,7 +239,7 @@ public class Validator {
                     String branchPosition = instPosition + "branches";
                     for (Branch branch : fj.getBranches()) {
                         String branchInstPosition = branchPosition + "[" + branchIndex + "].";
-                        validateInstructions(branch.getWorkflow().getInstructions(), branchInstPosition + "instructions", labels);
+                        validateInstructions(branch.getWorkflow().getInstructions(), branchInstPosition + "instructions", orderRequirements, labels);
                         branchIndex++;
                     }
                     break;
@@ -251,23 +250,101 @@ public class Validator {
                     } catch (Exception e) {
                         throw new SOSJsonSchemaException("$." + instPosition + "predicate:" + e.getMessage());
                     }
-                    validateInstructions(ifElse.getThen().getInstructions(), instPosition + "then.instructions", labels);
+                    validateInstructions(ifElse.getThen().getInstructions(), instPosition + "then.instructions", orderRequirements, labels);
                     if (ifElse.getElse() != null) {
-                        validateInstructions(ifElse.getElse().getInstructions(), instPosition + "else.instructions", labels);
+                        validateInstructions(ifElse.getElse().getInstructions(), instPosition + "else.instructions", orderRequirements, labels);
                     }
                     break;
                 case TRY:
                     TryCatch tryCatch = inst.cast();
-                    validateInstructions(tryCatch.getTry().getInstructions(), instPosition + "try.instructions", labels);
-                    validateInstructions(tryCatch.getCatch().getInstructions(), instPosition + "catch.instructions", labels);
+                    validateInstructions(tryCatch.getTry().getInstructions(), instPosition + "try.instructions", orderRequirements, labels);
+                    validateInstructions(tryCatch.getCatch().getInstructions(), instPosition + "catch.instructions", orderRequirements, labels);
                     break;
                 case LOCK:
                     Lock lock = inst.cast();
-                    validateInstructions(lock.getLockedWorkflow().getInstructions(), instPosition + "lockedWorkflow.instructions", labels);
+                    validateInstructions(lock.getLockedWorkflow().getInstructions(), instPosition + "lockedWorkflow.instructions", orderRequirements, labels);
                     break;
                 }
                 index++;
             }
+        }
+    }
+    
+    private static void validateOrderRequirements(OrderRequirements orderRequirements) throws JocConfigurationException {
+        final Map<String, Parameter> params = (orderRequirements != null && orderRequirements.getParameters() != null) ? orderRequirements
+                .getParameters().getAdditionalProperties() : Collections.emptyMap();
+
+        params.forEach((key, value) -> {
+            boolean invalid = false;
+            if (value.getDefault() != null) {
+                Object _default = value.getDefault();
+                switch (value.getType()) {
+                case String:
+                    invalid = (_default instanceof String) == false;
+                    break;
+                case Number:
+                    invalid = (_default instanceof String) || (_default instanceof Boolean);
+                    break;
+                case Boolean:
+                    invalid = (_default instanceof Boolean) == false;
+                    break;
+                }
+                if (invalid) {
+                    throw new JocConfigurationException(String.format(
+                            "$.orderRequirements.parameters['%s'].default: Wrong datatype %s (%s is expected).", key, _default.getClass()
+                                    .getSimpleName(), value.getType().value()));
+                }
+            }
+        });
+    }
+    
+    private static void validateArguments(Variables arguments, OrderRequirements orderRequirements, String position) throws JocConfigurationException {
+        final Map<String, Parameter> params = (orderRequirements != null && orderRequirements.getParameters() != null) ? orderRequirements
+                .getParameters().getAdditionalProperties() : Collections.emptyMap();
+        final Map<String, Object> args = (arguments != null) ? arguments.getAdditionalProperties() : Collections.emptyMap();
+
+        // jobs and job instructions can have arguments which are not declared in orderRequrirements ??
+        // Set<String> keys = args.keySet().stream().filter(arg -> !params.containsKey(arg)).collect(Collectors.toSet());
+        // if (!keys.isEmpty()) {
+        // if (keys.size() == 1) {
+        // throw new JocConfigurationException("Variable " + keys.iterator().next() + " isn't declared in the workflow");
+        // }
+        // throw new JocConfigurationException("Variables " + keys.toString() + " aren't declared in the workflow");
+        // }
+        if (!args.isEmpty()) {
+            params.forEach((key, value) -> {
+                boolean invalid = false;
+                // arguments in jobs and job instruction are not required caused of orderRequirements ??
+                // if (value.getDefault() == null && !args.containsKey(key)) { // required
+                // throw new JocConfigurationException("Variable '" + key + "' is missing but required");
+                // }
+                if (args.containsKey(key)) {
+                    Object curArg = args.get(key);
+                    switch (value.getType()) {
+                    case String:
+                        invalid = (curArg instanceof String) == false;
+                        break;
+                    case Number:
+                        invalid = (curArg instanceof String) || (curArg instanceof Boolean);
+                        break;
+                    case Boolean:
+                        invalid = (curArg instanceof Boolean) == false;
+                        break;
+                    }
+                    if (invalid) {
+                        throw new JocConfigurationException(String.format("%s['%s']: Wrong datatype %s (%s is expected).", key, position, curArg
+                                .getClass().getSimpleName(), value.getType().value()));
+                    }
+                }
+            });
+        }
+    }
+    
+    private static void validateJobArguments(Jobs jobs, OrderRequirements orderRequirements) {
+        if (jobs != null) {
+            jobs.getAdditionalProperties().forEach((key, value) -> {
+                validateArguments(value.getDefaultArguments(), orderRequirements, "$.jobs['" + key + "'].defaultArguments");
+            });
         }
     }
 }
