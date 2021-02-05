@@ -17,7 +17,7 @@ import com.sos.controller.model.common.Variables;
 import com.sos.controller.model.order.OrderItem;
 import com.sos.controller.model.workflow.HistoricOutcome;
 import com.sos.controller.model.workflow.WorkflowId;
-import com.sos.inventory.model.workflow.OrderRequirements;
+import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Parameter;
 import com.sos.joc.Globals;
 import com.sos.joc.db.history.common.HistorySeverity;
@@ -191,7 +191,7 @@ public class OrdersHelper {
         return o;
     }
 
-    public static Variables checkArguments(Variables arguments, OrderRequirements orderRequirements) throws JocMissingRequiredParameterException,
+    public static Variables checkArguments(Variables arguments, Requirements orderRequirements) throws JocMissingRequiredParameterException,
             JocConfigurationException {
         final Map<String, Parameter> params = (orderRequirements != null && orderRequirements.getParameters() != null) ? orderRequirements
                 .getParameters().getAdditionalProperties() : Collections.emptyMap();

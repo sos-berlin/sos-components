@@ -10,7 +10,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * orderRequirements
+ * order or job requirements
  * <p>
  * 
  * 
@@ -19,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "parameters"
 })
-public class OrderRequirements {
+public class Requirements {
 
     /**
      * parameters
@@ -34,14 +34,14 @@ public class OrderRequirements {
      * No args constructor for use in serialization
      * 
      */
-    public OrderRequirements() {
+    public Requirements() {
     }
 
     /**
      * 
      * @param parameters
      */
-    public OrderRequirements(Parameters parameters) {
+    public Requirements(Parameters parameters) {
         super();
         this.parameters = parameters;
     }
@@ -83,10 +83,10 @@ public class OrderRequirements {
         if (other == this) {
             return true;
         }
-        if ((other instanceof OrderRequirements) == false) {
+        if ((other instanceof Requirements) == false) {
             return false;
         }
-        OrderRequirements rhs = ((OrderRequirements) other);
+        Requirements rhs = ((Requirements) other);
         return new EqualsBuilder().append(parameters, rhs.parameters).isEquals();
     }
 

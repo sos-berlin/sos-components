@@ -29,7 +29,7 @@ import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.Jobs;
-import com.sos.inventory.model.workflow.OrderRequirements;
+import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Parameter;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
@@ -124,7 +124,7 @@ public class Validator {
                     JsonValidator.validateStrict(configBytes, URI.create("classpath:/raml/inventory/schemas/workflow/workflowJobs-schema.json"));
                     validateOrderRequirements(workflow.getOrderRequirements());
                     validateInstructions(workflow.getInstructions(), "instructions", workflow.getOrderRequirements(), new HashMap<String, String>());
-                    validateJobArguments(workflow.getJobs(), workflow.getOrderRequirements());
+                    //validateJobArguments(workflow.getJobs(), workflow.getOrderRequirements());
                     validateLockRefs(new String(configBytes, StandardCharsets.UTF_8), dbLayer);
                     validateAgentRefs(new String(configBytes, StandardCharsets.UTF_8), agentDBLayer, enabledAgentNames);
                 } else if (ConfigurationType.SCHEDULE.equals(type)) {
@@ -202,7 +202,7 @@ public class Validator {
         }
     }
 
-    private static void validateInstructions(Collection<Instruction> instructions, String position, OrderRequirements orderRequirements,
+    private static void validateInstructions(Collection<Instruction> instructions, String position, Requirements orderRequirements,
             Map<String, String> labels) throws SOSJsonSchemaException, JsonProcessingException, IOException, JocConfigurationException {
         if (instructions != null) {
             int index = 0;
@@ -231,7 +231,7 @@ public class Validator {
                     } else {
                         labels.put(nj.getLabel(), "$." + instPosition + "label");
                     }
-                    validateArguments(nj.getDefaultArguments(), orderRequirements, "$." + instPosition + "defaultArguments");
+                    //validateArguments(nj.getDefaultArguments(), orderRequirements, "$." + instPosition + "defaultArguments");
                     break;
                 case FORK:
                     ForkJoin fj = inst.cast();
@@ -270,7 +270,7 @@ public class Validator {
         }
     }
     
-    private static void validateOrderRequirements(OrderRequirements orderRequirements) throws JocConfigurationException {
+    private static void validateOrderRequirements(Requirements orderRequirements) throws JocConfigurationException {
         final Map<String, Parameter> params = (orderRequirements != null && orderRequirements.getParameters() != null) ? orderRequirements
                 .getParameters().getAdditionalProperties() : Collections.emptyMap();
 
@@ -298,7 +298,7 @@ public class Validator {
         });
     }
     
-    private static void validateArguments(Variables arguments, OrderRequirements orderRequirements, String position) throws JocConfigurationException {
+    private static void validateArguments(Variables arguments, Requirements orderRequirements, String position) throws JocConfigurationException {
         final Map<String, Parameter> params = (orderRequirements != null && orderRequirements.getParameters() != null) ? orderRequirements
                 .getParameters().getAdditionalProperties() : Collections.emptyMap();
         final Map<String, Object> args = (arguments != null) ? arguments.getAdditionalProperties() : Collections.emptyMap();
@@ -340,7 +340,7 @@ public class Validator {
         }
     }
     
-    private static void validateJobArguments(Jobs jobs, OrderRequirements orderRequirements) {
+    private static void validateJobArguments(Jobs jobs, Requirements orderRequirements) {
         if (jobs != null) {
             jobs.getAdditionalProperties().forEach((key, value) -> {
                 validateArguments(value.getDefaultArguments(), orderRequirements, "$.jobs['" + key + "'].defaultArguments");

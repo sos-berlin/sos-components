@@ -60,13 +60,13 @@ public class Workflow implements IConfigurationObject, IDeployObject
     @JsonProperty("versionId")
     private String versionId;
     /**
-     * orderRequirements
+     * order or job requirements
      * <p>
      * 
      * 
      */
     @JsonProperty("orderRequirements")
-    private OrderRequirements orderRequirements;
+    private Requirements orderRequirements;
     /**
      * 
      * (Required)
@@ -119,7 +119,7 @@ public class Workflow implements IConfigurationObject, IDeployObject
      * 
      * @param title
      */
-    public Workflow(String path, String versionId, OrderRequirements orderRequirements, List<Instruction> instructions, String title, String documentationPath, Jobs jobs) {
+    public Workflow(String path, String versionId, Requirements orderRequirements, List<Instruction> instructions, String title, String documentationPath, Jobs jobs) {
         super();
         this.path = path;
         this.versionId = versionId;
@@ -186,24 +186,24 @@ public class Workflow implements IConfigurationObject, IDeployObject
     }
 
     /**
-     * orderRequirements
+     * order or job requirements
      * <p>
      * 
      * 
      */
     @JsonProperty("orderRequirements")
-    public OrderRequirements getOrderRequirements() {
+    public Requirements getOrderRequirements() {
         return orderRequirements;
     }
 
     /**
-     * orderRequirements
+     * order or job requirements
      * <p>
      * 
      * 
      */
     @JsonProperty("orderRequirements")
-    public void setOrderRequirements(OrderRequirements orderRequirements) {
+    public void setOrderRequirements(Requirements orderRequirements) {
         this.orderRequirements = orderRequirements;
     }
 

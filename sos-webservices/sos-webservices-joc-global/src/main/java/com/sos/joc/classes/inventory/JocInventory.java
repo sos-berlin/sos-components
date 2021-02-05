@@ -387,38 +387,44 @@ public class JocInventory {
             }
             // temp. because of rename error on root folder
             config.setPath(config.getPath().replace("//+", "/"));
-        } else if (path != null) {
-            if (JocInventory.ROOT_FOLDER.equals(path) && ConfigurationType.FOLDER.equals(type)) {
-                config = new DBItemInventoryConfiguration();
-                config.setId(0L);
-                config.setPath(path);
-                config.setType(type);
-                config.setFolder(path);
-                config.setDeleted(false);
-                config.setValid(true);
-                config.setDeployed(false);
-                config.setReleased(false);
-            } else {
-                path = normalizePath(path).toString().replace('\\', '/');
-                if (!folderPermissions.isPermittedForFolder(path)) {
-                    throw new JocFolderPermissionsException("Access denied for folder: " + path);
+        } else {
+            if (!ConfigurationType.FOLDER.equals(type) && path != null && !path.contains("/")) {
+                name = path;
+                path = null;
+            }
+            if (path != null) {
+                if (JocInventory.ROOT_FOLDER.equals(path) && ConfigurationType.FOLDER.equals(type)) {
+                    config = new DBItemInventoryConfiguration();
+                    config.setId(0L);
+                    config.setPath(path);
+                    config.setType(type);
+                    config.setFolder(path);
+                    config.setDeleted(false);
+                    config.setValid(true);
+                    config.setDeployed(false);
+                    config.setReleased(false);
+                } else {
+                    path = normalizePath(path).toString().replace('\\', '/');
+                    if (!folderPermissions.isPermittedForFolder(path)) {
+                        throw new JocFolderPermissionsException("Access denied for folder: " + path);
+                    }
+                    config = dbLayer.getConfiguration(path, type.intValue());
+                    if (config == null) {
+                        throw new DBMissingDataException(String.format("%s not found: %s", type.value().toLowerCase(), path));
+                    }
                 }
-                config = dbLayer.getConfiguration(path, type.intValue());
-                if (config == null) {
-                    throw new DBMissingDataException(String.format("%s not found: %s", type.value().toLowerCase(), path));
+            } else {// name
+                List<DBItemInventoryConfiguration> configs = dbLayer.getConfigurationByName(name, type.intValue());
+                if (configs == null || configs.size() == 0) {
+                    throw new DBMissingDataException(String.format("configuration not found: %s", name));
                 }
+                config = configs.get(0); // TODO
+                if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
+                    throw new JocFolderPermissionsException("Access denied for folder: " + config.getFolder());
+                }
+                // temp. because of rename error on root folder
+                config.setPath(config.getPath().replace("//+", "/"));
             }
-        } else {// name
-            List<DBItemInventoryConfiguration> configs = dbLayer.getConfigurationByName(name, type.intValue());
-            if (configs == null || configs.size() == 0) {
-                throw new DBMissingDataException(String.format("configuration not found: %s", name));
-            }
-            config = configs.get(0); // TODO
-            if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
-                throw new JocFolderPermissionsException("Access denied for folder: " + config.getFolder());
-            }
-            // temp. because of rename error on root folder
-            config.setPath(config.getPath().replace("//+", "/"));
         }
         return config;
     }
