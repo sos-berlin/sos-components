@@ -275,6 +275,10 @@ public class Validator {
                 .getParameters().getAdditionalProperties() : Collections.emptyMap();
 
         params.forEach((key, value) -> {
+            if ("returnCode".equals(key)) {
+                throw new JocConfigurationException(String.format(
+                        "$.orderRequirements.parameters['%s']: 'returnCode' is a reserved word for a parameter.", key));
+            }
             boolean invalid = false;
             if (value.getDefault() != null) {
                 Object _default = value.getDefault();

@@ -2,12 +2,11 @@ package com.sos.joc.classes;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -17,8 +16,8 @@ import com.sos.controller.model.common.Variables;
 import com.sos.controller.model.order.OrderItem;
 import com.sos.controller.model.workflow.HistoricOutcome;
 import com.sos.controller.model.workflow.WorkflowId;
-import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Parameter;
+import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
 import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.exceptions.JocConfigurationException;
@@ -26,12 +25,18 @@ import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.order.OrderState;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrderV;
+import com.sos.sign.model.workflow.Workflow;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.agent.AgentId;
 import js7.data.order.Order;
+import js7.data.workflow.WorkflowParameters;
+import js7.proxy.javaapi.data.controller.JControllerState;
 import js7.proxy.javaapi.data.order.JOrder;
+import js7.proxy.javaapi.data.workflow.JWorkflow;
+import scala.compat.java8.OptionConverters;
+import scala.concurrent.JavaConversions;
 
 public class OrdersHelper {
 
@@ -150,7 +155,7 @@ public class OrdersHelper {
         return state;
     }
 
-    public static OrderV mapJOrderToOrderV(JOrder jOrder, Boolean compact, Map<String, String> namePathMap, Long surveyDateMillis, boolean withDates)
+    public static OrderV mapJOrderToOrderV(JOrder jOrder, Boolean compact, Map<String, String> namePathMap, Long surveyDateMillis)
             throws JsonParseException, JsonMappingException, IOException {
         // TODO mapping without ObjectMapper
         OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
@@ -184,11 +189,14 @@ public class OrdersHelper {
         } else {
             o.setWorkflowId(oItem.getWorkflowPosition().getWorkflowId());
         }
-        if (withDates && surveyDateMillis != null) {
-            o.setSurveyDate(Date.from(Instant.ofEpochMilli(surveyDateMillis)));
-            o.setDeliveryDate(Date.from(Instant.now()));
-        }
         return o;
+    }
+    
+    public static Requirements getRequirements(JOrder jOrder, JControllerState currentState) throws JsonParseException, JsonMappingException,
+            IOException {
+        Either<Problem, JWorkflow> eW = currentState.idToWorkflow(jOrder.workflowId());
+        ProblemHelper.throwProblemIfExist(eW);
+        return Globals.objectMapper.readValue(eW.get().toJson(), Workflow.class).getOrderRequirements();
     }
 
     public static Variables checkArguments(Variables arguments, Requirements orderRequirements) throws JocMissingRequiredParameterException,

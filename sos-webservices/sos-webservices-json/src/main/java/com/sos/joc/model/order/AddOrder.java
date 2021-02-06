@@ -38,14 +38,13 @@ public class AddOrder {
     @JsonPropertyDescription("letters without control, connect and punctuation chars (except _ $) and without digits as first letter")
     private String orderName;
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * (Required)
      * 
      */
     @JsonProperty("workflowPath")
-    @JsonPropertyDescription("absolute path of an object.")
     private String workflowPath;
     /**
      * timestamp with now
@@ -99,9 +98,9 @@ public class AddOrder {
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * (Required)
      * 
      */
@@ -111,9 +110,9 @@ public class AddOrder {
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * (Required)
      * 
      */

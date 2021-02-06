@@ -88,7 +88,7 @@ public class LockEntryHelper {
                 JOrder jo = getFromEither(controllerState.idToCheckedOrder(orderId), "OrderId=" + orderId.string());
                 if (jo != null) {
                     LockOrder lo = new LockOrder();
-                    lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, false, null, null, false));
+                    lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, false, null, null));
                     lo.setLock(getWorkflowLock(sharedAcquired, item.getId(), orderId.string()));
 
                     LockWorkflow lw = getLockWorkflow(workflows, lo);
@@ -105,7 +105,7 @@ public class LockEntryHelper {
                 JOrder jo = getFromEither(controllerState.idToCheckedOrder(orderId), "OrderId=" + orderId.string());
                 if (jo != null) {
                     LockOrder lo = new LockOrder();
-                    lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, false, null, null, false));
+                    lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, false, null, null));
                     lo.setLock(getWorkflowLock(controllerState, jo, lo, queuedWorkflowLocks, item.getId()));
 
                     LockWorkflow lw = getLockWorkflow(workflows, lo);
