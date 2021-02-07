@@ -137,7 +137,7 @@ public class PojosTest {
 	
     @Test
     public void readAndWriteVariables() throws IOException {
-        Variables vars = new Variables(0);
+        Variables vars = new Variables();
         vars.setAdditionalProperty("myString", "MyStringValue");
         vars.setAdditionalProperty("myNumber", 4711);
         vars.setAdditionalProperty("myNumber2", 1.34E2);
