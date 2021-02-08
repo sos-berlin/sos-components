@@ -23,6 +23,7 @@ import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.common.VariableType;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.order.initiator.classes.DailyPlanHelper;
 import com.sos.js7.order.initiator.classes.PlannedOrder;
@@ -356,6 +357,8 @@ public class DBLayerDailyPlannedOrders {
                 dbItemDailyPlanVariables.setPlannedOrderId(id);
                 dbItemDailyPlanVariables.setVariableName(variable.getKey());
                 dbItemDailyPlanVariables.setVariableValue(variable.getValue().toString());
+                dbItemDailyPlanVariables.setVariableType(VariableType.valueOf(variable.getValue().getClass().getSimpleName().toUpperCase())
+                        .value());
                 sosHibernateSession.save(dbItemDailyPlanVariables);
             }
         }

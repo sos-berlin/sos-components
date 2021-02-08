@@ -1,5 +1,6 @@
 package com.sos.webservices.order.impl;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -15,6 +16,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.orders.DBItemDailyPlanVariables;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.common.VariableType;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter;
 import com.sos.joc.model.order.OrderFilter;
 import com.sos.js7.order.initiator.db.DBLayerOrderVariables;
@@ -58,8 +60,23 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
             Variables variables = new Variables();
             if (listOfOrderVariables != null) {
                 for (DBItemDailyPlanVariables orderVariable : listOfOrderVariables) {
-                    // TODO db should know datatype then cast value
-                    variables.setAdditionalProperty(orderVariable.getVariableName(), orderVariable.getVariableValue());
+                    switch (VariableType.fromValue(orderVariable.getVariableType()).name()) {
+                    case "STRING":
+                        variables.setAdditionalProperty(orderVariable.getVariableName(), orderVariable.getVariableValue());
+                        break;
+                    case "INTEGER":
+                        variables.setAdditionalProperty(orderVariable.getVariableName(), Integer.parseInt(orderVariable.getVariableValue()));
+                        break;
+                    case "DOUBLE":
+                        variables.setAdditionalProperty(orderVariable.getVariableName(), Double.parseDouble(orderVariable.getVariableValue()));
+                        break;
+                    case "BIGDECIMAL":
+                        variables.setAdditionalProperty(orderVariable.getVariableName(), new BigDecimal(orderVariable.getVariableValue().replaceAll(",", "")));
+                        break;
+                    case "BOOLEAN":
+                        variables.setAdditionalProperty(orderVariable.getVariableName(), Boolean.parseBoolean(orderVariable.getVariableValue()));
+                        break;
+                    }
                 }
             }
             orderVariables.setVariables(variables);
