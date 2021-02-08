@@ -64,7 +64,7 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
             }
             orderVariables.setVariables(variables);
 
-            return JOCDefaultResponse.responseStatus200(variables);
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(variables));
 
         } catch (JocException e) {
             LOGGER.error(getJocError().getMessage(), e);
