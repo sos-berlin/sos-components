@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -16,6 +17,7 @@ import java.security.PublicKey;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -75,6 +77,7 @@ import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
+import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
@@ -87,6 +90,7 @@ import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocImportException;
+import com.sos.joc.exceptions.JocKeyNotParseableException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocNotImplementedException;
@@ -896,7 +900,7 @@ public abstract class PublishUtils {
                         Flux.fromIterable(updateItemsOperationsVersioned)));
     }
     
-    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509(
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509Certificate(
             String commitId,  Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts,
             Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer,
             String signatureAlgorithm, String certificate)
@@ -983,7 +987,94 @@ public abstract class PublishUtils {
                         Flux.fromIterable(updateRepoOperationsVersioned)));
     }
 
-    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509_2(
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509SignerDN(
+            String commitId,  Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts,
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer,
+            String signatureAlgorithm, String signerDN)
+                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+        Set<JUpdateItemOperation> updateRepoOperationsVersioned = new HashSet<JUpdateItemOperation>();
+        Set<JUpdateItemOperation> updateRepoOperationsSimple = new HashSet<JUpdateItemOperation>();
+        if (drafts != null) {
+            updateRepoOperationsVersioned.addAll(
+                    drafts.keySet().stream().filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(
+                            item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithSignedId(
+                                    item.getContent(),
+                                    drafts.get(item).getSignature(),
+                                    signatureAlgorithm,
+                                    SignerId.of(signerDN)))
+                            ).collect(Collectors.toSet())
+                    );
+            updateRepoOperationsSimple.addAll(
+                    drafts.keySet().stream().filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(
+                            item -> {
+                                switch(item.getTypeAsEnum()) {
+                                    case LOCK:
+                                        try {
+                                            Lock lock = om.readValue(item.getContent(), Lock.class);
+                                            if (lock.getId() == null) {
+                                                lock.setId(item.getName());
+                                            }
+//                                            JLock jLock = JLock.of(LockId.of(lock.getId()), lock.getLimit());
+                                            return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                                        } catch (Exception e) {
+                                            throw new JocDeployException(e);
+                                        }
+                                    case JUNCTION:
+                                        // TODO: When implemented in controller
+                                        return null;
+                                    case JOBCLASS:
+                                        // TODO: When implemented in controller
+                                        return null;
+                                    default:
+                                        return null;
+                                }
+                            }).collect(Collectors.toSet())
+                    );
+        }
+        if (alreadyDeployed != null) {
+            updateRepoOperationsVersioned.addAll(
+                    alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
+                            item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithSignedId(
+                                    item.getContent(),
+                                    alreadyDeployed.get(item).getSignature(),
+                                    signatureAlgorithm,
+                                    SignerId.of(signerDN)))
+                            ).collect(Collectors.toSet())
+                    );
+            updateRepoOperationsSimple.addAll(
+                    alreadyDeployed.keySet().stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
+                            item -> {
+                                switch(DeployType.fromValue(item.getType())) {
+                                    case LOCK:
+                                        try {
+                                            Lock lock = om.readValue(item.getContent(), Lock.class);
+                                            if (lock.getId() == null) {
+                                                lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                                            }
+                                            return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                                        } catch (Exception e) {
+                                            throw new JocDeployException(e);
+                                        }
+                                    case JUNCTION:
+                                        // TODO: When implemented in controller
+                                        return null;
+                                    case JOBCLASS:
+                                        // TODO: When implemented in controller
+                                        return null;
+                                    default:
+                                        return null;
+                                }
+                            }).collect(Collectors.toSet())
+                    );
+        }
+        return ControllerApi.of(controllerId).updateItems(
+                Flux.concat(
+                        Flux.fromIterable(updateRepoOperationsSimple),
+                        Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId))),
+                        Flux.fromIterable(updateRepoOperationsVersioned)));
+    }
+
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509CertificateFromImport(
             String commitId,  Map<ControllerObject, DBItemDepSignatures> drafts,
             Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer,
             String signatureAlgorithm, String certificate)
@@ -991,7 +1082,8 @@ public abstract class PublishUtils {
         Set<JUpdateItemOperation> updateItemsOperationsVersioned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
         if (drafts != null) {
-            updateItemsOperationsVersioned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.WORKFLOW)).map(
+            updateItemsOperationsVersioned.addAll(drafts.keySet().stream()
+                .filter(item -> item.getObjectType().equals(DeployType.WORKFLOW)).map(
                     item -> {
                         try {
                             return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(
@@ -1003,7 +1095,8 @@ public abstract class PublishUtils {
                             throw new JocDeployException(e1);
                         }
                     }).collect(Collectors.toSet()));
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getObjectType().equals(DeployType.WORKFLOW)).map(
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream()
+                    .filter(item -> !item.getObjectType().equals(DeployType.WORKFLOW)).map(
                             item -> {
                                 switch(item.getObjectType()) {
                                     case LOCK:
@@ -1028,15 +1121,17 @@ public abstract class PublishUtils {
                             }).filter(Objects::nonNull).collect(Collectors.toSet()));
         }
         if (alreadyDeployed != null) {
-            updateItemsOperationsVersioned.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
+            updateItemsOperationsVersioned.addAll(alreadyDeployed.keySet().stream()
+                .filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
                     item -> {
-                        return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithSignedId(
+                        return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(
                                 item.getContent(),
                                 alreadyDeployed.get(item).getSignature(),
                                 signatureAlgorithm,
-                                SignerId.of(certificate)));
+                                certificate));
                     }).collect(Collectors.toSet()));
-            updateItemsOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
+            updateItemsOperationsSimple.addAll(alreadyDeployed.keySet().stream()
+                    .filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
                             item -> {
                                 switch(DeployType.fromValue(item.getType())) {
                                     case LOCK:
@@ -1067,7 +1162,95 @@ public abstract class PublishUtils {
                         Flux.fromIterable(updateItemsOperationsVersioned)));
     }
 
-    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509(
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509SignerDNFromImport(
+            String commitId,  Map<ControllerObject, DBItemDepSignatures> drafts,
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer,
+            String signatureAlgorithm, String signerDN)
+                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+        Set<JUpdateItemOperation> updateItemsOperationsVersioned = new HashSet<JUpdateItemOperation>();
+        Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
+        if (drafts != null) {
+            updateItemsOperationsVersioned.addAll(drafts.keySet().stream()
+                .filter(item -> item.getObjectType().equals(DeployType.WORKFLOW)).map(
+                    item -> {
+                        try {
+                            return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithSignedId(
+                                    om.writeValueAsString(((WorkflowPublish)item).getContent()),
+                                    drafts.get(item).getSignature(),
+                                    signatureAlgorithm,
+                                    SignerId.of(signerDN)));
+                        } catch (JsonProcessingException e1) {
+                            throw new JocDeployException(e1);
+                        }
+                    }).collect(Collectors.toSet()));
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream()
+                    .filter(item -> !item.getObjectType().equals(DeployType.WORKFLOW)).map(
+                            item -> {
+                                switch(item.getObjectType()) {
+                                    case LOCK:
+                                        try {
+                                            Lock lock = (Lock)item.getContent();
+                                            if (lock.getId() == null) {
+                                                lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                                            }
+                                            return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                                        } catch (Exception e) {
+                                            throw new JocDeployException(e);
+                                        }
+                                    case JUNCTION:
+                                        // TODO: When implemented in controller
+                                        return null;
+                                    case JOBCLASS:
+                                        // TODO: When implemented in controller
+                                        return null;
+                                    default:
+                                        return null;
+                                }
+                            }).filter(Objects::nonNull).collect(Collectors.toSet()));
+        }
+        if (alreadyDeployed != null) {
+            updateItemsOperationsVersioned.addAll(alreadyDeployed.keySet().stream()
+                .filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
+                    item -> {
+                        return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithSignedId(
+                                item.getContent(),
+                                alreadyDeployed.get(item).getSignature(),
+                                signatureAlgorithm,
+                                SignerId.of(signerDN)));
+                    }).collect(Collectors.toSet()));
+            updateItemsOperationsSimple.addAll(alreadyDeployed.keySet().stream()
+                    .filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
+                            item -> {
+                                switch(DeployType.fromValue(item.getType())) {
+                                    case LOCK:
+                                        try {
+                                            Lock lock = om.readValue(item.getContent(), Lock.class);
+                                            if (lock.getId() == null) {
+                                                lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                                            }
+                                            return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                                        } catch (Exception e) {
+                                            throw new JocDeployException(e);
+                                        }
+                                    case JUNCTION:
+                                        // TODO: When implemented in controller
+                                        return null;
+                                    case JOBCLASS:
+                                        // TODO: When implemented in controller
+                                        return null;
+                                    default:
+                                        return null;
+                                }
+                            }).filter(Objects::nonNull).collect(Collectors.toSet()));
+        }
+        return ControllerApi.of(controllerId).updateItems(
+                Flux.concat(
+                        Flux.fromIterable(updateItemsOperationsSimple),
+                        Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId))),
+                        Flux.fromIterable(updateItemsOperationsVersioned)));
+    }
+
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509Certificate(
             String commitId,  List<DBItemDeploymentHistory> alreadyDeployed, String controllerId, String signatureAlgorithm, String certificate)
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         Set<JUpdateItemOperation> updateItemsOperationsVersioned = new HashSet<JUpdateItemOperation>();
@@ -1110,6 +1293,49 @@ public abstract class PublishUtils {
                         Flux.fromIterable(updateItemsOperationsVersioned)));
     }
 
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509SignerDN(
+            String commitId,  List<DBItemDeploymentHistory> alreadyDeployed, String controllerId, String signatureAlgorithm, String signerDN)
+                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+        Set<JUpdateItemOperation> updateItemsOperationsVersioned = new HashSet<JUpdateItemOperation>();
+        Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
+        updateItemsOperationsVersioned.addAll(alreadyDeployed.stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
+                item -> {
+                    return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithSignedId(
+                            item.getContent(),
+                            item.getSignedContent(),
+                            signatureAlgorithm,
+                            SignerId.of(signerDN)));
+                }).collect(Collectors.toSet()));
+        updateItemsOperationsSimple.addAll(alreadyDeployed.stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
+                        item -> {
+                            switch(DeployType.fromValue(item.getType())) {
+                                case LOCK:
+                                    try {
+                                        Lock lock = om.readValue(item.getContent(), Lock.class);
+                                        if (lock.getId() == null) {
+                                            lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                                        }
+                                        return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                                    } catch (Exception e) {
+                                        throw new JocDeployException(e);
+                                    }
+                                case JUNCTION:
+                                    // TODO: When implemented in controller
+                                    return null;
+                                case JOBCLASS:
+                                    // TODO: When implemented in controller
+                                    return null;
+                                default:
+                                    return null;
+                            }
+                        }).filter(Objects::nonNull).collect(Collectors.toSet()));
+        return ControllerApi.of(controllerId).updateItems(
+                Flux.concat(
+                        Flux.fromIterable(updateItemsOperationsSimple),
+                        Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId))),
+                        Flux.fromIterable(updateItemsOperationsVersioned)));
+    }
+
     public static CompletableFuture<Either<Problem, Void>> updateItemsDelete(String commitId,
             List<DBItemDeploymentHistory> alreadyDeployedtoDelete, String controllerId, DBLayerDeploy dbLayer, String keyAlgorithm)
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
@@ -1119,11 +1345,13 @@ public abstract class PublishUtils {
         Set<JUpdateItemOperation> updateItemOperationsVersioned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemOperationsSimple = new HashSet<JUpdateItemOperation>();
         if (alreadyDeployedtoDelete != null) {
-            updateItemOperationsVersioned.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
+            updateItemOperationsVersioned.addAll(alreadyDeployedtoDelete.stream()
+                .filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
                     item -> JUpdateItemOperation.deleteVersioned(WorkflowPath.of(item.getName()))
                     ).filter(Objects::nonNull).collect(Collectors.toSet())
                 );
-            updateItemOperationsSimple.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
+            updateItemOperationsSimple.addAll(alreadyDeployedtoDelete.stream()
+                .filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
                     item -> {
                         switch (DeployType.fromValue(item.getType())) {
                             case LOCK:
@@ -3081,5 +3309,28 @@ public abstract class PublishUtils {
             }).filter(Objects::nonNull).collect(Collectors.toList()));
         });
         return foldersOut;
+    }
+    
+    public static boolean verifyCertificateAgainstCAs (X509Certificate cert, List<DBItemInventoryCertificate> caCertDBItems) {
+        Set<X509Certificate> caCerts = caCertDBItems.stream()
+                .map(item -> {
+                    try {
+                        return KeyUtil.getX509Certificate(item.getPem());
+                    } catch (CertificateException | UnsupportedEncodingException e) {
+                        throw new JocKeyNotParseableException(e);
+                    }
+                }).filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        for(X509Certificate caCert : caCerts) {
+            try {
+                cert.verify(caCert.getPublicKey());
+                return true;
+            } catch (InvalidKeyException | CertificateException | NoSuchAlgorithmException | NoSuchProviderException | SignatureException e) {
+                // Do nothing if verification fails, 
+                // as an exception here only indicates that
+                // the verification failed
+            }
+        }
+        return false;
     }
 }

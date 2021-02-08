@@ -36,6 +36,7 @@ import com.sos.joc.classes.audit.ImportDeployAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
+import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
@@ -137,6 +138,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             // process signature verification and save or update objects
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             dbLayer = new DBLayerDeploy(hibernateSession);
+            List<DBItemInventoryCertificate> caCertificates = dbLayer.getCaCertificates();
             Map<ControllerObject, DBItemDepSignatures> importedObjects = 
                     new HashMap<ControllerObject, DBItemDepSignatures>();
             String commitId = null;
@@ -234,6 +236,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                             processAfterDelete(either, toDelete, controllerId, account, commitIdForDeleteRenamed, null);
                     }).get();
             }
+            boolean verified = false;
             String signerDN = null;
             X509Certificate cert = null;
             switch(keyPair.getKeyAlgorithm()) {
@@ -245,19 +248,35 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 break;
             case SOSKeyConstants.RSA_ALGORITHM_NAME:
                 cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                signerDN = cert.getSubjectDN().getName();
-                PublishUtils.updateItemsAddOrUpdateWithX509_2(commitIdForUpdate, importedObjects, null, controllerId, dbLayer,
-                        SOSKeyConstants.RSA_SIGNER_ALGORITHM, keyPair.getCertificate()).thenAccept(either -> {
-                            processAfterAdd(either, importedObjects, null, account, commitIdForUpdate, controllerId, deploymentDate, filter);
-                });
+                verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
+                if (verified) {
+                    PublishUtils.updateItemsAddOrUpdateWithX509CertificateFromImport(commitIdForUpdate, importedObjects, null, controllerId, dbLayer,
+                            SOSKeyConstants.RSA_SIGNER_ALGORITHM, keyPair.getCertificate()).thenAccept(either -> {
+                                processAfterAdd(either, importedObjects, null, account, commitIdForUpdate, controllerId, deploymentDate, filter);
+                    });
+                } else {
+                    signerDN = cert.getSubjectDN().getName();
+                    PublishUtils.updateItemsAddOrUpdateWithX509SignerDNFromImport(commitIdForUpdate, importedObjects, null, controllerId, dbLayer,
+                            SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
+                                processAfterAdd(either, importedObjects, null, account, commitIdForUpdate, controllerId, deploymentDate, filter);
+                    });
+                }
                 break;
             case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
                 cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                signerDN = cert.getSubjectDN().getName();
-                PublishUtils.updateItemsAddOrUpdateWithX509_2(commitIdForUpdate, importedObjects, null, controllerId, dbLayer,
-                        SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair.getCertificate()).thenAccept(either -> {
-                            processAfterAdd(either, importedObjects, null, account, commitIdForUpdate, controllerId, deploymentDate, filter);
-                });
+                verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
+                if (verified) {
+                    PublishUtils.updateItemsAddOrUpdateWithX509CertificateFromImport(commitIdForUpdate, importedObjects, null, controllerId, dbLayer,
+                            SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair.getCertificate()).thenAccept(either -> {
+                                processAfterAdd(either, importedObjects, null, account, commitIdForUpdate, controllerId, deploymentDate, filter);
+                    });
+                } else {
+                    signerDN = cert.getSubjectDN().getName();
+                    PublishUtils.updateItemsAddOrUpdateWithX509SignerDNFromImport(commitIdForUpdate, importedObjects, null, controllerId, dbLayer,
+                            SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
+                                processAfterAdd(either, importedObjects, null, account, commitIdForUpdate, controllerId, deploymentDate, filter);
+                    });
+                }
                 break;
             }
             if (importedObjects != null && !importedObjects.isEmpty()) {

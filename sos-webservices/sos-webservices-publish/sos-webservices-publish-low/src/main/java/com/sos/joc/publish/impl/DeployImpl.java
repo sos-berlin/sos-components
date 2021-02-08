@@ -14,7 +14,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
-import javax.xml.bind.DatatypeConverter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +29,7 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
+import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -75,6 +75,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             String account = Globals.defaultProfileAccount;
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             dbLayer = new DBLayerDeploy(hibernateSession);
+            List<DBItemInventoryCertificate> caCertificates = dbLayer.getCaCertificates();
             // get all available controller instances
             Map<String, List<DBItemInventoryJSInstance>> allControllers = dbLayer.getAllControllers().stream().collect(Collectors.groupingBy(
                     DBItemInventoryJSInstance::getControllerId));
@@ -216,8 +217,9 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 if ((verifiedConfigurations != null && !verifiedConfigurations.isEmpty()) || (verifiedReDeployables != null && !verifiedReDeployables
                         .isEmpty())) {
                     // call updateRepo command via ControllerApi for given controllers
-//                    String signerDN = null;
-//                    X509Certificate cert = null;
+                    boolean verified = false;
+                    String signerDN = null;
+                    X509Certificate cert = null;
                     switch (keyPair.getKeyAlgorithm()) {
                     case SOSKeyConstants.PGP_ALGORITHM_NAME:
                         PublishUtils.updateItemsAddOrUpdatePGP(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
@@ -227,24 +229,44 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                                 });// .get()
                         break;
                     case SOSKeyConstants.RSA_ALGORITHM_NAME:
-//                        cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-//                        signerDN = cert.getSubjectDN().getName();
-                        PublishUtils.updateItemsAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
-                                dbLayer, SOSKeyConstants.RSA_SIGNER_ALGORITHM, keyPair.getCertificate())
-                            .thenAccept(either -> {
-                                    processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account,
-                                            versionIdForUpdate, controllerId, deployFilter, unmodified);
-                                });// .get()
+                        cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+                        verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
+                        if (verified) {
+                            PublishUtils.updateItemsAddOrUpdateWithX509Certificate(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
+                                    dbLayer, SOSKeyConstants.RSA_SIGNER_ALGORITHM, keyPair.getCertificate())
+                                .thenAccept(either -> {
+                                        processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account,
+                                                versionIdForUpdate, controllerId, deployFilter, unmodified);
+                                    });
+                        } else {
+                          signerDN = cert.getSubjectDN().getName();
+                          PublishUtils.updateItemsAddOrUpdateWithX509SignerDN(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
+                                  dbLayer, SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN)
+                              .thenAccept(either -> {
+                                      processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account,
+                                              versionIdForUpdate, controllerId, deployFilter, unmodified);
+                                  });
+                        }
                         break;
                     case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
-//                        cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-//                        signerDN = cert.getSubjectDN().getName();
-                        PublishUtils.updateItemsAddOrUpdateWithX509(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
-                                dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair.getCertificate())
-                            .thenAccept(either -> {
-                                    processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account,
-                                            versionIdForUpdate, controllerId, deployFilter, unmodified);
-                                });// .get()
+                        cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+                        verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
+                        if (verified) {
+                            PublishUtils.updateItemsAddOrUpdateWithX509Certificate(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
+                                    dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair.getCertificate())
+                                .thenAccept(either -> {
+                                        processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account,
+                                                versionIdForUpdate, controllerId, deployFilter, unmodified);
+                                    });
+                        } else {
+                          signerDN = cert.getSubjectDN().getName();
+                          PublishUtils.updateItemsAddOrUpdateWithX509SignerDN(versionIdForUpdate, verifiedConfigurations, verifiedReDeployables, controllerId,
+                                  dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN)
+                              .thenAccept(either -> {
+                                      processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account,
+                                              versionIdForUpdate, controllerId, deployFilter, unmodified);
+                                  });
+                        }
                         break;
                     }
                 }
