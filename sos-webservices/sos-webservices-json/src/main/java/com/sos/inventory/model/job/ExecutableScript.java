@@ -24,6 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "script",
     "env",
+    "v1Compatible",
     "TYPE"
 })
 public class ExecutableScript {
@@ -44,6 +45,8 @@ public class ExecutableScript {
     @JsonProperty("env")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Environment env;
+    @JsonProperty("v1Compatible")
+    private Boolean v1Compatible = true;
     /**
      * 
      * (Required)
@@ -62,12 +65,16 @@ public class ExecutableScript {
     /**
      * 
      * @param env
+     * @param tYPE
      * @param script
+     * @param v1Compatible
      */
-    public ExecutableScript(String script, Environment env) {
+    public ExecutableScript(String script, Environment env, Boolean v1Compatible, ExecutableScript.TYPE tYPE) {
         super();
         this.script = script;
         this.env = env;
+        this.v1Compatible = v1Compatible;
+        this.tYPE = tYPE;
     }
 
     /**
@@ -112,6 +119,16 @@ public class ExecutableScript {
         this.env = env;
     }
 
+    @JsonProperty("v1Compatible")
+    public Boolean getV1Compatible() {
+        return v1Compatible;
+    }
+
+    @JsonProperty("v1Compatible")
+    public void setV1Compatible(Boolean v1Compatible) {
+        this.v1Compatible = v1Compatible;
+    }
+
     /**
      * 
      * (Required)
@@ -134,12 +151,12 @@ public class ExecutableScript {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("script", script).append("env", env).append("tYPE", tYPE).toString();
+        return new ToStringBuilder(this).append("script", script).append("env", env).append("v1Compatible", v1Compatible).append("tYPE", tYPE).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(env).append(tYPE).append(script).toHashCode();
+        return new HashCodeBuilder().append(env).append(tYPE).append(script).append(v1Compatible).toHashCode();
     }
 
     @Override
@@ -151,7 +168,7 @@ public class ExecutableScript {
             return false;
         }
         ExecutableScript rhs = ((ExecutableScript) other);
-        return new EqualsBuilder().append(env, rhs.env).append(tYPE, rhs.tYPE).append(script, rhs.script).isEquals();
+        return new EqualsBuilder().append(env, rhs.env).append(tYPE, rhs.tYPE).append(script, rhs.script).append(v1Compatible, rhs.v1Compatible).isEquals();
     }
 
     public enum TYPE {
