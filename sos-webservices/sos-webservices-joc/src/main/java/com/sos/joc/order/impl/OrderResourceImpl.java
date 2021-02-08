@@ -1,6 +1,9 @@
 package com.sos.joc.order.impl;
 
+import java.time.Instant;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -17,6 +20,8 @@ import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.exceptions.JobSchedulerObjectNotExistException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.order.OrderFilter;
+import com.sos.joc.model.order.OrderStateText;
+import com.sos.joc.model.order.OrderV;
 import com.sos.joc.order.resource.IOrderResource;
 import com.sos.schema.JsonValidator;
 
@@ -28,6 +33,8 @@ import js7.proxy.javaapi.data.order.JOrder;
 public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource {
 
     private static final String API_CALL = "./order";
+    private final List<OrderStateText> orderStateWithRequirements = Arrays.asList(OrderStateText.PENDING, OrderStateText.BLOCKED,
+            OrderStateText.SUSPENDED);
 
     @Override
     public JOCDefaultResponse postOrder(String accessToken, byte[] filterBytes) {
@@ -45,16 +52,21 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
             JControllerState currentState = Proxy.of(orderFilter.getControllerId()).currentState();
             Long surveyDateMillis = currentState.eventId() / 1000;
             Optional<JOrder> optional = currentState.idToOrder(OrderId.of(orderFilter.getOrderId()));
-            
+
             if (optional.isPresent()) {
                 JOrder jOrder = optional.get();
                 session = Globals.createSosHibernateStatelessConnection(API_CALL);
                 DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
                 final Map<String, String> namePathMap = dbLayer.getNamePathMapping(orderFilter.getControllerId(), Arrays.asList(jOrder.workflowId()
                         .path().toString()), DeployType.WORKFLOW.intValue());
-                //checkFolderPermissions(optional.get().workflowId().path().string()); is only a name
-                return JOCDefaultResponse.responseStatus200(OrdersHelper.mapJOrderToOrderV(optional.get(), orderFilter.getCompact(), namePathMap, surveyDateMillis,
-                        true));
+                OrderV o = OrdersHelper.mapJOrderToOrderV(jOrder, orderFilter.getCompact(), namePathMap, surveyDateMillis);
+                checkFolderPermissions(o.getWorkflowId().getPath());
+                if (orderStateWithRequirements.contains(o.getState().get_text())) {
+                    o.setRequirements(OrdersHelper.getRequirements(jOrder, currentState));
+                }
+                o.setSurveyDate(Date.from(Instant.ofEpochMilli(surveyDateMillis)));
+                o.setDeliveryDate(Date.from(Instant.now()));
+                return JOCDefaultResponse.responseStatus200(o);
             } else {
                 throw new JobSchedulerObjectNotExistException(String.format("unknown Order '%s'", orderFilter.getOrderId()));
             }

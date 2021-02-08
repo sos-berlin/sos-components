@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.controller.model.common.Variables;
+import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.model.common.IConfigurationObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -28,6 +29,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "timeout",
     "graceTimeout",
     "jobClass",
+    "jobRequirements",
     "defaultArguments",
     "title",
     "documentationPath",
@@ -98,6 +100,14 @@ public class Job implements IConfigurationObject
     @JsonPropertyDescription("absolute path of an object.")
     private String jobClass;
     /**
+     * order or job requirements
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jobRequirements")
+    private Requirements jobRequirements;
+    /**
      * key-value pairs
      * <p>
      * a map for arbitrary key-value pairs
@@ -152,6 +162,7 @@ public class Job implements IConfigurationObject
      * @param documentationPath
      * @param taskLimit
      * @param agentId
+     * @param jobRequirements
      * @param criticality
      * @param title
      * @param executable
@@ -163,7 +174,7 @@ public class Job implements IConfigurationObject
      * @param logLevel
      * @param jobClass
      */
-    public Job(String agentId, ExecutableScript executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Boolean v1Compatible, Integer timeout, Integer graceTimeout, String jobClass, Variables defaultArguments, String title, String documentationPath, JobLogLevel logLevel, JobCriticality criticality) {
+    public Job(String agentId, ExecutableScript executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Boolean v1Compatible, Integer timeout, Integer graceTimeout, String jobClass, Requirements jobRequirements, Variables defaultArguments, String title, String documentationPath, JobLogLevel logLevel, JobCriticality criticality) {
         super();
         this.agentId = agentId;
         this.executable = executable;
@@ -173,6 +184,7 @@ public class Job implements IConfigurationObject
         this.timeout = timeout;
         this.graceTimeout = graceTimeout;
         this.jobClass = jobClass;
+        this.jobRequirements = jobRequirements;
         this.defaultArguments = defaultArguments;
         this.title = title;
         this.documentationPath = documentationPath;
@@ -347,6 +359,28 @@ public class Job implements IConfigurationObject
     }
 
     /**
+     * order or job requirements
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jobRequirements")
+    public Requirements getJobRequirements() {
+        return jobRequirements;
+    }
+
+    /**
+     * order or job requirements
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jobRequirements")
+    public void setJobRequirements(Requirements jobRequirements) {
+        this.jobRequirements = jobRequirements;
+    }
+
+    /**
      * key-value pairs
      * <p>
      * a map for arbitrary key-value pairs
@@ -458,12 +492,12 @@ public class Job implements IConfigurationObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentId", agentId).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("taskLimit", taskLimit).append("v1Compatible", v1Compatible).append("timeout", timeout).append("graceTimeout", graceTimeout).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("title", title).append("documentationPath", documentationPath).append("logLevel", logLevel).append("criticality", criticality).toString();
+        return new ToStringBuilder(this).append("agentId", agentId).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("taskLimit", taskLimit).append("v1Compatible", v1Compatible).append("timeout", timeout).append("graceTimeout", graceTimeout).append("jobClass", jobClass).append("jobRequirements", jobRequirements).append("defaultArguments", defaultArguments).append("title", title).append("documentationPath", documentationPath).append("logLevel", logLevel).append("criticality", criticality).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(documentationPath).append(taskLimit).append(agentId).append(criticality).append(title).append(executable).append(v1Compatible).append(timeout).append(returnCodeMeaning).append(graceTimeout).append(defaultArguments).append(logLevel).append(jobClass).toHashCode();
+        return new HashCodeBuilder().append(documentationPath).append(taskLimit).append(agentId).append(jobRequirements).append(criticality).append(title).append(executable).append(v1Compatible).append(timeout).append(returnCodeMeaning).append(graceTimeout).append(defaultArguments).append(logLevel).append(jobClass).toHashCode();
     }
 
     @Override
@@ -475,7 +509,7 @@ public class Job implements IConfigurationObject
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(taskLimit, rhs.taskLimit).append(agentId, rhs.agentId).append(criticality, rhs.criticality).append(title, rhs.title).append(executable, rhs.executable).append(v1Compatible, rhs.v1Compatible).append(timeout, rhs.timeout).append(returnCodeMeaning, rhs.returnCodeMeaning).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(logLevel, rhs.logLevel).append(jobClass, rhs.jobClass).isEquals();
+        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(taskLimit, rhs.taskLimit).append(agentId, rhs.agentId).append(jobRequirements, rhs.jobRequirements).append(criticality, rhs.criticality).append(title, rhs.title).append(executable, rhs.executable).append(v1Compatible, rhs.v1Compatible).append(timeout, rhs.timeout).append(returnCodeMeaning, rhs.returnCodeMeaning).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(logLevel, rhs.logLevel).append(jobClass, rhs.jobClass).isEquals();
     }
 
 }

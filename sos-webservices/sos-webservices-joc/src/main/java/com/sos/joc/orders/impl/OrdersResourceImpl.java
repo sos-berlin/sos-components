@@ -1,6 +1,7 @@
 package com.sos.joc.orders.impl;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +47,8 @@ import js7.proxy.javaapi.data.workflow.JWorkflowId;
 public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResource {
 
     private static final String API_CALL = "./orders";
+    private final List<OrderStateText> orderStateWithRequirements = Arrays.asList(OrderStateText.PENDING, OrderStateText.BLOCKED,
+            OrderStateText.SUSPENDED);
 
     @Override
     public JOCDefaultResponse postOrders(String accessToken, byte[] filterBytes) {
@@ -146,14 +149,13 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             
             
             Long surveyDateMillis = currentState.eventId() / 1000;
-            
             OrdersV entity = new OrdersV();
             entity.setSurveyDate(Date.from(Instant.ofEpochMilli(surveyDateMillis)));
-
+            
             Stream<Either<Exception, OrderV>> ordersV = jOrderStream.map(o -> {
                 Either<Exception, OrderV> either = null;
                 try {
-                    OrderV order = OrdersHelper.mapJOrderToOrderV(o, ordersFilter.getCompact(), namePathMap, surveyDateMillis, false);
+                    OrderV order = OrdersHelper.mapJOrderToOrderV(o, ordersFilter.getCompact(), namePathMap, surveyDateMillis);
                     // special BLOCKED handling
                     if (withStatesFilter) {
                        if (lookingForBlocked && !lookingForPending && OrderStateText.PENDING.equals(order.getState().get_text())) {
@@ -161,6 +163,9 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                        } else if (lookingForPending && !lookingForBlocked && OrderStateText.BLOCKED.equals(order.getState().get_text())) {
                            order = null;
                        }
+                    }
+                    if (order != null && orderStateWithRequirements.contains(order.getState().get_text())) {
+                        order.setRequirements(OrdersHelper.getRequirements(o, currentState));
                     }
                     either = Either.right(order);
                 } catch (Exception e) {

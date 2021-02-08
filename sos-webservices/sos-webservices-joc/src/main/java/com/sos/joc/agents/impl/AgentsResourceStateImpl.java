@@ -101,7 +101,8 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                 JControllerState currentState;
                 try {
                     currentState = Proxy.of(controllerId).currentState();
-                    agents.setSurveyDate(Date.from(Instant.ofEpochMilli(currentState.eventId() / 1000)));
+                    Long surveyDateMillis = currentState.eventId() / 1000;
+                    agents.setSurveyDate(Date.from(Instant.ofEpochMilli(surveyDateMillis)));
                     Stream<JOrder> jOrderStream = currentState.ordersBy(JOrderPredicates.byOrderState(Order.Processing$.class)).filter(o -> o
                             .attached() != null && o.attached().isRight());
                     if (agentsParam.getCompact() == Boolean.TRUE) {
@@ -114,7 +115,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                         final Map<String, String> namePathMap = dbCLayer.getNamePathMapping(controllerId, names, DeployType.WORKFLOW.intValue());
                         ordersPerAgent.putAll(jOrders.stream().map(o -> {
                             try {
-                                return OrdersHelper.mapJOrderToOrderV(o, false, namePathMap, null, false);
+                                return OrdersHelper.mapJOrderToOrderV(o, false, namePathMap, surveyDateMillis);
                             } catch (Exception e) {
                                 return null;
                             }

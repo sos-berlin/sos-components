@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.deploy.DeployType;
-import com.sos.inventory.model.workflow.OrderRequirements;
+import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.model.common.IDeployObject;
 import com.sos.sign.model.instruction.Instruction;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -60,13 +60,13 @@ public class Workflow implements IDeployObject
     @JsonProperty("versionId")
     private String versionId;
     /**
-     * orderRequirements
+     * order or job requirements
      * <p>
      * 
      * 
      */
     @JsonProperty("orderRequirements")
-    private OrderRequirements orderRequirements;
+    private Requirements orderRequirements;
     /**
      * 
      * (Required)
@@ -100,7 +100,7 @@ public class Workflow implements IDeployObject
      * @param jobs
      * @param tYPE
      */
-    public Workflow(DeployType tYPE, String path, String versionId, OrderRequirements orderRequirements, List<Instruction> instructions, Jobs jobs) {
+    public Workflow(DeployType tYPE, String path, String versionId, Requirements orderRequirements, List<Instruction> instructions, Jobs jobs) {
         super();
         this.tYPE = tYPE;
         this.path = path;
@@ -183,24 +183,24 @@ public class Workflow implements IDeployObject
     }
 
     /**
-     * orderRequirements
+     * order or job requirements
      * <p>
      * 
      * 
      */
     @JsonProperty("orderRequirements")
-    public OrderRequirements getOrderRequirements() {
+    public Requirements getOrderRequirements() {
         return orderRequirements;
     }
 
     /**
-     * orderRequirements
+     * order or job requirements
      * <p>
      * 
      * 
      */
     @JsonProperty("orderRequirements")
-    public void setOrderRequirements(OrderRequirements orderRequirements) {
+    public void setOrderRequirements(Requirements orderRequirements) {
         this.orderRequirements = orderRequirements;
     }
 
