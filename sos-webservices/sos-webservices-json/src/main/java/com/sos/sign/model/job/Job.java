@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.controller.model.common.Variables;
-import com.sos.inventory.model.job.ExecutableScript;
+import com.sos.inventory.model.job.Executable;
 import com.sos.inventory.model.job.JobReturnCode;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -42,14 +42,14 @@ public class Job {
     @JsonProperty("agentId")
     private String agentId;
     /**
-     * executable script
+     * abstract executable
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("executable")
-    private ExecutableScript executable;
+    private Executable executable;
     /**
      * job
      * <p>
@@ -118,7 +118,7 @@ public class Job {
      * @param executable
      * @param timeout
      */
-    public Job(String agentId, ExecutableScript executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, String jobClass, Variables defaultArguments) {
+    public Job(String agentId, Executable executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, String jobClass, Variables defaultArguments) {
         super();
         this.agentId = agentId;
         this.executable = executable;
@@ -155,26 +155,26 @@ public class Job {
     }
 
     /**
-     * executable script
+     * abstract executable
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("executable")
-    public ExecutableScript getExecutable() {
+    public Executable getExecutable() {
         return executable;
     }
 
     /**
-     * executable script
+     * abstract executable
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("executable")
-    public void setExecutable(ExecutableScript executable) {
+    public void setExecutable(Executable executable) {
         this.executable = executable;
     }
 

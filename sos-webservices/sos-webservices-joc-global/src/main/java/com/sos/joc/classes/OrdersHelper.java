@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -31,12 +30,9 @@ import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.agent.AgentId;
 import js7.data.order.Order;
-import js7.data.workflow.WorkflowParameters;
 import js7.proxy.javaapi.data.controller.JControllerState;
 import js7.proxy.javaapi.data.order.JOrder;
 import js7.proxy.javaapi.data.workflow.JWorkflow;
-import scala.compat.java8.OptionConverters;
-import scala.concurrent.JavaConversions;
 
 public class OrdersHelper {
 

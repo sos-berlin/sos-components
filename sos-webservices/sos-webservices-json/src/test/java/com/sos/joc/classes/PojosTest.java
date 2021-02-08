@@ -125,7 +125,7 @@ public class PojosTest {
 	    workflow.setPath(request.getPath());
 	    Job job = new Job();
 	    job.setAgentId("myAgent");
-	    job.setExecutable(new ExecutableScript("echo hallo", null));
+	    job.setExecutable(new ExecutableScript("echo hallo", null, true));
 	    Jobs jobs = new Jobs();
 	    jobs.setAdditionalProperty("job1", job);
 	    workflow.setJobs(jobs);
