@@ -21,6 +21,7 @@ import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.DBItemHistoryTempLog;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryAgentName;
+import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
@@ -135,6 +136,10 @@ public class DBLayer implements Serializable {
     public static final String TABLE_INV_RELEASED_CONFIGURATIONS = "INV_RELEASED_CONFIGURATIONS";
     public static final String TABLE_INV_RELEASED_CONFIGURATIONS_SEQUENCE = "SEQ_INV_RC";
 
+    public static final String DBITEM_INV_CERTS = DBItemInventoryCertificate.class.getSimpleName();
+    public static final String TABLE_INV_CERTS = "INV_CERTS";
+    public static final String TABLE_INV_CERTS_SEQUENCE = "SEQ_INV_CRTS";
+
     public static final String DBITEM_DOCUMENTATION = com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentation.class.getSimpleName();
     public static final String TABLE_DOCUMENTATION = "INV_DOCUMENTATIONS";
     public static final String TABLE_DOCUMENTATION_SEQUENCE = "SEQ_INV_D";
@@ -246,6 +251,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemInventoryAgentName.class);
         cl.add(DBItemInventoryConfiguration.class);
         cl.add(DBItemInventoryReleasedConfiguration.class);
+        cl.add(DBItemInventoryCertificate.class);
         cl.add(DBItemSearchWorkflow.class);
         cl.add(DBItemSearchWorkflow2DeploymentHistory.class);
         cl.add(com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentation.class);
