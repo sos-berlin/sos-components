@@ -4,9 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 
 import org.slf4j.Logger;
@@ -16,19 +14,9 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
-import com.sos.joc.classes.audit.DailyPlanAudit;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.common.ControllerId;
-import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.dailyplan.DailyPlanOrderSelector;
-import com.sos.joc.model.dailyplan.DailyPlanOrderSelectorDef;
 import com.sos.joc.model.dailyplan.RelativeDatesConverter;
-import com.sos.js7.order.initiator.OrderInitiatorRunner;
-import com.sos.js7.order.initiator.OrderInitiatorSettings;
-import com.sos.js7.order.initiator.ScheduleSource;
-import com.sos.js7.order.initiator.ScheduleSourceDB;
 import com.sos.schema.JsonValidator;
-import com.sos.webservices.order.resource.IDailyPlanOrdersGenerateResource;
 import com.sos.webservices.order.resource.IRelativeDateConverterResource;
 
 
@@ -36,7 +24,7 @@ import com.sos.webservices.order.resource.IRelativeDateConverterResource;
 public class RelativeDatesConverterImpl extends JOCResourceImpl implements IRelativeDateConverterResource {
  
     private static final Logger LOGGER = LoggerFactory.getLogger(RelativeDatesConverterImpl.class);
-    private static final String API_CALL = "./daily_plan/relativedates";
+    private static final String API_CALL = "./utilities/convert_relative_dates";
 
     @Override
     public JOCDefaultResponse postConvertRelativeDates(String accessToken, byte[] filterBytes) throws JocException {

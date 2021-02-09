@@ -46,14 +46,12 @@ public class Job implements IConfigurationObject
     @JsonProperty("agentId")
     private String agentId;
     /**
-     * executable script
-     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("executable")
-    private ExecutableScript executable;
+    private Executable executable;
     /**
      * job
      * <p>
@@ -159,7 +157,7 @@ public class Job implements IConfigurationObject
      * @param executable
      * @param timeout
      */
-    public Job(String agentId, ExecutableScript executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, String jobClass, Variables defaultArguments, String title, String documentationPath, JobLogLevel logLevel, JobCriticality criticality) {
+    public Job(String agentId, Executable executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, String jobClass, Variables defaultArguments, String title, String documentationPath, JobLogLevel logLevel, JobCriticality criticality) {
         super();
         this.agentId = agentId;
         this.executable = executable;
@@ -200,26 +198,22 @@ public class Job implements IConfigurationObject
     }
 
     /**
-     * executable script
-     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("executable")
-    public ExecutableScript getExecutable() {
+    public Executable getExecutable() {
         return executable;
     }
 
     /**
-     * executable script
-     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("executable")
-    public void setExecutable(ExecutableScript executable) {
+    public void setExecutable(Executable executable) {
         this.executable = executable;
     }
 
