@@ -95,6 +95,11 @@ public class PredicateValidatorTest {
         parseTester("variable('', default='*') != 'a'", false);
     }
     
+    @Test
+    public void testParse2() throws IllegalArgumentException, IOException {
+        parseTester("${こんにちは} ++ 1 == 1", false);
+    }
+    
     private void parseTester(String str, boolean expect) {
         try {
             PredicateParser.parse(str);

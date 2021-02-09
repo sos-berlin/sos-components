@@ -14,7 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class PredicateParser {
-
+    
     public static void parse(InputStream stream) throws IOException, IllegalArgumentException {
         Reader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
         try {
@@ -208,7 +208,7 @@ public class PredicateParser {
 
         return token;
     }
-    
+
     protected static int parseVariable(String str, int pos) throws IOException, IllegalArgumentException {
         return parseVariable(str, pos, null);
     }
@@ -248,9 +248,9 @@ public class PredicateParser {
         int position = pos;
         List<String> varKeywords = new ArrayList<>(Arrays.asList("key", "label", "default"));
         List<String> argKeywords = new ArrayList<>(Arrays.asList("key", "default"));
-        
+
         if (parentStr == null || parentStr.isEmpty()) {
-            parentStr = str; 
+            parentStr = str;
         }
 
         int currentToken = tokenizer.nextToken();
@@ -474,7 +474,7 @@ public class PredicateParser {
 
         return considerToNumberBoolean(tokenizer, str, position, parentStr);
     }
-    
+
     protected static int parseDollarVariable(String str, int pos) throws IOException, IllegalArgumentException {
         return parseDollarVariable(str, pos, null);
     }
@@ -512,7 +512,7 @@ public class PredicateParser {
 
         int position = pos;
         if (parentStr == null || parentStr.isEmpty()) {
-            parentStr = str; 
+            parentStr = str;
         }
 
         int currentToken = tokenizer.nextToken();
@@ -588,7 +588,7 @@ public class PredicateParser {
         }
         return position;
     }
-    
+
     private static int parseString(String str, int pos, String parentStr) throws IOException, IllegalArgumentException {
         StreamTokenizer tokenizer = new StreamTokenizer(new StringReader(str));
         tokenizer.resetSyntax();
@@ -603,31 +603,31 @@ public class PredicateParser {
 
         int position = pos;
         if (parentStr == null || parentStr.isEmpty()) {
-            parentStr = str; 
+            parentStr = str;
         }
 
         int currentToken = tokenizer.nextToken();
         if (currentToken == StreamTokenizer.TT_EOF) {
             throw new IllegalArgumentException("unexpected empty expression at position " + position);
         }
-        
+
         if (tokenizer.ttype == '"' || tokenizer.ttype == '\'') {
             emptySingleQuoteStringException(tokenizer, parentStr, position);
             position += tokenizer.sval.length() + 2;
         } else {
             throwUnexpectedCharErrMsg(tokenizer, parentStr, position);
         }
-        
+
         currentToken = tokenizer.nextToken();
         if (currentToken == StreamTokenizer.TT_EOF) {
             return position;
         } else {
             throwUnexpectedCharErrMsg(tokenizer, parentStr, position);
         }
-        
+
         return position;
     }
-    
+
     private static void emptySingleQuoteStringException(StreamTokenizer tokenizer, String str, int position) {
         if (tokenizer.ttype == '\'' && tokenizer.sval.isEmpty()) {
             throw new IllegalArgumentException("wrong syntax near '" + str + "': an empty string with single quotes '' was found at position "
@@ -679,13 +679,13 @@ public class PredicateParser {
             if (!tokens[2].replaceAll("\\s", "").matches("\\[(-?[0-9]+(.[0-9]+)?)(,-?[0-9]+(.[0-9]+)?)*\\]")) {
                 throw new IllegalArgumentException(extendedErrMessage + "[" + tokens[2] + "] is not an array of numbers.");
             }
-            if (isNumeric(tokens[0])) {
-                if (tokens[0].endsWith(".toNumber")) {
+            if (isNumeric(tokens[0]) || isNumericVariable(tokens[0]) || hasArithmeticOperators(tokens[0])) {
+                if (isNumericVariable(tokens[0])) {
                     checkVariableSyntax(tokens[0], 0, str);
                 }
             } else {
                 throw new IllegalArgumentException(extendedErrMessage + "[" + tokens[0]
-                        + "] is not numeric. Expects variable(...).toNumber, argument(...).toNumber, $returnCode or an unquoted number.");
+                        + "] is not numeric. Expects variable(...)[.toNumber], argument(...)[.toNumber], $returnCode or an unquoted number.");
             }
             break;
         case "matches":
@@ -696,10 +696,12 @@ public class PredicateParser {
             if (!isString(tokens[2])) {
                 throw new IllegalArgumentException(extendedErrMessage + "[" + tokens[2]
                         + "] is not a string. Expects a ' or \"  enclosed expression.");
-            } else if (isString(tokens[0]) || isStringVariable(tokens[0])) {
-                checkString(tokens[0], 0, str);
-                if (isStringVariable(tokens[0])) {
-                    checkVariableSyntax(tokens[0], 0, str);
+            } else if (isString(tokens[0]) || isStringVariable(tokens[0]) || hasStringOperators(tokens[0])) {
+                if (!hasStringOperators(tokens[0])) {
+                    checkString(tokens[0], 0, str);
+                    if (isStringVariable(tokens[0])) {
+                        checkVariableSyntax(tokens[0], 0, str);
+                    }
                 }
             } else {
                 throw new IllegalArgumentException(extendedErrMessage + "[" + tokens[0]
@@ -712,27 +714,33 @@ public class PredicateParser {
             if (tokens[0].isEmpty() || tokens[2].isEmpty()) {
                 throw new IllegalArgumentException(extendedErrMessage + "value to compare is missing.");
             }
-            if (isNumeric(tokens[0]) && isNumeric(tokens[2])) {
-                if (tokens[0].endsWith(".toNumber")) {
+            if ((isNumeric(tokens[0]) || isNumericVariable(tokens[0]) || hasArithmeticOperators(tokens[0])) && (isNumeric(tokens[2])
+                    || isNumericVariable(tokens[2]) || hasArithmeticOperators(tokens[2]))) {
+                if (isNumericVariable(tokens[0])) {
                     checkVariableSyntax(tokens[0], 0, str);
                 }
-                if (tokens[2].endsWith(".toNumber")) {
+                if (isNumericVariable(tokens[2])) {
                     checkVariableSyntax(tokens[2], startPos2, str);
                 }
-            } else if ((isString(tokens[0]) || isStringVariable(tokens[0])) && (isString(tokens[2]) || isStringVariable(tokens[2]))) {
-                checkString(tokens[0], 0, str);
-                if (isStringVariable(tokens[0])) {
+            } else if ((isString(tokens[0]) || isStringVariable(tokens[0]) || hasStringOperators(tokens[0])) && (isString(tokens[2])
+                    || isStringVariable(tokens[2]) || hasStringOperators(tokens[2]))) {
+                if (!hasStringOperators(tokens[0])) {
+                    checkString(tokens[0], 0, str);
+                    if (isStringVariable(tokens[0])) {
+                        checkVariableSyntax(tokens[0], 0, str);
+                    }
+                }
+                if (!hasStringOperators(tokens[2])) {
+                    checkString(tokens[2], startPos2, str);
+                    if (isStringVariable(tokens[2])) {
+                        checkVariableSyntax(tokens[2], startPos2, str);
+                    }
+                }
+            } else if ((isBoolean(tokens[0]) || isBooleanVariable(tokens[0])) && (isBoolean(tokens[2]) || isBooleanVariable(tokens[2]))) {
+                if (isBooleanVariable(tokens[0])) {
                     checkVariableSyntax(tokens[0], 0, str);
                 }
-                checkString(tokens[2], startPos2, str);
-                if (isStringVariable(tokens[2])) {
-                    checkVariableSyntax(tokens[2], startPos2, str);
-                }
-            } else if (isBoolean(tokens[0]) && isBoolean(tokens[2])) {
-                if (tokens[0].endsWith(".toBoolean")) {
-                    checkVariableSyntax(tokens[0], 0, str);
-                }
-                if (tokens[2].endsWith(".toBoolean")) {
+                if (isBooleanVariable(tokens[2])) {
                     checkVariableSyntax(tokens[2], startPos2, str);
                 }
             } else {
@@ -747,27 +755,27 @@ public class PredicateParser {
             if (tokens[0].isEmpty() || tokens[2].isEmpty()) {
                 throw new IllegalArgumentException(extendedErrMessage + "value to compare is missing.");
             }
-            if (isNumeric(tokens[0])) {
-                if (tokens[0].endsWith(".toNumber")) {
+            if (isNumeric(tokens[0]) || isNumericVariable(tokens[0])) {
+                if (isNumericVariable(tokens[0])) {
                     checkVariableSyntax(tokens[0], 0, str);
                 }
             } else {
                 throw new IllegalArgumentException(extendedErrMessage + "[" + tokens[0]
-                        + "] is not numeric. Expects variable(...).toNumber, argument(...).toNumber, $returnCode or an unquoted number.");
+                        + "] is not numeric. Expects variable(...)[.toNumber], argument(...)[.toNumber], $returnCode or an unquoted number.");
             }
-            if (isNumeric(tokens[2])) {
-                if (tokens[2].endsWith(".toNumber")) {
+            if (isNumeric(tokens[2]) || isNumericVariable(tokens[2])) {
+                if (isNumericVariable(tokens[2])) {
                     checkVariableSyntax(tokens[2], startPos2, str);
                 }
             } else {
                 throw new IllegalArgumentException(extendedErrMessage + "[" + tokens[2]
-                        + "] is not numeric. Expects variable(...).toNumber, argument(...).toNumber, $returnCode or an unquoted number.");
+                        + "] is not numeric. Expects variable(...)[.toNumber], argument(...)[.toNumber], $returnCode or an unquoted number.");
             }
             break;
         case "":
             // check toBoolean
-            if (isBoolean(tokens[0])) {
-                if (tokens[0].endsWith(".toBoolean")) {
+            if (isBoolean(tokens[0]) || isBooleanVariable(tokens[0])) {
+                if (isBooleanVariable(tokens[0])) {
                     checkVariableSyntax(tokens[0], 0, str);
                 }
             } else {
@@ -803,23 +811,41 @@ public class PredicateParser {
     private static boolean isString(String str) {
         return (str.startsWith("\"") && str.endsWith("\"")) || (str.startsWith("'") && str.endsWith("'"));
     }
-    
+
     private static void checkString(String str, int pos, String parentStr) throws IllegalArgumentException, IOException {
         if (isString(str)) {
             parseString(str, pos, parentStr);
         }
     }
 
+    private static boolean isBooleanVariable(String str) {
+        if (str.endsWith(".toBoolean")) {
+            return true;
+        } else if (str.startsWith("variable(") && str.endsWith(")")) {
+            return true;
+        } else if (str.startsWith("${") && str.endsWith("}")) {
+            return true;
+        }
+        return false;
+    }
+
     private static boolean isBoolean(String str) {
-        return "true".equals(str) || "false".equals(str) || str.endsWith(".toBoolean");
+        return "true".equals(str) || "false".equals(str);
+    }
+
+    private static boolean isNumericVariable(String str) {
+        if (str.endsWith(".toNumber")) {
+            return true;
+        } else if (str.startsWith("variable(") && str.endsWith(")")) {
+            return true;
+        } else if (str.startsWith("${") && str.endsWith("}")) {
+            return true;
+        }
+        return false;
     }
 
     private static boolean isNumeric(String str) {
-        boolean isNumeric = "$returnCode".equals(str) || "${returnCode}".equals(str) || str.endsWith(".toNumber");
-//        if (!isNumeric) {
-//           String regex ="variable\\(\\s*[\"']returnCode[\"']\\s*(,\\s*label\\s*=\\s*[^\"']+\\s*|,\\s*default\\s*=\\s*[0-9]+\\s*){0,2}\\)";
-//           isNumeric = str.matches(regex);
-//        }
+        boolean isNumeric = "$returnCode".equals(str) || "${returnCode}".equals(str);
         if (!isNumeric) {
             try {
                 Double.parseDouble(str);
@@ -828,6 +854,16 @@ public class PredicateParser {
             }
         }
         return isNumeric;
+    }
+
+    private static boolean hasStringOperators(String str) {
+        // TODO use StreamTokenizer
+        return str.contains(" ++ ");
+    }
+    
+    private static boolean hasArithmeticOperators(String str) {
+        // TODO use StreamTokenizer
+        return str.contains(" + ") || str.contains(" - ");
     }
 
 }
