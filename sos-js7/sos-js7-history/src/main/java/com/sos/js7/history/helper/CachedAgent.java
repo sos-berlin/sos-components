@@ -4,24 +4,12 @@ import com.sos.joc.db.history.DBItemHistoryAgent;
 
 public class CachedAgent {
 
-    private final Long id;
-    private final String agentId;
     private final String timezone;
     private final String uri;
 
     public CachedAgent(final DBItemHistoryAgent item) {
-        id = item.getId();
-        agentId = item.getAgentId();
         timezone = item.getTimezone();
         uri = item.getUri();
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getAgentId() {
-        return agentId;
     }
 
     public String getTimezone() {

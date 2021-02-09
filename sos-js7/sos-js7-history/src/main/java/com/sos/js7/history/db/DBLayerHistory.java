@@ -1,22 +1,19 @@
 package com.sos.js7.history.db;
 
 import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.util.SOSDate;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.db.history.DBItemHistoryAgent;
 import com.sos.joc.db.history.DBItemHistoryController;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
+import com.sos.joc.db.joc.DBItemJocVariable;
 
 public class DBLayerHistory {
 
@@ -67,9 +64,9 @@ public class DBLayerHistory {
     public String getLastControllerTimezone(String controllerId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select timezone from ");
         hql.append(DBLayer.DBITEM_HISTORY_CONTROLLER);
-        hql.append(" where id = ");
+        hql.append(" where readyEventId = ");
         hql.append("(");
-        hql.append("select max(id) from ");
+        hql.append("select max(readyEventId) from ");
         hql.append(DBLayer.DBITEM_HISTORY_CONTROLLER);
         hql.append(" where controllerId=:controllerId");
         hql.append(")");
@@ -79,11 +76,11 @@ public class DBLayerHistory {
         return session.getSingleResult(query);
     }
 
-    public DBItemHistoryController getControllerByShutDownEventId(String controllerId, String shutDownEventId) throws SOSHibernateException {
+    public DBItemHistoryController getControllerByShutDownEventId(String controllerId, Long shutDownEventId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_CONTROLLER).append(" ");
-        hql.append("where id = ");
+        hql.append("where readyEventId = ");
         hql.append("(");
-        hql.append("select max(id) from ");
+        hql.append("select max(readyEventId) from ");
         hql.append(DBLayer.DBITEM_HISTORY_CONTROLLER);
         hql.append(" where controllerId=:controllerId ");
         hql.append(" and readyEventId < :shutDownEventId ");
@@ -99,9 +96,9 @@ public class DBLayerHistory {
     public DBItemHistoryAgent getLastAgent(String controllerId, String agentId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ");
         hql.append(DBLayer.DBITEM_HISTORY_AGENT);
-        hql.append(" where id = ");
+        hql.append(" where readyEventId = ");
         hql.append("(");
-        hql.append("select max(id) from ");
+        hql.append("select max(readyEventId) from ");
         hql.append(DBLayer.DBITEM_HISTORY_AGENT);
         hql.append(" where controllerId=:controllerId ");
         hql.append(" and agentId=:agentId");
@@ -113,12 +110,12 @@ public class DBLayerHistory {
         return session.getSingleResult(query);
     }
 
-    public DBItemHistoryAgent getAgentByCouplingFailedEventId(String controllerId, String agentId, String couplingFailedEventId)
+    public DBItemHistoryAgent getAgentByCouplingFailedEventId(String controllerId, String agentId, Long couplingFailedEventId)
             throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_AGENT).append(" ");
-        hql.append("where id = ");
+        hql.append("where readyEventId = ");
         hql.append("(");
-        hql.append("select max(id) from ");
+        hql.append("select max(readyEventId) from ");
         hql.append(DBLayer.DBITEM_HISTORY_AGENT);
         hql.append(" where controllerId=:controllerId ");
         hql.append(" and agentId=:agentId ");
@@ -133,15 +130,11 @@ public class DBLayerHistory {
         return session.getSingleResult(query);
     }
 
-    public DBItemHistoryAgent getAgentByReadyEventId(String controllerId, String agentId, String readyEventId) throws SOSHibernateException {
+    public DBItemHistoryAgent getAgentByReadyEventId(Long readyEventId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_AGENT).append(" ");
-        hql.append("where controllerId =:controllerId ");
-        hql.append("and agentId =:agentId ");
-        hql.append("and readyEventId =:readyEventId");
+        hql.append("where readyEventId =:readyEventId");
 
         Query<DBItemHistoryAgent> query = session.createQuery(hql.toString());
-        query.setParameter("controllerId", controllerId);
-        query.setParameter("agentId", agentId);
         query.setParameter("readyEventId", readyEventId);
 
         return session.getSingleResult(query);
@@ -157,77 +150,6 @@ public class DBLayerHistory {
         query.setParameter("controllerId", controllerId);
         query.setParameter("agentId", agentId);
         return session.getSingleResult(query);
-    }
-
-    public int updateAgent(Long id, String uri) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("update ");
-        hql.append(DBLayer.DBITEM_HISTORY_AGENT);
-        hql.append(" set uri=:uri ");
-        hql.append("where id=:id");
-
-        Query<DBItemHistoryAgent> query = session.createQuery(hql.toString());
-        query.setParameter("uri", uri);
-        query.setParameter("id", id);
-        return session.executeUpdate(query);
-    }
-
-    public DBItemHistoryOrder getOrderByStateTime(String controllerId, String orderId, Date stateTime) throws SOSHibernateException {
-        List<DBItemHistoryOrder> result = getOrder(controllerId, orderId);
-        if (result != null) {
-            switch (result.size()) {
-            case 0:
-                return null;
-            case 1:
-                return result.get(0);
-            default:
-                DBItemHistoryOrder order = null;
-                for (DBItemHistoryOrder item : result) {
-                    if (SOSDate.equals(stateTime, item.getStateTime())) {
-                        order = item;
-                        break;
-                    }
-                }
-                return order;
-            }
-        }
-        return null;
-    }
-
-    public DBItemHistoryOrder getOrderBeforeCurrentEvent(String controllerId, String orderId, Date currentEventTime) throws SOSHibernateException {
-        List<DBItemHistoryOrder> result = getOrder(controllerId, orderId);
-        if (result != null) {
-            long currentStateTime = currentEventTime.getTime();
-            switch (result.size()) {
-            case 0:
-                return null;
-            case 1:
-                DBItemHistoryOrder resultItem = result.get(0);
-                return resultItem.getStartTime().getTime() > currentStateTime ? null : resultItem;
-            default:
-                result = result.stream().sorted((item1, item2) -> {
-                    return Long.compare(item2.getId(), item1.getId());
-                }).collect(Collectors.toList());
-                for (DBItemHistoryOrder item : result) {
-                    long startTime = item.getStartTime().getTime();
-                    if (startTime > currentStateTime) {
-                        continue;
-                    }
-                    return item;
-                }
-            }
-        }
-        return null;
-    }
-
-    private List<DBItemHistoryOrder> getOrder(String controllerId, String orderId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER).append(" ");
-        hql.append("where controllerId=:controllerId ");
-        hql.append("and orderId=:orderId ");
-
-        Query<DBItemHistoryOrder> query = session.createQuery(hql.toString());
-        query.setParameter("controllerId", controllerId);
-        query.setParameter("orderId", orderId);
-        return session.getResultList(query);
     }
 
     public DBItemHistoryOrder getOrderByConstraint(String constraintHash) throws SOSHibernateException {
@@ -248,80 +170,6 @@ public class DBLayerHistory {
                 DBLayer.DBITEM_HISTORY_ORDER_STEP));
         query.setParameter("constraintHash", constraintHash);
         return session.getSingleResult(query);
-    }
-
-    public DBItemHistoryOrderStep getOrderStepLastBeforeCurrentEvent(String controllerId, String orderId, Date currentEventTime, Long currentEventId)
-            throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(" ");
-        hql.append("where controllerId=:controllerId ");
-        hql.append("and orderId=:orderId ");
-        hql.append("and startTime <=:startTime ");
-
-        Query<DBItemHistoryOrderStep> query = session.createQuery(hql.toString());
-        query.setParameter("controllerId", controllerId);
-        query.setParameter("orderId", orderId);
-        query.setParameter("startTime", currentEventTime);
-
-        List<DBItemHistoryOrderStep> result = session.getResultList(query);
-        if (result != null) {
-            switch (result.size()) {
-            case 0:
-                return null;
-            case 1:
-                return result.get(0);
-            default:
-                DBItemHistoryOrderStep step = null;
-                Long eventId = new Long(0);
-                for (DBItemHistoryOrderStep item : result) {
-                    Long itemStartEventId = Long.parseLong(item.getStartEventId());
-                    if (itemStartEventId > currentEventId) {
-                        continue;
-                    }
-
-                    if (itemStartEventId > eventId) {
-                        step = item;
-                        eventId = itemStartEventId;
-                    }
-                }
-                return step;
-            }
-        }
-        return null;
-    }
-
-    public DBItemHistoryOrderStep getOrderStepByStartTime(String controllerId, String orderId, Date startTime, Long startEventId)
-            throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(" ");
-        hql.append("where controllerId=:controllerId ");
-        hql.append("and orderId=:orderId ");
-        hql.append("and startTime=:startTime ");
-
-        Query<DBItemHistoryOrderStep> query = session.createQuery(hql.toString());
-        query.setParameter("controllerId", controllerId);
-        query.setParameter("orderId", orderId);
-        query.setParameter("startTime", startTime);
-
-        List<DBItemHistoryOrderStep> result = session.getResultList(query);
-        if (result != null) {
-            switch (result.size()) {
-            case 0:
-                return null;
-            case 1:
-                return result.get(0);
-            default:
-                DBItemHistoryOrderStep step = null;
-                // for cases with startIime diff < ms
-                String seid = String.valueOf(startEventId);
-                for (DBItemHistoryOrderStep item : result) {
-                    if (item.getStartEventId().equals(seid)) {
-                        step = item;
-                        break;
-                    }
-                }
-                return step;
-            }
-        }
-        return null;
     }
 
     public int setMainParentId(Long id, Long mainParentId) throws SOSHibernateException {
@@ -378,32 +226,7 @@ public class DBLayerHistory {
         return session.executeUpdate(query);
     }
 
-    public int updateOrderOnOrderStep(Long id, Date startTime, String startEventId, Integer state, Date stateTime, Long currentHistoryOrderStepId)
-            throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("update ");
-        hql.append(DBLayer.DBITEM_HISTORY_ORDER);
-        hql.append(" set startTime=:startTime ");
-        hql.append(",startEventId=:startEventId ");
-        hql.append(",severity=:severity ");
-        hql.append(",state=:state ");
-        hql.append(",stateTime=:stateTime ");
-        hql.append(",currentHistoryOrderStepId=:currentHistoryOrderStepId ");
-        hql.append(",modified=:modified ");
-        hql.append("where id=:id");
-
-        Query<DBItemHistoryOrder> query = session.createQuery(hql.toString());
-        query.setParameter("startTime", startTime);
-        query.setParameter("startEventId", startEventId);
-        query.setParameter("severity", HistorySeverity.map2DbSeverity(state));
-        query.setParameter("state", state);
-        query.setParameter("stateTime", stateTime);
-        query.setParameter("currentHistoryOrderStepId", currentHistoryOrderStepId);
-        query.setParameter("modified", new Date());
-        query.setParameter("id", id);
-        return session.executeUpdate(query);
-    }
-
-    public int setOrderStepEnd(Long id, Date endTime, String endEventId, String endParameters, Integer returnCode, Integer severity, boolean error,
+    public int setOrderStepEnd(Long id, Date endTime, Long endEventId, String endParameters, Integer returnCode, Integer severity, boolean error,
             String errorState, String errorReason, String errorCode, String errorText, Date modified) throws SOSHibernateException {
 
         StringBuilder hql = new StringBuilder("update ");
@@ -437,9 +260,9 @@ public class DBLayerHistory {
         return session.executeUpdate(query);
     }
 
-    public int setOrderEnd(Long id, Date endTime, String endWorkflowPosition, Long endHistoryOrderStepId, String endEventId, Integer state,
+    public int setOrderEnd(Long id, Date endTime, String endWorkflowPosition, Long endHistoryOrderStepId, Long endEventId, Integer state,
             Date stateTime, boolean hasStates, boolean error, String errorState, String errorReason, Integer errorReturnCode, String errorCode,
-            String errorText, Date startTime, String startEventId) throws SOSHibernateException {
+            String errorText) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ");
         hql.append(DBLayer.DBITEM_HISTORY_ORDER);
 
@@ -450,10 +273,7 @@ public class DBLayerHistory {
             hql.append(", endHistoryOrderStepId=:endHistoryOrderStepId ");
             hql.append(", endEventId=:endEventId ");
         }
-        if (startTime != null) {
-            hql.append(", startTime=:startTime");
-            hql.append(", startEventId=:startEventId");
-        }
+
         hql.append(", severity=:severity ");
         hql.append(", state=:state ");
         hql.append(", stateTime=:stateTime ");
@@ -474,10 +294,7 @@ public class DBLayerHistory {
             query.setParameter("endHistoryOrderStepId", endHistoryOrderStepId);
             query.setParameter("endEventId", endEventId);
         }
-        if (startTime != null) {
-            query.setParameter("startTime", startTime);
-            query.setParameter("startEventId", startEventId);
-        }
+
         query.setParameter("severity", HistorySeverity.map2DbSeverity(state));
         query.setParameter("state", state);
         query.setParameter("stateTime", stateTime);

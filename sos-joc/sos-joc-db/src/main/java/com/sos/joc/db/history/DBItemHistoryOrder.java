@@ -92,7 +92,7 @@ public class DBItemHistoryOrder extends DBItem {
     private String startWorkflowPosition; // event
 
     @Column(name = "[START_EVENT_ID]", nullable = false)
-    private String startEventId;// event <- order added event id
+    private Long startEventId;// event <- order added event id
 
     @Column(name = "[START_PARAMETERS]", nullable = true)
     private String startParameters;
@@ -107,7 +107,7 @@ public class DBItemHistoryOrder extends DBItem {
     private String endWorkflowPosition; // event
 
     @Column(name = "[END_EVENT_ID]", nullable = true)
-    private String endEventId;// event <- order finisched event id
+    private Long endEventId;// event <- order finisched event id
 
     @Column(name = "[END_HOS_ID]", nullable = false)
     private Long endHistoryOrderStepId; // db. TABLE_HISTORY_ORDER_STEPS.ID
@@ -326,11 +326,11 @@ public class DBItemHistoryOrder extends DBItem {
         startWorkflowPosition = val;
     }
 
-    public void setStartEventId(String val) {
+    public void setStartEventId(Long val) {
         startEventId = val;
     }
 
-    public String getStartEventId() {
+    public Long getStartEventId() {
         return startEventId;
     }
 
@@ -369,11 +369,11 @@ public class DBItemHistoryOrder extends DBItem {
         endWorkflowPosition = val;
     }
 
-    public void setEndEventId(String val) {
+    public void setEndEventId(Long val) {
         endEventId = val;
     }
 
-    public String getEndEventId() {
+    public Long getEndEventId() {
         return endEventId;
     }
 

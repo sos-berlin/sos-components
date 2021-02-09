@@ -4,12 +4,8 @@ import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.Type;
 
@@ -17,16 +13,14 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_HISTORY_CONTROLLERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[READY_EVENT_ID]" }) })
-@SequenceGenerator(name = DBLayer.TABLE_HISTORY_CONTROLLERS_SEQUENCE, sequenceName = DBLayer.TABLE_HISTORY_CONTROLLERS_SEQUENCE, allocationSize = 1)
+@Table(name = DBLayer.TABLE_HISTORY_CONTROLLERS)
 public class DBItemHistoryController extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_HISTORY_CONTROLLERS_SEQUENCE)
-    @Column(name = "[ID]", nullable = false)
-    private Long id;
+    @Column(name = "[READY_EVENT_ID]", nullable = false)
+    private Long readyEventId;
 
     @Column(name = "[CONTROLLER_ID]", nullable = false)
     private String controllerId;
@@ -47,21 +41,18 @@ public class DBItemHistoryController extends DBItem {
     @Type(type = "numeric_boolean")
     private boolean isPrimary;
 
-    @Column(name = "[READY_EVENT_ID]", nullable = false)
-    private String readyEventId;
-
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
 
     public DBItemHistoryController() {
     }
 
-    public Long getId() {
-        return id;
+    public Long getReadyEventId() {
+        return readyEventId;
     }
 
-    public void setId(Long val) {
-        id = val;
+    public void setReadyEventId(Long val) {
+        readyEventId = val;
     }
 
     public String getControllerId() {
@@ -110,14 +101,6 @@ public class DBItemHistoryController extends DBItem {
 
     public boolean getIsPrimary() {
         return isPrimary;
-    }
-
-    public String getReadyEventId() {
-        return readyEventId;
-    }
-
-    public void setReadyEventId(String val) {
-        readyEventId = val;
     }
 
     public void setCreated(Date val) {

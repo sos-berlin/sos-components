@@ -70,11 +70,9 @@ public class DBLayer implements Serializable {
     /** HISTORY Tables */
     public static final String DBITEM_HISTORY_CONTROLLER = DBItemHistoryController.class.getSimpleName();
     public static final String TABLE_HISTORY_CONTROLLERS = "HISTORY_CONTROLLERS";
-    public static final String TABLE_HISTORY_CONTROLLERS_SEQUENCE = "SEQ_HISTORY_C";
 
     public static final String DBITEM_HISTORY_AGENT = DBItemHistoryAgent.class.getSimpleName();
     public static final String TABLE_HISTORY_AGENTS = "HISTORY_AGENTS";
-    public static final String TABLE_HISTORY_AGENTS_SEQUENCE = "SEQ_HISTORY_A";
 
     public static final String DBITEM_HISTORY_ORDER = DBItemHistoryOrder.class.getSimpleName();
     public static final String TABLE_HISTORY_ORDERS = "HISTORY_ORDERS";
@@ -189,7 +187,7 @@ public class DBLayer implements Serializable {
 
     public static final String DBITEM_DEP_CONFIGURATIONS = DBItemDepConfiguration.class.getSimpleName();
     public static final String TABLE_DEP_CONFIGURATIONS = "DEP_CONFIGURATIONS";
-    
+
     public static final String DBITEM_DEP_NAMEPATHS = DBItemDepNamePaths.class.getSimpleName();
     public static final String TABLE_DEP_NAMEPATHS = "DEP_NAMEPATHS";
 

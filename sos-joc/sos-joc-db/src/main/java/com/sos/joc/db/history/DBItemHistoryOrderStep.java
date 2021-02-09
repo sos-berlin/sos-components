@@ -86,7 +86,7 @@ public class DBItemHistoryOrderStep extends DBItem {
     private Date startTime;// event
 
     @Column(name = "[START_EVENT_ID]", nullable = false)
-    private String startEventId;// event <- started event id
+    private Long startEventId;// event <- started event id
 
     @Column(name = "[START_PARAMETERS]", nullable = true)
     private String startParameters;
@@ -95,7 +95,7 @@ public class DBItemHistoryOrderStep extends DBItem {
     private Date endTime;// event
 
     @Column(name = "[END_EVENT_ID]", nullable = true)
-    private String endEventId;// event <- ended event id
+    private Long endEventId;// event <- ended event id
 
     @Column(name = "[END_PARAMETERS]", nullable = true)
     private String endParameters;
@@ -306,11 +306,11 @@ public class DBItemHistoryOrderStep extends DBItem {
         startTime = val;
     }
 
-    public void setStartEventId(String val) {
+    public void setStartEventId(Long val) {
         startEventId = val;
     }
 
-    public String getStartEventId() {
+    public Long getStartEventId() {
         return startEventId;
     }
 
@@ -330,11 +330,11 @@ public class DBItemHistoryOrderStep extends DBItem {
         endTime = val;
     }
 
-    public void setEndEventId(String val) {
+    public void setEndEventId(Long val) {
         endEventId = val;
     }
 
-    public String getEndEventId() {
+    public Long getEndEventId() {
         return endEventId;
     }
 
