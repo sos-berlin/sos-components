@@ -13,7 +13,7 @@
 	  "$ref": "../../../inventory/schemas/common/string255-schema.json"
 	},
 	"executable": {
-	  "$ref": "../../../inventory/schemas/job/executableScript-schema.json"
+	  "$ref": "../../../inventory/schemas/job/executable-schema.json"
 	},
     "returnCodeMeaning": {
       "$ref": "../../../inventory/schemas/job/jobReturnCode-schema.json"
@@ -22,10 +22,6 @@
       "type": "integer",
       "minimum": 1,
       "default": 1
-    },
-    "v1Compatible": {
-      "type": "boolean",
-      "default": true
     },
     "timeout": {
       "$ref": "../../../inventory/schemas/common/nonNegativeInteger-schema.json"

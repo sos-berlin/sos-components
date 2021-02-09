@@ -39,6 +39,7 @@ import com.sos.joc.exceptions.JobSchedulerObjectNotExistException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
+import com.sos.joc.model.common.VariableType;
 import com.sos.joc.model.dailyplan.DailyPlanModifyOrder;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.order.initiator.OrderInitiatorRunner;
@@ -57,15 +58,14 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
     private static final String API_CALL_MODIFY_ORDER = "./daily_plan/orders/modify";
 
     @Override
-    public JOCDefaultResponse postModifyOrder(String accessToken,  byte[] filterBytes) throws JocException {
-           
+    public JOCDefaultResponse postModifyOrder(String accessToken, byte[] filterBytes) throws JocException {
+
         LOGGER.debug("Change start time for orders from the daily plan");
 
         try {
             initLogging(API_CALL_MODIFY_ORDER, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DailyPlanModifyOrder.class);
             DailyPlanModifyOrder dailyplanModifyOrder = Globals.objectMapper.readValue(filterBytes, DailyPlanModifyOrder.class);
-
 
             JOCDefaultResponse jocDefaultResponse = init(API_CALL_MODIFY_ORDER, dailyplanModifyOrder, accessToken, dailyplanModifyOrder
                     .getControllerId(), getPermissonsJocCockpit(getControllerId(accessToken, dailyplanModifyOrder.getControllerId()), accessToken)
@@ -150,7 +150,9 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
                 dbItemDailyPlanVariables.setModified(new Date());
                 dbItemDailyPlanVariables.setPlannedOrderId(dbItemDailyPlanOrder.getId());
                 dbItemDailyPlanVariables.setVariableName(variable.getKey());
-                // datatype (variable.getValue().getClass()) should store too
+              
+                dbItemDailyPlanVariables.setVariableType(VariableType.valueOf(variable.getValue().getClass().getSimpleName().toUpperCase())
+                        .value());
                 dbItemDailyPlanVariables.setVariableValue(variable.getValue().toString());
                 sosHibernateSession.save(dbItemDailyPlanVariables);
             }

@@ -37,6 +37,9 @@ public class DBItemDailyPlanVariables extends DBItem {
     @Column(name = "[VARIABLE_VALUE]", nullable = false)
     private String variableValue;
 
+    @Column(name = "[VARIABLE_TYPE]", nullable = false)
+    private Integer variableType;
+
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
@@ -92,6 +95,16 @@ public class DBItemDailyPlanVariables extends DBItem {
 
     public void setModified(Date modified) {
         this.modified = modified;
+    }
+
+    
+    public Integer getVariableType() {
+        return variableType;
+    }
+
+    
+    public void setVariableType(Integer variableType) {
+        this.variableType = variableType;
     }
 
 }

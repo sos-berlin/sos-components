@@ -123,6 +123,15 @@ public class JsonValidator {
             put("com.sos.joc.model.publish.SetVersionFilter", "publish/setVersion-schema.json");
             put("com.sos.joc.model.publish.SetVersionsFilter", "publish/setVersions-schema.json");
             put("com.sos.joc.model.publish.ShowDepHistoryFilter", "publish/showDepHistoryFilter-schema.json");
+           
+            put("com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter", "orderManagement/dailyplan/dailyplanSubmissionsFilter-schema.json");
+            put("com.sos.joc.model.dailyplan.DailyPlanOrderFilter", "orderManagement/dailyplan/dailyPlanOrdersFilter-schema.json");
+            put("com.sos.joc.model.dailyplan.DailyPlanModifyOrder", "orderManagement/dailyplan/dailyPlanModifyOrder-schema.json");
+            put("com.sos.joc.model.dailyplan.DailyPlanOrderSelector", "orderManagement/dailyplan/dailyPlanOrdersSelector-schema.json");
+            put("com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter", "orderManagement/dailyplan/dailyplanSubmissionsFilter-schema.json");
+            put("com.sos.webservices.order.initiator.model.ScheduleSelector", "orderManagement/orders/sechedulesSelector-schema.json");
+            put("com.sos.joc.model.dailyplan.RelativeDatesConverter", "orderManagement/orders/relativeDatesConverter-schema.json");
+            
             //put("com.sos.joc.model.publish.RedeployFilter", "publish/redeploy-schema.json");
 
             // TODO complete the map
@@ -150,7 +159,6 @@ public class JsonValidator {
     public static void validate(byte[] json, Class<?> clazz) throws IOException, SOSJsonSchemaException {
         validate(json, getSchemaPath(clazz));
     }
-
     /** Validation which raises all errors
      * 
      * @param json

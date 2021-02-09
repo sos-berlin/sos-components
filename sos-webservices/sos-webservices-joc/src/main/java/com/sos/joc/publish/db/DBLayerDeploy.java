@@ -39,6 +39,7 @@ import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDepVersions;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.deployment.DBItemDeploymentSubmission;
+import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
@@ -2239,4 +2240,18 @@ public class DBLayerDeploy {
             throw new JocSosHibernateException(e);
         } 
     }
+    
+    public List<DBItemInventoryCertificate> getCaCertificates () {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CERTS);
+            hql.append(" where ca = true");
+            Query<DBItemInventoryCertificate> query = getSession().createQuery(hql.toString());
+            return query.getResultList();
+        } catch(NoResultException e) {
+            return null;
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        } 
+    }
+
 }

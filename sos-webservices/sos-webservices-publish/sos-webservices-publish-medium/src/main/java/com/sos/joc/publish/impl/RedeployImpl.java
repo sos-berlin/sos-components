@@ -99,7 +99,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                 case SOSKeyConstants.RSA_ALGORITHM_NAME:
                     cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                     signerDN = cert.getSubjectDN().getName();
-                    PublishUtils.updateItemsAddOrUpdateWithX509(
+                    PublishUtils.updateItemsAddOrUpdateWithX509Certificate(
                             versionId,  
                             reDeployables.stream()
                                 .map(item -> {
@@ -119,7 +119,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                 case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
                     cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                     signerDN = cert.getSubjectDN().getName();
-                    PublishUtils.updateItemsAddOrUpdateWithX509(
+                    PublishUtils.updateItemsAddOrUpdateWithX509Certificate(
                             versionId,  
                             reDeployables.stream()
                                 .map(item -> {
