@@ -75,7 +75,7 @@ public class WorkflowSearcherTest {
         LOGGER.info("[getJobsByScript(job_[0-9]? script.*)][size] " + jobs.size());
         for (WorkflowJob j : jobs) {
             LOGGER.info("  JOB: " + j.getName());
-            LOGGER.info("           " + j.getJob().getExecutable().getScript());
+            //LOGGER.info("           " + j.getJob().getExecutable().getScript());
         }
 
         jobs = ws.getJobsByArgument("xxx");
