@@ -41,6 +41,7 @@ import js7.data.workflow.WorkflowPath;
 import js7.proxy.javaapi.data.command.JCancelMode;
 import js7.proxy.javaapi.data.command.JSuspendMode;
 import js7.proxy.javaapi.data.controller.JControllerState;
+import js7.proxy.javaapi.data.order.JHistoricOutcome;
 import js7.proxy.javaapi.data.order.JOrder;
 import js7.proxy.javaapi.data.workflow.JWorkflowId;
 import js7.proxy.javaapi.data.workflow.position.JPosition;
@@ -168,18 +169,15 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         SOSHibernateSession sosHibernateSession = null;
 
         try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL + "/cancel");
             sosHibernateSession.setAutoCommit(false);
             DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
-            DBLayerDailyPlanHistory dbLayerDailyPlanHistory = new DBLayerDailyPlanHistory(sosHibernateSession);
             Globals.beginTransaction(sosHibernateSession);
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
             filter.setListOfOrders(modifyOrders.getOrderIds());
             filter.setSubmitted(false);
             dbLayerDailyPlannedOrders.setSubmitted(filter);
             
-    
-
             Globals.commit(sosHibernateSession);
         } finally {
             Globals.disconnect(sosHibernateSession);
@@ -188,11 +186,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
     private static CompletableFuture<Either<Problem, Void>> callCommand(Action action, ModifyOrders modifyOrders, Set<OrderId> oIds)
             throws SOSHibernateException {
-        Optional<JPosition> position = Optional.empty();
-        if (modifyOrders.getPosition() != null) {
-            JPosition.fromList(modifyOrders.getPosition());
-        }
-
+        
         switch (action) {
         case CANCEL:
 
@@ -208,17 +202,20 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             } else {
                 cancelMode = JCancelMode.kill();
             }
-            // TODO position! Why JWorkflowPosition instead JPosition?
             return ControllerApi.of(modifyOrders.getControllerId()).cancelOrders(oIds, cancelMode);
         case RESUME:
-            // TODO missing parameter!
-            // resumeOrder
-            // if (oIds.size() == 1) {
-            // return ControllerApi.of(modifyOrders.getControllerId()).resumeOrder(oIds.iterator().next(), position, ..);
-            // }
+            if (oIds.size() == 1) { // position and historicOutcome only for one Order!
+                Optional<List<JHistoricOutcome>> historyOutcomes = Optional.empty(); // TODO parameter resp. historicOutcome
+                Optional<JPosition> position = Optional.empty();
+                if (modifyOrders.getPosition() != null) {
+                    Either<Problem, JPosition> posEither = JPosition.fromList(modifyOrders.getPosition());
+                    ProblemHelper.throwProblemIfExist(posEither);
+                    position = Optional.of(posEither.get());
+                }
+                return ControllerApi.of(modifyOrders.getControllerId()).resumeOrder(oIds.iterator().next(), position, historyOutcomes);
+            }
             return ControllerApi.of(modifyOrders.getControllerId()).resumeOrders(oIds);
         case SUSPEND:
-            // TODO position! Why JWorkflowPosition instead JPosition?
             JSuspendMode suspendMode = null;
             if (modifyOrders.getKill() == Boolean.TRUE) {
                 suspendMode = JSuspendMode.kill(true);
