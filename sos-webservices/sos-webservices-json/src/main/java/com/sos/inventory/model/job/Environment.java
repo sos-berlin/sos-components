@@ -14,7 +14,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * key-value pairs particulraly to assign parameters to environemnt
+ * key-value pairs particularly to assign parameters to environment
  * <p>
  * a map for arbitrary key-value pairs
  * 

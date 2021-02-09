@@ -34,7 +34,7 @@ public class ExecutableScript
     @JsonProperty("script")
     private String script;
     /**
-     * key-value pairs particulraly to assign parameters to environemnt
+     * key-value pairs particularly to assign parameters to environment
      * <p>
      * a map for arbitrary key-value pairs
      * 
@@ -43,7 +43,7 @@ public class ExecutableScript
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Environment env;
     @JsonProperty("v1Compatible")
-    private Boolean v1Compatible = true;
+    private Boolean v1Compatible = false;
 
     /**
      * No args constructor for use in serialization
@@ -86,7 +86,7 @@ public class ExecutableScript
     }
 
     /**
-     * key-value pairs particulraly to assign parameters to environemnt
+     * key-value pairs particularly to assign parameters to environment
      * <p>
      * a map for arbitrary key-value pairs
      * 
@@ -97,7 +97,7 @@ public class ExecutableScript
     }
 
     /**
-     * key-value pairs particulraly to assign parameters to environemnt
+     * key-value pairs particularly to assign parameters to environment
      * <p>
      * a map for arbitrary key-value pairs
      * 

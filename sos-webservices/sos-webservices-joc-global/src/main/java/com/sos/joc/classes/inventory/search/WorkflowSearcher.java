@@ -18,6 +18,8 @@ import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.instruction.TryCatch;
+import com.sos.inventory.model.job.ExecutableScript;
+import com.sos.inventory.model.job.ExecutableType;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.Parameter;
@@ -144,8 +146,8 @@ public class WorkflowSearcher {
         if (regex == null || jobs.isEmpty()) {
             return jobs;
         }
-        return jobs.stream().filter(j -> j.getJob().getExecutable() != null && j.getJob().getExecutable().getScript() != null && j.getJob()
-                .getExecutable().getScript().matches(regex)).collect(Collectors.toList());
+        return jobs.stream().filter(j -> j.getJob().getExecutable() != null && ExecutableType.ScriptExecutable.equals(j.getJob().getExecutable().getTYPE()))
+                .filter(j -> ((ExecutableScript) j.getJob().getExecutable()).getScript().matches(regex)).collect(Collectors.toList());
     }
 
     public List<WorkflowJob> getJobsByArgument(String nameRegex) {

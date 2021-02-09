@@ -17,6 +17,8 @@ import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.NamedJob;
+import com.sos.inventory.model.job.ExecutableScript;
+import com.sos.inventory.model.job.ExecutableType;
 import com.sos.inventory.model.job.JobCriticality;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.classes.inventory.search.WorkflowSearcher.WorkflowInstruction;
@@ -181,8 +183,11 @@ public class WorkflowConverter {
                     }
                 }
                 if (job.getExecutable() != null) {
-                    if (!SOSString.isEmpty(job.getExecutable().getScript())) {
-                        scripts.add(job.getExecutable().getScript());
+                    if (ExecutableType.ScriptExecutable.equals(job.getExecutable().getTYPE())) {
+                        ExecutableScript es = job.getExecutable().cast();
+                        if (!SOSString.isEmpty(es.getScript())) {
+                            scripts.add(es.getScript());
+                        }
                     }
                 }
 

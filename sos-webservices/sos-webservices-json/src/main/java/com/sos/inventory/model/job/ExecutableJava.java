@@ -12,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * java executable
  * <p>
- * executable with fixed property 'TYPE':'JavaExecutable'
+ * executable with fixed property 'TYPE':'Java'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
