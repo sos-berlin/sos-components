@@ -18,7 +18,7 @@ public class EventTest {
 
     private static ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     private static String jsonTestTemplate =
-            "{\"TYPE\":\"HistoryOrderStarted\",\"orderId\":\"orderId\",\"historyId\":1,\"historyParentId\":0,\"controllerId\":\"controllerId\",\"key\":\"HistoryOrderStarted\",\"orderId\":\"orderId\",\"historyId\":\"1\",\"historyParentId\":\"0\"}";
+            "{\"TYPE\":\"HistoryOrderStarted\",\"controllerId\":\"controllerId\",\"key\":\"HistoryOrderStarted\",\"orderId\":\"orderId\",\"historyId\":\"1\",\"historyParentId\":\"0\"}";
 
     @Test
     public void testObjectToJSON() throws JsonProcessingException {

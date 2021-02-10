@@ -1,5 +1,6 @@
 package com.sos.joc.event.bean.inventory;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.joc.event.bean.JOCEvent;
 
 public class InventoryEvent extends JOCEvent {
@@ -19,6 +20,7 @@ public class InventoryEvent extends JOCEvent {
         putVariable("folder", folder);
     }
     
+    @JsonIgnore
     public String getFolder() {
         return getVariables().get("folder");
     }

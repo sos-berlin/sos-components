@@ -1,5 +1,7 @@
 package com.sos.joc.event.bean.history;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class HistoryOrderTerminated extends HistoryEvent {
 
     public HistoryOrderTerminated(String controllerId, String orderId, String state, Long historyId, Long historyParentId) {
@@ -10,14 +12,17 @@ public class HistoryOrderTerminated extends HistoryEvent {
         putVariable("historyParentId", String.valueOf(historyParentId));// HISTORY_ORDERS.PARENT_ID
     }
 
+    @JsonIgnore
     public String getOrderId() {
         return getVariables().get("orderId");
     }
 
+    @JsonIgnore
     public String getStateText() {
         return getVariables().get("stateText");
     }
 
+    @JsonIgnore
     public Long getHistoryId() {
         try {
             return Long.parseLong(getVariables().get("historyId"));
@@ -27,6 +32,7 @@ public class HistoryOrderTerminated extends HistoryEvent {
     }
 
     // parentId = 0 - mainOrder
+    @JsonIgnore
     public Long getHistoryParentId() {
         try {
             return Long.parseLong(getVariables().get("historyParentId"));
