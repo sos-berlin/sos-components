@@ -5,6 +5,7 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -76,8 +77,8 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
             }
 
             this.checkRequiredParameter("orderIds", dailyplanModifyOrder.getOrderIds());
-            if (dailyplanModifyOrder.getStartTime() == null && dailyplanModifyOrder.getVariables() == null) {
-                throw new JocMissingRequiredParameterException("variables or startTime missing");
+            if (dailyplanModifyOrder.getStartTime() == null && dailyplanModifyOrder.getRemoveVariables() == null && dailyplanModifyOrder.getVariables() == null) {
+                throw new JocMissingRequiredParameterException("variables, removeVariables or startTime missing");
             }
 
             for (String orderId : dailyplanModifyOrder.getOrderIds()) {
@@ -143,19 +144,41 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
             DBLayerOrderVariables dbLayerOrderVariables = new DBLayerOrderVariables(sosHibernateSession);
             FilterOrderVariables filter = new FilterOrderVariables();
             filter.setPlannedOrderId(dbItemDailyPlanOrder.getId());
-            dbLayerOrderVariables.delete(filter);
-            for (Map.Entry<String, Object> variable : dailyplanModifyOrder.getVariables().getAdditionalProperties().entrySet()) {
-                DBItemDailyPlanVariables dbItemDailyPlanVariables = new DBItemDailyPlanVariables();
-                dbItemDailyPlanVariables.setCreated(new Date());
-                dbItemDailyPlanVariables.setModified(new Date());
-                dbItemDailyPlanVariables.setPlannedOrderId(dbItemDailyPlanOrder.getId());
-                dbItemDailyPlanVariables.setVariableName(variable.getKey());
-              
-                dbItemDailyPlanVariables.setVariableType(VariableType.valueOf(variable.getValue().getClass().getSimpleName().toUpperCase())
-                        .value());
-                dbItemDailyPlanVariables.setVariableValue(variable.getValue().toString());
-                sosHibernateSession.save(dbItemDailyPlanVariables);
+
+            Map<String, Object> mapOfvariables = new HashMap<String, Object>();
+            List<DBItemDailyPlanVariables> listOfVariables = dbLayerOrderVariables.getOrderVariables(filter, 0);
+            for (DBItemDailyPlanVariables dbItemDailyPlanVariables : listOfVariables) {
+                mapOfvariables.put(dbItemDailyPlanVariables.getVariableName(), dbItemDailyPlanVariables.getVariableValue());
             }
+
+            for (DBItemDailyPlanVariables dbItemDailyPlanVariables : listOfVariables) {
+                Object value = dailyplanModifyOrder.getVariables().getAdditionalProperties().get(dbItemDailyPlanVariables.getVariableName());
+                if (value != null) {
+                    dbItemDailyPlanVariables.setVariableValue(value.toString());
+                    sosHibernateSession.update(dbItemDailyPlanVariables);
+                }
+            }
+
+            for (Map.Entry<String, Object> variable : dailyplanModifyOrder.getVariables().getAdditionalProperties().entrySet()) {
+                if (mapOfvariables.get(variable.getKey()) == null) {
+                    DBItemDailyPlanVariables dbItemDailyPlanVariables = new DBItemDailyPlanVariables();
+                    dbItemDailyPlanVariables.setCreated(new Date());
+                    dbItemDailyPlanVariables.setModified(new Date());
+                    dbItemDailyPlanVariables.setPlannedOrderId(dbItemDailyPlanOrder.getId());
+                    dbItemDailyPlanVariables.setVariableName(variable.getKey());
+
+                    dbItemDailyPlanVariables.setVariableType(VariableType.valueOf(variable.getValue().getClass().getSimpleName().toUpperCase())
+                            .value());
+                    dbItemDailyPlanVariables.setVariableValue(variable.getValue().toString());
+                    sosHibernateSession.save(dbItemDailyPlanVariables);
+                }
+            }
+
+            for (Map.Entry<String, Object> variable : dailyplanModifyOrder.getRemoveVariables().getAdditionalProperties().entrySet()) {
+                filter.setVariableName(variable.getKey());
+                dbLayerOrderVariables.delete(filter);
+            }
+
             Globals.commit(sosHibernateSession);
 
         } finally {

@@ -25,6 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "controllerId",
     "startTime",
     "variables",
+    "removeVariables",
     "orderIds",
     "auditLog"
 })
@@ -50,6 +51,15 @@ public class DailyPlanModifyOrder {
     @JsonProperty("variables")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables variables;
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("removeVariables")
+    @JsonPropertyDescription("a map for arbitrary key-value pairs")
+    private Variables removeVariables;
     @JsonProperty("orderIds")
     private List<String> orderIds = null;
     /**
@@ -115,6 +125,28 @@ public class DailyPlanModifyOrder {
         this.variables = variables;
     }
 
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("removeVariables")
+    public Variables getRemoveVariables() {
+        return removeVariables;
+    }
+
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("removeVariables")
+    public void setRemoveVariables(Variables removeVariables) {
+        this.removeVariables = removeVariables;
+    }
+
     @JsonProperty("orderIds")
     public List<String> getOrderIds() {
         return orderIds;
@@ -149,12 +181,12 @@ public class DailyPlanModifyOrder {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("startTime", startTime).append("variables", variables).append("orderIds", orderIds).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("startTime", startTime).append("variables", variables).append("removeVariables", removeVariables).append("orderIds", orderIds).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(startTime).append(variables).append(orderIds).append(controllerId).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(variables).append(removeVariables).append(controllerId).append(auditLog).append(startTime).append(orderIds).toHashCode();
     }
 
     @Override
@@ -166,7 +198,7 @@ public class DailyPlanModifyOrder {
             return false;
         }
         DailyPlanModifyOrder rhs = ((DailyPlanModifyOrder) other);
-        return new EqualsBuilder().append(startTime, rhs.startTime).append(variables, rhs.variables).append(orderIds, rhs.orderIds).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(variables, rhs.variables).append(removeVariables, rhs.removeVariables).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(startTime, rhs.startTime).append(orderIds, rhs.orderIds).isEquals();
     }
 
 }

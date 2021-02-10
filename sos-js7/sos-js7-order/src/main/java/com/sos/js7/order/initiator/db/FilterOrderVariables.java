@@ -9,6 +9,7 @@ public class FilterOrderVariables extends SOSFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterOrderVariables.class);
     private Long plannedOrderId;
+    private String variableName;
     private String orderId;
 
     public Long getPlannedOrderId() {
@@ -25,6 +26,16 @@ public class FilterOrderVariables extends SOSFilter {
 
     public void setOrderId(String orderId) {
         this.orderId = orderId;
+    }
+
+    
+    public String getVariableName() {
+        return variableName;
+    }
+
+    
+    public void setVariableName(String variableName) {
+        this.variableName = variableName;
     }
 
 }

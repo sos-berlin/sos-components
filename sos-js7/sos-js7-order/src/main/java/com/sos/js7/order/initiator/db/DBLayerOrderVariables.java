@@ -30,8 +30,12 @@ public class DBLayerOrderVariables {
     private String getWhere(FilterOrderVariables filter) {
         String where = " ";
         String and = " ";
+        if ((filter.getVariableName() != null) && (!"".equals(filter.getVariableName()))){
+            where += " variableName = :variableName";
+            and = " and ";
+        }
         if (filter.getPlannedOrderId() != null) {
-            where += " plannedOrderId = :plannedOrderId";
+            where += and + " plannedOrderId = :plannedOrderId";
             and = " and ";
         } else {
             where = "v.plannedOrderId = p.id";
@@ -54,6 +58,10 @@ public class DBLayerOrderVariables {
         if (filter.getPlannedOrderId() != null) {
             query.setParameter("plannedOrderId", filter.getPlannedOrderId());
         }
+        if ((filter.getVariableName() != null) && (!"".equals(filter.getVariableName()))){
+            query.setParameter("variableName", filter.getVariableName());
+        }
+            
         return query;
     }
 
@@ -77,9 +85,9 @@ public class DBLayerOrderVariables {
 
     public int delete(FilterOrderVariables filter) throws SOSHibernateException {
         int row = 0;
-        String hql = "delete from " + DBItemDailyPlanVariables + " where plannedOrderId = :plannedOrderId";
+        String hql = "delete from " + DBItemDailyPlanVariables + getWhere(filter);
         Query<DBItemDailyPlanSubmissions> query = sosHibernateSession.createQuery(hql);
-        query.setParameter("plannedOrderId", filter.getPlannedOrderId());
+        query = bindParameters(filter, query);
         row = row + sosHibernateSession.executeUpdate(query);
         return row;
     }
