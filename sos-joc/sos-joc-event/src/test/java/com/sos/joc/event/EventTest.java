@@ -33,7 +33,7 @@ public class EventTest {
         HistoryEvent evt = objectMapper.readValue(jsonTestTemplate, HistoryEvent.class);
         System.out.println(evt.toString());
         HistoryOrderStarted expectEvt = new HistoryOrderStarted("controllerId", "orderId", 1L, 0L);
-        expectEvt.setTYPE("OrderStepStarted");  // only for Test necessary
+        expectEvt.setTYPE(HistoryOrderStarted.class.getSimpleName());  // only for Test necessary
         assertEquals("testJSONToObject", expectEvt, evt);
     }
 
