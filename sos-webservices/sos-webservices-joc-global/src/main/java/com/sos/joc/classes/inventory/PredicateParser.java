@@ -478,8 +478,14 @@ public class PredicateParser {
     protected static int parseDollarVariable(String str, int pos) throws IOException, IllegalArgumentException {
         return parseDollarVariable(str, pos, null);
     }
+    
 
     private static int parseDollarVariable(String str, int pos, String parentStr) throws IOException, IllegalArgumentException {
+        String s = str.replaceFirst("\\}?(?:toBoolean|toNumber)?$", "");
+        if (s.lastIndexOf('-') == s.length() - 1) {
+            throwUnexpectedCharErrMsg("-", parentStr, pos + s.length() - 1);
+        }
+        
         StreamTokenizer tokenizer = new StreamTokenizer(new StringReader(str));
         tokenizer.resetSyntax();
         tokenizer.quoteChar('"');
@@ -495,7 +501,7 @@ public class PredicateParser {
         // tokenizer.wordChars(39, 41); // ' ( )
         // tokenizer.wordChars(42, 43); // * +
         // tokenizer.wordChars(44, 44); // ,
-        // tokenizer.wordChars(45, 45); // -
+        tokenizer.wordChars(45, 45); // -
         // tokenizer.wordChars(46, 46); // .
         tokenizer.wordChars(48, 57); // 0-9
         // tokenizer.wordChars(60, 60); // <
@@ -644,6 +650,11 @@ public class PredicateParser {
                     + "] at position " + position);
         }
     }
+    
+    private static void throwUnexpectedCharErrMsg(String character, String str, int position) {
+        throw new IllegalArgumentException("wrong syntax near '" + str + "': unexpected characters [" + character + "] at position "
+                + position);
+    }
 
     private static void throwUnexpectedEndErrMsg(int currentToken, String str, int position) {
         if (currentToken == StreamTokenizer.TT_EOF) {
@@ -682,6 +693,8 @@ public class PredicateParser {
             if (isNumeric(tokens[0]) || isNumericVariable(tokens[0]) || hasArithmeticOperators(tokens[0])) {
                 if (isNumericVariable(tokens[0])) {
                     checkVariableSyntax(tokens[0], 0, str);
+                } else if (hasArithmeticOperators(tokens[0])) {
+                    checkTokenWithArithmeticOperators(tokens[0]);
                 }
             } else {
                 throw new IllegalArgumentException(extendedErrMessage + "[" + tokens[0]
@@ -724,13 +737,13 @@ public class PredicateParser {
                 }
             } else if ((isString(tokens[0]) || isStringVariable(tokens[0]) || hasStringOperators(tokens[0])) && (isString(tokens[2])
                     || isStringVariable(tokens[2]) || hasStringOperators(tokens[2]))) {
-                if (!hasStringOperators(tokens[0])) {
+                if (!hasOperators(tokens[0])) {
                     checkString(tokens[0], 0, str);
                     if (isStringVariable(tokens[0])) {
                         checkVariableSyntax(tokens[0], 0, str);
                     }
                 }
-                if (!hasStringOperators(tokens[2])) {
+                if (!hasOperators(tokens[2])) {
                     checkString(tokens[2], startPos2, str);
                     if (isStringVariable(tokens[2])) {
                         checkVariableSyntax(tokens[2], startPos2, str);
@@ -796,20 +809,26 @@ public class PredicateParser {
             parseDollarVariable(str, pos, parentStr);
         }
     }
+    
+    private static void checkTokenWithArithmeticOperators(String string) {
+        // TODO Auto-generated method stub
+        
+    }
 
     private static boolean isStringVariable(String str) {
         if (str.startsWith("variable(") && str.endsWith(")")) {
             return true;
         } else if (str.startsWith("${") && str.endsWith("}")) {
             return true;
-        } else if (str.startsWith("$") && !(str.endsWith(".toNumber") || str.endsWith(".toBoolean"))) {
+        } else if (str.replaceAll("\\$\\{?[^ +}]+\\}?", "").isEmpty() && !(str.endsWith(".toNumber") || str.endsWith(".toBoolean"))) {
             return true;
         }
         return false;
     }
 
-    private static boolean isString(String str) {
-        return (str.startsWith("\"") && str.endsWith("\"")) || (str.startsWith("'") && str.endsWith("'"));
+    private static boolean isString(String str) throws IllegalArgumentException, IOException {
+        String s = withoutQuotedParts(str);
+        return s.isEmpty();
     }
 
     private static void checkString(String str, int pos, String parentStr) throws IllegalArgumentException, IOException {
@@ -823,7 +842,7 @@ public class PredicateParser {
             return true;
         } else if (str.startsWith("variable(") && str.endsWith(")")) {
             return true;
-        } else if (str.startsWith("${") && str.endsWith("}")) {
+        } else if (str.replaceAll("\\$\\{?[^ +}]+\\}?", "").isEmpty() && !str.endsWith(".toNumber")) {
             return true;
         }
         return false;
@@ -838,7 +857,7 @@ public class PredicateParser {
             return true;
         } else if (str.startsWith("variable(") && str.endsWith(")")) {
             return true;
-        } else if (str.startsWith("${") && str.endsWith("}")) {
+        } else if (str.replaceAll("\\$\\{?[^ +}]+\\}?", "").isEmpty() && !str.endsWith(".toBoolean")) {
             return true;
         }
         return false;
@@ -856,14 +875,28 @@ public class PredicateParser {
         return isNumeric;
     }
 
-    private static boolean hasStringOperators(String str) {
-        // TODO use StreamTokenizer
-        return str.contains(" ++ ");
+    private static boolean hasStringOperators(String str) throws IllegalArgumentException, IOException {
+        // TODO use StreamTokenizer - here quick and dirty
+        String s = withoutQuotedParts(str).replaceAll("\\$\\{?[^ +]+", "");
+        if (s.contains("++")) {
+            s = s.replaceAll("[+]{2}", "");
+            if (!(s.contains("+") || s.contains("-"))) {
+                return true;
+            }
+        }
+        return false;
     }
     
-    private static boolean hasArithmeticOperators(String str) {
-        // TODO use StreamTokenizer
-        return str.contains(" + ") || str.contains(" - ");
+    private static boolean hasArithmeticOperators(String str) throws IllegalArgumentException, IOException {
+        // TODO use StreamTokenizer - here quick and dirty
+        String s = withoutQuotedParts(str).replaceAll("\\$\\{?[^ +]+", "");
+        return (s.contains("+") || s.contains("-")) && !s.contains("++");
+    }
+    
+    private static boolean hasOperators(String str) throws IllegalArgumentException, IOException {
+        // TODO use StreamTokenizer - here quick and dirty
+        String s = withoutQuotedParts(str).replaceAll("\\$\\{?[^ +]+", "");
+        return s.contains("+") || s.contains("-");
     }
 
 }

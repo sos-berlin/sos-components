@@ -84,11 +84,12 @@ public class PredicateValidatorTest {
     @Test
     public void testParse() throws IllegalArgumentException, IOException {
         parseTester("${こんにちは}_ != 'h' && ${äöü}.toNumber in [42]|| variable('abc', default='DEF//AULT', label = LABEL).toNumber <= 9 && returnCode != 0", false);
-        parseTester("${こんにちは} != 'h' && ${äöü} in [42]|| variable('abc', default='DEF//AULT', label = LABEL).toNumber <= 9 && returnCode != 0", false);
+        parseTester("${こんにちは} != 'h' && (${äöü} in [42]|| variable(key='abc', default='DEF//AULT', label = LABEL).toNumber <= 9) && $returnCode!= 0", true);
         parseTester("${こんにちは} != 'h' && ${äöü}.toNumber in [42]|| variable(`abc`, default='DEF//AULT', label = LABEL).toNumber <= 9 && returnCode != 0", false);
         parseTester("hallo", false);
         parseTester("${こんにちは}.toBoolean", true);
         parseTester("${こんにちは}.toNumber", false);
+        parseTester("${こんにちは}", true);
         parseTester("${こんにちは} != '''a'", false);
         parseTester("variable('abc', default='') != 'a'", false);
         parseTester("variable('abc', default=\"\") != 'a'", true);
@@ -97,7 +98,8 @@ public class PredicateValidatorTest {
     
     @Test
     public void testParse2() throws IllegalArgumentException, IOException {
-        parseTester("${こんにちは} ++ 1 == 1", false);
+        //parseTester("${こんにちは} == '1'", false);
+        parseTester("${こんにちは} ++'1' != 'h'", true);
     }
     
     private void parseTester(String str, boolean expect) {
