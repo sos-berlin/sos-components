@@ -49,6 +49,10 @@ import js7.data.item.SimpleItemId;
 import js7.data.item.VersionedEvent.VersionedItemEvent;
 import js7.data.lock.LockId;
 import js7.data.order.OrderEvent;
+import js7.data.order.OrderEvent.OrderLockEvent;
+import js7.data.order.OrderEvent.OrderLockAcquired;
+import js7.data.order.OrderEvent.OrderLockQueued;
+import js7.data.order.OrderEvent.OrderLockReleased;
 import js7.data.order.OrderEvent.OrderAdded;
 import js7.data.order.OrderEvent.OrderBroken;
 import js7.data.order.OrderEvent.OrderFailed;
@@ -77,7 +81,8 @@ public class EventService {
     private static List<Class<? extends Event>> eventsOfController = Arrays.asList(ControllerEvent.class, ClusterEvent.class,
             AgentRefStateEvent.class, OrderStarted$.class, OrderProcessingKilled$.class, OrderFailed.class, OrderFailedInFork.class,
             OrderRetrying.class, OrderBroken.class, OrderTerminated.class, OrderAdded.class, OrderProcessed.class,
-            OrderProcessingStarted$.class, OrderRemoved$.class, VersionedItemEvent.class, SimpleItemEvent.class);
+            OrderProcessingStarted$.class, OrderRemoved$.class, VersionedItemEvent.class, SimpleItemEvent.class, 
+            OrderLockAcquired.class, OrderLockQueued.class, OrderLockReleased.class);
     private String controllerId;
     private volatile CopyOnWriteArraySet<EventSnapshot> events = new CopyOnWriteArraySet<>();
     private AtomicBoolean isCurrentController = new AtomicBoolean(false);
@@ -267,6 +272,11 @@ public class EventService {
                 eventSnapshot.setEventType("AgentStateChanged");
                 eventSnapshot.setPath(((AgentId) key).string());
                 eventSnapshot.setObjectType(EventType.AGENT);
+                
+            } else if (evt instanceof OrderLockEvent) {
+                eventSnapshot.setEventType("LockStateChanged");
+                eventSnapshot.setPath(((LockId) key).string());
+                eventSnapshot.setObjectType(EventType.LOCK);
             }
 
             if (eventSnapshot.getObjectType() != null) {
