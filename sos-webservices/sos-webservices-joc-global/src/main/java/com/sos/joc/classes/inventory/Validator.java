@@ -304,7 +304,7 @@ public class Validator {
             // throw new JocConfigurationException(String.format(
             // "$.orderRequirements.parameters['%s']: 'returnCode' is a reserved word for a parameter.", key));
             // }
-            validateKey(key, "$.orderRequirements.parameters");
+            // validateKey(key, "$.orderRequirements.parameters");
             boolean invalid = false;
             if (value.getDefault() != null) {
                 Object _default = value.getDefault();
