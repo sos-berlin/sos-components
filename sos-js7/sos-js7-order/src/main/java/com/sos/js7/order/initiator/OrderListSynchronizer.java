@@ -1,6 +1,7 @@
 package com.sos.js7.order.initiator;
 
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -134,19 +135,22 @@ public class OrderListSynchronizer {
             dbLayerDailyPlannedOrders.setSubmitted(filter);
             OrderApi.setRemoveOrdersWhenTerminated(setOfOrderIds);
 
-            DBLayerDailyPlanHistory dbLayerDailyPlanHistory = new DBLayerDailyPlanHistory(sosHibernateSession);
-            for (PlannedOrder addedOrder : addedOrders) {
-                DBItemDailyPlanHistory dbItemDailyPlanHistory = new DBItemDailyPlanHistory();
-                dbItemDailyPlanHistory.setSubmitted(true);
-                dbItemDailyPlanHistory.setControllerId(addedOrder.getControllerId());
-                dbItemDailyPlanHistory.setCreated(JobSchedulerDate.nowInUtc());
-                dbItemDailyPlanHistory.setDailyPlanDate(OrderInitiatorGlobals.dailyPlanDate);
-                dbItemDailyPlanHistory.setOrderId(addedOrder.getFreshOrder().getId());
-                dbItemDailyPlanHistory.setScheduledFor(new Date(addedOrder.getFreshOrder().getScheduledFor()));
-                dbItemDailyPlanHistory.setWorkflowPath(addedOrder.getSchedule().getWorkflowPath());
-                dbItemDailyPlanHistory.setSubmissionTime(OrderInitiatorGlobals.submissionTime);
-                dbItemDailyPlanHistory.setUserAccount(OrderInitiatorGlobals.orderInitiatorSettings.getUserAccount());
-                dbLayerDailyPlanHistory.storeDailyPlanHistory(dbItemDailyPlanHistory);
+            if (OrderInitiatorGlobals.submissionTime != null && OrderInitiatorGlobals.dailyPlanDate != null) {
+
+                DBLayerDailyPlanHistory dbLayerDailyPlanHistory = new DBLayerDailyPlanHistory(sosHibernateSession);
+                for (PlannedOrder addedOrder : addedOrders) {
+                    DBItemDailyPlanHistory dbItemDailyPlanHistory = new DBItemDailyPlanHistory();
+                    dbItemDailyPlanHistory.setSubmitted(true);
+                    dbItemDailyPlanHistory.setControllerId(addedOrder.getControllerId());
+                    dbItemDailyPlanHistory.setCreated(JobSchedulerDate.nowInUtc());
+                    dbItemDailyPlanHistory.setDailyPlanDate(OrderInitiatorGlobals.dailyPlanDate);
+                    dbItemDailyPlanHistory.setOrderId(addedOrder.getFreshOrder().getId());
+                    dbItemDailyPlanHistory.setScheduledFor(new Date(addedOrder.getFreshOrder().getScheduledFor()));
+                    dbItemDailyPlanHistory.setWorkflowPath(addedOrder.getSchedule().getWorkflowPath());
+                    dbItemDailyPlanHistory.setSubmissionTime(OrderInitiatorGlobals.submissionTime);
+                    dbItemDailyPlanHistory.setUserAccount(OrderInitiatorGlobals.orderInitiatorSettings.getUserAccount());
+                    dbLayerDailyPlanHistory.storeDailyPlanHistory(dbItemDailyPlanHistory);
+                }
             }
             Globals.commit(sosHibernateSession);
         } finally {

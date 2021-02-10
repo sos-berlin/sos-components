@@ -77,7 +77,8 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
             }
 
             this.checkRequiredParameter("orderIds", dailyplanModifyOrder.getOrderIds());
-            if (dailyplanModifyOrder.getStartTime() == null && dailyplanModifyOrder.getRemoveVariables() == null && dailyplanModifyOrder.getVariables() == null) {
+            if (dailyplanModifyOrder.getStartTime() == null && dailyplanModifyOrder.getRemoveVariables() == null && dailyplanModifyOrder
+                    .getVariables() == null) {
                 throw new JocMissingRequiredParameterException("variables, removeVariables or startTime missing");
             }
 
@@ -174,9 +175,11 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
                 }
             }
 
-            for (Map.Entry<String, Object> variable : dailyplanModifyOrder.getRemoveVariables().getAdditionalProperties().entrySet()) {
-                filter.setVariableName(variable.getKey());
-                dbLayerOrderVariables.delete(filter);
+            if (dailyplanModifyOrder.getRemoveVariables() != null) {
+                for (Map.Entry<String, Object> variable : dailyplanModifyOrder.getRemoveVariables().getAdditionalProperties().entrySet()) {
+                    filter.setVariableName(variable.getKey());
+                    dbLayerOrderVariables.delete(filter);
+                }
             }
 
             Globals.commit(sosHibernateSession);
