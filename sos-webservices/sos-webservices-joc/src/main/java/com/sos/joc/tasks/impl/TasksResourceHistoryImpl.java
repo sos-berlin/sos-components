@@ -124,7 +124,6 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                 if (in.getLimit() == null) {
                     in.setLimit(WebserviceConstants.HISTORY_RESULTSET_LIMIT);
                 }
-
                 dbFilter.setLimit(in.getLimit());
 
                 if (dbFilter.getExecutedFrom() == null) {
