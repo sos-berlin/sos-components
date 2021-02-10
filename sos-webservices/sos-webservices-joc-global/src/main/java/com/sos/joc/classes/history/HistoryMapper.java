@@ -89,7 +89,7 @@ public class HistoryMapper {
         return HistoryPosition.getLast(item.getStartWorkflowPosition());
     }
 
-    private static HistoryState getState(Integer historySeverity) {
+    public static HistoryState getState(Integer historySeverity) {
         HistoryState state = new HistoryState();
 
         OrderState os;

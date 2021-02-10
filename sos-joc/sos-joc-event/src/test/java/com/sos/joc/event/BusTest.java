@@ -2,35 +2,22 @@ package com.sos.joc.event;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.JOCEvent;
 import com.sos.joc.event.bean.history.HistoryEvent;
-import com.sos.joc.event.bean.history.OrderStepFinished;
-import com.sos.joc.event.bean.history.OrderStepStarted;
+import com.sos.joc.event.bean.history.HistoryOrderStarted;
+import com.sos.joc.event.bean.history.HistoryOrderTaskTerminated;
+import com.sos.joc.event.bean.history.HistoryOrderTerminated;
 
 public class BusTest {
 
     private static ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    private static final Map<String, String> testMap = Collections.unmodifiableMap(new HashMap<String, String>() {
-
-        private static final long serialVersionUID = 1L;
-
-        {
-            put("key1", "var1");
-            put("key2", "var2");
-        }
-    });
-
 
     public class Listener1 {
 
@@ -38,7 +25,7 @@ public class BusTest {
             EventBus.getInstance().register(this);
         }
 
-        @Subscribe({ OrderStepFinished.class, OrderStepStarted.class })
+        @Subscribe({ HistoryOrderTerminated.class, HistoryOrderTaskTerminated.class })
         public void onEvent(JOCEvent evt) throws JsonProcessingException {
             String json = objectMapper.writeValueAsString(evt);
             json = String.format("%s %s%n%s%n", Instant.now().toString(), this.getClass().getSimpleName(), json);
@@ -53,13 +40,13 @@ public class BusTest {
         }
 
         @Subscribe
-        public void doSomethingWithEvent(OrderStepStarted evt) throws JsonProcessingException {
+        public void doSomethingWithEvent(HistoryOrderStarted evt) throws JsonProcessingException {
             String json = objectMapper.writeValueAsString(evt);
             json = String.format("%s %s%n%s%n", Instant.now().toString(), this.getClass().getSimpleName(), json);
             System.out.print(json);
         }
     }
-    
+
     public class Listener3 {
 
         public Listener3() {
@@ -67,20 +54,20 @@ public class BusTest {
         }
 
         @Subscribe
-        public void doSomethingWithEvent(OrderStepFinished evt) throws JsonProcessingException {
+        public void doSomethingWithEvent(HistoryOrderTerminated evt) throws JsonProcessingException {
             String json = objectMapper.writeValueAsString(evt);
             json = String.format("%s %s%n%s%n", Instant.now().toString(), this.getClass().getSimpleName(), json);
             System.out.print(json);
         }
-        
+
         @Subscribe
-        public void doSomethingMoreWithEvent(OrderStepStarted evt) throws JsonProcessingException {
+        public void doSomethingMoreWithEvent(HistoryOrderStarted evt) throws JsonProcessingException {
             String json = objectMapper.writeValueAsString(evt);
             json = String.format("%s %s%n%s%n", Instant.now().toString(), this.getClass().getSimpleName(), json);
             System.out.print(json);
         }
     }
-    
+
     public class Listener4 {
 
         public Listener4() {
@@ -98,7 +85,7 @@ public class BusTest {
             System.out.print(json);
         }
     }
-    
+
     public class Listener5 {
 
         public Listener5() {
@@ -126,9 +113,9 @@ public class BusTest {
         Listener4 l4 = new Listener4();
         Listener5 l5 = new Listener5();
         Listener2 l6 = new Listener2();
-        
+
         System.out.println(Instant.now());
-        HistoryEvent evt = new OrderStepStarted("myJob", "myScheduler", testMap);
+        HistoryEvent evt = new HistoryOrderStarted("controllerId", "orderId", 1L, 0L);
         EventBus eventBus = EventBus.getInstance();
         eventBus.post(evt);
         try {

@@ -1,8 +1,10 @@
 package com.sos.js7.history.helper;
 
-import com.sos.commons.util.SOSString;
-import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import java.util.Date;
+
+import com.sos.commons.util.SOSString;
+import com.sos.joc.classes.history.HistoryMapper;
+import com.sos.joc.db.history.DBItemHistoryOrderStep;
 
 public class CachedOrderStep {
 
@@ -15,6 +17,7 @@ public class CachedOrderStep {
     private final String agentId;
     private final String agentUri;
     private final String workflowPosition;
+    private Integer severity;
     private Integer returnCode;
     private Date endTime;
     private CachedOrderStepError error;
@@ -32,6 +35,7 @@ public class CachedOrderStep {
         agentId = item.getAgentId();
         agentUri = item.getAgentUri();
         workflowPosition = item.getWorkflowPosition();
+        severity = item.getSeverity();
         returnCode = item.getReturnCode();
         endTime = item.getEndTime();
         created = new Date();
@@ -79,6 +83,22 @@ public class CachedOrderStep {
 
     public void setEndTime(Date val) {
         endTime = val;
+    }
+
+    public Integer getSeverity() {
+        return severity;
+    }
+
+    public void setSeverity(Integer val) {
+        severity = val;
+    }
+
+    public String getSeverityAsText() {
+        try {
+            return severity == null ? null : HistoryMapper.getState(severity).get_text().name();
+        } catch (Throwable e) {
+            return null;
+        }
     }
 
     public void setReturnCode(Integer val) {

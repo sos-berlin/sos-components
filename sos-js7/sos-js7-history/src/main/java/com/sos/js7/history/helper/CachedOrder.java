@@ -1,6 +1,8 @@
 package com.sos.js7.history.helper;
 
 import com.sos.joc.db.history.DBItemHistoryOrder;
+import com.sos.joc.model.order.OrderStateText;
+
 import java.util.Date;
 
 public class CachedOrder {
@@ -66,6 +68,14 @@ public class CachedOrder {
 
     public Integer getState() {
         return state;
+    }
+
+    public String getStateAsText() {
+        try {
+            return state == null ? null : OrderStateText.fromValue(state).name();
+        } catch (Throwable e) {
+            return null;
+        }
     }
 
     public boolean getHasChildren() {
