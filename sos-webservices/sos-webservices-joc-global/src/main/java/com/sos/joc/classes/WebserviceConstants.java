@@ -1,5 +1,6 @@
 package com.sos.joc.classes;
 
+import java.util.Date;
 
 public class WebserviceConstants {
 
@@ -40,6 +41,7 @@ public class WebserviceConstants {
     public static final String ENABLE_SESSION_TOUCH_DEFAULT = "true";
     public static final int DEFAULT_LIMIT = 30;
     public static final int HISTORY_RESULTSET_LIMIT = 10000;
+    public static final Date HISTORY_DEFAULT_EXECUTED_FROM = new Date(0); //1970-01-01 01:00:00
 
     /** Table JOC_CONFIGURATIONS */
     public static final String TABLE_JOC_CONFIGURATIONS = "JOC_CONFIGURATIONS";

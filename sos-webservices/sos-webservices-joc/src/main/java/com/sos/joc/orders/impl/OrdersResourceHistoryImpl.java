@@ -1,7 +1,5 @@
 package com.sos.joc.orders.impl;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -17,7 +15,6 @@ import org.hibernate.ScrollableResults;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
-import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -39,7 +36,7 @@ import com.sos.schema.JsonValidator;
 
 @Path(WebservicePaths.ORDERS)
 public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrdersResourceHistory {
-    
+
     @Override
     public JOCDefaultResponse postOrdersHistory(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
@@ -110,10 +107,8 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                 }
                 dbFilter.setLimit(in.getLimit());
 
-                // TODO to remove
                 if (dbFilter.getExecutedFrom() == null) {
-                    // 1970-01-01 01:00:00 + 1 day
-                    dbFilter.setExecutedFrom(SOSDate.add(Instant.ofEpochMilli(new Date(0).getTime()), 1, ChronoUnit.DAYS));
+                    dbFilter.setExecutedFrom(WebserviceConstants.HISTORY_DEFAULT_EXECUTED_FROM);
                 }
 
                 session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
