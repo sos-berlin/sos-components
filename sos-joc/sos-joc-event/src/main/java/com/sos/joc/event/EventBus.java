@@ -7,6 +7,8 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -21,7 +23,7 @@ public class EventBus {
     private static EventBus eventBus;
     private static final Logger LOGGER = LoggerFactory.getLogger(EventBus.class);
     private static String threadNamePrefix = "Thread-EventBus-";
-    private Set<Object> listeners = new HashSet<>();
+    private CopyOnWriteArraySet<Object> listeners = new CopyOnWriteArraySet<>();
     
     private EventBus() {
     }
@@ -45,18 +47,20 @@ public class EventBus {
         }
     }
 
-    public synchronized void post(final JOCEvent evt) {
+    public void post(final JOCEvent evt) {
         if (evt != null) {
-            Set<Object> unsubcribedListeners = new HashSet<>();
-            evt.setEventId(Instant.now().getEpochSecond());
-            Collections.unmodifiableSet(listeners).stream().forEach(listener -> {
-                if (!invokeSubcribedMethods(listener, evt)) {
-                    unsubcribedListeners.add(listener);
+            CompletableFuture.runAsync(() -> {
+                Set<Object> unsubcribedListeners = new HashSet<>();
+                evt.setEventId(Instant.now().getEpochSecond());
+                Collections.unmodifiableSet(listeners).stream().forEach(listener -> {
+                    if (!invokeSubcribedMethods(listener, evt)) {
+                        unsubcribedListeners.add(listener);
+                    }
+                });
+                if (!unsubcribedListeners.isEmpty()) {
+                    listeners.removeAll(unsubcribedListeners);
                 }
             });
-            if (!unsubcribedListeners.isEmpty()) {
-                listeners.removeAll(unsubcribedListeners);
-            }
         }
     }
 
