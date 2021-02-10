@@ -24,9 +24,8 @@ import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 
 public class PeriodResolver {
 
-    private static final String HH_MM_SS = "HH:mm:ss";
     private static final String DATE_FORMAT_ISO = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-    private static final String DATE_FORMAT_TIME = HH_MM_SS;
+    private static final String DATE_FORMAT_TIME ="HH:mm:ss";
     private static final String DATE_FORMAT_SIMPLE = "yyyy-M-dd HH:mm:ss";
     private static final Logger LOGGER = LoggerFactory.getLogger(PeriodResolver.class);
     private Map<Long, Period> listOfStartTimes;

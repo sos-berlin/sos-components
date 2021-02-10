@@ -1,6 +1,7 @@
 package com.sos.js7.order.initiator;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.Date;
@@ -49,6 +50,7 @@ import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
+import com.sos.joc.model.common.VariableType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 import com.sos.js7.order.initiator.classes.DailyPlanHelper;
@@ -94,7 +96,7 @@ public class OrderInitiatorRunner extends TimerTask {
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
             IOException, ParseException, SOSException, URISyntaxException, JobSchedulerConnectionResetException,
             JobSchedulerConnectionRefusedException, InterruptedException, ExecutionException, TimeoutException {
-       
+
         orderListSynchronizer = calculateStartTimes(DailyPlanHelper.stringAsDate(dailyPlanDate));
         if (orderListSynchronizer.getListOfPlannedOrders().size() > 0) {
             orderListSynchronizer.addPlannedOrderToControllerAndDB(withSubmit);
@@ -128,8 +130,23 @@ public class OrderInitiatorRunner extends TimerTask {
                 List<DBItemDailyPlanVariables> listOfOrderVariables = dbLayerOrderVariables.getOrderVariables(filterOrderVariables, 0);
                 if (listOfOrderVariables != null) {
                     for (DBItemDailyPlanVariables orderVariable : listOfOrderVariables) {
-                        // TODO db should know the datatype -> cast vale with datatype
-                        variables.setAdditionalProperty(orderVariable.getVariableName(), orderVariable.getVariableValue());
+                        switch (orderVariable.getVariableType()) {
+                        case 0:
+                            variables.setAdditionalProperty(orderVariable.getVariableName(), orderVariable.getVariableValue());
+                            break;
+                        case 1:
+                            variables.setAdditionalProperty(orderVariable.getVariableName(), Boolean.parseBoolean(orderVariable.getVariableValue()));
+                            break;
+                        case 2:
+                            variables.setAdditionalProperty(orderVariable.getVariableName(), Integer.parseInt(orderVariable.getVariableValue()));
+                            break;
+                        case 3:
+                            variables.setAdditionalProperty(orderVariable.getVariableName(), new BigDecimal(orderVariable.getVariableValue()));
+                        case 4:
+                            variables.setAdditionalProperty(orderVariable.getVariableName(), Double.parseDouble(orderVariable.getVariableValue()));
+                            break;
+
+                        }
                     }
                 }
 
