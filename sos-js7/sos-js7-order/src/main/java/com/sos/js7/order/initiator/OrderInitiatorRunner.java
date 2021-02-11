@@ -101,6 +101,7 @@ public class OrderInitiatorRunner extends TimerTask {
         if (orderListSynchronizer.getListOfPlannedOrders().size() > 0) {
             orderListSynchronizer.addPlannedOrderToControllerAndDB(withSubmit);
         }
+        orderListSynchronizer.resetListOfPlannedOrders();
     }
 
     public void submitOrders(List<DBItemDailyPlanOrders> listOfPlannedOrders) throws JsonParseException, JsonMappingException,
@@ -229,6 +230,8 @@ public class OrderInitiatorRunner extends TimerTask {
             createdPlans.add(DailyPlanHelper.getDayOfYear(calendar));
             try {
                 OrderInitiatorGlobals.submissionTime = new Date();
+                calendar.add(java.util.Calendar.DATE, 1);
+
                 createPlan(calendar);
             } catch (JobSchedulerConnectionResetException | JobSchedulerConnectionRefusedException | ParseException | SOSException
                     | URISyntaxException | InterruptedException | ExecutionException | TimeoutException e) {
@@ -327,10 +330,7 @@ public class OrderInitiatorRunner extends TimerTask {
             Set<String> dates;
             PeriodResolver periodResolver;
         }
-        // TODO:
-        if (Globals.sosCockpitProperties == null) {
-            Globals.sosCockpitProperties = new JocCockpitProperties("/order_configuration.properties");
-        }
+       
         Date actDate = dailyPlanDate;
         Date nextDate = DailyPlanHelper.getNextDay(dailyPlanDate);
         SOSHibernateSession sosHibernateSession = null;
@@ -347,7 +347,7 @@ public class OrderInitiatorRunner extends TimerTask {
                     String controllerId = OrderInitiatorGlobals.orderInitiatorSettings.getControllerId();
 
                     if (dbItemDailyPlanSubmissionHistory == null) {
-                        dbItemDailyPlanSubmissionHistory = addDailyPlanSubmission(sosHibernateSession, controllerId, dailyPlanDate);
+                        dbItemDailyPlanSubmissionHistory = addDailyPlanSubmission(controllerId, dailyPlanDate);
                     }
 
                     generateNonWorkingDays(dailyPlanDate, schedule, controllerId);
@@ -423,20 +423,28 @@ public class OrderInitiatorRunner extends TimerTask {
         }
     }
 
-    private DBItemDailyPlanSubmissions addDailyPlanSubmission(SOSHibernateSession sosHibernateSession, String controllerId, Date dateForPlan)
-            throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException, ParseException {
+    private DBItemDailyPlanSubmissions addDailyPlanSubmission(String controllerId, Date dateForPlan) throws JocConfigurationException,
+            DBConnectionRefusedException, SOSHibernateException, ParseException {
 
-        DBLayerDailyPlanSubmissions dbLayer = new DBLayerDailyPlanSubmissions(sosHibernateSession);
-        DBItemDailyPlanSubmissions dbItemDailyPlanSubmissionHistory = new DBItemDailyPlanSubmissions();
-        dbItemDailyPlanSubmissionHistory.setControllerId(controllerId);
-        dbItemDailyPlanSubmissionHistory.setSubmissionForDate(dateForPlan);
-        dbItemDailyPlanSubmissionHistory.setUserAccount(OrderInitiatorGlobals.orderInitiatorSettings.getUserAccount());
+        SOSHibernateSession sosHibernateSession = null;
 
-        Globals.beginTransaction(sosHibernateSession);
-        dbLayer.storePlan(dbItemDailyPlanSubmissionHistory);
+        try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("OrderInitiatorRunner");
+            DBLayerDailyPlanSubmissions dbLayer = new DBLayerDailyPlanSubmissions(sosHibernateSession);
+            DBItemDailyPlanSubmissions dbItemDailyPlanSubmissionHistory = new DBItemDailyPlanSubmissions();
+            dbItemDailyPlanSubmissionHistory.setControllerId(controllerId);
+            dbItemDailyPlanSubmissionHistory.setSubmissionForDate(dateForPlan);
+            dbItemDailyPlanSubmissionHistory.setUserAccount(OrderInitiatorGlobals.orderInitiatorSettings.getUserAccount());
 
-        Globals.commit(sosHibernateSession);
-        return dbItemDailyPlanSubmissionHistory;
+            Globals.beginTransaction(sosHibernateSession);
+            dbLayer.storePlan(dbItemDailyPlanSubmissionHistory);
+
+            Globals.commit(sosHibernateSession);
+            return dbItemDailyPlanSubmissionHistory;
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
+
     }
 
 }

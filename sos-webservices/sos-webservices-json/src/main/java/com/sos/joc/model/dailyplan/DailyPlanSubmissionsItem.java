@@ -27,13 +27,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class DailyPlanSubmissionsItem {
 
     /**
-     * path
+     * filename
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
     @JsonProperty("controllerId")
-    @JsonPropertyDescription("absolute path of an object.")
     private String controllerId;
     /**
      * non negative long
@@ -63,9 +62,9 @@ public class DailyPlanSubmissionsItem {
     private Date submissionTime;
 
     /**
-     * path
+     * filename
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
     @JsonProperty("controllerId")
@@ -74,9 +73,9 @@ public class DailyPlanSubmissionsItem {
     }
 
     /**
-     * path
+     * filename
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
     @JsonProperty("controllerId")

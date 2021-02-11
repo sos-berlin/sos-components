@@ -30,6 +30,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class DailyPlanOrderSelector {
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("controllerId")
     private String controllerId;
     /**
@@ -79,11 +85,23 @@ public class DailyPlanOrderSelector {
     @JsonProperty("auditLog")
     private AuditParams auditLog;
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("controllerId")
     public String getControllerId() {
         return controllerId;
     }
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("controllerId")
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;

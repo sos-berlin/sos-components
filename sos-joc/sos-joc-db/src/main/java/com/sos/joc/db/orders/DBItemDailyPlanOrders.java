@@ -1,6 +1,7 @@
 package com.sos.joc.db.orders;
 
 import java.text.ParseException;
+import java.util.Calendar;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -260,10 +261,12 @@ public class DBItemDailyPlanOrders extends DBItem {
     public void setRepeatInterval(String repeat) throws ParseException {
         DailyPlanDate daysScheduleDate = new DailyPlanDate();
         daysScheduleDate.setSchedule("HH:mm:ss", repeat);
-        Date to = daysScheduleDate.getSchedule();
+        Calendar c = Calendar.getInstance();
+        c.setTime(daysScheduleDate.getSchedule());
 
         if (repeat != null) {
-            this.repeatInterval = to.getTime() / 1000;
+           Integer i=     c.get(Calendar.HOUR)*60*60 +  c.get(Calendar.MINUTE)*60 +  c.get(Calendar.SECOND);
+           repeatInterval = new Long(i);
         }
     }
 

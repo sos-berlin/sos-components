@@ -38,6 +38,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class PlannedOrdersFilter {
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("controllerId")
     private String controllerId;
     /**
@@ -63,9 +69,18 @@ public class PlannedOrdersFilter {
     @JsonProperty("withSubmit")
     @JsonPropertyDescription("controls if the order should be submitted to the controller")
     private Boolean withSubmit = true;
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
     @JsonProperty("dailyPlanDate")
+    @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
     private String dailyPlanDate;
     /**
+     * string without < and >
+     * <p>
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
@@ -91,11 +106,23 @@ public class PlannedOrdersFilter {
     @JsonProperty("orderId")
     private String orderId;
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("controllerId")
     public String getControllerId() {
         return controllerId;
     }
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("controllerId")
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
@@ -175,17 +202,31 @@ public class PlannedOrdersFilter {
         this.withSubmit = withSubmit;
     }
 
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
     @JsonProperty("dailyPlanDate")
     public String getDailyPlanDate() {
         return dailyPlanDate;
     }
 
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
     @JsonProperty("dailyPlanDate")
     public void setDailyPlanDate(String dailyPlanDate) {
         this.dailyPlanDate = dailyPlanDate;
     }
 
     /**
+     * string without < and >
+     * <p>
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
@@ -195,6 +236,8 @@ public class PlannedOrdersFilter {
     }
 
     /**
+     * string without < and >
+     * <p>
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */

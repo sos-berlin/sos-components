@@ -1,7 +1,6 @@
 package com.sos.js7.order.initiator;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -47,7 +46,7 @@ public class OrderListSynchronizer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderListSynchronizer.class);
     private Map<PlannedOrderKey, PlannedOrder> listOfPlannedOrders;
-    private Map<PlannedOrderKey, Long> listOfDurations;
+    private Map<String, Long> listOfDurations;
 
     public OrderListSynchronizer() {
         listOfPlannedOrders = new HashMap<PlannedOrderKey, PlannedOrder>();
@@ -65,7 +64,8 @@ public class OrderListSynchronizer {
     private void calculateDuration(PlannedOrder plannedOrder) throws SOSHibernateException, JocConfigurationException, DBConnectionRefusedException,
             DBOpenSessionException {
 
-        if (listOfDurations.get(plannedOrder.uniqueOrderkey()) == null) {
+        
+        if (listOfDurations.get(plannedOrder.getSchedule().getWorkflowName()) == null) {
 
             SOSHibernateSession sosHibernateSession = null;
             try {
@@ -88,7 +88,7 @@ public class OrderListSynchronizer {
                         sosDurations.add(sosDuration);
                     }
                 }
-                listOfDurations.put(plannedOrder.uniqueOrderkey(), sosDurations.average());
+                listOfDurations.put(plannedOrder.getSchedule().getWorkflowName(), sosDurations.average());
             } finally {
                 Globals.disconnect(sosHibernateSession);
             }
@@ -97,7 +97,7 @@ public class OrderListSynchronizer {
 
     private void calculateDurations() throws SOSHibernateException, JocConfigurationException, DBConnectionRefusedException, DBOpenSessionException {
         LOGGER.debug("... calculateDurations");
-        listOfDurations = new HashMap<PlannedOrderKey, Long>();
+        listOfDurations = new HashMap<String, Long>();
 
         for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
             calculateDuration(plannedOrder);
@@ -179,7 +179,7 @@ public class OrderListSynchronizer {
                 for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
                     FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
                     filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
-                    LOGGER.debug("----> Remove: " + plannedOrder.getFreshOrder().getScheduledFor() + ":" + new Date(plannedOrder.getFreshOrder()
+                    LOGGER.trace("----> Remove: " + plannedOrder.getFreshOrder().getScheduledFor() + ":" + new Date(plannedOrder.getFreshOrder()
                             .getScheduledFor()));
                     filter.setControllerId(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
                     filter.addWorkflowName(plannedOrder.getFreshOrder().getWorkflowPath());
@@ -197,8 +197,8 @@ public class OrderListSynchronizer {
                 dbItemDailyPlan = dbLayerDailyPlan.getUniqueDailyPlan(plannedOrder);
 
                 if (OrderInitiatorGlobals.orderInitiatorSettings.isOverwrite() || dbItemDailyPlan == null) {
-                    LOGGER.debug("snchronizer: adding planned order to database: " + plannedOrder.uniqueOrderkey());
-                    plannedOrder.setAverageDuration(listOfDurations.get(plannedOrder.uniqueOrderkey()));
+                    LOGGER.trace("snchronizer: adding planned order to database: " + plannedOrder.uniqueOrderkey());
+                    plannedOrder.setAverageDuration(listOfDurations.get(plannedOrder.getSchedule().getWorkflowName()));
                     dbLayerDailyPlan.store(plannedOrder);
                     plannedOrder.setStoredInDb(true);
                 }
@@ -228,5 +228,9 @@ public class OrderListSynchronizer {
 
     public Map<PlannedOrderKey, PlannedOrder> getListOfPlannedOrders() {
         return listOfPlannedOrders;
+    }
+
+    public void resetListOfPlannedOrders() {
+        listOfPlannedOrders=null;
     }
 }

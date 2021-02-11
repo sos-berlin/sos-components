@@ -27,13 +27,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class DailyPlanHistoryItem {
 
     /**
-     * path
+     * filename
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
     @JsonProperty("controllerId")
-    @JsonPropertyDescription("absolute path of an object.")
     private String controllerId;
     /**
      * timestamp
@@ -48,9 +47,9 @@ public class DailyPlanHistoryItem {
     private List<DailyPlanSubmissionTimes> submissions = null;
 
     /**
-     * path
+     * filename
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
     @JsonProperty("controllerId")
@@ -59,9 +58,9 @@ public class DailyPlanHistoryItem {
     }
 
     /**
-     * path
+     * filename
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
     @JsonProperty("controllerId")

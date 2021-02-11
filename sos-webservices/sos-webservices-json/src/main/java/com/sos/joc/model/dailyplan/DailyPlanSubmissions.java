@@ -35,6 +35,11 @@ public class DailyPlanSubmissions {
     @JsonProperty("deliveryDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("submissionHistoryItems")
     private List<DailyPlanSubmissionsItem> submissionHistoryItems = null;
 
@@ -62,11 +67,21 @@ public class DailyPlanSubmissions {
         this.deliveryDate = deliveryDate;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("submissionHistoryItems")
     public List<DailyPlanSubmissionsItem> getSubmissionHistoryItems() {
         return submissionHistoryItems;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("submissionHistoryItems")
     public void setSubmissionHistoryItems(List<DailyPlanSubmissionsItem> submissionHistoryItems) {
         this.submissionHistoryItems = submissionHistoryItems;

@@ -22,11 +22,18 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "controllerId",
     "overwrite",
     "withSubmit",
+    "expandCycleOrders",
     "filter",
     "auditLog"
 })
 public class DailyPlanOrderFilter {
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("controllerId")
     private String controllerId;
     /**
@@ -48,6 +55,15 @@ public class DailyPlanOrderFilter {
     @JsonPropertyDescription("controls if the order should be submitted to the controller")
     private Boolean withSubmit = true;
     /**
+     * expandCycleOrders parameter
+     * <p>
+     * controls if the cycle order should be expanded in the answer
+     * 
+     */
+    @JsonProperty("expandCycleOrders")
+    @JsonPropertyDescription("controls if the cycle order should be expanded in the answer")
+    private Boolean expandCycleOrders = false;
+    /**
      * Daily Plan  Order Filter Definition
      * <p>
      * Define the filter To get orders from the daily plan
@@ -65,11 +81,23 @@ public class DailyPlanOrderFilter {
     @JsonProperty("auditLog")
     private AuditParams auditLog;
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("controllerId")
     public String getControllerId() {
         return controllerId;
     }
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("controllerId")
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
@@ -120,6 +148,28 @@ public class DailyPlanOrderFilter {
     }
 
     /**
+     * expandCycleOrders parameter
+     * <p>
+     * controls if the cycle order should be expanded in the answer
+     * 
+     */
+    @JsonProperty("expandCycleOrders")
+    public Boolean getExpandCycleOrders() {
+        return expandCycleOrders;
+    }
+
+    /**
+     * expandCycleOrders parameter
+     * <p>
+     * controls if the cycle order should be expanded in the answer
+     * 
+     */
+    @JsonProperty("expandCycleOrders")
+    public void setExpandCycleOrders(Boolean expandCycleOrders) {
+        this.expandCycleOrders = expandCycleOrders;
+    }
+
+    /**
      * Daily Plan  Order Filter Definition
      * <p>
      * Define the filter To get orders from the daily plan
@@ -165,12 +215,12 @@ public class DailyPlanOrderFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("overwrite", overwrite).append("withSubmit", withSubmit).append("filter", filter).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("overwrite", overwrite).append("withSubmit", withSubmit).append("expandCycleOrders", expandCycleOrders).append("filter", filter).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(withSubmit).append(filter).append(controllerId).append(auditLog).append(overwrite).toHashCode();
+        return new HashCodeBuilder().append(filter).append(controllerId).append(auditLog).append(withSubmit).append(overwrite).append(expandCycleOrders).toHashCode();
     }
 
     @Override
@@ -182,7 +232,7 @@ public class DailyPlanOrderFilter {
             return false;
         }
         DailyPlanOrderFilter rhs = ((DailyPlanOrderFilter) other);
-        return new EqualsBuilder().append(withSubmit, rhs.withSubmit).append(filter, rhs.filter).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(overwrite, rhs.overwrite).isEquals();
+        return new EqualsBuilder().append(filter, rhs.filter).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(withSubmit, rhs.withSubmit).append(overwrite, rhs.overwrite).append(expandCycleOrders, rhs.expandCycleOrders).isEquals();
     }
 
 }

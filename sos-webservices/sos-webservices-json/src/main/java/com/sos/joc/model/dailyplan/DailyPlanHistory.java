@@ -29,12 +29,16 @@ public class DailyPlanHistory {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * (Required)
      * 
      */
     @JsonProperty("deliveryDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("dailyPlans")
     private List<DailyPlanHistoryItem> dailyPlans = null;
 
@@ -42,7 +46,6 @@ public class DailyPlanHistory {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * (Required)
      * 
      */
     @JsonProperty("deliveryDate")
@@ -54,7 +57,6 @@ public class DailyPlanHistory {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * (Required)
      * 
      */
     @JsonProperty("deliveryDate")
@@ -62,11 +64,21 @@ public class DailyPlanHistory {
         this.deliveryDate = deliveryDate;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("dailyPlans")
     public List<DailyPlanHistoryItem> getDailyPlans() {
         return dailyPlans;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("dailyPlans")
     public void setDailyPlans(List<DailyPlanHistoryItem> dailyPlans) {
         this.dailyPlans = dailyPlans;

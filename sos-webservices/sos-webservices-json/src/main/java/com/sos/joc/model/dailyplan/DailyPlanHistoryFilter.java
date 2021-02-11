@@ -24,6 +24,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class DailyPlanHistoryFilter {
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("controllerId")
     private String controllerId;
     /**
@@ -36,6 +42,8 @@ public class DailyPlanHistoryFilter {
     @JsonPropertyDescription("Define the filter To get the daily plan history")
     private DailyPlanHistoryFilterDef filter;
     /**
+     * string without < and >
+     * <p>
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
@@ -43,11 +51,23 @@ public class DailyPlanHistoryFilter {
     @JsonPropertyDescription("see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
     private String timeZone;
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("controllerId")
     public String getControllerId() {
         return controllerId;
     }
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("controllerId")
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
@@ -76,6 +96,8 @@ public class DailyPlanHistoryFilter {
     }
 
     /**
+     * string without < and >
+     * <p>
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
@@ -85,6 +107,8 @@ public class DailyPlanHistoryFilter {
     }
 
     /**
+     * string without < and >
+     * <p>
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */

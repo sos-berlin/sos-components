@@ -36,6 +36,43 @@ import com.sos.webservices.order.resource.IDailyPlanOrdersResource;
 @Path("daily_plan")
 public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOrdersResource {
 
+    class CyclicOrder {
+
+        String scheduleName;
+        Period period;
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((period == null) ? 0 : period.hashCode());
+            result = prime * result + ((scheduleName == null) ? 0 : scheduleName.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            CyclicOrder other = (CyclicOrder) obj;
+            if (period == null) {
+                if (other.period != null)
+                    return false;
+            } else if (!period.equals(other.period))
+                return false;
+            if (scheduleName == null) {
+                if (other.scheduleName != null)
+                    return false;
+            } else if (!scheduleName.equals(other.scheduleName))
+                return false;
+            return true;
+        }
+    }
+
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanOrdersImpl.class);
     private static final String API_CALL = "./daily_plan/orders";
 
@@ -165,16 +202,27 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
             PlannedOrders entity = new PlannedOrders();
 
             if (hasPermission) {
+                Set<CyclicOrder> cycledOrders = new HashSet<CyclicOrder>();
                 List<DBItemDailyPlanWithHistory> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanWithHistoryList(filter, 0);
 
                 for (DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory : listOfPlannedOrders) {
 
                     boolean add = true;
                     PlannedOrderItem p = createPlanItem(dbItemDailyPlanWithHistory);
+
+                    CyclicOrder c = new CyclicOrder();
+                    c.period = p.getPeriod();
+                    c.scheduleName = Paths.get(p.getSchedulePath()).getFileName().toString();
+
+                    if (p.getStartMode() == 1 && !cycledOrders.contains(c)) {
+                        cycledOrders.add(c);
+                    }
                     if (dailyPlanOrderFilter.getFilter().getStates() != null && !stateFilterContainsPendingOrPlanned && dbItemDailyPlanWithHistory
                             .getOrderHistoryId() == null) {
                         add = false;
                     }
+
+                    add = (p.getStartMode() == 0 || dailyPlanOrderFilter.getExpandCycleOrders() || !cycledOrders.contains(c));
 
                     if (add) {
                         result.add(p);
