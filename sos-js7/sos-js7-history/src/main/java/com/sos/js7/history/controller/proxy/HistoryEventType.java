@@ -3,10 +3,10 @@ package com.sos.js7.history.controller.proxy;
 import java.util.HashMap;
 import java.util.Map;
 
-import js7.controller.data.events.AgentRefStateEvent.AgentCouplingFailed;
-import js7.controller.data.events.AgentRefStateEvent.AgentReady;
-import js7.controller.data.events.ControllerEvent.ControllerReady;
-import js7.controller.data.events.ControllerEvent.ControllerShutDown;
+import js7.data.agent.AgentRefStateEvent.AgentCouplingFailed;
+import js7.data.agent.AgentRefStateEvent.AgentReady;
+import js7.data.controller.ControllerEvent.ControllerReady;
+import js7.data.controller.ControllerEvent.ControllerShutDown;
 import js7.data.order.OrderEvent.OrderBroken;
 import js7.data.order.OrderEvent.OrderCancelled$;
 import js7.data.order.OrderEvent.OrderFailed;
@@ -18,13 +18,13 @@ import js7.data.order.OrderEvent.OrderLockQueued;
 import js7.data.order.OrderEvent.OrderLockReleased;
 import js7.data.order.OrderEvent.OrderProcessed;
 import js7.data.order.OrderEvent.OrderProcessingStarted$;
-import js7.data.order.OrderEvent.OrderResumed;
 import js7.data.order.OrderEvent.OrderResumeMarked;
+import js7.data.order.OrderEvent.OrderResumed;
 import js7.data.order.OrderEvent.OrderStarted$;
 import js7.data.order.OrderEvent.OrderStderrWritten;
 import js7.data.order.OrderEvent.OrderStdoutWritten;
-import js7.data.order.OrderEvent.OrderSuspended$;
 import js7.data.order.OrderEvent.OrderSuspendMarked;
+import js7.data.order.OrderEvent.OrderSuspended$;
 
 public enum HistoryEventType {
     EventWithProblem("EventWithProblem"),// special case for events with problems

@@ -34,8 +34,8 @@ import com.sos.schema.JsonValidator;
 import js7.base.web.Uri;
 import js7.data.agent.AgentId;
 import js7.data.agent.AgentRef;
-import js7.proxy.javaapi.data.agent.JAgentRef;
-import js7.proxy.javaapi.data.item.JUpdateItemOperation;
+import js7.data_for_java.agent.JAgentRef;
+import js7.data_for_java.item.JUpdateItemOperation;
 import reactor.core.publisher.Flux;
 
 @Path("agents")

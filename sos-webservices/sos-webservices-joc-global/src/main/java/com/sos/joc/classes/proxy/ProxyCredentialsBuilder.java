@@ -10,10 +10,10 @@ import com.sos.joc.classes.SSLContext;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.DBMissingDataException;
 
-import js7.common.akkahttp.https.KeyStoreRef;
-import js7.common.akkahttp.https.TrustStoreRef;
-import js7.proxy.javaapi.data.auth.JCredentials;
-import js7.proxy.javaapi.data.auth.JHttpsConfig;
+import js7.base.io.https.KeyStoreRef;
+import js7.base.io.https.TrustStoreRef;
+import js7.data_for_java.auth.JCredentials;
+import js7.data_for_java.auth.JHttpsConfig;
 
 public class ProxyCredentialsBuilder {
 

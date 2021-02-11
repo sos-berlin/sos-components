@@ -27,9 +27,9 @@ import com.sos.joc.model.agent.ReadAgentsV;
 import com.sos.schema.JsonValidator;
 
 import js7.data.order.Order;
-import js7.proxy.javaapi.data.controller.JControllerState;
-import js7.proxy.javaapi.data.order.JOrder;
-import js7.proxy.javaapi.data.order.JOrderPredicates;
+import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.order.JOrder;
+import js7.data_for_java.order.JOrderPredicates;
 
 @Path("agents")
 public class AgentsResourceTasksImpl extends JOCResourceImpl implements IAgentsResourceTasks {

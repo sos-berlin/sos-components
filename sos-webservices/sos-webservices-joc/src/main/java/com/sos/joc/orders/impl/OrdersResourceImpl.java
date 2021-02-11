@@ -38,10 +38,10 @@ import io.vavr.control.Either;
 import js7.data.item.VersionedItemId;
 import js7.data.order.Order;
 import js7.data.workflow.WorkflowPath;
-import js7.proxy.javaapi.data.controller.JControllerState;
-import js7.proxy.javaapi.data.order.JOrder;
-import js7.proxy.javaapi.data.order.JOrderPredicates;
-import js7.proxy.javaapi.data.workflow.JWorkflowId;
+import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.order.JOrder;
+import js7.data_for_java.order.JOrderPredicates;
+import js7.data_for_java.workflow.JWorkflowId;
 
 @Path("orders")
 public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResource {

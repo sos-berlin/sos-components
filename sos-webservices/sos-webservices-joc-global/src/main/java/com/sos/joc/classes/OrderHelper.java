@@ -24,9 +24,9 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.order.OrderId;
-import js7.proxy.javaapi.data.command.JCancelMode;
-import js7.proxy.javaapi.data.order.JOrder;
-import js7.proxy.javaapi.data.order.JOrderPredicates;
+import js7.data_for_java.command.JCancelMode;
+import js7.data_for_java.order.JOrder;
+import js7.data_for_java.order.JOrderPredicates;
 
 public class OrderHelper {
 

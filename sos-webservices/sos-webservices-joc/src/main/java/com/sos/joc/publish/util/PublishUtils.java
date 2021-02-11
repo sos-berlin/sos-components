@@ -140,8 +140,8 @@ import js7.base.problem.Problem;
 import js7.data.item.VersionId;
 import js7.data.lock.LockId;
 import js7.data.workflow.WorkflowPath;
-import js7.proxy.javaapi.data.item.JUpdateItemOperation;
-import js7.proxy.javaapi.data.lock.JLock;
+import js7.data_for_java.item.JUpdateItemOperation;
+import js7.data_for_java.lock.JLock;
 import reactor.core.publisher.Flux;
 
 public abstract class PublishUtils {

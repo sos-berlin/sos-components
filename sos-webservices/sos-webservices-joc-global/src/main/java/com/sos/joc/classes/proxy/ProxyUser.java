@@ -2,7 +2,7 @@ package com.sos.joc.classes.proxy;
 
 import java.util.Base64;
 
-import js7.proxy.javaapi.data.auth.JCredentials;
+import js7.data_for_java.auth.JCredentials;
 
 public enum ProxyUser {
     

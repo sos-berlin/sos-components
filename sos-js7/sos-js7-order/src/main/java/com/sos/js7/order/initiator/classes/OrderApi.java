@@ -41,24 +41,24 @@ import com.sos.js7.order.initiator.OrderListSynchronizer;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
-import js7.controller.data.ControllerCommand.AddOrdersResponse;
+import js7.data.controller.ControllerCommand.AddOrdersResponse;
 import js7.data.order.OrderId;
 import js7.data.value.BooleanValue;
 import js7.data.value.NumberValue;
 import js7.data.value.StringValue;
 import js7.data.value.Value;
 import js7.data.workflow.WorkflowPath;
-import js7.proxy.javaapi.data.order.JFreshOrder;
-import js7.proxy.javaapi.data.order.JOrder;
-import js7.proxy.javaapi.data.order.JOrderPredicates;
+import js7.data_for_java.order.JFreshOrder;
+import js7.data_for_java.order.JOrder;
+import js7.data_for_java.order.JOrderPredicates;
 import reactor.core.publisher.Flux;
 
 public class OrderApi {
 
-    public static void addOrders__not_used____(AddOrders startOrders, String userAccount) throws JocConfigurationException, DBConnectionRefusedException,
-            DBOpenSessionException, JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, DBMissingDataException,
-            DBInvalidDataException, JsonProcessingException, SOSException, URISyntaxException, ParseException, InterruptedException,
-            ExecutionException, TimeoutException {
+    public static void addOrders__not_used____(AddOrders startOrders, String userAccount) throws JocConfigurationException,
+            DBConnectionRefusedException, DBOpenSessionException, JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException,
+            DBMissingDataException, DBInvalidDataException, JsonProcessingException, SOSException, URISyntaxException, ParseException,
+            InterruptedException, ExecutionException, TimeoutException {
         OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
         orderInitiatorSettings.setUserAccount(userAccount);
 
@@ -108,9 +108,9 @@ public class OrderApi {
                 } else if (val instanceof Long) {
                     arguments.put(key, NumberValue.of((Long) val));
                 } else if (val instanceof Double) {
-                    arguments.put(key, NumberValue.of(scala.math.BigDecimal.javaBigDecimal2bigDecimal(BigDecimal.valueOf((Double) val))));
+                    arguments.put(key, NumberValue.of(BigDecimal.valueOf((Double) val)));
                 } else if (val instanceof BigDecimal) {
-                    arguments.put(key, NumberValue.of(scala.math.BigDecimal.javaBigDecimal2bigDecimal((BigDecimal) val)));
+                    arguments.put(key, NumberValue.of((BigDecimal) val));
                 }
             }
         }

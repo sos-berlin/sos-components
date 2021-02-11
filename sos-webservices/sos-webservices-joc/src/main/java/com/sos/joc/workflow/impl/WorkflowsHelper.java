@@ -13,10 +13,10 @@ import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.workflow.Branch;
 
-import js7.proxy.javaapi.data.controller.JControllerState;
-import js7.proxy.javaapi.data.order.JOrder;
-import js7.proxy.javaapi.data.order.JOrderPredicates;
-import js7.proxy.javaapi.data.workflow.JWorkflowId;
+import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.order.JOrder;
+import js7.data_for_java.order.JOrderPredicates;
+import js7.data_for_java.workflow.JWorkflowId;
 
 public class WorkflowsHelper {
     

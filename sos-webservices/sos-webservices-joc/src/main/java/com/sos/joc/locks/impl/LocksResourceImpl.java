@@ -33,7 +33,7 @@ import com.sos.joc.model.lock.LocksFilter;
 import com.sos.joc.model.lock.common.LockEntry;
 import com.sos.schema.JsonValidator;
 
-import js7.proxy.javaapi.data.controller.JControllerState;
+import js7.data_for_java.controller.JControllerState;
 
 @Path("locks")
 public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource {

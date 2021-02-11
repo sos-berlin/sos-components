@@ -33,11 +33,11 @@ import js7.data.lock.LockState;
 import js7.data.order.OrderId;
 import js7.data.workflow.Instruction;
 import js7.data.workflow.instructions.LockInstruction;
-import js7.proxy.javaapi.data.controller.JControllerState;
-import js7.proxy.javaapi.data.lock.JLockState;
-import js7.proxy.javaapi.data.order.JOrder;
-import js7.proxy.javaapi.data.workflow.JWorkflow;
-import js7.proxy.javaapi.data.workflow.JWorkflowId;
+import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.lock.JLockState;
+import js7.data_for_java.order.JOrder;
+import js7.data_for_java.workflow.JWorkflow;
+import js7.data_for_java.workflow.JWorkflowId;
 import scala.collection.JavaConverters;
 import scala.compat.java8.OptionConverters;
 

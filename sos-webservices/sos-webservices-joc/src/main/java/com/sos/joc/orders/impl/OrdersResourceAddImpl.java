@@ -46,9 +46,9 @@ import js7.data.value.StringValue;
 import js7.data.value.Value;
 import js7.data.workflow.WorkflowPath;
 import js7.proxy.javaapi.JControllerProxy;
-import js7.proxy.javaapi.data.controller.JControllerState;
-import js7.proxy.javaapi.data.order.JFreshOrder;
-import js7.proxy.javaapi.data.workflow.JWorkflow;
+import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.order.JFreshOrder;
+import js7.data_for_java.workflow.JWorkflow;
 import reactor.core.publisher.Flux;
 
 @Path("orders")
@@ -157,9 +157,9 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                 } else if (val instanceof Long) {
                     arguments.put(key, NumberValue.of((Long) val));
                 } else if (val instanceof Double) {
-                    arguments.put(key, NumberValue.of(scala.math.BigDecimal.javaBigDecimal2bigDecimal(BigDecimal.valueOf((Double) val))));
+                    arguments.put(key, NumberValue.of(BigDecimal.valueOf((Double) val)));
                 } else if (val instanceof BigDecimal) {
-                    arguments.put(key, NumberValue.of(scala.math.BigDecimal.javaBigDecimal2bigDecimal((BigDecimal) val)));
+                    arguments.put(key, NumberValue.of(((BigDecimal) val)));
                 }
             }
         }

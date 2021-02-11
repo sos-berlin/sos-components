@@ -8,10 +8,10 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 
+import js7.data_for_java.auth.JAdmission;
+import js7.data_for_java.auth.JHttpsConfig;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JProxyContext;
-import js7.proxy.javaapi.data.auth.JAdmission;
-import js7.proxy.javaapi.data.auth.JHttpsConfig;
 
 public class ControllerApiContext {
 
