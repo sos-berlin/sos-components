@@ -1,12 +1,8 @@
 package com.sos.joc.cluster.configuration;
 
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.net.UnknownHostException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,33 +49,7 @@ public class JocConfiguration {
         }
         return hostname;
     }
-
-    public static Properties readConfiguration(Path path) {
-        String method = "readConfiguration";
-        if (!Files.exists(path)) {
-            LOGGER.info(String.format("[%s][%s]not found. use defaults.", method, path));
-            return new Properties();
-        }
-
-        LOGGER.info(String.format("[%s]%s", method, path));
-
-        Properties conf = new Properties();
-        try (InputStream in = Files.newInputStream(path)) {
-            conf.load(in);
-        } catch (Exception ex) {
-            String addition = "";
-            if (ex instanceof FileNotFoundException) {
-                if (Files.exists(path) && !Files.isReadable(path)) {
-                    addition = " (exists but not readable)";
-                }
-            }
-            LOGGER.error(String.format("[%s][%s]error on read the properties file%s: %s", method, path, addition, ex.toString()), ex);
-
-        }
-        LOGGER.info(String.format("[%s]%s", method, conf));
-        return conf;
-    }
-
+ 
     public Path getResourceDirectory() {
         return resourceDirectory;
     }

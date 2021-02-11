@@ -62,7 +62,7 @@ public class JocClusterService {
                 .getResourceDir(), Globals.getJocSecurityLevel().value(), Globals.sosCockpitProperties.getProperty("title"),
                 Globals.sosCockpitProperties.getProperty("ordering", 0));
         startTime = new Date();
-        //MDC.remove("clusterService");
+        // MDC.remove("clusterService");
     }
 
     public static synchronized JocClusterService getInstance() {
@@ -80,7 +80,7 @@ public class JocClusterService {
         MDC.put("clusterService", ClusterServices.cluster.name());
         JocClusterAnswer answer = JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
         if (cluster == null) {
-            JocClusterConfiguration clusterConfig = new JocClusterConfiguration(config.getResourceDirectory());
+            JocClusterConfiguration clusterConfig = new JocClusterConfiguration(Globals.sosCockpitProperties.getProperties());
             threadPool = Executors.newFixedThreadPool(1, new JocClusterThreadFactory(clusterConfig.getThreadGroup(), THREAD_NAME_PREFIX));
             Runnable task = new Runnable() {
 

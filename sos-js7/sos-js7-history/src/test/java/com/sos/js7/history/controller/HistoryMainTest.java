@@ -53,8 +53,8 @@ public class HistoryMainTest {
 
     private List<ControllerConfiguration> getControllers() {
         Properties p = new Properties();
-        p.setProperty("jobscheduler_id", "js7.x");
-        p.setProperty("primary_master_uri", "http://localhost:5444");
+        p.setProperty("controller_id", "js7.x");
+        p.setProperty("primary_controller_uri", "http://localhost:5444");
 
         List<ControllerConfiguration> list = new ArrayList<ControllerConfiguration>();
         ControllerConfiguration c = new ControllerConfiguration();

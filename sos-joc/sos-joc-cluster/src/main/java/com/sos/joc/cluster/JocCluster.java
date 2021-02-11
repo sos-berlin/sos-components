@@ -151,17 +151,16 @@ public class JocCluster {
                         } else {
                             p = new Properties();
                         }
-                        // TODO user, pass
-                        p.setProperty("jobscheduler_id", item.getControllerId());
+                        p.setProperty("controller_id", item.getControllerId());
                         if (item.getIsPrimary()) {
-                            p.setProperty("primary_master_uri", item.getUri());
+                            p.setProperty("primary_controller_uri", item.getUri());
                             if (item.getClusterUri() != null) {
-                                p.setProperty("primary_cluster_uri", item.getClusterUri());
+                                p.setProperty("primary_controller_cluster_uri", item.getClusterUri());
                             }
                         } else {
-                            p.setProperty("backup_master_uri", item.getUri());
+                            p.setProperty("secondary_controller_uri", item.getUri());
                             if (item.getClusterUri() != null) {
-                                p.setProperty("backup_cluster_uri", item.getClusterUri());
+                                p.setProperty("secondary_controller_cluster_uri", item.getClusterUri());
                             }
                         }
                         map.put(item.getControllerId(), p);

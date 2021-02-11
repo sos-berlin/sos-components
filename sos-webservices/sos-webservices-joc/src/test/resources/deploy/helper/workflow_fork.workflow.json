@@ -48,7 +48,7 @@
             "agentId"   : "agent",
             "taskLimit" : 1,
             "executable" : {
-                "TYPE"      : "ExecutableScript",
+                "TYPE"      : "ScriptExecutable",
                 "script"    : "dir"
             },
             "returnCodeMeaning" : {
@@ -63,7 +63,7 @@
             "agentId" 	: "agent",
             "taskLimit" : 1,
             "executable" : {
-                "TYPE" : "ExecutableScript",
+                "TYPE" : "ScriptExecutable",
                 "script" : "dir"
             },
             "returnCodeMeaning" : {
@@ -78,7 +78,7 @@
             "agentId" 	: "agent",
             "taskLimit" : 1,
             "executable" : {
-                "TYPE" : "ExecutableScript",
+                "TYPE" : "ScriptExecutable",
                 "script" : "dir"
             },
             "defaultArguments" : {
@@ -90,7 +90,7 @@
             "agentId" 	: "agent",
             "taskLimit" : 1,
             "executable" : {
-                "TYPE" : "ExecutableScript",
+                "TYPE" : "ScriptExecutable",
                 "script" : "dir"
             },
             "defaultArguments" : {

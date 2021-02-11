@@ -553,7 +553,7 @@ public class HistoryControllerHandler {
 
     private void setIdentifier(String type) {
         String identifier = controllerConfig.getCurrent().getId();
-        if (controllerConfig.getBackup() != null) {
+        if (controllerConfig.getSecondary() != null) {
             identifier = "cluster][" + identifier;
             if (!SOSString.isEmpty(type)) {
                 identifier = identifier + "][" + type;

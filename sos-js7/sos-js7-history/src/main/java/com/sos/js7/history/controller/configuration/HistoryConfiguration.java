@@ -19,14 +19,14 @@ public class HistoryConfiguration {
     private String logDir = "logs/history";
     // commit/store after n inserts
     private int maxTransactions = 100;
-    // minutes, JS7 Proxy ControllerApi
-    private int releaseEventsInterval = 15;
 
     // Flux - Collect incoming values into a List that will be pushed into the returned Flux every timespan OR maxSize items.
     private int bufferTimeoutMaxSize = 1000; // the max collected size
     private int bufferTimeoutMaxTime = 1; // the timeout in seconds to use to release a buffered list
 
-    // TODO
+    // minutes, JS7 Proxy ControllerApi
+    private int releaseEventsInterval = 15;
+
     public void load(final Properties conf) throws Exception {
         if (conf.getProperty("history_log_dir") != null) {
             logDir = HistoryUtil.resolveVars(conf.getProperty("history_log_dir").trim());
@@ -49,18 +49,18 @@ public class HistoryConfiguration {
         if (conf.getProperty("history_max_transactions") != null) {
             maxTransactions = Integer.parseInt(conf.getProperty("history_max_transactions").trim());
         }
-
-        if (conf.getProperty("history_release_events_interval") != null) {
-            releaseEventsInterval = Integer.parseInt(conf.getProperty("history_release_events_interval").trim());
-        }
-
         if (conf.getProperty("history_buffer_timeout_max_size") != null) {
             bufferTimeoutMaxSize = Integer.parseInt(conf.getProperty("history_buffer_timeout_max_size").trim());
         }
         if (conf.getProperty("history_buffer_timeout_max_time") != null) {
             bufferTimeoutMaxTime = Integer.parseInt(conf.getProperty("history_buffer_timeout_max_time").trim());
         }
-
+        if (conf.getProperty("history_release_events_interval") != null) {
+            releaseEventsInterval = Integer.parseInt(conf.getProperty("history_release_events_interval").trim());
+        }
+        LOGGER.info(String.format(
+                "[history]max_transactions=%s, buffer_timeout_max_size=%s, buffer_timeout_max_time=%ss, release_events_interval=%sm", maxTransactions,
+                bufferTimeoutMaxSize, bufferTimeoutMaxTime, releaseEventsInterval));
     }
 
     public String getLogDir() {

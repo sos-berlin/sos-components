@@ -82,7 +82,7 @@ public class Controller {
     }
 
     public String getType() {
-        return primary ? "Primary" : "Backup";
+        return primary ? "Primary" : "Secondary";
     }
 
     @Override
