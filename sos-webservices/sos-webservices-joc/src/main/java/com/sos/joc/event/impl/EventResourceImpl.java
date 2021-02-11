@@ -46,7 +46,7 @@ import com.sos.joc.model.event.EventType;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.schema.JsonValidator;
 
-import js7.proxy.javaapi.data.workflow.JWorkflowId;
+import js7.data_for_java.workflow.JWorkflowId;
 
 @Path("events")
 public class EventResourceImpl extends JOCResourceImpl implements IEventResource {

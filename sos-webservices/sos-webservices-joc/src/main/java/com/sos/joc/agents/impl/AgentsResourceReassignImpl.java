@@ -18,8 +18,8 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 
-import js7.proxy.javaapi.data.agent.JAgentRef;
-import js7.proxy.javaapi.data.item.JUpdateItemOperation;
+import js7.data_for_java.agent.JAgentRef;
+import js7.data_for_java.item.JUpdateItemOperation;
 import reactor.core.publisher.Flux;
 
 @Path("agents")

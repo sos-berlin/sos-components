@@ -341,7 +341,7 @@ public class DBLayerDailyPlannedOrders {
             SOSHibernateException {
         FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
         filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
-        LOGGER.info("----> " + plannedOrder.getFreshOrder().getScheduledFor() + ":" + new Date(plannedOrder.getFreshOrder().getScheduledFor()));
+        LOGGER.trace("----> " + plannedOrder.getFreshOrder().getScheduledFor() + ":" + new Date(plannedOrder.getFreshOrder().getScheduledFor()));
         filter.setControllerId(plannedOrder.getControllerId());
         filter.setWorkflowName(plannedOrder.getFreshOrder().getWorkflowPath());
         filter.setScheduleName(Paths.get(plannedOrder.getSchedule().getPath()).getFileName().toString());

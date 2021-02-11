@@ -8,34 +8,34 @@ public class ControllerConfiguration {
 
     private Properties config;
     private Controller primary;
-    private Controller backup;
+    private Controller secondary;
     private Controller current;
 
-    // TODO
     public void load(final Properties conf) throws Exception {
         config = conf;
-        Controller primary = new Controller(conf.getProperty("jobscheduler_id"), conf.getProperty("primary_master_uri"), conf.getProperty(
-                "primary_cluster_uri"), conf.getProperty("primary_master_user"), conf.getProperty("primary_master_user_password"));
+        Controller primary = new Controller(conf.getProperty("controller_id"), conf.getProperty("primary_controller_uri"), conf.getProperty(
+                "primary_controller_cluster_uri"), conf.getProperty("primary_controller_user"), conf.getProperty("primary_controller_user_password"));
 
-        Controller backup = null;
-        if (!SOSString.isEmpty(conf.getProperty("backup_master_uri"))) {
-            backup = new Controller(primary.getId(), conf.getProperty("backup_master_uri"), conf.getProperty("backup_cluster_uri"), conf.getProperty(
-                    "backup_master_user"), conf.getProperty("backup_master_user_password"));
+        Controller secondary = null;
+        if (!SOSString.isEmpty(conf.getProperty("secondary_controller_uri"))) {
+            secondary = new Controller(primary.getId(), conf.getProperty("secondary_controller_uri"), conf.getProperty(
+                    "secondary_controller_cluster_uri"), conf.getProperty("secondary_controller_user"), conf.getProperty(
+                            "secondary_controller_user_password"));
         }
-        init(primary, backup);
+        init(primary, secondary);
     }
 
-    private void init(Controller primaryController, Controller backupController) throws Exception {
+    private void init(Controller primaryController, Controller secondaryController) throws Exception {
         if (primaryController == null) {
             throw new Exception("primaryController is null");
         }
         primary = primaryController;
         primary.setPrimary(true);
         current = primary;
-        backup = backupController;
-        if (backup != null) {
-            backup.setId(primaryController.getId());
-            backup.setPrimary(false);
+        secondary = secondaryController;
+        if (secondary != null) {
+            secondary.setId(primaryController.getId());
+            secondary.setPrimary(false);
         }
     }
 
@@ -43,16 +43,16 @@ public class ControllerConfiguration {
         if (isPrimary && controller.equals(primary)) {
             return;
         }
-        if (backup != null) {
-            if (!isPrimary && controller.equals(backup)) {
+        if (secondary != null) {
+            if (!isPrimary && controller.equals(secondary)) {
                 return;
             }
-            Controller oldBackUp = backup;
+            Controller oldSecondary = secondary;
 
-            backup = primary;
-            backup.setPrimary(false);
+            secondary = primary;
+            secondary.setPrimary(false);
 
-            primary = oldBackUp;
+            primary = oldSecondary;
             primary.setPrimary(true);
         }
     }
@@ -61,8 +61,8 @@ public class ControllerConfiguration {
         return primary;
     }
 
-    public Controller getBackup() {
-        return backup;
+    public Controller getSecondary() {
+        return secondary;
     }
 
     public Controller getCurrent() {
@@ -70,15 +70,15 @@ public class ControllerConfiguration {
     }
 
     public Controller getNotCurrent() {
-        if (current != null && backup != null) {
-            return current.equals(primary) ? backup : primary;
+        if (current != null && secondary != null) {
+            return current.equals(primary) ? secondary : primary;
         }
         return null;
     }
 
     public void switchCurrent() {
-        if (current != null && backup != null) {
-            current = current.equals(primary) ? backup : primary;
+        if (current != null && secondary != null) {
+            current = current.equals(primary) ? secondary : primary;
         }
     }
 
@@ -88,11 +88,11 @@ public class ControllerConfiguration {
 
     public ControllerConfiguration copy(String user, String pass) {
         Properties p = config;
-        p.put("primary_master_user", user);
-        p.put("primary_master_user_password", pass);
-        if (backup != null) {
-            p.put("backup_master_user", user);
-            p.put("backup_master_user_password", pass);
+        p.put("primary_controller_user", user);
+        p.put("primary_controller_user_password", pass);
+        if (secondary != null) {
+            p.put("secondary_controller_user", user);
+            p.put("secondary_controller_user_password", pass);
         }
         ControllerConfiguration m = new ControllerConfiguration();
         try {

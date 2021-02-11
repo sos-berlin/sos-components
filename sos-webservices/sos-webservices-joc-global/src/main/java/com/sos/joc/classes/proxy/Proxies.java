@@ -10,7 +10,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -25,10 +24,10 @@ import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
+import com.sos.joc.event.bean.proxy.ProxyCoupled;
 import com.sos.joc.event.bean.proxy.ProxyRemoved;
 import com.sos.joc.event.bean.proxy.ProxyRestarted;
 import com.sos.joc.event.bean.proxy.ProxyStarted;
-import com.sos.joc.event.bean.proxy.ProxyCoupled;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -43,11 +42,11 @@ import js7.base.web.Uri;
 import js7.data.agent.AgentId;
 import js7.data.agent.AgentRef;
 import js7.data.cluster.ClusterSetting.Watch;
+import js7.data_for_java.agent.JAgentRef;
+import js7.data_for_java.auth.JHttpsConfig;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.JProxyContext;
-import js7.proxy.javaapi.data.agent.JAgentRef;
-import js7.proxy.javaapi.data.auth.JHttpsConfig;
 
 public class Proxies {
 

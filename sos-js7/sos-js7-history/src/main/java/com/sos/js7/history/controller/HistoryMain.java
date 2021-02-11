@@ -20,7 +20,7 @@ import org.slf4j.MDC;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSPath;
-import com.sos.commons.util.SOSString;
+import com.sos.joc.Globals;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
@@ -43,7 +43,6 @@ public class HistoryMain extends JocClusterService {
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     private static final String IDENTIFIER = JocClusterServices.history.name();
-    private static final String PROPERTIES_FILE = "history.properties";
     private static final long AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER = 3;// in seconds
 
     private final Path logDir;
@@ -127,19 +126,15 @@ public class HistoryMain extends JocClusterService {
     }
 
     private void setConfig() {
-        String method = "setConfig";
-
         config = new Configuration();
         try {
-            Properties conf = JocConfiguration.readConfiguration(getJocConfig().getResourceDirectory().resolve(PROPERTIES_FILE).normalize());
+            Properties conf = Globals.sosCockpitProperties.getProperties();
             config.getMailer().load(conf);
             config.getHandler().load(conf);
 
             HistoryConfiguration h = new HistoryConfiguration();
             h.load(conf);
             config.setApp(h);
-
-            LOGGER.info(String.format("[%s]%s", method, SOSString.toString(config)));
         } catch (Exception ex) {
             LOGGER.error(ex.toString(), ex);
         }

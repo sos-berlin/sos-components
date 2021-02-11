@@ -46,11 +46,11 @@ import com.sos.schema.JsonValidator;
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.workflow.WorkflowPath;
-import js7.proxy.javaapi.data.controller.JControllerState;
-import js7.proxy.javaapi.data.order.JOrder;
-import js7.proxy.javaapi.data.order.JOrderPredicates;
-import js7.proxy.javaapi.data.workflow.JWorkflow;
-import js7.proxy.javaapi.data.workflow.JWorkflowId;
+import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.order.JOrder;
+import js7.data_for_java.order.JOrderPredicates;
+import js7.data_for_java.workflow.JWorkflow;
+import js7.data_for_java.workflow.JWorkflowId;
 
 @Path("workflows")
 public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflowsResource {

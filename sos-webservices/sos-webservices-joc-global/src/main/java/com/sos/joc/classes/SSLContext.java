@@ -18,9 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import js7.base.generic.SecretString;
-import js7.common.akkahttp.https.KeyStoreRef;
-import js7.common.akkahttp.https.TrustStoreRef;
-import js7.proxy.javaapi.data.auth.JHttpsConfig;
+import js7.base.io.https.KeyStoreRef;
+import js7.base.io.https.TrustStoreRef;
+import js7.data_for_java.auth.JHttpsConfig;
 
 public class SSLContext {
 
@@ -43,48 +43,48 @@ public class SSLContext {
     private volatile char[] keyPassChars;
     private volatile javax.net.ssl.SSLContext netSSlContext;
     private volatile JHttpsConfig httpsConfig;
-    
+
     private SSLContext() {
     }
-    
+
     public static synchronized SSLContext getInstance() {
         if (sslContext == null) {
-            sslContext = new SSLContext(); 
+            sslContext = new SSLContext();
         }
         return sslContext;
     }
-    
+
     public JHttpsConfig getHttpsConfig() {
         return httpsConfig;
     }
-    
+
     public KeyStore getKeyStore() {
         return keystore;
     }
-    
+
     public char[] getKeyStorePass() {
         return keyPassChars;
     }
-    
+
     public KeyStore getTrustStore() {
         return truststore;
     }
-    
+
     public javax.net.ssl.SSLContext getSSLContext() {
         return netSSlContext;
     }
-    
+
     public synchronized JHttpsConfig loadHttpsConfig() {
         loadKeyStore();
         loadTrustStore();
         setHttpsConfig();
         return httpsConfig;
     }
-    
+
     public synchronized void setJocProperties(JocCockpitProperties properties) {
         sosJocProperties = properties;
     }
-    
+
     public synchronized void setSSLContext() {
         loadHttpsConfig();
         if (keystore != null || truststore != null) {
@@ -106,12 +106,12 @@ public class SSLContext {
             }
         }
     }
-    
+
     public synchronized void setSSLContext(JocCockpitProperties properties) {
         setJocProperties(properties);
         setSSLContext();
     }
-    
+
     public synchronized KeyStoreRef loadKeyStore() {
         if (sosJocProperties == null) {
             sosJocProperties = new JocCockpitProperties();
@@ -148,12 +148,12 @@ public class SSLContext {
         }
         return keyStoreRef;
     }
-    
+
     public synchronized KeyStoreRef loadKeyStore(JocCockpitProperties properties) {
         setJocProperties(properties);
         return loadKeyStore();
     }
-    
+
     public synchronized TrustStoreRef loadTrustStore() {
         if (sosJocProperties == null) {
             sosJocProperties = new JocCockpitProperties();
@@ -188,16 +188,16 @@ public class SSLContext {
         }
         return trustStoreRef;
     }
-    
+
     public synchronized TrustStoreRef loadTrustStore(JocCockpitProperties properties) {
         setJocProperties(properties);
         return loadTrustStore();
     }
-    
+
     public void setHttpsConfig() {
         getHttpsConfig(keyStoreRef, trustStoreRef);
     }
-    
+
     public JHttpsConfig getHttpsConfig(KeyStoreRef keyStoreRef, TrustStoreRef trustStoreRef) {
         if (keyStoreRef == null && trustStoreRef == null) {
             httpsConfig = JHttpsConfig.empty();
@@ -228,7 +228,7 @@ public class SSLContext {
         }
         return false;
     }
-    
+
     private boolean reloadTrustStore(Path path, String type, String pass) throws IOException {
         return reloadTrustStore(path, type, pass, Files.getLastModifiedTime(path).toMillis());
     }
@@ -256,7 +256,7 @@ public class SSLContext {
         keyPassChars = null;
         keyStoreRef = null;
     }
-    
+
     private void resetTrustStore() {
         truststorePath = null;
         truststoreType = null;
@@ -292,7 +292,7 @@ public class SSLContext {
         }
         return null;
     }
-    
+
     private KeyStore readTrustStore() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
         KeyStore keyStore = KeyStore.getInstance(getTruststoreType());
         keyStore.load(Files.newInputStream(truststorePath), getTruststorePass());
@@ -312,7 +312,7 @@ public class SSLContext {
         }
         return truststoreType;
     }
-    
+
     private SecretString SecretString(String pass) {
         if (pass == null) {
             pass = "";

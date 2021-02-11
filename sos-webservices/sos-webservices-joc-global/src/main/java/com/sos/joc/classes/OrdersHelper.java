@@ -30,9 +30,9 @@ import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.agent.AgentId;
 import js7.data.order.Order;
-import js7.proxy.javaapi.data.controller.JControllerState;
-import js7.proxy.javaapi.data.order.JOrder;
-import js7.proxy.javaapi.data.workflow.JWorkflow;
+import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.order.JOrder;
+import js7.data_for_java.workflow.JWorkflow;
 
 public class OrdersHelper {
 

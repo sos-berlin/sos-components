@@ -18,7 +18,7 @@ import com.sos.joc.model.controller.ComponentStateText;
 import com.sos.joc.model.controller.ConnectionState;
 import com.sos.joc.model.controller.ConnectionStateText;
 
-import js7.proxy.javaapi.data.cluster.JClusterState;
+import js7.data_for_java.cluster.JClusterState;
 
 public class States {
     

@@ -164,7 +164,7 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
 
                 for (Map.Entry<String, Object> variable : dailyplanModifyOrder.getVariables().getAdditionalProperties().entrySet()) {
 
-                    String varName = variable.getValue().toString();
+                    String varName = variable.getKey().toString();
 
                     if (mapOfvariables.get(varName) == null) {
 

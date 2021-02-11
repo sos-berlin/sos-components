@@ -26,7 +26,6 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.ModifyOrders;
 import com.sos.joc.orders.resource.IOrdersResourceModify;
-import com.sos.js7.order.initiator.db.DBLayerDailyPlanHistory;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
@@ -38,13 +37,13 @@ import js7.data.item.VersionedItemId;
 import js7.data.order.Order;
 import js7.data.order.OrderId;
 import js7.data.workflow.WorkflowPath;
-import js7.proxy.javaapi.data.command.JCancelMode;
-import js7.proxy.javaapi.data.command.JSuspendMode;
-import js7.proxy.javaapi.data.controller.JControllerState;
-import js7.proxy.javaapi.data.order.JHistoricOutcome;
-import js7.proxy.javaapi.data.order.JOrder;
-import js7.proxy.javaapi.data.workflow.JWorkflowId;
-import js7.proxy.javaapi.data.workflow.position.JPosition;
+import js7.data_for_java.command.JCancelMode;
+import js7.data_for_java.command.JSuspendMode;
+import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.order.JHistoricOutcome;
+import js7.data_for_java.order.JOrder;
+import js7.data_for_java.workflow.JWorkflowId;
+import js7.data_for_java.workflow.position.JPosition;
 
 @Path("orders")
 public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrdersResourceModify {

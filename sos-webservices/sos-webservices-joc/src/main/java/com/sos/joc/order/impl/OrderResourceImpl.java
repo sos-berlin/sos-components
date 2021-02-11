@@ -26,8 +26,8 @@ import com.sos.joc.order.resource.IOrderResource;
 import com.sos.schema.JsonValidator;
 
 import js7.data.order.OrderId;
-import js7.proxy.javaapi.data.controller.JControllerState;
-import js7.proxy.javaapi.data.order.JOrder;
+import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.order.JOrder;
 
 @Path("order")
 public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource {

@@ -74,15 +74,15 @@ import js7.data.order.OrderEvent.OrderLockReleased;
 import js7.data.order.OrderEvent.OrderStderrWritten;
 import js7.data.order.OrderEvent.OrderStdoutWritten;
 import js7.data.order.OrderId;
-import js7.proxy.data.ProxyEvent;
+import js7.data_for_java.order.JOrder.Forked;
+import js7.data_for_java.order.JOrderEvent.JOrderFailed;
+import js7.data_for_java.order.JOrderEvent.JOrderForked;
+import js7.data_for_java.order.JOrderEvent.JOrderJoined;
+import js7.data_for_java.order.JOrderEvent.JOrderProcessed;
+import js7.data_for_java.problem.JProblem;
+import js7.proxy.data.event.ProxyEvent;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.data.controller.JEventAndControllerState;
-import js7.proxy.javaapi.data.order.JOrder.Forked;
-import js7.proxy.javaapi.data.order.JOrderEvent.JOrderFailed;
-import js7.proxy.javaapi.data.order.JOrderEvent.JOrderForked;
-import js7.proxy.javaapi.data.order.JOrderEvent.JOrderJoined;
-import js7.proxy.javaapi.data.order.JOrderEvent.JOrderProcessed;
-import js7.proxy.javaapi.data.problem.JProblem;
 import js7.proxy.javaapi.eventbus.JStandardEventBus;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.SignalType;
@@ -553,7 +553,7 @@ public class HistoryControllerHandler {
 
     private void setIdentifier(String type) {
         String identifier = controllerConfig.getCurrent().getId();
-        if (controllerConfig.getBackup() != null) {
+        if (controllerConfig.getSecondary() != null) {
             identifier = "cluster][" + identifier;
             if (!SOSString.isEmpty(type)) {
                 identifier = identifier + "][" + type;
@@ -600,7 +600,7 @@ public class HistoryControllerHandler {
                 String method = "releaseEvents";
                 try {
                     LOGGER.info(String.format("[%s][%s]%s", getIdentifier(), method, eventId));
-                    js7.proxy.javaapi.data.common.VavrUtils.await(api.releaseEvents(eventId));
+                    js7.data_for_java.vavr.VavrUtils.await(api.releaseEvents(eventId));
                     lastReleaseEventId = eventId;
                 } catch (Throwable t) {
                     LOGGER.error(String.format("[%s][%s][%s]%s", getIdentifier(), method, eventId, t.toString()));

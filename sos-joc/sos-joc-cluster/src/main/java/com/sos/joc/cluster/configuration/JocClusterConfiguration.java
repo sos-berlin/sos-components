@@ -1,7 +1,5 @@
 package com.sos.joc.cluster.configuration;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -22,8 +20,6 @@ public class JocClusterConfiguration {
     private static final String CLASS_NAME_HISTORY = "com.sos.js7.history.controller.HistoryMain";
     private static final String CLASS_NAME_DAILYPLAN = "com.sos.js7.order.initiator.OrderInitiatorMain";
 
-    private static final String PROPERTIES_FILE = "joc/cluster.properties";
-
     private List<Class<?>> services;
     private final ThreadGroup threadGroup;
 
@@ -42,13 +38,9 @@ public class JocClusterConfiguration {
     // seconds - max wait time = switch_member_wait_counter_on_error*switchMemberWaitIntervalOnError+ execution time
     private int switchMemberWaitIntervalOnError = 2;
 
-    public JocClusterConfiguration(Path resourceDirectory) {
-        Path configFile = resourceDirectory.resolve(PROPERTIES_FILE).normalize();
-        if (Files.exists(configFile)) {
-            Properties conf = JocConfiguration.readConfiguration(resourceDirectory.resolve(PROPERTIES_FILE).normalize());
-            if (conf != null) {
-                setConfiguration(conf);
-            }
+    public JocClusterConfiguration(Properties properties) {
+        if (properties != null) {
+            setConfiguration(properties);
         }
         threadGroup = new ThreadGroup(JocClusterConfiguration.IDENTIFIER);
         register();
@@ -70,26 +62,26 @@ public class JocClusterConfiguration {
 
     private void setConfiguration(Properties conf) {
         try {
-            if (conf.getProperty("heart_beat_exceeded_interval") != null) {
-                heartBeatExceededInterval = Integer.parseInt(conf.getProperty("heart_beat_exceeded_interval").trim());
+            if (conf.getProperty("cluster_heart_beat_exceeded_interval") != null) {
+                heartBeatExceededInterval = Integer.parseInt(conf.getProperty("cluster_heart_beat_exceeded_interval").trim());
             }
-            if (conf.getProperty("polling_interval") != null) {
-                pollingInterval = Integer.parseInt(conf.getProperty("polling_interval").trim());
+            if (conf.getProperty("cluster_polling_interval") != null) {
+                pollingInterval = Integer.parseInt(conf.getProperty("cluster_polling_interval").trim());
             }
-            if (conf.getProperty("polling_wait_interval_on_error") != null) {
-                pollingWaitIntervalOnError = Integer.parseInt(conf.getProperty("polling_wait_interval_on_error").trim());
+            if (conf.getProperty("cluster_polling_wait_interval_on_error") != null) {
+                pollingWaitIntervalOnError = Integer.parseInt(conf.getProperty("cluster_polling_wait_interval_on_error").trim());
             }
-            if (conf.getProperty("switch_member_wait_counter_on_success") != null) {
-                switchMemberWaitCounterOnSuccess = Integer.parseInt(conf.getProperty("switch_member_wait_counter_on_success").trim());
+            if (conf.getProperty("cluster_switch_member_wait_counter_on_success") != null) {
+                switchMemberWaitCounterOnSuccess = Integer.parseInt(conf.getProperty("cluster_switch_member_wait_counter_on_success").trim());
             }
-            if (conf.getProperty("switch_member_wait_interval_on_success") != null) {
-                switchMemberWaitIntervalOnSuccess = Integer.parseInt(conf.getProperty("switch_member_wait_interval_on_success").trim());
+            if (conf.getProperty("cluster_switch_member_wait_interval_on_success") != null) {
+                switchMemberWaitIntervalOnSuccess = Integer.parseInt(conf.getProperty("cluster_switch_member_wait_interval_on_success").trim());
             }
-            if (conf.getProperty("switch_member_wait_counter_on_error") != null) {
-                switchMemberWaitCounterOnError = Integer.parseInt(conf.getProperty("switch_member_wait_counter_on_error").trim());
+            if (conf.getProperty("cluster_switch_member_wait_counter_on_error") != null) {
+                switchMemberWaitCounterOnError = Integer.parseInt(conf.getProperty("cluster_switch_member_wait_counter_on_error").trim());
             }
-            if (conf.getProperty("switch_member_wait_interval_on_error") != null) {
-                switchMemberWaitIntervalOnError = Integer.parseInt(conf.getProperty("switch_member_wait_interval_on_error").trim());
+            if (conf.getProperty("cluster_switch_member_wait_interval_on_error") != null) {
+                switchMemberWaitIntervalOnError = Integer.parseInt(conf.getProperty("cluster_switch_member_wait_interval_on_error").trim());
             }
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);

@@ -247,7 +247,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                     LOGGER.error(String.format("%s[%s]%s", method, count, e.toString()));
                     sendConnectionRefusedNotifierOnError(String.format("%s[%s]", method, count), e);
                     wait(getConfig().getHandler().getWaitIntervalOnConnectionRefused());
-                    if (controllerConfig.getBackup() != null && switchOnError) {
+                    if (controllerConfig.getSecondary() != null && switchOnError) {
                         controllerConfig.switchCurrent();
                         try {
                             setUri(controllerConfig.getCurrent().getUri());
@@ -281,7 +281,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
     }
 
     public boolean setCurrentController() {
-        if (controllerConfig.getBackup() != null) {
+        if (controllerConfig.getSecondary() != null) {
             EventHandler handler = new EventHandler(getConfig());
             try {
                 handler.setUri(controllerConfig.getCurrent().getUri());
@@ -314,8 +314,8 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
                             LOGGER.error(String.format("[%s][controller switch]can't identify controller to switch", getIdentifier()));
                             LOGGER.error(String.format("[%s][controller switch][controller answer][active=%s]%s", getIdentifier(), event
                                     .getActiveId(), event.getIdToUri()));
-                            LOGGER.error(String.format("[%s][controller switch][configured controllers][primary=%s][backup=%s]", getIdentifier(),
-                                    controllerConfig.getPrimary().getUri4Log(), controllerConfig.getBackup().getUri4Log()));
+                            LOGGER.error(String.format("[%s][controller switch][configured controllers][primary=%s][secondary=%s]", getIdentifier(),
+                                    controllerConfig.getPrimary().getUri4Log(), controllerConfig.getSecondary().getUri4Log()));
                         }
                     }
                     controllerConfig.setClusterControllers(controllerConfig.getCurrent(), event.getActiveId().equalsIgnoreCase("primary"));
@@ -337,7 +337,7 @@ public class LoopEventHandler extends EventHandler implements ILoopEventHandler 
     @Override
     public void setIdentifier(String type) {
         String identifier = controllerConfig.getCurrent().getId();
-        if (controllerConfig.getBackup() != null) {
+        if (controllerConfig.getSecondary() != null) {
             identifier = "cluster][" + identifier;
             if (!SOSString.isEmpty(type)) {
                 identifier = identifier + "][" + type;

@@ -27,7 +27,7 @@
 		"job1": {
 			"agentId": "agent",
 			"executable": {
-				"TYPE": "ExecutableScript",
+				"TYPE": "ScriptExecutable",
 				"script": "dir"
 			},
 			"taskLimit": 1

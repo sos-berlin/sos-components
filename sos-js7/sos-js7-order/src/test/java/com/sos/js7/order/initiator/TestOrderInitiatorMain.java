@@ -53,8 +53,8 @@ import com.sos.js7.event.controller.configuration.controller.ControllerConfigura
 
     private List<ControllerConfiguration> getControllers() {
         Properties p = new Properties();
-        p.setProperty("jobscheduler_id", "controller");
-        p.setProperty("primary_master_uri", "http://localhost:4424");
+        p.setProperty("controller_id", "controller");
+        p.setProperty("primary_controller_uri", "http://localhost:4424");
 
         List<ControllerConfiguration> list = new ArrayList<ControllerConfiguration>();
         ControllerConfiguration c = new ControllerConfiguration();

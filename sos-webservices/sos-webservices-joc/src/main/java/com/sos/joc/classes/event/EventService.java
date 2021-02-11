@@ -21,6 +21,8 @@ import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
+import com.sos.joc.event.bean.history.HistoryEvent;
+import com.sos.joc.event.bean.history.HistoryOrderTaskTerminated;
 import com.sos.joc.event.bean.inventory.InventoryEvent;
 import com.sos.joc.event.bean.problem.ProblemEvent;
 import com.sos.joc.event.bean.proxy.ProxyEvent;
@@ -36,10 +38,10 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.event.EventSnapshot;
 import com.sos.joc.model.event.EventType;
 
-import js7.controller.data.events.AgentRefStateEvent;
-import js7.controller.data.events.ControllerEvent;
 import js7.data.agent.AgentId;
+import js7.data.agent.AgentRefStateEvent;
 import js7.data.cluster.ClusterEvent;
+import js7.data.controller.ControllerEvent;
 import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
@@ -49,14 +51,14 @@ import js7.data.item.SimpleItemId;
 import js7.data.item.VersionedEvent.VersionedItemEvent;
 import js7.data.lock.LockId;
 import js7.data.order.OrderEvent;
-import js7.data.order.OrderEvent.OrderLockEvent;
-import js7.data.order.OrderEvent.OrderLockAcquired;
-import js7.data.order.OrderEvent.OrderLockQueued;
-import js7.data.order.OrderEvent.OrderLockReleased;
 import js7.data.order.OrderEvent.OrderAdded;
 import js7.data.order.OrderEvent.OrderBroken;
 import js7.data.order.OrderEvent.OrderFailed;
 import js7.data.order.OrderEvent.OrderFailedInFork;
+import js7.data.order.OrderEvent.OrderLockAcquired;
+import js7.data.order.OrderEvent.OrderLockEvent;
+import js7.data.order.OrderEvent.OrderLockQueued;
+import js7.data.order.OrderEvent.OrderLockReleased;
 import js7.data.order.OrderEvent.OrderProcessed;
 import js7.data.order.OrderEvent.OrderProcessingKilled$;
 import js7.data.order.OrderEvent.OrderProcessingStarted$;
@@ -66,9 +68,9 @@ import js7.data.order.OrderEvent.OrderStarted$;
 import js7.data.order.OrderEvent.OrderTerminated;
 import js7.data.order.OrderId;
 import js7.data.workflow.WorkflowPath;
-import js7.proxy.javaapi.data.controller.JControllerState;
-import js7.proxy.javaapi.data.order.JOrder;
-import js7.proxy.javaapi.data.workflow.JWorkflowId;
+import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.order.JOrder;
+import js7.data_for_java.workflow.JWorkflowId;
 import js7.proxy.javaapi.eventbus.JControllerEventBus;
 
 public class EventService {
@@ -157,7 +159,6 @@ public class EventService {
 
     @Subscribe({ ProblemEvent.class })
     public void createEvent(ProblemEvent evt) {
-        //if (isCurrentController.get() && evt.getControllerId().equals(controllerId)) {
         if (evt.getControllerId() == null || evt.getControllerId().isEmpty() || evt.getControllerId().equals(controllerId)) {
             EventSnapshot eventSnapshot = new EventSnapshot();
             eventSnapshot.setEventId(evt.getEventId());
@@ -167,6 +168,20 @@ public class EventService {
             eventSnapshot.setMessage(evt.getVariables().get("message"));
             addEvent(eventSnapshot);
         }
+    }
+    
+    @Subscribe({ HistoryEvent.class })
+    public void createEvent(HistoryEvent evt) {
+        EventSnapshot eventSnapshot = new EventSnapshot();
+        eventSnapshot.setEventId(evt.getEventId());
+        eventSnapshot.setEventType(evt.getKey()); // HistoryOrderStarted, HistoryOrderTerminated, HistoryOrderTaskTerminated
+        eventSnapshot.setObjectType(EventType.ORDERHISTORY);
+        if (evt instanceof HistoryOrderTaskTerminated) {
+            eventSnapshot.setObjectType(EventType.TASKHISTORY);
+            eventSnapshot.setEventType("HistoryTaskTerminated");
+        }
+        //eventSnapshot.setPath(evt.getOrderId());
+        addEvent(eventSnapshot);
     }
     
     @Subscribe({ InventoryEvent.class })
