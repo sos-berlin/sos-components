@@ -250,10 +250,8 @@ public class DBLayerDeploy {
             query.setParameter("name", name);
             query.setParameter("type", type);
             return session.getSingleResult(query);
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
         }
     }
 
@@ -1809,10 +1807,14 @@ public class DBLayerDeploy {
         }
     }
     
-    public void cleanupSignatures (Set<DBItemDepSignatures> signatures) throws SOSHibernateException {
+    public void cleanupSignatures (Set<DBItemDepSignatures> signatures) {
         if (signatures != null && !signatures.isEmpty()) {
             for (DBItemDepSignatures sig : signatures) {
-                session.delete(sig);
+                try {
+                    session.delete(sig);
+                } catch (SOSHibernateException e) {
+                    throw new JocSosHibernateException(e.getCause());
+                }
             }
         }
     }
@@ -1832,32 +1834,40 @@ public class DBLayerDeploy {
         }
     }
     
-    public void cleanupCommitIdsForConfigurations (Set<DBItemInventoryConfiguration> invConfigurations) throws SOSHibernateException {
-        Set<Long> cfgIds = invConfigurations.stream().map(DBItemInventoryConfiguration::getId).collect(Collectors.toSet());
-        StringBuilder hql = new StringBuilder();
-        hql.append("from ").append(DBLayer.DBITEM_DEP_COMMIT_IDS);
-        hql.append(" where invConfigurationId in (:cfgIds)");
-        Query<DBItemDepCommitIds> query = session.createQuery(hql.toString());
-        query.setParameterList("cfgIds", cfgIds);
-        List<DBItemDepCommitIds> commitIdsToDelete = session.getResultList(query);
-        if (commitIdsToDelete != null && !commitIdsToDelete.isEmpty()) {
-            for (DBItemDepCommitIds commitId : commitIdsToDelete) {
-                session.delete(commitId);
+    public void cleanupCommitIdsForConfigurations (Set<DBItemInventoryConfiguration> invConfigurations) {
+        try {
+            Set<Long> cfgIds = invConfigurations.stream().map(DBItemInventoryConfiguration::getId).collect(Collectors.toSet());
+            StringBuilder hql = new StringBuilder();
+            hql.append("from ").append(DBLayer.DBITEM_DEP_COMMIT_IDS);
+            hql.append(" where invConfigurationId in (:cfgIds)");
+            Query<DBItemDepCommitIds> query = session.createQuery(hql.toString());
+            query.setParameterList("cfgIds", cfgIds);
+            List<DBItemDepCommitIds> commitIdsToDelete = session.getResultList(query);
+            if (commitIdsToDelete != null && !commitIdsToDelete.isEmpty()) {
+                for (DBItemDepCommitIds commitId : commitIdsToDelete) {
+                    session.delete(commitId);
+                }
             }
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e.getCause());
         }
     }
     
-    public void cleanupCommitIdsForConfigurations (String versionId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder();
-        hql.append("from ").append(DBLayer.DBITEM_DEP_COMMIT_IDS);
-        hql.append(" where commitId = :versionId");
-        Query<DBItemDepCommitIds> query = session.createQuery(hql.toString());
-        query.setParameter("versionId", versionId);
-        List<DBItemDepCommitIds> commitIdsToDelete = session.getResultList(query);
-        if (commitIdsToDelete != null && !commitIdsToDelete.isEmpty()) {
-            for (DBItemDepCommitIds commitId : commitIdsToDelete) {
-                session.delete(commitId);
+    public void cleanupCommitIds (String commitId) {
+        try {
+            StringBuilder hql = new StringBuilder();
+            hql.append("from ").append(DBLayer.DBITEM_DEP_COMMIT_IDS);
+            hql.append(" where commitId = :versionId");
+            Query<DBItemDepCommitIds> query = session.createQuery(hql.toString());
+            query.setParameter("versionId", commitId);
+            List<DBItemDepCommitIds> commitIdsToDelete = session.getResultList(query);
+            if (commitIdsToDelete != null && !commitIdsToDelete.isEmpty()) {
+                for (DBItemDepCommitIds item : commitIdsToDelete) {
+                    session.delete(item);
+                }
             }
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e.getCause());
         }
     }
     

@@ -289,14 +289,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                                         deployFilter);
                             });// .get()
                 }
-                if (verifiedConfigurations != null && !verifiedConfigurations.isEmpty()) {
-                    dbLayer.cleanupSignaturesForConfigurations(verifiedConfigurations.keySet());
-                    dbLayer.cleanupCommitIdsForConfigurations(verifiedConfigurations.keySet());
-                }
-                if (verifiedReDeployables != null && !verifiedReDeployables.isEmpty()) {
-                    dbLayer.cleanupSignaturesForRedeployments(verifiedReDeployables.keySet());
-                    dbLayer.cleanupCommitIdsForRedeployments(verifiedReDeployables.keySet());
-                }
             }
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -379,10 +371,21 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         updateableAgentNames, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
                     PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet().stream().collect(Collectors.toSet()),
                             withOriginalContent, controllerId, dbLayer.getSession());
+                    // cleanup stored signatures
+                    dbLayer.cleanupSignatures(verifiedConfigurations.keySet().stream()
+                        .map(item -> verifiedConfigurations.get(item)).filter(Objects::nonNull).collect(Collectors.toSet()));
+                    // cleanup stored commitIds
+                    deployedObjects.stream().forEach(item -> dbLayer.cleanupCommitIds(item.getCommitId()));
                 }
                 if (verifiedReDeployables != null && !verifiedReDeployables.isEmpty()) {
-                    deployedObjects.addAll(PublishUtils.cloneDepHistoryItemsToRedeployed(verifiedReDeployables, account, dbLayer, versionIdForUpdate,
-                            controllerId, deploymentDate));
+                    Set<DBItemDeploymentHistory> cloned = PublishUtils.cloneDepHistoryItemsToRedeployed(
+                            verifiedReDeployables, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate);
+                    deployedObjects.addAll(cloned);
+                    // cleanup stored signatures
+                    dbLayer.cleanupSignatures(verifiedReDeployables.keySet().stream()
+                            .map(item -> verifiedReDeployables.get(item)).filter(Objects::nonNull).collect(Collectors.toSet()));
+                    // cleanup stored commitIds
+                    cloned.stream().forEach(item -> dbLayer.cleanupCommitIds(item.getCommitId()));
                 }
                 if (!deployedObjects.isEmpty()) {
                     LOGGER.info(String.format("Update command send to Controller \"%1$s\".", controllerId));
@@ -398,10 +401,11 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 // if not successful the objects and the related controllerId have to be stored
                 // in a submissions table for reprocessing
                 dbLayer.createSubmissionForFailedDeployments(failedDeployUpdateItems);
+                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), null);
             }
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
-            ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(e.toString())), getAccessToken(), getJocError(), controllerId);
+            ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(e.toString())), getAccessToken(), getJocError(), null);
         } finally {
             Globals.disconnect(newHibernateSession);
         }
@@ -435,10 +439,11 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 // if not successful the objects and the related controllerId have to be stored 
                 // in a submissions table for reprocessing
                 dbLayer.createSubmissionForFailedDeployments(failedDeployDeleteItems);
+                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), null);
             }
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
-            ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(e.toString())), getAccessToken(), getJocError(), controllerId);
+            ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(e.toString())), getAccessToken(), getJocError(), null);
         } finally {
             Globals.disconnect(newHibernateSession);
         }
@@ -475,7 +480,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                                 JocInventory.deleteEmptyFolders(new InventoryDBLayer(newHibernateSession), folder.getConfiguration().getPath());
                             } catch (SOSHibernateException e) {
                                 ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(e.toString())), getAccessToken(), getJocError(),
-                                        controllerId);
+                                        null);
                            }
                         }
                     }
@@ -489,11 +494,11 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 // if not successful the objects and the related controllerId have to be stored
                 // in a submissions table for reprocessing
                 dbLayer.createSubmissionForFailedDeployments(failedDeployDeleteItems);
-                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), null);
             }
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
-            ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(e.toString())), getAccessToken(), getJocError(), controllerId);
+            ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(e.toString())), getAccessToken(), getJocError(), null);
         } finally {
             Globals.disconnect(newHibernateSession);
         }

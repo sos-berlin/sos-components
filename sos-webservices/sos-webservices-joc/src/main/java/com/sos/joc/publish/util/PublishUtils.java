@@ -2744,8 +2744,32 @@ public abstract class PublishUtils {
     
     public static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesWithoutDraftsFromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
         Set<DBItemDeploymentHistory> allLatest = getLatestActiveDepHistoryEntriesFromFolders(folders, dbLayer);
+        // filter duplicates, if history item with same name but different folder exists
+        allLatest = allLatest.stream().filter(item -> {
+            DBItemInventoryConfiguration dbItem = dbLayer.getConfigurationByName(item.getName(), item.getType());
+            if (dbItem != null && item.getPath().equals(dbItem.getPath())) {
+                return true;
+            } else {
+                return false;
+            }
+        }).filter(Objects::nonNull).collect(Collectors.toSet());
         return allLatest.stream()
-                .filter(item -> dbLayer.getInventoryConfigurationDeployedByNameAndType(item.getName(), item.getType())).collect(Collectors.toSet());
+                .filter(item -> {
+                    if(item.getName() == null || item.getName().isEmpty()) {
+                        LOGGER.debug(String.format("No name found for item with path: %1$s ", item.getPath()));
+                        String name = Paths.get(item.getPath()).getFileName().toString();
+                        item.setName(name);
+                        LOGGER.debug(String.format("Item name set to: %1$s ", item.getName()));
+                    }
+                    Boolean deployed = dbLayer.getInventoryConfigurationDeployedByNameAndType(item.getName(), item.getType());
+                    if (deployed == null) {
+                        // history item does not exist in current configuration
+                        // decision: ignore item as only objects from history with existing current configuration are relevant
+                        return false;
+                    } else {
+                        return deployed;
+                    }
+                }).filter(Objects::nonNull).collect(Collectors.toSet());
     }
     
     public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesDeleteForFolder(Config folder, String controllerId,
