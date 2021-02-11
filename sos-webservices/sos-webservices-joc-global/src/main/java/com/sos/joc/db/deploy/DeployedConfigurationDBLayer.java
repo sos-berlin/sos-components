@@ -1,6 +1,5 @@
 package com.sos.joc.db.deploy;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -13,14 +12,10 @@ import java.util.stream.Collectors;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.query.Query;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
-import com.sos.inventory.model.deploy.DeployType;
-import com.sos.inventory.model.workflow.Workflow;
-import com.sos.joc.Globals;
+import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
@@ -30,7 +25,6 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.tree.Tree;
-import com.sos.joc.model.workflow.WorkflowFilter;
 
 public class DeployedConfigurationDBLayer {
 
@@ -44,14 +38,20 @@ public class DeployedConfigurationDBLayer {
             DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
-            hql.append("(path, content) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
+            hql.append("(path, content, commitId) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
             hql.append(" where controllerId = :controllerId");
             hql.append(" and type = :type");
-            hql.append(" and path = :path");
+            if (path.contains("/")) {
+                hql.append(" and path = :path");
+            } else {
+                hql.append(" and name = :path");
+            }
+            hql.append(" order by id desc");
             Query<DeployedContent> query = session.createQuery(hql.toString());
             query.setParameter("controllerId", controllerId);
             query.setParameter("type", type);
             query.setParameter("path", path);
+            query.setMaxResults(1);
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -67,34 +67,29 @@ public class DeployedConfigurationDBLayer {
         }
         try {
             StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
-            hql.append("(path, invContent) from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append("(path, invContent, commitId) from ").append(DBLayer.DBITEM_DEP_HISTORY);
             hql.append(" where controllerId = :controllerId");
             hql.append(" and type = :type");
-            hql.append(" and path = :path");
+            if (path.contains("/")) {
+                hql.append(" and path = :path");
+            } else {
+                hql.append(" and name = :path");
+            }
             hql.append(" and commitId = :commitId");
+            hql.append(" and operation = 0");
+            hql.append(" and state = 0");
+            hql.append(" order by id desc");
             Query<DeployedContent> query = session.createQuery(hql.toString());
             query.setParameter("controllerId", controllerId);
             query.setParameter("type", type);
             query.setParameter("path", path);
             query.setParameter("commitId", commitId);
+            query.setMaxResults(1);
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
-        }
-    }
-    
-    public Workflow getDeployedInventory(WorkflowFilter workflowFilter) throws DBConnectionRefusedException, DBInvalidDataException,
-            JsonParseException, JsonMappingException, IOException {
-        DeployedContent content = getDeployedInventory(workflowFilter.getControllerId(), DeployType.WORKFLOW.intValue(), workflowFilter.getWorkflowId()
-                .getPath(), workflowFilter.getWorkflowId().getVersionId());
-        if (content != null && content.getContent() != null && !content.getContent().isEmpty()) {
-            Workflow workflow =  Globals.objectMapper.readValue(content.getContent(), Workflow.class);
-            workflow.setPath(content.getPath());
-            return workflow;
-        } else {
-            return null;
         }
     }
     
@@ -149,7 +144,7 @@ public class DeployedConfigurationDBLayer {
             DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
-            hql.append("(path, content) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(getWhere(filter));
+            hql.append("(path, content, commitId) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(getWhereForDepConfiguration(filter));
             Query<DeployedContent> query = createQuery(hql.toString(), filter);
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -159,10 +154,11 @@ public class DeployedConfigurationDBLayer {
         }
     }
     
-    public List<DeployedContent> getDeployedInventoryWithCommitIds(DeployedConfigurationFilter filter) throws DBConnectionRefusedException, DBInvalidDataException {
+    public List<DeployedContent> getDeployedInventoryWithCommitIds(DeployedConfigurationFilter filter) throws DBConnectionRefusedException,
+            DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
-            hql.append("(path, invContent) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(getWhere(filter));
+            hql.append("(path, invContent, commitId) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(getWhereForDepHistory(filter));
             Query<DeployedContent> query = createQuery(hql.toString(), filter);
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -199,7 +195,22 @@ public class DeployedConfigurationDBLayer {
         }
         return Collections.emptyMap();
     }
-
+    
+    public Map<WorkflowId, String> getNamePathMappingWithCommitIds(DeployedConfigurationFilter filter) throws SOSHibernateException {
+        if (filter.getWorkflowIds() == null || filter.getWorkflowIds().isEmpty()) {
+            return Collections.emptyMap();
+        }
+        StringBuilder hql = new StringBuilder("select new ").append(InventoryNamePath.class.getName());
+        hql.append("(name, commitId, path) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(getWhereForDepHistory(filter));
+        Query<InventoryNamePath> query = createQuery(hql.toString(), filter);
+        
+        List<InventoryNamePath> result = session.getResultList(query);
+        if (result != null) {
+            return result.stream().distinct().collect(Collectors.toMap(InventoryNamePath::getWorkflowId, InventoryNamePath::getPath));
+        }
+        return Collections.emptyMap();
+    }
+    
     public Set<Tree> getFoldersByFolderAndType(String controllerId, String folderName, Collection<Integer> types) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
@@ -249,8 +260,16 @@ public class DeployedConfigurationDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
+    
+    private String getWhereForDepHistory(DeployedConfigurationFilter filter) {
+        return getWhere(filter, true);
+    }
+    
+    private String getWhereForDepConfiguration(DeployedConfigurationFilter filter) {
+        return getWhere(filter, false);
+    }
 
-    private String getWhere(DeployedConfigurationFilter filter) {
+    private String getWhere(DeployedConfigurationFilter filter, boolean withOperationAndState) {
         List<String> clauses = new ArrayList<String>();
 
         if (filter.getControllerId() != null && !filter.getControllerId().isEmpty()) {
@@ -293,6 +312,11 @@ public class DeployedConfigurationDBLayer {
                 clause = "(" + clause + ")";
             }
             clauses.add(clause);
+        }
+        
+        if (withOperationAndState) {
+            clauses.add("operation = 0");
+            clauses.add("state = 0");
         }
 
         if (!clauses.isEmpty()) {

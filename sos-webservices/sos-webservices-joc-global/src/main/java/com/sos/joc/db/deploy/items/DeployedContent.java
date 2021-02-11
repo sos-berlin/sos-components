@@ -4,9 +4,24 @@ public class DeployedContent {
 
     private String json;
     private String path;
+    private String commitId;
+    private Boolean isCurrentVersion;
     
-    public DeployedContent(String path, String json) {
+    public DeployedContent(String path, String json, String commitId) {
         this.path = path;
+        this.json = json;
+        this.commitId = commitId;
+        this.isCurrentVersion = null;
+    }
+    
+    public DeployedContent(String path, String json, String commitId, Boolean isCurrentVersion) {
+        this.path = path;
+        this.json = json;
+        this.commitId = commitId;
+        this.isCurrentVersion = isCurrentVersion;
+    }
+    
+    public void setContent(String json) {
         this.json = json;
     }
 
@@ -16,5 +31,13 @@ public class DeployedContent {
     
     public String getPath() {
         return path;
+    }
+    
+    public String getCommitId() {
+        return commitId;
+    }
+    
+    public Boolean isCurrentVersion() {
+        return isCurrentVersion;
     }
 }

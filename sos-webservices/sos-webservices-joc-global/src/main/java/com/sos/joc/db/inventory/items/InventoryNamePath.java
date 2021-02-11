@@ -4,14 +4,23 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+import com.sos.controller.model.workflow.WorkflowId;
+
 public class InventoryNamePath {
     
     private String name;
     private String path;
+    private WorkflowId workflowId;
 
     public InventoryNamePath(String name, String path) {
         this.name = name;
         this.path = path;
+    }
+    
+    public InventoryNamePath(String name, String commitId, String path) {
+        this.name = name + "/" + commitId;
+        this.path = path;
+        this.workflowId = new WorkflowId(name, commitId);
     }
 
     public String getName() {
@@ -20,6 +29,10 @@ public class InventoryNamePath {
 
     public String getPath() {
         return path;
+    }
+    
+    public WorkflowId getWorkflowId() {
+        return workflowId;
     }
 
     @Override

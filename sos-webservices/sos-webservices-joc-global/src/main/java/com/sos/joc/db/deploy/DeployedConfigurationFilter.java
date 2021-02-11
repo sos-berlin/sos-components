@@ -3,6 +3,7 @@ package com.sos.joc.db.deploy;
 import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.model.common.Folder;
@@ -77,6 +78,12 @@ public class DeployedConfigurationFilter {
     public void setWorkflowIds(Collection<WorkflowId> workflowIds) {
         if (workflowIds != null && !workflowIds.isEmpty()) {
             this.workflowIds = workflowIds.stream().collect(Collectors.toSet());
+        }
+    }
+    
+    public void setWorkflowIds(Stream<WorkflowId> workflowIds) {
+        if (workflowIds != null) {
+            this.workflowIds = workflowIds.collect(Collectors.toSet());
         }
     }
 }
