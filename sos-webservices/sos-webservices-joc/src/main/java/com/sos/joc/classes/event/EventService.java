@@ -21,6 +21,8 @@ import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
+import com.sos.joc.event.bean.history.HistoryEvent;
+import com.sos.joc.event.bean.history.HistoryOrderTaskTerminated;
 import com.sos.joc.event.bean.inventory.InventoryEvent;
 import com.sos.joc.event.bean.problem.ProblemEvent;
 import com.sos.joc.event.bean.proxy.ProxyEvent;
@@ -157,7 +159,6 @@ public class EventService {
 
     @Subscribe({ ProblemEvent.class })
     public void createEvent(ProblemEvent evt) {
-        //if (isCurrentController.get() && evt.getControllerId().equals(controllerId)) {
         if (evt.getControllerId() == null || evt.getControllerId().isEmpty() || evt.getControllerId().equals(controllerId)) {
             EventSnapshot eventSnapshot = new EventSnapshot();
             eventSnapshot.setEventId(evt.getEventId());
@@ -167,6 +168,20 @@ public class EventService {
             eventSnapshot.setMessage(evt.getVariables().get("message"));
             addEvent(eventSnapshot);
         }
+    }
+    
+    @Subscribe({ HistoryEvent.class })
+    public void createEvent(HistoryEvent evt) {
+        EventSnapshot eventSnapshot = new EventSnapshot();
+        eventSnapshot.setEventId(evt.getEventId());
+        eventSnapshot.setEventType(evt.getKey()); // HistoryOrderStarted, HistoryOrderTerminated, HistoryOrderTaskTerminated
+        eventSnapshot.setObjectType(EventType.ORDERHISTORY);
+        if (evt instanceof HistoryOrderTaskTerminated) {
+            eventSnapshot.setObjectType(EventType.TASKHISTORY);
+            eventSnapshot.setEventType("HistoryTaskTerminated");
+        }
+        //eventSnapshot.setPath(evt.getOrderId());
+        addEvent(eventSnapshot);
     }
     
     @Subscribe({ InventoryEvent.class })
