@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
+import com.sos.joc.event.EventBus;
 import com.sos.joc.exceptions.JobSchedulerAuthorizationException;
 import com.sos.joc.exceptions.JobSchedulerBadRequestException;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
@@ -187,6 +188,7 @@ public class ProxyContext {
         if (!coupledFuture.isDone()) {
             coupledFuture.complete(null);
         }
+        EventBus.getInstance().post(new com.sos.joc.event.bean.proxy.ProxyCoupled(this.credentials.getControllerId(), coupled));
         checkCluster();
         reDeployAgents();
     }
@@ -194,6 +196,7 @@ public class ProxyContext {
     private void onProxyDecoupled(ProxyDecoupled$ proxyDecoupled) {
         LOGGER.info(toString() + ": " + proxyDecoupled.toString());
         coupled = false;
+        EventBus.getInstance().post(new com.sos.joc.event.bean.proxy.ProxyCoupled(this.credentials.getControllerId(), coupled));
     }
 
     private void onProxyCouplingError(ProxyCouplingError proxyCouplingError) {
@@ -202,6 +205,7 @@ public class ProxyContext {
         }
         lastProblem = Optional.of(proxyCouplingError.problem());
         coupled = false;
+        EventBus.getInstance().post(new com.sos.joc.event.bean.proxy.ProxyCoupled(this.credentials.getControllerId(), coupled));
         if (lastProblem.isPresent()) {
             String msg = lastProblem.get().messageWithCause();
             if (msg != null) {

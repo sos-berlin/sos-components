@@ -1,5 +1,7 @@
 package com.sos.joc.event.bean.proxy;
 
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -10,7 +12,8 @@ import com.sos.joc.event.bean.JOCEvent;
 @JsonSubTypes({ 
     @JsonSubTypes.Type(ProxyStarted.class),
     @JsonSubTypes.Type(ProxyRestarted.class),
-    @JsonSubTypes.Type(ProxyRemoved.class)
+    @JsonSubTypes.Type(ProxyRemoved.class),
+    @JsonSubTypes.Type(ProxyCoupled.class)
 })
 
 public abstract class ProxyEvent extends JOCEvent {
@@ -29,5 +32,9 @@ public abstract class ProxyEvent extends JOCEvent {
      */
     public ProxyEvent(String key, String controllerId) {
         super(key, controllerId, null);
+    }
+    
+    public ProxyEvent(String key, String controllerId, Map<String, String> variables) {
+        super(key, controllerId, variables);
     }
 }

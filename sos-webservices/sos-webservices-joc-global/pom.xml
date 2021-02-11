@@ -54,6 +54,11 @@
 			<artifactId>sos-raml</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-joc-event</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 		
 		<dependency>
 			<groupId>com.sos-berlin</groupId>

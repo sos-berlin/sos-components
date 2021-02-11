@@ -23,6 +23,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
@@ -59,7 +60,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             put(AgentStateText.COUPLED, 0);
             put(AgentStateText.DECOUPLED, 1);
             put(AgentStateText.COUPLINGFAILED, 2);
-            put(AgentStateText.UNKNOWN, 4);
+            put(AgentStateText.UNKNOWN, 2);
         }
     });
 
@@ -126,18 +127,20 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                         Either<Problem, JAgentRefState> either = currentState.idToAgentRefState(AgentId.of(dbAgent.getAgentId()));
                         AgentV agent = mapDbAgentToAgentV(dbAgent);
                         AgentStateText stateText = AgentStateText.UNKNOWN;
-                        if (either.isRight()) {
-                            AgentRefState.CouplingState couplingState = either.get().asScala().couplingState();
-                            if (couplingState instanceof AgentRefState.CouplingFailed) {
-                                stateText = AgentStateText.COUPLINGFAILED;
-                                agent.setErrorMessage(ProblemHelper.getErrorMessage(((AgentRefState.CouplingFailed) couplingState).problem()));
-                            } else if (couplingState instanceof AgentRefState.Coupled$) {
-                                stateText = AgentStateText.COUPLED;
-                            } else if (couplingState instanceof AgentRefState.Decoupled$) {
-                                stateText = AgentStateText.DECOUPLED;
+                        if (Proxies.isCoupled(controllerId)) {
+                            if (either.isRight()) {
+                                AgentRefState.CouplingState couplingState = either.get().asScala().couplingState();
+                                if (couplingState instanceof AgentRefState.CouplingFailed) {
+                                    stateText = AgentStateText.COUPLINGFAILED;
+                                    agent.setErrorMessage(ProblemHelper.getErrorMessage(((AgentRefState.CouplingFailed) couplingState).problem()));
+                                } else if (couplingState instanceof AgentRefState.Coupled$) {
+                                    stateText = AgentStateText.COUPLED;
+                                } else if (couplingState instanceof AgentRefState.Decoupled$) {
+                                    stateText = AgentStateText.DECOUPLED;
+                                }
+                            } else {
+                                agent.setErrorMessage(ProblemHelper.getErrorMessage(either.getLeft()));
                             }
-                        } else {
-                            agent.setErrorMessage(ProblemHelper.getErrorMessage(either.getLeft()));
                         }
                         if (withStateFilter && !agentsParam.getStates().contains(stateText)) {
                             return null;

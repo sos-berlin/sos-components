@@ -10,6 +10,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -23,9 +24,11 @@ import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.event.EventBus;
+import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.proxy.ProxyRemoved;
 import com.sos.joc.event.bean.proxy.ProxyRestarted;
 import com.sos.joc.event.bean.proxy.ProxyStarted;
+import com.sos.joc.event.bean.proxy.ProxyCoupled;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -54,8 +57,10 @@ public class Proxies {
     private volatile Map<ProxyCredentials, ProxyContext> controllerFutures = new ConcurrentHashMap<>();
     private volatile Map<ProxyCredentials, JControllerApi> controllerApis = new ConcurrentHashMap<>();
     private volatile Map<String, List<DBItemInventoryJSInstance>> controllerDbInstances = new ConcurrentHashMap<>();
+    private volatile Map<String, Boolean> coupledStates = new ConcurrentHashMap<>();
 
     private Proxies() {
+        EventBus.getInstance().register(this);
     }
 
     protected static Proxies getInstance() {
@@ -239,6 +244,22 @@ public class Proxies {
      */
     public static void startAll(final JocCockpitProperties properties, final ProxyUser account) {
         Proxies.getInstance()._startAll(properties, 10, account, null);
+    }
+    
+    /**
+     * 
+     * @param controllerId
+     * @return
+     */
+    public static boolean isCoupled(String controllerId) {
+        return Proxies.getInstance().coupledStates.getOrDefault(controllerId, true);
+    }
+    
+    @Subscribe({ ProxyCoupled.class })
+    public void setCoupled(ProxyCoupled evt) {
+        if (evt.getControllerId() == null || evt.getControllerId().isEmpty()) {
+            coupledStates.put(evt.getControllerId(), evt.isCoupled());
+        }
     }
     
     private void _startAll(final JocCockpitProperties properties, final long delay, final ProxyUser account, Map<String, String> urlMapper) {
