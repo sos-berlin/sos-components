@@ -27,12 +27,12 @@ import com.sos.joc.exceptions.JobSchedulerSSLCertificateException;
 
 import io.vavr.control.Either;
 import js7.base.generic.SecretString;
+import js7.base.io.https.KeyStoreRef;
+import js7.base.io.https.TrustStoreRef;
 import js7.base.problem.Problem;
-import js7.common.akkahttp.https.KeyStoreRef;
-import js7.common.akkahttp.https.TrustStoreRef;
-import js7.controller.data.events.ControllerEvent;
-import js7.controller.data.events.ControllerEvent.ControllerReady;
 import js7.data.cluster.ClusterEvent;
+import js7.data.controller.ControllerEvent;
+import js7.data.controller.ControllerEvent.ControllerReady;
 import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
@@ -40,10 +40,10 @@ import js7.data.order.Order;
 import js7.data.order.OrderId;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
-import js7.proxy.javaapi.data.cluster.JClusterState;
-import js7.proxy.javaapi.data.controller.JControllerState;
-import js7.proxy.javaapi.data.order.JOrder;
-import js7.proxy.javaapi.data.order.JOrderPredicates;
+import js7.data_for_java.cluster.JClusterState;
+import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.order.JOrder;
+import js7.data_for_java.order.JOrderPredicates;
 import js7.proxy.javaapi.eventbus.JControllerEventBus;
 
 public class ProxyTest {

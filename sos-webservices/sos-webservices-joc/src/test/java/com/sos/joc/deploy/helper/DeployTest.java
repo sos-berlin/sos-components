@@ -31,10 +31,10 @@ import js7.data.agent.AgentRef;
 import js7.data.item.VersionId;
 import js7.data.lock.LockId;
 import js7.proxy.javaapi.JControllerApi;
-import js7.proxy.javaapi.data.agent.JAgentRef;
-import js7.proxy.javaapi.data.item.JSimpleItem;
-import js7.proxy.javaapi.data.item.JUpdateItemOperation;
-import js7.proxy.javaapi.data.lock.JLock;
+import js7.data_for_java.agent.JAgentRef;
+import js7.data_for_java.item.JSimpleItem;
+import js7.data_for_java.item.JUpdateItemOperation;
+import js7.data_for_java.lock.JLock;
 import reactor.core.publisher.Flux;
 
 public class DeployTest {

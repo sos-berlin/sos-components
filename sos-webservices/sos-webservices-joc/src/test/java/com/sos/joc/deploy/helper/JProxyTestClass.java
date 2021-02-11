@@ -11,9 +11,9 @@ import com.sos.joc.classes.proxy.ProxyUser;
 
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JProxyContext;
-import js7.proxy.javaapi.data.auth.JAdmission;
-import js7.proxy.javaapi.data.auth.JCredentials;
-import js7.proxy.javaapi.data.auth.JHttpsConfig;
+import js7.data_for_java.auth.JAdmission;
+import js7.data_for_java.auth.JCredentials;
+import js7.data_for_java.auth.JHttpsConfig;
 
 public class JProxyTestClass {
 
