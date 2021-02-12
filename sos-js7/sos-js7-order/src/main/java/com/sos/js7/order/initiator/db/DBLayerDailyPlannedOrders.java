@@ -112,7 +112,7 @@ public class DBLayerDailyPlannedOrders {
         }
 
         if (filter.getPeriodEnd() != null) {
-            where += and + " p.periodBegin = :periodEnd";
+            where += and + " p.periodEnd = :periodEnd";
             and = " and ";
         }
 

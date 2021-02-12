@@ -17,9 +17,4 @@ public interface IDailyPlanDeleteOrderResource {
     public JOCDefaultResponse postDeleteOrders(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes)
             throws Exception;
 
-    @POST
-    @Path("orders/cancel")
-    @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postCancelOrders(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes)
-            throws Exception;
 }

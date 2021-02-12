@@ -37,8 +37,8 @@ public class OrderInitiatorMain extends JocClusterService {
             LOGGER.info(String.format("[%s] start", getIdentifier()));
 
             setSettings();
-            LOGGER.info("Creating plan for " + settings.getDayAhead() + " days ahead");
-            if (settings.getDayAhead() > 0) {
+            LOGGER.info("Creating plan for " + settings.getDayAheadPlan() + " days ahead");
+            if (settings.getDayAheadPlan() > 0) {
                 resetStartPlannedOrderTimer(controllers);
             }
 
@@ -90,7 +90,8 @@ public class OrderInitiatorMain extends JocClusterService {
  
         LOGGER.debug("...Settings from " + getJocConfig().getResourceDirectory().resolve("joc.properties").normalize());
          
-        settings.setDayAhead(getProperty(Globals.sosCockpitProperties, "daily_plan_day_ahead", "0"));
+        settings.setDayAheadPlan(getProperty(Globals.sosCockpitProperties, "daily_plan_days_ahead_plan", "0"));
+        settings.setDayAheadSubmit(getProperty(Globals.sosCockpitProperties, "daily_plan_days_ahead_submit", "0"));
         settings.setTimeZone(getProperty(Globals.sosCockpitProperties, "daily_plan_time_zone", "UTC"));
         settings.setPeriodBegin(getProperty(Globals.sosCockpitProperties, "daily_plan_period_begin", "00:00"));
          

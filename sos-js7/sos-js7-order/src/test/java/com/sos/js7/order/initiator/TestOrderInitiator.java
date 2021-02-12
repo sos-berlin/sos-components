@@ -49,7 +49,8 @@ public class TestOrderInitiator {
             throw new Exception(String.format("[%s][%s]error on read the history configuration: %s", method, cp, ex.toString()), ex);
         }
 
-        orderInitiatorSettings.setDayAhead(conf.getProperty("day_offset"));
+        orderInitiatorSettings.setDayAheadPlan(conf.getProperty("daily_plan_days_ahead_plan"));
+        orderInitiatorSettings.setDayAheadSubmit(conf.getProperty("daily_plan_days_ahead_submit"));
         orderInitiatorSettings.setControllerId(conf.getProperty("controller_id"));
         String hibernateConfiguration = conf.getProperty("hibernate_configuration_file");
         if (hibernateConfiguration != null) {

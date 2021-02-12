@@ -201,12 +201,20 @@ public class OrderInitiatorRunner extends TimerTask {
                 OrderInitiatorGlobals.dailyPlanDate = dailyPlanCalendar.getTime();
                 ScheduleSource scheduleSource = new ScheduleSourceDB(controllerConfiguration.getCurrent().getId());
                 readSchedules(scheduleSource);
-                for (int day = 0; day < OrderInitiatorGlobals.orderInitiatorSettings.getDayAhead(); day++) {
+                boolean logDailyPlan = false;
+                int getDayAheadSubmitt = OrderInitiatorGlobals.orderInitiatorSettings.getDayAheadSubmit();
+                for (int day = 0; day < OrderInitiatorGlobals.orderInitiatorSettings.getDayAheadPlan(); day++) {
+                    String dailyPlanDate = DailyPlanHelper.dateAsString(dailyPlanCalendar.getTime());
                     if (!(dailyPlanExist(calendar, controllerConfiguration.getCurrent().getId()))) {
-                        LOGGER.info("Creating daily plans for controller: " + controllerConfiguration.getCurrent().getId() + " from "
-                                + DailyPlanHelper.dateAsString(dailyPlanCalendar.getTime()) + " for " + OrderInitiatorGlobals.orderInitiatorSettings
-                                        .getDayAhead() + " days");
-                        generateDailyPlan(DailyPlanHelper.dateAsString(dailyPlanCalendar.getTime()), true);
+                        if (!logDailyPlan) {
+                            LOGGER.info("Creating daily plans for controller: " + controllerConfiguration.getCurrent().getId() + " from "
+                                    + dailyPlanDate + " for " + OrderInitiatorGlobals.orderInitiatorSettings.getDayAheadPlan() + " days ahead");
+                            LOGGER.info("Submitting orders for daily plans for " + OrderInitiatorGlobals.orderInitiatorSettings.getDayAheadSubmit()
+                                    + " days ahead");
+                            logDailyPlan = true;
+                        }
+                        generateDailyPlan(dailyPlanDate, getDayAheadSubmitt > 0);
+                        getDayAheadSubmitt = getDayAheadSubmitt - 1;
                     }
                     dailyPlanCalendar.add(java.util.Calendar.DATE, 1);
                     OrderInitiatorGlobals.dailyPlanDate = dailyPlanCalendar.getTime();
@@ -330,7 +338,7 @@ public class OrderInitiatorRunner extends TimerTask {
             Set<String> dates;
             PeriodResolver periodResolver;
         }
-       
+
         Date actDate = dailyPlanDate;
         Date nextDate = DailyPlanHelper.getNextDay(dailyPlanDate);
         SOSHibernateSession sosHibernateSession = null;

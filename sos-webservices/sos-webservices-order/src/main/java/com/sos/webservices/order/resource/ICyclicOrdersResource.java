@@ -6,13 +6,13 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.model.order.OrderFilter;
    
-public interface ICleanupOrderResource {
+public interface ICyclicOrdersResource {
 
     @POST
-    @Path("cleanup")
+    @Path("cyclic_orders")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postCleanupOrders(@HeaderParam("X-Access-Token") String accessToken, OrderFilter orderCleanup)  ;
+    public JOCDefaultResponse postCyclicOrders(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes)  ;
 }
