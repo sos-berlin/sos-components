@@ -401,7 +401,7 @@ public class HistoryModel {
         Instant end = Instant.now();
         Duration duration = Duration.between(start, end);
 
-        LOGGER.info(String.format("[%s][%s(%s)-%s][%s(%s)-%s][%s-%s][%s]%s %s", identifier, startEventId, firstEventId, storedEventId,
+        LOGGER.info(String.format("[%s][%s(%s)-%s][%s(%s)-%s][%s-%s][%s]%s%s", identifier, startEventId, firstEventId, storedEventId,
                 startEventIdAsTime, firstEventIdAsTime, endEventIdAsTime, SOSDate.getTime(start), SOSDate.getTime(end), SOSDate.getDuration(duration),
                 counter.toString(), getCachedSummary()));
         return duration;
@@ -411,28 +411,29 @@ public class HistoryModel {
         // TODO remove cached items - dependent of the created time
         int coSize = cachedOrders.size();
         int cosSize = cachedOrderSteps.size();
-        StringBuilder sb = new StringBuilder();
-        if (isDebugEnabled) {
-            LOGGER.debug(String.format("[cachedAgents=%s][cachedOrders=%s][cachedOrderSteps=%s]", cachedAgents.size(), coSize, cosSize));
-        }
-        if (coSize >= 1_000) {
-            sb.append("cachedOrders=").append(coSize);
-        } else {
-            if (isDebugEnabled && coSize > 0) {
-                // LOGGER.debug(SOSString.mapToString(cachedOrders, true));
-            }
-        }
-        if (cosSize >= 1_000) {
-            if (sb.length() > 0) {
-                sb.append(", ");
-            }
-            sb.append("cachedOrderSteps=").append(cosSize);
-        } else {
-            if (isDebugEnabled && cosSize > 0) {
-                // LOGGER.debug(SOSString.mapToString(cachedOrderSteps, true));
-            }
-        }
-        return sb.toString();
+        // StringBuilder sb = new StringBuilder();
+        // if (isDebugEnabled) {
+        // LOGGER.debug(String.format("[cachedAgents=%s][cachedOrders=%s][cachedOrderSteps=%s]", cachedAgents.size(), coSize, cosSize));
+        // }
+        // if (coSize >= 1_000) {
+        // sb.append("cachedOrders=").append(coSize);
+        // } else {
+        // if (isDebugEnabled && coSize > 0) {
+        // // LOGGER.debug(SOSString.mapToString(cachedOrders, true));
+        // }
+        // }
+        // if (cosSize >= 1_000) {
+        // if (sb.length() > 0) {
+        // sb.append(", ");
+        // }
+        // sb.append("cachedOrderSteps=").append(cosSize);
+        // } else {
+        // if (isDebugEnabled && cosSize > 0) {
+        // // LOGGER.debug(SOSString.mapToString(cachedOrderSteps, true));
+        // }
+        // }
+        // return sb.toString();
+        return String.format("[cached orders=%s, steps=%s]", coSize, cosSize);
     }
 
     private void initCache() {
