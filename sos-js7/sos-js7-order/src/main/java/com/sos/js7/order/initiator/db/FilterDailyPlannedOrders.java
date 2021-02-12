@@ -31,6 +31,11 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     private Date orderPlannedStartTo;
     private Date submitTime;
 
+    private Date periodBegin;
+    private Date periodEnd;
+    private Long repeatInterval;
+
+
     private String orderId;
     private Boolean submitted;
     private Set<PlannedOrder> setOfPlannedOrder;
@@ -314,5 +319,37 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     public void setScheduleName(String scheduleName) {
         this.scheduleName = scheduleName;
     }
+
+    
+    public Date getPeriodBegin() {
+        return periodBegin;
+    }
+
+    
+    public void setPeriodBegin(Date periodBegin) {
+        this.periodBegin = periodBegin;
+    }
+
+    
+    public Date getPeriodEnd() {
+        return periodEnd;
+    }
+
+    
+    public void setPeriodEnd(Date periodEnd) {
+        this.periodEnd = periodEnd;
+    }
+
+    
+    public Long getRepeatInterval() {
+        return repeatInterval;
+    }
+
+    
+    public void setRepeatInterval(Long repeatInterval) {
+        this.repeatInterval = repeatInterval;
+    }
+
+ 
 
 }

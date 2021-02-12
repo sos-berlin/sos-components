@@ -105,6 +105,22 @@ public class DBLayerDailyPlannedOrders {
             where += and + " p.plannedStart = :plannedStart";
             and = " and ";
         }
+
+        if (filter.getPeriodBegin() != null) {
+            where += and + " p.periodBegin = :periodBegin";
+            and = " and ";
+        }
+
+        if (filter.getPeriodEnd() != null) {
+            where += and + " p.periodBegin = :periodEnd";
+            and = " and ";
+        }
+
+        if (filter.getRepeatInterval() != null) {
+            where += and + " p.repeatInterval = :repeatInterval";
+            and = " and ";
+        }
+
         if (filter.getOrderPlannedStartFrom() != null && filter.getOrderPlannedStartTo() != null) {
             where += and + " p.plannedStart >= :plannedStartFrom and p.plannedStart < :plannedStartTo";
             and = " and ";
@@ -224,6 +240,15 @@ public class DBLayerDailyPlannedOrders {
 
     private <T> Query<T> bindParameters(FilterDailyPlannedOrders filter, Query<T> query) {
 
+        if (filter.getPeriodBegin() != null) {
+            query.setParameter("periodBegin", filter.getPeriodBegin());
+        }
+        if (filter.getPeriodEnd() != null) {
+            query.setParameter("periodEnd", filter.getPeriodEnd());
+        }
+        if (filter.getRepeatInterval() != null) {
+            query.setParameter("repeatInterval", filter.getRepeatInterval());
+        }
         if (filter.getPlannedStart() != null) {
             query.setParameter("plannedStart", filter.getPlannedStart());
         }
@@ -357,8 +382,7 @@ public class DBLayerDailyPlannedOrders {
                 dbItemDailyPlanVariables.setPlannedOrderId(id);
                 dbItemDailyPlanVariables.setVariableName(variable.getKey());
                 dbItemDailyPlanVariables.setVariableValue(variable.getValue().toString());
-                dbItemDailyPlanVariables.setVariableType(VariableType.valueOf(variable.getValue().getClass().getSimpleName().toUpperCase())
-                        .value());
+                dbItemDailyPlanVariables.setVariableType(VariableType.valueOf(variable.getValue().getClass().getSimpleName().toUpperCase()).value());
                 sosHibernateSession.save(dbItemDailyPlanVariables);
             }
         }

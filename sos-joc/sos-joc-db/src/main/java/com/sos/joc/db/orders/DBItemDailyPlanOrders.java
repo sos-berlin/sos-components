@@ -1,6 +1,7 @@
 package com.sos.joc.db.orders;
 
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -244,6 +245,15 @@ public class DBItemDailyPlanOrders extends DBItem {
     }
 
     @Transient
+    public Integer getStartMode() {
+        if (this.getPeriodBegin() == null) {
+            return 0;
+        } else {
+            return 1;
+        }
+    }
+
+    @Transient
     public void setPeriodBegin(Date start, String periodBegin) throws ParseException {
         DailyPlanDate daysScheduleDate = new DailyPlanDate();
         daysScheduleDate.setSchedule(start, periodBegin);
@@ -265,9 +275,15 @@ public class DBItemDailyPlanOrders extends DBItem {
         c.setTime(daysScheduleDate.getSchedule());
 
         if (repeat != null) {
-           Integer i=     c.get(Calendar.HOUR)*60*60 +  c.get(Calendar.MINUTE)*60 +  c.get(Calendar.SECOND);
-           repeatInterval = new Long(i);
+            Integer i = c.get(Calendar.HOUR) * 60 * 60 + c.get(Calendar.MINUTE) * 60 + c.get(Calendar.SECOND);
+            repeatInterval = new Long(i);
         }
+    }
+
+    @Transient
+    public String getDailyPlanDate() {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        return format.format(plannedStart);
     }
 
 }

@@ -82,7 +82,17 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
                 throw new JocMissingRequiredParameterException("variables, removeVariables or startTime missing");
             }
 
+            List<String> listOfOrderIds = new ArrayList<String>();
+
             for (String orderId : dailyplanModifyOrder.getOrderIds()) {
+                listOfOrderIds.add(orderId);
+            }
+
+            for (String orderId : dailyplanModifyOrder.getOrderIds()) {
+                addCyclicOrderIds(listOfOrderIds, orderId, dailyplanModifyOrder);
+            }
+
+            for (String orderId : listOfOrderIds) {
                 modifyOrder(orderId, dailyplanModifyOrder);
             }
 
@@ -98,6 +108,51 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
 
+    }
+
+    private void addCyclicOrderIds(List<String> orderIds, String orderId, DailyPlanModifyOrder dailyplanModifyOrder) throws SOSHibernateException {
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER);
+
+            DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
+
+            FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+            filter.setControllerId(dailyplanModifyOrder.getControllerId());
+            filter.setOrderId(orderId);
+
+            List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
+
+            if (listOfPlannedOrders.size() == 1) {
+                DBItemDailyPlanOrders dbItemDailyPlanOrder = listOfPlannedOrders.get(0);
+                if (dbItemDailyPlanOrder.getStartMode() == 1) {
+                    
+                    FilterDailyPlannedOrders filterCyclic = new FilterDailyPlannedOrders();
+                    filterCyclic.setControllerId(dailyplanModifyOrder.getControllerId());
+                    filterCyclic.setRepeatInterval(dbItemDailyPlanOrder.getRepeatInterval());
+                    filterCyclic.setPeriodBegin(dbItemDailyPlanOrder.getPeriodBegin());
+                    filterCyclic.setPeriodEnd(dbItemDailyPlanOrder.getPeriodEnd());
+                    filterCyclic.setWorkflowName(dbItemDailyPlanOrder.getWorkflowName());
+                    filterCyclic.setScheduleName(dbItemDailyPlanOrder.getScheduleName());
+                    filterCyclic.setDailyPlanDate(dbItemDailyPlanOrder.getDailyPlanDate());
+
+                    
+                    List<DBItemDailyPlanOrders> listOfPlannedCyclicOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filterCyclic, 0);
+                    for (DBItemDailyPlanOrders dbItemDailyPlanOrders : listOfPlannedCyclicOrders) {
+                        if (!dbItemDailyPlanOrders.getOrderId().equals(orderId)) {
+                            orderIds.add(dbItemDailyPlanOrders.getOrderId());
+                        }
+                    }
+
+                }
+
+            } else {
+                LOGGER.warn("Expected one record for order-id " + filter.getOrderId());
+                throw new DBMissingDataException("Expected one record for order-id " + filter.getOrderId());
+            }
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
     }
 
     private void cancelOrdersFromController(FilterDailyPlannedOrders filter, List<DBItemDailyPlanWithHistory> listOfPlannedOrdersWithHistory)
