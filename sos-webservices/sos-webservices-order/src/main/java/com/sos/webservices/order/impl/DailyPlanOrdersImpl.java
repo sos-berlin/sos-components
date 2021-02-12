@@ -210,21 +210,21 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
                     boolean add = true;
                     PlannedOrderItem p = createPlanItem(dbItemDailyPlanWithHistory);
 
-                    CyclicOrder c = new CyclicOrder();
-                    c.period = p.getPeriod();
-                    c.scheduleName = Paths.get(p.getSchedulePath()).getFileName().toString();
+                    CyclicOrder cyclicOrder = new CyclicOrder();
+                    cyclicOrder.period = p.getPeriod();
+                    cyclicOrder.scheduleName = Paths.get(p.getSchedulePath()).getFileName().toString();
 
-                    if (p.getStartMode() == 1 && !cycledOrders.contains(c)) {
-                        cycledOrders.add(c);
-                    }
                     if (dailyPlanOrderFilter.getFilter().getStates() != null && !stateFilterContainsPendingOrPlanned && dbItemDailyPlanWithHistory
                             .getOrderHistoryId() == null) {
                         add = false;
                     }
 
-                    add = (p.getStartMode() == 0 || dailyPlanOrderFilter.getExpandCycleOrders() || !cycledOrders.contains(c));
+                    add = (p.getStartMode() == 0 || dailyPlanOrderFilter.getExpandCycleOrders() || !cycledOrders.contains(cyclicOrder));
 
                     if (add) {
+                        if (p.getStartMode() == 1 && !cycledOrders.contains(cyclicOrder)) {
+                            cycledOrders.add(cyclicOrder);
+                        }
                         result.add(p);
                     }
                 }
