@@ -41,6 +41,7 @@ import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.history.HistoryOrderStarted;
+import com.sos.joc.event.bean.history.HistoryOrderTaskTerminated;
 import com.sos.joc.event.bean.history.HistoryOrderTerminated;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.event.controller.EventMeta;
@@ -386,7 +387,7 @@ public class HistoryModel {
 
     private void postEventOrderTaskTerminated(CachedOrderStep cos) {
         if (cos != null) {
-            EventBus.getInstance().post(new HistoryOrderTerminated(controllerConfiguration.getCurrent().getId(), cos.getOrderId(), cos
+            EventBus.getInstance().post(new HistoryOrderTaskTerminated(controllerConfiguration.getCurrent().getId(), cos.getOrderId(), cos
                     .getSeverityAsText(), cos.getId(), cos.getHistoryOrderId()));
 
             clearCache(CacheType.orderStep, cos.getOrderId());
