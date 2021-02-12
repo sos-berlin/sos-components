@@ -1,6 +1,5 @@
 package com.sos.joc.workflows.impl;
 
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
@@ -24,6 +23,7 @@ import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.ImplicitEnd;
 import com.sos.inventory.model.instruction.Instruction;
+import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.workflow.Branch;
@@ -31,7 +31,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.deploy.items.DeployedContent;
@@ -39,7 +38,6 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.workflow.Workflows;
 import com.sos.joc.model.workflow.WorkflowsFilter;
-import com.sos.joc.workflow.impl.WorkflowsHelper;
 import com.sos.joc.workflows.resource.IWorkflowsResource;
 import com.sos.schema.JsonValidator;
 
@@ -47,8 +45,6 @@ import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerState;
-import js7.data_for_java.order.JOrder;
-import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
 
@@ -85,9 +81,9 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                         workflow.setIsCurrentVersion(null); // TODO
                         List<Instruction> instructions = workflow.getInstructions();
                         if (instructions != null) {
-                            instructions.add(new ImplicitEnd());
+                            instructions.add(createImplicitEndInstruction());
                         } else {
-                            instructions = Arrays.asList(new ImplicitEnd());
+                            instructions = Arrays.asList(createImplicitEndInstruction());
                             workflow.setInstructions(instructions);
                         }
                         return addWorkflowPositions(workflow);
@@ -151,6 +147,12 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
+    }
+    
+    private static ImplicitEnd createImplicitEndInstruction() {
+        ImplicitEnd i = new ImplicitEnd();
+        i.setTYPE(InstructionType.IMPLICIT_END);
+        return i;
     }
 
     private List<DeployedContent> getPermanentDeployedContent(WorkflowsFilter workflowsFilter) {
