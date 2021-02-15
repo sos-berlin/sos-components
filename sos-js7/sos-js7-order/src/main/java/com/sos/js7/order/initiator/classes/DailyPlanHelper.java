@@ -83,7 +83,9 @@ public class DailyPlanHelper {
         calendar.set(java.util.Calendar.HOUR_OF_DAY, hours);
         calendar.set(java.util.Calendar.MINUTE, minutes);
         calendar.set(java.util.Calendar.SECOND, 0);
-        calendar.add(java.util.Calendar.MINUTE, 30 * -1);
+        calendar.set(java.util.Calendar.MILLISECOND, 0);
+        calendar.add(java.util.Calendar.DATE, 1);
+        calendar.add(java.util.Calendar.MINUTE, -30);
 
 
         return calendar;

@@ -57,11 +57,15 @@ import com.sos.js7.order.initiator.classes.DailyPlanHelper;
 import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 import com.sos.js7.order.initiator.classes.PlannedOrder;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlanSubmissions;
+import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.DBLayerInventoryConfigurations;
 import com.sos.js7.order.initiator.db.DBLayerOrderVariables;
 import com.sos.js7.order.initiator.db.FilterDailyPlanSubmissions;
+import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterInventoryConfigurations;
 import com.sos.js7.order.initiator.db.FilterOrderVariables;
+
+import akka.http.impl.engine.http2.FrameEvent.Setting;
 
 public class OrderInitiatorRunner extends TimerTask {
 
@@ -170,7 +174,7 @@ public class OrderInitiatorRunner extends TimerTask {
         }
     }
 
-    private boolean dailyPlanExist(java.util.Calendar calendar, String controllerId) throws SOSHibernateException {
+    private List<DBItemDailyPlanSubmissions> getSubmissionsForDate(java.util.Calendar calendar, String controllerId) throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(DAILYPLAN_RUNNER);
@@ -184,7 +188,7 @@ public class OrderInitiatorRunner extends TimerTask {
             calendarTo.add(java.util.Calendar.DATE, 1);
             filter.setDateTo(calendarTo.getTime());
             List<DBItemDailyPlanSubmissions> listOfDailyPlanSubmissions = dbLayerDailyPlan.getDailyPlanSubmissions(filter, 0);
-            return (listOfDailyPlanSubmissions.size() > 0);
+            return (listOfDailyPlanSubmissions);
 
         } finally {
             Globals.disconnect(sosHibernateSession);
@@ -195,30 +199,52 @@ public class OrderInitiatorRunner extends TimerTask {
             ParseException, SOSException, URISyntaxException, InterruptedException, ExecutionException, TimeoutException {
 
         try {
+
+            java.util.Calendar savCalendar = java.util.Calendar.getInstance();
+            savCalendar.setTime(calendar.getTime());
+            LOGGER.info("Submitting orders for daily plans for " + OrderInitiatorGlobals.orderInitiatorSettings.getDayAheadSubmit() + " days ahead");
+
             for (ControllerConfiguration controllerConfiguration : controllers) {
-                java.util.Calendar dailyPlanCalendar = calendar;
+                java.util.Calendar dailyPlanCalendar = java.util.Calendar.getInstance();
+                dailyPlanCalendar.setTime(savCalendar.getTime());
+
                 OrderInitiatorGlobals.orderInitiatorSettings.setControllerId(controllerConfiguration.getCurrent().getId());
                 OrderInitiatorGlobals.dailyPlanDate = dailyPlanCalendar.getTime();
                 ScheduleSource scheduleSource = new ScheduleSourceDB(controllerConfiguration.getCurrent().getId());
                 readSchedules(scheduleSource);
                 boolean logDailyPlan = false;
-                int getDayAheadSubmitt = OrderInitiatorGlobals.orderInitiatorSettings.getDayAheadSubmit();
+
                 for (int day = 0; day < OrderInitiatorGlobals.orderInitiatorSettings.getDayAheadPlan(); day++) {
                     String dailyPlanDate = DailyPlanHelper.dateAsString(dailyPlanCalendar.getTime());
-                    if (!(dailyPlanExist(calendar, controllerConfiguration.getCurrent().getId()))) {
+                    List<DBItemDailyPlanSubmissions> l = getSubmissionsForDate(dailyPlanCalendar, controllerConfiguration.getCurrent().getId());
+                    if ((l.size() == 0)) {
                         if (!logDailyPlan) {
                             LOGGER.info("Creating daily plans for controller: " + controllerConfiguration.getCurrent().getId() + " from "
                                     + dailyPlanDate + " for " + OrderInitiatorGlobals.orderInitiatorSettings.getDayAheadPlan() + " days ahead");
-                            LOGGER.info("Submitting orders for daily plans for " + OrderInitiatorGlobals.orderInitiatorSettings.getDayAheadSubmit()
-                                    + " days ahead");
+
                             logDailyPlan = true;
                         }
-                        generateDailyPlan(dailyPlanDate, getDayAheadSubmitt > 0);
-                        getDayAheadSubmitt = getDayAheadSubmitt - 1;
+                        LOGGER.debug("Creating daily plans for controller: " + controllerConfiguration.getCurrent().getId() + " from " + dailyPlanDate
+                                + " for " + OrderInitiatorGlobals.orderInitiatorSettings.getDayAheadPlan() + " days ahead");
+                        generateDailyPlan(dailyPlanDate, false);
+                    }else {
+                        LOGGER.debug("Will not create for " + dailyPlanDate + " --> Submission found");
                     }
+
                     dailyPlanCalendar.add(java.util.Calendar.DATE, 1);
                     OrderInitiatorGlobals.dailyPlanDate = dailyPlanCalendar.getTime();
                 }
+
+                dailyPlanCalendar.setTime(savCalendar.getTime());
+                OrderInitiatorGlobals.dailyPlanDate = dailyPlanCalendar.getTime();
+
+                for (int day = 0; day < OrderInitiatorGlobals.orderInitiatorSettings.getDayAheadSubmit(); day++) {
+
+                    submitDaysAhead(dailyPlanCalendar, controllerConfiguration.getCurrent().getId());
+                    dailyPlanCalendar.add(java.util.Calendar.DATE, 1);
+                    OrderInitiatorGlobals.dailyPlanDate = dailyPlanCalendar.getTime();
+                }
+
             }
         } catch (SOSHibernateException | IOException | DBConnectionRefusedException | DBInvalidDataException | DBMissingDataException
                 | JocConfigurationException | DBOpenSessionException e) {
@@ -227,19 +253,54 @@ public class OrderInitiatorRunner extends TimerTask {
 
     }
 
+    private void submitDaysAhead(java.util.Calendar calendar, String controllerId) throws JsonParseException, JsonMappingException,
+            DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
+            JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, IOException, ParseException, SOSException,
+            URISyntaxException, InterruptedException, ExecutionException, TimeoutException {
+
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+            List<DBItemDailyPlanSubmissions> listOfSubmissions = getSubmissionsForDate(calendar, controllerId);
+            String dailyPlanDate = DailyPlanHelper.dateAsString(calendar.getTime());
+
+            LOGGER.debug("Submit days ahead: " + dailyPlanDate);
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("submitDaysAhead");
+
+            for (DBItemDailyPlanSubmissions dbItemDailyPlanSubmissions : listOfSubmissions) {
+                FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+                filter.addSubmissionHistoryId(dbItemDailyPlanSubmissions.getId());
+                filter.setSubmitted(false);
+                DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
+                List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
+                LOGGER.debug(listOfPlannedOrders.size() + " to be submitted");
+               // submitOrders(listOfPlannedOrders);
+
+            }
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
+    }
+
     public void run() {
         if (createdPlans == null) {
             createdPlans = new HashSet<String>();
         }
 
         java.util.Calendar calendar = DailyPlanHelper.getDailyplanCalendar();
+
         java.util.Calendar now = java.util.Calendar.getInstance(TimeZone.getTimeZone(OrderInitiatorGlobals.orderInitiatorSettings.getTimeZone()));
-        if (!createdPlans.contains(DailyPlanHelper.getDayOfYear(calendar)) && now.after(calendar)) {
+
+        if (!createdPlans.contains(DailyPlanHelper.getDayOfYear(calendar)) && (OrderInitiatorGlobals.orderInitiatorSettings
+                .getDailyPlanDaysCreateOnStart() || (now.getTimeInMillis() - calendar.getTimeInMillis()) > 0)) {
             createdPlans.add(DailyPlanHelper.getDayOfYear(calendar));
             try {
                 OrderInitiatorGlobals.submissionTime = new Date();
                 calendar.add(java.util.Calendar.DATE, 1);
-
+                calendar.set(java.util.Calendar.HOUR_OF_DAY, 0);
+                calendar.set(java.util.Calendar.MINUTE, 0);
+                calendar.set(java.util.Calendar.SECOND, 0);
+                calendar.set(java.util.Calendar.MILLISECOND, 0);
+                calendar.set(java.util.Calendar.MINUTE, 0);
                 createPlan(calendar);
             } catch (JobSchedulerConnectionResetException | JobSchedulerConnectionRefusedException | ParseException | SOSException
                     | URISyntaxException | InterruptedException | ExecutionException | TimeoutException e) {

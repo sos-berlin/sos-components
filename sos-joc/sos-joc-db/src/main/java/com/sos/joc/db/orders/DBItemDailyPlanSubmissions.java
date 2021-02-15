@@ -12,6 +12,8 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.hibernate.annotations.Type;
+
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
@@ -33,6 +35,7 @@ public class DBItemDailyPlanSubmissions extends DBItem {
 
     @Column(name = "[USER_ACCOUNT]", nullable = false)
     private String userAccount;
+ 
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[SUBMISSION_FOR_DATE]", nullable = false)
@@ -82,6 +85,8 @@ public class DBItemDailyPlanSubmissions extends DBItem {
     public void setCreated(Date created) {
         this.created = created;
     }
+
+ 
 
   
 

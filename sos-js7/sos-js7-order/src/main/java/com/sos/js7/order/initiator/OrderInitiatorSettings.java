@@ -15,6 +15,7 @@ public class OrderInitiatorSettings {
     private String orderTemplatesDirectory;
     private int dayAheadPlan = 0;
     private int dayAheadSubmit = 0;
+    private Boolean dailyPlanDaysCreateOnStart=false;
     private String userAccount = "JS7";
     private String timeZone = "UTC";
     private String periodBegin = "00:00";
@@ -125,6 +126,16 @@ public class OrderInitiatorSettings {
             this.dayAheadSubmit = 0;
             LOGGER.warn("Could not set setting for dayAheadPlan: " + dayAheadPlan);
         }
+    }
+
+    
+    public Boolean getDailyPlanDaysCreateOnStart() {
+        return dailyPlanDaysCreateOnStart;
+    }
+
+    
+    public void setDailyPlanDaysCreateOnStart(Boolean dailyPlanDaysCreateOnStart) {
+        this.dailyPlanDaysCreateOnStart = dailyPlanDaysCreateOnStart;
     }
 
 }

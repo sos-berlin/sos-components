@@ -35,7 +35,6 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     private Date periodEnd;
     private Long repeatInterval;
 
-
     private String orderId;
     private Boolean submitted;
     private Set<PlannedOrder> setOfPlannedOrder;
@@ -79,8 +78,6 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         listOfOrders.add(orderId);
     }
 
-  
-
     public void setDailyPlanDate(String dailyPlanDate) {
         if (dailyPlanDate != null) {
             this.dailyPlanDate = dailyPlanDate;
@@ -88,7 +85,6 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         }
     }
 
-   
     public void addScheduleName(String scheduleName) {
         if (listOfScheduleNames == null) {
             listOfScheduleNames = new ArrayList<String>();
@@ -280,6 +276,14 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         this.listOfSubmissionIds = listOfSubmissionIds;
     }
 
+    public void addSubmissionHistoryId(Long submissionHistoryId) {
+        if (this.listOfSubmissionIds == null) {
+            this.listOfSubmissionIds = new ArrayList<Long>();
+        }
+        this.listOfSubmissionIds.add(submissionHistoryId);
+
+    }
+
     public Long getPlannedOrderId() {
         return plannedOrderId;
     }
@@ -320,36 +324,28 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         this.scheduleName = scheduleName;
     }
 
-    
     public Date getPeriodBegin() {
         return periodBegin;
     }
 
-    
     public void setPeriodBegin(Date periodBegin) {
         this.periodBegin = periodBegin;
     }
 
-    
     public Date getPeriodEnd() {
         return periodEnd;
     }
 
-    
     public void setPeriodEnd(Date periodEnd) {
         this.periodEnd = periodEnd;
     }
 
-    
     public Long getRepeatInterval() {
         return repeatInterval;
     }
 
-    
     public void setRepeatInterval(Long repeatInterval) {
         this.repeatInterval = repeatInterval;
     }
-
- 
 
 }
