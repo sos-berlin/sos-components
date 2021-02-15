@@ -217,6 +217,10 @@ public class EventService {
             eventSnapshot.setObjectType(EventType.CONTROLLER);
             addEvent(eventSnapshot);
         }
+        EventSnapshot eventSnapshot2 = new EventSnapshot();
+        eventSnapshot2.setEventType("ControllerStateChanged");
+        eventSnapshot2.setObjectType(EventType.CONTROLLER);
+        addEvent(eventSnapshot2);
     }
 
     BiConsumer<Stamped<KeyedEvent<Event>>, JControllerState> callbackOfController = (stampedEvt, currentState) -> {
