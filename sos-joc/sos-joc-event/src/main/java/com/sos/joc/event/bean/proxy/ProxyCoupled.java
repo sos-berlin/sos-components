@@ -22,6 +22,6 @@ public class ProxyCoupled extends ProxyEvent {
     
     @JsonIgnore
     public boolean isCoupled() {
-        return Boolean.getBoolean(getVariables().get("isCoupled"));
+        return Boolean.parseBoolean(getVariables().get("isCoupled"));
     }
 }
