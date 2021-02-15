@@ -1,6 +1,5 @@
 package com.sos.joc.workflows.impl;
 
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
@@ -262,20 +261,18 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                     dbFilter.setFolders(folders);
                     contents = dbLayer.getDeployedInventory(dbFilter);
 
-                    dbFilter.setFolders(null);
                     Set<WorkflowId> wIds = WorkflowsHelper.oldWorkflowIds(currentState).collect(Collectors.toSet());
                     if (wIds != null && !wIds.isEmpty()) {
                         dbFilter.setWorkflowIds(wIds);
                         Map<WorkflowId, String> namePathMap = dbLayer.getNamePathMappingWithCommitIds(dbFilter);
-                        Stream<DeployedContent> oldWorkflows = wIds.stream().filter(wId -> namePathMap.get(wId) != null && folders.contains(Paths.get(
-                                namePathMap.get(wId)).getParent().toString().replace('\\', '/'))).map(wId -> {
-                                    Either<Problem, JWorkflow> e = currentState.idToWorkflow(JWorkflowId.of(wId.getPath(), wId.getVersionId()));
-                                    if (e.isRight() && namePathMap.get(wId) != null) {
-                                        return new DeployedContent(namePathMap.get(wId), e.get().withPositions().toJson(), e.get().id().versionId()
-                                                .string(), false);
-                                    }
-                                    return null;
-                                }).filter(Objects::nonNull);
+                        Stream<DeployedContent> oldWorkflows = wIds.stream().filter(wId -> namePathMap.containsKey(wId)).map(wId -> {
+                            Either<Problem, JWorkflow> e = currentState.idToWorkflow(JWorkflowId.of(wId.getPath(), wId.getVersionId()));
+                            if (e.isRight() && namePathMap.get(wId) != null) {
+                                return new DeployedContent(namePathMap.get(wId), e.get().withPositions().toJson(), e.get().id().versionId().string(),
+                                        false);
+                            }
+                            return null;
+                        }).filter(Objects::nonNull);
 
                         if (contents == null) {
                             return oldWorkflows;
