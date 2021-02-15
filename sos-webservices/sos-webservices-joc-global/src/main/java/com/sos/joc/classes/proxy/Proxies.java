@@ -256,7 +256,7 @@ public class Proxies {
     
     @Subscribe({ ProxyCoupled.class })
     public void setCoupled(ProxyCoupled evt) {
-        if (evt.getControllerId() == null || evt.getControllerId().isEmpty()) {
+        if (evt.getControllerId() != null && !evt.getControllerId().isEmpty()) {
             coupledStates.put(evt.getControllerId(), evt.isCoupled());
         }
     }

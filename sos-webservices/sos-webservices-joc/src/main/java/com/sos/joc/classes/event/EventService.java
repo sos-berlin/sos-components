@@ -25,6 +25,7 @@ import com.sos.joc.event.bean.history.HistoryEvent;
 import com.sos.joc.event.bean.history.HistoryOrderTaskTerminated;
 import com.sos.joc.event.bean.inventory.InventoryEvent;
 import com.sos.joc.event.bean.problem.ProblemEvent;
+import com.sos.joc.event.bean.proxy.ProxyCoupled;
 import com.sos.joc.event.bean.proxy.ProxyEvent;
 import com.sos.joc.event.bean.proxy.ProxyRemoved;
 import com.sos.joc.event.bean.proxy.ProxyRestarted;
@@ -201,6 +202,21 @@ public class EventService {
         eventSnapshot.setEventType("JOCStateChanged");
         eventSnapshot.setObjectType(EventType.JOCCLUSTER);
         addEvent(eventSnapshot);
+    }
+    
+    @Subscribe({ ProxyCoupled.class })
+    public void createEvent(ProxyCoupled evt) {
+        if (evt.getControllerId() != null && !evt.getControllerId().isEmpty() && evt.getControllerId().equals(controllerId)) {
+            EventSnapshot eventSnapshot = new EventSnapshot();
+            eventSnapshot.setEventId(evt.getEventId());
+            if (evt.isCoupled()) {
+                eventSnapshot.setEventType("ProxyCoupled");
+            } else {
+                eventSnapshot.setEventType("ProxyDecoupled");
+            }
+            eventSnapshot.setObjectType(EventType.CONTROLLERCLUSTER);
+            addEvent(eventSnapshot);
+        }
     }
 
     BiConsumer<Stamped<KeyedEvent<Event>>, JControllerState> callbackOfController = (stampedEvt, currentState) -> {
