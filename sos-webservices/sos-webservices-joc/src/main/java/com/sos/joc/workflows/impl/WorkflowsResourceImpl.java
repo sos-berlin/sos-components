@@ -1,7 +1,9 @@
 package com.sos.joc.workflows.impl;
 
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +33,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.deploy.items.DeployedContent;
@@ -38,6 +41,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.workflow.Workflows;
 import com.sos.joc.model.workflow.WorkflowsFilter;
+import com.sos.joc.workflow.impl.WorkflowsHelper;
 import com.sos.joc.workflows.resource.IWorkflowsResource;
 import com.sos.schema.JsonValidator;
 
@@ -78,7 +82,6 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                     try {
                         Workflow workflow = Globals.objectMapper.readValue(w.getContent(), Workflow.class);
                         workflow.setPath(w.getPath());
-                        workflow.setIsCurrentVersion(null); // TODO
                         List<Instruction> instructions = workflow.getInstructions();
                         if (instructions != null) {
                             instructions.add(createImplicitEndInstruction());
@@ -95,7 +98,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             }
             workflows.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsString(workflows));
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(workflows));
 
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -117,29 +120,29 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                 return jocDefaultResponse;
             }
 
-//            JControllerState currentState = Proxy.of(workflowsFilter.getControllerId()).currentState();
-//            Long surveyDateMillis = currentState.eventId() / 1000;
-//            Stream<DeployedContent> contentsStream = getVolatileDeployedContent(workflowsFilter, currentState);
+            JControllerState currentState = Proxy.of(workflowsFilter.getControllerId()).currentState();
+            Long surveyDateMillis = currentState.eventId() / 1000;
+            Stream<DeployedContent> contentsStream = getVolatileDeployedContent(workflowsFilter, currentState);
+
+            boolean withRegex = workflowsFilter.getRegex() != null && !workflowsFilter.getRegex().isEmpty();
+            Predicate<String> regex = withRegex ? Pattern.compile(workflowsFilter.getRegex().replaceAll("%", ".*")).asPredicate() : s -> true;
 
             Workflows workflows = new Workflows();
-//            if (workflowsFilter.getRegex() != null && !workflowsFilter.getRegex().isEmpty()) {
-//                Predicate<String> regex = Pattern.compile(workflowsFilter.getRegex().replaceAll("%", ".*")).asPredicate();
-//                contentsStream = contentsStream.filter(w -> regex.test(w.getPath()));
-//            }
-//            workflows.setWorkflows(contentsStream.map(c -> {
-//                try {
-//                    Workflow workflow = Globals.objectMapper.readValue(c.getContent(), Workflow.class);
-//                    workflow.setPath(c.getPath());
-//                    return workflow;
-//                } catch (Exception e) {
-//                    // TODO
-//                    return null;
-//                }
-//            }).filter(Objects::nonNull).collect(Collectors.toList()));
-//            workflows.setSurveyDate(Date.from(Instant.ofEpochMilli(surveyDateMillis)));
+            workflows.setWorkflows(contentsStream.map(c -> {
+                try {
+                    Workflow workflow = Globals.objectMapper.readValue(c.getContent(), Workflow.class);
+                    workflow.setPath(c.getPath());
+                    workflow.setIsCurrentVersion(c.isCurrentVersion());
+                    return workflow;
+                } catch (Exception e) {
+                    // TODO
+                    return null;
+                }
+            }).filter(Objects::nonNull).filter(w -> regex.test(w.getPath())).collect(Collectors.toList()));
+            workflows.setSurveyDate(Date.from(Instant.ofEpochMilli(surveyDateMillis)));
             workflows.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsString(workflows));
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(workflows));
 
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -148,7 +151,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
     }
-    
+
     private static ImplicitEnd createImplicitEndInstruction() {
         ImplicitEnd i = new ImplicitEnd();
         i.setTYPE(InstructionType.IMPLICIT_END);
@@ -174,12 +177,23 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             List<DeployedContent> contents = null;
 
             if (workflowIds != null && !workflowIds.isEmpty()) {
-                workflowsFilter.setRegex(null);
                 Map<Boolean, Set<WorkflowId>> workflowMap = workflowIds.stream().filter(w -> canAdd(w.getPath(), folders)).collect(Collectors
                         .groupingBy(w -> w.getVersionId() != null, Collectors.toSet()));
                 if (workflowMap.containsKey(true)) {
                     dbFilter.setWorkflowIds(workflowMap.get(true));
                     contents = dbLayer.getDeployedInventoryWithCommitIds(dbFilter);
+                    if (contents != null && !contents.isEmpty()) {
+                        dbFilter.setWorkflowIds((Set<WorkflowId>) null);
+                        dbFilter.setPaths(workflowMap.get(true).stream().map(WorkflowId::getPath).collect(Collectors.toSet()));
+                        List<DeployedContent> contents2 = dbLayer.getDeployedInventory(dbFilter);
+                        if (contents2 != null && !contents2.isEmpty()) {
+                            Set<String> commitIds = contents2.stream().map(c -> c.getPath() + "," + c.getCommitId()).collect(Collectors.toSet());
+                            contents = contents.stream().map(c -> {
+                                c.setIsCurrentVersion(commitIds.contains(c.getPath() + "," + c.getCommitId()));
+                                return c;
+                            }).collect(Collectors.toList());
+                        }
+                    }
                 }
                 if (workflowMap.containsKey(false)) {
                     dbFilter.setPaths(workflowMap.get(false).stream().map(WorkflowId::getPath).collect(Collectors.toSet()));
@@ -224,6 +238,10 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                         isCurrentVersion = true;
                     }
                     if (e != null && e.isRight()) {
+                        if (isCurrentVersion == null) {
+                            Either<Problem, JWorkflow> e2 = currentState.pathToWorkflow(WorkflowPath.of(JocInventory.pathToName(w.getPath())));
+                            isCurrentVersion = e2.get().id().versionId().equals(e.get().id().versionId());
+                        }
                         return new DeployedContent(w.getPath(), e.get().withPositions().toJson(), w.getVersionId(), isCurrentVersion);
                     }
                     return null;
@@ -243,45 +261,73 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                 } else if (folders != null && !folders.isEmpty()) {
                     dbFilter.setFolders(folders);
                     contents = dbLayer.getDeployedInventory(dbFilter);
-                    
-//                    dbFilter.setFolders(null);
-//                    Set<WorkflowId> wIds = WorkflowsHelper.oldWorkflowIds(currentState).collect(Collectors.toSet());
-//                    dbFilter.setWorkflowIds(wIds);
-//                    Map<WorkflowId, String> namePathMap = dbLayer.getNamePathMappingWithCommitIds(dbFilter);
-//                    wIds.stream().filter(wId -> folders.contains(Paths.get(namePathMap.get(wId)).getParent().toString().replace('\\','/'))).map(wId -> {
-//                        Either<Problem, JWorkflow> e = currentState.idToWorkflow(JWorkflowId.of(wId.getPath(), wId.getVersionId()));
-//                        if (e.isRight()) {
-//                            return new DeployedContent(namePathMap.get(wId), e.get().withPositions().toJson(), e.get().id().versionId().string(), false);
-//                        }
-//                        return null;
-//                    }).filter(Objects::nonNull);
+
+                    dbFilter.setFolders(null);
+                    Set<WorkflowId> wIds = WorkflowsHelper.oldWorkflowIds(currentState).collect(Collectors.toSet());
+                    if (wIds != null && !wIds.isEmpty()) {
+                        dbFilter.setWorkflowIds(wIds);
+                        Map<WorkflowId, String> namePathMap = dbLayer.getNamePathMappingWithCommitIds(dbFilter);
+                        Stream<DeployedContent> oldWorkflows = wIds.stream().filter(wId -> namePathMap.get(wId) != null && folders.contains(Paths.get(
+                                namePathMap.get(wId)).getParent().toString().replace('\\', '/'))).map(wId -> {
+                                    Either<Problem, JWorkflow> e = currentState.idToWorkflow(JWorkflowId.of(wId.getPath(), wId.getVersionId()));
+                                    if (e.isRight() && namePathMap.get(wId) != null) {
+                                        return new DeployedContent(namePathMap.get(wId), e.get().withPositions().toJson(), e.get().id().versionId()
+                                                .string(), false);
+                                    }
+                                    return null;
+                                }).filter(Objects::nonNull);
+
+                        if (contents == null) {
+                            return oldWorkflows;
+                        } else {
+                            return Stream.concat(addWorkflowPositions(contents, currentState), oldWorkflows);
+                        }
+                    }
+                    return addWorkflowPositions(contents, currentState);
                 } else {
                     contents = dbLayer.getDeployedInventory(dbFilter);
-                    
-//                    currentState.ordersBy(JOrderPredicates.not(currentState.orderIsInCurrentVersionWorkflow())).map(JOrder::workflowId).distinct().map(w -> {
-//                        Either<Problem, JWorkflow> e = currentState.idToWorkflow(w);
-//                        if (e.isRight()) {
-//                            // TODO nameToPath mapping
-//                            return new DeployedContent(w.path().string(), e.get().withPositions().toJson(), e.get().id().versionId().string(), false);
-//                        }
-//                        return null;
-//                    }).filter(Objects::nonNull);
+
+                    Set<WorkflowId> wIds = WorkflowsHelper.oldWorkflowIds(currentState).collect(Collectors.toSet());
+                    if (wIds != null && !wIds.isEmpty()) {
+                        dbFilter.setWorkflowIds(wIds);
+                        Map<WorkflowId, String> namePathMap = dbLayer.getNamePathMappingWithCommitIds(dbFilter);
+                        Stream<DeployedContent> oldWorkflows = wIds.stream().map(wId -> {
+                            Either<Problem, JWorkflow> e = currentState.idToWorkflow(JWorkflowId.of(wId.getPath(), wId.getVersionId()));
+                            if (e.isRight() && namePathMap.get(wId) != null) {
+                                return new DeployedContent(namePathMap.get(wId), e.get().withPositions().toJson(), e.get().id().versionId().string(),
+                                        false);
+                            }
+                            return null;
+                        }).filter(Objects::nonNull);
+
+                        if (contents == null) {
+                            return oldWorkflows;
+                        } else {
+                            return Stream.concat(addWorkflowPositions(contents, currentState), oldWorkflows);
+                        }
+                    }
+                    return addWorkflowPositions(contents, currentState);
                 }
             }
-            if (contents != null && !contents.isEmpty()) {
-                return contents.stream().map(w -> {
-                    Either<Problem, JWorkflow> e = currentState.pathToWorkflow(WorkflowPath.of(JocInventory.pathToName(w.getPath())));
-                    if (e.isRight()) {
-                        w.setContent(e.get().withPositions().toJson());
-                        return w;
-                    }
-                    return null;
-                }).filter(Objects::nonNull);
-            }
+
             return Stream.empty();
         } finally {
             Globals.disconnect(connection);
         }
+    }
+
+    private Stream<DeployedContent> addWorkflowPositions(Collection<DeployedContent> contents, JControllerState currentState) {
+        if (contents != null && !contents.isEmpty()) {
+            return contents.stream().map(w -> {
+                Either<Problem, JWorkflow> e = currentState.pathToWorkflow(WorkflowPath.of(JocInventory.pathToName(w.getPath())));
+                if (e.isRight()) {
+                    w.setContent(e.get().withPositions().toJson());
+                    return w;
+                }
+                return null;
+            }).filter(Objects::nonNull);
+        }
+        return Stream.empty();
     }
 
     private Workflow addWorkflowPositions(Workflow w) {

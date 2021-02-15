@@ -47,24 +47,31 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
-            // TODO folder permissions
 
+            String workflowPath = workflowFilter.getWorkflowId().getPath();
+            if (workflowPath.contains("/")) {
+                checkFolderPermissions(workflowPath, folderPermissions.getListOfFolders());
+            }
+            String versionId = workflowFilter.getWorkflowId().getVersionId();
+            
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
             Workflow entity = new Workflow();
-            
-            DeployedContent content = dbLayer.getDeployedInventory(workflowFilter.getControllerId(), DeployType.WORKFLOW.intValue(), workflowFilter
-                    .getWorkflowId().getPath(), workflowFilter.getWorkflowId().getVersionId());
+
+            DeployedContent content = dbLayer.getDeployedInventory(workflowFilter.getControllerId(), DeployType.WORKFLOW.intValue(), workflowPath,
+                    versionId);
             if (content != null && content.getContent() != null && !content.getContent().isEmpty()) {
                 com.sos.controller.model.workflow.Workflow workflow = Globals.objectMapper.readValue(content.getContent(),
                         com.sos.controller.model.workflow.Workflow.class);
                 workflow.setPath(content.getPath());
-                if (workflowFilter.getWorkflowId().getVersionId() == null || workflowFilter.getWorkflowId().getVersionId().isEmpty()) {
+                if (!workflowPath.contains("/")) {
+                    checkFolderPermissions(content.getPath(), folderPermissions.getListOfFolders());
+                }
+                if (versionId == null || versionId.isEmpty()) {
                     workflow.setIsCurrentVersion(true);
                 } else {
-                    DeployedContent lastContent = dbLayer.getDeployedInventory(workflowFilter.getControllerId(), DeployType.WORKFLOW.intValue(), workflowFilter
-                            .getWorkflowId().getPath());
+                    DeployedContent lastContent = dbLayer.getDeployedInventory(workflowFilter.getControllerId(), DeployType.WORKFLOW.intValue(),
+                            workflowPath);
                     if (lastContent != null && lastContent.getCommitId() != null) {
                         workflow.setIsCurrentVersion(lastContent.getCommitId().equals(content.getCommitId()));
                     }
@@ -72,9 +79,9 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                 workflow = WorkflowsHelper.addWorkflowPositions(workflow);
                 entity.setWorkflow(workflow);
             } else {
-                throw new DBMissingDataException(String.format("Workflow '%s' doesn't exist", workflowFilter.getWorkflowId().getPath()));
+                throw new DBMissingDataException(String.format("Workflow '%s' doesn't exist", workflowPath));
             }
-            
+
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsString(entity));
@@ -100,10 +107,13 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                 return jocDefaultResponse;
             }
             
-            // TODO folder permissions
             // nameToPath mapping if workflowFilter.getWorkflowId().getPath() is a name
+            String workflowPath = workflowFilter.getWorkflowId().getPath();
+            if (workflowPath.contains("/")) {
+                checkFolderPermissions(workflowPath, folderPermissions.getListOfFolders());
+            }
 
-            String workflowName = JocInventory.pathToName(workflowFilter.getWorkflowId().getPath());
+            String workflowName = JocInventory.pathToName(workflowPath);
             JControllerState currentState = Proxy.of(workflowFilter.getControllerId()).currentState();
             Long surveyDateMillis = currentState.eventId() / 1000;
             
@@ -119,7 +129,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
             com.sos.controller.model.workflow.Workflow workflow = Globals.objectMapper.readValue(response.get().withPositions().toJson(),
                     com.sos.controller.model.workflow.Workflow.class);
             workflow.setIsCurrentVersion(WorkflowsHelper.isCurrentVersion(versionId, currentState));
-            workflow.setPath(workflowFilter.getWorkflowId().getPath());
+            workflow.setPath(workflowPath);
             
             Workflow entity = new Workflow();
             entity.setSurveyDate(Date.from(Instant.ofEpochMilli(surveyDateMillis)));

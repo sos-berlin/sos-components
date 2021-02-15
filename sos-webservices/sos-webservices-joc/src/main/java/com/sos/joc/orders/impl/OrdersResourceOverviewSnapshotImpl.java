@@ -176,7 +176,8 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                 wIds = workflowIds.stream().filter(w -> folderIsPermitted(w.getPath(), permittedFolders)).map(w -> JWorkflowId.of(JocInventory
                         .pathToName(w.getPath()), w.getVersionId()).asScala()).collect(Collectors.toSet());
             } else {
-                wIds = workflowIds.stream().map(w -> JWorkflowId.of(w.getPath(), w.getVersionId()).asScala()).collect(Collectors.toSet());
+                wIds = workflowIds.stream().map(w -> JWorkflowId.of(JocInventory.pathToName(w.getPath()), w.getVersionId()).asScala()).collect(
+                        Collectors.toSet());
             }
         }
         return wIds;

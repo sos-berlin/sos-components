@@ -37,6 +37,10 @@ public class DeployedContent {
         return commitId;
     }
     
+    public void setIsCurrentVersion(Boolean isCurrentVersion) {
+       this.isCurrentVersion = isCurrentVersion;
+    }
+    
     public Boolean isCurrentVersion() {
         return isCurrentVersion;
     }
