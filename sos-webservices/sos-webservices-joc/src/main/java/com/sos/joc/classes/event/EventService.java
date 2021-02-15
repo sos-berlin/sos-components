@@ -218,6 +218,7 @@ public class EventService {
             addEvent(eventSnapshot);
         }
         EventSnapshot eventSnapshot2 = new EventSnapshot();
+        eventSnapshot2.setEventId(evt.getEventId());
         eventSnapshot2.setEventType("ControllerStateChanged");
         eventSnapshot2.setObjectType(EventType.CONTROLLER);
         addEvent(eventSnapshot2);
