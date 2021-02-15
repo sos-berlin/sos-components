@@ -22,10 +22,10 @@ import com.sos.joc.model.Version;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.ArchiveFormat;
-import com.sos.joc.model.publish.ExportFilter;
-import com.sos.joc.model.publish.ExportShallowCopy;
-import com.sos.joc.model.publish.ExportForSigning;
 import com.sos.joc.model.publish.ControllerObject;
+import com.sos.joc.model.publish.ExportFilter;
+import com.sos.joc.model.publish.ExportForSigning;
+import com.sos.joc.model.publish.ExportShallowCopy;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
@@ -94,18 +94,28 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             InputStream apiVersionStream = null;
             InputStream inventoryVersionStream = null;
             jocVersionStream = this.getClass().getClassLoader().getResourceAsStream("/version.json");
+            if (jocVersionStream == null) {
+                jocVersionStream = this.getClass().getResourceAsStream("/version.json");
+            }
             apiVersionStream = this.getClass().getClassLoader().getResourceAsStream("/api-schema-version.json");
+            if (apiVersionStream == null) {
+                apiVersionStream = this.getClass().getResourceAsStream("/api-schema-version.json");
+            }
             inventoryVersionStream = this.getClass().getClassLoader().getResourceAsStream("/inventory-schema-version.json");
+            if (inventoryVersionStream == null) {
+                inventoryVersionStream = this.getClass().getResourceAsStream("/inventory-schema-version.json");
+            }
             Version jocVersion = PublishUtils.readVersion(jocVersionStream, "/version.json");
             Version apiVersion = PublishUtils.readVersion(apiVersionStream, "/api-schema-version.json");
             Version inventoryVersion = PublishUtils.readVersion(inventoryVersionStream, "/inventory-schema-version.json");
+
             StreamingOutput stream = null;
             if (filter.getExportFile().getFormat().equals(ArchiveFormat.TAR_GZ)) {
                 stream = PublishUtils.writeTarGzipFile(deployables,
-                        releasables,
-                        updateableAgentNames,
-                        commitId,
-                        controllerId,
+                        releasables, 
+                        updateableAgentNames, 
+                        commitId, 
+                        controllerId, 
                         dbLayer,
                         jocVersion,
                         apiVersion,
@@ -124,8 +134,8 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             ExportAudit audit = null;
             if (controllerId != null) {
                 audit = new ExportAudit(filter, 
-                        String.format("objects exported for controller <%1$s> to file <%2$s> with profile <%3$s>."
-                                , controllerId, filter.getExportFile().getFilename(), account));
+                        String.format("objects exported for controller <%1$s> to file <%2$s> with profile <%3$s>.", 
+                                controllerId, filter.getExportFile().getFilename(), account));
             } else {
                 audit = new ExportAudit(filter, 
                         String.format("objects exported to file <%1$s> with profile <%2$s>.", filter.getExportFile().getFilename(), account));

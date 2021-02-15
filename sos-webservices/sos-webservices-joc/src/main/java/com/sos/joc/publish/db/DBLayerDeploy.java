@@ -255,6 +255,22 @@ public class DBLayerDeploy {
         }
     }
 
+    public Boolean getInventoryConfigurationReleasedByNameAndType(String name, Integer type)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("select released from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            sql.append(" where name = :name");
+            sql.append(" and type = :type");
+            Query<Boolean> query = session.createQuery(sql.toString());
+            query.setParameter("name", name);
+            query.setParameter("type", type);
+            return session.getSingleResult(query);
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+    }
+
     public List<DBItemInventoryConfiguration> getAllInventoryConfigurations() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
@@ -274,23 +290,27 @@ public class DBLayerDeploy {
     }
 
     public List<DBItemInventoryConfiguration> getAllInventoryConfigurationsByFolder(String folder) {
-        return getInventoryConfigurationsByFolder(folder, false, false, false, false);
+        return getInventoryConfigurationsByFolder(folder, false, false, false, false, false, false);
     }
 
     public List<DBItemInventoryConfiguration> getDeployableInventoryConfigurationsByFolder(String folder) {
-        return getInventoryConfigurationsByFolder(folder, true, false, false, false);
+        return getInventoryConfigurationsByFolder(folder, false, true, false, false, false, false);
     }
 
     public List<DBItemInventoryConfiguration> getValidDeployableInventoryConfigurationsByFolder(String folder) {
-        return getInventoryConfigurationsByFolder(folder, true, false, false, true);
+        return getInventoryConfigurationsByFolder(folder, false, true, false, false, false, true);
     }
 
     public List<DBItemInventoryConfiguration> getDeployableInventoryConfigurationsByFolder(String folder, boolean recursive) {
-        return getInventoryConfigurationsByFolder(folder, true, false, recursive, false);
+        return getInventoryConfigurationsByFolder(folder, recursive, true, false, false, false, false);
+    }
+
+    public List<DBItemInventoryConfiguration> getDeployableInventoryConfigurationsByFolderWithoutDeployed(String folder, boolean recursive) {
+        return getInventoryConfigurationsByFolder(folder, recursive, true, false, true, false, false);
     }
 
     public List<DBItemInventoryConfiguration> getValidDeployableInventoryConfigurationsByFolder(String folder, boolean recursive) {
-        return getInventoryConfigurationsByFolder(folder, true, false, recursive, true);
+        return getInventoryConfigurationsByFolder(folder, recursive, true, false, false, false, true);
     }
 
     public List<DBItemInventoryConfiguration> getValidDeployableDraftInventoryConfigurationsByFolder(String folder, boolean recursive) {
@@ -298,19 +318,19 @@ public class DBLayerDeploy {
     }
 
     public List<DBItemInventoryConfiguration> getReleasableInventoryConfigurationsByFolder(String folder) {
-        return getInventoryConfigurationsByFolder(folder, false, true, false, false);
+        return getInventoryConfigurationsByFolder(folder, false, false, true, false, false, false);
     }
 
     public List<DBItemInventoryConfiguration> getValidReleasableInventoryConfigurationsByFolder(String folder) {
-        return getInventoryConfigurationsByFolder(folder, false, true, false, true);
+        return getInventoryConfigurationsByFolder(folder, false, false, true, false, false, true);
     }
 
-    public List<DBItemInventoryConfiguration> getReleasableInventoryConfigurationsByFolder(String folder, boolean recursive) {
-        return getInventoryConfigurationsByFolder(folder, false, true, recursive, false);
+    public List<DBItemInventoryConfiguration> getReleasableInventoryConfigurationsByFolderWithoutReleased(String folder, boolean recursive) {
+        return getInventoryConfigurationsByFolder(folder, recursive, false, true, false, true, false);
     }
 
-    public List<DBItemInventoryConfiguration> getValidReleasableInventoryConfigurationsByFolder(String folder, boolean recursive) {
-        return getInventoryConfigurationsByFolder(folder, false, true, recursive, true);
+    public List<DBItemInventoryConfiguration> getValidReleasableInventoryConfigurationsByFolderWithoutReleased(String folder, boolean recursive) {
+        return getInventoryConfigurationsByFolder(folder, recursive, false, true, false, true, true);
     }
 
     public List<DBItemInventoryReleasedConfiguration> getReleasedInventoryConfigurationsByFolder(String folder) {
@@ -338,8 +358,7 @@ public class DBLayerDeploy {
         } 
     }
         
-    private List<DBItemInventoryConfiguration> getInventoryConfigurationsByFolder(String folder, boolean onlyDeployables, boolean onlyReleasables,
-            boolean recursive, boolean onlyValid) {
+    public List<DBItemInventoryConfiguration> getReleasableInventoryConfigurationsByFolderWithoutReleased(String folder, boolean recursive, boolean valid) {
         try {
             StringBuilder hql = new StringBuilder();
             hql.append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
@@ -348,11 +367,47 @@ public class DBLayerDeploy {
             } else {
                 hql.append(" where folder = :folder");
             }
-            if (onlyDeployables || onlyReleasables) {
+            if (valid) {
+                hql.append(" and valid = true");
+            }
+            hql.append(" and released = false");
+            Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
+            if (recursive) {
+                query.setParameter("folder", MatchMode.START.toMatchString(folder));
+            } else {
+                query.setParameter("folder", folder);
+            }
+            return session.getResultList(query);
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        } 
+    }
+        
+    private List<DBItemInventoryConfiguration> getInventoryConfigurationsByFolder(String folder, boolean recursive, 
+            boolean deployablesOnly, 
+            boolean releasablesOnly,
+            boolean withoutDeployed,
+            boolean withoutReleased,
+            boolean validOnly) {
+        try {
+            StringBuilder hql = new StringBuilder();
+            hql.append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            if (recursive) {
+                hql.append(" where folder like :folder");
+            } else {
+                hql.append(" where folder = :folder");
+            }
+            if (deployablesOnly || releasablesOnly) {
               hql.append(" and type in (:types)");  
             } 
-            if (onlyValid) {
+            if (validOnly) {
                 hql.append(" and valid = true");
+            }
+            if (withoutDeployed) {
+                hql.append(" and deployed = false");
+            }
+            if (withoutReleased) {
+                hql.append(" and released = false");
             }
             Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
             if (recursive) {
@@ -360,13 +415,13 @@ public class DBLayerDeploy {
             } else {
                 query.setParameter("folder", folder);
             }
-            if (onlyDeployables) {
+            if (deployablesOnly) {
                 query.setParameterList("types", Arrays.asList(new Integer[] {
                         ConfigurationType.WORKFLOW.intValue(), 
                         ConfigurationType.JUNCTION.intValue(),
                         ConfigurationType.JOBCLASS.intValue(),
                         ConfigurationType.LOCK.intValue()}));
-            } else if (onlyReleasables) {
+            } else if (releasablesOnly) {
                 query.setParameterList("types", Arrays.asList(new Integer[] {
                         ConfigurationType.SCHEDULE.intValue(), 
                         ConfigurationType.WORKINGDAYSCALENDAR.intValue(),

@@ -94,11 +94,21 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             InputStream apiVersionStream = null;
             InputStream inventoryVersionStream = null;
             jocVersionStream = this.getClass().getClassLoader().getResourceAsStream("/version.json");
+            if (jocVersionStream == null) {
+                jocVersionStream = this.getClass().getResourceAsStream("/version.json");
+            }
             apiVersionStream = this.getClass().getClassLoader().getResourceAsStream("/api-schema-version.json");
+            if (apiVersionStream == null) {
+                apiVersionStream = this.getClass().getResourceAsStream("/api-schema-version.json");
+            }
             inventoryVersionStream = this.getClass().getClassLoader().getResourceAsStream("/inventory-schema-version.json");
+            if (inventoryVersionStream == null) {
+                inventoryVersionStream = this.getClass().getResourceAsStream("/inventory-schema-version.json");
+            }
             Version jocVersion = PublishUtils.readVersion(jocVersionStream, "/version.json");
             Version apiVersion = PublishUtils.readVersion(apiVersionStream, "/api-schema-version.json");
             Version inventoryVersion = PublishUtils.readVersion(inventoryVersionStream, "/inventory-schema-version.json");
+
             StreamingOutput stream = null;
             if (filter.getExportFile().getFormat().equals(ArchiveFormat.TAR_GZ)) {
                 stream = PublishUtils.writeTarGzipFile(deployables,
@@ -111,11 +121,11 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                         apiVersion,
                         inventoryVersion);
             } else {
-                stream = PublishUtils.writeZipFile(deployables, 
-                        releasables, 
-                        updateableAgentNames, 
-                        commitId, 
-                        controllerId, 
+                stream = PublishUtils.writeZipFile(deployables,
+                        releasables,
+                        updateableAgentNames,
+                        commitId,
+                        controllerId,
                         dbLayer,
                         jocVersion,
                         apiVersion,

@@ -2701,7 +2701,7 @@ public abstract class PublishUtils {
  
     public static Set<DBItemInventoryConfiguration> getDeployableInventoryConfigurationsfromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
         List<DBItemInventoryConfiguration> entries = new ArrayList<DBItemInventoryConfiguration>();
-        folders.stream().forEach(item -> entries.addAll(dbLayer.getDeployableInventoryConfigurationsByFolder(item.getPath(), item.getRecursive())));
+        folders.stream().forEach(item -> entries.addAll(dbLayer.getDeployableInventoryConfigurationsByFolderWithoutDeployed(item.getPath(), item.getRecursive())));
         return entries.stream().collect(Collectors.toSet());
     }
     
@@ -2717,23 +2717,49 @@ public abstract class PublishUtils {
         return entries.stream().collect(Collectors.toSet());
     }
     
-    public static Set<DBItemInventoryConfiguration> getReleasableInventoryConfigurationsfromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
+    public static Set<DBItemInventoryConfiguration> getReleasableInventoryConfigurationsWithoutReleasedfromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
         List<DBItemInventoryConfiguration> entries = new ArrayList<DBItemInventoryConfiguration>();
-        folders.stream().forEach(item -> entries.addAll(dbLayer.getReleasableInventoryConfigurationsByFolder(item.getPath(), item.getRecursive())));
+        folders.stream().forEach(item -> entries.addAll(dbLayer.getReleasableInventoryConfigurationsByFolderWithoutReleased(item.getPath(), item.getRecursive())));
         return entries.stream().collect(Collectors.toSet());
     }
     
     public static Set<DBItemInventoryConfiguration> getValidReleasableInventoryConfigurationsfromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
         List<DBItemInventoryConfiguration> entries = new ArrayList<DBItemInventoryConfiguration>();
-        folders.stream().forEach(item -> entries.addAll(dbLayer.getValidReleasableInventoryConfigurationsByFolder(item.getPath(), item.getRecursive())));
+        folders.stream().forEach(item -> entries.addAll(dbLayer.getValidReleasableInventoryConfigurationsByFolderWithoutReleased(item.getPath(), item.getRecursive())));
         return entries.stream().collect(Collectors.toSet());
     }
     
-    public static Set<DBItemInventoryReleasedConfiguration> getReleasedInventoryConfigurationsfromFolders(List<Configuration> folders, 
+    public static Set<DBItemInventoryReleasedConfiguration> getReleasedInventoryConfigurationsfromFoldersWithoutDrafts(List<Configuration> folders, 
             DBLayerDeploy dbLayer) {
         List<DBItemInventoryReleasedConfiguration> entries = new ArrayList<DBItemInventoryReleasedConfiguration>();
         folders.stream().forEach(item -> entries.addAll(dbLayer.getReleasedInventoryConfigurationsByFolder(item.getPath(), item.getRecursive())));
-        return entries.stream().collect(Collectors.toSet());
+        Set<DBItemInventoryReleasedConfiguration> allReleased = entries.stream().collect(Collectors.toSet());;
+        allReleased = allReleased.stream().filter(item -> {
+            DBItemInventoryConfiguration dbItem = dbLayer.getConfigurationByName(item.getName(), item.getType());
+            if (dbItem != null && item.getPath().equals(dbItem.getPath())) {
+                return true;
+            } else {
+                return false;
+            }
+        }).filter(Objects::nonNull).collect(Collectors.toSet());
+        allReleased.stream()
+        .filter(item -> {
+            if(item.getName() == null || item.getName().isEmpty()) {
+                LOGGER.debug(String.format("No name found for item with path: %1$s ", item.getPath()));
+                String name = Paths.get(item.getPath()).getFileName().toString();
+                item.setName(name);
+                LOGGER.debug(String.format("Item name set to: %1$s ", item.getName()));
+            }
+            Boolean released = dbLayer.getInventoryConfigurationReleasedByNameAndType(item.getName(), item.getType());
+            if (released == null) {
+                // released item does not exist in current configuration
+                // decision: ignore item as only objects from released configurations with existing current configuration are relevant
+                return false;
+            } else {
+                return released;
+            }
+        }).filter(Objects::nonNull).collect(Collectors.toSet());
+        return allReleased;
     }
     
     public static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesFromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
@@ -2806,7 +2832,7 @@ public abstract class PublishUtils {
                         .collect(Collectors.toList());
                 Set<DBItemDeploymentHistory> allItems = new HashSet<DBItemDeploymentHistory>();
                 if (depFolders != null && !depFolders.isEmpty()) {
-                    allItems.addAll(getLatestActiveDepHistoryEntriesFromFolders(depFolders, dbLayer));
+                    allItems.addAll(getLatestActiveDepHistoryEntriesWithoutDraftsFromFolders(depFolders, dbLayer));
                 }
                 List<DBItemDeploymentHistory> deploymentDbItems = dbLayer.getFilteredDeployments(filter);
                 if (deploymentDbItems != null && !deploymentDbItems.isEmpty()) {
@@ -2924,7 +2950,7 @@ public abstract class PublishUtils {
                         .collect(Collectors.toList());
                 Set<DBItemInventoryReleasedConfiguration> allItems = new HashSet<DBItemInventoryReleasedConfiguration>();
                 if (releasedFolders != null && !releasedFolders.isEmpty()) {
-                    allItems.addAll(getReleasedInventoryConfigurationsfromFolders(releasedFolders, dbLayer));
+                    allItems.addAll(getReleasedInventoryConfigurationsfromFoldersWithoutDrafts(releasedFolders, dbLayer));
                 }
                 List<DBItemInventoryReleasedConfiguration> configurationDbItems = dbLayer.getFilteredReleasedConfigurations(filter);
                 if (configurationDbItems != null && !configurationDbItems.isEmpty()) {
@@ -2944,7 +2970,7 @@ public abstract class PublishUtils {
                         .collect(Collectors.toList());
                 Set<DBItemInventoryConfiguration> allItems = new HashSet<DBItemInventoryConfiguration>();
                 if (draftFolders != null && !draftFolders.isEmpty()) {
-                    allItems.addAll(getReleasableInventoryConfigurationsfromFolders(draftFolders, dbLayer));
+                    allItems.addAll(getReleasableInventoryConfigurationsWithoutReleasedfromFolders(draftFolders, dbLayer));
                 }
                 List<DBItemInventoryConfiguration> configurationDbItems = dbLayer.getFilteredReleasableConfigurations(filter);
                 if (configurationDbItems != null && !configurationDbItems.isEmpty()) {
