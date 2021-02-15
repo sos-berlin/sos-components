@@ -15,16 +15,15 @@ import java.util.concurrent.Executors;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSPath;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.proxy.ProxyUser;
+import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
-import com.sos.joc.cluster.JocClusterService;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
@@ -37,9 +36,9 @@ import com.sos.js7.event.controller.configuration.controller.ControllerConfigura
 import com.sos.js7.event.notifier.Mailer;
 import com.sos.js7.history.controller.configuration.HistoryConfiguration;
 
-public class HistoryMain extends JocClusterService {
+public class HistoryService extends AJocClusterService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(HistoryMain.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HistoryService.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     private static final String IDENTIFIER = JocClusterServices.history.name();
@@ -55,9 +54,8 @@ public class HistoryMain extends JocClusterService {
     // private final List<HistoryControllerHandler> activeHandlers = Collections.synchronizedList(new ArrayList<HistoryControllerHandler>());
     private static List<HistoryControllerHandler> activeHandlers = new ArrayList<>();
 
-    public HistoryMain(final JocConfiguration jocConf, ThreadGroup parentThreadGroup) {
+    public HistoryService(final JocConfiguration jocConf, ThreadGroup parentThreadGroup) {
         super(jocConf, parentThreadGroup, IDENTIFIER);
-        MDC.put("clusterService", IDENTIFIER);
         setConfig();
         logDir = Paths.get(((HistoryConfiguration) config.getApp()).getLogDir());
     }
@@ -75,7 +73,7 @@ public class HistoryMain extends JocClusterService {
     @Override
     public JocClusterAnswer start(List<ControllerConfiguration> controllers) {
         try {
-            MDC.put("clusterService", IDENTIFIER);
+            AJocClusterService.setLogger(IDENTIFIER);
             LOGGER.info(String.format("[%s]start...", getIdentifier()));
 
             processingStarted = false;
@@ -86,6 +84,7 @@ public class HistoryMain extends JocClusterService {
             createFactory(getJocConfig().getHibernateConfiguration());
             handleTempLogsOnStart();
             threadPool = Executors.newFixedThreadPool(config.getControllers().size(), new JocClusterThreadFactory(getThreadGroup(), IDENTIFIER));
+            AJocClusterService.clearLogger();
 
             for (ControllerConfiguration controllerConfig : config.getControllers()) {
                 HistoryControllerHandler controllerHandler = new HistoryControllerHandler(factory, config, controllerConfig, mailer);
@@ -95,10 +94,14 @@ public class HistoryMain extends JocClusterService {
 
                     @Override
                     public void run() {
+                        AJocClusterService.setLogger(IDENTIFIER);
+
                         LOGGER.info(String.format("[%s][run]start ...", controllerHandler.getIdentifier()));
                         controllerHandler.start();
                         processingStarted = true;
                         LOGGER.info(String.format("[%s][run]end", controllerHandler.getIdentifier()));
+
+                        AJocClusterService.clearLogger();
                     }
 
                 };
@@ -112,10 +115,13 @@ public class HistoryMain extends JocClusterService {
 
     @Override
     public JocClusterAnswer stop() {
-        MDC.put("clusterService", IDENTIFIER);
+        AJocClusterService.setLogger(IDENTIFIER);
         LOGGER.info(String.format("[%s]stop...", getIdentifier()));
+        AJocClusterService.clearLogger();
 
         closeEventHandlers();
+
+        AJocClusterService.setLogger(IDENTIFIER);
         handleTempLogsOnEnd();
         closeFactory();
         JocCluster.shutdownThreadPool(threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
@@ -126,6 +132,7 @@ public class HistoryMain extends JocClusterService {
     }
 
     private void setConfig() {
+        AJocClusterService.setLogger(IDENTIFIER);
         config = new Configuration();
         try {
             Properties conf = Globals.sosCockpitProperties.getProperties();
@@ -137,6 +144,8 @@ public class HistoryMain extends JocClusterService {
             config.setApp(h);
         } catch (Exception ex) {
             LOGGER.error(ex.toString(), ex);
+        } finally {
+            AJocClusterService.clearLogger();
         }
     }
 
@@ -327,9 +336,11 @@ public class HistoryMain extends JocClusterService {
 
                     @Override
                     public void run() {
+                        AJocClusterService.setLogger(IDENTIFIER);
                         LOGGER.info(String.format("[%s][%s]start...", method, h.getIdentifier()));
                         h.close();
                         LOGGER.info(String.format("[%s][%s]end", method, h.getIdentifier()));
+                        AJocClusterService.clearLogger();
                     }
                 };
                 threadPool.submit(thread);
@@ -338,7 +349,9 @@ public class HistoryMain extends JocClusterService {
             activeHandlers = new ArrayList<>();
         } else {
             if (isDebugEnabled) {
+                AJocClusterService.setLogger(IDENTIFIER);
                 LOGGER.debug(String.format("[%s][skip]already closed", method));
+                AJocClusterService.clearLogger();
             }
         }
     }

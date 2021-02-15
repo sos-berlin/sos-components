@@ -49,7 +49,7 @@ public class JocServletContainer extends ServletContainer {
             SOSShell.printSystemInfos();
             SOSShell.printJVMInfos();
         });
-        
+
         JocClusterService.getInstance().start();
 
         try {
@@ -64,8 +64,10 @@ public class JocServletContainer extends ServletContainer {
         LOGGER.debug("----> destroy on close JOC");
         super.destroy();
 
-        Proxies.closeAll();
+        // 1 - stop cluster
         JocClusterService.getInstance().stop(true);
+        // 2 - close proxies
+        Proxies.closeAll();
 
         if (Globals.sosHibernateFactory != null) {
             LOGGER.info("----> closing DB Connections");

@@ -6,16 +6,16 @@ import org.slf4j.MDC;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
-import com.sos.joc.cluster.JocClusterService;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
-import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.JocClusterServices;
+import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 
 
-public class ProxyService extends JocClusterService {
+public class ProxyService extends AJocClusterService {
     
     private static final String IDENTIFIER = JocClusterServices.proxy.name();
 

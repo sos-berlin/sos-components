@@ -1,8 +1,11 @@
 package com.sos.joc.cluster;
 
-import com.sos.joc.cluster.configuration.JocConfiguration;
+import org.slf4j.MDC;
 
-public abstract class JocClusterService implements IJocClusterService {
+import com.sos.joc.cluster.configuration.JocConfiguration;
+import com.sos.joc.model.cluster.common.ClusterServices;
+
+public abstract class AJocClusterService implements IJocClusterService {
 
     private final JocConfiguration jocConfig;
     private final ThreadGroup parentThreadGroup;
@@ -10,7 +13,7 @@ public abstract class JocClusterService implements IJocClusterService {
 
     private ThreadGroup threadGroup;
 
-    public JocClusterService(final JocConfiguration jocConf, ThreadGroup clusterThreadGroup, String serviceIdentifier) {
+    public AJocClusterService(final JocConfiguration jocConf, ThreadGroup clusterThreadGroup, String serviceIdentifier) {
         jocConfig = jocConf;
         parentThreadGroup = clusterThreadGroup;
         threadGroup = new ThreadGroup(parentThreadGroup, serviceIdentifier);
@@ -42,5 +45,17 @@ public abstract class JocClusterService implements IJocClusterService {
             threadGroup = new ThreadGroup(parentThreadGroup, identifier);
         }
         return threadGroup;
+    }
+
+    public static void setLogger() {
+        setLogger(ClusterServices.cluster.name());
+    }
+
+    public static void setLogger(String identifier) {
+        MDC.put("clusterService", identifier);
+    }
+
+    public static void clearLogger() {
+        MDC.clear();
     }
 }

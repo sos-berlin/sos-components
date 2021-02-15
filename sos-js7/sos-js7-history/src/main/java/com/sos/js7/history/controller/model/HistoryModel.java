@@ -46,7 +46,7 @@ import com.sos.joc.event.bean.history.HistoryOrderTerminated;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.event.controller.EventMeta;
 import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
-import com.sos.js7.history.controller.HistoryMain;
+import com.sos.js7.history.controller.HistoryService;
 import com.sos.js7.history.controller.configuration.HistoryConfiguration;
 import com.sos.js7.history.controller.exception.FatEventOrderNotFoundException;
 import com.sos.js7.history.controller.exception.FatEventOrderStepNotFoundException;
@@ -1467,7 +1467,7 @@ public class HistoryModel {
     }
 
     private Path getOrderLogDirectory(LogEntry entry) {
-        return HistoryMain.getOrderLogDirectory(Paths.get(historyConfiguration.getLogDir()), entry.getHistoryOrderMainParentId());
+        return HistoryService.getOrderLogDirectory(Paths.get(historyConfiguration.getLogDir()), entry.getHistoryOrderMainParentId());
         // return Paths.get(historyConfiguration.getLogDir(), String.valueOf(entry.getHistoryOrderMainParentId()));
     }
 

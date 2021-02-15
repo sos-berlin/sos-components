@@ -1,4 +1,4 @@
-package com.sos.js7.history.controller;
+package com.sos.js7.order.initiator;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -16,9 +16,9 @@ import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 
-public class HistoryMainTest {
+ public class TestOrderInitiatorService {
 
-    public static void exitAfter(HistoryMain history, int seconds) {
+    public static void exitAfter(OrderInitiatorService history, int seconds) {
 
         boolean run = true;
         int counter = 0;
@@ -27,7 +27,7 @@ public class HistoryMainTest {
                 run = false;
             } else {
                 try {
-                    Thread.sleep(1 * 1_000);
+                    Thread.sleep(1 * 1000);
                     counter = counter + 1;
                 } catch (InterruptedException e) {
 
@@ -42,7 +42,7 @@ public class HistoryMainTest {
                 run = false;
             } else {
                 try {
-                    Thread.sleep(seconds * 1_000);
+                    Thread.sleep(seconds * 1000);
                     counter = counter + 1;
                 } catch (InterruptedException e) {
 
@@ -53,8 +53,8 @@ public class HistoryMainTest {
 
     private List<ControllerConfiguration> getControllers() {
         Properties p = new Properties();
-        p.setProperty("controller_id", "js7.x");
-        p.setProperty("primary_controller_uri", "http://localhost:5444");
+        p.setProperty("controller_id", "controller");
+        p.setProperty("primary_controller_uri", "http://localhost:4424");
 
         List<ControllerConfiguration> list = new ArrayList<ControllerConfiguration>();
         ControllerConfiguration c = new ControllerConfiguration();
@@ -67,8 +67,7 @@ public class HistoryMainTest {
         return list;
     }
 
-    @Ignore
-    @Test
+     @Test
     public void test() throws Exception {
         Globals.sosCockpitProperties = new JocCockpitProperties();
 
@@ -76,9 +75,9 @@ public class HistoryMainTest {
         JocConfiguration jocConfig = new JocConfiguration(resDir.toString(), "UTC", resDir.resolve("hibernate.cfg.xml"), resDir, JocSecurityLevel.LOW
                 .value(), "", 0);
 
-        HistoryMain hm = new HistoryMain(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
+        OrderInitiatorService hm = new OrderInitiatorService(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
         hm.start(getControllers());
-        HistoryMainTest.exitAfter(hm, 2 * 60);
+        TestOrderInitiatorService.exitAfter(hm, 3 * 60);
 
     }
 

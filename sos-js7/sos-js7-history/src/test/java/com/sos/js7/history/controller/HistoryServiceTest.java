@@ -1,4 +1,4 @@
-package com.sos.js7.order.initiator;
+package com.sos.js7.history.controller;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -16,9 +16,9 @@ import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 
- public class TestOrderInitiatorMain {
+public class HistoryServiceTest {
 
-    public static void exitAfter(OrderInitiatorMain history, int seconds) {
+    public static void exitAfter(HistoryService history, int seconds) {
 
         boolean run = true;
         int counter = 0;
@@ -27,7 +27,7 @@ import com.sos.js7.event.controller.configuration.controller.ControllerConfigura
                 run = false;
             } else {
                 try {
-                    Thread.sleep(1 * 1000);
+                    Thread.sleep(1 * 1_000);
                     counter = counter + 1;
                 } catch (InterruptedException e) {
 
@@ -42,7 +42,7 @@ import com.sos.js7.event.controller.configuration.controller.ControllerConfigura
                 run = false;
             } else {
                 try {
-                    Thread.sleep(seconds * 1000);
+                    Thread.sleep(seconds * 1_000);
                     counter = counter + 1;
                 } catch (InterruptedException e) {
 
@@ -53,8 +53,8 @@ import com.sos.js7.event.controller.configuration.controller.ControllerConfigura
 
     private List<ControllerConfiguration> getControllers() {
         Properties p = new Properties();
-        p.setProperty("controller_id", "controller");
-        p.setProperty("primary_controller_uri", "http://localhost:4424");
+        p.setProperty("controller_id", "js7.x");
+        p.setProperty("primary_controller_uri", "http://localhost:5444");
 
         List<ControllerConfiguration> list = new ArrayList<ControllerConfiguration>();
         ControllerConfiguration c = new ControllerConfiguration();
@@ -67,7 +67,8 @@ import com.sos.js7.event.controller.configuration.controller.ControllerConfigura
         return list;
     }
 
-     @Test
+    @Ignore
+    @Test
     public void test() throws Exception {
         Globals.sosCockpitProperties = new JocCockpitProperties();
 
@@ -75,9 +76,9 @@ import com.sos.js7.event.controller.configuration.controller.ControllerConfigura
         JocConfiguration jocConfig = new JocConfiguration(resDir.toString(), "UTC", resDir.resolve("hibernate.cfg.xml"), resDir, JocSecurityLevel.LOW
                 .value(), "", 0);
 
-        OrderInitiatorMain hm = new OrderInitiatorMain(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
+        HistoryService hm = new HistoryService(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
         hm.start(getControllers());
-        TestOrderInitiatorMain.exitAfter(hm, 3 * 60);
+        HistoryServiceTest.exitAfter(hm, 2 * 60);
 
     }
 

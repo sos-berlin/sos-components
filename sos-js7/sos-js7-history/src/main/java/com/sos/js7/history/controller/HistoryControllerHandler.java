@@ -12,14 +12,12 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.ProxyUser;
-import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.js7.event.controller.configuration.Configuration;
 import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 import com.sos.js7.event.notifier.DefaultNotifier;
@@ -122,7 +120,6 @@ public class HistoryControllerHandler {
     }
 
     public void start() {
-        MDC.put("clusterService", ClusterServices.history.name());
         closed.set(false);
 
         String method = "run";
@@ -535,7 +532,6 @@ public class HistoryControllerHandler {
     }
 
     public void close() {
-        MDC.put("clusterService", ClusterServices.history.name());
         doClose();
         if (model != null) {
             model.close();
@@ -543,7 +539,11 @@ public class HistoryControllerHandler {
     }
 
     public void doClose() {
-        stopper.stop();
+        try {
+            stopper.stop();
+        } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
+        }
         closed.set(true);
 
         synchronized (lockObject) {

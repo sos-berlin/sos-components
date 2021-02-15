@@ -14,11 +14,12 @@ public class JocClusterConfiguration {
     public static final String IDENTIFIER = JocClusterServices.cluster.name();
 
     public enum JocClusterServices {
-        cluster, history, dailyplan, proxy;
+        cluster, history, dailyplan, cleanup, proxy;
     }
 
-    private static final String CLASS_NAME_HISTORY = "com.sos.js7.history.controller.HistoryMain";
-    private static final String CLASS_NAME_DAILYPLAN = "com.sos.js7.order.initiator.OrderInitiatorMain";
+    private static final String CLASS_NAME_HISTORY = "com.sos.js7.history.controller.HistoryService";
+    private static final String CLASS_NAME_DAILYPLAN = "com.sos.js7.order.initiator.OrderInitiatorService";
+    private static final String CLASS_NAME_CLEANUP = "com.sos.joc.cleanup.CleanupService";
 
     private List<Class<?>> services;
     private final ThreadGroup threadGroup;
@@ -50,6 +51,7 @@ public class JocClusterConfiguration {
         services = new ArrayList<>();
         addServiceClass(CLASS_NAME_HISTORY);
         addServiceClass(CLASS_NAME_DAILYPLAN);
+        addServiceClass(CLASS_NAME_CLEANUP);
     }
 
     private void addServiceClass(String className) {

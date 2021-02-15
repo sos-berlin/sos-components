@@ -12,13 +12,11 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocConfiguration;
-import com.sos.joc.cluster.IJocClusterService;
 import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 
 public class JocClusterHandler {
@@ -33,11 +31,11 @@ public class JocClusterHandler {
     private List<IJocClusterService> services;
     private boolean active;
 
-    public JocClusterHandler(JocCluster jocCluster) {
+    protected JocClusterHandler(JocCluster jocCluster) {
         cluster = jocCluster;
     }
 
-    public JocClusterAnswer perform(PerformType type) {
+    protected JocClusterAnswer perform(PerformType type) {
         LOGGER.info(String.format("[perform][active=%s]%s", active, type.name()));
 
         if (cluster.getConfig().getServices() == null || cluster.getConfig().getServices().size() == 0) {
@@ -75,7 +73,9 @@ public class JocClusterHandler {
 
                 @Override
                 public JocClusterAnswer get() {
+                    AJocClusterService.setLogger();
                     LOGGER.info(String.format("[%s][%s]start...", method, s.getIdentifier()));
+                    AJocClusterService.clearLogger();
                     JocClusterAnswer answer = null;
                     if (isStart) {
                         if (!SOSString.isEmpty(s.getControllerApiUser())) {
@@ -90,7 +90,9 @@ public class JocClusterHandler {
                     } else {
                         answer = s.stop();
                     }
+                    AJocClusterService.setLogger();
                     LOGGER.info(String.format("[%s][%s]completed", method, s.getIdentifier()));
+                    AJocClusterService.clearLogger();
                     return answer;
                 }
             };
@@ -109,6 +111,8 @@ public class JocClusterHandler {
         } else {
             active = false;
         }
+
+        AJocClusterService.setLogger();
         LOGGER.info(String.format("[%s][active=%s]start ...", type.name(), active));
 
         ExecutorService es = Executors.newFixedThreadPool(services.size(), new JocClusterThreadFactory(cluster.getConfig().getThreadGroup(),
@@ -157,7 +161,6 @@ public class JocClusterHandler {
     }
 
     public JocClusterAnswer restartService(String identifier) {
-        MDC.put("clusterService", identifier);
         Optional<IJocClusterService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
         if (!os.isPresent()) {
             return JocCluster.getErrorAnswer(new Exception(String.format("handler not found for %s", identifier)));

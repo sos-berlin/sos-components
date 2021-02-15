@@ -402,7 +402,6 @@ public class JocCluster {
     }
 
     private JocClusterAnswer setSwitchMember(DBLayerJocCluster dbLayer, String newMemberId) throws Exception {
-
         JocClusterAnswer answer = getOKAnswer(JocClusterAnswerState.SWITCH);
         try {
             dbLayer.getSession().beginTransaction();
@@ -509,7 +508,6 @@ public class JocCluster {
             dbLayer.getSession().update(item);
             dbLayer.getSession().commit();
         }
-
         return item;
     }
 

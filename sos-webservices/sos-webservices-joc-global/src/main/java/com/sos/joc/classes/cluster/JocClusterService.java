@@ -9,12 +9,12 @@ import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.JocClusterThreadFactory;
@@ -46,7 +46,7 @@ public class JocClusterService {
     private JocCluster cluster;
 
     private JocClusterService() {
-        MDC.put("clusterService", ClusterServices.cluster.name());
+        AJocClusterService.setLogger();
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties();
         }
@@ -62,7 +62,7 @@ public class JocClusterService {
                 .getResourceDir(), Globals.getJocSecurityLevel().value(), Globals.sosCockpitProperties.getProperty("title"),
                 Globals.sosCockpitProperties.getProperty("ordering", 0));
         startTime = new Date();
-        // MDC.remove("clusterService");
+        AJocClusterService.clearLogger();
     }
 
     public static synchronized JocClusterService getInstance() {
@@ -77,7 +77,6 @@ public class JocClusterService {
     }
 
     public JocClusterAnswer start() {
-        MDC.put("clusterService", ClusterServices.cluster.name());
         JocClusterAnswer answer = JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
         if (cluster == null) {
             JocClusterConfiguration clusterConfig = new JocClusterConfiguration(Globals.sosCockpitProperties.getProperties());
@@ -86,7 +85,7 @@ public class JocClusterService {
 
                 @Override
                 public void run() {
-                    MDC.put("clusterService", ClusterServices.cluster.name());
+                    AJocClusterService.setLogger();
                     LOGGER.info("[start][run]...");
                     try {
                         createFactory(config.getHibernateConfiguration());
@@ -98,20 +97,22 @@ public class JocClusterService {
                         LOGGER.error(e.toString(), e);
                     }
                     LOGGER.info("[start][end]");
-                    MDC.remove("clusterService");
+                    AJocClusterService.clearLogger();
                 }
 
             };
             threadPool.submit(task);
         } else {
+            AJocClusterService.setLogger();
             LOGGER.info("[start][skip]already started");
             answer.setState(JocClusterAnswerState.ALREADY_STARTED);
+            AJocClusterService.clearLogger();
         }
         return answer;
     }
 
     public JocClusterAnswer stop(boolean deleteActiveCurrentMember) {
-        MDC.put("clusterService", ClusterServices.cluster.name());
+        AJocClusterService.setLogger();
         JocClusterAnswer answer = JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
         if (cluster == null) {
             answer.setState(JocClusterAnswerState.ALREADY_STOPPED);
@@ -124,11 +125,11 @@ public class JocClusterService {
             ThreadHelper.tryStop(tg);
         }
         ThreadHelper.print("after stop " + JocClusterConfiguration.IDENTIFIER);
+        AJocClusterService.clearLogger();
         return answer;
     }
 
     public JocClusterAnswer restart() {
-        MDC.put("clusterService", ClusterServices.cluster.name());
         stop(false);
         JocClusterAnswer answer = start();
         if (answer.getState().equals(JocClusterAnswerState.STARTED)) {
@@ -137,8 +138,7 @@ public class JocClusterService {
         return answer;
     }
 
-    public void closeCluster(boolean deleteActiveCurrentMember) {
-        MDC.put("clusterService", ClusterServices.cluster.name());
+    private void closeCluster(boolean deleteActiveCurrentMember) {
         if (cluster != null) {
             cluster.close(deleteActiveCurrentMember);
             cluster = null;
@@ -146,7 +146,6 @@ public class JocClusterService {
     }
 
     public JocClusterAnswer restartService(ClusterRestart r) {
-        MDC.put("clusterService", ClusterServices.cluster.name());
         if (cluster == null) {
             return JocCluster.getErrorAnswer(new Exception(String.format("cluster not started. restart %s can't be performed.", r.getType())));
         }
@@ -154,36 +153,45 @@ public class JocClusterService {
             return JocCluster.getErrorAnswer(new Exception(String.format("cluster inactiv. restart %s can't be performed.", r.getType())));
         }
 
+        AJocClusterService.setLogger();
         JocClusterAnswer answer = null;
         if (r.getType().equals(ClusterServices.history)) {
             answer = cluster.getHandler().restartService(ClusterServices.history.name());
         } else {
             answer = JocCluster.getErrorAnswer(new Exception(String.format("restart not yet supported for %s", r.getType())));
         }
+        AJocClusterService.clearLogger();
         return answer;
     }
 
     public JocClusterAnswer switchMember(String memberId) {
-        MDC.put("clusterService", ClusterServices.cluster.name());
+        AJocClusterService.setLogger();
         if (cluster == null) {
+            AJocClusterService.clearLogger();
             return JocCluster.getErrorAnswer(new Exception("cluster not running"));
         }
-        return cluster.switchMember(memberId);
+        JocClusterAnswer answer = cluster.switchMember(memberId);
+        AJocClusterService.clearLogger();
+        return answer;
     }
 
-    public void createFactory(Path configFile) throws SOSHibernateConfigurationException, SOSHibernateFactoryBuildException {
-        factory = new JocClusterHibernateFactory(configFile, 1, 1);
-        factory.setIdentifier(JocClusterConfiguration.IDENTIFIER);
-        factory.setAutoCommit(false);
-        factory.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
-        factory.addClassMapping(DBItemInventoryOperatingSystem.class);
-        factory.addClassMapping(DBItemJocInstance.class);
-        factory.addClassMapping(DBItemJocCluster.class);
-        factory.addClassMapping(DBItemInventoryJSInstance.class);
-        factory.build();
+    private void createFactory(Path configFile) throws SOSHibernateConfigurationException, SOSHibernateFactoryBuildException {
+        try {
+            factory = new JocClusterHibernateFactory(configFile, 1, 1);
+            factory.setIdentifier(JocClusterConfiguration.IDENTIFIER);
+            factory.setAutoCommit(false);
+            factory.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+            factory.addClassMapping(DBItemInventoryOperatingSystem.class);
+            factory.addClassMapping(DBItemJocInstance.class);
+            factory.addClassMapping(DBItemJocCluster.class);
+            factory.addClassMapping(DBItemInventoryJSInstance.class);
+            factory.build();
+        } catch (Throwable e) {
+            throw e;
+        }
     }
 
-    public void closeFactory() {
+    private void closeFactory() {
         if (factory != null) {
             factory.close();
             factory = null;
@@ -191,6 +199,5 @@ public class JocClusterService {
         } else {
             LOGGER.info(String.format("[%s]database factory already closed", JocClusterConfiguration.IDENTIFIER));
         }
-
     }
 }
