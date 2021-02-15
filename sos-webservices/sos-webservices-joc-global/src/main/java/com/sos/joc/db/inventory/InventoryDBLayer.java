@@ -469,7 +469,7 @@ public class InventoryDBLayer extends DBLayer {
         }
         return getSession().getResultList(query);
     }
-    
+
     public List<DBItemInventoryConfiguration> getConfigurationByNames(Stream<String> namesStream, Integer type) throws SOSHibernateException {
         boolean isCalendar = JocInventory.isCalendar(type);
         Set<String> names = namesStream.map(String::toLowerCase).collect(Collectors.toSet());
@@ -482,7 +482,7 @@ public class InventoryDBLayer extends DBLayer {
         if (!names.isEmpty()) {
             hql.append(" and lower(name) in (:names)");
         }
-        
+
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         if (!names.isEmpty()) {
             query.setParameterList("names", names);
@@ -504,7 +504,7 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameterList("types", JocInventory.getCalendarTypes());
         return getSession().getSingleResult(query);
     }
-    
+
     public DBItemInventoryConfiguration getCalendarByName(String name) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where lower(name)=:name");
@@ -532,7 +532,7 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameterList("types", JocInventory.getCalendarTypes());
         return getSession().getResultList(query);
     }
-    
+
     public List<DBItemInventoryConfiguration> getCalendarsByNames(Stream<String> namesStream) throws SOSHibernateException {
         Set<String> names = namesStream.map(String::toLowerCase).collect(Collectors.toSet());
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
@@ -569,7 +569,7 @@ public class InventoryDBLayer extends DBLayer {
         }
         return getSession().getResultList(query);
     }
-    
+
     public Map<String, String> getNamePathMapping(Collection<String> names, Integer type) throws SOSHibernateException {
         if (names == null || names.isEmpty()) {
             return Collections.emptyMap();
@@ -585,7 +585,7 @@ public class InventoryDBLayer extends DBLayer {
         if (type != null) {
             query.setParameter("type", type);
         }
-        
+
         List<InventoryNamePath> result = getSession().getResultList(query);
         if (result != null) {
             return result.stream().distinct().collect(Collectors.toMap(InventoryNamePath::getName, InventoryNamePath::getPath));
@@ -678,7 +678,30 @@ public class InventoryDBLayer extends DBLayer {
     public void searchWorkflow2DeploymentHistory(Long searchWorkflowId, Long inventoryId, String controllerId, List<Long> deploymentIds,
             boolean delete) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            deleteSearchWorkflow2DeploymentHistory(searchWorkflowId, inventoryId, controllerId);
+            List<DBItemSearchWorkflow2DeploymentHistory> items = getSearchWorkflow2DeploymentHistory(inventoryId);
+            if (items != null) {
+                List<Long> toDelete = new ArrayList<Long>();
+                List<Long> toHold = new ArrayList<Long>();
+                for (DBItemSearchWorkflow2DeploymentHistory item : items) {
+                    if (item.getControllerId().equals(controllerId)) {
+                        if (!item.getSearchWorkflowId().equals(searchWorkflowId)) {
+                            if (!toDelete.contains(item.getSearchWorkflowId())) {
+                                toDelete.add(item.getSearchWorkflowId());
+                            }
+                        }
+                        getSession().delete(item);
+                    } else {
+                        if (!toHold.contains(item.getSearchWorkflowId())) {
+                            toHold.add(item.getSearchWorkflowId());
+                        }
+                    }
+                }
+                for (Long swId : toDelete) {
+                    if (!toHold.contains(swId)) {
+                        deleteSearchWorkflow(swId, true);
+                    }
+                }
+            }
             if (delete) {
                 Long count = getCountSearchWorkflow2DeploymentHistory(searchWorkflowId);
                 if (count == null || count.equals(0L)) {
@@ -702,26 +725,20 @@ public class InventoryDBLayer extends DBLayer {
         }
     }
 
-    private int deleteSearchWorkflow2DeploymentHistory(Long searchWorkflowId, Long inventoryId, String controllerId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS_DEPLOYMENT_HISTORY);
-        hql.append(" where searchWorkflowId=:searchWorkflowId");
-        hql.append(" and inventoryConfigurationId=:inventoryId");
-        hql.append(" and controllerId=:controllerId");
+    private List<DBItemSearchWorkflow2DeploymentHistory> getSearchWorkflow2DeploymentHistory(Long inventoryId) {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS_DEPLOYMENT_HISTORY);
+            hql.append(" where inventoryConfigurationId=:inventoryId");
 
-        Query<DBItemSearchWorkflow2DeploymentHistory> query = getSession().createQuery(hql.toString());
-        query.setParameter("searchWorkflowId", searchWorkflowId);
-        query.setParameter("inventoryId", inventoryId);
-        query.setParameter("controllerId", controllerId);
+            Query<DBItemSearchWorkflow2DeploymentHistory> query = getSession().createQuery(hql.toString());
+            query.setParameter("inventoryId", inventoryId);
 
-        List<DBItemSearchWorkflow2DeploymentHistory> result = getSession().getResultList(query);
-        int deleted = 0;
-        if (result != null) {
-            for (DBItemSearchWorkflow2DeploymentHistory item : result) {
-                getSession().delete(item);
-                deleted++;
-            }
+            return getSession().getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
         }
-        return deleted;
     }
 
     private int deleteSearchWorkflow(Long id, boolean deployed) throws SOSHibernateException {
@@ -976,7 +993,7 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("workflowPath", workflowPath);
         return getSession().getResultList(query);
     }
-    
+
     public List<DBItemInventoryConfiguration> getUsedSchedulesByWorkflowName(String workflowName) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
         hql.append("where type=:type ");
@@ -1001,7 +1018,7 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("calendarPath", "\"" + calendarPath + "\"");
         return getSession().getResultList(query);
     }
-    
+
     public List<DBItemInventoryConfiguration> getUsedSchedulesByCalendarName(String calendarName) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
         hql.append("where type=:type ");
@@ -1014,8 +1031,8 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("calendarName", "\"" + calendarName + "\"");
         return getSession().getResultList(query);
     }
-    
-    public String getPathByNameFromInvConfigurations (String name, ConfigurationType type) throws SOSHibernateException {
+
+    public String getPathByNameFromInvConfigurations(String name, ConfigurationType type) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select path from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
         hql.append(" where name = :name");
         hql.append(" and type = :type");
@@ -1023,10 +1040,10 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("name", name);
         query.setParameter("type", type.intValue());
         return getSession().getSingleResult(query);
-        
+
     }
 
-    public String getPathByNameFromInvReleasedConfigurations (String name, ConfigurationType type) throws SOSHibernateException {
+    public String getPathByNameFromInvReleasedConfigurations(String name, ConfigurationType type) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select path from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" ");
         hql.append(" where name = :name");
         hql.append(" and type = :type");
@@ -1034,10 +1051,10 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("name", name);
         query.setParameter("type", type.intValue());
         return getSession().getSingleResult(query);
-        
+
     }
 
-    public String getPathByNameFromDepHistory (String name, ConfigurationType type) throws SOSHibernateException {
+    public String getPathByNameFromDepHistory(String name, ConfigurationType type) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select path from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" ");
         hql.append(" where name = :name");
         hql.append(" and type = :type");
@@ -1047,7 +1064,7 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
-    public String getPathByNameFromLatestActiveDepHistoryItem (String name, ConfigurationType type) throws SOSHibernateException {
+    public String getPathByNameFromLatestActiveDepHistoryItem(String name, ConfigurationType type) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select dep.path from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
         hql.append(" where dep.id = (select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
         hql.append(" where history.name = :name");
