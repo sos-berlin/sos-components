@@ -214,7 +214,7 @@ public class EventService {
             } else {
                 eventSnapshot.setEventType("ProxyDecoupled");
             }
-            eventSnapshot.setObjectType(EventType.CONTROLLERCLUSTER);
+            eventSnapshot.setObjectType(EventType.CONTROLLER);
             addEvent(eventSnapshot);
         }
     }

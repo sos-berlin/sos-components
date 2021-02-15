@@ -40,9 +40,16 @@ public class StatisticsResourceImpl extends JOCResourceImpl implements IStatisti
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
             Statistics entity = new Statistics();
             entity.setSurveyDate(Date.from(Instant.now()));
-            Map<ConfigurationType, Long> numOfs = dbLayer.getNumOfDeployedObjects(controller.getControllerId());
-            entity.setNumOfWorkflows(numOfs.getOrDefault(ConfigurationType.WORKFLOW, 0L));
+            Map<ConfigurationType, Long> numOfDeployed = dbLayer.getNumOfDeployedObjects(controller.getControllerId());
+            Map<ConfigurationType, Long> numOfReleased = dbLayer.getNumOfReleasedObjects();
+            entity.setNumOfWorkflows(numOfDeployed.getOrDefault(ConfigurationType.WORKFLOW, 0L));
             entity.setNumOfJobs(dbLayer.getNumOfDeployedJobs(controller.getControllerId()));
+            entity.setNumOfLocks(numOfDeployed.getOrDefault(ConfigurationType.LOCK, 0L));
+            entity.setNumOfJunctions(numOfDeployed.getOrDefault(ConfigurationType.JUNCTION, 0L));
+            entity.setNumOfFileWatches(0L);  // TODO add to ConfigurationType
+            entity.setNumOfSchedules(numOfReleased.getOrDefault(ConfigurationType.SCHEDULE, 0L));
+            entity.setNumOfCalendars(numOfReleased.getOrDefault(ConfigurationType.WORKINGDAYSCALENDAR, 0L) + numOfReleased.getOrDefault(
+                    ConfigurationType.NONWORKINGDAYSCALENDAR, 0L));
             entity.setDeliveryDate(Date.from(Instant.now()));
             
             return JOCDefaultResponse.responseStatus200(entity);

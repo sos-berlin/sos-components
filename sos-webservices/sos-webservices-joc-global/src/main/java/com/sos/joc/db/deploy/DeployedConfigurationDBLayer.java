@@ -117,6 +117,25 @@ public class DeployedConfigurationDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
+    
+    public Map<ConfigurationType, Long> getNumOfReleasedObjects() {
+        try {
+            StringBuilder hql = new StringBuilder("select new ").append(NumOfDeployment.class.getName());
+            hql.append("(type, count(id) as numof) from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+            hql.append(" group by type");
+            Query<NumOfDeployment> query = session.createQuery(hql.toString());
+            List<NumOfDeployment> result = session.getResultList(query);
+            if (result != null) {
+                return result.stream().filter(i -> i.getConfigurationType() != null).collect(Collectors.toMap(NumOfDeployment::getConfigurationType,
+                        NumOfDeployment::getNumOf));
+            }
+            return Collections.emptyMap();
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
 
     public Long getNumOfDeployedJobs(String controllerId) {
         try {
