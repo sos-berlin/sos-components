@@ -143,6 +143,10 @@ public class SOSHibernateSession implements Serializable {
         if (currentSession == null) {
             throw new SOSHibernateInvalidSessionException("currentSession is NULL");
         }
+        if (isTransactionOpened) {
+            LOGGER.warn(String.format("%sskip (transaction is already opened)", method));
+            return;
+        }
         LOGGER.debug(method);
         try {
             if (isStatelessSession) {
@@ -200,6 +204,7 @@ public class SOSHibernateSession implements Serializable {
         LOGGER.debug(method);
         Transaction tr = getTransaction();
         if (tr == null) {
+            isTransactionOpened = false;
             throw new SOSHibernateTransactionException("transaction is NULL");
         }
         try {
@@ -207,11 +212,12 @@ public class SOSHibernateSession implements Serializable {
                 ((Session) currentSession).flush();
             }
             tr.commit();
-            isTransactionOpened = false;
         } catch (IllegalStateException e) {
             throwException(e, new SOSHibernateTransactionException(e));
         } catch (PersistenceException e) {
             throwException(e, new SOSHibernateTransactionException(e));
+        } finally {
+            isTransactionOpened = false;
         }
     }
 
@@ -925,15 +931,17 @@ public class SOSHibernateSession implements Serializable {
         LOGGER.debug(method);
         Transaction tr = getTransaction();
         if (tr == null) {
+            isTransactionOpened = false;
             throw new SOSHibernateTransactionException("transaction is NULL");
         }
         try {
             tr.rollback();
-            isTransactionOpened = false;
         } catch (IllegalStateException e) {
             throwException(e, new SOSHibernateTransactionException(e));
         } catch (PersistenceException e) {
             throwException(e, new SOSHibernateTransactionException(e));
+        } finally {
+            isTransactionOpened = false;
         }
     }
 
