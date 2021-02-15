@@ -76,9 +76,13 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()) && orderIsPermitted(o, folders));
             } else if (workflowIds != null && !workflowIds.isEmpty()) {
                 ordersFilter.setRegex(null);
-                Set<VersionedItemId<WorkflowPath>> workflowPaths = workflowIds.stream().map(w -> JWorkflowId.of(JocInventory.pathToName(w.getPath()),
-                        w.getVersionId()).asScala()).collect(Collectors.toSet());
-                orderStream = currentState.ordersBy(o -> workflowPaths.contains(o.workflowId()) && orderIsPermitted(o, folders));
+                Predicate<WorkflowId> versionNotEmpty = w -> w.getVersionId() != null && !w.getVersionId().isEmpty();
+                Set<VersionedItemId<WorkflowPath>> workflowPaths = workflowIds.stream().filter(versionNotEmpty).map(w -> JWorkflowId.of(
+                        JocInventory.pathToName(w.getPath()), w.getVersionId()).asScala()).collect(Collectors.toSet());
+                Set<WorkflowPath> workflowPaths2 = workflowIds.stream().filter(w -> !versionNotEmpty.test(w)).map(w -> WorkflowPath.of(JocInventory
+                        .pathToName(w.getPath()))).collect(Collectors.toSet());
+                orderStream = currentState.ordersBy(o -> (workflowPaths.contains(o.workflowId()) || workflowPaths2.contains(o.workflowId().path()))
+                        && orderIsPermitted(o, folders));
             } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
                 // no folder permissions
                 orderStream = currentState.ordersBy(JOrderPredicates.none());
