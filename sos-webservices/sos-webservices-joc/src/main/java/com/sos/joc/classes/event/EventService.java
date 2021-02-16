@@ -1,6 +1,5 @@
 package com.sos.joc.classes.event;
 
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -11,11 +10,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.controller.model.workflow.WorkflowId;
+import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.event.EventServiceFactory.EventCondition;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyUser;
@@ -40,6 +41,7 @@ import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.event.EventSnapshot;
 import com.sos.joc.model.event.EventType;
+import com.sos.joc.model.order.OrderStateText;
 
 import js7.data.agent.AgentId;
 import js7.data.agent.AgentRefStateEvent;
@@ -114,6 +116,7 @@ public class EventService {
                 evtBus = Proxy.of(controllerId).controllerEventBus();
                 if (evtBus != null) {
                     evtBus.subscribe(eventsOfController, callbackOfController);
+                    setTerminatedOrders();
                 }
             }
         } catch (Exception e) {
@@ -146,14 +149,14 @@ public class EventService {
             DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
             ExecutionException {
         if (evt.getControllerId().equals(controllerId) && ProxyUser.JOC.name().equals(evt.getKey())) {
-            LOGGER.info("try to close EventBus");
             if (evtBus != null) {
+                LOGGER.info("try to close EventBus");
                 evtBus.close();
                 evtBus = null;
-                if (evt instanceof ProxyRestarted || evt instanceof ProxyClosed) {
-                    LOGGER.info("try to restart EventBus");
-                    startEventService();
-                }
+            }
+            if (evtBus == null && (evt instanceof ProxyRestarted || evt instanceof ProxyClosed)) {
+                LOGGER.info("try to restart EventBus");
+                startEventService();
             }
         }
     }
@@ -207,6 +210,9 @@ public class EventService {
     @Subscribe({ ProxyCoupled.class })
     public void createEvent(ProxyCoupled evt) {
         if (evt.getControllerId() != null && !evt.getControllerId().isEmpty() && evt.getControllerId().equals(controllerId)) {
+            if (evt.isCoupled()) {
+                setTerminatedOrders();
+            }
             addEvent(createProxyEvent(evt.getEventId(), evt.isCoupled()));
         }
         EventSnapshot eventSnapshot2 = new EventSnapshot();
@@ -408,9 +414,16 @@ public class EventService {
         return EventServiceFactory.Mode.FALSE;
     }
 
-    protected void setTerminatedOrders(Map<String, WorkflowId> terminatedOrders) {
-        if (terminatedOrders != null && !terminatedOrders.isEmpty()) {
-            unremovedTerminatedOrders.putAll(terminatedOrders);
+    private void setTerminatedOrders() {
+        try {
+            final List<OrderStateText> states = Arrays.asList(OrderStateText.CANCELLED, OrderStateText.FINISHED);
+            Map<String, WorkflowId> terminatedOrders = Proxy.of(controllerId).currentState().ordersBy(o -> states.contains(OrdersHelper.getGroupedState(o.state().getClass())))
+                .collect(Collectors.toMap(o -> o.id().string(), o -> mapWorkflowId(o.workflowId())));
+            if (terminatedOrders != null && !terminatedOrders.isEmpty()) {
+                unremovedTerminatedOrders.putAll(terminatedOrders);
+            }
+        } catch (Exception e) {
+            //
         }
     }
 

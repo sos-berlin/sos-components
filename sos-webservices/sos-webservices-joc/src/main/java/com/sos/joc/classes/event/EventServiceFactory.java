@@ -24,7 +24,6 @@ import org.apache.shiro.session.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.common.Err;
 import com.sos.joc.model.event.Event;
@@ -101,9 +100,8 @@ public class EventServiceFactory {
         EventServiceFactory.isClosed.set(true);
     }
     
-    public static Event getEvents(String controllerId, Long eventId, String accessToken, Session session,
-            Map<String, WorkflowId> terminatedOrders) {
-        return EventServiceFactory.getInstance()._getEvents(controllerId, eventId, accessToken, session, terminatedOrders);
+    public static Event getEvents(String controllerId, Long eventId, String accessToken, Session session) {
+        return EventServiceFactory.getInstance()._getEvents(controllerId, eventId, accessToken, session);
     }
     
     public EventService getEventService(String controllerId) {
@@ -131,7 +129,7 @@ public class EventServiceFactory {
         return new EventCondition(lock.newCondition());
     }
     
-    private Event _getEvents(String controllerId, Long eventId, String accessToken, Session session, Map<String, WorkflowId> terminatedOrders) {
+    private Event _getEvents(String controllerId, Long eventId, String accessToken, Session session) {
         Event events = new Event();
         events.setControllerId(controllerId);
         events.setEventId(eventId); //default
@@ -142,7 +140,6 @@ public class EventServiceFactory {
         EventCondition eventArrived = createCondition();
         try {
             service = getEventService(controllerId);
-            service.setTerminatedOrders(terminatedOrders);
             //service.addCondition(eventArrived);
             //service.setIsCurrentController(isCurrentController);
             SortedSet<Long> evtIds = new TreeSet<>(Comparator.comparing(Long::longValue));
