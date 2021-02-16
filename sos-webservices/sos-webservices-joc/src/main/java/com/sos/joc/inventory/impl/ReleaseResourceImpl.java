@@ -174,13 +174,17 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             throws SOSHibernateException, JsonParseException, JsonMappingException, IOException {
         DBItemInventoryReleasedConfiguration releaseItem = dbLayer.getReleasedItemByConfigurationId(conf.getId());
         DBItemInventoryReleasedConfiguration contraintReleaseItem = dbLayer.getReleasedConfiguration(conf.getName(), conf.getType());
-        if (contraintReleaseItem != null) {
-            dbLayer.getSession().delete(contraintReleaseItem);
-        }
+        
         if (releaseItem == null) {
+            if (contraintReleaseItem != null) {
+                dbLayer.getSession().delete(contraintReleaseItem);
+            }
             DBItemInventoryReleasedConfiguration release = setReleaseItem(null, conf, now);
             dbLayer.getSession().save(release);
         } else {
+            if (contraintReleaseItem != null && contraintReleaseItem.getId() != releaseItem.getId()) {
+                dbLayer.getSession().delete(contraintReleaseItem);
+            }
             DBItemInventoryReleasedConfiguration release = setReleaseItem(releaseItem.getId(), conf, now);
             dbLayer.getSession().update(release);
         }
