@@ -155,9 +155,14 @@ public class JocClusterService {
 
         AJocClusterService.setLogger();
         JocClusterAnswer answer = null;
-        if (r.getType().equals(ClusterServices.history)) {
+        switch (r.getType()) {
+        case history:
             answer = cluster.getHandler().restartService(ClusterServices.history.name());
-        } else {
+            break;
+        case dailyplan:
+            answer = cluster.getHandler().restartService(ClusterServices.dailyplan.name());
+            break;
+        default:
             answer = JocCluster.getErrorAnswer(new Exception(String.format("restart not yet supported for %s", r.getType())));
         }
         AJocClusterService.clearLogger();
