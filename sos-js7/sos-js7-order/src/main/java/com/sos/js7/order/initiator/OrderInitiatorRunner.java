@@ -277,7 +277,7 @@ public class OrderInitiatorRunner extends TimerTask {
                 DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
                 List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
                 LOGGER.debug(listOfPlannedOrders.size() + " to be submitted");
-              //  submitOrders(listOfPlannedOrders);
+                submitOrders(listOfPlannedOrders);
 
             }
         } finally {
