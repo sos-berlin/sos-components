@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSClassUtil;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 
 public class ThreadHelper {
 
@@ -73,50 +74,50 @@ public class ThreadHelper {
     }
 
     @SuppressWarnings("deprecation")
-    public static void tryStop(final ThreadGroup group) {
+    public static void tryStop(final StartupMode mode, final ThreadGroup group) {
         try {
             if (group != null && group.activeCount() > 0) {
                 group.interrupt();
                 Thread.sleep(500);
                 if (group.activeCount() > 0) {
-                    LOGGER.info(String.format("[stop][group=%s]activeCount=%s", group.getName(), group.activeCount()));
+                    LOGGER.info(String.format("[%s][stop][group=%s]activeCount=%s", mode, group.getName(), group.activeCount()));
                     group.stop();
                     Thread.sleep(500);
                 }
-                LOGGER.info(String.format("[stopped][group=%s]activeCount=%s", group.getName(), group.activeCount()));
+                LOGGER.info(String.format("[%s][stopped][group=%s]activeCount=%s", mode, group.getName(), group.activeCount()));
             }
         } catch (Throwable e) {
-            LOGGER.warn(String.format("[stop][group=%s]%s", group.getName(), e.toString()), e);
+            LOGGER.warn(String.format("[%s][stop][group=%s]%s", mode, group.getName(), e.toString()), e);
         }
     }
 
-    public static void tryStopChilds(final ThreadGroup group) {
+    public static void tryStopChilds(final StartupMode mode, final ThreadGroup group) {
         try {
             if (group != null) {
                 ThreadGroup[] result = getThreadGroups(group);
                 if (result != null) {
                     for (int i = 0; i < result.length; i++) {
-                        tryStop(result[i]);
+                        tryStop(mode, result[i]);
                     }
                 }
             }
         } catch (Throwable e) {
-            LOGGER.warn(String.format("[tryStopChildGroups][group=%s]%s", group.getName(), e.toString()), e);
+            LOGGER.warn(String.format("[%s][tryStopChildGroups][group=%s]%s", mode, group.getName(), e.toString()), e);
         }
     }
 
-    public static void tryStop(List<String> l) {
-        tryStop(String.join("|", l));
+    public static void tryStop(final StartupMode mode, List<String> l) {
+        tryStop(mode, String.join("|", l));
     }
 
     @SuppressWarnings("deprecation")
-    public static void tryStop(final String threadPrefix) {
+    public static void tryStop(final StartupMode mode, final String threadPrefix) {
         try {
             Collection<Thread> threads = ThreadHelper.getThreads(ThreadHelper.getThreadGroup(), true, threadPrefix);
             if (threads != null) {
                 for (Thread t : threads) {
                     if (t != null) {
-                        LOGGER.info(String.format("[stop][%s]%s", t.getState(), t));
+                        LOGGER.info(String.format("[%s][stop][%s]%s", mode, t.getState(), t));
                         if (!t.isInterrupted()) {
                             try {
                                 t.interrupt();
@@ -140,9 +141,9 @@ public class ThreadHelper {
         }
     }
 
-    public static void print(String header) {
+    public static void print(final StartupMode mode, String header) {
         try {
-            LOGGER.info(String.format("[threads][print][%s]%s", SOSClassUtil.getMethodName(2), header));
+            LOGGER.info(String.format("[%s][threads][%s]%s", mode, SOSClassUtil.getMethodName(2), header));
             Thread[] threads = ThreadHelper.getThreads(ThreadHelper.getThreadGroup());
             if (threads != null) {
                 for (Thread t : threads) {

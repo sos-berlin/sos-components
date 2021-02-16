@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 
@@ -35,8 +36,8 @@ public class JocClusterHandler {
         cluster = jocCluster;
     }
 
-    protected JocClusterAnswer perform(PerformType type) {
-        LOGGER.info(String.format("[perform][active=%s]%s", active, type.name()));
+    protected JocClusterAnswer perform(StartupMode mode, PerformType type) {
+        LOGGER.info(String.format("[%s][perform][active=%s]%s", mode, active, type.name()));
 
         if (cluster.getConfig().getServices() == null || cluster.getConfig().getServices().size() == 0) {
             return JocCluster.getErrorAnswer(JocClusterAnswerState.MISSING_HANDLERS_CONFIGURATION);
@@ -74,7 +75,7 @@ public class JocClusterHandler {
                 @Override
                 public JocClusterAnswer get() {
                     AJocClusterService.setLogger();
-                    LOGGER.info(String.format("[%s][%s]start...", method, s.getIdentifier()));
+                    LOGGER.info(String.format("[%s][%s][%s]start...", mode, method, s.getIdentifier()));
                     AJocClusterService.clearLogger();
                     JocClusterAnswer answer = null;
                     if (isStart) {
@@ -83,25 +84,25 @@ public class JocClusterHandler {
                             for (ControllerConfiguration m : controllers) {
                                 newControllers.add(m.copy(s.getControllerApiUser(), s.getControllerApiUserPassword()));
                             }
-                            answer = s.start(newControllers);
+                            answer = s.start(newControllers, mode);
                         } else {
-                            answer = s.start(controllers);
+                            answer = s.start(controllers, mode);
                         }
                     } else {
-                        answer = s.stop();
+                        answer = s.stop(mode);
                     }
                     AJocClusterService.setLogger();
-                    LOGGER.info(String.format("[%s][%s]completed", method, s.getIdentifier()));
+                    LOGGER.info(String.format("[%s][%s][%s]completed", mode, method, s.getIdentifier()));
                     AJocClusterService.clearLogger();
                     return answer;
                 }
             };
             tasks.add(task);
         }
-        return performServices(tasks, type);
+        return performServices(mode, tasks, type);
     }
 
-    private JocClusterAnswer performServices(List<Supplier<JocClusterAnswer>> tasks, PerformType type) {
+    private JocClusterAnswer performServices(StartupMode mode, List<Supplier<JocClusterAnswer>> tasks, PerformType type) {
         if (tasks == null || tasks.size() == 0) {
             return JocCluster.getErrorAnswer(JocClusterAnswerState.MISSING_HANDLERS);
         }
@@ -113,14 +114,14 @@ public class JocClusterHandler {
         }
 
         AJocClusterService.setLogger();
-        LOGGER.info(String.format("[%s][active=%s]start ...", type.name(), active));
+        LOGGER.info(String.format("[%s][%s][active=%s]start ...", mode, type.name(), active));
 
         ExecutorService es = Executors.newFixedThreadPool(services.size(), new JocClusterThreadFactory(cluster.getConfig().getThreadGroup(),
                 "cluster-" + type.name().toLowerCase()));
         List<CompletableFuture<JocClusterAnswer>> futuresList = tasks.stream().map(task -> CompletableFuture.supplyAsync(task, es)).collect(Collectors
                 .toList());
         CompletableFuture.allOf(futuresList.toArray(new CompletableFuture[futuresList.size()])).join();
-        JocCluster.shutdownThreadPool(es, 3);
+        JocCluster.shutdownThreadPool(mode, es, 3);
 
         // for (CompletableFuture<ClusterAnswer> future : futuresList) {
         // try {
@@ -131,13 +132,13 @@ public class JocClusterHandler {
         // }
         // handlers = new ArrayList<>();
 
-        LOGGER.info(String.format("[%s][active=%s][completed]%s", type.name(), active, cluster.getJocConfig().getMemberId()));
+        LOGGER.info(String.format("[%s][%s][active=%s][completed]%s", mode, type.name(), active, cluster.getJocConfig().getMemberId()));
         if (active) {
             return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);// TODO check future results
         } else {
-            ThreadHelper.tryStopChilds(cluster.getConfig().getThreadGroup());
+            ThreadHelper.tryStopChilds(mode, cluster.getConfig().getThreadGroup());
 
-            ThreadHelper.print("after stop active services");
+            ThreadHelper.print(mode, "after stop active services");
             services = null;
             return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);// TODO check future results
         }
@@ -160,19 +161,33 @@ public class JocClusterHandler {
         }
     }
 
-    public JocClusterAnswer restartService(String identifier) {
+    public JocClusterAnswer restartService(String identifier, StartupMode mode) {
         Optional<IJocClusterService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
         if (!os.isPresent()) {
             return JocCluster.getErrorAnswer(new Exception(String.format("handler not found for %s", identifier)));
         }
         IJocClusterService s = os.get();
 
-        ThreadHelper.print("[" + identifier + "]before stop");
-        s.stop();
-        ThreadHelper.tryStop(s.getThreadGroup());
-        ThreadHelper.print("[" + identifier + "]after stop");
+        AJocClusterService.setLogger();
+        LOGGER.info(String.format("[%s][restart][%s]start...", mode, identifier));
+        AJocClusterService.clearLogger();
 
-        s.start(cluster.getControllers());
+        AJocClusterService.setLogger(identifier);
+        ThreadHelper.print(mode, "[" + identifier + "]before stop");
+        AJocClusterService.clearLogger();
+
+        s.stop(mode);
+
+        AJocClusterService.setLogger(identifier);
+        ThreadHelper.tryStop(mode, s.getThreadGroup());
+        ThreadHelper.print(mode, "[" + identifier + "]after stop");
+        AJocClusterService.clearLogger();
+
+        s.start(cluster.getControllers(), mode);
+
+        AJocClusterService.setLogger();
+        LOGGER.info(String.format("[%s][restart][%s]completed", mode, identifier));
+        AJocClusterService.clearLogger();
 
         return JocCluster.getOKAnswer(JocClusterAnswerState.RESTARTED);
     }

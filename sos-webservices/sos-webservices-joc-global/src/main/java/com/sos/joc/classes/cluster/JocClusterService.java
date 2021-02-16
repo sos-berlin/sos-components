@@ -22,6 +22,7 @@ import com.sos.joc.cluster.ThreadHelper;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
@@ -76,7 +77,7 @@ public class JocClusterService {
         return cluster;
     }
 
-    public JocClusterAnswer start() {
+    public JocClusterAnswer start(StartupMode mode) {
         JocClusterAnswer answer = JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
         if (cluster == null) {
             JocClusterConfiguration clusterConfig = new JocClusterConfiguration(Globals.sosCockpitProperties.getProperties());
@@ -86,17 +87,17 @@ public class JocClusterService {
                 @Override
                 public void run() {
                     AJocClusterService.setLogger();
-                    LOGGER.info("[start][run]...");
+                    LOGGER.info("[" + mode + "][start][run]...");
                     try {
                         createFactory(config.getHibernateConfiguration());
 
                         cluster = new JocCluster(factory, clusterConfig, config);
-                        cluster.doProcessing(startTime);
+                        cluster.doProcessing(mode, startTime);
 
                     } catch (Throwable e) {
                         LOGGER.error(e.toString(), e);
                     }
-                    LOGGER.info("[start][end]");
+                    LOGGER.info("[" + mode + "][start][end]");
                     AJocClusterService.clearLogger();
                 }
 
@@ -104,78 +105,79 @@ public class JocClusterService {
             threadPool.submit(task);
         } else {
             AJocClusterService.setLogger();
-            LOGGER.info("[start][skip]already started");
+            LOGGER.info("[" + mode + "][start][skip]already started");
             answer.setState(JocClusterAnswerState.ALREADY_STARTED);
             AJocClusterService.clearLogger();
         }
         return answer;
     }
 
-    public JocClusterAnswer stop(boolean deleteActiveCurrentMember) {
+    public JocClusterAnswer stop(StartupMode mode, boolean deleteActiveCurrentMember) {
         AJocClusterService.setLogger();
         JocClusterAnswer answer = JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
         if (cluster == null) {
             answer.setState(JocClusterAnswerState.ALREADY_STOPPED);
         } else {
             ThreadGroup tg = cluster.getConfig().getThreadGroup();
-            closeCluster(deleteActiveCurrentMember);
+            closeCluster(mode, deleteActiveCurrentMember);
             closeFactory();
-            JocCluster.shutdownThreadPool(threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
+            JocCluster.shutdownThreadPool(mode, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
 
-            ThreadHelper.tryStop(tg);
+            ThreadHelper.tryStop(mode, tg);
         }
-        ThreadHelper.print("after stop " + JocClusterConfiguration.IDENTIFIER);
+        ThreadHelper.print(mode, String.format("after stop %s", JocClusterConfiguration.IDENTIFIER));
         AJocClusterService.clearLogger();
         return answer;
     }
 
-    public JocClusterAnswer restart() {
-        stop(false);
-        JocClusterAnswer answer = start();
+    public JocClusterAnswer restart(StartupMode mode) {
+        stop(mode, false);
+        JocClusterAnswer answer = start(mode);
         if (answer.getState().equals(JocClusterAnswerState.STARTED)) {
             answer.setState(JocClusterAnswerState.RESTARTED);
         }
         return answer;
     }
 
-    private void closeCluster(boolean deleteActiveCurrentMember) {
+    private void closeCluster(StartupMode mode, boolean deleteActiveCurrentMember) {
         if (cluster != null) {
-            cluster.close(deleteActiveCurrentMember);
+            cluster.close(mode, deleteActiveCurrentMember);
             cluster = null;
         }
     }
 
-    public JocClusterAnswer restartService(ClusterRestart r) {
+    public JocClusterAnswer restartService(ClusterRestart r, StartupMode mode) {
         if (cluster == null) {
-            return JocCluster.getErrorAnswer(new Exception(String.format("cluster not started. restart %s can't be performed.", r.getType())));
+            return JocCluster.getErrorAnswer(new Exception(String.format("cluster not started. %s restart %s can't be performed.", mode, r
+                    .getType())));
         }
         if (!cluster.getHandler().isActive()) {
-            return JocCluster.getErrorAnswer(new Exception(String.format("cluster inactiv. restart %s can't be performed.", r.getType())));
+            return JocCluster.getErrorAnswer(new Exception(String.format("cluster inactiv. %s restart %s can't be performed.", mode, r.getType())));
         }
 
         AJocClusterService.setLogger();
         JocClusterAnswer answer = null;
         switch (r.getType()) {
         case history:
-            answer = cluster.getHandler().restartService(ClusterServices.history.name());
+            answer = cluster.getHandler().restartService(ClusterServices.history.name(), mode);
             break;
         case dailyplan:
-            answer = cluster.getHandler().restartService(ClusterServices.dailyplan.name());
+            answer = cluster.getHandler().restartService(ClusterServices.dailyplan.name(), mode);
             break;
         default:
-            answer = JocCluster.getErrorAnswer(new Exception(String.format("restart not yet supported for %s", r.getType())));
+            answer = JocCluster.getErrorAnswer(new Exception(String.format("%s restart not yet supported for %s", mode, r.getType())));
         }
         AJocClusterService.clearLogger();
         return answer;
     }
 
-    public JocClusterAnswer switchMember(String memberId) {
+    public JocClusterAnswer switchMember(StartupMode mode, String memberId) {
         AJocClusterService.setLogger();
         if (cluster == null) {
             AJocClusterService.clearLogger();
             return JocCluster.getErrorAnswer(new Exception("cluster not running"));
         }
-        JocClusterAnswer answer = cluster.switchMember(memberId);
+        JocClusterAnswer answer = cluster.switchMember(mode, memberId);
         AJocClusterService.clearLogger();
         return answer;
     }

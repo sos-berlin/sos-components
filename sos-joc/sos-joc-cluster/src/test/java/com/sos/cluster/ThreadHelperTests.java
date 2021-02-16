@@ -4,9 +4,10 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import com.sos.joc.cluster.ThreadHelper;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 
 public class ThreadHelperTests {
- 
+
     private static Runnable MyTask(ThreadGroup tg) {
         return () -> {
 
@@ -89,14 +90,14 @@ public class ThreadHelperTests {
 
             Thread.sleep(1_000);
 
-            ThreadHelper.print("-------------------------");
+            ThreadHelper.print(StartupMode.manual, "-------------------------");
 
             // ThreadHelperTests.interruptThreads();
-            ThreadHelper.tryStop(groupMain);
+            ThreadHelper.tryStop(StartupMode.manual, groupMain);
 
-            ThreadHelper.tryStop("Timer");
+            ThreadHelper.tryStop(StartupMode.manual, "Timer");
 
-            ThreadHelper.print("-------------------------");
+            ThreadHelper.print(StartupMode.manual, "-------------------------");
 
         } catch (Throwable e) {
             e.printStackTrace();

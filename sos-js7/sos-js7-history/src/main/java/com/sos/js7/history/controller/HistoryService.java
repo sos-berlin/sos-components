@@ -28,6 +28,7 @@ import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.JocClusterServices;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.DBItemHistoryTempLog;
@@ -71,10 +72,10 @@ public class HistoryService extends AJocClusterService {
     }
 
     @Override
-    public JocClusterAnswer start(List<ControllerConfiguration> controllers) {
+    public JocClusterAnswer start(List<ControllerConfiguration> controllers, StartupMode mode) {
         try {
             AJocClusterService.setLogger(IDENTIFIER);
-            LOGGER.info(String.format("[%s]start...", getIdentifier()));
+            LOGGER.info(String.format("[%s][%s]start...", getIdentifier(), mode));
 
             processingStarted = false;
             Mailer mailer = new Mailer(config.getMailer());
@@ -114,19 +115,19 @@ public class HistoryService extends AJocClusterService {
     }
 
     @Override
-    public JocClusterAnswer stop() {
+    public JocClusterAnswer stop(StartupMode mode) {
         AJocClusterService.setLogger(IDENTIFIER);
-        LOGGER.info(String.format("[%s]stop...", getIdentifier()));
+        LOGGER.info(String.format("[%s][%s]stop...", getIdentifier(), mode));
         AJocClusterService.clearLogger();
 
-        closeEventHandlers();
+        closeEventHandlers(mode);
 
         AJocClusterService.setLogger(IDENTIFIER);
         handleTempLogsOnEnd();
         closeFactory();
-        JocCluster.shutdownThreadPool(threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
+        JocCluster.shutdownThreadPool(mode, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
 
-        LOGGER.info(String.format("[%s]stopped", getIdentifier()));
+        LOGGER.info(String.format("[%s][%s]stopped", getIdentifier(), mode));
 
         return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
     }
@@ -323,7 +324,7 @@ public class HistoryService extends AJocClusterService {
         return logDir.resolve(String.valueOf(historyOrderMainParentId));
     }
 
-    private void closeEventHandlers() {
+    private void closeEventHandlers(StartupMode mode) {
         String method = "closeEventHandlers";
 
         int size = activeHandlers.size();
@@ -345,7 +346,7 @@ public class HistoryService extends AJocClusterService {
                 };
                 threadPool.submit(thread);
             }
-            JocCluster.shutdownThreadPool(threadPool, AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER);
+            JocCluster.shutdownThreadPool(mode, threadPool, AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER);
             activeHandlers = new ArrayList<>();
         } else {
             if (isDebugEnabled) {

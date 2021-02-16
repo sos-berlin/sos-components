@@ -13,6 +13,7 @@ import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.JocClusterServices;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.db.DBLayer;
 import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
@@ -31,11 +32,11 @@ public class CleanupService extends AJocClusterService {
     }
 
     @Override
-    public JocClusterAnswer start(List<ControllerConfiguration> controllers) {
+    public JocClusterAnswer start(List<ControllerConfiguration> controllers, StartupMode mode) {
         try {
             AJocClusterService.setLogger(IDENTIFIER);
 
-            LOGGER.info(String.format("[%s]start...", getIdentifier()));
+            LOGGER.info(String.format("[%s][%s]start...", getIdentifier(), mode));
             createFactory(getJocConfig().getHibernateConfiguration());
             return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
         } catch (Exception e) {
@@ -46,12 +47,12 @@ public class CleanupService extends AJocClusterService {
     }
 
     @Override
-    public JocClusterAnswer stop() {
+    public JocClusterAnswer stop(StartupMode mode) {
         AJocClusterService.setLogger(IDENTIFIER);
-        LOGGER.info(String.format("[%s]stop...", getIdentifier()));
+        LOGGER.info(String.format("[%s][%s]stop...", getIdentifier(), mode));
 
         closeFactory();
-        LOGGER.info(String.format("[%s]stopped", getIdentifier()));
+        LOGGER.info(String.format("[%s][%s]stopped", getIdentifier(), mode));
 
         AJocClusterService.clearLogger();
         return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);

@@ -501,31 +501,28 @@ public class JocInventory {
             if (deleteDeployments) {
                 return;
             }
-
             if (deployed) {
                 DBItemSearchWorkflow draft = dbLayer.getSearchWorkflow(inventoryId, null);
                 if (draft != null) {
-                    draft.setDeployed(true);
-                    draft.setContentHash(hash);
-                    draft.setModified(new Date());
-                    draft = convert(draft, workflow);
-                    dbLayer.getSession().update(draft);
                     item = draft;
                 }
             }
-
             if (item == null) {
                 item = new DBItemSearchWorkflow();
-                item.setInventoryConfigurationId(inventoryId);
-                item.setDeployed(deployed);
-                item.setContentHash(hash);
-                item.setCreated(new Date());
-                item.setModified(item.getCreated());
-
-                item = convert(item, workflow);
-                dbLayer.getSession().save(item);
             }
 
+            item.setInventoryConfigurationId(inventoryId);
+            item.setDeployed(deployed);
+            item.setContentHash(hash);
+            item = convert(item, workflow);
+            if (item.getCreated() == null) {
+                item.setCreated(new Date());
+                item.setModified(item.getCreated());
+                dbLayer.getSession().save(item);
+            } else {
+                item.setModified(new Date());
+                dbLayer.getSession().update(item);
+            }
             if (deployed) {
                 dbLayer.searchWorkflow2DeploymentHistory(item.getId(), inventoryId, controllerId, deploymentIds, false);
             }

@@ -10,6 +10,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.resource.IClusterResource;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocServiceException;
@@ -38,9 +39,9 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
             JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getJoc().getView().isLog());
             if (response == null) {
                 if (in.getType().equals(ClusterServices.cluster)) {
-                    processAnswer(JocClusterService.getInstance().restart());
+                    processAnswer(JocClusterService.getInstance().restart(StartupMode.manual));
                 } else {
-                    processAnswer(JocClusterService.getInstance().restartService(in));
+                    processAnswer(JocClusterService.getInstance().restartService(in, StartupMode.manual));
                 }
                 response = JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             }
@@ -62,7 +63,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
             // TODO permission for switchMember
             JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getJoc().getView().isLog());
             if (response == null) {
-                processAnswer(JocClusterService.getInstance().switchMember(in.getMemberId()));
+                processAnswer(JocClusterService.getInstance().switchMember(StartupMode.manual, in.getMemberId()));
                 response = JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             }
             return response;

@@ -13,6 +13,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocConfiguration;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 
@@ -34,7 +35,7 @@ public class HistoryServiceTest {
                 }
             }
         }
-        history.stop();
+        history.stop(StartupMode.manual);
 
         counter = 0;
         while (run) {
@@ -77,7 +78,7 @@ public class HistoryServiceTest {
                 .value(), "", 0);
 
         HistoryService hm = new HistoryService(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
-        hm.start(getControllers());
+        hm.start(getControllers(), StartupMode.manual);
         HistoryServiceTest.exitAfter(hm, 2 * 60);
 
     }

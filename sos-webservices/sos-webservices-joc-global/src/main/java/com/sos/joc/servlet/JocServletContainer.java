@@ -25,6 +25,7 @@ import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.ProxyUser;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 
 public class JocServletContainer extends ServletContainer {
 
@@ -50,7 +51,7 @@ public class JocServletContainer extends ServletContainer {
             SOSShell.printJVMInfos();
         });
 
-        JocClusterService.getInstance().start();
+        JocClusterService.getInstance().start(StartupMode.automatic);
 
         try {
             cleanupOldDeployedFolders(false);
@@ -65,7 +66,7 @@ public class JocServletContainer extends ServletContainer {
         super.destroy();
 
         // 1 - stop cluster
-        JocClusterService.getInstance().stop(true);
+        JocClusterService.getInstance().stop(StartupMode.automatic, true);
         // 2 - close proxies
         Proxies.closeAll();
 

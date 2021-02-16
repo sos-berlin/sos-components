@@ -17,6 +17,10 @@ public class JocClusterConfiguration {
         cluster, history, dailyplan, cleanup, proxy;
     }
 
+    public enum StartupMode {
+        automatic, manual;
+    }
+
     private static final String CLASS_NAME_HISTORY = "com.sos.js7.history.controller.HistoryService";
     private static final String CLASS_NAME_DAILYPLAN = "com.sos.js7.order.initiator.OrderInitiatorService";
     private static final String CLASS_NAME_CLEANUP = "com.sos.joc.cleanup.CleanupService";

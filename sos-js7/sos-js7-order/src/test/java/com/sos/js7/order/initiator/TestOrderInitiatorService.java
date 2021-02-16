@@ -6,17 +6,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 
- public class TestOrderInitiatorService {
+public class TestOrderInitiatorService {
 
     public static void exitAfter(OrderInitiatorService history, int seconds) {
 
@@ -34,7 +34,7 @@ import com.sos.js7.event.controller.configuration.controller.ControllerConfigura
                 }
             }
         }
-        history.stop();
+        history.stop(StartupMode.manual);
 
         counter = 0;
         while (run) {
@@ -67,7 +67,7 @@ import com.sos.js7.event.controller.configuration.controller.ControllerConfigura
         return list;
     }
 
-     @Test
+    @Test
     public void test() throws Exception {
         Globals.sosCockpitProperties = new JocCockpitProperties();
 
@@ -76,7 +76,7 @@ import com.sos.js7.event.controller.configuration.controller.ControllerConfigura
                 .value(), "", 0);
 
         OrderInitiatorService hm = new OrderInitiatorService(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
-        hm.start(getControllers());
+        hm.start(getControllers(), StartupMode.manual);
         TestOrderInitiatorService.exitAfter(hm, 3 * 60);
 
     }
