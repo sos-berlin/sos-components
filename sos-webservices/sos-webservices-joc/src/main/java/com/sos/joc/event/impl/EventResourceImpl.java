@@ -165,15 +165,17 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
         return w;
     }
     
-    private static Map<String, WorkflowId> getTerminatedOrders(String controllerId, boolean firstCall) throws JobSchedulerConnectionResetException,
-            JobSchedulerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
-            DBConnectionRefusedException, ExecutionException {
+    private static Map<String, WorkflowId> getTerminatedOrders(String controllerId, boolean firstCall) {
         if (!firstCall) {
            return Collections.emptyMap(); 
         }
-        final List<OrderStateText> states = Arrays.asList(OrderStateText.CANCELLED, OrderStateText.FINISHED);
-        return Proxy.of(controllerId).currentState().ordersBy(o -> states.contains(OrdersHelper.getGroupedState(o.state().getClass())))
-            .collect(Collectors.toMap(o -> o.id().string(), o -> mapWorkflowId(o.workflowId())));
+        try {
+            final List<OrderStateText> states = Arrays.asList(OrderStateText.CANCELLED, OrderStateText.FINISHED);
+            return Proxy.of(controllerId).currentState().ordersBy(o -> states.contains(OrdersHelper.getGroupedState(o.state().getClass())))
+                .collect(Collectors.toMap(o -> o.id().string(), o -> mapWorkflowId(o.workflowId())));
+        } catch (Exception e) {
+            return Collections.emptyMap();
+        }
     }
 
 }

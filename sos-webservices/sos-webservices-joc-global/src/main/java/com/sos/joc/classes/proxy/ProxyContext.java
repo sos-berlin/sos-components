@@ -46,7 +46,7 @@ public class ProxyContext {
     private CompletableFuture<JControllerProxy> proxyFuture;
     private Optional<Problem> lastProblem = Optional.empty();
     private CompletableFuture<Void> coupledFuture;
-    private boolean coupled;
+    private Boolean coupled = null;
     private ProxyCredentials credentials;
 
     protected ProxyContext(JProxyContext proxyContext, ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
@@ -63,7 +63,7 @@ public class ProxyContext {
         return proxyFuture;
     }
     
-    public boolean isCoupled() {
+    public Boolean isCoupled() {
         return coupled;
     }
 
@@ -184,19 +184,23 @@ public class ProxyContext {
     private void onProxyCoupled(ProxyCoupled proxyCoupled) {
         LOGGER.info(toString() + ": " + proxyCoupled.toString());
         lastProblem = Optional.empty();
+        if (!Boolean.TRUE.equals(coupled)) {
+            EventBus.getInstance().post(new com.sos.joc.event.bean.proxy.ProxyCoupled(this.credentials.getControllerId(), true));
+        }
         coupled = true;
         if (!coupledFuture.isDone()) {
             coupledFuture.complete(null);
         }
-        EventBus.getInstance().post(new com.sos.joc.event.bean.proxy.ProxyCoupled(this.credentials.getControllerId(), coupled));
         checkCluster();
         reDeployAgents();
     }
 
     private void onProxyDecoupled(ProxyDecoupled$ proxyDecoupled) {
         LOGGER.info(toString() + ": " + proxyDecoupled.toString());
+        if (!Boolean.FALSE.equals(coupled)) {
+            EventBus.getInstance().post(new com.sos.joc.event.bean.proxy.ProxyCoupled(this.credentials.getControllerId(), false));
+        }
         coupled = false;
-        EventBus.getInstance().post(new com.sos.joc.event.bean.proxy.ProxyCoupled(this.credentials.getControllerId(), coupled));
     }
 
     private void onProxyCouplingError(ProxyCouplingError proxyCouplingError) {
@@ -204,8 +208,10 @@ public class ProxyContext {
             LOGGER.debug(this.credentials.getControllerId() + ": " + proxyCouplingError.toString());
         }
         lastProblem = Optional.of(proxyCouplingError.problem());
+        if (!Boolean.FALSE.equals(coupled)) {
+            EventBus.getInstance().post(new com.sos.joc.event.bean.proxy.ProxyCoupled(this.credentials.getControllerId(), false));
+        }
         coupled = false;
-        EventBus.getInstance().post(new com.sos.joc.event.bean.proxy.ProxyCoupled(this.credentials.getControllerId(), coupled));
         if (lastProblem.isPresent()) {
             String msg = lastProblem.get().messageWithCause();
             if (msg != null) {

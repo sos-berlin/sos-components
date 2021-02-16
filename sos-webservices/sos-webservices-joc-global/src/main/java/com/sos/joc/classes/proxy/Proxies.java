@@ -24,6 +24,7 @@ import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
+import com.sos.joc.event.bean.proxy.ProxyClosed;
 import com.sos.joc.event.bean.proxy.ProxyCoupled;
 import com.sos.joc.event.bean.proxy.ProxyRemoved;
 import com.sos.joc.event.bean.proxy.ProxyRestarted;
@@ -496,12 +497,12 @@ public class Proxies {
             return controllerFutures.get(credentials).stop().thenRun(() -> {
                 controllerFutures.remove(credentials);
                 controllerApis.remove(credentials);
-                EventBus.getInstance().post(new ProxyRemoved(credentials.getUser().name(), credentials.getControllerId()));
+                EventBus.getInstance().post(new ProxyClosed(credentials.getUser().name(), credentials.getControllerId()));
             });
         } else if (controllerApis.containsKey(credentials)) {
             return CompletableFuture.runAsync(() -> {
                 controllerApis.remove(credentials);
-                EventBus.getInstance().post(new ProxyRemoved(credentials.getUser().name(), credentials.getControllerId()));
+                EventBus.getInstance().post(new ProxyClosed(credentials.getUser().name(), credentials.getControllerId()));
             });
         } else {
             return CompletableFuture.completedFuture(null);

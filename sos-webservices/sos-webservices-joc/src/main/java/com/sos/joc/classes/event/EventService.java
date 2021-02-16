@@ -1,5 +1,6 @@
 package com.sos.joc.classes.event;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ import com.sos.joc.event.bean.history.HistoryEvent;
 import com.sos.joc.event.bean.history.HistoryOrderTaskTerminated;
 import com.sos.joc.event.bean.inventory.InventoryEvent;
 import com.sos.joc.event.bean.problem.ProblemEvent;
+import com.sos.joc.event.bean.proxy.ProxyClosed;
 import com.sos.joc.event.bean.proxy.ProxyCoupled;
 import com.sos.joc.event.bean.proxy.ProxyEvent;
 import com.sos.joc.event.bean.proxy.ProxyRemoved;
@@ -139,20 +141,18 @@ public class EventService {
         isCurrentController.set(val);
     }
     
-    @Subscribe({ ProxyRestarted.class, ProxyRemoved.class })
+    @Subscribe({ ProxyRestarted.class, ProxyClosed.class, ProxyRemoved.class })
     public void processProxyEvent(ProxyEvent evt) throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException,
             DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
             ExecutionException {
         if (evt.getControllerId().equals(controllerId) && ProxyUser.JOC.name().equals(evt.getKey())) {
-            LOGGER.info("try to restart EventBus");
+            LOGGER.info("try to close EventBus");
             if (evtBus != null) {
                 evtBus.close();
                 evtBus = null;
-                if (evt instanceof ProxyRestarted) {
-                    evtBus = Proxy.of(controllerId).controllerEventBus();
-                    if (evtBus != null) {
-                        evtBus.subscribe(eventsOfController, callbackOfController);
-                    }
+                if (evt instanceof ProxyRestarted || evt instanceof ProxyClosed) {
+                    LOGGER.info("try to restart EventBus");
+                    startEventService();
                 }
             }
         }
@@ -207,15 +207,7 @@ public class EventService {
     @Subscribe({ ProxyCoupled.class })
     public void createEvent(ProxyCoupled evt) {
         if (evt.getControllerId() != null && !evt.getControllerId().isEmpty() && evt.getControllerId().equals(controllerId)) {
-            EventSnapshot eventSnapshot = new EventSnapshot();
-            eventSnapshot.setEventId(evt.getEventId());
-            if (evt.isCoupled()) {
-                eventSnapshot.setEventType("ProxyCoupled");
-            } else {
-                eventSnapshot.setEventType("ProxyDecoupled");
-            }
-            eventSnapshot.setObjectType(EventType.CONTROLLER);
-            addEvent(eventSnapshot);
+            addEvent(createProxyEvent(evt.getEventId(), evt.isCoupled()));
         }
         EventSnapshot eventSnapshot2 = new EventSnapshot();
         eventSnapshot2.setEventId(evt.getEventId());
@@ -346,6 +338,18 @@ public class EventService {
         evt.setEventType("JobStateChanged");
         evt.setObjectType(EventType.JOB);
         evt.setWorkflow(workflowId);
+        return evt;
+    }
+    
+    private EventSnapshot createProxyEvent(Long eventId, Boolean isCoupled) {
+        EventSnapshot evt = new EventSnapshot();
+        evt.setEventId(eventId);
+        if (isCoupled) {
+            evt.setEventType("ProxyCoupled");
+        } else {
+            evt.setEventType("ProxyDecoupled");
+        }
+        evt.setObjectType(EventType.CONTROLLER);
         return evt;
     }
 
