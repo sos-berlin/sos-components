@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -33,8 +32,6 @@ import com.sos.joc.model.event.Event;
 import com.sos.joc.model.event.EventSnapshot;
 import com.sos.joc.model.event.EventType;
 import com.sos.schema.JsonValidator;
-
-import js7.data_for_java.workflow.JWorkflowId;
 
 @Path("events")
 public class EventResourceImpl extends JOCResourceImpl implements IEventResource {
@@ -143,13 +140,6 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             }
         }
         return evt;
-    }
-    
-    private static WorkflowId mapWorkflowId(JWorkflowId workflowId) {
-        WorkflowId w = new WorkflowId();
-        w.setPath(workflowId.path().string());
-        w.setVersionId(workflowId.versionId().string());
-        return w;
     }
 
 }

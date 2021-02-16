@@ -214,12 +214,10 @@ public class EventService {
                 setTerminatedOrders();
             }
             addEvent(createProxyEvent(evt.getEventId(), evt.isCoupled()));
+        } else {
+            // to update Controller Status widget for other controllers
+            addEvent(createControllerEvent(evt.getEventId()));
         }
-        EventSnapshot eventSnapshot2 = new EventSnapshot();
-        eventSnapshot2.setEventId(evt.getEventId());
-        eventSnapshot2.setEventType("ControllerStateChanged");
-        eventSnapshot2.setObjectType(EventType.CONTROLLER);
-        addEvent(eventSnapshot2);
     }
 
     BiConsumer<Stamped<KeyedEvent<Event>>, JControllerState> callbackOfController = (stampedEvt, currentState) -> {
@@ -229,94 +227,60 @@ public class EventService {
             Object key = event.key();
             Event evt = event.event();
 
-            EventSnapshot eventSnapshot = new EventSnapshot();
-
             if (evt instanceof OrderEvent) {
-                //LOGGER.debug("OrderEvent received: " + evt.getClass().getSimpleName());
                 final OrderId orderId = (OrderId) key;
                 Optional<JOrder> opt = currentState.idToOrder(orderId);
                 if (opt.isPresent()) {
                     WorkflowId w = mapWorkflowId(opt.get().workflowId());
-//                    LOGGER.info("OrderEvent received with Workflow: " + evt.getClass().getSimpleName());
-//                    LOGGER.info("try add WorkflowEvent id/workflow: " + eventId + "/" + w.getPath());
                     if (evt instanceof OrderTerminated) {
                         unremovedTerminatedOrders.put(orderId.string(), w);
                     }
                     addEvent(createWorkflowEventOfOrder(eventId, w));
                     if (evt instanceof OrderProcessingStarted$ || evt instanceof OrderProcessed || evt instanceof OrderProcessingKilled$) {
-//                        LOGGER.info("try add JOBEvent id/workflow: " + eventId + "/" + w.getPath());
                         addEvent(createTaskEventOfOrder(eventId, w));
                     }
                 } else {
-//                    LOGGER.info("OrderEvent received without Workflow: " + evt.getClass().getSimpleName());
                     if (evt instanceof OrderRemoved$) {
                         if (unremovedTerminatedOrders.containsKey(orderId.string())) {
-//                            LOGGER.info("try add WorkflowEvent: " + eventId + "/" + unremovedTerminatedOrders.get(orderId.string()));
                             addEvent(createWorkflowEventOfOrder(eventId, unremovedTerminatedOrders.get(orderId.string())));
                             unremovedTerminatedOrders.remove(orderId.string());
                         }
                     }
                 }
-//                if (opt.isPresent()) {
-//                    WorkflowId w = mapWorkflowId(opt.get().workflowId());
-//                    addEvent(createWorkflowEventOfOrder(eventId, w));
-//                    eventSnapshot.setPath(orderId.string());
-//                    eventSnapshot.setWorkflow(w);
-//                    eventSnapshot.setObjectType(EventType.ORDER);
-//                }
-//                eventSnapshot.setEventType("OrderStateChanged");
-//                if (evt instanceof OrderAdded) {
-//                    eventSnapshot.setEventType("OrderAdded");
-//                } else if (evt instanceof OrderTerminated) { //|| evt instanceof OrderRemoved$) {
-//                    eventSnapshot.setEventType("OrderTerminated");
-////                } else if (evt instanceof OrderRemoved$) {
-////                    eventSnapshot.setEventType("OrderRemoved");
-//                } else if (evt instanceof OrderProcessingStarted$ || evt instanceof OrderProcessed || evt instanceof OrderProcessingKilled$) {
-//                    if (opt.isPresent()) {
-//                        addEvent(createTaskEventOfOrder(eventId, mapWorkflowId(opt.get().workflowId())));
-//                    }
-//                }
                 
             } else if (evt instanceof ControllerEvent || evt instanceof ClusterEvent) {
-                eventSnapshot.setEventType("ControllerStateChanged");
-                eventSnapshot.setObjectType(EventType.CONTROLLER);
+                addEvent(createControllerEvent(eventId));
                 
             } else if (evt instanceof VersionedItemEvent) {
-                eventSnapshot.setEventType(evt.getClass().getSimpleName().replaceFirst("Versioned", "")); // VersionedItemAdded and VersionedItemChanged etc.
+                // VersionedItemAdded and VersionedItemChanged etc.
+                String eventType = evt.getClass().getSimpleName().replaceFirst("Versioned", "");
                 ItemPath path = ((VersionedItemEvent) evt).path();
-                eventSnapshot.setPath(path.string());
                 if (path instanceof WorkflowPath) {
-                    eventSnapshot.setObjectType(EventType.WORKFLOW);
+                    addEvent(createWorkflowEvent(eventId, path.string(), eventType));
                 } else {
                     // TODO other versioned objects
                 }
                 
             }  else if (evt instanceof SimpleItemEvent) {
-                eventSnapshot.setEventType(evt.getClass().getSimpleName().replaceFirst("Simple", "")); // SimpleItemAdded SimpleItemAddedAndChanged SimpleItemDeleted and SimpleItemChanged etc.
+                // SimpleItemAdded SimpleItemAddedAndChanged SimpleItemDeleted and SimpleItemChanged etc.
+                String eventType = evt.getClass().getSimpleName().replaceFirst("Simple", "");
                 SimpleItemId itemId = ((SimpleItemEvent) evt).id();
-                eventSnapshot.setPath(itemId.string());
                 if (itemId instanceof AgentId) {
-                    eventSnapshot.setEventType(evt.getClass().getSimpleName().replaceFirst("SimpleItem", "Agent")); // SimpleItemAdded SimpleItemAddedAndChanged SimpleItemDeleted and SimpleItemChanged etc.
-                    eventSnapshot.setObjectType(EventType.AGENT);
+                    eventType = evt.getClass().getSimpleName().replaceFirst("SimpleItem", "Agent");
+                    addEvent(createAgentEvent(eventId, itemId.string(), eventType));
                 } else if (itemId instanceof LockId) {
-                    eventSnapshot.setObjectType(EventType.LOCK);
+                    addEvent(createLockEvent(eventId, itemId.string(), eventType));
+                } else {
+                    // TODO other simple objects
                 }
                 
             } else if (evt instanceof AgentRefStateEvent && !(evt instanceof AgentRefStateEvent.AgentEventsObserved)) {
-                eventSnapshot.setEventType("AgentStateChanged");
-                eventSnapshot.setPath(((AgentId) key).string());
-                eventSnapshot.setObjectType(EventType.AGENT);
+                addEvent(createAgentEvent(eventId, ((AgentId) key).string()));
                 
             } else if (evt instanceof OrderLockEvent) {
-                eventSnapshot.setEventType("LockStateChanged");
-                eventSnapshot.setPath(((LockId) key).string());
-                eventSnapshot.setObjectType(EventType.LOCK);
+                addEvent(createLockEvent(eventId, ((LockId) key).string()));
             }
-
-            if (eventSnapshot.getObjectType() != null) {
-                eventSnapshot.setEventId(eventId);
-                addEvent(eventSnapshot);
-            }
+            
         } catch (Exception e) {
             LOGGER.warn(e.toString());
         }
@@ -347,7 +311,7 @@ public class EventService {
         return evt;
     }
     
-    private EventSnapshot createProxyEvent(Long eventId, Boolean isCoupled) {
+    private EventSnapshot createProxyEvent(long eventId, Boolean isCoupled) {
         EventSnapshot evt = new EventSnapshot();
         evt.setEventId(eventId);
         if (isCoupled) {
@@ -358,9 +322,49 @@ public class EventService {
         evt.setObjectType(EventType.CONTROLLER);
         return evt;
     }
+    
+    private EventSnapshot createControllerEvent(long eventId) {
+        EventSnapshot evt = new EventSnapshot();
+        evt.setEventId(eventId);
+        evt.setEventType("ControllerStateChanged");
+        evt.setObjectType(EventType.CONTROLLER);
+        return evt;
+    }
+    
+    private EventSnapshot createAgentEvent(long eventId, String path) {
+        return createAgentEvent(eventId, path, "AgentStateChanged");
+    }
+    
+    private EventSnapshot createAgentEvent(long eventId, String path, String eventType) {
+        EventSnapshot evt = new EventSnapshot();
+        evt.setEventType(eventType);
+        evt.setPath(path);
+        evt.setObjectType(EventType.AGENT);
+        return evt;
+    }
+    
+    private EventSnapshot createLockEvent(long eventId, String path) {
+        return createLockEvent(eventId, path, "LockStateChanged");
+    }
+    
+    private EventSnapshot createLockEvent(long eventId, String path, String eventType) {
+        EventSnapshot evt = new EventSnapshot();
+        evt.setEventType(eventType);
+        evt.setPath(path);
+        evt.setObjectType(EventType.LOCK);
+        return evt;
+    }
+    
+    private EventSnapshot createWorkflowEvent(long eventId, String path, String eventType) {
+        EventSnapshot evt = new EventSnapshot();
+        evt.setEventType(eventType);
+        evt.setPath(path);
+        evt.setObjectType(EventType.WORKFLOW);
+        return evt;
+    }
 
     private void addEvent(EventSnapshot eventSnapshot) {
-        if (events.add(eventSnapshot)) {
+        if (eventSnapshot != null && eventSnapshot.getEventId() != null && events.add(eventSnapshot)) {
             if (isDebugEnabled) {
                 LOGGER.debug("add event for " + controllerId + ": " + eventSnapshot.toString());
             }
@@ -426,27 +430,5 @@ public class EventService {
             //
         }
     }
-
-//    protected EventServiceFactory.Mode hasEvent(Condition eventArrived) {
-//        try {
-//            if (EventServiceFactory.lock.tryLock(200L, TimeUnit.MILLISECONDS)) { // with timeout
-//                try {
-//                    //atLeastOneConditionIsHold.set(true);
-//                    LOGGER.info("Waiting for Events of '" + controllerId + "'");
-//                    eventArrived.await(6, TimeUnit.MINUTES);
-//                    //EventServiceFactory.await(eventArrived);
-//                } catch (InterruptedException e1) {
-//                } finally {
-//                    EventServiceFactory.lock.unlock();
-//                }
-//            }
-//        } catch (InterruptedException e) {
-//        }
-////        if (events.stream().parallel().anyMatch(e -> EventType.PROBLEM.equals(e.getObjectType()))) {
-////            LOGGER.info("ProblemEvent for " + controllerId + ": true");
-////            return EventServiceFactory.Mode.IMMEDIATLY;
-////        }
-//        return EventServiceFactory.Mode.TRUE;
-//    }
 
 }

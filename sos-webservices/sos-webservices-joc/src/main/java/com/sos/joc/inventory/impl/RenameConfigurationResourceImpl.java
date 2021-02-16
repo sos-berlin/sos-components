@@ -107,11 +107,11 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 if (newDBFolderContent != null && !newDBFolderContent.isEmpty()) {
                     newDBFolderContent.retainAll(oldDBFolderContent);
                     if (!newDBFolderContent.isEmpty()) {
-                        if (in.getOverwrite()) {
-                            for (DBItemInventoryConfiguration targetItem : newDBFolderContent) {
-                                JocInventory.deleteConfiguration(dbLayer, targetItem);
-                            }
-                        } else {
+//                        if (in.getOverwrite()) {
+//                            for (DBItemInventoryConfiguration targetItem : newDBFolderContent) {
+//                                JocInventory.deleteConfiguration(dbLayer, targetItem);
+//                            }
+//                        } else {
                             Map<Boolean, List<DBItemInventoryConfiguration>> map = newDBFolderContent.stream().collect(Collectors.groupingBy(
                                     item -> ConfigurationType.FOLDER.intValue() == item.getType()));
                             if (!map.getOrDefault(false, Collections.emptyList()).isEmpty()) { // all not folder items
@@ -122,7 +122,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                             for (DBItemInventoryConfiguration targetItem : map.getOrDefault(true, Collections.emptyList())) {
                                 JocInventory.deleteConfiguration(dbLayer, targetItem);
                             }
-                        }
+//                        }
                     }
                 }
                 if (newItem != null) {
@@ -143,12 +143,12 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                     DBItemInventoryConfiguration targetItem = dbLayer.getConfiguration(newPath, config.getType());
                     
                     if (targetItem != null) {
-                        if (in.getOverwrite()) {
-                            JocInventory.deleteConfiguration(dbLayer, targetItem);
-                        } else {
+//                        if (in.getOverwrite()) {
+//                            JocInventory.deleteConfiguration(dbLayer, targetItem);
+//                        } else {
                             throw new JocObjectAlreadyExistException(String.format("%s %s already exists", ConfigurationType.fromValue(config.getType())
                                     .value().toLowerCase(), targetItem.getPath()));
-                        }
+//                        }
                     } else {
                         // check unique name
                         List<DBItemInventoryConfiguration> namedItems = dbLayer.getConfigurationByName(p.getFileName().toString(), config.getType());

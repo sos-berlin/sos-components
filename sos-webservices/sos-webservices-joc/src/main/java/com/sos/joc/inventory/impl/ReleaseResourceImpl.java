@@ -66,7 +66,9 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             session.setAutoCommit(false);
+            
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+            session.beginTransaction();
             List<Err419> errors = new ArrayList<>();
             
             if (in.getDelete() != null && !in.getDelete().isEmpty()) {
@@ -106,7 +108,10 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                     try {
                         DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, folderPermissions);
                         createAuditLog(conf, conf.getTypeAsEnum());
-                        if (!JocInventory.isReleasable(conf.getTypeAsEnum())) {
+                        if (ConfigurationType.FOLDER.intValue() == conf.getType()) {
+                            updateReleasedFolder(conf, dbLayer);
+                            JocInventory.postEvent(conf.getFolder());
+                        } else if (!JocInventory.isReleasable(conf.getTypeAsEnum())) {
                             throw new JobSchedulerInvalidResponseDataException(String.format("%s is not a 'Scheduling Object': %s", conf.getPath(),
                                     conf.getTypeAsEnum()));
                         } else {
@@ -127,8 +132,10 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             }
 
             if (errors != null && !errors.isEmpty()) {
+                Globals.rollback(session);
                 return JOCDefaultResponse.responseStatus419(errors);
             }
+            Globals.commit(session);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {
             Globals.rollback(session);
@@ -146,11 +153,30 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             config.setAuditLogId(auditItem.getId());
         }
     }
-
-    private static void updateReleasedObject(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer)
-            throws SOSHibernateException, JsonParseException, JsonMappingException, IOException {
+    
+    private void updateReleasedFolder(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer) throws SOSHibernateException, JsonParseException,
+            JsonMappingException, IOException {
+        List<DBItemInventoryConfiguration> folderContent = dbLayer.getFolderContent(conf.getPath(), true, JocInventory.getReleasableTypes());
         Date now = Date.from(Instant.now());
+
+        // quick and dirty TODO version with more performance
+        if (folderContent != null && !folderContent.isEmpty()) {
+            for (DBItemInventoryConfiguration item : folderContent) {
+                if (item.getReleased() || !item.getValid()) {
+                    continue;
+                }
+                updateReleasedObject(item, dbLayer, now);
+            }
+        }
+    }
+    
+    private static void updateReleasedObject(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer, Date now)
+            throws SOSHibernateException, JsonParseException, JsonMappingException, IOException {
         DBItemInventoryReleasedConfiguration releaseItem = dbLayer.getReleasedItemByConfigurationId(conf.getId());
+        DBItemInventoryReleasedConfiguration contraintReleaseItem = dbLayer.getReleasedConfiguration(conf.getName(), conf.getType());
+        if (contraintReleaseItem != null) {
+            dbLayer.getSession().delete(contraintReleaseItem);
+        }
         if (releaseItem == null) {
             DBItemInventoryReleasedConfiguration release = setReleaseItem(null, conf, now);
             dbLayer.getSession().save(release);
@@ -161,6 +187,11 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         conf.setReleased(true);
         conf.setModified(now);
         dbLayer.getSession().update(conf);
+    }
+
+    private static void updateReleasedObject(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer)
+            throws SOSHibernateException, JsonParseException, JsonMappingException, IOException {
+        updateReleasedObject(conf, dbLayer, Date.from(Instant.now()));
     }
     
     private static DBItemInventoryReleasedConfiguration setReleaseItem(Long releaseId, DBItemInventoryConfiguration conf, Date now) throws JsonParseException, JsonMappingException, IOException {
@@ -187,14 +218,14 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         
         if (folderContent != null && !folderContent.isEmpty()) {
             // delete in INV_RELEASED_CONFIGURATION
-            Globals.beginTransaction(dbLayer.getSession());
-            try {
+//            Globals.beginTransaction(dbLayer.getSession());
+//            try {
                 dbLayer.deleteReleasedItemsByConfigurationIds(folderContent.stream().map(DBItemInventoryConfiguration::getId).collect(Collectors.toSet()));
                 Globals.commit(dbLayer.getSession());
-            } catch (Exception e) {
-                Globals.rollback(dbLayer.getSession());
-                throw e;
-            }
+//            } catch (Exception e) {
+//                Globals.rollback(dbLayer.getSession());
+//                throw e;
+//            }
             for (DBItemInventoryConfiguration item : folderContent) {
                 // delete releasable objects in INV_CONFIGURATION
                 dbLayer.getSession().delete(item);
@@ -207,14 +238,14 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     }
 
     private static void deleteReleasedObject(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer) throws SOSHibernateException {
-        Globals.beginTransaction(dbLayer.getSession());
-        try {
+//        Globals.beginTransaction(dbLayer.getSession());
+//        try {
             dbLayer.deleteReleasedItemsByConfigurationIds(Arrays.asList(conf.getId()));
             Globals.commit(dbLayer.getSession());
-        } catch (Exception e) {
-            Globals.rollback(dbLayer.getSession());
-            throw e;
-        }
+//        } catch (Exception e) {
+//            Globals.rollback(dbLayer.getSession());
+//            throw e;
+//        }
         dbLayer.getSession().delete(conf);
     }
 }

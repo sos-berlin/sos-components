@@ -17,8 +17,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "newPath",
-    "overwrite"
+    "newPath"
 })
 public class RequestFilter
     extends com.sos.joc.model.inventory.common.RequestFilter
@@ -32,8 +31,6 @@ public class RequestFilter
      */
     @JsonProperty("newPath")
     private String newPath;
-    @JsonProperty("overwrite")
-    private Boolean overwrite = false;
 
     /**
      * string without < and >
@@ -57,24 +54,14 @@ public class RequestFilter
         this.newPath = newPath;
     }
 
-    @JsonProperty("overwrite")
-    public Boolean getOverwrite() {
-        return overwrite;
-    }
-
-    @JsonProperty("overwrite")
-    public void setOverwrite(Boolean overwrite) {
-        this.overwrite = overwrite;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("newPath", newPath).append("overwrite", overwrite).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("newPath", newPath).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(newPath).append(overwrite).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(newPath).toHashCode();
     }
 
     @Override
@@ -86,7 +73,7 @@ public class RequestFilter
             return false;
         }
         RequestFilter rhs = ((RequestFilter) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(newPath, rhs.newPath).append(overwrite, rhs.overwrite).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(newPath, rhs.newPath).isEquals();
     }
 
 }

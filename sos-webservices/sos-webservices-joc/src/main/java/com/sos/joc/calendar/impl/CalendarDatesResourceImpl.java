@@ -10,6 +10,7 @@ import com.sos.joc.calendar.resource.ICalendarDatesResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.calendar.FrequencyResolver;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -65,10 +66,10 @@ public class CalendarDatesResourceImpl extends JOCResourceImpl implements ICalen
                     }
                     in.setPath(calendarItem.getPath());
                 } else {
-                    String calendarPath = Globals.normalizePath(in.getPath());
-                    calendarItem = dbLayer.getReleasedConfiguration(calendarPath, ConfigurationType.WORKINGDAYSCALENDAR.intValue());
+                    String calendarName = JocInventory.pathToName(in.getPath());
+                    calendarItem = dbLayer.getReleasedConfiguration(calendarName, ConfigurationType.WORKINGDAYSCALENDAR.intValue());
                     if (calendarItem == null) {
-                        throw new DBMissingDataException(String.format("calendar '%1$s' not found", calendarPath));
+                        throw new DBMissingDataException(String.format("calendar '%1$s' not found", calendarName));
                     }
                     in.setId(calendarItem.getId());
                 }

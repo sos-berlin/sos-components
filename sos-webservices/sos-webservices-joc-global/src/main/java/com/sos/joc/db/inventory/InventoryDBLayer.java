@@ -174,17 +174,18 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().get(DBItemInventoryReleasedConfiguration.class, id);
     }
 
-    public DBItemInventoryReleasedConfiguration getReleasedConfiguration(String path, Integer type) throws SOSHibernateException {
+    public DBItemInventoryReleasedConfiguration getReleasedConfiguration(String name, Integer type) throws SOSHibernateException {
         boolean isCalendar = JocInventory.isCalendar(type);
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
-        hql.append(" where lower(path)=:path");
+        hql.append(" where lower(name)=:name");
         if (isCalendar) {
             hql.append(" and type in (:types)");
         } else {
             hql.append(" and type=:type");
         }
         Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameter("path", path.toLowerCase());
+        query.setParameter("name", name.toLowerCase());
+        query.setMaxResults(1);
         if (isCalendar) {
             query.setParameterList("types", JocInventory.getCalendarTypes());
         } else {
