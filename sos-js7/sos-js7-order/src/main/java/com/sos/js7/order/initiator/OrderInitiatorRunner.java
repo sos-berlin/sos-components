@@ -36,8 +36,8 @@ import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.Period;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.calendar.FrequencyResolver;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.db.orders.DBItemDailyPlanSubmissions;
@@ -50,7 +50,6 @@ import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
-import com.sos.joc.model.common.VariableType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 import com.sos.js7.order.initiator.classes.DailyPlanHelper;
@@ -65,8 +64,12 @@ import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterInventoryConfigurations;
 import com.sos.js7.order.initiator.db.FilterOrderVariables;
 
-import akka.http.impl.engine.http2.FrameEvent.Setting;
+class CalendarCacheItem {
 
+    Calendar calendar;
+    Set<String> dates;
+    PeriodResolver periodResolver;
+}
 public class OrderInitiatorRunner extends TimerTask {
 
     private static final String DAILYPLAN_RUNNER = "DailyplanRunner";
@@ -74,6 +77,7 @@ public class OrderInitiatorRunner extends TimerTask {
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderInitiatorRunner.class);
     private List<Schedule> listOfSchedules;
     private boolean fromService = true;
+    private boolean firstStart = false;
     private Set<String> createdPlans;
     private List<ControllerConfiguration> controllers;
 
@@ -219,7 +223,7 @@ public class OrderInitiatorRunner extends TimerTask {
                     List<DBItemDailyPlanSubmissions> l = getSubmissionsForDate(dailyPlanCalendar, controllerConfiguration.getCurrent().getId());
                     if ((l.size() == 0)) {
                         if (!logDailyPlan) {
-                            LOGGER.info("Creating daily plans for controller: " + controllerConfiguration.getCurrent().getId() + " from "
+                            LOGGER.info("Creating daily plan for controller: " + controllerConfiguration.getCurrent().getId() + " from "
                                     + dailyPlanDate + " for " + OrderInitiatorGlobals.orderInitiatorSettings.getDayAheadPlan() + " days ahead");
 
                             logDailyPlan = true;
@@ -273,7 +277,7 @@ public class OrderInitiatorRunner extends TimerTask {
                 DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
                 List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
                 LOGGER.debug(listOfPlannedOrders.size() + " to be submitted");
-               // submitOrders(listOfPlannedOrders);
+              //  submitOrders(listOfPlannedOrders);
 
             }
         } finally {
@@ -285,12 +289,18 @@ public class OrderInitiatorRunner extends TimerTask {
         if (createdPlans == null) {
             createdPlans = new HashSet<String>();
         }
+        
+        boolean generateFromManuelStart=false;
+        if (! firstStart && StartupMode.manual.equals(OrderInitiatorGlobals.orderInitiatorSettings.getStartMode())){
+           firstStart = true;
+           generateFromManuelStart = true;
+        }
 
         java.util.Calendar calendar = DailyPlanHelper.getDailyplanCalendar();
 
         java.util.Calendar now = java.util.Calendar.getInstance(TimeZone.getTimeZone(OrderInitiatorGlobals.orderInitiatorSettings.getTimeZone()));
 
-        if (!createdPlans.contains(DailyPlanHelper.getDayOfYear(calendar)) && (OrderInitiatorGlobals.orderInitiatorSettings
+        if (!createdPlans.contains(DailyPlanHelper.getDayOfYear(calendar)) && (generateFromManuelStart || OrderInitiatorGlobals.orderInitiatorSettings
                 .getDailyPlanDaysCreateOnStart() || (now.getTimeInMillis() - calendar.getTimeInMillis()) > 0)) {
             createdPlans.add(DailyPlanHelper.getDayOfYear(calendar));
             try {
@@ -393,22 +403,18 @@ public class OrderInitiatorRunner extends TimerTask {
             SOSInvalidDataException, ParseException, JocConfigurationException, SOSHibernateException, DBOpenSessionException {
 
         LOGGER.debug(String.format("... calculateStartTimes for %s", dailyPlanDate));
-        class CalendarCacheItem {
-
-            Calendar calendar;
-            Set<String> dates;
-            PeriodResolver periodResolver;
-        }
 
         Date actDate = dailyPlanDate;
         Date nextDate = DailyPlanHelper.getNextDay(dailyPlanDate);
         SOSHibernateSession sosHibernateSession = null;
 
         try {
+            Map<String, CalendarCacheItem> calendarCache = new HashMap<String, CalendarCacheItem>();
+
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("OrderInitiatorRunner");
             DBItemDailyPlanSubmissions dbItemDailyPlanSubmissionHistory = null;
             OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer();
-            Map<String, CalendarCacheItem> calendarCache = new HashMap<String, CalendarCacheItem>();
+           
             for (Schedule schedule : listOfSchedules) {
                 if (fromService && !schedule.getPlanOrderAutomatically()) {
                     LOGGER.debug(String.format("... schedule %s  will not be planned automatically", schedule.getPath()));
@@ -436,7 +442,7 @@ public class OrderInitiatorRunner extends TimerTask {
                         if (calendarCacheItem == null) {
                             calendarCacheItem = new CalendarCacheItem();
 
-                            PeriodResolver periodResolver = new PeriodResolver();
+                            calendarCacheItem.periodResolver = new PeriodResolver();
                             Calendar calendar = getCalendar(controllerId, assignedCalendar.getCalendarName(), ConfigurationType.WORKINGDAYSCALENDAR);
                             Calendar restrictions = new Calendar();
 
@@ -449,13 +455,18 @@ public class OrderInitiatorRunner extends TimerTask {
                             Set<String> s = fr.getDates().keySet();
 
                             for (Period p : assignedCalendar.getPeriods()) {
-                                periodResolver.addStartTimes(p, dailyPlanDateAsString, assignedCalendar.getTimeZone());
+                                Period _period = new Period();
+                                _period.setBegin(p.getBegin());
+                                _period.setEnd(p.getEnd());
+                                _period.setRepeat(p.getRepeat());
+                                _period.setSingleStart(p.getSingleStart());
+                                _period.setWhenHoliday(p.getWhenHoliday());
+                                calendarCacheItem.periodResolver.addStartTimes(_period, dailyPlanDateAsString, assignedCalendar.getTimeZone());
                             }
 
                             calendarCacheItem.dates = s;
                             calendarCacheItem.calendar = calendar;
-                            calendarCacheItem.periodResolver = periodResolver;
-                            calendarCache.put(assignedCalendar.getCalendarPath() + "#" + schedule.getPath(), calendarCacheItem);
+                            calendarCache.put(assignedCalendar.getCalendarName() + "#" + schedule.getPath(), calendarCacheItem);
                         }
 
                         for (String d : calendarCacheItem.dates) {
@@ -463,16 +474,17 @@ public class OrderInitiatorRunner extends TimerTask {
                             if (listOfNonWorkingDays != null && listOfNonWorkingDays.get(d) != null) {
                                 LOGGER.trace(d + "will be ignored as it is a non working day");
                             } else {
-                                for (Entry<Long, Period> startTime : calendarCacheItem.periodResolver.getStartTimes(d, dailyPlanDateAsString)
-                                        .entrySet()) {
-                                    FreshOrder freshOrder = buildFreshOrder(schedule, startTime.getKey());
+                                Map<Long, Period> listOfStartTimes = calendarCacheItem.periodResolver.getStartTimes(d, dailyPlanDateAsString); 
+                                for (Entry<Long, Period> periodEntry :listOfStartTimes.entrySet()) {
+                                    
+                                    FreshOrder freshOrder = buildFreshOrder(schedule, periodEntry.getKey());
 
                                     PlannedOrder plannedOrder = new PlannedOrder();
                                     plannedOrder.setControllerId(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
 
                                     plannedOrder.setFreshOrder(freshOrder);
                                     plannedOrder.setCalendarId(calendarCacheItem.calendar.getId());
-                                    plannedOrder.setPeriod(startTime.getValue());
+                                    plannedOrder.setPeriod(periodEntry.getValue());
                                     plannedOrder.setSubmissionHistoryId(dbItemDailyPlanSubmissionHistory.getId());
                                     if (!fromService) {
                                         schedule.setSubmitOrderToControllerWhenPlanned(OrderInitiatorGlobals.orderInitiatorSettings.isSubmit());

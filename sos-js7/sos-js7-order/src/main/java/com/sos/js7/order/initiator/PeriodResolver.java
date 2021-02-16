@@ -3,7 +3,9 @@ package com.sos.js7.order.initiator;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
@@ -168,9 +170,11 @@ public class PeriodResolver {
     public void addStartTimes(Period period, String dailyPlanDate, String timeZone) throws ParseException, SOSInvalidDataException {
         period = normalizePeriod(period);
         if (period.getSingleStart() != null && !period.getSingleStart().isEmpty()) {
-            Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(dailyPlanDate + " " + period.getSingleStart(), timeZone);
-            period.setSingleStart(getTimeFromIso(scheduledFor.get()));
-            add(period.getSingleStart(), period);
+           Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(dailyPlanDate + " " + period.getSingleStart(), timeZone);
+           
+            //period.setSingleStart(getTimeFromIso(scheduledFor.get()));
+           // add(getTimeFromIso(scheduledFor.get()), period);
+           add(period.getSingleStart(), period);
         }
         addRepeat(period, dailyPlanDate, timeZone);
     }
@@ -178,8 +182,14 @@ public class PeriodResolver {
     public Map<Long, Period> getStartTimes() {
         return listOfStartTimes;
     }
+    
+    private Date dateAsUtc(Date d) {
+        LocalDateTime ldt = LocalDateTime.ofInstant(d.toInstant(), ZoneId.of("UTC"));
+        return java.sql.Timestamp.valueOf(ldt); 
+    }
 
     private boolean dayIsInPlan(Date start, String dailyPlanDate) throws ParseException {
+        start = dateAsUtc(start);
         String timeZone = OrderInitiatorGlobals.orderInitiatorSettings.getTimeZone();
         String periodBegin = OrderInitiatorGlobals.orderInitiatorSettings.getPeriodBegin();
         String dateInString = String.format("%s %s", dailyPlanDate, periodBegin);

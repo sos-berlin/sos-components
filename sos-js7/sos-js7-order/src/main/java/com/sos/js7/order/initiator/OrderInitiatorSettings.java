@@ -5,6 +5,8 @@ import java.nio.file.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
+
 public class OrderInitiatorSettings {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderInitiatorSettings.class);
@@ -21,6 +23,7 @@ public class OrderInitiatorSettings {
     private String periodBegin = "00:00";
     private boolean overwrite = false;
     private boolean submit = true;
+    private StartupMode startMode;
 
     public boolean isSubmit() {
         return submit;
@@ -136,6 +139,16 @@ public class OrderInitiatorSettings {
     
     public void setDailyPlanDaysCreateOnStart(Boolean dailyPlanDaysCreateOnStart) {
         this.dailyPlanDaysCreateOnStart = dailyPlanDaysCreateOnStart;
+    }
+
+    
+    public StartupMode getStartMode() {
+        return startMode;
+    }
+
+    
+    public void setStartMode(StartupMode startMode) {
+        this.startMode = startMode;
     }
 
 }

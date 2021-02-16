@@ -40,8 +40,11 @@ public class OrderInitiatorService extends AJocClusterService {
             LOGGER.info(String.format("[%s][%s] start", getIdentifier(), mode));
 
             setSettings();
-            LOGGER.info("Creating plan for " + settings.getDayAheadPlan() + " days ahead");
-            if (settings.getDayAheadPlan() > 0) {
+            settings.setStartMode(mode);
+
+            LOGGER.info("[daily_plan_days_ahead_plan] onPeriodChange will create daily plan for " + settings.getDayAheadPlan() + " days ahead");
+            LOGGER.info("[daily_plan_days_ahead_submit] onPeriodChange will submit daily plan for " + settings.getDayAheadSubmit() + " days ahead");
+                   if (settings.getDayAheadPlan() > 0) {
                 resetStartPlannedOrderTimer(controllers);
             }
 
