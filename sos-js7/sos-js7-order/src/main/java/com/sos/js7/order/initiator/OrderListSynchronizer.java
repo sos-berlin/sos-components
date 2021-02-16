@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -49,11 +50,11 @@ public class OrderListSynchronizer {
     private Map<String, Long> listOfDurations;
 
     public OrderListSynchronizer() {
-        listOfPlannedOrders = new HashMap<PlannedOrderKey, PlannedOrder>();
+        listOfPlannedOrders = new TreeMap  <PlannedOrderKey, PlannedOrder>();
     }
 
     public OrderListSynchronizer(OrderInitiatorSettings orderInitiatorSettings) {
-        listOfPlannedOrders = new HashMap<PlannedOrderKey, PlannedOrder>();
+        listOfPlannedOrders = new TreeMap <PlannedOrderKey, PlannedOrder>();
         OrderInitiatorGlobals.orderInitiatorSettings = orderInitiatorSettings;
     }
 

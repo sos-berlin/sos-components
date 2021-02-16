@@ -1,6 +1,6 @@
 package com.sos.js7.order.initiator.classes;
 
-public class PlannedOrderKey {
+public class PlannedOrderKey implements Comparable<PlannedOrderKey>  {
 
     private String controllerId;
     private String workflowName;
@@ -54,6 +54,11 @@ public class PlannedOrderKey {
         PlannedOrderKey other = (PlannedOrderKey) obj;
         return (controllerId.equals(other.controllerId) && orderId.equals(other.orderId) && workflowName.equals(other.workflowName));
 
+    }
+
+    @Override
+    public int compareTo(PlannedOrderKey o) {
+        return this.orderId.compareTo(o.orderId);         
     }
 
 }
