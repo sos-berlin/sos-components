@@ -10,7 +10,8 @@ public enum ClusterServices {
 
     cluster("cluster"),
     history("history"),
-    dailyplan("dailyplan");
+    dailyplan("dailyplan"),
+    cleanup("cleanup");
     private final String value;
     private final static Map<String, ClusterServices> CONSTANTS = new HashMap<String, ClusterServices>();
 
