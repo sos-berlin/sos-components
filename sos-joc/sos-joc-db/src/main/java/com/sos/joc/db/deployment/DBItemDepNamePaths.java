@@ -31,41 +31,55 @@ public class DBItemDepNamePaths extends DBItem {
 
     @Column(name = "[CONTROLLER_ID]", nullable = false)
     private String controllerId;
-    
-    
+
+    @Column(name = "[COMMIT_ID]", nullable = false)
+    private String commitId;
+
     public Long getId() {
         return id;
     }
-    public void setId(Long id) {
-        this.id = id;
+
+    public void setId(Long val) {
+        id = val;
     }
 
     public String getPath() {
         return path;
     }
-    public void setPath(String path) {
-        this.path = path;
+
+    public void setPath(String val) {
+        path = val;
     }
-    
+
     public String getName() {
         return name;
     }
-    public void setName(String name) {
-        this.name = name;
+
+    public void setName(String val) {
+        name = val;
     }
-    
+
     public Integer getType() {
         return type;
     }
-    public void setType(Integer type) {
-        this.type = type;
+
+    public void setType(Integer val) {
+        type = val;
     }
 
     public String getControllerId() {
         return controllerId;
     }
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
+
+    public void setControllerId(String val) {
+        controllerId = val;
     }
 
+    public String getCommitId() {
+        return commitId;
+    }
+
+    public void setCommitId(String val) {
+        commitId = val;
+    }
 }

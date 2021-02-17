@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
+import com.sos.joc.model.common.JocSecurityLevel;
 
 public class JocConfiguration {
 
@@ -18,15 +19,15 @@ public class JocConfiguration {
     private final String timezone;
     private final Path hibernateConfiguration;
     private final Path resourceDirectory;
-    private final String securityLevel;
+    private final JocSecurityLevel securityLevel;
     private final String memberId;
     private final String title;
     private final Integer ordering;
 
     private String hostname;
 
-    public JocConfiguration(String jocDataDirectory, String jocTimezone, Path jocHibernateConfig, Path jocResourceDir, String jocSecurityLevel,
-            String jocTitle, Integer jocOrdering) {
+    public JocConfiguration(String jocDataDirectory, String jocTimezone, Path jocHibernateConfig, Path jocResourceDir,
+            JocSecurityLevel jocSecurityLevel, String jocTitle, Integer jocOrdering) {
         setHostname();
         dataDirectory = Paths.get(jocDataDirectory);
         timezone = jocTimezone;
@@ -49,7 +50,7 @@ public class JocConfiguration {
         }
         return hostname;
     }
- 
+
     public Path getResourceDirectory() {
         return resourceDirectory;
     }
@@ -70,7 +71,7 @@ public class JocConfiguration {
         return ordering;
     }
 
-    public String getSecurityLevel() {
+    public JocSecurityLevel getSecurityLevel() {
         return securityLevel;
     }
 

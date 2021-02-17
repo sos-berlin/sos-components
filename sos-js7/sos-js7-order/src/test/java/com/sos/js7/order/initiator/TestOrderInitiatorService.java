@@ -72,8 +72,8 @@ public class TestOrderInitiatorService {
         Globals.sosCockpitProperties = new JocCockpitProperties();
 
         Path resDir = Paths.get("src/test/resources");
-        JocConfiguration jocConfig = new JocConfiguration(resDir.toString(), "UTC", resDir.resolve("hibernate.cfg.xml"), resDir, JocSecurityLevel.LOW
-                .value(), "", 0);
+        JocConfiguration jocConfig = new JocConfiguration(resDir.toString(), "UTC", resDir.resolve("hibernate.cfg.xml"), resDir, JocSecurityLevel.LOW,
+                "", 0);
 
         OrderInitiatorService hm = new OrderInitiatorService(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
         hm.start(getControllers(), StartupMode.manual);

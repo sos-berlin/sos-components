@@ -32,7 +32,7 @@ public class JocInstance {
                 item.setMemberId(config.getMemberId());
                 item.setOsId(osItem.getId());
                 item.setDataDirectory(config.getDataDirectory().toString());
-                item.setSecurityLevel(config.getSecurityLevel());
+                item.setSecurityLevel(config.getSecurityLevel().name());
                 item.setStartedAt(startTime);
                 item.setTimezone(config.getTimezone());
                 item.setTitle(config.getTitle());
@@ -41,7 +41,7 @@ public class JocInstance {
                 item.setHeartBeat(new Date());
                 dbLayer.getSession().save(item);
             } else {
-                item.setSecurityLevel(config.getSecurityLevel());
+                item.setSecurityLevel(config.getSecurityLevel().name());
                 item.setStartedAt(startTime);
                 item.setTimezone(config.getTimezone());
                 item.setTitle(config.getTitle());

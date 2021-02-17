@@ -14,6 +14,7 @@ import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.joc.DBItemJocVariable;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class DBLayerHistory {
 
@@ -323,6 +324,22 @@ public class DBLayerHistory {
         query.setParameter("id", id);
         query.setParameter("logId", logId);
         return session.executeUpdate(query);
+    }
+
+    public String getDeployedWorkflowPath(String controllerId, String workflowName, String workflowVersionId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select path from ");
+        hql.append(DBLayer.DBITEM_DEP_NAMEPATHS).append(" ");
+        hql.append("where type=:type ");
+        hql.append("and controllerId=:controllerId ");
+        hql.append("and name=:workflowName ");
+        hql.append("and commitId=:workflowVersionId");
+
+        Query<String> query = session.createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
+        query.setParameter("controllerId", controllerId);
+        query.setParameter("workflowName", workflowName);
+        query.setParameter("workflowVersionId", workflowVersionId);
+        return session.getSingleResult(query);
     }
 
 }

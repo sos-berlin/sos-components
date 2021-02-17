@@ -73,6 +73,7 @@ import com.sos.js7.history.db.DBLayerHistory;
 import com.sos.js7.history.helper.CachedAgent;
 import com.sos.js7.history.helper.CachedOrder;
 import com.sos.js7.history.helper.CachedOrderStep;
+import com.sos.js7.history.helper.CachedWorkflow;
 import com.sos.js7.history.helper.Counter;
 import com.sos.js7.history.helper.HistoryUtil;
 import com.sos.js7.history.helper.LogEntry;
@@ -89,6 +90,7 @@ public class HistoryModel {
     private static final boolean isTraceEnabled = LOGGER.isTraceEnabled();
 
     private static final long MAX_LOCK_VERSION = 10_000_000;
+    private static final String KEY_DELIMITER = "|||";
     private final SOSHibernateFactory dbFactory;
     private HistoryConfiguration historyConfiguration;
     private ControllerConfiguration controllerConfiguration;
@@ -105,6 +107,7 @@ public class HistoryModel {
     private Map<String, CachedOrder> cachedOrders;
     private Map<String, CachedOrderStep> cachedOrderSteps;
     private Map<String, CachedAgent> cachedAgents;
+    private Map<String, CachedWorkflow> cachedWorkflows;
 
     private static enum CacheType {
         order, orderStep
@@ -433,13 +436,14 @@ public class HistoryModel {
         // }
         // }
         // return sb.toString();
-        return String.format("[cached orders=%s, steps=%s]", coSize, cosSize);
+        return String.format("[cached workflows=%s,orders=%s,steps=%s]", cachedWorkflows.size(), coSize, cosSize);
     }
 
     private void initCache() {
         cachedOrders = new HashMap<>();
         cachedOrderSteps = new HashMap<>();
         cachedAgents = new HashMap<>();
+        cachedWorkflows = new HashMap<>();
     }
 
     public void close() {
@@ -600,11 +604,14 @@ public class HistoryModel {
             item.setControllerId(controllerConfiguration.getCurrent().getId());
             item.setOrderId(entry.getOrderId());
 
-            item.setWorkflowPath(entry.getWorkflowPath());
+            String workflowName = HistoryUtil.getBasenameFromPath(entry.getWorkflowPath());
+            CachedWorkflow cw = getCachedWorkflow(dbLayer, workflowName, entry.getWorkflowVersionId());
+
+            item.setWorkflowPath(cw.getPath());
             item.setWorkflowVersionId(entry.getWorkflowVersionId());
             item.setWorkflowPosition(SOSString.isEmpty(entry.getPosition()) ? "0" : entry.getPosition());
             item.setWorkflowFolder(HistoryUtil.getFolderFromPath(item.getWorkflowPath()));
-            item.setWorkflowName(HistoryUtil.getBasenameFromPath(item.getWorkflowPath()));
+            item.setWorkflowName(workflowName);
             item.setWorkflowTitle(null);// TODO
 
             item.setMainParentId(new Long(0L));// TODO see below
@@ -969,11 +976,14 @@ public class HistoryModel {
             item.setControllerId(controllerConfiguration.getCurrent().getId());
             item.setOrderId(forkOrder.getOrderId());
 
-            item.setWorkflowPath(entry.getWorkflowPath());
+            String workflowName = HistoryUtil.getBasenameFromPath(entry.getWorkflowPath());
+            CachedWorkflow cw = getCachedWorkflow(dbLayer, workflowName, entry.getWorkflowVersionId());
+
+            item.setWorkflowPath(cw.getPath());
             item.setWorkflowVersionId(entry.getWorkflowVersionId());
             item.setWorkflowPosition(HistoryPosition.asString(forkOrder.getPosition()));
             item.setWorkflowFolder(HistoryUtil.getFolderFromPath(item.getWorkflowPath()));
-            item.setWorkflowName(HistoryUtil.getBasenameFromPath(item.getWorkflowPath()));
+            item.setWorkflowName(workflowName);
             item.setWorkflowTitle(null);// TODO
 
             item.setMainParentId(parentOrder.getMainParentId());
@@ -1074,11 +1084,14 @@ public class HistoryModel {
             item.setControllerId(controllerConfiguration.getCurrent().getId());
             item.setOrderId(entry.getOrderId());
 
-            item.setWorkflowPath(entry.getWorkflowPath());
+            String workflowName = HistoryUtil.getBasenameFromPath(entry.getWorkflowPath());
+            CachedWorkflow cw = getCachedWorkflow(dbLayer, workflowName, entry.getWorkflowVersionId());
+
+            item.setWorkflowPath(cw.getPath());
             item.setWorkflowVersionId(entry.getWorkflowVersionId());
             item.setWorkflowPosition(entry.getPosition());
             item.setWorkflowFolder(HistoryUtil.getFolderFromPath(item.getWorkflowPath()));
-            item.setWorkflowName(HistoryUtil.getBasenameFromPath(item.getWorkflowPath()));
+            item.setWorkflowName(workflowName);
 
             item.setHistoryOrderMainParentId(co.getMainParentId());
             item.setHistoryOrderId(co.getId());
@@ -1408,6 +1421,43 @@ public class HistoryModel {
         return null;
     }
 
+    private CachedWorkflow getCachedWorkflow(DBLayerHistory dbLayer, String workflowName, String workflowVersionId) throws Exception {
+        CachedWorkflow cw = getCachedWorkflow(workflowName, workflowVersionId);
+        if (cw == null) {
+            clearWorkflowCache(workflowName);
+            String path = dbLayer.getDeployedWorkflowPath(controllerConfiguration.getCurrent().getId(), workflowName, workflowVersionId);
+            if (path == null) {
+                path = "/" + workflowName;
+            }
+            cw = new CachedWorkflow(path);
+            addCachedWorkflow(getCachedWorkflowKey(workflowName, workflowVersionId), cw);
+        }
+        return cw;
+    }
+
+    private void addCachedWorkflow(String key, CachedWorkflow cw) {
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("[%s][addCachedWorkflow][%s]%s", identifier, key, SOSString.toString(cw)));
+        }
+        cachedWorkflows.put(key, cw);
+    }
+
+    private CachedWorkflow getCachedWorkflow(String workflowName, String workflowVersionId) {
+        String key = getCachedWorkflowKey(workflowName, workflowVersionId);
+        if (cachedWorkflows.containsKey(key)) {
+            CachedWorkflow cw = cachedWorkflows.get(key);
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][getCachedWorkflow][%s]%s", identifier, key, SOSString.toString(cw)));
+            }
+            return cw;
+        }
+        return null;
+    }
+
+    private String getCachedWorkflowKey(String workflowName, String workflowVersionId) {
+        return new StringBuilder(workflowName).append(KEY_DELIMITER).append(workflowVersionId).toString();
+    }
+
     private void clearCache(CacheType cacheType, String orderId) {
         if (isDebugEnabled) {
             LOGGER.debug(String.format("[%s][clearCache][%s]%s", identifier, cacheType, orderId));
@@ -1423,6 +1473,10 @@ public class HistoryModel {
         default:
             break;
         }
+    }
+
+    private void clearWorkflowCache(String workflowName) {
+        cachedWorkflows.entrySet().removeIf(entry -> entry.getKey().startsWith(new StringBuilder(workflowName).append(KEY_DELIMITER).toString()));
     }
 
     private DBItemHistoryLog storeLogFile2Db(DBLayerHistory dbLayer, Long orderMainParentId, Long orderId, Long orderStepId, boolean compressed,

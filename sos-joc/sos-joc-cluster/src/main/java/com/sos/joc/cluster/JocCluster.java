@@ -9,6 +9,7 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -121,7 +122,7 @@ public class JocCluster {
                 if (controllers != null && controllers.size() > 0) {
                     run = false;
                 } else {
-                    LOGGER.info("no controllers found. sleep 1m and try again ...");
+                    LOGGER.info(String.format("[%s]no controllers found. sleep 1m and try again ...", jocConfig.getSecurityLevel().name()));
                     wait(60);
                 }
             } catch (Exception e) {
@@ -138,7 +139,11 @@ public class JocCluster {
             try {
                 session = dbFactory.openStatelessSession("history");
                 session.beginTransaction();
-                List<DBItemInventoryJSInstance> result = session.getResultList("from " + DBLayer.DBITEM_INV_JS_INSTANCES);
+                StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_JS_INSTANCES).append(" ");
+                hql.append("where securityLevel=:securityLevel");
+                Query<DBItemInventoryJSInstance> query = session.createQuery(hql.toString());
+                query.setParameter("securityLevel", jocConfig.getSecurityLevel().intValue());
+                List<DBItemInventoryJSInstance> result = session.getResultList(query);
                 session.commit();
                 session.close();
                 session = null;
