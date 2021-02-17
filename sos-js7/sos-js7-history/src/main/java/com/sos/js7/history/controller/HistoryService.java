@@ -27,11 +27,11 @@ import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
-import com.sos.joc.cluster.configuration.JocClusterConfiguration.JocClusterServices;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.DBItemHistoryTempLog;
+import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.js7.event.controller.configuration.Configuration;
 import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 import com.sos.js7.event.notifier.Mailer;
@@ -42,7 +42,7 @@ public class HistoryService extends AJocClusterService {
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryService.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
-    private static final String IDENTIFIER = JocClusterServices.history.name();
+    private static final String IDENTIFIER = ClusterServices.history.name();
     private static final long AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER = 3;// in seconds
 
     private final Path logDir;

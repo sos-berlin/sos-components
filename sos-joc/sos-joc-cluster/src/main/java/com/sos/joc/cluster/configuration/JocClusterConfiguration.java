@@ -7,15 +7,13 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.joc.model.cluster.common.ClusterServices;
+
 public class JocClusterConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JocClusterConfiguration.class);
 
-    public static final String IDENTIFIER = JocClusterServices.cluster.name();
-
-    public enum JocClusterServices {
-        cluster, history, dailyplan, cleanup, proxy;
-    }
+    public static final String IDENTIFIER = ClusterServices.cluster.name();
 
     public enum StartupMode {
         automatic, manual, automatic_switchover, manual_switchover;

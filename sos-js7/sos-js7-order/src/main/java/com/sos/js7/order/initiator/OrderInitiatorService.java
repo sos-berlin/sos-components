@@ -12,16 +12,16 @@ import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
-import com.sos.joc.cluster.configuration.JocClusterConfiguration.JocClusterServices;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
+import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 
 public class OrderInitiatorService extends AJocClusterService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderInitiatorService.class);
 
-    private static final String IDENTIFIER = JocClusterServices.dailyplan.name();
+    private static final String IDENTIFIER = ClusterServices.dailyplan.name();
 
     private OrderInitiatorSettings settings;
     private Timer timer;

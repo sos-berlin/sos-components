@@ -12,17 +12,17 @@ import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
-import com.sos.joc.cluster.configuration.JocClusterConfiguration.JocClusterServices;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 
 public class CleanupService extends AJocClusterService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupService.class);
 
-    private static final String IDENTIFIER = JocClusterServices.cleanup.name();
+    private static final String IDENTIFIER = ClusterServices.cleanup.name();
     private static final int MAX_POOL_SIZE = 3;
 
     private JocClusterHibernateFactory factory;
