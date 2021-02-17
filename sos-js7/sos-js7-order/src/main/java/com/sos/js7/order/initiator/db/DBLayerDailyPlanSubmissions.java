@@ -56,7 +56,7 @@ public class DBLayerDailyPlanSubmissions {
         }
 
         if (filter.getDateTo() != null) {
-            where += and + " submissionForDate <= :dateTo";
+            where += and + " submissionForDate < :dateTo";
             and = " and ";
         }
 

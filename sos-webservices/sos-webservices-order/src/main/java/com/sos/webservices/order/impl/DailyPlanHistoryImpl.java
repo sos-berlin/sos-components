@@ -90,10 +90,10 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             DailyPlanHistory dailyPlanHistory = new DailyPlanHistory();
             List<DailyPlanHistoryItem> result = new ArrayList<DailyPlanHistoryItem>();
 
-            List<DBItemDailyPlanHistory> listOfDailyPlanSubmissions = dbLayerDailyPlanHistory.getDailyPlanHistory(filter, 0);
+            List<DBItemDailyPlanHistory> listOfDailyPlanHistory = dbLayerDailyPlanHistory.getDailyPlanHistory(filter, 0);
             Map<Date, Map<Date, DailyPlanSubmissionTimes>> mapOfSubmissionTimesByDate = new HashMap<Date, Map<Date, DailyPlanSubmissionTimes>>();
 
-            for (DBItemDailyPlanHistory dbItemDailySubmissionHistory : listOfDailyPlanSubmissions) {
+            for (DBItemDailyPlanHistory dbItemDailySubmissionHistory : listOfDailyPlanHistory) {
 
                 if (mapOfSubmissionTimesByDate.get(dbItemDailySubmissionHistory.getDailyPlanDate()) == null) {
                     Map<Date, DailyPlanSubmissionTimes> mapOfSubmissionTimes = new HashMap<Date, DailyPlanSubmissionTimes>();
@@ -118,7 +118,6 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
                 dailyplanHistoryOrderItem.setWorkflowPath(dbItemDailySubmissionHistory.getWorkflowPath());
 
                 DailyPlanSubmissionTimes dailyPlanSubmissionTimes = mapOfSubmissionTimes.get(dbItemDailySubmissionHistory.getSubmissionTime());
-                dailyPlanSubmissionTimes.getOrderIds().add(dailyplanHistoryOrderItem);
 
                 if (dbItemDailySubmissionHistory.getMessage() != null) {
                     if (dbItemDailySubmissionHistory.getMessage().startsWith(WARN)) {
@@ -127,6 +126,8 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
                     if (dbItemDailySubmissionHistory.getMessage().startsWith(ERROR)) {
                         dailyPlanSubmissionTimes.getErrorMessages().add(dbItemDailySubmissionHistory.getMessage().substring(ERROR.length()));
                     }
+                }else {
+                    dailyPlanSubmissionTimes.getOrderIds().add(dailyplanHistoryOrderItem);
                 }
 
             }

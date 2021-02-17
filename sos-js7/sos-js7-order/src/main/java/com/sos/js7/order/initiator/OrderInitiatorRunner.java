@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URISyntaxException;
 import java.text.ParseException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -178,6 +180,10 @@ public class OrderInitiatorRunner extends TimerTask {
         }
     }
 
+    private Date dateAsUtc(Date d) {
+        LocalDateTime ldt = LocalDateTime.ofInstant(d.toInstant(), ZoneId.of("UTC"));
+        return java.sql.Timestamp.valueOf(ldt); 
+    }
     private List<DBItemDailyPlanSubmissions> getSubmissionsForDate(java.util.Calendar calendar, String controllerId) throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         try {
@@ -186,11 +192,8 @@ public class OrderInitiatorRunner extends TimerTask {
             DBLayerDailyPlanSubmissions dbLayerDailyPlan = new DBLayerDailyPlanSubmissions(sosHibernateSession);
             FilterDailyPlanSubmissions filter = new FilterDailyPlanSubmissions();
             filter.setControllerId(controllerId);
-            filter.setDateFrom(calendar.getTime());
-            java.util.Calendar calendarTo = java.util.Calendar.getInstance();
-            calendarTo.setTimeInMillis(calendar.getTimeInMillis());
-            calendarTo.add(java.util.Calendar.DATE, 1);
-            filter.setDateTo(calendarTo.getTime());
+            
+            filter.setDateFor(calendar.getTime());
             List<DBItemDailyPlanSubmissions> listOfDailyPlanSubmissions = dbLayerDailyPlan.getDailyPlanSubmissions(filter, 0);
             return (listOfDailyPlanSubmissions);
 
@@ -206,7 +209,6 @@ public class OrderInitiatorRunner extends TimerTask {
 
             java.util.Calendar savCalendar = java.util.Calendar.getInstance();
             savCalendar.setTime(calendar.getTime());
-            LOGGER.info("Submitting orders for daily plans for " + OrderInitiatorGlobals.orderInitiatorSettings.getDayAheadSubmit() + " days ahead");
 
             for (ControllerConfiguration controllerConfiguration : controllers) {
                 java.util.Calendar dailyPlanCalendar = java.util.Calendar.getInstance();
@@ -242,6 +244,7 @@ public class OrderInitiatorRunner extends TimerTask {
                 dailyPlanCalendar.setTime(savCalendar.getTime());
                 OrderInitiatorGlobals.dailyPlanDate = dailyPlanCalendar.getTime();
 
+                LOGGER.info("Submitting orders for daily plan for " + OrderInitiatorGlobals.orderInitiatorSettings.getDayAheadSubmit() + " days ahead");
                 for (int day = 0; day < OrderInitiatorGlobals.orderInitiatorSettings.getDayAheadSubmit(); day++) {
 
                     submitDaysAhead(dailyPlanCalendar, controllerConfiguration.getCurrent().getId());
@@ -289,10 +292,12 @@ public class OrderInitiatorRunner extends TimerTask {
         if (createdPlans == null) {
             createdPlans = new HashSet<String>();
         }
+        LOGGER.debug("firstStart:" + firstStart);
         
         boolean generateFromManuelStart=false;
         if (! firstStart && StartupMode.manual.equals(OrderInitiatorGlobals.orderInitiatorSettings.getStartMode())){
            firstStart = true;
+           LOGGER.debug("generateFromManuelStart: true");
            generateFromManuelStart = true;
         }
 
@@ -302,6 +307,8 @@ public class OrderInitiatorRunner extends TimerTask {
 
         if (!createdPlans.contains(DailyPlanHelper.getDayOfYear(calendar)) && (generateFromManuelStart || OrderInitiatorGlobals.orderInitiatorSettings
                 .getDailyPlanDaysCreateOnStart() || (now.getTimeInMillis() - calendar.getTimeInMillis()) > 0)) {
+            
+            LOGGER.debug("Creating daily plan beginning with " + DailyPlanHelper.getDayOfYear(calendar));           
             createdPlans.add(DailyPlanHelper.getDayOfYear(calendar));
             try {
                 OrderInitiatorGlobals.submissionTime = new Date();

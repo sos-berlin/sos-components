@@ -88,7 +88,9 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
 
     private FilterDailyPlannedOrders getFilter(DailyPlanOrderFilter dailyPlanOrderFilter) throws SOSHibernateException {
         
-        for (String orderId: dailyPlanOrderFilter.getFilter().getOrderIds()) {
+        List <String>orderIds = new ArrayList<String>();
+        orderIds.addAll(dailyPlanOrderFilter.getFilter().getOrderIds());
+        for (String orderId: orderIds) {
             addCyclicOrderIds(dailyPlanOrderFilter.getFilter().getOrderIds(), orderId, dailyPlanOrderFilter);
         }
         

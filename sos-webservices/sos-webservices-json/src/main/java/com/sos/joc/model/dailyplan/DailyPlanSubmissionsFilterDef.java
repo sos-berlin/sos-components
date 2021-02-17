@@ -21,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "dateFrom",
     "dateTo",
+    "dateFor",
     "controllerIds"
 })
 public class DailyPlanSubmissionsFilterDef {
@@ -43,6 +44,15 @@ public class DailyPlanSubmissionsFilterDef {
     @JsonProperty("dateTo")
     @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
     private String dateTo;
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
+    @JsonProperty("dateFor")
+    @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
+    private String dateFor;
     @JsonProperty("controllerIds")
     private List<String> controllerIds = null;
 
@@ -90,6 +100,28 @@ public class DailyPlanSubmissionsFilterDef {
         this.dateTo = dateTo;
     }
 
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
+    @JsonProperty("dateFor")
+    public String getDateFor() {
+        return dateFor;
+    }
+
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
+    @JsonProperty("dateFor")
+    public void setDateFor(String dateFor) {
+        this.dateFor = dateFor;
+    }
+
     @JsonProperty("controllerIds")
     public List<String> getControllerIds() {
         return controllerIds;
@@ -102,12 +134,12 @@ public class DailyPlanSubmissionsFilterDef {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("dateFrom", dateFrom).append("dateTo", dateTo).append("controllerIds", controllerIds).toString();
+        return new ToStringBuilder(this).append("dateFrom", dateFrom).append("dateTo", dateTo).append("dateFor", dateFor).append("controllerIds", controllerIds).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dateTo).append(dateFrom).append(controllerIds).toHashCode();
+        return new HashCodeBuilder().append(dateTo).append(dateFrom).append(dateFor).append(controllerIds).toHashCode();
     }
 
     @Override
@@ -119,7 +151,7 @@ public class DailyPlanSubmissionsFilterDef {
             return false;
         }
         DailyPlanSubmissionsFilterDef rhs = ((DailyPlanSubmissionsFilterDef) other);
-        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(dateFrom, rhs.dateFrom).append(controllerIds, rhs.controllerIds).isEquals();
+        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(dateFrom, rhs.dateFrom).append(dateFor, rhs.dateFor).append(controllerIds, rhs.controllerIds).isEquals();
     }
 
 }

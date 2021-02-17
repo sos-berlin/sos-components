@@ -119,14 +119,12 @@ public class DBLayerSchedules {
         }
 
         FilterInventoryConfigurations filterInventoryConfigurations = new FilterInventoryConfigurations();
-        filterInventoryConfigurations.setListOfControllerIds(filter.getListOfControllerIds());
         filterInventoryConfigurations.setType(ConfigurationType.WORKFLOW);
 
         FilterDeployHistory filterDeployHistory = new FilterDeployHistory();
         filterDeployHistory.setOrderCriteria("deploymentDate");
         filterDeployHistory.setSortMode("desc");
         filterDeployHistory.setType(ConfigurationType.WORKFLOW);
-        filterDeployHistory.setListOfControllerIds(filter.getListOfControllerIds());
         filterDeployHistory.setState(DeploymentState.DEPLOYED);
 
         DBLayerDeployHistory dbLayerDeploy = new DBLayerDeployHistory(sosHibernateSession);
@@ -173,7 +171,7 @@ public class DBLayerSchedules {
                     dbItemDailyPlanHistory.setUserAccount(OrderInitiatorGlobals.orderInitiatorSettings.getUserAccount());
                     dbLayerDailyPlanHistory.storeDailyPlanHistory(dbItemDailyPlanHistory);
 
-                    LOGGER.warn("Warn:" + s);
+                    LOGGER.warn(s);
                 }
             }
         }

@@ -1,9 +1,18 @@
 package com.sos.webservices.order.impl;
 
+import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.zone.ZoneRules;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.Path;
 
@@ -104,6 +113,10 @@ public class DailyPlanSubmissionsImpl extends JOCResourceImpl implements IDailyP
         }
     }
 
+    public static long getOffset(String timeZone) {
+        return TimeZone.getTimeZone(timeZone).getOffset(Instant.now().toEpochMilli());
+    }
+
     @Override
     public JOCDefaultResponse postDeleteDailyPlanSubmissions(String accessToken, byte[] filterBytes) throws JocException {
         SOSHibernateSession sosHibernateSession = null;
@@ -122,7 +135,6 @@ public class DailyPlanSubmissionsImpl extends JOCResourceImpl implements IDailyP
             }
 
             this.checkRequiredParameter("filter", dailyPlanSubmissionHistoryFilter.getFilter());
-            this.checkRequiredParameter("dateTo", dailyPlanSubmissionHistoryFilter.getFilter().getDateTo());
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
 
@@ -133,17 +145,39 @@ public class DailyPlanSubmissionsImpl extends JOCResourceImpl implements IDailyP
 
             FilterDailyPlanSubmissions filter = new FilterDailyPlanSubmissions();
             filter.setControllerId(dailyPlanSubmissionHistoryFilter.getControllerId());
-            if (dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom() != null) {
-                Date fromDate = JobSchedulerDate.getDateFrom(dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom(),
-                        dailyPlanSubmissionHistoryFilter.getTimeZone());
-                filter.setDateFrom(fromDate);
-            }
-            if (dailyPlanSubmissionHistoryFilter.getFilter().getDateTo() != null) {
-                Date toDate = JobSchedulerDate.getDateTo(dailyPlanSubmissionHistoryFilter.getFilter().getDateTo(), dailyPlanSubmissionHistoryFilter
+
+            if (dailyPlanSubmissionHistoryFilter.getFilter().getDateFor() != null) {
+                Date date = JobSchedulerDate.getDateFrom(dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom(), dailyPlanSubmissionHistoryFilter
                         .getTimeZone());
-                filter.setDateTo(toDate);
+                filter.setDateFor(date);
+
+            } else {
+
+                if (dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom() != null) {
+                    Date fromDate = JobSchedulerDate.getDateFrom(dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom(),
+                            dailyPlanSubmissionHistoryFilter.getTimeZone());
+                    filter.setDateFrom(fromDate);
+                    filter.setDateFor(fromDate);
+
+                }
+                if (dailyPlanSubmissionHistoryFilter.getFilter().getDateTo() != null) {
+                    Date toDate = JobSchedulerDate.getDateTo(dailyPlanSubmissionHistoryFilter.getFilter().getDateTo(),
+                            dailyPlanSubmissionHistoryFilter.getTimeZone());
+                    filter.setDateTo(toDate);
+                }
             }
 
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(filter.getDateFor());
+            calendar.add(java.util.Calendar.DATE, 1);
+            calendar.set(java.util.Calendar.HOUR_OF_DAY, 0);
+            calendar.set(java.util.Calendar.MINUTE, 0);
+            calendar.set(java.util.Calendar.SECOND, 0);
+            calendar.set(java.util.Calendar.MILLISECOND, 0);
+            calendar.set(java.util.Calendar.MINUTE, 0);
+            
+            filter.setDateFor(calendar.getTime());
+            
             dbLayerDailyPlan.delete(filter);
             Globals.commit(sosHibernateSession);
 
