@@ -46,7 +46,7 @@ public class JocInstance {
                 item.setTimezone(config.getTimezone());
                 item.setTitle(config.getTitle());
                 item.setOrdering(config.getOrdering());
-                item.setUri(null);// TODO
+                // item.setUri(null);
                 item.setHeartBeat(new Date());
                 dbLayer.getSession().update(item);
             }

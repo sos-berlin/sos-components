@@ -36,8 +36,8 @@ public class DBLayerJocCluster extends DBLayer {
 
     public int deleteCluster(String memberId, boolean checkSwitchMemberId) throws Exception {
         StringBuilder sql = new StringBuilder("delete from ");
-        sql.append(DBLayer.DBITEM_JOC_CLUSTER);
-        sql.append(" where memberId=:memberId");
+        sql.append(DBLayer.DBITEM_JOC_CLUSTER).append(" ");
+        sql.append("where memberId=:memberId");
         if (checkSwitchMemberId) {
             sql.append(" and switchMemberId is null");
         }

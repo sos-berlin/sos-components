@@ -18,7 +18,7 @@ public class JocClusterConfiguration {
     }
 
     public enum StartupMode {
-        automatic, manual;
+        automatic, manual, automatic_switchover, manual_switchover;
     }
 
     private static final String CLASS_NAME_HISTORY = "com.sos.js7.history.controller.HistoryService";

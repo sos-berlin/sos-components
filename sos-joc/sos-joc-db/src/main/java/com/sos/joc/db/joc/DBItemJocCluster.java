@@ -6,6 +6,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 
@@ -34,6 +35,9 @@ public class DBItemJocCluster extends DBItem {
     @Version
     @Column(name = "[HEART_BEAT]", nullable = false)
     private Date heartBeat;
+
+    @Transient
+    private String startupMode;
 
     public String getId() {
         return id;
@@ -75,4 +79,11 @@ public class DBItemJocCluster extends DBItem {
         return heartBeat;
     }
 
+    public void setStartupMode(String val) {
+        startupMode = val;
+    }
+
+    public String getStartupMode() {
+        return startupMode;
+    }
 }

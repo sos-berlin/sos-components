@@ -346,7 +346,9 @@ public class HistoryService extends AJocClusterService {
                 };
                 threadPool.submit(thread);
             }
+            AJocClusterService.setLogger(IDENTIFIER);
             JocCluster.shutdownThreadPool(mode, threadPool, AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER);
+            AJocClusterService.clearLogger();
             activeHandlers = new ArrayList<>();
         } else {
             if (isDebugEnabled) {

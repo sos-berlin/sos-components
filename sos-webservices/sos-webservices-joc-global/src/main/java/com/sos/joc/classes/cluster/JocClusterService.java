@@ -91,8 +91,8 @@ public class JocClusterService {
                     try {
                         createFactory(config.getHibernateConfiguration());
 
-                        cluster = new JocCluster(factory, clusterConfig, config);
-                        cluster.doProcessing(mode, startTime);
+                        cluster = new JocCluster(factory, clusterConfig, config, startTime);
+                        cluster.doProcessing(mode);
 
                     } catch (Throwable e) {
                         LOGGER.error(e.toString(), e);

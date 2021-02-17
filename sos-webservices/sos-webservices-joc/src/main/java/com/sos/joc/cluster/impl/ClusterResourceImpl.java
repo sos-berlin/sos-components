@@ -63,7 +63,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
             // TODO permission for switchMember
             JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getJoc().getView().isLog());
             if (response == null) {
-                processAnswer(JocClusterService.getInstance().switchMember(StartupMode.manual, in.getMemberId()));
+                processAnswer(JocClusterService.getInstance().switchMember(StartupMode.manual_switchover, in.getMemberId()));
                 response = JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             }
             return response;
