@@ -1422,10 +1422,11 @@ public class HistoryModel {
     }
 
     private CachedWorkflow getCachedWorkflow(DBLayerHistory dbLayer, String workflowName, String workflowVersionId) throws Exception {
+        // key workflowVersionId - trigger to select from the database
         CachedWorkflow cw = getCachedWorkflow(workflowName, workflowVersionId);
         if (cw == null) {
             clearWorkflowCache(workflowName);
-            String path = dbLayer.getDeployedWorkflowPath(controllerConfiguration.getCurrent().getId(), workflowName, workflowVersionId);
+            String path = dbLayer.getDeployedWorkflowPath(controllerConfiguration.getCurrent().getId(), workflowName);
             if (path == null) {
                 path = "/" + workflowName;
             }
