@@ -32,9 +32,6 @@ public class DBItemDepNamePaths extends DBItem {
     @Column(name = "[CONTROLLER_ID]", nullable = false)
     private String controllerId;
 
-    @Column(name = "[COMMIT_ID]", nullable = false)
-    private String commitId;
-
     public Long getId() {
         return id;
     }
@@ -75,11 +72,4 @@ public class DBItemDepNamePaths extends DBItem {
         controllerId = val;
     }
 
-    public String getCommitId() {
-        return commitId;
-    }
-
-    public void setCommitId(String val) {
-        commitId = val;
-    }
 }
