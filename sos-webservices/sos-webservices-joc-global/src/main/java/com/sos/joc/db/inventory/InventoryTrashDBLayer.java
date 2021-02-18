@@ -34,7 +34,7 @@ public class InventoryTrashDBLayer extends DBLayer {
         try {
             List<String> whereClause = new ArrayList<String>();
             StringBuilder sql = new StringBuilder();
-            sql.append("select folder, type, path from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            sql.append("select folder, type, path from ").append(DBLayer.DBITEM_INV_CONFIGURATION_TRASH);
             if (folder != null && !folder.isEmpty() && !folder.equals(JocInventory.ROOT_FOLDER)) {
                 whereClause.add("(folder = :folder or folder like :likeFolder)");
             }
@@ -100,7 +100,7 @@ public class InventoryTrashDBLayer extends DBLayer {
     private Set<Tree> getFoldersByFolder(Collection<String> folders) throws SOSHibernateException {
         if (folders != null && !folders.isEmpty()) {
             StringBuilder sql = new StringBuilder();
-            sql.append("select path, deleted from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            sql.append("select path, deleted from ").append(DBLayer.DBITEM_INV_CONFIGURATION_TRASH);
             sql.append(" where path in (:folders) and type=:type");
             Query<Object[]> query = getSession().createQuery(sql.toString());
             query.setParameterList("folders", folders);
