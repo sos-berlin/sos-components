@@ -23,6 +23,7 @@ import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryAgentName;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
@@ -129,6 +130,10 @@ public class DBLayer implements Serializable {
     public static final String DBITEM_INV_CONFIGURATIONS = DBItemInventoryConfiguration.class.getSimpleName();
     public static final String TABLE_INV_CONFIGURATIONS = "INV_CONFIGURATIONS";
     public static final String TABLE_INV_CONFIGURATIONS_SEQUENCE = "SEQ_INV_C";
+
+    public static final String DBITEM_INV_CONFIGURATION_TRASH = DBItemInventoryConfigurationTrash.class.getSimpleName();
+    public static final String TABLE_INV_CONFIGURATION_TRASH = "INV_CONFIGURATION_TRASH";
+    public static final String TABLE_INV_CONFIGURATION_TRASH_SEQUENCE = "SEQ_INV_CT";
 
     public static final String DBITEM_INV_RELEASED_CONFIGURATIONS = DBItemInventoryReleasedConfiguration.class.getSimpleName();
     public static final String TABLE_INV_RELEASED_CONFIGURATIONS = "INV_RELEASED_CONFIGURATIONS";
@@ -249,6 +254,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemInventoryAgentInstance.class);
         cl.add(DBItemInventoryAgentName.class);
         cl.add(DBItemInventoryConfiguration.class);
+        cl.add(DBItemInventoryConfigurationTrash.class);
         cl.add(DBItemInventoryReleasedConfiguration.class);
         cl.add(DBItemInventoryCertificate.class);
         cl.add(DBItemSearchWorkflow.class);
