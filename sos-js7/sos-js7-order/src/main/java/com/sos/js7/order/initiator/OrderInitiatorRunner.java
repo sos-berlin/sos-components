@@ -163,7 +163,7 @@ public class OrderInitiatorRunner extends TimerTask {
 
                 schedule.setVariables(variables);
 
-                FreshOrder freshOrder = buildFreshOrder(schedule, dbItemDailyPlanOrders.getPlannedStart().getTime());
+                FreshOrder freshOrder = buildFreshOrder(schedule, dbItemDailyPlanOrders.getPlannedStart().getTime(),dbItemDailyPlanOrders.getStartMode());
                 freshOrder.setId(dbItemDailyPlanOrders.getOrderId());
                 p.setSchedule(schedule);
                 p.setFreshOrder(freshOrder);
@@ -180,10 +180,7 @@ public class OrderInitiatorRunner extends TimerTask {
         }
     }
 
-    private Date dateAsUtc(Date d) {
-        LocalDateTime ldt = LocalDateTime.ofInstant(d.toInstant(), ZoneId.of("UTC"));
-        return java.sql.Timestamp.valueOf(ldt); 
-    }
+
     private List<DBItemDailyPlanSubmissions> getSubmissionsForDate(java.util.Calendar calendar, String controllerId) throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         try {
@@ -368,9 +365,9 @@ public class OrderInitiatorRunner extends TimerTask {
         }
     }
 
-    private FreshOrder buildFreshOrder(Schedule o, Long startTime) {
+    private FreshOrder buildFreshOrder(Schedule o, Long startTime,Integer startMode ) {
         FreshOrder freshOrder = new FreshOrder();
-        freshOrder.setId(DailyPlanHelper.buildOrderId(o, startTime));
+        freshOrder.setId(DailyPlanHelper.buildOrderId(o, startTime,startMode));
         freshOrder.setScheduledFor(startTime);
         freshOrder.setArguments(o.getVariables());
         freshOrder.setWorkflowPath(o.getWorkflowName());
@@ -484,7 +481,14 @@ public class OrderInitiatorRunner extends TimerTask {
                                 Map<Long, Period> listOfStartTimes = calendarCacheItem.periodResolver.getStartTimes(d, dailyPlanDateAsString); 
                                 for (Entry<Long, Period> periodEntry :listOfStartTimes.entrySet()) {
                                     
-                                    FreshOrder freshOrder = buildFreshOrder(schedule, periodEntry.getKey());
+                                    Integer startMode;
+                                    if (periodEntry.getValue().getSingleStart() == null) {
+                                        startMode = 1;
+                                    }else {
+                                        startMode = 0;
+                                    }
+                                        
+                                    FreshOrder freshOrder = buildFreshOrder(schedule, periodEntry.getKey(),startMode);
 
                                     PlannedOrder plannedOrder = new PlannedOrder();
                                     plannedOrder.setControllerId(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());

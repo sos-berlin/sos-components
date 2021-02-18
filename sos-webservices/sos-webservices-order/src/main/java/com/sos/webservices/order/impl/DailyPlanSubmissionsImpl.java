@@ -113,9 +113,6 @@ public class DailyPlanSubmissionsImpl extends JOCResourceImpl implements IDailyP
         }
     }
 
-    public static long getOffset(String timeZone) {
-        return TimeZone.getTimeZone(timeZone).getOffset(Instant.now().toEpochMilli());
-    }
 
     @Override
     public JOCDefaultResponse postDeleteDailyPlanSubmissions(String accessToken, byte[] filterBytes) throws JocException {
@@ -147,7 +144,7 @@ public class DailyPlanSubmissionsImpl extends JOCResourceImpl implements IDailyP
             filter.setControllerId(dailyPlanSubmissionHistoryFilter.getControllerId());
 
             if (dailyPlanSubmissionHistoryFilter.getFilter().getDateFor() != null) {
-                Date date = JobSchedulerDate.getDateFrom(dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom(), dailyPlanSubmissionHistoryFilter
+                Date date = JobSchedulerDate.getDateFrom(dailyPlanSubmissionHistoryFilter.getFilter().getDateFor(), dailyPlanSubmissionHistoryFilter
                         .getTimeZone());
                 filter.setDateFor(date);
 

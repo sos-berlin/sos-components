@@ -388,8 +388,8 @@ public class DBLayerDailyPlannedOrders {
         }
     }
 
-    public void store(PlannedOrder plannedOrder) throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException,
-            ParseException {
+    public void store(PlannedOrder plannedOrder, Integer nr, Integer size) throws JocConfigurationException, DBConnectionRefusedException,
+            SOSHibernateException, ParseException {
         DBItemDailyPlanOrders dbItemDailyPlannedOrders = new DBItemDailyPlanOrders();
         dbItemDailyPlannedOrders.setSchedulePath(plannedOrder.getSchedule().getPath());
         dbItemDailyPlannedOrders.setScheduleName(Paths.get(plannedOrder.getSchedule().getPath()).getFileName().toString());
@@ -413,6 +413,15 @@ public class DBLayerDailyPlannedOrders {
         sosHibernateSession.save(dbItemDailyPlannedOrders);
         String id = "0000000000" + String.valueOf(dbItemDailyPlannedOrders.getId());
         id = id.substring(id.length() - 10);
+        if (nr != 0) {
+            String nrAsString = "00000" + String.valueOf(nr);
+            nrAsString = nrAsString.substring(nrAsString.length() - 5);
+
+            String sizeAsString = String.valueOf(size);
+            dbItemDailyPlannedOrders.setOrderId(dbItemDailyPlannedOrders.getOrderId().replaceAll("<nr.....>", nrAsString));
+            dbItemDailyPlannedOrders.setOrderId(dbItemDailyPlannedOrders.getOrderId().replaceAll("<size>", sizeAsString));
+        }
+
         dbItemDailyPlannedOrders.setOrderId(dbItemDailyPlannedOrders.getOrderId().replaceAll("<id.*>", id));
         plannedOrder.getFreshOrder().setId(dbItemDailyPlannedOrders.getOrderId());
         sosHibernateSession.update(dbItemDailyPlannedOrders);
@@ -466,6 +475,11 @@ public class DBLayerDailyPlannedOrders {
 
         return dbItemDailyPlanOrders;
 
+    }
+
+    public void store(PlannedOrder plannedOrder) throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException,
+            ParseException {
+        store(plannedOrder, 0, 0);
     }
 
     public DBItemDailyPlanOrders insertFrom(DBItemDailyPlanOrders dbItemDailyPlanOrders) throws SOSHibernateException {

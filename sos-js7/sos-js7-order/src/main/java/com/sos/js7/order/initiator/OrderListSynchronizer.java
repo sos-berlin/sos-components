@@ -1,16 +1,17 @@
 package com.sos.js7.order.initiator;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +34,7 @@ import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JobSchedulerObjectNotExistException;
 import com.sos.joc.exceptions.JocConfigurationException;
+import com.sos.js7.order.initiator.classes.CycleOrderKey;
 import com.sos.js7.order.initiator.classes.OrderApi;
 import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 import com.sos.js7.order.initiator.classes.PlannedOrder;
@@ -50,11 +52,11 @@ public class OrderListSynchronizer {
     private Map<String, Long> listOfDurations;
 
     public OrderListSynchronizer() {
-        listOfPlannedOrders = new TreeMap  <PlannedOrderKey, PlannedOrder>();
+        listOfPlannedOrders = new TreeMap<PlannedOrderKey, PlannedOrder>();
     }
 
     public OrderListSynchronizer(OrderInitiatorSettings orderInitiatorSettings) {
-        listOfPlannedOrders = new TreeMap <PlannedOrderKey, PlannedOrder>();
+        listOfPlannedOrders = new TreeMap<PlannedOrderKey, PlannedOrder>();
         OrderInitiatorGlobals.orderInitiatorSettings = orderInitiatorSettings;
     }
 
@@ -65,7 +67,6 @@ public class OrderListSynchronizer {
     private void calculateDuration(PlannedOrder plannedOrder) throws SOSHibernateException, JocConfigurationException, DBConnectionRefusedException,
             DBOpenSessionException {
 
-        
         if (listOfDurations.get(plannedOrder.getSchedule().getWorkflowName()) == null) {
 
             SOSHibernateSession sosHibernateSession = null;
@@ -194,14 +195,52 @@ public class OrderListSynchronizer {
                 }
             }
             for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
-                DBItemDailyPlanOrders dbItemDailyPlan = null;
-                dbItemDailyPlan = dbLayerDailyPlan.getUniqueDailyPlan(plannedOrder);
+                if (plannedOrder.getPeriod().getSingleStart() != null) {
+                    DBItemDailyPlanOrders dbItemDailyPlan = null;
+                    dbItemDailyPlan = dbLayerDailyPlan.getUniqueDailyPlan(plannedOrder);
 
-                if (OrderInitiatorGlobals.orderInitiatorSettings.isOverwrite() || dbItemDailyPlan == null) {
-                    LOGGER.trace("snchronizer: adding planned order to database: " + plannedOrder.uniqueOrderkey());
-                    plannedOrder.setAverageDuration(listOfDurations.get(plannedOrder.getSchedule().getWorkflowName()));
-                    dbLayerDailyPlan.store(plannedOrder);
-                    plannedOrder.setStoredInDb(true);
+                    if (OrderInitiatorGlobals.orderInitiatorSettings.isOverwrite() || dbItemDailyPlan == null) {
+                        LOGGER.trace("snchronizer: adding planned order to database: " + plannedOrder.uniqueOrderkey());
+                        plannedOrder.setAverageDuration(listOfDurations.get(plannedOrder.getSchedule().getWorkflowName()));
+                        dbLayerDailyPlan.store(plannedOrder);
+                        plannedOrder.setStoredInDb(true);
+                    }
+                }
+            }
+
+            Map<CycleOrderKey, List<PlannedOrder>> mapOfCycledOrders = new TreeMap<CycleOrderKey, List<PlannedOrder>>();
+
+            for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
+                if (plannedOrder.getPeriod().getSingleStart() == null) {
+
+                    CycleOrderKey cycleOrderKey = new CycleOrderKey();
+                    cycleOrderKey.setPeriodBegin(plannedOrder.getPeriod().getBegin());
+                    cycleOrderKey.setPeriodEnd(plannedOrder.getPeriod().getEnd());
+                    cycleOrderKey.setRepeat(plannedOrder.getPeriod().getRepeat());
+                    cycleOrderKey.setSchedulePath(plannedOrder.getSchedule().getPath());
+                    cycleOrderKey.setWorkflowPath(plannedOrder.getSchedule().getWorkflowPath());
+                    
+                    if (mapOfCycledOrders.get(cycleOrderKey) == null) {
+                        mapOfCycledOrders.put(cycleOrderKey,new ArrayList<PlannedOrder>());
+                    }
+                    mapOfCycledOrders.get(cycleOrderKey).add(plannedOrder);
+                }
+            }
+
+            for (Entry<CycleOrderKey, List<PlannedOrder>> entry : mapOfCycledOrders.entrySet()) {
+                int size = entry.getValue().size();
+                int nr = 1;
+                for (PlannedOrder plannedOrder:entry.getValue()) {
+                    DBItemDailyPlanOrders dbItemDailyPlan = null;
+                    dbItemDailyPlan = dbLayerDailyPlan.getUniqueDailyPlan(plannedOrder);
+
+                    if (OrderInitiatorGlobals.orderInitiatorSettings.isOverwrite() || dbItemDailyPlan == null) {
+                        LOGGER.trace("snchronizer: adding planned cylced order to database: " + nr + " of " + size + " " + plannedOrder.uniqueOrderkey());
+                        plannedOrder.setAverageDuration(listOfDurations.get(plannedOrder.getSchedule().getWorkflowName()));
+                        dbLayerDailyPlan.store(plannedOrder,nr,size);
+                        nr = nr +1;
+                        plannedOrder.setStoredInDb(true);
+                    }
                 }
             }
 
@@ -232,6 +271,6 @@ public class OrderListSynchronizer {
     }
 
     public void resetListOfPlannedOrders() {
-        listOfPlannedOrders=null;
+        listOfPlannedOrders = null;
     }
 }
