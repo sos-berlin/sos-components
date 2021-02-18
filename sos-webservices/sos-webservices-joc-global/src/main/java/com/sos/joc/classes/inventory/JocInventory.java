@@ -253,7 +253,6 @@ public class JocInventory {
                 DBItemInventoryConfiguration newDbFolder = dbLayer.getConfiguration(newFolder, ConfigurationType.FOLDER.intValue());
                 if (newDbFolder == null) {
                     newDbFolder = new DBItemInventoryConfiguration();
-                    // setItem(newDbFolder, parent);
                     newDbFolder.setPath(newFolder);
                     newDbFolder.setFolder(parentFolder.getParent().toString().replace('\\', '/'));
                     newDbFolder.setName(parentFolder.getFileName().toString());

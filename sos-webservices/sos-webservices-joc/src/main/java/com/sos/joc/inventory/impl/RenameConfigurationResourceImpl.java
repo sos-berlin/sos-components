@@ -107,26 +107,20 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 if (newDBFolderContent != null && !newDBFolderContent.isEmpty()) {
                     newDBFolderContent.retainAll(oldDBFolderContent);
                     if (!newDBFolderContent.isEmpty()) {
-//                        if (in.getOverwrite()) {
-//                            for (DBItemInventoryConfiguration targetItem : newDBFolderContent) {
-//                                JocInventory.deleteConfiguration(dbLayer, targetItem);
-//                            }
-//                        } else {
-                            Map<Boolean, List<DBItemInventoryConfiguration>> map = newDBFolderContent.stream().collect(Collectors.groupingBy(
-                                    item -> ConfigurationType.FOLDER.intValue() == item.getType()));
-                            if (!map.getOrDefault(false, Collections.emptyList()).isEmpty()) { // all not folder items
-                                throw new JocObjectAlreadyExistException("Cannot move to " + newPath + ": common objects are " + map.get(false)
-                                        .stream().map(DBItemInventoryConfiguration::getPath).collect(Collectors.joining("', '", "'", "'")));
-                            }
-                            // delete all folder items
-                            for (DBItemInventoryConfiguration targetItem : map.getOrDefault(true, Collections.emptyList())) {
-                                JocInventory.deleteConfiguration(dbLayer, targetItem);
-                            }
-//                        }
+                        Map<Boolean, List<DBItemInventoryConfiguration>> map = newDBFolderContent.stream().collect(Collectors.groupingBy(
+                                item -> ConfigurationType.FOLDER.intValue() == item.getType()));
+                        if (!map.getOrDefault(false, Collections.emptyList()).isEmpty()) { // all not folder items
+                            throw new JocObjectAlreadyExistException("Cannot move to " + newPath + ": common objects are " + map.get(false).stream()
+                                    .map(DBItemInventoryConfiguration::getPath).collect(Collectors.joining("', '", "'", "'")));
+                        }
+                        // delete all folder items
+                        for (DBItemInventoryConfiguration targetItem : map.getOrDefault(true, Collections.emptyList())) {
+                            JocInventory.deleteConfiguration(dbLayer, targetItem);
+                        }
                     }
                 }
                 if (newItem != null) {
-                    JocInventory.deleteConfiguration(dbLayer, config);
+                    JocInventory.deleteConfiguration(dbLayer, newItem);
                 }
                 
                 setItem(config, p);
@@ -143,12 +137,8 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                     DBItemInventoryConfiguration targetItem = dbLayer.getConfiguration(newPath, config.getType());
                     
                     if (targetItem != null) {
-//                        if (in.getOverwrite()) {
-//                            JocInventory.deleteConfiguration(dbLayer, targetItem);
-//                        } else {
-                            throw new JocObjectAlreadyExistException(String.format("%s %s already exists", ConfigurationType.fromValue(config.getType())
-                                    .value().toLowerCase(), targetItem.getPath()));
-//                        }
+                        throw new JocObjectAlreadyExistException(String.format("%s %s already exists", ConfigurationType.fromValue(config.getType())
+                                .value().toLowerCase(), targetItem.getPath()));
                     } else {
                         // check unique name
                         List<DBItemInventoryConfiguration> namedItems = dbLayer.getConfigurationByName(p.getFileName().toString(), config.getType());

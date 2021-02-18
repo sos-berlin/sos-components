@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -20,10 +21,10 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.ModifyOrders;
 import com.sos.joc.orders.resource.IOrdersResourceModify;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
@@ -44,6 +45,7 @@ import js7.data_for_java.order.JHistoricOutcome;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
+import scala.Function1;
 
 @Path("orders")
 public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrdersResourceModify {
@@ -139,32 +141,31 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
         List<String> orders = modifyOrders.getOrderIds();
         List<WorkflowId> workflowIds = modifyOrders.getWorkflowIds();
-        final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+        // final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
 
         JControllerState currentState = Proxy.of(modifyOrders.getControllerId()).currentState();
         Stream<OrderId> orderStream = Stream.empty();
+        
+        // TODO folder permissions
 
         if (orders != null && !orders.isEmpty()) {
-            orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()) && orderIsPermitted(o, permittedFolders)).map(JOrder::id);
+            orderStream = currentState.ordersBy(o -> orders.contains(o.id().string())).map(JOrder::id);
         } else if (workflowIds != null && !workflowIds.isEmpty()) {
-            Set<VersionedItemId<WorkflowPath>> workflowPaths = workflowIds.stream().map(w -> JWorkflowId.of(w.getPath(), w.getVersionId()).asScala())
-                    .collect(Collectors.toSet());
-            orderStream = currentState.ordersBy(o -> workflowPaths.contains(o.workflowId()) && orderIsPermitted(o, permittedFolders)).map(JOrder::id);
+            Predicate<WorkflowId> versionNotEmpty = w -> w.getVersionId() != null && !w.getVersionId().isEmpty();
+            Set<VersionedItemId<WorkflowPath>> workflowPaths = workflowIds.stream().filter(versionNotEmpty).map(w -> JWorkflowId.of(JocInventory
+                    .pathToName(w.getPath()), w.getVersionId()).asScala()).collect(Collectors.toSet());
+            Set<WorkflowPath> workflowPaths2 = workflowIds.stream().filter(w -> !versionNotEmpty.test(w)).map(w -> WorkflowPath.of(JocInventory
+                    .pathToName(w.getPath()))).collect(Collectors.toSet());
+            Function1<Order<Order.State>, Object> workflowFilter = o -> (workflowPaths.contains(o.workflowId()) || workflowPaths2.contains(o
+                    .workflowId().path()));
+            orderStream = currentState.ordersBy(workflowFilter).map(JOrder::id);
         }
 
-        // Either<Problem, Void> either = callCommand(action, modifyOrders, orderStream.collect(Collectors.toSet()))
-        // .get(Globals.httpSocketTimeout, TimeUnit.MILLISECONDS);
-        // ProblemHelper.throwProblemIfExist(either);
         callCommand(action, modifyOrders, orderStream.collect(Collectors.toSet())).thenAccept(either -> ProblemHelper.postProblemEventIfExist(either,
                 getAccessToken(), getJocError(), modifyOrders.getControllerId()));
-        // ProblemHelper.throwProblemIfExist(either);
-        // TODO auditLog
-        // } catch (TimeoutException e) {
-        // // TODO
-        // }
     }
 
-    private static void updateDailyPlan(ModifyOrders modifyOrders) throws SOSHibernateException {
+    private static void updateDailyPlan(List<String> orderIds) throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
 
         try {
@@ -173,11 +174,14 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
             Globals.beginTransaction(sosHibernateSession);
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-            filter.setListOfOrders(modifyOrders.getOrderIds());
+            filter.setListOfOrders(orderIds);
             filter.setSubmitted(false);
             dbLayerDailyPlannedOrders.setSubmitted(filter);
             
             Globals.commit(sosHibernateSession);
+        } catch (Exception e) {
+            Globals.rollback(sosHibernateSession);
+            throw e;
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -190,7 +194,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         case CANCEL:
 
             // TODO This update must be removed when dailyplan service receives events for order state changes
-            updateDailyPlan(modifyOrders);
+            // this is the wrong place anyway -> must be in thenAccept if "Either" right
+            updateDailyPlan(oIds.stream().map(OrderId::string).filter(s -> !s.matches(".*#T[0-9]+-.*")).collect(Collectors.toList()));
 
             // TODO a fresh order should cancelled by a dailyplan method!
             JCancelMode cancelMode = null;
@@ -253,14 +258,14 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     // return orderMode;
     // }
 
-    private static boolean orderIsPermitted(Order<Order.State> order, Set<Folder> listOfFolders) {
-        // TODO order.workflowId().path().string() is only a name
-        return true;
-        // if (listOfFolders == null || listOfFolders.isEmpty()) {
-        // return true;
-        // }
-        // return folderIsPermitted(Paths.get(order.workflowId().path().string()).getParent().toString().replace('\\', '/'), listOfFolders);
-    }
+    // private static boolean orderIsPermitted(Order<Order.State> order, Set<Folder> listOfFolders) {
+    // TODO order.workflowId().path().string() is only a name
+    // return true;
+    // if (listOfFolders == null || listOfFolders.isEmpty()) {
+    // return true;
+    // }
+    // return folderIsPermitted(Paths.get(order.workflowId().path().string()).getParent().toString().replace('\\', '/'), listOfFolders);
+    // }
 
     // private static boolean folderIsPermitted(String folder, Set<Folder> listOfFolders) {
     // Predicate<Folder> filter = f -> f.getFolder().equals(folder) || (f.getRecursive() && ("/".equals(f.getFolder()) || folder.startsWith(f
