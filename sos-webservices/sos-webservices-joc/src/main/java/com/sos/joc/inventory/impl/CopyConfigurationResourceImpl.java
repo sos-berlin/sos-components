@@ -76,6 +76,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
             if (suffix == null) {
                 suffix = "";
             }
+            boolean useDefaultSuffix = suffix.isEmpty();
             
             // folder copy or (object copy where target and source name are the same)
             boolean fixMustUsed = JocInventory.isFolder(type) || (!JocInventory.isFolder(type) && oldPath.getFileName().toString().equals(pWithoutFix
@@ -123,18 +124,35 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                 if (!in.getShallowCopy()) {
                     List<Integer> typesForReferences = Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.WORKINGDAYSCALENDAR
                             .intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue(), ConfigurationType.LOCK.intValue());
-                    oldToNewName = oldDBFolderContent.stream().filter(item -> typesForReferences.contains(item.getType())).collect(Collectors
-                            .groupingBy(DBItemInventoryConfiguration::getTypeAsEnum, Collectors.toMap(DBItemInventoryConfiguration::getName,
-                                    item -> prefix + item.getName() + suffix2)));
-                }
-                oldDBFolderContent = oldDBFolderContent.stream().map(oldItem -> {
-                    java.nio.file.Path oldItemPath = Paths.get(oldItem.getPath());
-                    if (ConfigurationType.FOLDER.intValue() == oldItem.getType()) {
-                        return createItem(oldItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath)));
+                    if (useDefaultSuffix) {
+                        oldToNewName = oldDBFolderContent.stream().filter(item -> typesForReferences.contains(item.getType())).collect(Collectors
+                                .groupingBy(DBItemInventoryConfiguration::getTypeAsEnum, Collectors.toMap(DBItemInventoryConfiguration::getName,
+                                        item -> prefix + item.getName().replaceFirst("(.*?)(-copy[0-9]*)?$", "$1" + suffix2))));
+                    } else {
+                        oldToNewName = oldDBFolderContent.stream().filter(item -> typesForReferences.contains(item.getType())).collect(Collectors
+                                .groupingBy(DBItemInventoryConfiguration::getTypeAsEnum, Collectors.toMap(DBItemInventoryConfiguration::getName,
+                                        item -> prefix + item.getName() + suffix2)));
                     }
-                    return createItem(oldItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath.getParent().resolve(prefix + oldItem.getName()
-                            + suffix2))));
-                }).collect(Collectors.toList());
+                }
+                if (useDefaultSuffix) {
+                    oldDBFolderContent = oldDBFolderContent.stream().map(oldItem -> {
+                        java.nio.file.Path oldItemPath = Paths.get(oldItem.getPath());
+                        if (ConfigurationType.FOLDER.intValue() == oldItem.getType()) {
+                            return createItem(oldItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath)));
+                        }
+                        return createItem(oldItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath.getParent().resolve(prefix + oldItem.getName()
+                                .replaceFirst("(.*?)(-copy[0-9]*)?$", "$1" + suffix2)))));
+                    }).collect(Collectors.toList());
+                } else {
+                    oldDBFolderContent = oldDBFolderContent.stream().map(oldItem -> {
+                        java.nio.file.Path oldItemPath = Paths.get(oldItem.getPath());
+                        if (ConfigurationType.FOLDER.intValue() == oldItem.getType()) {
+                            return createItem(oldItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath)));
+                        }
+                        return createItem(oldItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath.getParent().resolve(prefix + oldItem.getName()
+                                + suffix2))));
+                    }).collect(Collectors.toList());
+                }
                 DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(newPathWithoutFix, ConfigurationType.FOLDER.intValue());
                 List<DBItemInventoryConfiguration> newDBFolderContent = null;
                 if (in.getShallowCopy()) {
