@@ -1426,7 +1426,13 @@ public class HistoryModel {
         CachedWorkflow cw = getCachedWorkflow(workflowName, workflowVersionId);
         if (cw == null) {
             clearWorkflowCache(workflowName);
-            String path = dbLayer.getDeployedWorkflowPath(controllerConfiguration.getCurrent().getId(), workflowName);
+            String path = null;
+            try {
+                path = dbLayer.getDeployedWorkflowPath(controllerConfiguration.getCurrent().getId(), workflowName, workflowVersionId);
+            } catch (Throwable e) {
+                LOGGER.warn(String.format("[workflowName=%s,workflowVersionId=%s][can't evaluate path]%s", workflowName, workflowVersionId, e
+                        .toString()));
+            }
             if (path == null) {
                 path = "/" + workflowName;
             }

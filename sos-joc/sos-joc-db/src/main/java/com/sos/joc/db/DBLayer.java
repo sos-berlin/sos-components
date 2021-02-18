@@ -227,7 +227,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemHistoryAgent.class);
 
         cl.add(DBItemInventoryAgentInstance.class);
-        cl.add(DBItemDepNamePaths.class);
+        cl.add(DBItemDeploymentHistory.class);
         return cl;
     }
 
