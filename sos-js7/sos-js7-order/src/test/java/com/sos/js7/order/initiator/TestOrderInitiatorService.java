@@ -5,6 +5,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.TimeZone;
 
 import org.junit.Test;
 
@@ -70,6 +71,7 @@ public class TestOrderInitiatorService {
     @Test
     public void test() throws Exception {
         Globals.sosCockpitProperties = new JocCockpitProperties();
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
         Path resDir = Paths.get("src/test/resources");
         JocConfiguration jocConfig = new JocConfiguration(resDir.toString(), "UTC", resDir.resolve("hibernate.cfg.xml"), resDir, JocSecurityLevel.LOW,
@@ -77,7 +79,7 @@ public class TestOrderInitiatorService {
 
         OrderInitiatorService hm = new OrderInitiatorService(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
         hm.start(getControllers(), StartupMode.manual);
-        TestOrderInitiatorService.exitAfter(hm, 3 * 60);
+        TestOrderInitiatorService.exitAfter(hm, 13 * 60);
 
     }
 

@@ -388,8 +388,9 @@ public class DBLayerDailyPlannedOrders {
         }
     }
 
-    public void store(PlannedOrder plannedOrder, Integer nr, Integer size) throws JocConfigurationException, DBConnectionRefusedException,
+    public Long store(PlannedOrder plannedOrder, Long firstId, Integer nr, Integer size) throws JocConfigurationException, DBConnectionRefusedException,
             SOSHibernateException, ParseException {
+        
         DBItemDailyPlanOrders dbItemDailyPlannedOrders = new DBItemDailyPlanOrders();
         dbItemDailyPlannedOrders.setSchedulePath(plannedOrder.getSchedule().getPath());
         dbItemDailyPlannedOrders.setScheduleName(Paths.get(plannedOrder.getSchedule().getPath()).getFileName().toString());
@@ -411,7 +412,12 @@ public class DBLayerDailyPlannedOrders {
         dbItemDailyPlannedOrders.setExpectedEnd(new Date(plannedOrder.getFreshOrder().getScheduledFor() + plannedOrder.getAverageDuration()));
         dbItemDailyPlannedOrders.setModified(JobSchedulerDate.nowInUtc());
         sosHibernateSession.save(dbItemDailyPlannedOrders);
-        String id = "0000000000" + String.valueOf(dbItemDailyPlannedOrders.getId());
+
+        if (firstId==null){
+            firstId = dbItemDailyPlannedOrders.getId(); 
+        }
+
+        String id = "0000000000" + String.valueOf(firstId);
         id = id.substring(id.length() - 10);
         if (nr != 0) {
             String nrAsString = "00000" + String.valueOf(nr);
@@ -426,6 +432,7 @@ public class DBLayerDailyPlannedOrders {
         plannedOrder.getFreshOrder().setId(dbItemDailyPlannedOrders.getOrderId());
         sosHibernateSession.update(dbItemDailyPlannedOrders);
         storeVariables(plannedOrder, dbItemDailyPlannedOrders.getId());
+        return dbItemDailyPlannedOrders.getId();
     }
 
     public int setSubmitted(FilterDailyPlannedOrders filter) throws SOSHibernateException {
@@ -447,7 +454,7 @@ public class DBLayerDailyPlannedOrders {
         int row = sosHibernateSession.executeUpdate(query);
         return row;
     }
-
+/*
     public DBItemDailyPlanOrders insertFrom(DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory) throws SOSHibernateException {
         DBItemDailyPlanOrders dbItemDailyPlanOrders = new DBItemDailyPlanOrders();
         dbItemDailyPlanOrders.setControllerId(dbItemDailyPlanWithHistory.getControllerId());
@@ -476,10 +483,10 @@ public class DBLayerDailyPlannedOrders {
         return dbItemDailyPlanOrders;
 
     }
-
+*/
     public void store(PlannedOrder plannedOrder) throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException,
             ParseException {
-        store(plannedOrder, 0, 0);
+        store(plannedOrder, null,0, 0);
     }
 
     public DBItemDailyPlanOrders insertFrom(DBItemDailyPlanOrders dbItemDailyPlanOrders) throws SOSHibernateException {
@@ -487,10 +494,12 @@ public class DBLayerDailyPlannedOrders {
         dbItemDailyPlanOrders.setCreated(JobSchedulerDate.nowInUtc());
         dbItemDailyPlanOrders.setModified(JobSchedulerDate.nowInUtc());
         sosHibernateSession.save(dbItemDailyPlanOrders);
-        String id = "0000000000" + String.valueOf(dbItemDailyPlanOrders.getId());
-        id = id.substring(id.length() - 10);
-        String orderId = DailyPlanHelper.buildOrderId(dbItemDailyPlanOrders);
-        dbItemDailyPlanOrders.setOrderId(orderId.replaceAll("<id.*>", id));
+        // #2021-02-19#C0000000001-00001-8-cyclic2
+        //String id = "0000000000" + String.valueOf(dbItemDailyPlanOrders.getId());
+        //id = id.substring(id.length() - 10);
+        //String orderId = DailyPlanHelper.buildOrderId(dbItemDailyPlanOrders);
+        String newOrderId = DailyPlanHelper.modifiedOrderId(dbItemDailyPlanOrders.getOrderId(), dbItemDailyPlanOrders.getId());
+        dbItemDailyPlanOrders.setOrderId(newOrderId);
         sosHibernateSession.update(dbItemDailyPlanOrders);
 
         return dbItemDailyPlanOrders;

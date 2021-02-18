@@ -230,14 +230,19 @@ public class OrderListSynchronizer {
             for (Entry<CycleOrderKey, List<PlannedOrder>> entry : mapOfCycledOrders.entrySet()) {
                 int size = entry.getValue().size();
                 int nr = 1;
+                Long firstId = null;
                 for (PlannedOrder plannedOrder:entry.getValue()) {
+ 
                     DBItemDailyPlanOrders dbItemDailyPlan = null;
                     dbItemDailyPlan = dbLayerDailyPlan.getUniqueDailyPlan(plannedOrder);
 
                     if (OrderInitiatorGlobals.orderInitiatorSettings.isOverwrite() || dbItemDailyPlan == null) {
                         LOGGER.trace("snchronizer: adding planned cylced order to database: " + nr + " of " + size + " " + plannedOrder.uniqueOrderkey());
                         plannedOrder.setAverageDuration(listOfDurations.get(plannedOrder.getSchedule().getWorkflowName()));
-                        dbLayerDailyPlan.store(plannedOrder,nr,size);
+                        Long fId = dbLayerDailyPlan.store(plannedOrder,firstId,nr,size);
+                        if (firstId == null){
+                            firstId = fId;
+                        }
                         nr = nr +1;
                         plannedOrder.setStoredInDb(true);
                     }

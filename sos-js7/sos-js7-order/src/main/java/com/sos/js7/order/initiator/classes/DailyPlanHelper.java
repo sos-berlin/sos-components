@@ -134,4 +134,23 @@ public class DailyPlanHelper {
         return calendar.getTime();
     }
 
+    public static String modifiedOrderId(String oldOrderId, Long add) {
+        String[] stringSplit = oldOrderId.split("-");
+        String newOrderId = "";
+        if (stringSplit.length >= 4) {
+            
+            for (int i = 0; i < 3; i++) {
+                newOrderId = newOrderId + stringSplit[i] + "-";
+            }
+            
+            if (stringSplit.length <= 5) {
+                newOrderId = newOrderId +  add + "-" + stringSplit[stringSplit.length-1];
+            }else {
+                newOrderId = newOrderId +  stringSplit[3] + "-" + stringSplit[4] + "-" + add + "-" + stringSplit[stringSplit.length-1];
+            }
+        } else {
+            newOrderId = oldOrderId;
+        }
+        return newOrderId;
+    }
 }
