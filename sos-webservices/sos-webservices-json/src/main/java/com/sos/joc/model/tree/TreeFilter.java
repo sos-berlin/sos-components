@@ -24,7 +24,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "types",
     "folders",
     "onlyValidObjects",
-    "forInventory"
+    "forInventory",
+    "forInventoryTrash"
 })
 public class TreeFilter {
 
@@ -50,6 +51,8 @@ public class TreeFilter {
     private Boolean onlyValidObjects = false;
     @JsonProperty("forInventory")
     private Boolean forInventory = false;
+    @JsonProperty("forInventoryTrash")
+    private Boolean forInventoryTrash = false;
 
     /**
      * filename
@@ -124,15 +127,25 @@ public class TreeFilter {
     public void setForInventory(Boolean forInventory) {
         this.forInventory = forInventory;
     }
+    
+    @JsonProperty("forInventoryTrash")
+    public Boolean getForInventoryTrash() {
+        return forInventoryTrash;
+    }
+
+    @JsonProperty("forInventoryTrash")
+    public void setForInventoryTrash(Boolean forInventoryTrash) {
+        this.forInventoryTrash = forInventoryTrash;
+    }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("types", types).append("folders", folders).append("onlyValidObjects", onlyValidObjects).append("forInventory", forInventory).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("types", types).append("folders", folders).append("onlyValidObjects", onlyValidObjects).append("forInventory", forInventory).append("forInventoryTrash", forInventoryTrash).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(types).append(folders).append(controllerId).append(forInventory).append(onlyValidObjects).toHashCode();
+        return new HashCodeBuilder().append(types).append(folders).append(controllerId).append(forInventory).append(forInventoryTrash).append(onlyValidObjects).toHashCode();
     }
 
     @Override
@@ -144,7 +157,7 @@ public class TreeFilter {
             return false;
         }
         TreeFilter rhs = ((TreeFilter) other);
-        return new EqualsBuilder().append(types, rhs.types).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(forInventory, rhs.forInventory).append(onlyValidObjects, rhs.onlyValidObjects).isEquals();
+        return new EqualsBuilder().append(types, rhs.types).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(forInventory, rhs.forInventory).append(forInventoryTrash, rhs.forInventoryTrash).append(onlyValidObjects, rhs.onlyValidObjects).isEquals();
     }
 
 }

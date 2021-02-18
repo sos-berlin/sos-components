@@ -34,10 +34,11 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             JsonValidator.validateFailFast(treeBodyBytes, TreeFilter.class);
             TreeFilter treeBody = Globals.objectMapper.readValue(treeBodyBytes, TreeFilter.class);
 
+            boolean treeForInventoryTrash = (treeBody.getForInventoryTrash() != null && treeBody.getForInventoryTrash());
             boolean treeForInventory = (treeBody.getForInventory() != null && treeBody.getForInventory()) || (treeBody.getTypes() != null && treeBody
                     .getTypes().contains(TreeType.INVENTORY));
             List<TreeType> types = TreePermanent.getAllowedTypes(treeBody.getTypes(), getPermissonsJocCockpit(treeBody.getControllerId(),
-                    accessToken), treeForInventory);
+                    accessToken), treeForInventory, treeForInventoryTrash);
 
             JOCDefaultResponse jocDefaultResponse = initPermissions(treeBody.getControllerId(), types.size() > 0);
             if (jocDefaultResponse != null) {
@@ -51,6 +52,8 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             SortedSet<Tree> folders = Collections.emptySortedSet();
             if (treeForInventory) {
                 folders = TreePermanent.initFoldersByFoldersForInventory(treeBody);
+            } else if (treeForInventoryTrash) {
+                folders = TreePermanent.initFoldersByFoldersForInventoryTrash(treeBody);
             } else {
                 folders = TreePermanent.initFoldersByFoldersForViews(treeBody);
             }
