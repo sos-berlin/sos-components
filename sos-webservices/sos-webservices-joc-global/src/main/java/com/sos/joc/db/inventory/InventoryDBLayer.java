@@ -498,7 +498,7 @@ public class InventoryDBLayer extends DBLayer {
         }
         return getSession().getResultList(query);
     }
-    
+
     public Integer getCopySuffixNumber() throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select name from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where lower(name) like :likename and type != :type");
@@ -711,12 +711,18 @@ public class InventoryDBLayer extends DBLayer {
             boolean delete) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             List<DBItemSearchWorkflow2DeploymentHistory> items = getSearchWorkflow2DeploymentHistory(inventoryId);
-            if (items != null) {
+            if (items != null && items.size() > 0) {
                 List<Long> toDelete = new ArrayList<Long>();
                 List<Long> toHold = new ArrayList<Long>();
                 for (DBItemSearchWorkflow2DeploymentHistory item : items) {
                     if (item.getControllerId().equals(controllerId)) {
-                        if (!item.getSearchWorkflowId().equals(searchWorkflowId)) {
+                        if (item.getSearchWorkflowId().equals(searchWorkflowId)) {
+                            if (delete) {
+                                if (!toDelete.contains(item.getSearchWorkflowId())) {
+                                    toDelete.add(item.getSearchWorkflowId());
+                                }
+                            }
+                        } else {
                             if (!toDelete.contains(item.getSearchWorkflowId())) {
                                 toDelete.add(item.getSearchWorkflowId());
                             }
@@ -734,12 +740,7 @@ public class InventoryDBLayer extends DBLayer {
                     }
                 }
             }
-            if (delete) {
-                Long count = getCountSearchWorkflow2DeploymentHistory(searchWorkflowId);
-                if (count == null || count.equals(0L)) {
-                    deleteSearchWorkflow(searchWorkflowId, true);
-                }
-            } else {
+            if (!delete) {
                 for (Long deploymentId : deploymentIds) {
                     DBItemSearchWorkflow2DeploymentHistory item = new DBItemSearchWorkflow2DeploymentHistory();
                     item.setSearchWorkflowId(searchWorkflowId);
@@ -790,13 +791,13 @@ public class InventoryDBLayer extends DBLayer {
         return 0;
     }
 
-    public int deleteSearchWorkflowByInventoryId(Long id, boolean deployed) throws SOSHibernateException {
+    public int deleteSearchWorkflowByInventoryId(Long inventoryId, boolean deployed) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS);
-        hql.append(" where inventoryConfigurationId=:id");
+        hql.append(" where inventoryConfigurationId=:inventoryId");
         hql.append(" and deployed=:deployed");
 
         Query<DBItemSearchWorkflow> query = getSession().createQuery(hql.toString());
-        query.setParameter("id", id);
+        query.setParameter("inventoryId", inventoryId);
         query.setParameter("deployed", deployed);
 
         DBItemSearchWorkflow item = getSession().getSingleResult(query);
@@ -805,15 +806,6 @@ public class InventoryDBLayer extends DBLayer {
             return 1;
         }
         return 0;
-    }
-
-    private Long getCountSearchWorkflow2DeploymentHistory(Long searchWorkflowId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select count(deploymentHistoryId) from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS_DEPLOYMENT_HISTORY);
-        hql.append(" where searchWorkflowId=:searchWorkflowId");
-
-        Query<Long> query = getSession().createQuery(hql.toString());
-        query.setParameter("searchWorkflowId", searchWorkflowId);
-        return getSession().getSingleValue(query);
     }
 
     // TODO check usage - used by DeployImpl
