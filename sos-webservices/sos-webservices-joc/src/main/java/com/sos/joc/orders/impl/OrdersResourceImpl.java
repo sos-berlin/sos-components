@@ -2,10 +2,12 @@ package com.sos.joc.orders.impl;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -42,6 +44,7 @@ import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.workflow.JWorkflowId;
+import scala.Function1;
 
 @Path("orders")
 public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResource {
@@ -53,7 +56,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
     @Override
     public JOCDefaultResponse postOrders(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
-		try {
+        try {
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrdersFilterV.class);
             OrdersFilterV ordersFilter = Globals.objectMapper.readValue(filterBytes, OrdersFilterV.class);
@@ -68,36 +71,62 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             boolean withFolderFilter = ordersFilter.getFolders() != null && !ordersFilter.getFolders().isEmpty();
             boolean withOrderIdFilter = orders != null && !orders.isEmpty();
             final Set<Folder> folders = addPermittedFolder(ordersFilter.getFolders());
-            
-            JControllerState currentState = Proxy.of(ordersFilter.getControllerId()).currentState();
-            Stream<JOrder> orderStream = null;
-            if (withOrderIdFilter) {
-                ordersFilter.setRegex(null);
-                orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()) && orderIsPermitted(o, folders));
-            } else if (workflowIds != null && !workflowIds.isEmpty()) {
-                ordersFilter.setRegex(null);
-                Predicate<WorkflowId> versionNotEmpty = w -> w.getVersionId() != null && !w.getVersionId().isEmpty();
-                Set<VersionedItemId<WorkflowPath>> workflowPaths = workflowIds.stream().filter(versionNotEmpty).map(w -> JWorkflowId.of(
-                        JocInventory.pathToName(w.getPath()), w.getVersionId()).asScala()).collect(Collectors.toSet());
-                Set<WorkflowPath> workflowPaths2 = workflowIds.stream().filter(w -> !versionNotEmpty.test(w)).map(w -> WorkflowPath.of(JocInventory
-                        .pathToName(w.getPath()))).collect(Collectors.toSet());
-                orderStream = currentState.ordersBy(o -> (workflowPaths.contains(o.workflowId()) || workflowPaths2.contains(o.workflowId().path()))
-                        && orderIsPermitted(o, folders));
-            } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
-                // no folder permissions
-                orderStream = currentState.ordersBy(JOrderPredicates.none());
-            } else if (folders != null && !folders.isEmpty()) {
-                orderStream = currentState.ordersBy(o -> orderIsPermitted(o, folders));
-            } else {
-                orderStream = currentState.ordersBy(JOrderPredicates.any());
-            }
+
+            Function1<Order<Order.State>, Object> cycledOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class), o -> o
+                    .id().string().matches(".*#C[0-9]{10}-.*"));
+            Function1<Order<Order.State>, Object> notCycledOrderFilter = JOrderPredicates.not(cycledOrderFilter);
 
             List<OrderStateText> states = ordersFilter.getStates();
             // BLOCKED is not a Controller state. It needs a special handling. These are PENDING with scheduledFor in the past
             final boolean withStatesFilter = states != null && !states.isEmpty();
             final boolean lookingForBlocked = withStatesFilter && states.contains(OrderStateText.BLOCKED);
             final boolean lookingForPending = withStatesFilter && states.contains(OrderStateText.PENDING);
+
+            JControllerState currentState = Proxy.of(ordersFilter.getControllerId()).currentState();
+            Stream<JOrder> orderStream = Stream.empty();
+            Stream<JOrder> cycledOrderStream = Stream.empty();
+
+            if (withOrderIdFilter) {
+                ordersFilter.setRegex(null);
+                orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()));
+            } else if (workflowIds != null && !workflowIds.isEmpty()) {
+                ordersFilter.setRegex(null);
+                Predicate<WorkflowId> versionNotEmpty = w -> w.getVersionId() != null && !w.getVersionId().isEmpty();
+                Set<VersionedItemId<WorkflowPath>> workflowPaths = workflowIds.stream().filter(versionNotEmpty).map(w -> JWorkflowId.of(JocInventory
+                        .pathToName(w.getPath()), w.getVersionId()).asScala()).collect(Collectors.toSet());
+                Set<WorkflowPath> workflowPaths2 = workflowIds.stream().filter(w -> !versionNotEmpty.test(w)).map(w -> WorkflowPath.of(JocInventory
+                        .pathToName(w.getPath()))).collect(Collectors.toSet());
+                Function1<Order<Order.State>, Object> workflowFilter = o -> (workflowPaths.contains(o.workflowId()) || workflowPaths2.contains(o
+                        .workflowId().path()));
+                orderStream = currentState.ordersBy(JOrderPredicates.and(workflowFilter, notCycledOrderFilter));
+                cycledOrderStream = currentState.ordersBy(JOrderPredicates.and(workflowFilter, cycledOrderFilter));
+            } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
+                // no folder permissions
+                // orderStream = currentState.ordersBy(JOrderPredicates.none());
+            } else if (folders != null && !folders.isEmpty()) {
+                orderStream = currentState.ordersBy(notCycledOrderFilter);
+                cycledOrderStream = currentState.ordersBy(cycledOrderFilter);
+            } else {
+                orderStream = currentState.ordersBy(JOrderPredicates.any());
+            }
+
+            // grouping cycledOrders and return the next Order of the group to orderStream
+            cycledOrderStream = cycledOrderStream.collect(Collectors.groupingBy(o -> o.id().string().substring(0, 24))).values().stream().map(l -> l
+                    .stream().sorted(Comparator.comparing(o -> o.id().string())).findFirst()).filter(Optional::isPresent).map(Optional::get);
             
+            // merge cycledOrders to orderStream and grouping by workflow name for folder permissions
+            Map<String, List<JOrder>> groupedByWorkflowPath = Stream.concat(orderStream, cycledOrderStream).collect(Collectors.groupingBy(o -> o
+                    .workflowId().path().string()));
+
+            // TODO Path of name from db hold in memory
+            session = Globals.createSosHibernateStatelessConnection(API_CALL);
+            DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
+            final Map<String, String> namePathMap = dbLayer.getNamePathMapping(ordersFilter.getControllerId(), groupedByWorkflowPath.keySet(),
+                    DeployType.WORKFLOW.intValue());
+
+            orderStream = groupedByWorkflowPath.entrySet().stream().filter(e -> namePathMap.containsKey(e.getKey())).filter(e -> canAdd(namePathMap
+                    .get(e.getKey()), folders)).flatMap(e -> e.getValue().stream());
+
             if (withStatesFilter) {
                 // special BLOCKED handling
                 if (lookingForBlocked && !lookingForPending) {
@@ -112,7 +141,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 }
 
             }
-            
+
             // OrderIds beat dateTo
             if (!withOrderIdFilter && ordersFilter.getDateTo() != null && !ordersFilter.getDateTo().isEmpty()) {
                 // only necessary if fresh orders in orderStream
@@ -130,43 +159,28 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     });
                 }
             }
-            
-            List<JOrder> jOrders = orderStream.collect(Collectors.toList());
-            
-            // Path of name from db
-            session = Globals.createSosHibernateStatelessConnection(API_CALL);
-            DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
-            Set<String> names = jOrders.stream().map(o -> o.workflowId().path().string()).collect(Collectors.toSet());
-            final Map<String, String> namePathMap = dbLayer.getNamePathMapping(ordersFilter.getControllerId(), names, DeployType.WORKFLOW.intValue());
 
-            Stream<JOrder> jOrderStream = jOrders.stream();
-            
+
             if (ordersFilter.getRegex() != null && !ordersFilter.getRegex().isEmpty()) {
                 Predicate<String> regex = Pattern.compile(ordersFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE).asPredicate();
-                if (namePathMap != null) {
-                    jOrderStream = jOrderStream.filter(o -> regex.test(namePathMap.getOrDefault(o.workflowId().path().string(), o.workflowId().path()
-                            .string()) + "/" + o.id().string()));
-                } else {
-                    jOrderStream = jOrderStream.filter(o -> regex.test(o.workflowId().path().string() + "/" + o.id().string()));
-                }
+                orderStream = orderStream.filter(o -> regex.test(namePathMap.get(o.workflowId().path().string()) + "/" + o.id().string()));
             }
-            
-            
+
             Long surveyDateMillis = currentState.eventId() / 1000;
             OrdersV entity = new OrdersV();
             entity.setSurveyDate(Date.from(Instant.ofEpochMilli(surveyDateMillis)));
-            
-            Stream<Either<Exception, OrderV>> ordersV = jOrderStream.map(o -> {
+
+            Stream<Either<Exception, OrderV>> ordersV = orderStream.map(o -> {
                 Either<Exception, OrderV> either = null;
                 try {
                     OrderV order = OrdersHelper.mapJOrderToOrderV(o, ordersFilter.getCompact(), namePathMap, surveyDateMillis);
                     // special BLOCKED handling
                     if (withStatesFilter) {
-                       if (lookingForBlocked && !lookingForPending && OrderStateText.PENDING.equals(order.getState().get_text())) {
-                           order = null;
-                       } else if (lookingForPending && !lookingForBlocked && OrderStateText.BLOCKED.equals(order.getState().get_text())) {
-                           order = null;
-                       }
+                        if (lookingForBlocked && !lookingForPending && OrderStateText.PENDING.equals(order.getState().get_text())) {
+                            order = null;
+                        } else if (lookingForPending && !lookingForBlocked && OrderStateText.BLOCKED.equals(order.getState().get_text())) {
+                            order = null;
+                        }
                     }
                     if (order != null && orderStateWithRequirements.contains(order.getState().get_text())) {
                         order.setRequirements(OrdersHelper.getRequirements(o, currentState));
@@ -191,20 +205,5 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             Globals.disconnect(session);
         }
     }
-    
-    private static boolean orderIsPermitted(Order<Order.State> order, Set<Folder> listOfFolders) {
-        return true;
-        // TODO order.workflowId().path().string() is only a name
-//        if (listOfFolders == null || listOfFolders.isEmpty()) {
-//            return true;
-//        }
-//        return folderIsPermitted(Paths.get(order.workflowId().path().string()).getParent().toString().replace('\\', '/'), listOfFolders);
-    }
-    
-//    private static boolean folderIsPermitted(String folder, Set<Folder> listOfFolders) {
-//        Predicate<Folder> filter = f -> f.getFolder().equals(folder) || (f.getRecursive() && ("/".equals(f.getFolder()) || folder.startsWith(f
-//                .getFolder() + "/")));
-//        return listOfFolders.stream().parallel().anyMatch(filter);
-//    }
 
 }

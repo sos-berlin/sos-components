@@ -57,6 +57,7 @@ public class JocInventory {
     private static final Logger LOGGER = LoggerFactory.getLogger(JocInventory.class);
     public static final String APPLICATION_PATH = "inventory";
     public static final String ROOT_FOLDER = "/";
+    public static final String DEFAULT_COPY_SUFFIX = "-copy";
 
     public static final Map<ConfigurationType, String> SCHEMA_LOCATION = Collections.unmodifiableMap(new HashMap<ConfigurationType, String>() {
 
@@ -176,6 +177,14 @@ public class JocInventory {
 
     public static boolean isCalendar(Integer type) {
         return Arrays.asList(ConfigurationType.WORKINGDAYSCALENDAR.intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue()).contains(type);
+    }
+    
+    public static List<Integer> getTypesFromObjectsWithReferences() {
+        return Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.SCHEDULE.intValue());
+    }
+    
+    public static List<Integer> getTypesFromObjectsWithReferencesAndFolders() {
+        return Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.SCHEDULE.intValue(), ConfigurationType.FOLDER.intValue());
     }
 
     public static List<Integer> getCalendarTypes() {

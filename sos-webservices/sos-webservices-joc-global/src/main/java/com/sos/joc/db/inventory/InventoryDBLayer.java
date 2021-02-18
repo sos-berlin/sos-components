@@ -13,8 +13,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -494,6 +497,34 @@ public class InventoryDBLayer extends DBLayer {
             query.setParameter("type", type);
         }
         return getSession().getResultList(query);
+    }
+    
+    public Integer getCopySuffixNumber() throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select name from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where lower(name) like :likename and type != :type");
+        Query<String> query = getSession().createQuery(hql.toString());
+        query.setParameter("likename", "%" + JocInventory.DEFAULT_COPY_SUFFIX + "%");
+        query.setParameter("type", ConfigurationType.FOLDER.intValue());
+
+        List<String> result = getSession().getResultList(query);
+        if (result == null || result.isEmpty()) {
+            return 0;
+        }
+        Predicate<String> predicate = Pattern.compile(JocInventory.DEFAULT_COPY_SUFFIX + "[0-9]*$").asPredicate();
+        Function<String, Integer> mapper = n -> Integer.parseInt(n.replaceFirst(".*" + JocInventory.DEFAULT_COPY_SUFFIX + "([0-9]*)$", "0$1"));
+        SortedSet<Integer> numbers = result.stream().map(String::toLowerCase).distinct().filter(predicate).map(mapper).sorted().collect(Collectors
+                .toCollection(TreeSet::new));
+        if (numbers.isEmpty()) {
+            return 0;
+        }
+        Integer num = 0;
+        for (Integer number : numbers) {
+            if (num < number) {
+                break;
+            }
+            num = number + 1;
+        }
+        return num;
     }
 
     public DBItemInventoryConfiguration getCalendar(String path) throws SOSHibernateException {

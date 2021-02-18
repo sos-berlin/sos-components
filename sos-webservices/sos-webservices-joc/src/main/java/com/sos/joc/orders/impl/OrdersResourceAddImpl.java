@@ -140,7 +140,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
     
     private static JFreshOrder mapToFreshOrder(AddOrder order, String yyyymmdd) {
         //TODO uniqueId comes from dailyplan, here a fake
-        String uniqueId = Long.valueOf(Instant.now().toEpochMilli()).toString().substring(4);
+        String uniqueId = Long.valueOf(Instant.now().toEpochMilli()).toString().substring(3);
         OrderId orderId = OrderId.of(String.format("#%s#T%s-%s", yyyymmdd, uniqueId, order.getOrderName()));
         Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order.getTimeZone());
         Map<String, Value> arguments = new HashMap<>();
