@@ -39,6 +39,7 @@ import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingKeyException;
@@ -365,13 +366,15 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
         SOSHibernateSession newHibernateSession = null;
         try {
             newHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            final DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
+            final InventoryDBLayer invDbLayer = new InventoryDBLayer(newHibernateSession);
             if (either.isRight()) {
-                Set<Long> configurationIdsToDelete = itemsToDelete.stream()
-                        .map(item -> dbLayer.getInventoryConfigurationIdByPathAndType(item.getPath(), item.getType()))
+                Set<DBItemInventoryConfiguration> configurationsToDelete = itemsToDelete.stream()
+                        .map(item -> dbLayer.getInventoryConfigurationByNameAndType(item.getName(), item.getType()))
                         .collect(Collectors.toSet());
-                Set<DBItemDeploymentHistory> deletedDeployItems = 
-                        PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer);
-                JocInventory.deleteConfigurations(configurationIdsToDelete);
+                Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer);
+                configurationsToDelete.stream().forEach(item -> JocInventory.deleteInventoryConfigurationAndPutToTrash(item, invDbLayer));
+//                JocInventory.deleteConfigurations(configurationsToDelete);
                 JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);
             } else if (either.isLeft()) {
                 String message = String.format("Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());

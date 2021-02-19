@@ -203,6 +203,36 @@ public class DBLayerDeploy {
         }
     }
 
+    public List<DBItemInventoryConfiguration> getInventoryConfigurationsByFolder(String folder, boolean recursive)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            if (recursive) {
+                sql.append(" where folder like :folder");
+            } else {
+                sql.append(" where folder = :folder");
+            }
+            sql.append(" and type in (:types)");  
+            Query<DBItemInventoryConfiguration> query = session.createQuery(sql.toString());
+            if (recursive) {
+                query.setParameter("folder", MatchMode.START.toMatchString(folder));
+            } else {
+                query.setParameter("folder", folder);
+            }
+            query.setParameterList("types", Arrays.asList(new Integer[] {
+                    ConfigurationType.WORKFLOW.intValue(), 
+                    ConfigurationType.JUNCTION.intValue(),
+                    ConfigurationType.JOBCLASS.intValue(),
+                    ConfigurationType.LOCK.intValue()}));
+            return session.getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
     public Long getInventoryConfigurationIdByPathAndType(String path, Integer type)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
@@ -212,6 +242,24 @@ public class DBLayerDeploy {
             sql.append(" and type = :type");
             Query<Long> query = session.createQuery(sql.toString());
             query.setParameter("path", path);
+            query.setParameter("type", type);
+            return session.getSingleResult(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    public DBItemInventoryConfiguration getInventoryConfigurationByNameAndType(String name, Integer type)
+            throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            sql.append(" where name = :name");
+            sql.append(" and type = :type");
+            Query<DBItemInventoryConfiguration> query = session.createQuery(sql.toString());
+            query.setParameter("name", name);
             query.setParameter("type", type);
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {

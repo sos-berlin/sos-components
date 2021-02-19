@@ -366,7 +366,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 }
                 if (!deployedObjects.isEmpty()) {
                     LOGGER.info(String.format("Update command send to Controller \"%1$s\".", controllerId));
-//                    createAuditLogForEach(deployedObjects, deployFilter, controllerId, true, versionIdForUpdate, account);
                     JocInventory.handleWorkflowSearch(newHibernateSession, deployedObjects, false);
                 }
             } else if (either.isLeft()) {
@@ -400,15 +399,16 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         SOSHibernateSession newHibernateSession = null;
         try {
             newHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
+            final DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
+            final InventoryDBLayer invDbLayer = new InventoryDBLayer(newHibernateSession);
             if (either.isRight()) {
-                Set<Long> configurationIdsToDelete = itemsToDelete.stream()
-                        .map(item -> item.getInventoryConfigurationId())
+                Set<DBItemInventoryConfiguration> configurationsToDelete = itemsToDelete.stream()
+                        .map(item -> dbLayer.getInventoryConfigurationByNameAndType(item.getName(), item.getType()))
                         .collect(Collectors.toSet());
                 Set<DBItemDeploymentHistory> deletedDeployItems = 
                         PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer);
-//                createAuditLogForEach(deletedDeployItems, deployFilter, controllerId, false, versionIdForDelete, account);
-                JocInventory.deleteConfigurations(configurationIdsToDelete);
+                configurationsToDelete.stream().forEach(item -> JocInventory.deleteInventoryConfigurationAndPutToTrash(item, invDbLayer));
+//                JocInventory.deleteConfigurations(configurationsToDelete);
                 JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);
             } else if (either.isLeft()) {
                 String message = String.format("Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
@@ -440,23 +440,23 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         SOSHibernateSession newHibernateSession = null;
         try {
             newHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
+            final DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
+            final InventoryDBLayer invDbLayer = new InventoryDBLayer(newHibernateSession);
             if (either.isRight()) {
-                Set<Long> configurationIdsToDelete = itemsToDelete.stream()
-                        .map(item -> dbLayer.getInventoryConfigurationIdByPathAndType(item.getPath(), item.getType()))
+                Set<DBItemInventoryConfiguration> configurationsToDelete = itemsToDelete.stream()
+                        .map(item -> dbLayer.getInventoryConfigurationByNameAndType(item.getName(), item.getType()))
                         .collect(Collectors.toSet());
                 foldersToDelete.stream()
-                    .forEach(item -> configurationIdsToDelete.addAll(
-                        dbLayer.getDeployableInventoryConfigurationIdsByFolder(item.getConfiguration().getPath(), item.getConfiguration().getRecursive())));
+                    .forEach(item -> configurationsToDelete.addAll(
+                        dbLayer.getInventoryConfigurationsByFolder(item.getConfiguration().getPath(), item.getConfiguration().getRecursive())));
                 Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer);
-//                createAuditLogForEach(deletedDeployItems, deployFilter, controllerId, false, versionIdForDelete, account);
-                JocInventory.deleteConfigurations(configurationIdsToDelete);
+                configurationsToDelete.stream().forEach(item -> JocInventory.deleteInventoryConfigurationAndPutToTrash(item, invDbLayer));
+//                JocInventory.deleteConfigurations(configurationsToDelete);
                 JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);
                 if (foldersToDelete != null && !foldersToDelete.isEmpty()) {
                     for (Config folder : foldersToDelete) {
                         // check if deployable objects still exist in the folder
-                        Set<DBItemDeploymentHistory> stillActiveDeployments = 
-                                PublishUtils.getLatestDepHistoryEntriesActiveForFolder(folder, dbLayer);
+                        Set<DBItemDeploymentHistory> stillActiveDeployments = PublishUtils.getLatestDepHistoryEntriesActiveForFolder(folder, dbLayer);
                         if (checkDeploymentItemsStillExist(stillActiveDeployments)) {
                             String controllersFormatted = stillActiveDeployments.stream()
                                     .map(item -> item.getControllerId()).collect(Collectors.joining(", "));
@@ -491,8 +491,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             Globals.disconnect(newHibernateSession);
         }
     }
-    
-    private boolean checkDeploymentItemsStillExist (Set<DBItemDeploymentHistory> deployments) {
+
+    private boolean checkDeploymentItemsStillExist(Set<DBItemDeploymentHistory> deployments) {
         if (deployments != null && !deployments.isEmpty()) {
             return true;
         }

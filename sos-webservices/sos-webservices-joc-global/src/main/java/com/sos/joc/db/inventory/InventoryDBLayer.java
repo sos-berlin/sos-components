@@ -455,6 +455,15 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
+    public DBItemInventoryConfigurationTrash getTrashFolderConfiguration(String path) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATION_TRASH);
+        hql.append(" where lower(path)=:path");
+        hql.append(" and type = 0");
+        Query<DBItemInventoryConfigurationTrash> query = getSession().createQuery(hql.toString());
+        query.setParameter("path", path.toLowerCase());
+        return getSession().getSingleResult(query);
+    }
+
     public List<DBItemInventoryConfiguration> getConfigurationByName(String name, Integer type) throws SOSHibernateException {
         boolean isCalendar = JocInventory.isCalendar(type);
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);

@@ -41,12 +41,14 @@ import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.inventory.search.WorkflowConverter;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.inventory.InventoryEvent;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
+import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
@@ -277,6 +279,36 @@ public class JocInventory {
 
     public static void makeParentDirs(InventoryDBLayer dbLayer, Path folder) throws SOSHibernateException {
         makeParentDirs(dbLayer, folder, null);
+    }
+
+    public static void makeParentDirsForTrash(InventoryDBLayer dbLayer, Path folder) throws SOSHibernateException {
+        makeParentDirsForTrash(dbLayer, folder, null);
+    }
+
+    public static void makeParentDirsForTrash(InventoryDBLayer dbLayer, java.nio.file.Path parentFolder, Long auditLogId) throws SOSHibernateException {
+        if (parentFolder != null) {
+            String newFolder = parentFolder.toString().replace('\\', '/');
+            if (!ROOT_FOLDER.equals(newFolder)) {
+                DBItemInventoryConfigurationTrash newDbFolder = dbLayer.getTrashFolderConfiguration(newFolder);
+                if (newDbFolder == null) {
+                    newDbFolder = new DBItemInventoryConfigurationTrash();
+                    newDbFolder.setPath(newFolder);
+                    newDbFolder.setFolder(parentFolder.getParent().toString().replace('\\', '/'));
+                    newDbFolder.setName(parentFolder.getFileName().toString());
+                    newDbFolder.setModified(Date.from(Instant.now()));
+                    newDbFolder.setAuditLogId(auditLogId == null ? 0L : auditLogId);
+                    newDbFolder.setContent(null);
+                    newDbFolder.setCreated(newDbFolder.getModified());
+                    newDbFolder.setDocumentationId(0L);
+                    newDbFolder.setId(null);
+                    newDbFolder.setTitle(null);
+                    newDbFolder.setType(ConfigurationType.FOLDER);
+                    newDbFolder.setValid(true);
+                    dbLayer.getSession().save(newDbFolder);
+                    makeParentDirsForTrash(dbLayer, parentFolder.getParent(), auditLogId);
+                }
+            }
+        }
     }
 
     public static String pathToName(String path) {
@@ -620,4 +652,26 @@ public class JocInventory {
         }
     }
 
+    public static void deleteInventoryConfigurationAndPutToTrash(DBItemInventoryConfiguration item, InventoryDBLayer dbLayer) {
+        DBItemInventoryConfigurationTrash itemToTrash = new DBItemInventoryConfigurationTrash();
+        itemToTrash.setAuditLogId(item.getAuditLogId());
+        itemToTrash.setContent(item.getContent());
+        itemToTrash.setDocumentationId(item.getDocumentationId());
+        itemToTrash.setFolder(item.getFolder());
+        itemToTrash.setName(item.getName());
+        itemToTrash.setPath(item.getPath());
+        itemToTrash.setTitle(item.getTitle());
+        itemToTrash.setType(item.getType());
+        itemToTrash.setValid(item.getValid());
+        itemToTrash.setCreated(item.getCreated());
+        itemToTrash.setModified(item.getModified());
+        try {
+            dbLayer.getSession().delete(item);
+            dbLayer.getSession().save(itemToTrash);
+            makeParentDirsForTrash(dbLayer, Paths.get(itemToTrash.getFolder()));
+            postEvent(item.getFolder());
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+    }
 }
