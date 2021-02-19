@@ -66,9 +66,9 @@ public class HistoryUtil {
             b.add(name, value.convertToString());
         } else if (value instanceof js7.data.value.NumberValue) {
             try {
-                b.add(name, ((scala.math.BigDecimal) value.toJava()).bigDecimal());
+                b.add(name, ((js7.data.value.NumberValue) value).toJava());
             } catch (Throwable e) {
-
+                // e.printStackTrace();
             }
         } else if (value instanceof js7.data.value.BooleanValue) {
             b.add(name, (Boolean.parseBoolean(value.convertToString())));

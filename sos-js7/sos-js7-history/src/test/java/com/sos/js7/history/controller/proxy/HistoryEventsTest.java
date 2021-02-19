@@ -13,6 +13,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryAgentCouplingFailed;
@@ -58,14 +59,14 @@ import js7.data.order.OrderEvent.OrderLockReleased;
 import js7.data.order.OrderEvent.OrderStderrWritten;
 import js7.data.order.OrderEvent.OrderStdoutWritten;
 import js7.data.order.OrderId;
-import js7.proxy.data.event.ProxyEvent;
-import js7.proxy.javaapi.JControllerApi;
-import js7.proxy.javaapi.data.controller.JEventAndControllerState;
 import js7.data_for_java.order.JOrder.Forked;
 import js7.data_for_java.order.JOrderEvent.JOrderFailed;
 import js7.data_for_java.order.JOrderEvent.JOrderForked;
 import js7.data_for_java.order.JOrderEvent.JOrderJoined;
 import js7.data_for_java.order.JOrderEvent.JOrderProcessed;
+import js7.proxy.data.event.ProxyEvent;
+import js7.proxy.javaapi.JControllerApi;
+import js7.proxy.javaapi.data.controller.JEventAndControllerState;
 import js7.proxy.javaapi.eventbus.JStandardEventBus;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.SignalType;
@@ -77,7 +78,7 @@ public class HistoryEventsTest {
     private static final String CONTROLLER_URI_PRIMARY = "http://localhost:5444";
     private static final String CONTROLLER_ID = "js7.x";
     private static final int MAX_EXECUTION_TIME = 20; // seconds
-    private static final Long START_EVENT_ID = 1611933032992003L;
+    private static final Long START_EVENT_ID = 1613722418382001L;
 
     private EventFluxStopper stopper = new EventFluxStopper();
 
@@ -117,7 +118,20 @@ public class HistoryEventsTest {
             flux.takeUntilOther(stopper.stopped()).map(this::map2fat).bufferTimeout(1_000, Duration.ofSeconds(2)).toIterable().forEach(list -> {
                 LOGGER.info("[HANDLE BLOCK][START]" + list.size());
                 for (AFatEvent event : list) {
-                    LOGGER.info(SOSString.toString(event));
+                    if (event instanceof FatEventOrderStepStdWritten) {
+                        // continue;
+                    }
+                    if (event instanceof FatEventOrderStepProcessed) {
+                        FatEventOrderStepProcessed p = (FatEventOrderStepProcessed) event;
+                        LOGGER.info(SOSString.toString(event));
+                        LOGGER.info("----" + SOSString.toString(p.getOutcome()));
+                        try {
+                            LOGGER.info("-----------" + p.getOutcome().getNamedValuesAsJsonString());
+                        } catch (JsonProcessingException e1) {
+                            e1.printStackTrace();
+                        }
+
+                    }
                 }
                 LOGGER.info("[HANDLE BLOCK][END]");
             });
