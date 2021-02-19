@@ -433,7 +433,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         .map(item -> dbLayer.getInventoryConfigurationByNameAndType(item.getName(), item.getType()))
                         .collect(Collectors.toSet());
                 Set<DBItemDeploymentHistory> deletedDeployItems = 
-                        PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer);
+                        PublishUtils.updateDeletedDepHistoryAndPutToTrash(itemsToDelete, dbLayer);
                 configurationsToDelete.stream().forEach(item -> JocInventory.deleteInventoryConfigurationAndPutToTrash(item, invDbLayer));
 //                JocInventory.deleteConfigurations(configurationsToDelete);
                 JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);
@@ -470,7 +470,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 foldersToDelete.stream()
                     .forEach(item -> configurationsToDelete.addAll(
                         dbLayer.getInventoryConfigurationsByFolder(item.getConfiguration().getPath(), item.getConfiguration().getRecursive())));
-                Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer);
+                Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistoryAndPutToTrash(itemsToDelete, dbLayer);
                 configurationsToDelete.stream().forEach(item -> JocInventory.deleteInventoryConfigurationAndPutToTrash(item, invDbLayer));
 //                JocInventory.deleteConfigurations(configurationsToDelete);
                 JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);

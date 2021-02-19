@@ -79,8 +79,10 @@ import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
+import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -1657,7 +1659,7 @@ public abstract class PublishUtils {
         return deployedObjects;
     }
 
-    public static Set<DBItemDeploymentHistory> updateDeletedDepHistory(List<DBItemDeploymentHistory> toDelete, DBLayerDeploy dbLayer) {
+    public static Set<DBItemDeploymentHistory> updateDeletedDepHistoryAndPutToTrash(List<DBItemDeploymentHistory> toDelete, DBLayerDeploy dbLayer) {
         Set<DBItemDeploymentHistory> deletedObjects = new HashSet<DBItemDeploymentHistory>();
         try {
             for (DBItemDeploymentHistory delete : toDelete) {
@@ -1668,7 +1670,29 @@ public abstract class PublishUtils {
                 delete.setDeploymentDate(Date.from(Instant.now()));
                 dbLayer.getSession().save(delete);
                 deletedObjects.add(delete);
+                DBItemInventoryConfiguration orig = dbLayer.getInventoryConfigurationByNameAndType(delete.getName(), delete.getType());
+                DBItemInventoryConfigurationTrash toTrash = new DBItemInventoryConfigurationTrash();
+                if (orig != null) {
+                    toTrash.setAuditLogId(orig.getAuditLogId());
+                    toTrash.setDocumentationId(orig.getDocumentationId());
+                    toTrash.setTitle(orig.getTitle());
+                    toTrash.setCreated(orig.getCreated());
+                    toTrash.setModified(orig.getModified());
+                } else {
+                    toTrash.setCreated(delete.getDeleteDate());
+                    toTrash.setModified(delete.getDeleteDate());
+                }
+                toTrash.setContent(delete.getInvContent());
+                toTrash.setFolder(delete.getFolder());
+                toTrash.setName(delete.getName());
+                toTrash.setPath(delete.getPath());
+                toTrash.setType(delete.getType());
+                toTrash.setValid(true);
+                dbLayer.getSession().save(toTrash);
+                InventoryDBLayer invDBLayer = new InventoryDBLayer(dbLayer.getSession());
+                JocInventory.makeParentDirsForTrash(invDBLayer, Paths.get(toTrash.getFolder()));
             }
+            
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }
@@ -3383,4 +3407,5 @@ public abstract class PublishUtils {
         }
         return false;
     }
+    
 }
