@@ -2,15 +2,15 @@ package com.sos.joc.orders.impl;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Predicate;
-import java.util.function.ToLongFunction;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -108,12 +108,23 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 orderStream = currentState.ordersBy(notCycledOrderFilter);
                 cycledOrderStream = currentState.ordersBy(cycledOrderFilter);
             } else {
-                orderStream = currentState.ordersBy(JOrderPredicates.any());
+                orderStream = currentState.ordersBy(notCycledOrderFilter);
+                cycledOrderStream = currentState.ordersBy(cycledOrderFilter);
             }
 
             // grouping cycledOrders and return the next Order of the group to orderStream
-            cycledOrderStream = cycledOrderStream.collect(Collectors.groupingBy(o -> o.id().string().substring(0, 24))).values().stream().map(l -> l
-                    .stream().sorted(Comparator.comparing(o -> o.id().string())).findFirst()).filter(Optional::isPresent).map(Optional::get);
+            Comparator<JOrder> comp = Comparator.comparing(o -> o.id().string());
+            Collection<TreeSet<JOrder>> cycledOrderColl = cycledOrderStream.collect(Collectors.groupingBy(o -> o.id().string().substring(0, 24),
+                    Collectors.toCollection(() -> new TreeSet<>(comp)))).values();
+            cycledOrderStream = cycledOrderColl.stream().map(t -> t.first());
+            Map<String, Long> lastCycles = cycledOrderColl.stream().filter(t -> !t.last().asScala().state().maybeDelayedUntil().isEmpty()).map(t -> {
+                OrderV o = new OrderV();
+                o.setOrderId(t.first().id().string());
+                o.setLastCycle(t.last().asScala().state().maybeDelayedUntil().get().toEpochMilli());
+                return o;
+            }).collect(Collectors.toMap(OrderV::getOrderId, OrderV::getLastCycle));
+//            cycledOrderStream = cycledOrderStream.collect(Collectors.groupingBy(o -> o.id().string().substring(0, 24))).values().stream().map(l -> l
+//                    .stream().min(Comparator.comparing(o -> o.id().string()))).filter(Optional::isPresent).map(Optional::get);
 
             // merge cycledOrders to orderStream and grouping by workflow name for folder permissions
             Map<String, List<JOrder>> groupedByWorkflowPath = Stream.concat(orderStream, cycledOrderStream).collect(Collectors.groupingBy(o -> o
@@ -187,8 +198,11 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                             order = null;
                         }
                     }
-                    if (order != null && orderStateWithRequirements.contains(order.getState().get_text())) {
-                        order.setRequirements(OrdersHelper.getRequirements(o, currentState));
+                    if (order != null) {
+                        order.setLastCycle(lastCycles.get(order.getOrderId()));
+                        if (orderStateWithRequirements.contains(order.getState().get_text())) {
+                            order.setRequirements(OrdersHelper.getRequirements(o, currentState));
+                        }
                     }
                     either = Either.right(order);
                 } catch (Exception e) {
