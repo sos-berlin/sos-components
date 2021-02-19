@@ -20,12 +20,14 @@ import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.order.ModifyOrders;
+import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.orders.resource.IOrdersResourceModify;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
@@ -43,6 +45,7 @@ import js7.data_for_java.command.JSuspendMode;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JHistoricOutcome;
 import js7.data_for_java.order.JOrder;
+import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
 import scala.Function1;
@@ -136,7 +139,6 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     }
 
     public void postOrdersModify(Action action, ModifyOrders modifyOrders) throws Exception {
-        // try {
         checkRequiredComment(modifyOrders.getAuditLog());
 
         List<String> orders = modifyOrders.getOrderIds();
@@ -145,11 +147,17 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
         JControllerState currentState = Proxy.of(modifyOrders.getControllerId()).currentState();
         Stream<OrderId> orderStream = Stream.empty();
+        Stream<OrderId> cyclicOrderStream = Stream.empty();
         
         // TODO folder permissions
 
         if (orders != null && !orders.isEmpty()) {
             orderStream = currentState.ordersBy(o -> orders.contains(o.id().string())).map(JOrder::id);
+            // determine possibly fresh cyclic orders in case of CANCEL
+            if (Action.CANCEL.equals(action)) {
+                // determine cyclic ids
+                orderStream = Stream.concat(orderStream, cyclicFreshOrderIds(orders, currentState));
+            }
         } else if (workflowIds != null && !workflowIds.isEmpty()) {
             Predicate<WorkflowId> versionNotEmpty = w -> w.getVersionId() != null && !w.getVersionId().isEmpty();
             Set<VersionedItemId<WorkflowPath>> workflowPaths = workflowIds.stream().filter(versionNotEmpty).map(w -> JWorkflowId.of(JocInventory
@@ -163,6 +171,20 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
         callCommand(action, modifyOrders, orderStream.collect(Collectors.toSet())).thenAccept(either -> ProblemHelper.postProblemEventIfExist(either,
                 getAccessToken(), getJocError(), modifyOrders.getControllerId()));
+    }
+    
+    private static Stream<OrderId> cyclicFreshOrderIds(List<String> orderIds, JControllerState currentState) {
+        Stream<OrderId> cyclicOrderStream = Stream.empty();
+        // determine cyclic ids
+        Set<String> freshCyclicIds = orderIds.stream().filter(s -> s.matches(".*#C[0-9]{10}-.*")).map(s -> currentState.idToOrder(OrderId.of(
+                s))).filter(Optional::isPresent).map(Optional::get).filter(o -> Order.Fresh.class.isInstance(o.asScala().state())).map(o -> o
+                        .id().string().substring(0, 24)).collect(Collectors.toSet());
+        if (!freshCyclicIds.isEmpty()) {
+            Function1<Order<Order.State>, Object> cyclicOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class),
+                    o -> freshCyclicIds.contains(o.id().string().substring(0, 24)));
+            cyclicOrderStream = currentState.ordersBy(cyclicOrderFilter).map(JOrder::id);
+        }
+        return cyclicOrderStream;
     }
 
     private static void updateDailyPlan(List<String> orderIds) throws SOSHibernateException {
