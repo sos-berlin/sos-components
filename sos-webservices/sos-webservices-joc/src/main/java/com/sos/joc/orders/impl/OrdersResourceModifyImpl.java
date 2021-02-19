@@ -20,14 +20,12 @@ import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.order.ModifyOrders;
-import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.orders.resource.IOrdersResourceModify;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
@@ -147,7 +145,6 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
         JControllerState currentState = Proxy.of(modifyOrders.getControllerId()).currentState();
         Stream<OrderId> orderStream = Stream.empty();
-        Stream<OrderId> cyclicOrderStream = Stream.empty();
         
         // TODO folder permissions
 

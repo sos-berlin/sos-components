@@ -10,6 +10,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.function.ToLongFunction;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -113,7 +114,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             // grouping cycledOrders and return the next Order of the group to orderStream
             cycledOrderStream = cycledOrderStream.collect(Collectors.groupingBy(o -> o.id().string().substring(0, 24))).values().stream().map(l -> l
                     .stream().sorted(Comparator.comparing(o -> o.id().string())).findFirst()).filter(Optional::isPresent).map(Optional::get);
-            
+
             // merge cycledOrders to orderStream and grouping by workflow name for folder permissions
             Map<String, List<JOrder>> groupedByWorkflowPath = Stream.concat(orderStream, cycledOrderStream).collect(Collectors.groupingBy(o -> o
                     .workflowId().path().string()));
@@ -165,7 +166,6 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 }
             }
 
-
             if (ordersFilter.getRegex() != null && !ordersFilter.getRegex().isEmpty()) {
                 Predicate<String> regex = Pattern.compile(ordersFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE).asPredicate();
                 orderStream = orderStream.filter(o -> regex.test(namePathMap.get(o.workflowId().path().string()) + "/" + o.id().string()));
@@ -197,7 +197,8 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 return either;
             });
             // TODO consider Either::isLeft, maybe at least LOGGER usage
-            entity.setOrders(ordersV.filter(Either::isRight).map(Either::get).filter(Objects::nonNull).collect(Collectors.toList()));
+            entity.setOrders(ordersV.filter(Either::isRight).map(Either::get).filter(Objects::nonNull).sorted(Comparator.comparingLong(
+                    OrderV::getScheduledFor)).collect(Collectors.toList()));
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
