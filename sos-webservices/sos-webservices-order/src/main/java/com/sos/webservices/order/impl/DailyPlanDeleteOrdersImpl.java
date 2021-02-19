@@ -20,7 +20,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.DailyPlanAudit;
-import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -43,57 +42,19 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanDeleteOrdersImpl.class);
     private static final String API_CALL_DELETE = "./daily_plan/orders/delete";
 
-    private void addCyclicOrderIds(List<String> orderIds, String orderId, DailyPlanOrderFilter dailyPlanOrderFilter) throws SOSHibernateException {
-        SOSHibernateSession sosHibernateSession = null;
-        try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
+  
 
-            DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
+    private FilterDailyPlannedOrders getFilter(SOSHibernateSession sosHibernateSession, DailyPlanOrderFilter dailyPlanOrderFilter) throws SOSHibernateException {
 
-            FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-            filter.setControllerId(dailyPlanOrderFilter.getControllerId());
-            filter.setOrderId(orderId);
-
-            List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
-
-            if (listOfPlannedOrders.size() == 1) {
-                DBItemDailyPlanOrders dbItemDailyPlanOrder = listOfPlannedOrders.get(0);
-                if (dbItemDailyPlanOrder.getStartMode() == 1) {
-
-                    FilterDailyPlannedOrders filterCyclic = new FilterDailyPlannedOrders();
-                    filterCyclic.setControllerId(dailyPlanOrderFilter.getControllerId());
-                    filterCyclic.setRepeatInterval(dbItemDailyPlanOrder.getRepeatInterval());
-                    filterCyclic.setPeriodBegin(dbItemDailyPlanOrder.getPeriodBegin());
-                    filterCyclic.setPeriodEnd(dbItemDailyPlanOrder.getPeriodEnd());
-                    filterCyclic.setWorkflowName(dbItemDailyPlanOrder.getWorkflowName());
-                    filterCyclic.setScheduleName(dbItemDailyPlanOrder.getScheduleName());
-                    filterCyclic.setDailyPlanDate(dbItemDailyPlanOrder.getDailyPlanDate());
-
-                    List<DBItemDailyPlanOrders> listOfPlannedCyclicOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filterCyclic, 0);
-                    for (DBItemDailyPlanOrders dbItemDailyPlanOrders : listOfPlannedCyclicOrders) {
-                        if (!dbItemDailyPlanOrders.getOrderId().equals(orderId)) {
-                            orderIds.add(dbItemDailyPlanOrders.getOrderId());
-                        }
-                    }
-                }
-
-            } else {
-                LOGGER.warn("Expected one record for order-id " + filter.getOrderId());
-                throw new DBMissingDataException("Expected one record for order-id " + filter.getOrderId());
-            }
-        } finally {
-            Globals.disconnect(sosHibernateSession);
-        }
-    }
-
-    private FilterDailyPlannedOrders getFilter(DailyPlanOrderFilter dailyPlanOrderFilter) throws SOSHibernateException {
+      
+        DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
 
         List<String> orderIds = new ArrayList<String>();
         if (dailyPlanOrderFilter.getFilter().getOrderIds() != null) {
             orderIds.addAll(dailyPlanOrderFilter.getFilter().getOrderIds());
 
             for (String orderId : orderIds) {
-                addCyclicOrderIds(dailyPlanOrderFilter.getFilter().getOrderIds(), orderId, dailyPlanOrderFilter);
+                dbLayerDailyPlannedOrders.addCyclicOrderIds(dailyPlanOrderFilter.getFilter().getOrderIds(), orderId, dailyPlanOrderFilter.getControllerId());
             }
         }
         FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
@@ -140,7 +101,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
 
-            FilterDailyPlannedOrders filter = getFilter(dailyPlanOrderFilter);
+            FilterDailyPlannedOrders filter = getFilter(sosHibernateSession,dailyPlanOrderFilter);
             filter.addState(OrderStateText.PLANNED);
             dbLayerDailyPlannedOrders.deleteCascading(filter);
             Globals.commit(sosHibernateSession);

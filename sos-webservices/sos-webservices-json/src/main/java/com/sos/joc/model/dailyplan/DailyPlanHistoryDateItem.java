@@ -13,27 +13,18 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * DailyPlanHistoryItem
+ * DailyPlanHistoryDateItem
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
     "dailyPlanDate",
-    "submissions"
+    "controllers"
 })
-public class DailyPlanHistoryItem {
+public class DailyPlanHistoryDateItem {
 
-    /**
-     * filename
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
     /**
      * timestamp
      * <p>
@@ -43,30 +34,8 @@ public class DailyPlanHistoryItem {
     @JsonProperty("dailyPlanDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date dailyPlanDate;
-    @JsonProperty("submissions")
-    private List<DailyPlanSubmissionTimes> submissions = null;
-
-    /**
-     * filename
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * filename
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
+    @JsonProperty("controllers")
+    private List<DailyPlanHistoryControllerItem> controllers = null;
 
     /**
      * timestamp
@@ -90,24 +59,24 @@ public class DailyPlanHistoryItem {
         this.dailyPlanDate = dailyPlanDate;
     }
 
-    @JsonProperty("submissions")
-    public List<DailyPlanSubmissionTimes> getSubmissions() {
-        return submissions;
+    @JsonProperty("controllers")
+    public List<DailyPlanHistoryControllerItem> getControllers() {
+        return controllers;
     }
 
-    @JsonProperty("submissions")
-    public void setSubmissions(List<DailyPlanSubmissionTimes> submissions) {
-        this.submissions = submissions;
+    @JsonProperty("controllers")
+    public void setControllers(List<DailyPlanHistoryControllerItem> controllers) {
+        this.controllers = controllers;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("dailyPlanDate", dailyPlanDate).append("submissions", submissions).toString();
+        return new ToStringBuilder(this).append("dailyPlanDate", dailyPlanDate).append("controllers", controllers).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dailyPlanDate).append(controllerId).append(submissions).toHashCode();
+        return new HashCodeBuilder().append(controllers).append(dailyPlanDate).toHashCode();
     }
 
     @Override
@@ -115,11 +84,11 @@ public class DailyPlanHistoryItem {
         if (other == this) {
             return true;
         }
-        if ((other instanceof DailyPlanHistoryItem) == false) {
+        if ((other instanceof DailyPlanHistoryDateItem) == false) {
             return false;
         }
-        DailyPlanHistoryItem rhs = ((DailyPlanHistoryItem) other);
-        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(submissions, rhs.submissions).isEquals();
+        DailyPlanHistoryDateItem rhs = ((DailyPlanHistoryDateItem) other);
+        return new EqualsBuilder().append(controllers, rhs.controllers).append(dailyPlanDate, rhs.dailyPlanDate).isEquals();
     }
 
 }

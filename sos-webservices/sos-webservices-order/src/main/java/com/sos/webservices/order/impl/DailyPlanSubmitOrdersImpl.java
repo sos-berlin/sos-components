@@ -21,7 +21,6 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -71,6 +70,17 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
             sosHibernateSession.setAutoCommit(false);
+
+            List<String> orderIds = new ArrayList<String>();
+            if (dailyPlanOrderFilter.getFilter().getOrderIds() != null) {
+                orderIds.addAll(dailyPlanOrderFilter.getFilter().getOrderIds());
+
+                for (String orderId : orderIds) {
+                    dbLayerDailyPlannedOrders.addCyclicOrderIds(dailyPlanOrderFilter.getFilter().getOrderIds(), orderId, dailyPlanOrderFilter
+                            .getControllerId());
+                }
+            }
+
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
 
             Globals.beginTransaction(sosHibernateSession);
@@ -141,51 +151,6 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
             Globals.disconnect(sosHibernateSession);
         }
     }
-    
-    private void addCyclicOrderIds(List<String> orderIds, String orderId, DailyPlanOrderFilter dailyPlanOrderFilter) throws SOSHibernateException {
-        SOSHibernateSession sosHibernateSession = null;
-        try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-
-            DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
-
-            FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-            filter.setControllerId(dailyPlanOrderFilter.getControllerId());
-            filter.setOrderId(orderId);
-
-            List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
-
-            if (listOfPlannedOrders.size() == 1) {
-                DBItemDailyPlanOrders dbItemDailyPlanOrder = listOfPlannedOrders.get(0);
-                if (dbItemDailyPlanOrder.getStartMode() == 1) {
-
-                    FilterDailyPlannedOrders filterCyclic = new FilterDailyPlannedOrders();
-                    filterCyclic.setControllerId(dailyPlanOrderFilter.getControllerId());
-                    filterCyclic.setRepeatInterval(dbItemDailyPlanOrder.getRepeatInterval());
-                    filterCyclic.setPeriodBegin(dbItemDailyPlanOrder.getPeriodBegin());
-                    filterCyclic.setPeriodEnd(dbItemDailyPlanOrder.getPeriodEnd());
-                    filterCyclic.setWorkflowName(dbItemDailyPlanOrder.getWorkflowName());
-                    filterCyclic.setScheduleName(dbItemDailyPlanOrder.getScheduleName());
-                    filterCyclic.setDailyPlanDate(dbItemDailyPlanOrder.getDailyPlanDate());
-
-                    List<DBItemDailyPlanOrders> listOfPlannedCyclicOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filterCyclic, 0);
-                    for (DBItemDailyPlanOrders dbItemDailyPlanOrders : listOfPlannedCyclicOrders) {
-                        if (!dbItemDailyPlanOrders.getOrderId().equals(orderId)) {
-                            orderIds.add(dbItemDailyPlanOrders.getOrderId());
-                        }
-                    }
-                }
-
-            } else {
-                LOGGER.warn("Expected one record for order-id " + filter.getOrderId());
-                throw new DBMissingDataException("Expected one record for order-id " + filter.getOrderId());
-            }
-        } finally {
-            Globals.disconnect(sosHibernateSession);
-        }
-    }
-    
-    
 
     @Override
     public JOCDefaultResponse postSubmitOrders(String accessToken, byte[] filterBytes) throws JocException {
@@ -201,15 +166,6 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
-            }
-            
-            List<String> orderIds = new ArrayList<String>();
-            if (dailyPlanOrderFilter.getFilter().getOrderIds() != null) {
-                orderIds.addAll(dailyPlanOrderFilter.getFilter().getOrderIds());
-
-                for (String orderId : orderIds) {
-                    addCyclicOrderIds(dailyPlanOrderFilter.getFilter().getOrderIds(), orderId, dailyPlanOrderFilter);
-                }
             }
 
             submitOrdersToController(dailyPlanOrderFilter);
@@ -229,7 +185,5 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
     }
-
-   
 
 }

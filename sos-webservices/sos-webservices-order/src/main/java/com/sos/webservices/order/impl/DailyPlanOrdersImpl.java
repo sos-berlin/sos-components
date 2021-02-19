@@ -1,12 +1,17 @@
 package com.sos.webservices.order.impl;
 
 import java.nio.file.Paths;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 
 import javax.ws.rs.Path;
 
@@ -21,6 +26,7 @@ import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.dailyplan.CyclicOrderInfos;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.joc.model.dailyplan.DailyPlanOrderSelector;
 import com.sos.joc.model.dailyplan.Period;
@@ -28,6 +34,8 @@ import com.sos.joc.model.dailyplan.PlannedOrderItem;
 import com.sos.joc.model.dailyplan.PlannedOrders;
 import com.sos.joc.model.order.OrderState;
 import com.sos.joc.model.order.OrderStateText;
+import com.sos.js7.order.initiator.classes.CycleOrderKey;
+import com.sos.js7.order.initiator.classes.PlannedOrder;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
@@ -198,12 +206,13 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
                 filter.addFolderPaths(new HashSet<Folder>(folders));
             }
 
-            ArrayList<PlannedOrderItem> result = new ArrayList<PlannedOrderItem>();
-            PlannedOrders entity = new PlannedOrders();
+            ArrayList<PlannedOrderItem> listOfPlannedOrderItems = new ArrayList<PlannedOrderItem>();
+            PlannedOrders plannedOrders = new PlannedOrders();
+            DateFormat periodFormat = new SimpleDateFormat("hh:mm:ss");
 
             if (hasPermission) {
-                Set<CyclicOrder> cycledOrders = new HashSet<CyclicOrder>();
                 List<DBItemDailyPlanWithHistory> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanWithHistoryList(filter, 0);
+                Map<CycleOrderKey, List<PlannedOrderItem>> mapOfCycledOrders = new TreeMap<CycleOrderKey, List<PlannedOrderItem>>();
 
                 for (DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory : listOfPlannedOrders) {
 
@@ -219,22 +228,48 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
                         add = false;
                     }
 
-                    add = (p.getStartMode() == 0 || dailyPlanOrderFilter.getExpandCycleOrders() || !cycledOrders.contains(cyclicOrder));
-
                     if (add) {
-                        if (p.getStartMode() == 1 && !cycledOrders.contains(cyclicOrder)) {
-                            cycledOrders.add(cyclicOrder);
+
+                        if ((p.getStartMode() == 1 && !dailyPlanOrderFilter.getExpandCycleOrders())) {
+                            CycleOrderKey cycleOrderKey = new CycleOrderKey();
+                            cycleOrderKey.setPeriodBegin(periodFormat.format(p.getPeriod().getBegin()));
+                            cycleOrderKey.setPeriodEnd(periodFormat.format(p.getPeriod().getEnd()));
+                            cycleOrderKey.setRepeat(String.valueOf(p.getPeriod().getRepeat()));
+                            cycleOrderKey.setSchedulePath(p.getSchedulePath());
+                            cycleOrderKey.setWorkflowPath(p.getWorkflowPath());
+                            if (mapOfCycledOrders.get(cycleOrderKey) == null) {
+                                mapOfCycledOrders.put(cycleOrderKey, new ArrayList<PlannedOrderItem>());
+                            }
+
+                            mapOfCycledOrders.get(cycleOrderKey).add(p);
+
+                        } else {
+                            listOfPlannedOrderItems.add(p);
                         }
-                        result.add(p);
                     }
                 }
+
+                for (Entry<CycleOrderKey, List<PlannedOrderItem>> entry : mapOfCycledOrders.entrySet()) {
+                    if (entry.getValue().size() > 0) {
+                        PlannedOrderItem firstP = entry.getValue().get(0);
+                        PlannedOrderItem lastP = entry.getValue().get(entry.getValue().size() - 1);
+                        firstP.setCyclicOrder(new CyclicOrderInfos());
+                        firstP.getCyclicOrder().setCount(entry.getValue().size());
+                        firstP.getCyclicOrder().setFirstOrderId(firstP.getOrderId());
+                        firstP.getCyclicOrder().setFirstStart(firstP.getPlannedStartTime());
+                        firstP.getCyclicOrder().setLastOrderId(lastP.getOrderId());
+                        firstP.getCyclicOrder().setLastStart(lastP.getPlannedStartTime());
+                        listOfPlannedOrderItems.add(firstP);
+                    }
+                }
+
                 Globals.commit(sosHibernateSession);
             }
 
-            entity.setPlannedOrderItems(result);
-            entity.setDeliveryDate(Date.from(Instant.now()));
+            plannedOrders.setPlannedOrderItems(listOfPlannedOrderItems);
+            plannedOrders.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(entity);
+            return JOCDefaultResponse.responseStatus200(plannedOrders);
 
         } catch (JocException e) {
             LOGGER.error(getJocError().getMessage(), e);

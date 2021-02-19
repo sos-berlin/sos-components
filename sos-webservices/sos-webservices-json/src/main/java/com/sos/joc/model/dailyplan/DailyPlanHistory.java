@@ -40,7 +40,7 @@ public class DailyPlanHistory {
      * 
      */
     @JsonProperty("dailyPlans")
-    private List<DailyPlanHistoryItem> dailyPlans = null;
+    private List<DailyPlanHistoryDateItem> dailyPlans = null;
 
     /**
      * timestamp
@@ -70,7 +70,7 @@ public class DailyPlanHistory {
      * 
      */
     @JsonProperty("dailyPlans")
-    public List<DailyPlanHistoryItem> getDailyPlans() {
+    public List<DailyPlanHistoryDateItem> getDailyPlans() {
         return dailyPlans;
     }
 
@@ -80,7 +80,7 @@ public class DailyPlanHistory {
      * 
      */
     @JsonProperty("dailyPlans")
-    public void setDailyPlans(List<DailyPlanHistoryItem> dailyPlans) {
+    public void setDailyPlans(List<DailyPlanHistoryDateItem> dailyPlans) {
         this.dailyPlans = dailyPlans;
     }
 
