@@ -1,12 +1,15 @@
 package com.sos.joc.workflow.impl;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
+import com.sos.inventory.model.instruction.Instruction;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -64,6 +67,13 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                 com.sos.controller.model.workflow.Workflow workflow = Globals.objectMapper.readValue(content.getContent(),
                         com.sos.controller.model.workflow.Workflow.class);
                 workflow.setPath(content.getPath());
+                List<Instruction> instructions = workflow.getInstructions();
+                if (instructions != null) {
+                    instructions.add(WorkflowsHelper.createImplicitEndInstruction());
+                } else {
+                    instructions = Arrays.asList(WorkflowsHelper.createImplicitEndInstruction());
+                    workflow.setInstructions(instructions);
+                }
                 if (!workflowPath.contains("/")) {
                     checkFolderPermissions(content.getPath(), folderPermissions.getListOfFolders());
                 }

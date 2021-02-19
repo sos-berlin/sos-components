@@ -20,14 +20,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.workflow.Workflow;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.deploy.DeployType;
-import com.sos.inventory.model.instruction.ForkJoin;
-import com.sos.inventory.model.instruction.IfElse;
-import com.sos.inventory.model.instruction.ImplicitEnd;
 import com.sos.inventory.model.instruction.Instruction;
-import com.sos.inventory.model.instruction.InstructionType;
-import com.sos.inventory.model.instruction.Lock;
-import com.sos.inventory.model.instruction.TryCatch;
-import com.sos.inventory.model.workflow.Branch;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -83,12 +76,12 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                         workflow.setPath(w.getPath());
                         List<Instruction> instructions = workflow.getInstructions();
                         if (instructions != null) {
-                            instructions.add(createImplicitEndInstruction());
+                            instructions.add(WorkflowsHelper.createImplicitEndInstruction());
                         } else {
-                            instructions = Arrays.asList(createImplicitEndInstruction());
+                            instructions = Arrays.asList(WorkflowsHelper.createImplicitEndInstruction());
                             workflow.setInstructions(instructions);
                         }
-                        return addWorkflowPositions(workflow);
+                        return WorkflowsHelper.addWorkflowPositions(workflow);
                     } catch (Exception e) {
                         // TODO
                         return null;
@@ -149,12 +142,6 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
-    }
-
-    private static ImplicitEnd createImplicitEndInstruction() {
-        ImplicitEnd i = new ImplicitEnd();
-        i.setTYPE(InstructionType.IMPLICIT_END);
-        return i;
     }
 
     private List<DeployedContent> getPermanentDeployedContent(WorkflowsFilter workflowsFilter) {
@@ -325,59 +312,6 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             }).filter(Objects::nonNull);
         }
         return Stream.empty();
-    }
-
-    private Workflow addWorkflowPositions(Workflow w) {
-        if (w == null) {
-            return null;
-        }
-        Object[] o = {};
-        setWorkflowPositions(o, w.getInstructions());
-        return w;
-    }
-
-    private void setWorkflowPositions(Object[] parentPosition, List<Instruction> insts) {
-        if (insts != null) {
-            for (int i = 0; i < insts.size(); i++) {
-                Object[] pos = extendArray(parentPosition, i);
-                Instruction inst = insts.get(i);
-                inst.setPosition(Arrays.asList(pos));
-                switch (inst.getTYPE()) {
-                case FORK:
-                    ForkJoin f = inst.cast();
-                    for (Branch b : f.getBranches()) {
-                        setWorkflowPositions(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions());
-                    }
-                    break;
-                case IF:
-                    IfElse ie = inst.cast();
-                    setWorkflowPositions(extendArray(pos, "then"), ie.getThen().getInstructions());
-                    if (ie.getElse() != null) {
-                        setWorkflowPositions(extendArray(pos, "else"), ie.getElse().getInstructions());
-                    }
-                    break;
-                case TRY:
-                    TryCatch tc = inst.cast();
-                    setWorkflowPositions(extendArray(pos, "try+0"), tc.getTry().getInstructions());
-                    if (tc.getCatch() != null) {
-                        setWorkflowPositions(extendArray(pos, "catch+0"), tc.getCatch().getInstructions());
-                    }
-                    break;
-                case LOCK:
-                    Lock l = inst.cast();
-                    setWorkflowPositions(extendArray(pos, "lock"), l.getLockedWorkflow().getInstructions());
-                    break;
-                default:
-                    break;
-                }
-            }
-        }
-    }
-
-    private Object[] extendArray(Object[] position, Object extValue) {
-        Object[] pos = Arrays.copyOf(position, position.length + 1);
-        pos[position.length] = extValue;
-        return pos;
     }
 
 }

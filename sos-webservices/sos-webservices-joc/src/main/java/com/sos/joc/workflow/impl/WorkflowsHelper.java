@@ -8,7 +8,9 @@ import com.sos.controller.model.workflow.Workflow;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.IfElse;
+import com.sos.inventory.model.instruction.ImplicitEnd;
 import com.sos.inventory.model.instruction.Instruction;
+import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.workflow.Branch;
@@ -59,6 +61,12 @@ public class WorkflowsHelper {
 
     public static Stream<JWorkflowId> oldJWorkflowIds(JControllerState currentState) {
         return currentState.ordersBy(JOrderPredicates.not(currentState.orderIsInCurrentVersionWorkflow())).map(JOrder::workflowId);
+    }
+    
+    public static ImplicitEnd createImplicitEndInstruction() {
+        ImplicitEnd i = new ImplicitEnd();
+        i.setTYPE(InstructionType.IMPLICIT_END);
+        return i;
     }
     
     public static Workflow addWorkflowPositions(Workflow w) {
