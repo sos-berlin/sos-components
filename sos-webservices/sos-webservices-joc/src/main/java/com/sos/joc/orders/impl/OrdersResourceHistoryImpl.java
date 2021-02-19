@@ -160,7 +160,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
             OrderHistory answer = new OrderHistory();
             answer.setDeliveryDate(new Date());
             answer.setHistory(history);
-            return JOCDefaultResponse.responseStatus200(answer);
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);

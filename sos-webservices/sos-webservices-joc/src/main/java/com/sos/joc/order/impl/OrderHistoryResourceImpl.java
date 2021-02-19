@@ -51,7 +51,7 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
             mapChildren(answer, dbLayer.getOrderSteps(in.getHistoryId()), dbLayer.getOrderForkChilds(in.getHistoryId()));
             answer.setDeliveryDate(new Date());
 
-            return JOCDefaultResponse.responseStatus200(answer);
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);

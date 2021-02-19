@@ -196,7 +196,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
             answer.setDeliveryDate(Date.from(Instant.now()));
             answer.setHistory(history);
 
-            return JOCDefaultResponse.responseStatus200(answer);
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);

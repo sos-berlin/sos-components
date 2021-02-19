@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.controller.model.common.Variables;
 import com.sos.joc.model.common.Err;
 import com.sos.joc.model.common.HistoryState;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -36,7 +37,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "taskId",
     "agentUrl",
     "exitCode",
-    "error"
+    "error",
+    "arguments"
 })
 public class TaskHistoryItem {
 
@@ -160,6 +162,15 @@ public class TaskHistoryItem {
      */
     @JsonProperty("error")
     private Err error;
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("arguments")
+    @JsonPropertyDescription("a map for arbitrary key-value pairs")
+    private Variables arguments;
 
     /**
      * timestamp
@@ -491,14 +502,36 @@ public class TaskHistoryItem {
         this.error = error;
     }
 
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("arguments")
+    public Variables getArguments() {
+        return arguments;
+    }
+
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("arguments")
+    public void setArguments(Variables arguments) {
+        this.arguments = arguments;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("controllerId", controllerId).append("job", job).append("workflow", workflow).append("orderId", orderId).append("startTime", startTime).append("endTime", endTime).append("position", position).append("sequence", sequence).append("retryCounter", retryCounter).append("state", state).append("criticality", criticality).append("taskId", taskId).append("agentUrl", agentUrl).append("exitCode", exitCode).append("error", error).toString();
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("controllerId", controllerId).append("job", job).append("workflow", workflow).append("orderId", orderId).append("startTime", startTime).append("endTime", endTime).append("position", position).append("sequence", sequence).append("retryCounter", retryCounter).append("state", state).append("criticality", criticality).append("taskId", taskId).append("agentUrl", agentUrl).append("exitCode", exitCode).append("error", error).append("arguments", arguments).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(retryCounter).append(surveyDate).append(controllerId).append(workflow).append(orderId).append(criticality).append(error).append(sequence).append(exitCode).append(startTime).append(endTime).append(position).append(state).append(agentUrl).append(job).append(taskId).toHashCode();
+        return new HashCodeBuilder().append(retryCounter).append(surveyDate).append(controllerId).append(workflow).append(orderId).append(criticality).append(error).append(sequence).append(exitCode).append(startTime).append(arguments).append(endTime).append(position).append(state).append(agentUrl).append(job).append(taskId).toHashCode();
     }
 
     @Override
@@ -510,7 +543,7 @@ public class TaskHistoryItem {
             return false;
         }
         TaskHistoryItem rhs = ((TaskHistoryItem) other);
-        return new EqualsBuilder().append(retryCounter, rhs.retryCounter).append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(criticality, rhs.criticality).append(error, rhs.error).append(sequence, rhs.sequence).append(exitCode, rhs.exitCode).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(position, rhs.position).append(state, rhs.state).append(agentUrl, rhs.agentUrl).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
+        return new EqualsBuilder().append(retryCounter, rhs.retryCounter).append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(criticality, rhs.criticality).append(error, rhs.error).append(sequence, rhs.sequence).append(exitCode, rhs.exitCode).append(startTime, rhs.startTime).append(arguments, rhs.arguments).append(endTime, rhs.endTime).append(position, rhs.position).append(state, rhs.state).append(agentUrl, rhs.agentUrl).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
     }
 
 }

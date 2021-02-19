@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.controller.model.common.Variables;
 import com.sos.joc.model.common.HistoryState;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -34,7 +35,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "state",
     "orderState",
     "historyId",
-    "children"
+    "children",
+    "arguments"
 })
 public class OrderHistoryItem {
 
@@ -141,6 +143,15 @@ public class OrderHistoryItem {
     private Long historyId;
     @JsonProperty("children")
     private List<OrderHistoryItem> children = new ArrayList<OrderHistoryItem>();
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("arguments")
+    @JsonPropertyDescription("a map for arbitrary key-value pairs")
+    private Variables arguments;
 
     /**
      * timestamp
@@ -416,14 +427,36 @@ public class OrderHistoryItem {
         this.children = children;
     }
 
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("arguments")
+    public Variables getArguments() {
+        return arguments;
+    }
+
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("arguments")
+    public void setArguments(Variables arguments) {
+        this.arguments = arguments;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("controllerId", controllerId).append("orderId", orderId).append("workflow", workflow).append("startTime", startTime).append("plannedTime", plannedTime).append("endTime", endTime).append("position", position).append("sequence", sequence).append("state", state).append("orderState", orderState).append("historyId", historyId).append("children", children).toString();
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("controllerId", controllerId).append("orderId", orderId).append("workflow", workflow).append("startTime", startTime).append("plannedTime", plannedTime).append("endTime", endTime).append("position", position).append("sequence", sequence).append("state", state).append("orderState", orderState).append("historyId", historyId).append("children", children).append("arguments", arguments).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(surveyDate).append(controllerId).append(workflow).append(orderId).append(orderState).append(sequence).append(children).append(historyId).append(plannedTime).append(startTime).append(endTime).append(position).append(state).toHashCode();
+        return new HashCodeBuilder().append(surveyDate).append(controllerId).append(workflow).append(orderId).append(orderState).append(sequence).append(children).append(historyId).append(plannedTime).append(startTime).append(arguments).append(endTime).append(position).append(state).toHashCode();
     }
 
     @Override
@@ -435,7 +468,7 @@ public class OrderHistoryItem {
             return false;
         }
         OrderHistoryItem rhs = ((OrderHistoryItem) other);
-        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(orderState, rhs.orderState).append(sequence, rhs.sequence).append(children, rhs.children).append(historyId, rhs.historyId).append(plannedTime, rhs.plannedTime).append(startTime, rhs.startTime).append(endTime, rhs.endTime).append(position, rhs.position).append(state, rhs.state).isEquals();
+        return new EqualsBuilder().append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(orderState, rhs.orderState).append(sequence, rhs.sequence).append(children, rhs.children).append(historyId, rhs.historyId).append(plannedTime, rhs.plannedTime).append(startTime, rhs.startTime).append(arguments, rhs.arguments).append(endTime, rhs.endTime).append(position, rhs.position).append(state, rhs.state).isEquals();
     }
 
 }

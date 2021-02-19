@@ -1,6 +1,10 @@
 package com.sos.joc.classes.history;
 
+import java.io.IOException;
+
 import com.sos.commons.util.SOSString;
+import com.sos.controller.model.common.Variables;
+import com.sos.joc.Globals;
 import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.DBItemHistoryOrderState;
@@ -31,6 +35,7 @@ public class HistoryMapper {
         history.setWorkflow(item.getWorkflowPath());
         history.setPosition(getWorkflowPosition(item));
         history.setSequence(getSequence(item));
+        history.setArguments(getVariables(item.getStartParameters()));
         return history;
     }
 
@@ -52,6 +57,7 @@ public class HistoryMapper {
         history.setPosition(item.getWorkflowPosition());
         history.setSequence(item.getPosition());
         history.setRetryCounter(item.getRetryCounter());
+        history.setArguments(getVariables(item.getStartParameters()));
         return history;
     }
 
@@ -87,6 +93,18 @@ public class HistoryMapper {
 
     private static Integer getSequence(DBItemHistoryOrder item) {
         return HistoryPosition.getLast(item.getStartWorkflowPosition());
+    }
+
+    private static Variables getVariables(String json) {
+        if (!SOSString.isEmpty(json)) {
+            try {
+                return Globals.objectMapper.readValue(json, Variables.class);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+        return null;
     }
 
     public static HistoryState getState(Integer historySeverity) {
