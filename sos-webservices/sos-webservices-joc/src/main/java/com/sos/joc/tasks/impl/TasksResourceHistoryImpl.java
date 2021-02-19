@@ -24,7 +24,6 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.history.HistoryMapper;
-import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
@@ -92,8 +91,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                     if (in.getJobs() != null && !in.getJobs().isEmpty()) {
                         final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                         dbFilter.setJobs(in.getJobs().stream().filter(job -> job != null && canAdd(job.getWorkflowPath(), permittedFolders)).collect(
-                                Collectors.groupingBy(job -> JocInventory.pathToName(job.getWorkflowPath()), Collectors.mapping(JobPath::getJob, Collectors
-                                        .toSet()))));
+                                Collectors.groupingBy(job -> job.getWorkflowPath(), Collectors.mapping(JobPath::getJob, Collectors.toSet()))));
                         in.setRegex("");
 
                     } else {
@@ -104,8 +102,8 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                         }
 
                         if (!in.getExcludeJobs().isEmpty()) {
-                            dbFilter.setExcludedJobs(in.getExcludeJobs().stream().collect(Collectors.groupingBy(job -> JocInventory.pathToName(job
-                                    .getWorkflowPath()), Collectors.mapping(JobPath::getJob, Collectors.toSet()))));
+                            dbFilter.setExcludedJobs(in.getExcludeJobs().stream().collect(Collectors.groupingBy(job -> job.getWorkflowPath(),
+                                    Collectors.mapping(JobPath::getJob, Collectors.toSet()))));
                         }
 
                         if (withFolderFilter && (folders == null || folders.isEmpty())) {

@@ -22,7 +22,6 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.history.HistoryMapper;
-import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
@@ -76,8 +75,8 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                     final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                     // TODO consider workflowId in groupingby???
                     dbFilter.setOrders(in.getOrders().stream().filter(order -> order != null && canAdd(order.getWorkflowPath(), permittedFolders))
-                            .collect(Collectors.groupingBy(order -> JocInventory.pathToName(order.getWorkflowPath()), Collectors.mapping(OrderPath::getOrderId,
-                                    Collectors.toSet()))));
+                            .collect(Collectors.groupingBy(order -> order.getWorkflowPath(), Collectors.mapping(OrderPath::getOrderId, Collectors
+                                    .toSet()))));
                     in.setRegex("");
                 } else {
 
@@ -87,8 +86,8 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                     }
 
                     if (in.getExcludeOrders() != null && !in.getExcludeOrders().isEmpty()) {
-                        dbFilter.setExcludedOrders(in.getExcludeOrders().stream().collect(Collectors.groupingBy(order -> JocInventory.pathToName(order
-                                .getWorkflowPath()), Collectors.mapping(OrderPath::getOrderId, Collectors.toSet()))));
+                        dbFilter.setExcludedOrders(in.getExcludeOrders().stream().collect(Collectors.groupingBy(order -> order.getWorkflowPath(),
+                                Collectors.mapping(OrderPath::getOrderId, Collectors.toSet()))));
                     }
 
                     if (withFolderFilter && (folders == null || folders.isEmpty())) {
