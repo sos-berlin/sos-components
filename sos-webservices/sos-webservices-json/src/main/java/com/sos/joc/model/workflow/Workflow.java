@@ -46,12 +46,11 @@ public class Workflow {
     /**
      * workflow
      * <p>
-     * deploy object with fixed property 'TYPE':'Workflow'
+     * 
      * 
      */
     @JsonProperty("workflow")
-    @JsonPropertyDescription("deploy object with fixed property 'TYPE':'Workflow'")
-    private com.sos.inventory.model.workflow.Workflow workflow;
+    private com.sos.controller.model.workflow.Workflow workflow;
 
     /**
      * timestamp
@@ -100,22 +99,22 @@ public class Workflow {
     /**
      * workflow
      * <p>
-     * deploy object with fixed property 'TYPE':'Workflow'
+     * 
      * 
      */
     @JsonProperty("workflow")
-    public com.sos.inventory.model.workflow.Workflow getWorkflow() {
+    public com.sos.controller.model.workflow.Workflow getWorkflow() {
         return workflow;
     }
 
     /**
      * workflow
      * <p>
-     * deploy object with fixed property 'TYPE':'Workflow'
+     * 
      * 
      */
     @JsonProperty("workflow")
-    public void setWorkflow(com.sos.inventory.model.workflow.Workflow workflow) {
+    public void setWorkflow(com.sos.controller.model.workflow.Workflow workflow) {
         this.workflow = workflow;
     }
 

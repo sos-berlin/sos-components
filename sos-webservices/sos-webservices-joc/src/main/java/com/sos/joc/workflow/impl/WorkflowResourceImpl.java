@@ -53,9 +53,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
             }
 
             String workflowPath = workflowFilter.getWorkflowId().getPath();
-            if (workflowPath.contains("/")) {
-                checkFolderPermissions(workflowPath, folderPermissions.getListOfFolders());
-            }
+            checkFolderPermissions(workflowPath, folderPermissions.getListOfFolders());
             String versionId = workflowFilter.getWorkflowId().getVersionId();
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);

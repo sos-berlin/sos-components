@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import com.sos.controller.model.workflow.Workflow;
-import com.sos.controller.model.workflow.WorkflowId;
+import com.sos.joc.model.workflow.WorkflowId;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.ImplicitEnd;
