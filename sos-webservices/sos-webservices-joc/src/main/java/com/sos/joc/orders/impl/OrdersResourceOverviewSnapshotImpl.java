@@ -37,11 +37,13 @@ import com.sos.joc.model.workflow.WorkflowsFilter;
 import com.sos.joc.orders.resource.IOrdersResourceOverviewSnapshot;
 import com.sos.schema.JsonValidator;
 
+import js7.base.time.Timestamp;
 import js7.data.item.VersionedItemId;
 import js7.data.order.Order;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
+import js7.data_for_java.order.JOrder.State;
 import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.workflow.JWorkflowId;
 
@@ -104,14 +106,14 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             final Instant now = Instant.ofEpochMilli(nowMillis);
             Map<Class<? extends Order.State>, Integer> orderStates = null;
             int suspendedOrders = 0;
-            Stream<JOrder> blockedOrders = null;
+            Stream<JOrder> freshOrders = null;
 
             if (withWorkFlowFilter) {
                 if (!workflowIds.isEmpty()) {
 
                     orderStates = controllerState.orderStateToCount(o -> !o.isSuspended() && workflowIds.contains(o.workflowId()));
                     if (orderStates.getOrDefault(Order.Fresh.class, 0) > 0) {
-                        blockedOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh.class)).filter(o -> !o.asScala().isSuspended()
+                        freshOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh.class)).filter(o -> !o.asScala().isSuspended()
                                 && workflowIds.contains(o.workflowId()));
                     }
                     suspendedOrders = controllerState.ordersBy(o -> o.isSuspended() && workflowIds.contains(o.workflowId())).mapToInt(e -> 1).sum();
@@ -123,7 +125,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                 orderStates = controllerState.orderStateToCount(o -> !o.isSuspended() && orderIsPermitted(o.workflowId().path().string(),
                         permittedFolders));
                 if (orderStates.getOrDefault(Order.Fresh.class, 0) > 0) {
-                    blockedOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh.class)).filter(o -> !o.asScala().isSuspended()
+                    freshOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh.class)).filter(o -> !o.asScala().isSuspended()
                             && orderIsPermitted(o.workflowId().path().string(), permittedFolders));
                 }
                 suspendedOrders = controllerState.ordersBy(o -> o.isSuspended() && orderIsPermitted(o.workflowId().path().string(), permittedFolders))
@@ -131,24 +133,30 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             } else {
                 orderStates = controllerState.orderStateToCount(o -> !o.isSuspended());
                 if (orderStates.getOrDefault(Order.Fresh.class, 0) > 0) {
-                    blockedOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh.class)).filter(o -> !o.asScala().isSuspended());
+                    freshOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh.class)).filter(o -> !o.asScala().isSuspended());
                 }
                 suspendedOrders = controllerState.ordersBy(o -> o.isSuspended()).mapToInt(e -> 1).sum();
             }
             
             int numOfBlockedOrders = 0;
-            if (blockedOrders != null) {
-                numOfBlockedOrders = blockedOrders.map(order -> order.asScala().state().maybeDelayedUntil()).filter(tstamp -> !tstamp.isEmpty() && tstamp
-                        .get().toInstant().isBefore(now)).mapToInt(item -> 1).sum();
+            int numOfFreshOrders = 0;
+            if (freshOrders != null) {
+                Set<JOrder> freshOrderSet = freshOrders.collect(Collectors.toSet());
+                numOfFreshOrders = freshOrderSet.stream().map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(e -> 1).sum();
+                numOfBlockedOrders = freshOrderSet.stream().filter(o -> {
+                    scala.Option<Timestamp> scheduledFor = o.asScala().state().maybeDelayedUntil();
+                    return !scheduledFor.isEmpty()  && scheduledFor.get().toInstant().isBefore(now);
+                }).map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(item -> 1).sum();
             }
             
             final Map<OrderStateText, Integer> map = orderStates.entrySet().stream().collect(Collectors.groupingBy(
                     entry -> OrdersHelper.groupByStateClasses.get(entry.getKey()), Collectors.summingInt(entry -> entry.getValue())));
             map.put(OrderStateText.BLOCKED, numOfBlockedOrders);
+            map.put(OrderStateText.PENDING, numOfFreshOrders - numOfBlockedOrders);
             OrdersHelper.groupByStateClasses.values().stream().distinct().forEach(state -> map.putIfAbsent(state, 0));
             
             summary.setBlocked(map.getOrDefault(OrderStateText.BLOCKED, 0));
-            summary.setPending(map.getOrDefault(OrderStateText.PENDING, 0) - map.getOrDefault(OrderStateText.BLOCKED, 0));
+            summary.setPending(map.getOrDefault(OrderStateText.PENDING, 0));
             summary.setInProgress(map.getOrDefault(OrderStateText.INPROGRESS, 0));
             summary.setRunning(map.getOrDefault(OrderStateText.RUNNING, 0));
             summary.setFailed(map.getOrDefault(OrderStateText.FAILED, 0));

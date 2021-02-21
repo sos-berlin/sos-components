@@ -1,5 +1,6 @@
 package com.sos.webservices.order.impl;
 
+import java.util.Collection;
 import java.util.List;
 
 import javax.ws.rs.Path;
@@ -65,7 +66,7 @@ public class CyclicOrdersImpl extends JOCResourceImpl implements ICyclicOrdersRe
 
     }
 
-    private void addCyclicOrderIds(List<String> orderIds, String orderId, OrdersFilterV ordersFilterV) throws SOSHibernateException {
+    private void addCyclicOrderIds(Collection<String> orderIds, String orderId, OrdersFilterV ordersFilterV) throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);

@@ -8,8 +8,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
@@ -26,6 +28,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.OrderHelper;
+import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.db.orders.DBItemDailyPlanVariables;
 import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
@@ -40,6 +43,7 @@ import com.sos.joc.exceptions.JobSchedulerObjectNotExistException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
+import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.VariableType;
 import com.sos.joc.model.dailyplan.DailyPlanModifyOrder;
 import com.sos.joc.model.order.OrderStateText;
@@ -76,24 +80,36 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
                 return jocDefaultResponse;
             }
 
+            //TODO this check is not necessary if schema specifies orderIds as required and with minItems:1
+            // uniqueItems should also better 
             this.checkRequiredParameter("orderIds", dailyplanModifyOrder.getOrderIds());
             if (dailyplanModifyOrder.getStartTime() == null && dailyplanModifyOrder.getRemoveVariables() == null && dailyplanModifyOrder
                     .getVariables() == null) {
                 throw new JocMissingRequiredParameterException("variables, removeVariables or startTime missing");
             }
+            checkRequiredComment(dailyplanModifyOrder.getAuditLog());
 
+            List<String> orderIds = dailyplanModifyOrder.getOrderIds();
+            Set<String> temporaryOrderIds = orderIds.stream().filter(id -> id.matches(".*#T[0-9]+-.*")).collect(Collectors.toSet());
+            List<Err419> errors = OrdersHelper.cancelAndAddFreshOrder(temporaryOrderIds, dailyplanModifyOrder, accessToken, getJocError(),
+                    getJocAuditLog());
+            orderIds.removeAll(temporaryOrderIds);
+            
             List<String> listOfOrderIds = new ArrayList<String>();
-
-            for (String orderId : dailyplanModifyOrder.getOrderIds()) {
+            for (String orderId : orderIds) {
                 listOfOrderIds.add(orderId);
             }
 
-            for (String orderId : dailyplanModifyOrder.getOrderIds()) {
+            for (String orderId : orderIds) {
                 addCyclicOrderIds(listOfOrderIds, orderId, dailyplanModifyOrder);
             }
 
             for (String orderId : listOfOrderIds) {
                 modifyOrder(orderId, dailyplanModifyOrder);
+            }
+            
+            if (!errors.isEmpty()) {
+                return JOCDefaultResponse.responseStatus419(errors);
             }
 
             return JOCDefaultResponse.responseStatusJSOk(new Date());

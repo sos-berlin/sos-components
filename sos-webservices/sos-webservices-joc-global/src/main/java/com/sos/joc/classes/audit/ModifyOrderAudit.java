@@ -2,17 +2,20 @@ package com.sos.joc.classes.audit;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.order.AddOrder;
-import com.sos.joc.model.order.AddOrders;
 
-public class AddOrderAudit extends AddOrder implements IAuditLog {
+import js7.data_for_java.order.JFreshOrder;
+import js7.data_for_java.order.JOrder;
+
+public class ModifyOrderAudit implements IAuditLog {
 
     @JsonIgnore
     private String folder;
 
+    @JsonIgnore
     private String workflow;
     
     @JsonIgnore
@@ -30,40 +33,24 @@ public class AddOrderAudit extends AddOrder implements IAuditLog {
     // @JsonIgnore
     private String controllerId;
 
-    public AddOrderAudit(AddOrder addOrder, AddOrders addOrders, String orderId) {
-        if (addOrder != null) {
-            setScheduledFor(addOrder.getScheduledFor());
-            this.workflow = addOrder.getWorkflowPath();
-            this.orderId = orderId;
-            setOrderName(addOrder.getOrderName());
-            setArguments(addOrder.getArguments());
-            setTimeZone(addOrder.getTimeZone());
-            if (addOrder.getWorkflowPath() != null) {
-                Path p = Paths.get(addOrder.getWorkflowPath());
-                this.folder = p.getParent().toString().replace('\\', '/');
-            }
-        }
-        if (addOrders != null) {
-            setAuditParams(addOrders.getAuditLog());
-            this.controllerId = addOrders.getControllerId();
-        }
-    }
-
-    public AddOrderAudit(AddOrder addOrder, String controllerId, AuditParams auditParams) {
-        if (addOrder != null) {
-            setScheduledFor(addOrder.getScheduledFor());
-            this.workflow = addOrder.getWorkflowPath();
-            this.orderId = addOrder.getOrderName();
-            setOrderName(addOrder.getOrderName().replaceFirst(".*#T[0-9]+-", ""));
-            setArguments(addOrder.getArguments());
-            setTimeZone(addOrder.getTimeZone());
-            if (addOrder.getWorkflowPath() != null) {
-                Path p = Paths.get(addOrder.getWorkflowPath());
-                this.folder = p.getParent().toString().replace('\\', '/');
-            }
-        }
-        setAuditParams(auditParams);
+    public ModifyOrderAudit(JOrder jOrders, String controllerId, AuditParams auditParams, Map<String, String> nameToPath) {
         this.controllerId = controllerId;
+        this.orderId = jOrders.id().string();
+        this.workflow = jOrders.workflowId().path().string();
+        this.workflow = nameToPath.getOrDefault(this.workflow, this.workflow);
+        Path f = Paths.get(this.workflow).getParent();
+        this.folder = f == null ? "/" : f.toString().replace('\\', '/');
+        setAuditParams(auditParams);
+    }
+    
+    public ModifyOrderAudit(JFreshOrder jOrders, String controllerId, AuditParams auditParams, Map<String, String> nameToPath) {
+        this.controllerId = controllerId;
+        this.orderId = jOrders.id().string();
+        this.workflow = jOrders.asScala().workflowPath().string();
+        this.workflow = nameToPath.getOrDefault(this.workflow, this.workflow);
+        Path f = Paths.get(this.workflow).getParent();
+        this.folder = f == null ? "/" : f.toString().replace('\\', '/');
+        setAuditParams(auditParams);
     }
 
     private void setAuditParams(AuditParams auditParams) {

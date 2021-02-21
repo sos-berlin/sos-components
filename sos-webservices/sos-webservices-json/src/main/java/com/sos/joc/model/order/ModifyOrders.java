@@ -2,11 +2,14 @@
 package com.sos.joc.model.order;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.controller.model.common.Variables;
 import com.sos.controller.model.order.OrderModeType;
 import com.sos.controller.model.workflow.WorkflowId;
@@ -50,7 +53,8 @@ public class ModifyOrders {
      * 
      */
     @JsonProperty("orderIds")
-    private List<String> orderIds = new ArrayList<String>();
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> orderIds = new LinkedHashSet<String>();
     @JsonProperty("workflowIds")
     private List<WorkflowId> workflowIds = new ArrayList<WorkflowId>();
     /**
@@ -121,7 +125,7 @@ public class ModifyOrders {
      * 
      */
     @JsonProperty("orderIds")
-    public List<String> getOrderIds() {
+    public Set<String> getOrderIds() {
         return orderIds;
     }
 
@@ -131,7 +135,7 @@ public class ModifyOrders {
      * 
      */
     @JsonProperty("orderIds")
-    public void setOrderIds(List<String> orderIds) {
+    public void setOrderIds(Set<String> orderIds) {
         this.orderIds = orderIds;
     }
 

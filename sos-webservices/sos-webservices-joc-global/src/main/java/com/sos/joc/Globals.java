@@ -41,7 +41,6 @@ public class Globals {
 
     public static final String DEFAULT_TIMEZONE_DAILY_PLAN = "UTC";
     public static final String DEFAULT_PERIOD_DAILY_PLAN = "00:00";
-    public static final String SESSION_KEY_FOR_SEND_EVENTS_IMMEDIATLY = "send_events_immediatly";
     public static final String DEFAULT_SHIRO_INI_PATH = "classpath:shiro.ini";
     public static final String DEFAULT_SHIRO_INI_FILENAME = "shiro.ini";
 

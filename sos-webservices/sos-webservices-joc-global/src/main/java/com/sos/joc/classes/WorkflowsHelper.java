@@ -1,4 +1,4 @@
-package com.sos.joc.workflow.impl;
+package com.sos.joc.classes;
 
 import java.util.Arrays;
 import java.util.List;

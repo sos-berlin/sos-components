@@ -2,11 +2,14 @@
 package com.sos.joc.model.order;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.HistoryStateText;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -48,9 +51,11 @@ public class OrdersFilter {
     @JsonProperty("controllerId")
     private String controllerId;
     @JsonProperty("orders")
-    private List<OrderPath> orders = new ArrayList<OrderPath>();
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<OrderPath> orders = new LinkedHashSet<OrderPath>();
     @JsonProperty("excludeOrders")
-    private List<OrderPath> excludeOrders = new ArrayList<OrderPath>();
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<OrderPath> excludeOrders = new LinkedHashSet<OrderPath>();
     /**
      * compact parameter
      * <p>
@@ -71,9 +76,23 @@ public class OrdersFilter {
     private String regex;
     @JsonProperty("states")
     private List<OrderStateText> states = new ArrayList<OrderStateText>();
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
     @JsonProperty("dateFrom")
+    @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
     private String dateFrom;
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
     @JsonProperty("dateTo")
+    @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
     private String dateTo;
     /**
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
@@ -127,22 +146,22 @@ public class OrdersFilter {
     }
 
     @JsonProperty("orders")
-    public List<OrderPath> getOrders() {
+    public Set<OrderPath> getOrders() {
         return orders;
     }
 
     @JsonProperty("orders")
-    public void setOrders(List<OrderPath> orders) {
+    public void setOrders(Set<OrderPath> orders) {
         this.orders = orders;
     }
 
     @JsonProperty("excludeOrders")
-    public List<OrderPath> getExcludeOrders() {
+    public Set<OrderPath> getExcludeOrders() {
         return excludeOrders;
     }
 
     @JsonProperty("excludeOrders")
-    public void setExcludeOrders(List<OrderPath> excludeOrders) {
+    public void setExcludeOrders(Set<OrderPath> excludeOrders) {
         this.excludeOrders = excludeOrders;
     }
 
@@ -200,21 +219,45 @@ public class OrdersFilter {
         this.states = states;
     }
 
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
     @JsonProperty("dateFrom")
     public String getDateFrom() {
         return dateFrom;
     }
 
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
     @JsonProperty("dateFrom")
     public void setDateFrom(String dateFrom) {
         this.dateFrom = dateFrom;
     }
 
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
     @JsonProperty("dateTo")
     public String getDateTo() {
         return dateTo;
     }
 
+    /**
+     * string for dateFrom and dateTo as search filter
+     * <p>
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * 
+     */
     @JsonProperty("dateTo")
     public void setDateTo(String dateTo) {
         this.dateTo = dateTo;

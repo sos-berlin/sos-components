@@ -27,7 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "hasOrders",
     "children"
 })
-public class OrderHistoryItemChilds {
+public class OrderHistoryItemChildren {
 
     /**
      * timestamp
@@ -127,10 +127,10 @@ public class OrderHistoryItemChilds {
         if (other == this) {
             return true;
         }
-        if ((other instanceof OrderHistoryItemChilds) == false) {
+        if ((other instanceof OrderHistoryItemChildren) == false) {
             return false;
         }
-        OrderHistoryItemChilds rhs = ((OrderHistoryItemChilds) other);
+        OrderHistoryItemChildren rhs = ((OrderHistoryItemChildren) other);
         return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(hasTasks, rhs.hasTasks).append(children, rhs.children).append(states, rhs.states).append(hasOrders, rhs.hasOrders).isEquals();
     }
 

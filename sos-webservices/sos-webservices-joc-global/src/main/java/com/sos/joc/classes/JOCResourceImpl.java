@@ -218,17 +218,16 @@ public class JOCResourceImpl {
             return true;
         }
     }
+    
+    public JocAuditLog getJocAuditLog() {
+        return jocAuditLog;
+    }
 
     public void logAuditMessage(IAuditLog body) {
         jocAuditLog.logAuditMessage(body);
     }
 
     public DBItemJocAuditLog storeAuditLogEntry(IAuditLog body) {
-        try {
-            jobschedulerUser.getSosShiroCurrentUser().getCurrentSubject().getSession().setAttribute(Globals.SESSION_KEY_FOR_SEND_EVENTS_IMMEDIATLY,
-                    true);
-        } catch (Exception e) {
-        }
         return jocAuditLog.storeAuditLogEntry(body);
     }
 

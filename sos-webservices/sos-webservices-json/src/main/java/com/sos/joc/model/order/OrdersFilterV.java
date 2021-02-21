@@ -2,11 +2,14 @@
 package com.sos.joc.model.order;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.model.common.Folder;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -44,9 +47,11 @@ public class OrdersFilterV {
     @JsonProperty("controllerId")
     private String controllerId;
     @JsonProperty("orderIds")
-    private List<String> orderIds = new ArrayList<String>();
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> orderIds = new LinkedHashSet<String>();
     @JsonProperty("workflowIds")
-    private List<WorkflowId> workflowIds = new ArrayList<WorkflowId>();
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<WorkflowId> workflowIds = new LinkedHashSet<WorkflowId>();
     /**
      * compact parameter
      * <p>
@@ -117,22 +122,22 @@ public class OrdersFilterV {
     }
 
     @JsonProperty("orderIds")
-    public List<String> getOrderIds() {
+    public Set<String> getOrderIds() {
         return orderIds;
     }
 
     @JsonProperty("orderIds")
-    public void setOrderIds(List<String> orderIds) {
+    public void setOrderIds(Set<String> orderIds) {
         this.orderIds = orderIds;
     }
 
     @JsonProperty("workflowIds")
-    public List<WorkflowId> getWorkflowIds() {
+    public Set<WorkflowId> getWorkflowIds() {
         return workflowIds;
     }
 
     @JsonProperty("workflowIds")
-    public void setWorkflowIds(List<WorkflowId> workflowIds) {
+    public void setWorkflowIds(Set<WorkflowId> workflowIds) {
         this.workflowIds = workflowIds;
     }
 

@@ -65,17 +65,23 @@ public class ProblemHelper {
     }
 
     public static void throwProblemIfExist(Either<Problem, ?> either) throws JocException {
-        if (either.isLeft()) {
+        if (either == null) {
+            throw new JobSchedulerBadRequestException("Unknown problem");
+        } else if (either.isLeft()) {
             throw getExceptionOfProblem(either.getLeft());
         }
     }
     
     public static void postProblemEventIfExist(Either<Problem, ?> either, String accessToken, JocError err, String controller) throws JocException {
-        if (either != null && either.isLeft()) {
+        if (either == null || either.isLeft()) {
             if (err != null && !err.printMetaInfo().isEmpty()) {
                 LOGGER.info(err.printMetaInfo());
             }
-            EventBus.getInstance().post(getEventOfProblem(either.getLeft(), accessToken, controller));
+            if (either == null) {
+                EventBus.getInstance().post(new ProblemEvent(accessToken, controller, "BadRequestError: Unknown problem"));
+            } else {
+                EventBus.getInstance().post(getEventOfProblem(either.getLeft(), accessToken, controller));
+            }
         }
     }
 }

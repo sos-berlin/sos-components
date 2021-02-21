@@ -1,13 +1,10 @@
 package com.sos.joc.orders.impl;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -19,10 +16,8 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.ProblemHelper;
-import com.sos.joc.classes.audit.AddOrderAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.exceptions.BulkError;
@@ -40,15 +35,11 @@ import com.sos.sign.model.workflow.Workflow;
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.order.OrderId;
-import js7.data.value.BooleanValue;
-import js7.data.value.NumberValue;
-import js7.data.value.StringValue;
-import js7.data.value.Value;
 import js7.data.workflow.WorkflowPath;
-import js7.proxy.javaapi.JControllerProxy;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JFreshOrder;
 import js7.data_for_java.workflow.JWorkflow;
+import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 
 @Path("orders")
@@ -91,20 +82,19 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     ProblemHelper.throwProblemIfExist(e);
                     Workflow workflow = Globals.objectMapper.readValue(e.get().toJson(), Workflow.class);
                     order.setArguments(OrdersHelper.checkArguments(order.getArguments(), workflow.getOrderRequirements()));
-                    JFreshOrder o = mapToFreshOrder(order, yyyymmdd);
-                    AddOrderAudit orderAudit = new AddOrderAudit(order, addOrders, o.id().string());
-                    logAuditMessage(orderAudit);
+                    JFreshOrder o = OrdersHelper.mapToFreshOrder(order, yyyymmdd);
+                    order.setOrderName(o.id().string()); // this setting for later auditLog
                     either = Either.right(o);
-                    storeAuditLogEntry(orderAudit);
                 } catch (Exception ex) {
                     either = Either.left(new BulkError().get(ex, getJocError(), order));
                 }
                 return either;
             };
+            
 
             Map<Boolean, Set<Either<Err419, JFreshOrder>>> result = addOrders.getOrders().stream().filter(permissions).map(mapper).collect(
                     Collectors.groupingBy(Either::isRight, Collectors.toSet()));
-
+            
             OrderIds entity = new OrderIds();
             if (result.containsKey(true) && !result.get(true).isEmpty()) {
                 final Map<OrderId, JFreshOrder> freshOrders = result.get(true).stream().map(Either::get).collect(Collectors.toMap(JFreshOrder::id,
@@ -113,18 +103,15 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     if (either.isRight()) {
                         proxy.api().removeOrdersWhenTerminated(freshOrders.keySet()).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e,
                                 accessToken, getJocError(), addOrders.getControllerId()));
+                        OrdersHelper.createAuditLogFromJFreshOrders(getJocAuditLog(), addOrders);
                     } else {
                         ProblemHelper.postProblemEventIfExist(either, accessToken, getJocError(), addOrders.getControllerId());
                     }
                 });
 
-                entity.setOrderIds(freshOrders.keySet().stream().map(o -> o.string()).collect(Collectors.toList()));
+                entity.setOrderIds(freshOrders.keySet().stream().map(o -> o.string()).collect(Collectors.toSet()));
             }
             entity.setDeliveryDate(Date.from(Instant.now()));
-            
-//            if (result.containsKey(true) && !result.get(true).isEmpty()) {
-//                OrderApi.addOrders(addOrders, this.getAccount());
-//            }
             
             if (result.containsKey(false) && !result.get(false).isEmpty()) {
                 return JOCDefaultResponse.responseStatus419(result.get(false).stream().map(Either::getLeft).collect(Collectors.toList()));
@@ -136,34 +123,6 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
-    }
-    
-    private static JFreshOrder mapToFreshOrder(AddOrder order, String yyyymmdd) {
-        //TODO uniqueId comes from dailyplan, here a fake
-        String uniqueId = Long.valueOf(Instant.now().toEpochMilli()).toString().substring(3);
-        OrderId orderId = OrderId.of(String.format("#%s#T%s-%s", yyyymmdd, uniqueId, order.getOrderName()));
-        Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order.getTimeZone());
-        Map<String, Value> arguments = new HashMap<>();
-        if (order.getArguments() != null) {
-            Map<String, Object> a = order.getArguments().getAdditionalProperties();
-            for(String key : a.keySet()) {
-                Object val = a.get(key);
-                if (val instanceof String) {
-                    arguments.put(key, StringValue.of((String) val));
-                } else if (val instanceof Boolean) {
-                    arguments.put(key, BooleanValue.of((Boolean) val));
-                } else if (val instanceof Integer) {
-                    arguments.put(key, NumberValue.of((Integer) val));
-                } else if (val instanceof Long) {
-                    arguments.put(key, NumberValue.of((Long) val));
-                } else if (val instanceof Double) {
-                    arguments.put(key, NumberValue.of(BigDecimal.valueOf((Double) val)));
-                } else if (val instanceof BigDecimal) {
-                    arguments.put(key, NumberValue.of(((BigDecimal) val)));
-                }
-            }
-        }
-        return JFreshOrder.of(orderId, WorkflowPath.of(JocInventory.pathToName(order.getWorkflowPath())), scheduledFor, arguments);
     }
 
 }

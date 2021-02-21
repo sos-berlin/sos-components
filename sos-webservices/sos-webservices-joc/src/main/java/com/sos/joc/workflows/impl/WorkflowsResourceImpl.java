@@ -24,6 +24,7 @@ import com.sos.inventory.model.instruction.Instruction;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.WorkflowsHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
@@ -33,7 +34,6 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.workflow.Workflows;
 import com.sos.joc.model.workflow.WorkflowsFilter;
-import com.sos.joc.workflow.impl.WorkflowsHelper;
 import com.sos.joc.workflows.resource.IWorkflowsResource;
 import com.sos.schema.JsonValidator;
 

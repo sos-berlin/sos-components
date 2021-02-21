@@ -1,11 +1,12 @@
 
 package com.sos.joc.model.order;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -41,7 +42,8 @@ public class AddOrders {
      * 
      */
     @JsonProperty("orders")
-    private List<AddOrder> orders = new ArrayList<AddOrder>();
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<AddOrder> orders = new LinkedHashSet<AddOrder>();
     /**
      * auditParams
      * <p>
@@ -81,7 +83,7 @@ public class AddOrders {
      * 
      */
     @JsonProperty("orders")
-    public List<AddOrder> getOrders() {
+    public Set<AddOrder> getOrders() {
         return orders;
     }
 
@@ -91,7 +93,7 @@ public class AddOrders {
      * 
      */
     @JsonProperty("orders")
-    public void setOrders(List<AddOrder> orders) {
+    public void setOrders(Set<AddOrder> orders) {
         this.orders = orders;
     }
 

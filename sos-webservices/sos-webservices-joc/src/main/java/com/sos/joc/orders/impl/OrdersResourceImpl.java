@@ -67,14 +67,14 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 return jocDefaultResponse;
             }
 
-            List<String> orders = ordersFilter.getOrderIds();
-            List<WorkflowId> workflowIds = ordersFilter.getWorkflowIds();
+            Set<String> orders = ordersFilter.getOrderIds();
+            Set<WorkflowId> workflowIds = ordersFilter.getWorkflowIds();
             boolean withFolderFilter = ordersFilter.getFolders() != null && !ordersFilter.getFolders().isEmpty();
             boolean withOrderIdFilter = orders != null && !orders.isEmpty();
             final Set<Folder> folders = addPermittedFolder(ordersFilter.getFolders());
 
             Function1<Order<Order.State>, Object> cycledOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class), o -> o
-                    .id().string().matches(".*#C[0-9]{10}-.*"));
+                    .id().string().matches(".*#C[0-9]+-.*"));
             Function1<Order<Order.State>, Object> notCycledOrderFilter = JOrderPredicates.not(cycledOrderFilter);
 
             List<OrderStateText> states = ordersFilter.getStates();
@@ -112,7 +112,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 cycledOrderStream = currentState.ordersBy(cycledOrderFilter);
             }
 
-            // grouping cycledOrders and return the next Order of the group to orderStream
+            // grouping cycledOrders and return the first pending Order of the group to orderStream
             Comparator<JOrder> comp = Comparator.comparing(o -> o.id().string());
             Collection<TreeSet<JOrder>> cycledOrderColl = cycledOrderStream.collect(Collectors.groupingBy(o -> o.id().string().substring(0, 24),
                     Collectors.toCollection(() -> new TreeSet<>(comp)))).values();

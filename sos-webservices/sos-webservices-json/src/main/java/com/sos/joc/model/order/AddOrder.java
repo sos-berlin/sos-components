@@ -28,23 +28,21 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class AddOrder {
 
     /**
-     * string according java variable names
-     * <p>
-     * letters without control, connect and punctuation chars (except _ $) and without digits as first letter
+     * 
      * (Required)
      * 
      */
     @JsonProperty("orderName")
-    @JsonPropertyDescription("letters without control, connect and punctuation chars (except _ $) and without digits as first letter")
     private String orderName;
     /**
-     * string without < and >
+     * path
      * <p>
-     * 
+     * absolute path of an object.
      * (Required)
      * 
      */
     @JsonProperty("workflowPath")
+    @JsonPropertyDescription("absolute path of an object.")
     private String workflowPath;
     /**
      * timestamp with now
@@ -74,9 +72,7 @@ public class AddOrder {
     private Variables arguments;
 
     /**
-     * string according java variable names
-     * <p>
-     * letters without control, connect and punctuation chars (except _ $) and without digits as first letter
+     * 
      * (Required)
      * 
      */
@@ -86,9 +82,7 @@ public class AddOrder {
     }
 
     /**
-     * string according java variable names
-     * <p>
-     * letters without control, connect and punctuation chars (except _ $) and without digits as first letter
+     * 
      * (Required)
      * 
      */
@@ -98,9 +92,9 @@ public class AddOrder {
     }
 
     /**
-     * string without < and >
+     * path
      * <p>
-     * 
+     * absolute path of an object.
      * (Required)
      * 
      */
@@ -110,9 +104,9 @@ public class AddOrder {
     }
 
     /**
-     * string without < and >
+     * path
      * <p>
-     * 
+     * absolute path of an object.
      * (Required)
      * 
      */

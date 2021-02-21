@@ -66,40 +66,54 @@ public class JocAuditLog {
 			LOGGER.error("Cannot write to audit log file", e);
 		}
 	}
+	
+	public synchronized DBItemJocAuditLog storeAuditLogEntry(IAuditLog body, SOSHibernateSession connection) {
+	    if (body != null) {
+            String controllerId = body.getControllerId();
+            if (controllerId == null || controllerId.isEmpty()) {
+                controllerId = "-";
+            }
+            DBItemJocAuditLog auditLogToDb = new DBItemJocAuditLog();
+            auditLogToDb.setSchedulerId(controllerId);
+            auditLogToDb.setAccount(user);
+            auditLogToDb.setRequest(request);
+            auditLogToDb.setParameters(getJsonString(body));
+            auditLogToDb.setJob(body.getJob());
+            auditLogToDb.setWorkflow(body.getWorkflow());
+            auditLogToDb.setOrderId(body.getOrderId());
+            auditLogToDb.setFolder(body.getFolder());
+            auditLogToDb.setComment(body.getComment());
+            auditLogToDb.setTicketLink(body.getTicketLink());
+            auditLogToDb.setTimeSpent(body.getTimeSpent());
+            auditLogToDb.setCalendar(body.getCalendar());
+            auditLogToDb.setCreated(Date.from(Instant.now()));
+            auditLogToDb.setDepHistoryId(body.getDepHistoryId());
+            if (connection == null) {
+                SOSHibernateSession connection2 = null;
+                try {
+                    connection2 = Globals.createSosHibernateStatelessConnection("storeAuditLogEntry");
+                    connection2.save(auditLogToDb);
+                    return auditLogToDb;
+                } catch (Exception e) {
+                    LOGGER.error(e.getMessage(), e);
+                } finally {
+                    Globals.disconnect(connection2);
+                }
+            } else {
+                try {
+                    connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntry");
+                    connection.save(auditLogToDb);
+                    return auditLogToDb;
+                } catch (Exception e) {
+                    LOGGER.error(e.getMessage(), e);
+                } 
+            }
+        }
+        return null;
+	}
 
 	public synchronized DBItemJocAuditLog storeAuditLogEntry(IAuditLog body) {
-		if (body != null) {
-			String controllerId = body.getControllerId();
-			if (controllerId == null || controllerId.isEmpty()) {
-				controllerId = "-";
-			}
-			DBItemJocAuditLog auditLogToDb = new DBItemJocAuditLog();
-			auditLogToDb.setSchedulerId(controllerId);
-			auditLogToDb.setAccount(user);
-			auditLogToDb.setRequest(request);
-			auditLogToDb.setParameters(getJsonString(body));
-			auditLogToDb.setJob(body.getJob());
-			auditLogToDb.setWorkflow(body.getWorkflow());
-			auditLogToDb.setOrderId(body.getOrderId());
-			auditLogToDb.setFolder(body.getFolder());
-			auditLogToDb.setComment(body.getComment());
-			auditLogToDb.setTicketLink(body.getTicketLink());
-			auditLogToDb.setTimeSpent(body.getTimeSpent());
-			auditLogToDb.setCalendar(body.getCalendar());
-			auditLogToDb.setCreated(Date.from(Instant.now()));
-			auditLogToDb.setDepHistoryId(body.getDepHistoryId());
-			SOSHibernateSession connection = null;
-			try {
-				connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntry");
-				connection.save(auditLogToDb);
-				return auditLogToDb;
-			} catch (Exception e) {
-				LOGGER.error(e.getMessage(), e);
-			} finally {
-				Globals.disconnect(connection);
-			}
-		}
-		return null;
+	    return storeAuditLogEntry(body, null);
 	}
 
 	private String getJsonString(IAuditLog body) {
