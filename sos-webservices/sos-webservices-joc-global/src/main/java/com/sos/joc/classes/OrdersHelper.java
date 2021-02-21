@@ -217,6 +217,9 @@ public class OrdersHelper {
             o.setState(getState(oItem.getState().getTYPE(), oItem.getIsSuspended()));
         }
         o.setScheduledFor(scheduledFor);
+        if (scheduledFor == null && surveyDateMillis != null) {
+            o.setScheduledFor(surveyDateMillis);
+        }
         if (namePathMap != null) {
             WorkflowId wId = oItem.getWorkflowPosition().getWorkflowId();
             wId.setPath(namePathMap.getOrDefault(wId.getPath(), wId.getPath()));

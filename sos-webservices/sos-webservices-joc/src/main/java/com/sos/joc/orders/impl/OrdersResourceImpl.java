@@ -212,7 +212,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             });
             // TODO consider Either::isLeft, maybe at least LOGGER usage
             entity.setOrders(ordersV.filter(Either::isRight).map(Either::get).filter(Objects::nonNull).sorted(Comparator.comparingLong(
-                    OrderV::getScheduledFor)).collect(Collectors.toList()));
+                    o -> o.getScheduledFor() == null ? surveyDateMillis : o.getScheduledFor())).collect(Collectors.toList()));
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));

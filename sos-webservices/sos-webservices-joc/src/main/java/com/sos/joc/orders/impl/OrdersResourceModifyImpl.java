@@ -172,8 +172,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         }
 
         final Set<JOrder> jOrders = orderStream.collect(Collectors.toSet());
-        CompletableFuture<Either<Problem, Void>> command = command(action, modifyOrders, jOrders.stream().map(JOrder::id).collect(Collectors.toSet()));
-        callCommand(action, command, jOrders, controllerId, modifyOrders.getAuditLog());
+        if (!jOrders.isEmpty()) {
+            CompletableFuture<Either<Problem, Void>> command = command(action, modifyOrders, jOrders.stream().map(JOrder::id).collect(Collectors
+                    .toSet()));
+            callCommand(action, command, jOrders, controllerId, modifyOrders.getAuditLog());
+        }
     }
     
     private static Stream<JOrder> cyclicFreshOrderIds(Collection<String> orderIds, JControllerState currentState) {
