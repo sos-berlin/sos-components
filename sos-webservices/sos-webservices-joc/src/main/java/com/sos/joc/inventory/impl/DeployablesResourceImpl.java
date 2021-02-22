@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
@@ -25,7 +26,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
@@ -95,13 +95,8 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                     deployables.addAll(getResponseStreamOfDeletedItem(dbLayer.getDeletedConfigurations(deployableTypes, in.getFolder(), in
                             .getRecursive(), deletedFolders), folders, permittedFolders));
                 }
-                if (!in.getWithoutDrafts() || !in.getWithoutDeployed()) {
-                    deployables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurationsWithAllDeployments(notDeletedIds), in
-                            .getOnlyValidObjects(), permittedFolders, in.getWithoutDrafts(), in.getWithoutDeployed(), in.getLatest()));
-                } else {
-                    deployables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurationsWithMaxDeployment(notDeletedIds), in
-                            .getOnlyValidObjects(), permittedFolders));
-                }
+                deployables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurationsWithAllDeployments(notDeletedIds), in
+                        .getOnlyValidObjects(), permittedFolders, in.getWithoutDrafts(), in.getWithoutDeployed(), in.getLatest()));
             }
             ResponseDeployables result = new ResponseDeployables();
             result.setDeliveryDate(Date.from(Instant.now()));
@@ -151,6 +146,31 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
     private Set<ResponseDeployableTreeItem> getResponseStreamOfNotDeletedItem(Map<DBItemInventoryConfiguration, Set<InventoryDeploymentItem>> map,
             Boolean onlyValidObjects, Set<Folder> permittedFolders, Boolean withoutDrafts, Boolean withoutDeployed, Boolean onlyLatest) {
         if (map != null) {
+            Set<DBItemInventoryConfiguration> toRemoves = new HashSet<>();
+            
+            for (Map.Entry<DBItemInventoryConfiguration, Set<InventoryDeploymentItem>> entry : map.entrySet()) {
+                if (ConfigurationType.FOLDER.intValue().equals(entry.getKey().getType())) {
+                    continue;
+                }
+                if (onlyValidObjects && !entry.getKey().getValid()) {
+                    toRemoves.add(entry.getKey());
+                }
+                if (withoutDrafts) { // valid drafts which have never been deployed
+                    if (entry.getValue() == null || entry.getValue().isEmpty()) {
+                        toRemoves.add(entry.getKey());
+                    } else if (entry.getValue().stream().filter(Objects::nonNull).count() == 0L) {
+                        toRemoves.add(entry.getKey());
+                    }
+                }
+                if (withoutDeployed && (entry.getKey().getDeployed())) {
+                    toRemoves.add(entry.getKey());
+                }
+            }
+            
+            for (DBItemInventoryConfiguration toRemove : toRemoves) {
+                map.remove(toRemove);
+            }
+            
             final Set<String> paths = map.keySet().stream().filter(item -> ConfigurationType.FOLDER.intValue() != item.getType()).map(item -> item
                     .getPath()).collect(Collectors.toSet());
             Predicate<Map.Entry<DBItemInventoryConfiguration, Set<InventoryDeploymentItem>>> folderIsNotEmpty = entry -> {
@@ -162,7 +182,6 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             };
             return map.entrySet().stream()
                     .filter(folderIsNotEmpty)
-                    .filter(entry -> !onlyValidObjects || (entry.getValue() != null && entry.getValue().iterator().next() != null) || entry.getKey().getValid())
                     .filter(entry -> folderIsPermitted(entry.getKey().getFolder(), permittedFolders))
                     .map(entry -> {
                         DBItemInventoryConfiguration conf = entry.getKey();
@@ -189,29 +208,6 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                         }
                         return treeItem;
                     })
-                    .collect(Collectors.toSet());
-        } else {
-            return Collections.emptySet();
-        }
-    }
-    
-    private Set<ResponseDeployableTreeItem> getResponseStreamOfNotDeletedItem(List<InventoryDeployablesTreeFolderItem> list,
-            Boolean onlyValidObjects, Set<Folder> permittedFolders) {
-        if (list != null) {
-            final Set<String> paths = list.stream().filter(item -> ConfigurationType.FOLDER.intValue() != item.getType()).map(item -> item
-                    .getConfiguration().getPath()).collect(Collectors.toSet());
-            Predicate<InventoryDeployablesTreeFolderItem> folderIsNotEmpty = item -> {
-                if (ConfigurationType.FOLDER.intValue() != item.getConfiguration().getType()) {
-                    return true;
-                } else {
-                    return folderIsNotEmpty(item.getConfiguration().getPath(), paths);
-                }
-            };
-            return list.stream()
-                    .filter(folderIsNotEmpty)
-                    .filter(item -> !onlyValidObjects || item.getDeployment() != null || item.getConfiguration().getValid())
-                    .filter(item -> folderIsPermitted(item.getConfiguration().getFolder(), permittedFolders))
-                    .map(item -> DeployableResourceImpl.getResponseDeployableTreeItem(item.getConfiguration()))
                     .collect(Collectors.toSet());
         } else {
             return Collections.emptySet();
