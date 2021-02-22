@@ -37,7 +37,7 @@ public class WorkflowsHelper {
 
         {
             put(WorkflowStateText.IN_SYNC, 0);
-            put(WorkflowStateText.NOT_IN_SYNC, 1);
+            put(WorkflowStateText.NOT_IN_SYNC, 7);
             put(WorkflowStateText.UNKNOWN, 2);
         }
     });
