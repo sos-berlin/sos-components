@@ -90,8 +90,12 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                     suffix += num;
                 }
             } else {
-                CheckJavaVariableName.test("prefix", prefix);
-                CheckJavaVariableName.test("suffix", suffix);
+                if (prefix != null && !prefix.isEmpty()) {
+                    CheckJavaVariableName.test("prefix", prefix);
+                }
+                if (suffix != null && !suffix.isEmpty()) {
+                    CheckJavaVariableName.test("suffix", suffix);
+                }
             }
             
             Set<String> events = new HashSet<>();

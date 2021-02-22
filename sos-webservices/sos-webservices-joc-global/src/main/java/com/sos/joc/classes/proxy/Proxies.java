@@ -478,8 +478,8 @@ public class Proxies {
      * @throws ExecutionException
      * @throws JobSchedulerConnectionRefusedException
      */
-    protected JControllerProxy of(ProxyCredentials credentials, long connectionTimeout) throws JobSchedulerConnectionResetException, ExecutionException,
-            JobSchedulerConnectionRefusedException {
+    protected JControllerProxy of(ProxyCredentials credentials, long connectionTimeout) throws JobSchedulerConnectionResetException,
+            ExecutionException, JobSchedulerConnectionRefusedException, JobSchedulerConnectionRefusedException {
         ProxyContext context = start(credentials);
         try {
             return context.getProxy(connectionTimeout);
@@ -509,7 +509,7 @@ public class Proxies {
         }
     }
 
-    private ProxyContext start(ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
+    private ProxyContext start(ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException, JobSchedulerConnectionRefusedException {
         if (!controllerFutures.containsKey(credentials)) {
             controllerFutures.put(credentials, new ProxyContext(loadApi(credentials), credentials));
         }

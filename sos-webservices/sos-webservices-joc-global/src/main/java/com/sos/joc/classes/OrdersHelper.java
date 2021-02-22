@@ -368,21 +368,26 @@ public class OrdersHelper {
         if (addOrders.containsKey(true) && !addOrders.get(true).isEmpty()) {
             final Map<OrderId, JFreshOrder> freshOrders = addOrders.get(true).stream().map(Either::get).collect(Collectors.toMap(JFreshOrder::id,
                     Function.identity()));
-            cancelOrders(proxy.api(), modifyOrders, freshOrders.keySet())
-                    .thenAccept(either -> {
-                        ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
-                        if (either.isRight()) {
-                            proxy.api().addOrders(Flux.fromIterable(freshOrders.values())).thenAccept(either2 -> {
-                                ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
-                                if (either2.isRight()) {
-                                    proxy.api().removeOrdersWhenTerminated(freshOrders.keySet()).thenAccept(e -> ProblemHelper
-                                            .postProblemEventIfExist(e, accessToken, jocError, controllerId));
+            proxy.api().removeOrdersWhenTerminated(freshOrders.keySet()).thenAccept(either -> {
+                ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
+                if (either.isRight()) {
+                    cancelOrders(proxy.api(), modifyOrders, freshOrders.keySet()).thenAccept(either2 -> {
+                        ProblemHelper.postProblemEventIfExist(either2, accessToken, jocError, controllerId);
+                        if (either2.isRight()) {
+                            proxy.api().addOrders(Flux.fromIterable(freshOrders.values())).thenAccept(either3 -> {
+                                ProblemHelper.postProblemEventIfExist(either3, accessToken, jocError, controllerId);
+                                if (either3.isRight()) {
+                                    proxy.api().removeOrdersWhenTerminated(freshOrders.keySet()).thenAccept(either4 -> ProblemHelper
+                                            .postProblemEventIfExist(either4, accessToken, jocError, controllerId));
+                                    // auditlog is written even removeOrdersWhenTerminated has a problem
                                     createAuditLogFromJFreshOrders(jocAuditLog, freshOrders.values(), controllerId, dailyplanModifyOrder
                                             .getAuditLog(), nameToPath);
                                 }
                             });
                         }
                     });
+                }
+            });
         }
         if (addOrders.containsKey(false) && !addOrders.get(false).isEmpty()) {
             return addOrders.get(false).stream().map(Either::getLeft).collect(Collectors.toList());
