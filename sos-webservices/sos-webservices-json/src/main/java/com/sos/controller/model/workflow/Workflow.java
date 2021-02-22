@@ -2,17 +2,15 @@
 package com.sos.controller.model.workflow;
 
 import java.util.List;
-
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Requirements;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
@@ -24,7 +22,8 @@ import com.sos.inventory.model.workflow.Requirements;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
-    "isCurrentVersion"
+    "isCurrentVersion",
+    "state"
 })
 public class Workflow
     extends com.sos.inventory.model.workflow.Workflow
@@ -32,6 +31,14 @@ public class Workflow
 
     @JsonProperty("isCurrentVersion")
     private Boolean isCurrentVersion = true;
+    /**
+     * workflow state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("state")
+    private WorkflowState state;
 
     /**
      * No args constructor for use in serialization
@@ -49,12 +56,13 @@ public class Workflow
      * @param isCurrentVersion
      * @param orderRequirements
      * @param jobs
-     * @param tYPE
+     * @param state
      * @param title
      */
-    public Workflow(Boolean isCurrentVersion, String path, String versionId, Requirements orderRequirements, List<Instruction> instructions, String title, String documentationPath, Jobs jobs) {
+    public Workflow(Boolean isCurrentVersion, WorkflowState state, String path, String versionId, Requirements orderRequirements, List<Instruction> instructions, String title, String documentationPath, Jobs jobs) {
         super(path, versionId, orderRequirements, instructions, title, documentationPath, jobs);
         this.isCurrentVersion = isCurrentVersion;
+        this.state = state;
     }
 
     @JsonProperty("isCurrentVersion")
@@ -67,14 +75,36 @@ public class Workflow
         this.isCurrentVersion = isCurrentVersion;
     }
 
+    /**
+     * workflow state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("state")
+    public WorkflowState getState() {
+        return state;
+    }
+
+    /**
+     * workflow state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("state")
+    public void setState(WorkflowState state) {
+        this.state = state;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("isCurrentVersion", isCurrentVersion).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("isCurrentVersion", isCurrentVersion).append("state", state).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(isCurrentVersion).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(isCurrentVersion).append(state).toHashCode();
     }
 
     @Override
@@ -86,7 +116,7 @@ public class Workflow
             return false;
         }
         Workflow rhs = ((Workflow) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(isCurrentVersion, rhs.isCurrentVersion).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(isCurrentVersion, rhs.isCurrentVersion).append(state, rhs.state).isEquals();
     }
 
 }

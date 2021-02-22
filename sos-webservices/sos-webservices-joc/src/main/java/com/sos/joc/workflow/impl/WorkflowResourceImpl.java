@@ -1,15 +1,15 @@
 package com.sos.joc.workflow.impl;
 
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 
 import javax.ws.rs.Path;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
-import com.sos.inventory.model.instruction.Instruction;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -37,8 +37,8 @@ import js7.data_for_java.workflow.JWorkflowId;
 public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowResource {
 
     private static final String API_CALL = "./workflow";
-    
-    
+    private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowResourceImpl.class);
+
     @Override
     public JOCDefaultResponse postWorkflowPermanent(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
@@ -46,8 +46,9 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, WorkflowFilter.class);
             WorkflowFilter workflowFilter = Globals.objectMapper.readValue(filterBytes, WorkflowFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(workflowFilter.getControllerId(), getPermissonsJocCockpit(workflowFilter
-                    .getControllerId(), accessToken).getWorkflow().getView().isStatus());
+            String controllerId = workflowFilter.getControllerId();
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getPermissonsJocCockpit(controllerId, accessToken).getWorkflow()
+                    .getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -56,37 +57,32 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
             checkFolderPermissions(workflowPath, folderPermissions.getListOfFolders());
             String versionId = workflowFilter.getWorkflowId().getVersionId();
             
+            Workflow entity = new Workflow();
+            entity.setSurveyDate(Date.from(Instant.now()));
+            final JControllerState currentstate = getCurrentState(controllerId);
+            if (currentstate != null) {
+                entity.setSurveyDate(Date.from(Instant.ofEpochMilli(currentstate.eventId() / 1000)));
+            }
+            
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
-            Workflow entity = new Workflow();
 
-            DeployedContent content = dbLayer.getDeployedInventory(workflowFilter.getControllerId(), DeployType.WORKFLOW.intValue(), workflowPath,
-                    versionId);
+            DeployedContent content = dbLayer.getDeployedInventory(controllerId, DeployType.WORKFLOW.intValue(), workflowPath, versionId);
             if (content != null && content.getContent() != null && !content.getContent().isEmpty()) {
                 com.sos.controller.model.workflow.Workflow workflow = Globals.objectMapper.readValue(content.getContent(),
                         com.sos.controller.model.workflow.Workflow.class);
                 workflow.setPath(content.getPath());
-                List<Instruction> instructions = workflow.getInstructions();
-                if (instructions != null) {
-                    instructions.add(WorkflowsHelper.createImplicitEndInstruction());
-                } else {
-                    instructions = Arrays.asList(WorkflowsHelper.createImplicitEndInstruction());
-                    workflow.setInstructions(instructions);
-                }
-                if (!workflowPath.contains("/")) {
-                    checkFolderPermissions(content.getPath(), folderPermissions.getListOfFolders());
-                }
+                workflow.setState(WorkflowsHelper.getState(currentstate, workflow));
+                
                 if (versionId == null || versionId.isEmpty()) {
                     workflow.setIsCurrentVersion(true);
                 } else {
-                    DeployedContent lastContent = dbLayer.getDeployedInventory(workflowFilter.getControllerId(), DeployType.WORKFLOW.intValue(),
-                            workflowPath);
+                    DeployedContent lastContent = dbLayer.getDeployedInventory(controllerId, DeployType.WORKFLOW.intValue(), workflowPath);
                     if (lastContent != null && lastContent.getCommitId() != null) {
                         workflow.setIsCurrentVersion(lastContent.getCommitId().equals(content.getCommitId()));
                     }
                 }
-                workflow = WorkflowsHelper.addWorkflowPositions(workflow);
-                entity.setWorkflow(workflow);
+                entity.setWorkflow(WorkflowsHelper.addWorkflowPositions(workflow));
             } else {
                 throw new DBMissingDataException(String.format("Workflow '%s' doesn't exist", workflowPath));
             }
@@ -110,12 +106,12 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
             initLogging(API_CALL + "/v", filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, WorkflowFilter.class);
             WorkflowFilter workflowFilter = Globals.objectMapper.readValue(filterBytes, WorkflowFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(workflowFilter.getControllerId(),
-                    getPermissonsJocCockpit(workflowFilter.getControllerId(), accessToken).getWorkflow().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(workflowFilter.getControllerId(), getPermissonsJocCockpit(workflowFilter
+                    .getControllerId(), accessToken).getWorkflow().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             // nameToPath mapping if workflowFilter.getWorkflowId().getPath() is a name
             String workflowPath = workflowFilter.getWorkflowId().getPath();
             if (workflowPath.contains("/")) {
@@ -125,7 +121,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
             String workflowName = JocInventory.pathToName(workflowPath);
             JControllerState currentState = Proxy.of(workflowFilter.getControllerId()).currentState();
             Long surveyDateMillis = currentState.eventId() / 1000;
-            
+
             String versionId = workflowFilter.getWorkflowId().getVersionId();
             Either<Problem, JWorkflow> response = null;
             if (versionId == null) {
@@ -134,17 +130,17 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                 response = currentState.idToWorkflow(JWorkflowId.of(workflowName, versionId));
             }
             ProblemHelper.throwProblemIfExist(response);
-            
+
             com.sos.controller.model.workflow.Workflow workflow = Globals.objectMapper.readValue(response.get().withPositions().toJson(),
                     com.sos.controller.model.workflow.Workflow.class);
             workflow.setIsCurrentVersion(WorkflowsHelper.isCurrentVersion(versionId, currentState));
             workflow.setPath(workflowPath);
-            
+
             Workflow entity = new Workflow();
             entity.setSurveyDate(Date.from(Instant.ofEpochMilli(surveyDateMillis)));
             entity.setDeliveryDate(Date.from(Instant.now()));
             entity.setWorkflow(workflow);
-            
+
             return JOCDefaultResponse.responseStatus200(entity);
 
         } catch (JocException e) {
@@ -155,4 +151,14 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
         }
     }
     
+    private JControllerState getCurrentState(String controllerId) {
+        JControllerState currentstate = null;
+        try {
+            currentstate = Proxy.of(controllerId).currentState();
+        } catch (Exception e) {
+            LOGGER.warn(e.toString());
+        }
+        return currentstate;
+    }
+
 }
