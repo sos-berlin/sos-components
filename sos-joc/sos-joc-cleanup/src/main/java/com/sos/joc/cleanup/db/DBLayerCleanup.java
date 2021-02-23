@@ -32,6 +32,13 @@ public class DBLayerCleanup {
         return session.getSingleResult(query);
     }
 
+    public int deleteVariable(String name) throws SOSHibernateException {
+        String hql = String.format("delete from %s where name = :name", DBLayer.DBITEM_JOC_VARIABLE);
+        Query<DBItemJocVariable> query = session.createQuery(hql);
+        query.setParameter("name", name);
+        return session.executeUpdate(query);
+    }
+
     public DBItemJocVariable insertJocVariable(String name, String eventId) throws SOSHibernateException {
         DBItemJocVariable item = new DBItemJocVariable();
         item.setName(name);

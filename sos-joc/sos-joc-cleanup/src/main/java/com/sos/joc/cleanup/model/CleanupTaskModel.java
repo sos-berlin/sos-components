@@ -1,7 +1,5 @@
 package com.sos.joc.cleanup.model;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -98,10 +96,6 @@ public class CleanupTaskModel implements ICleanupTask {
                 }
             }
         }
-    }
-
-    public Date getCurrentDateTimeMinusMinutes(int minutes) {
-        return Date.from(LocalDateTime.now().atZone(ZoneId.of("UTC")).minusMinutes(minutes).toInstant());
     }
 
 }
