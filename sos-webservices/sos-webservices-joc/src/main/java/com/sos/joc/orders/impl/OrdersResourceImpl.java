@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -30,6 +31,7 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.dailyplan.CyclicOrderInfos;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrderV;
 import com.sos.joc.model.order.OrdersFilterV;
@@ -117,12 +119,19 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             Collection<TreeSet<JOrder>> cycledOrderColl = cycledOrderStream.collect(Collectors.groupingBy(o -> o.id().string().substring(0, 24),
                     Collectors.toCollection(() -> new TreeSet<>(comp)))).values();
             cycledOrderStream = cycledOrderColl.stream().map(t -> t.first());
-            Map<String, Long> lastCycles = cycledOrderColl.stream().filter(t -> !t.last().asScala().state().maybeDelayedUntil().isEmpty()).map(t -> {
-                OrderV o = new OrderV();
-                o.setOrderId(t.first().id().string());
-                o.setLastCycle(t.last().asScala().state().maybeDelayedUntil().get().toEpochMilli());
-                return o;
-            }).collect(Collectors.toMap(OrderV::getOrderId, OrderV::getLastCycle));
+            Map<String, CyclicOrderInfos> cycleInfos = cycledOrderColl.stream().map(t -> {
+                CyclicOrderInfos cycle = new CyclicOrderInfos();
+                cycle.setCount(t.size());
+                cycle.setFirstOrderId(t.first().id().string());
+                if (!t.first().asScala().state().maybeDelayedUntil().isEmpty()) {
+                    cycle.setFirstStart(Date.from(t.first().asScala().state().maybeDelayedUntil().get().toInstant()));
+                }
+                cycle.setLastOrderId(t.last().id().string());
+                if (!t.last().asScala().state().maybeDelayedUntil().isEmpty()) {
+                    cycle.setLastStart(Date.from(t.last().asScala().state().maybeDelayedUntil().get().toInstant()));
+                }
+                return cycle;
+            }).collect(Collectors.toMap(CyclicOrderInfos::getFirstOrderId, Function.identity()));
 //            cycledOrderStream = cycledOrderStream.collect(Collectors.groupingBy(o -> o.id().string().substring(0, 24))).values().stream().map(l -> l
 //                    .stream().min(Comparator.comparing(o -> o.id().string()))).filter(Optional::isPresent).map(Optional::get);
 
@@ -199,7 +208,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                         }
                     }
                     if (order != null) {
-                        order.setLastCycle(lastCycles.get(order.getOrderId()));
+                        order.setCyclicOrder(cycleInfos.get(order.getOrderId()));
                         if (orderStateWithRequirements.contains(order.getState().get_text())) {
                             order.setRequirements(OrdersHelper.getRequirements(o, currentState));
                         }

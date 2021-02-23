@@ -14,6 +14,7 @@ import com.sos.controller.model.order.OrderAttachedState;
 import com.sos.controller.model.workflow.HistoricOutcome;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.workflow.Requirements;
+import com.sos.joc.model.dailyplan.CyclicOrderInfos;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -37,10 +38,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "agentId",
     "position",
     "scheduledFor",
-    "lastCycle",
     "lastOutcome",
     "historicOutcome",
-    "requirements"
+    "requirements",
+    "cyclicOrder"
 })
 public class OrderV {
 
@@ -90,7 +91,7 @@ public class OrderV {
     @JsonProperty("workflowId")
     private WorkflowId workflowId;
     /**
-     * jobChain state
+     * order state
      * <p>
      * 
      * (Required)
@@ -126,14 +127,6 @@ public class OrderV {
     @JsonProperty("scheduledFor")
     private Long scheduledFor;
     /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("lastCycle")
-    private Long lastCycle;
-    /**
      * outcome
      * <p>
      * 
@@ -156,6 +149,14 @@ public class OrderV {
      */
     @JsonProperty("requirements")
     private Requirements requirements;
+    /**
+     * Cyclic Order
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("cyclicOrder")
+    private CyclicOrderInfos cyclicOrder;
 
     /**
      * timestamp
@@ -272,7 +273,7 @@ public class OrderV {
     }
 
     /**
-     * jobChain state
+     * order state
      * <p>
      * 
      * (Required)
@@ -284,7 +285,7 @@ public class OrderV {
     }
 
     /**
-     * jobChain state
+     * order state
      * <p>
      * 
      * (Required)
@@ -372,28 +373,6 @@ public class OrderV {
     }
 
     /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("lastCycle")
-    public Long getLastCycle() {
-        return lastCycle;
-    }
-
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("lastCycle")
-    public void setLastCycle(Long lastCycle) {
-        this.lastCycle = lastCycle;
-    }
-
-    /**
      * outcome
      * <p>
      * 
@@ -455,14 +434,36 @@ public class OrderV {
         this.requirements = requirements;
     }
 
+    /**
+     * Cyclic Order
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("cyclicOrder")
+    public CyclicOrderInfos getCyclicOrder() {
+        return cyclicOrder;
+    }
+
+    /**
+     * Cyclic Order
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("cyclicOrder")
+    public void setCyclicOrder(CyclicOrderInfos cyclicOrder) {
+        this.cyclicOrder = cyclicOrder;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orderId", orderId).append("arguments", arguments).append("workflowId", workflowId).append("state", state).append("attachedState", attachedState).append("agentId", agentId).append("position", position).append("scheduledFor", scheduledFor).append("lastCycle", lastCycle).append("lastOutcome", lastOutcome).append("historicOutcome", historicOutcome).append("requirements", requirements).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orderId", orderId).append("arguments", arguments).append("workflowId", workflowId).append("state", state).append("attachedState", attachedState).append("agentId", agentId).append("position", position).append("scheduledFor", scheduledFor).append("lastOutcome", lastOutcome).append("historicOutcome", historicOutcome).append("requirements", requirements).append("cyclicOrder", cyclicOrder).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(attachedState).append(agentId).append(requirements).append(surveyDate).append(orderId).append(lastOutcome).append(lastCycle).append(historicOutcome).append(scheduledFor).append(arguments).append(state).append(position).append(deliveryDate).append(workflowId).toHashCode();
+        return new HashCodeBuilder().append(attachedState).append(agentId).append(requirements).append(surveyDate).append(orderId).append(lastOutcome).append(historicOutcome).append(scheduledFor).append(arguments).append(state).append(position).append(deliveryDate).append(workflowId).append(cyclicOrder).toHashCode();
     }
 
     @Override
@@ -474,7 +475,7 @@ public class OrderV {
             return false;
         }
         OrderV rhs = ((OrderV) other);
-        return new EqualsBuilder().append(attachedState, rhs.attachedState).append(agentId, rhs.agentId).append(requirements, rhs.requirements).append(surveyDate, rhs.surveyDate).append(orderId, rhs.orderId).append(lastOutcome, rhs.lastOutcome).append(lastCycle, rhs.lastCycle).append(historicOutcome, rhs.historicOutcome).append(scheduledFor, rhs.scheduledFor).append(arguments, rhs.arguments).append(state, rhs.state).append(position, rhs.position).append(deliveryDate, rhs.deliveryDate).append(workflowId, rhs.workflowId).isEquals();
+        return new EqualsBuilder().append(attachedState, rhs.attachedState).append(agentId, rhs.agentId).append(requirements, rhs.requirements).append(surveyDate, rhs.surveyDate).append(orderId, rhs.orderId).append(lastOutcome, rhs.lastOutcome).append(historicOutcome, rhs.historicOutcome).append(scheduledFor, rhs.scheduledFor).append(arguments, rhs.arguments).append(state, rhs.state).append(position, rhs.position).append(deliveryDate, rhs.deliveryDate).append(workflowId, rhs.workflowId).append(cyclicOrder, rhs.cyclicOrder).isEquals();
     }
 
 }
