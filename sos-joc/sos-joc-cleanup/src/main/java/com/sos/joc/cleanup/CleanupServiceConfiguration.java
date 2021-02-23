@@ -21,7 +21,7 @@ public class CleanupServiceConfiguration {
 
     private ZoneId zoneId = ZoneId.of("UTC");
     private StartupMode startupMode = StartupMode.DAILY;
-    private Period period = new Period(startupMode, "01-03");
+    private Period period = new Period(startupMode, "01:00-03:00");
     private Age age = new Age("30d");
 
     public CleanupServiceConfiguration(Properties properties) {
