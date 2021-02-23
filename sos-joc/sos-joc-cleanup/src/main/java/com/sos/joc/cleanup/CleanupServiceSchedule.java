@@ -42,7 +42,7 @@ public class CleanupServiceSchedule {
 
     public CleanupServiceSchedule(CleanupService service) {
         this.service = service;
-        this.task = new CleanupServiceTask(this.service);
+        this.task = new CleanupServiceTask(this);
     }
 
     public void start(StartupMode mode) {
@@ -314,8 +314,17 @@ public class CleanupServiceSchedule {
         }
     }
 
+    public CleanupService getService() {
+        return service;
+    }
+
+    public ZonedDateTime getStart() {
+        return start;
+    }
+
     private StringBuilder getInitialValue() {
         return new StringBuilder(service.getConfig().getPeriod().getConfigured()).append(DELIMITER).append(start.toString()).append(DELIMITER).append(
                 end.toString());
     }
+
 }

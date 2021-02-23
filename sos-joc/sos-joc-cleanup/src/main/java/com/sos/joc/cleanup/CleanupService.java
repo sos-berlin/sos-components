@@ -2,8 +2,8 @@ package com.sos.joc.cleanup;
 
 import java.nio.file.Path;
 import java.sql.Connection;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -138,8 +138,12 @@ public class CleanupService extends AJocClusterService {
         return factory;
     }
 
-    public static Date getCurrentDateTimeMinusMinutes(Long minutes) {
-        return Date.from(LocalDateTime.now().atZone(ZoneId.of("UTC")).minusMinutes(minutes).toInstant());
+    public static Date toDate(ZonedDateTime dateTime) {
+        return Date.from(dateTime.toInstant());
+    }
+
+    public static ZonedDateTime getZonedDateTimeUTCMinusMinutes(ZonedDateTime datetime, Long minutes) {
+        return datetime.withZoneSameInstant(ZoneId.of("UTC")).minusMinutes(minutes);
     }
 
     public static String toString(Date date) {

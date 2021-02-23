@@ -1,7 +1,7 @@
 package com.sos.joc.cleanup;
 
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -32,14 +32,14 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupServiceTask.class);
 
-    private final CleanupService service;
+    private final CleanupServiceSchedule schedule;
     private final String identifier;
     private final String logIdentifier;
     private List<ICleanupTask> cleanupTasks = null;
 
-    public CleanupServiceTask(CleanupService service) {
-        this.service = service;
-        this.identifier = service.getIdentifier();
+    public CleanupServiceTask(CleanupServiceSchedule schedule) {
+        this.schedule = schedule;
+        this.identifier = schedule.getService().getIdentifier();
         this.logIdentifier = identifier + "_task";
     }
 
@@ -51,7 +51,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
         LOGGER.info(String.format("[%s][run]start ...", logIdentifier));
         JocCluster cluster = JocClusterService.getInstance().getCluster();
         if (cluster.getHandler().isActive()) {
-            CleanupService cleanupService = this.service;
+            CleanupServiceSchedule cleanupSchedule = this.schedule;
             List<IJocClusterService> services = cluster.getHandler().getServices();
             LOGGER.info(String.format("[%s][run]found %s running services", logIdentifier, services.size()));
 
@@ -79,12 +79,13 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                             LOGGER.info(String.format("[%s][%s][skip]not implemented yet", logIdentifier, service.getIdentifier()));
                             LOGGER.info(String.format("[%s][%s]completed", logIdentifier, service.getIdentifier()));
                         } else {
-                            Date d = CleanupService.getCurrentDateTimeMinusMinutes(cleanupService.getConfig().getAge().getMinutes());
-                            String ds = cleanupService.getConfig().getAge().getConfigured() + "=" + CleanupService.toString(d);
+                            ZonedDateTime zd = CleanupService.getZonedDateTimeUTCMinusMinutes(cleanupSchedule.getStart(), cleanupSchedule.getService()
+                                    .getConfig().getAge().getMinutes());
+                            String ds = cleanupSchedule.getService().getConfig().getAge().getConfigured() + "=" + zd;
 
                             LOGGER.info(String.format("[%s][%s][%s]start...", logIdentifier, service.getIdentifier(), ds));
                             cleanupTasks.add(task);
-                            task.start(d);
+                            task.start(CleanupService.toDate(zd));
                             LOGGER.info(String.format("[%s][%s][%s]%s", logIdentifier, service.getIdentifier(), ds, SOSString.toString(task
                                     .getState())));
                             task.stop();
@@ -100,8 +101,8 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
             }
 
             if (tasks.size() > 0) {
-                ExecutorService es = Executors.newFixedThreadPool(tasks.size(), new JocClusterThreadFactory(service.getThreadGroup(), identifier
-                        + "-t-h-start"));
+                ExecutorService es = Executors.newFixedThreadPool(tasks.size(), new JocClusterThreadFactory(cleanupSchedule.getService()
+                        .getThreadGroup(), identifier + "-t-h-start"));
                 List<CompletableFuture<JocClusterAnswer>> futuresList = tasks.stream().map(task -> CompletableFuture.supplyAsync(task, es)).collect(
                         Collectors.toList());
                 CompletableFuture.allOf(futuresList.toArray(new CompletableFuture[futuresList.size()])).join();
@@ -137,8 +138,8 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
         int size = cleanupTasks.size();
         if (size > 0) {
             // close all cleanups
-            ExecutorService threadPool = Executors.newFixedThreadPool(size, new JocClusterThreadFactory(service.getThreadGroup(), identifier
-                    + "-t-h-stop"));
+            ExecutorService threadPool = Executors.newFixedThreadPool(size, new JocClusterThreadFactory(schedule.getService().getThreadGroup(),
+                    identifier + "-t-h-stop"));
             for (int i = 0; i < size; i++) {
                 ICleanupTask task = cleanupTasks.get(i);
                 Runnable thread = new Runnable() {
