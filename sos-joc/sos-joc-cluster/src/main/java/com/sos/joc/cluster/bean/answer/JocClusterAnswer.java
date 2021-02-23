@@ -8,9 +8,15 @@ public class JocClusterAnswer {
 
     private JocClusterAnswerState state;
     private JocClusterAnswerError error;
+    private String message;
 
     public JocClusterAnswer(JocClusterAnswerState val) {
         state = val;
+    }
+
+    public JocClusterAnswer(JocClusterAnswerState val, String message) {
+        this(val);
+        this.message = message;
     }
 
     public JocClusterAnswerState getState() {
@@ -23,6 +29,10 @@ public class JocClusterAnswer {
 
     public JocClusterAnswerError getError() {
         return error;
+    }
+
+    public String getMessage() {
+        return message;
     }
 
     public void setError(Exception e) {

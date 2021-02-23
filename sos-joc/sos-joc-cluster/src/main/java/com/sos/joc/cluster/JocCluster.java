@@ -665,6 +665,10 @@ public class JocCluster {
         return new JocClusterAnswer(state);
     }
 
+    public static JocClusterAnswer getOKAnswer(JocClusterAnswerState state, String message) {
+        return new JocClusterAnswer(state, message);
+    }
+
     public static JocClusterAnswer getErrorAnswer(JocClusterAnswerState state) {
         return getErrorAnswer(state, new Exception(state.toString()));
     }
