@@ -3,14 +3,14 @@ package com.sos.joc.cluster.bean.answer;
 public class JocClusterAnswer {
 
     public enum JocClusterAnswerState {
-        STARTED, STOPPED, RESTARTED, ALREADY_STARTED, ALREADY_STOPPED, SWITCH, MISSING_HANDLERS_CONFIGURATION, MISSING_HANDLERS, ERROR
+        STARTED, STOPPED, RESTARTED, ALREADY_STARTED, ALREADY_STOPPED, SWITCH, MISSING_CONFIGURATION, MISSING_HANDLERS, ERROR, COMPLETED, UNCOMPLETED
     }
 
     private JocClusterAnswerState state;
     private JocClusterAnswerError error;
 
-    public JocClusterAnswer(JocClusterAnswerState answerState) {
-        state = answerState;
+    public JocClusterAnswer(JocClusterAnswerState val) {
+        state = val;
     }
 
     public JocClusterAnswerState getState() {

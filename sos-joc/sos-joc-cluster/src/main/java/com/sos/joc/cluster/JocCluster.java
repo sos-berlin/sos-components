@@ -681,6 +681,7 @@ public class JocCluster {
 
     public static void shutdownThreadPool(StartupMode mode, ExecutorService threadPool, long awaitTerminationTimeout) {
         String caller = SOSClassUtil.getMethodName(2);
+        String logMode = mode == null ? "" : "[" + mode + "]";
         try {
             if (threadPool == null) {
                 return;
@@ -688,21 +689,21 @@ public class JocCluster {
             threadPool.shutdown();// Disable new tasks from being submitted
             // Wait a while for existing tasks to terminate
             if (threadPool.awaitTermination(awaitTerminationTimeout, TimeUnit.SECONDS)) {
-                LOGGER.info(String.format("[%s][shutdown][%s]thread pool has been shut down correctly", mode, caller));
+                LOGGER.info(String.format("%s[shutdown][%s]thread pool has been shut down correctly", logMode, caller));
             } else {
                 threadPool.shutdownNow();// Cancel currently executing tasks
                 // Wait a while for tasks to respond to being cancelled
                 if (threadPool.awaitTermination(3, TimeUnit.SECONDS)) {
-                    LOGGER.info(String.format("[%s][shutdown][%s]thread pool has ended due to timeout of %ss on shutdown", mode, caller,
+                    LOGGER.info(String.format("%s[shutdown][%s]thread pool has ended due to timeout of %ss on shutdown", logMode, caller,
                             awaitTerminationTimeout));
                 } else {
-                    LOGGER.info(String.format("[%s][shutdown][%s]thread pool did not terminate due to timeout of %ss on shutdown", mode, caller,
+                    LOGGER.info(String.format("%s[shutdown][%s]thread pool did not terminate due to timeout of %ss on shutdown", logMode, caller,
                             awaitTerminationTimeout));
                 }
             }
         } catch (InterruptedException e) {
             // (Re-)Cancel if current thread also interrupted
-            LOGGER.error(String.format("[%s][shutdown][%s][exception]%s", mode, caller, e.toString()), e);
+            LOGGER.error(String.format("%s[shutdown][%s][exception]%s", logMode, caller, e.toString()), e);
             threadPool.shutdownNow();
             Thread.currentThread().interrupt();
         }

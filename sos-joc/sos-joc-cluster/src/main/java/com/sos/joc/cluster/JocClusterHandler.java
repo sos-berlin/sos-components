@@ -40,7 +40,7 @@ public class JocClusterHandler {
         LOGGER.info(String.format("[%s][perform][active=%s]%s", mode, active, type.name()));
 
         if (cluster.getConfig().getServices() == null || cluster.getConfig().getServices().size() == 0) {
-            return JocCluster.getErrorAnswer(JocClusterAnswerState.MISSING_HANDLERS_CONFIGURATION);
+            return JocCluster.getErrorAnswer(JocClusterAnswerState.MISSING_CONFIGURATION);
         }
 
         String method = type.name().toLowerCase();
@@ -111,6 +111,7 @@ public class JocClusterHandler {
             active = true;
         } else {
             active = false;
+            // ThreadHelper.print(mode, "before stop active services");
         }
 
         AJocClusterService.setLogger();
@@ -194,6 +195,10 @@ public class JocClusterHandler {
 
     public boolean isActive() {
         return active;
+    }
+
+    public List<IJocClusterService> getServices() {
+        return services;
     }
 
 }
