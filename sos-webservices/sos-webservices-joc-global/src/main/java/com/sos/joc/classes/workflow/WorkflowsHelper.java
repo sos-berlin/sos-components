@@ -1,4 +1,4 @@
-package com.sos.joc.classes;
+package com.sos.joc.classes.workflow;
 
 import java.util.Arrays;
 import java.util.Collections;

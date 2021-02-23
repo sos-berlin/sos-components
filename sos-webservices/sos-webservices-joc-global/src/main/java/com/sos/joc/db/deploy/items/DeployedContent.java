@@ -2,6 +2,9 @@ package com.sos.joc.db.deploy.items;
 
 import java.util.Date;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 public class DeployedContent {
 
     private String json;
@@ -52,5 +55,22 @@ public class DeployedContent {
     
     public Boolean isCurrentVersion() {
         return isCurrentVersion;
+    }
+    
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder().append(path).append(commitId).toHashCode();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof DeployedContent) == false) {
+            return false;
+        }
+        DeployedContent rhs = ((DeployedContent) other);
+        return new EqualsBuilder().append(path, rhs.path).append(commitId, rhs.commitId).isEquals();
     }
 }

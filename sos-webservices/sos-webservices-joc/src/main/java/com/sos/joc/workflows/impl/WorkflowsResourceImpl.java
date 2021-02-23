@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -26,12 +27,13 @@ import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.WorkflowsHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.deploy.items.DeployedContent;
+import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.workflow.WorkflowId;
@@ -80,8 +82,9 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                 workflows.setSurveyDate(Date.from(Instant.ofEpochMilli(currentstate.eventId() / 1000)));
                 contents.addAll(getOlderWorkflows(workflowsFilter, currentstate, dbLayer));
             }
-
-            Stream<DeployedContent> contentsStream = contents.stream();
+            
+            Stream<DeployedContent> contentsStream = contents.stream().sorted(Comparator.comparing(DeployedContent::getCreated).reversed())
+                    .distinct();
             if (workflowsFilter.getRegex() != null && !workflowsFilter.getRegex().isEmpty()) {
                 Predicate<String> regex = Pattern.compile(workflowsFilter.getRegex().replaceAll("%", ".*")).asPredicate();
                 contentsStream = contentsStream.filter(w -> regex.test(w.getPath()));
@@ -98,7 +101,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                     // TODO
                     return null;
                 }
-            }).filter(Objects::nonNull).distinct().collect(Collectors.toList()));
+            }).filter(Objects::nonNull).collect(Collectors.toList()));
             workflows.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(workflows));
