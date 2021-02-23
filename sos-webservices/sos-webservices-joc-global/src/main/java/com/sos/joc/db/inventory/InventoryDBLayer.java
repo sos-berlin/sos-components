@@ -483,6 +483,25 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
+    public List<DBItemInventoryConfigurationTrash> getConfigurationFromTrashByName(String name, Integer type) throws SOSHibernateException {
+        boolean isCalendar = JocInventory.isCalendar(type);
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATION_TRASH);
+        hql.append(" where lower(name)=:name");
+        if (isCalendar) {
+            hql.append(" and type in (:types)");
+        } else {
+            hql.append(" and type=:type");
+        }
+        Query<DBItemInventoryConfigurationTrash> query = getSession().createQuery(hql.toString());
+        query.setParameter("name", name.toLowerCase());
+        if (isCalendar) {
+            query.setParameterList("types", JocInventory.getCalendarTypes());
+        } else {
+            query.setParameter("type", type);
+        }
+        return getSession().getResultList(query);
+    }
+
     public List<DBItemInventoryConfiguration> getConfigurationByNames(Stream<String> namesStream, Integer type) throws SOSHibernateException {
         boolean isCalendar = JocInventory.isCalendar(type);
         Set<String> names = namesStream.map(String::toLowerCase).collect(Collectors.toSet());
