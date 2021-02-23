@@ -655,6 +655,7 @@ public class JocInventory {
     public static void deleteInventoryConfigurationAndPutToTrash(DBItemInventoryConfiguration item, InventoryDBLayer dbLayer) {
         try {
             List<DBItemInventoryConfigurationTrash> trashItems = dbLayer.getConfigurationFromTrashByName(item.getName(), item.getType());
+            dbLayer.getSession().delete(item);
             if (trashItems == null || trashItems.isEmpty()) {
                 DBItemInventoryConfigurationTrash itemToTrash = new DBItemInventoryConfigurationTrash();
                 itemToTrash.setAuditLogId(item.getAuditLogId());
@@ -668,7 +669,6 @@ public class JocInventory {
                 itemToTrash.setValid(item.getValid());
                 itemToTrash.setCreated(item.getCreated());
                 itemToTrash.setModified(item.getModified());
-                dbLayer.getSession().delete(item);
                 dbLayer.getSession().save(itemToTrash);
                 makeParentDirsForTrash(dbLayer, Paths.get(itemToTrash.getFolder()));
                 postEvent(item.getFolder());
