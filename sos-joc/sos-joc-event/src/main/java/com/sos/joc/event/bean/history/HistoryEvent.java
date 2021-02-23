@@ -9,8 +9,13 @@ import com.sos.joc.event.bean.JOCEvent;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "TYPE", visible = true)
-@JsonSubTypes({ @JsonSubTypes.Type(HistoryOrderTerminated.class), @JsonSubTypes.Type(HistoryOrderStarted.class),
-        @JsonSubTypes.Type(HistoryOrderTaskTerminated.class) })
+@JsonSubTypes({ 
+    @JsonSubTypes.Type(HistoryOrderTerminated.class), 
+    @JsonSubTypes.Type(HistoryOrderStarted.class),
+    @JsonSubTypes.Type(HistoryOrderUpdated.class),
+    @JsonSubTypes.Type(HistoryOrderTaskStarted.class),
+    @JsonSubTypes.Type(HistoryOrderTaskTerminated.class)
+})
 
 public abstract class HistoryEvent extends JOCEvent {
 
