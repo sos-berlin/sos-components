@@ -36,8 +36,8 @@ public class WorkflowsHelper {
         private static final long serialVersionUID = 1L;
 
         {
-            put(WorkflowStateText.IN_SYNC, 0);
-            put(WorkflowStateText.NOT_IN_SYNC, 7);
+            put(WorkflowStateText.IN_SYNC, 6);
+            put(WorkflowStateText.NOT_IN_SYNC, 5);
             put(WorkflowStateText.UNKNOWN, 2);
         }
     });
