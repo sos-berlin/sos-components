@@ -79,8 +79,8 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                             LOGGER.info(String.format("[%s][%s][skip]not implemented yet", logIdentifier, service.getIdentifier()));
                             LOGGER.info(String.format("[%s][%s]completed", logIdentifier, service.getIdentifier()));
                         } else {
-                            ZonedDateTime zd = CleanupService.getZonedDateTimeUTCMinusMinutes(cleanupSchedule.getStart(), cleanupSchedule.getService()
-                                    .getConfig().getAge().getMinutes());
+                            ZonedDateTime zd = CleanupService.getZonedDateTimeUTCMinusMinutes(cleanupSchedule.getFirstStart(), cleanupSchedule
+                                    .getService().getConfig().getAge().getMinutes());
                             String ds = cleanupSchedule.getService().getConfig().getAge().getConfigured() + "=" + zd;
 
                             LOGGER.info(String.format("[%s][%s][%s]start...", logIdentifier, service.getIdentifier(), ds));

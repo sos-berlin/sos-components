@@ -37,6 +37,7 @@ public class CleanupServiceSchedule {
     private ScheduledFuture<JocClusterAnswer> resultFuture = null;
     private CleanupServiceTask task = null;
     private DBItemJocVariable item = null;
+    private ZonedDateTime firstStart = null;
     private ZonedDateTime start = null;
     private ZonedDateTime end = null;
 
@@ -97,31 +98,47 @@ public class CleanupServiceSchedule {
 
             boolean computeNewPeriod = false;
             ZonedDateTime now = Instant.now().atZone(service.getConfig().getZoneId());
+            ZonedDateTime firstStartDB = null;
             ZonedDateTime nextFromDB = null;
             ZonedDateTime nextToDB = null;
             String configuredDB = null;
             if (item != null) {
                 LOGGER.info(String.format("[stored value]%s", item.getTextValue()));
                 String[] arr = item.getTextValue().split(DELIMITER);
-                configuredDB = arr[0].trim();
-                try {
-                    nextFromDB = ZonedDateTime.parse(arr[1].trim(), DateTimeFormatter.ISO_ZONED_DATE_TIME);
-                } catch (Throwable e) {
-                    LOGGER.warn(String.format("[%s]%s", arr[1].trim(), e.toString()), e);
-                }
-                try {
-                    nextToDB = ZonedDateTime.parse(arr[2].trim(), DateTimeFormatter.ISO_ZONED_DATE_TIME);
-                } catch (Throwable e) {
-                    LOGGER.warn(String.format("[%s]%s", arr[2].trim(), e.toString()), e);
-                }
-                if (nextFromDB != null && nextToDB != null && arr.length > 3) {
-                    String val = arr[3];
-                    if (val.equalsIgnoreCase(JocClusterAnswerState.COMPLETED.name())) {
-                        computeNewPeriod = true;
-                        LOGGER.info(String.format("cleanup completed, compute next period..."));
+                if (arr.length > 3) {
+                    configuredDB = arr[0].trim();
+                    String fs = arr[1].trim();
+                    String nf = arr[2].trim();
+                    String nt = arr[3].trim();
+                    try {
+                        firstStartDB = ZonedDateTime.parse(fs, DateTimeFormatter.ISO_ZONED_DATE_TIME);
+                    } catch (Throwable e) {
+                        deleteJocVariable(dbLayer);
+                        LOGGER.warn(String.format("[%s]%s", fs, e.toString()));
+                    }
+                    try {
+                        nextFromDB = ZonedDateTime.parse(nf, DateTimeFormatter.ISO_ZONED_DATE_TIME);
+                    } catch (Throwable e) {
+                        deleteJocVariable(dbLayer);
+                        LOGGER.warn(String.format("[%s]%s", nf, e.toString()));
+                    }
+                    try {
+                        nextToDB = ZonedDateTime.parse(nt, DateTimeFormatter.ISO_ZONED_DATE_TIME);
+                    } catch (Throwable e) {
+                        deleteJocVariable(dbLayer);
+                        LOGGER.warn(String.format("[%s]%s", nt, e.toString()));
+                    }
+                    if (nextFromDB != null && nextToDB != null && arr.length > 4) {
+                        String val = arr[4];
+                        if (val.equalsIgnoreCase(JocClusterAnswerState.COMPLETED.name())) {
+                            computeNewPeriod = true;
+                            LOGGER.info(String.format("cleanup completed, compute next period..."));
+                        }
+                    } else {
+
                     }
                 } else {
-
+                    LOGGER.info(String.format("[stored value][skip]old format"));
                 }
 
             }
@@ -170,6 +187,7 @@ public class CleanupServiceSchedule {
                     if (computeNewPeriod) {
                         nextFrom = nextFrom.plusDays(1);
                         nextTo = nextTo.plusDays(1);
+                        firstStartDB = null;
                         LOGGER.info(String.format("set nextFrom=%s, nextTo=%s", nextFrom, nextTo));
                     }
 
@@ -178,6 +196,7 @@ public class CleanupServiceSchedule {
                         nextFrom = now.plusSeconds(30);
                         LOGGER.info(String.format("set nextFrom=%s", nextFrom));
                     }
+                    firstStart = firstStartDB == null ? nextFrom : firstStartDB;
                     nanos = now.until(nextFrom, ChronoUnit.NANOS);
                 } catch (Exception e) {
                     LOGGER.error(e.toString(), e);
@@ -234,6 +253,26 @@ public class CleanupServiceSchedule {
             DBItemJocVariable item = dbLayer.getVariable(service.getIdentifier());
             dbLayer.getSession().commit();
             return item;
+        } catch (Exception e) {
+            if (dbLayer != null) {
+                try {
+                    dbLayer.getSession().rollback();
+                } catch (Throwable ex) {
+                }
+            }
+            throw e;
+        }
+    }
+
+    private void deleteJocVariable(DBLayerCleanup dbLayer) throws Exception {
+        if (item == null) {
+            return;
+        }
+        try {
+            dbLayer.getSession().beginTransaction();
+            dbLayer.deleteVariable(service.getIdentifier());
+            dbLayer.getSession().commit();
+            item = null;
         } catch (Exception e) {
             if (dbLayer != null) {
                 try {
@@ -318,13 +357,13 @@ public class CleanupServiceSchedule {
         return service;
     }
 
-    public ZonedDateTime getStart() {
-        return start;
+    public ZonedDateTime getFirstStart() {
+        return firstStart;
     }
 
     private StringBuilder getInitialValue() {
-        return new StringBuilder(service.getConfig().getPeriod().getConfigured()).append(DELIMITER).append(start.toString()).append(DELIMITER).append(
-                end.toString());
+        return new StringBuilder(service.getConfig().getPeriod().getConfigured()).append(DELIMITER).append(firstStart.toString()).append(DELIMITER)
+                .append(start.toString()).append(DELIMITER).append(end.toString());
     }
 
 }
