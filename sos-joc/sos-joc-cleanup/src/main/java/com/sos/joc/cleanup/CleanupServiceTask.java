@@ -1,6 +1,7 @@
 package com.sos.joc.cleanup;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -50,6 +51,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
         LOGGER.info(String.format("[%s][run]start ...", logIdentifier));
         JocCluster cluster = JocClusterService.getInstance().getCluster();
         if (cluster.getHandler().isActive()) {
+            CleanupService cleanupService = this.service;
             List<IJocClusterService> services = cluster.getHandler().getServices();
             LOGGER.info(String.format("[%s][run]found %s running services", logIdentifier, services.size()));
 
@@ -77,12 +79,16 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                             LOGGER.info(String.format("[%s][%s][skip]not implemented yet", logIdentifier, service.getIdentifier()));
                             LOGGER.info(String.format("[%s][%s]completed", logIdentifier, service.getIdentifier()));
                         } else {
-                            LOGGER.info(String.format("[%s][%s]start...", logIdentifier, service.getIdentifier()));
+                            Date d = CleanupService.getCurrentDateTimeMinusMinutes(cleanupService.getConfig().getAge().getMinutes());
+                            String ds = cleanupService.getConfig().getAge().getConfigured() + "=" + CleanupService.toString(d);
+
+                            LOGGER.info(String.format("[%s][%s][%s]start...", logIdentifier, service.getIdentifier(), ds));
                             cleanupTasks.add(task);
-                            task.start();
-                            LOGGER.info(String.format("[%s][%s]%s", logIdentifier, service.getIdentifier(), SOSString.toString(task.getState())));
+                            task.start(d);
+                            LOGGER.info(String.format("[%s][%s][%s]%s", logIdentifier, service.getIdentifier(), ds, SOSString.toString(task
+                                    .getState())));
                             task.stop();
-                            LOGGER.info(String.format("[%s][%s]completed", logIdentifier, service.getIdentifier()));
+                            LOGGER.info(String.format("[%s][%s][%s]completed", logIdentifier, service.getIdentifier(), ds));
                         }
 
                         AJocClusterService.clearLogger();
@@ -158,5 +164,4 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
             cleanupTasks = new ArrayList<>();
         }
     }
-
 }

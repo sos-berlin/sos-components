@@ -10,11 +10,22 @@ public class JocServiceAnswer {
     private long lastActivityStart;
     private long lastActivityEnd;
 
-    public JocServiceAnswer(JocServiceAnswerState state) {
-        this(state, 0, 0);
+    public JocServiceAnswer() {
+        this(null, 0, 0);
+    }
+
+    public JocServiceAnswer(long lastActivityStart, long lastActivityEnd) {
+        this(null, lastActivityStart, lastActivityEnd);
     }
 
     public JocServiceAnswer(JocServiceAnswerState state, long lastActivityStart, long lastActivityEnd) {
+        if (state == null) {
+            if (lastActivityStart == 0 && lastActivityEnd == 0) {
+                state = JocServiceAnswerState.UNKNOWN;
+            } else {
+                state = lastActivityStart > lastActivityEnd ? JocServiceAnswerState.BUSY : JocServiceAnswerState.RELAX;
+            }
+        }
         this.state = state;
         this.lastActivityStart = lastActivityStart;
         this.lastActivityEnd = lastActivityEnd;

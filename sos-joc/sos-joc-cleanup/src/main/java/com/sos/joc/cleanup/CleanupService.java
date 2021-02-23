@@ -2,6 +2,9 @@ package com.sos.joc.cleanup;
 
 import java.nio.file.Path;
 import java.sql.Connection;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -11,6 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
@@ -19,7 +23,6 @@ import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer.JocServiceAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.db.DBLayer;
@@ -110,7 +113,7 @@ public class CleanupService extends AJocClusterService {
 
     @Override
     public JocServiceAnswer getInfo() {
-        return new JocServiceAnswer(JocServiceAnswerState.RELAX);
+        return new JocServiceAnswer();
     }
 
     private void setConfig() {
@@ -133,6 +136,18 @@ public class CleanupService extends AJocClusterService {
 
     public JocClusterHibernateFactory getFactory() {
         return factory;
+    }
+
+    public static Date getCurrentDateTimeMinusMinutes(Long minutes) {
+        return Date.from(LocalDateTime.now().atZone(ZoneId.of("UTC")).minusMinutes(minutes).toInstant());
+    }
+
+    public static String toString(Date date) {
+        try {
+            return SOSDate.getDateTimeAsString(date, SOSDate.dateTimeFormat);
+        } catch (Exception e) {
+            return date == null ? "null" : date.toString();
+        }
     }
 
     private void createFactory(Path configFile) throws Exception {

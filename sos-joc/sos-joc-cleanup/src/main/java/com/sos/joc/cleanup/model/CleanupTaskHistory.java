@@ -5,8 +5,8 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
+import com.sos.joc.cleanup.CleanupService;
 import com.sos.joc.cluster.IJocClusterService;
 import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
@@ -20,8 +20,8 @@ public class CleanupTaskHistory extends CleanupTaskModel {
     }
 
     @Override
-    public void start() {
-        super.start();
+    public void start(Date date) {
+        super.start(date);
 
         LOGGER.info(String.format("[%s][mock-mode]ask history...", getLogIdentifier()));
         if (!isStopped()) {
@@ -46,8 +46,8 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             LOGGER.info(String.format("[%s][mock-mode][history answer][lastActivityStart]not set", getLogIdentifier()));
         } else {
             try {
-                LOGGER.info(String.format("[%s][mock-mode][history answer][lastActivityStart]%s", getLogIdentifier(), SOSDate.getDateTimeAsString(
-                        new Date(info.getLastActivityStart()), SOSDate.dateTimeFormat)));
+                LOGGER.info(String.format("[%s][mock-mode][history answer][lastActivityStart]%s", getLogIdentifier(), CleanupService.toString(
+                        new Date(info.getLastActivityStart()))));
             } catch (Exception e) {
             }
         }
@@ -55,8 +55,8 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             LOGGER.info(String.format("[%s][mock-mode][history answer][lastActivityEnd]not set", getLogIdentifier()));
         } else {
             try {
-                LOGGER.info(String.format("[%s][mock-mode][history answer][lastActivityEnd]%s", getLogIdentifier(), SOSDate.getDateTimeAsString(
-                        new Date(info.getLastActivityEnd()), SOSDate.dateTimeFormat)));
+                LOGGER.info(String.format("[%s][mock-mode][history answer][lastActivityEnd]%s", getLogIdentifier(), CleanupService.toString(new Date(
+                        info.getLastActivityEnd()))));
             } catch (Exception e) {
             }
         }

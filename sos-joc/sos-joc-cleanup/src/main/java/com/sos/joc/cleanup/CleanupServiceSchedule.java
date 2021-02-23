@@ -42,7 +42,7 @@ public class CleanupServiceSchedule {
 
     public CleanupServiceSchedule(CleanupService service) {
         this.service = service;
-        this.task = new CleanupServiceTask(service);
+        this.task = new CleanupServiceTask(this.service);
     }
 
     public void start(StartupMode mode) {
@@ -101,7 +101,7 @@ public class CleanupServiceSchedule {
             ZonedDateTime nextToDB = null;
             String configuredDB = null;
             if (item != null) {
-                LOGGER.info(String.format("found stored value=%s", item.getTextValue()));
+                LOGGER.info(String.format("[stored value]%s", item.getTextValue()));
                 String[] arr = item.getTextValue().split(DELIMITER);
                 configuredDB = arr[0].trim();
                 try {
@@ -148,7 +148,7 @@ public class CleanupServiceSchedule {
                     if (!computeNewPeriod) {
                         if (nextFromDB != null && nextToDB != null && nextFromDB.isAfter(nextFrom)) {
                             if (configuredDB != null && !configuredDB.equals(configured.getConfigured())) {
-                                LOGGER.info(String.format("skip stored value. period was changed (old=%s, new=%s)", configuredDB, configured
+                                LOGGER.info(String.format("[stored value][skip]period was changed (old=%s, new=%s)", configuredDB, configured
                                         .getConfigured()));
                             } else {
                                 nextFrom = nextFromDB;
