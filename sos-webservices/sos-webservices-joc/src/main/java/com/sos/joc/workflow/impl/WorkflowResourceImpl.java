@@ -72,6 +72,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                 com.sos.controller.model.workflow.Workflow workflow = Globals.objectMapper.readValue(content.getContent(),
                         com.sos.controller.model.workflow.Workflow.class);
                 workflow.setPath(content.getPath());
+                workflow.setVersionDate(content.getCreated());
                 workflow.setState(WorkflowsHelper.getState(currentstate, workflow));
                 
                 if (versionId == null || versionId.isEmpty()) {

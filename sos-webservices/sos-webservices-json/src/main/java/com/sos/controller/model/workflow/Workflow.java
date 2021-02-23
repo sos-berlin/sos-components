@@ -1,9 +1,11 @@
 
 package com.sos.controller.model.workflow;
 
+import java.util.Date;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.workflow.Jobs;
@@ -23,6 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "TYPE",
     "isCurrentVersion",
+    "versionDate",
     "state"
 })
 public class Workflow
@@ -31,6 +34,15 @@ public class Workflow
 
     @JsonProperty("isCurrentVersion")
     private Boolean isCurrentVersion = true;
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("versionDate")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
+    private Date versionDate;
     /**
      * workflow state
      * <p>
@@ -58,10 +70,12 @@ public class Workflow
      * @param jobs
      * @param state
      * @param title
+     * @param versionDate
      */
-    public Workflow(Boolean isCurrentVersion, WorkflowState state, String path, String versionId, Requirements orderRequirements, List<Instruction> instructions, String title, String documentationPath, Jobs jobs) {
+    public Workflow(Boolean isCurrentVersion, Date versionDate, WorkflowState state, String path, String versionId, Requirements orderRequirements, List<Instruction> instructions, String title, String documentationPath, Jobs jobs) {
         super(path, versionId, orderRequirements, instructions, title, documentationPath, jobs);
         this.isCurrentVersion = isCurrentVersion;
+        this.versionDate = versionDate;
         this.state = state;
     }
 
@@ -73,6 +87,28 @@ public class Workflow
     @JsonProperty("isCurrentVersion")
     public void setIsCurrentVersion(Boolean isCurrentVersion) {
         this.isCurrentVersion = isCurrentVersion;
+    }
+
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("versionDate")
+    public Date getVersionDate() {
+        return versionDate;
+    }
+
+    /**
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * 
+     */
+    @JsonProperty("versionDate")
+    public void setVersionDate(Date versionDate) {
+        this.versionDate = versionDate;
     }
 
     /**
@@ -99,12 +135,12 @@ public class Workflow
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("isCurrentVersion", isCurrentVersion).append("state", state).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("isCurrentVersion", isCurrentVersion).append("versionDate", versionDate).append("state", state).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(isCurrentVersion).append(state).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(state).append(isCurrentVersion).append(versionDate).toHashCode();
     }
 
     @Override
@@ -116,7 +152,7 @@ public class Workflow
             return false;
         }
         Workflow rhs = ((Workflow) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(isCurrentVersion, rhs.isCurrentVersion).append(state, rhs.state).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(state, rhs.state).append(isCurrentVersion, rhs.isCurrentVersion).append(versionDate, rhs.versionDate).isEquals();
     }
 
 }

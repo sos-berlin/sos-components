@@ -38,7 +38,7 @@ public class DeployedConfigurationDBLayer {
             DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
-            hql.append("(path, content, commitId, true as isCurrentVersion) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
+            hql.append("(path, content, commitId, created, true as isCurrentVersion) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
             hql.append(" where controllerId = :controllerId");
             hql.append(" and type = :type");
             if (path.contains("/")) {
@@ -67,7 +67,7 @@ public class DeployedConfigurationDBLayer {
         }
         try {
             StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
-            hql.append("(path, invContent, commitId, false as isCurrentVersion) from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append("(path, invContent, commitId, deploymentDate, false as isCurrentVersion) from ").append(DBLayer.DBITEM_DEP_HISTORY);
             hql.append(" where controllerId = :controllerId");
             hql.append(" and type = :type");
             if (path.contains("/")) {
@@ -163,7 +163,7 @@ public class DeployedConfigurationDBLayer {
             DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
-            hql.append("(path, content, commitId, true as isCurrentVersion) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(
+            hql.append("(path, content, commitId, created, true as isCurrentVersion) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(
                     getWhereForDepConfiguration(filter));
             Query<DeployedContent> query = createQuery(hql.toString(), filter);
             return session.getResultList(query);
@@ -178,7 +178,7 @@ public class DeployedConfigurationDBLayer {
             DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select new ").append(DeployedContent.class.getName());
-            hql.append("(path, invContent, commitId, false as isCurrentVersion) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(
+            hql.append("(path, invContent, commitId, deploymentDate, false as isCurrentVersion) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(
                     getWhereForDepHistory(filter));
             Query<DeployedContent> query = createQuery(hql.toString(), filter);
             return session.getResultList(query);

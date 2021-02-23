@@ -91,6 +91,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                     Workflow workflow = Globals.objectMapper.readValue(w.getContent(), Workflow.class);
                     workflow.setPath(w.getPath());
                     workflow.setIsCurrentVersion(w.isCurrentVersion());
+                    workflow.setVersionDate(w.getCreated());
                     workflow.setState(WorkflowsHelper.getState(currentstate, workflow));
                     return WorkflowsHelper.addWorkflowPositions(workflow);
                 } catch (Exception e) {
@@ -252,7 +253,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                             Either<Problem, JWorkflow> e2 = currentState.pathToWorkflow(WorkflowPath.of(JocInventory.pathToName(w.getPath())));
                             isCurrentVersion = e2.get().id().versionId().equals(e.get().id().versionId());
                         }
-                        return new DeployedContent(w.getPath(), e.get().withPositions().toJson(), w.getVersionId(), isCurrentVersion);
+                        return new DeployedContent(w.getPath(), e.get().withPositions().toJson(), w.getVersionId(), null, isCurrentVersion);
                     }
                     return null;
                 }).filter(Objects::nonNull);
@@ -280,7 +281,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                             Either<Problem, JWorkflow> e = currentState.idToWorkflow(JWorkflowId.of(wId.getPath(), wId.getVersionId()));
                             if (e.isRight() && namePathMap.get(wId) != null) {
                                 return new DeployedContent(namePathMap.get(wId), e.get().withPositions().toJson(), e.get().id().versionId().string(),
-                                        false);
+                                        null, false);
                             }
                             return null;
                         }).filter(Objects::nonNull);
@@ -303,7 +304,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                             Either<Problem, JWorkflow> e = currentState.idToWorkflow(JWorkflowId.of(wId.getPath(), wId.getVersionId()));
                             if (e.isRight() && namePathMap.get(wId) != null) {
                                 return new DeployedContent(namePathMap.get(wId), e.get().withPositions().toJson(), e.get().id().versionId().string(),
-                                        false);
+                                        null, false);
                             }
                             return null;
                         }).filter(Objects::nonNull);
