@@ -24,6 +24,7 @@ import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer;
+import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
 import com.sos.joc.model.cluster.common.ClusterServices;
 
 public class CleanupServiceTask implements Callable<JocClusterAnswer> {
@@ -80,7 +81,6 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                             cleanupTasks.add(task);
                             task.start();
                             LOGGER.info(String.format("[%s][%s]%s", logIdentifier, service.getIdentifier(), SOSString.toString(task.getState())));
-
                             task.stop();
                             LOGGER.info(String.format("[%s][%s]completed", logIdentifier, service.getIdentifier()));
                         }
@@ -100,13 +100,24 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                         Collectors.toList());
                 CompletableFuture.allOf(futuresList.toArray(new CompletableFuture[futuresList.size()])).join();
                 JocCluster.shutdownThreadPool(null, es, 3);
+
             }
 
         } else {
             LOGGER.info(String.format("[%s][run][skip]cluster not active", logIdentifier));
         }
         LOGGER.info(String.format("[%s][run]end", logIdentifier));
-        return JocCluster.getOKAnswer(JocClusterAnswerState.COMPLETED);
+
+        List<String> nonCompleted = cleanupTasks.stream().filter(t -> t.getState() == null || !t.getState().equals(
+                JocServiceTaskAnswerState.COMPLETED)).map(t -> {
+                    return t.getIdentifier();
+                }).collect(Collectors.toList());
+
+        if (nonCompleted.size() == 0) {
+            return JocCluster.getOKAnswer(JocClusterAnswerState.COMPLETED);
+        } else {
+            return JocCluster.getOKAnswer(JocClusterAnswerState.UNCOMPLETED, String.join(",", nonCompleted));
+        }
     }
 
     public void close() {

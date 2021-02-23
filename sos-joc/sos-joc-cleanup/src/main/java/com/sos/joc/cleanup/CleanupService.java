@@ -5,6 +5,8 @@ import java.sql.Connection;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +37,7 @@ public class CleanupService extends AJocClusterService {
     private ExecutorService threadPool = null;
     private CleanupServiceSchedule schedule = null;
     private CleanupServiceConfiguration config = null;
+    private AtomicBoolean closed = new AtomicBoolean(false);
 
     public CleanupService(JocConfiguration jocConf, ThreadGroup clusterThreadGroup) {
         super(jocConf, clusterThreadGroup, IDENTIFIER);
@@ -44,6 +47,7 @@ public class CleanupService extends AJocClusterService {
     @Override
     public JocClusterAnswer start(List<ControllerConfiguration> controllers, StartupMode mode) {
         try {
+            closed.set(false);
             AJocClusterService.setLogger(IDENTIFIER);
 
             LOGGER.info(String.format("[%s][%s]start...", getIdentifier(), mode));
@@ -57,13 +61,27 @@ public class CleanupService extends AJocClusterService {
 
                 threadPool = Executors.newFixedThreadPool(1, new JocClusterThreadFactory(getThreadGroup(), IDENTIFIER + "-start"));
                 schedule = new CleanupServiceSchedule(this);
+                AtomicLong errors = new AtomicLong();
                 Runnable thread = new Runnable() {
 
                     @Override
                     public void run() {
-                        AJocClusterService.setLogger(IDENTIFIER);
-                        schedule.start(mode);
-                        AJocClusterService.clearLogger();
+                        while (!closed.get()) {
+                            AJocClusterService.setLogger(IDENTIFIER);
+                            try {
+                                schedule.start(mode);
+                            } catch (Throwable e) {
+                                LOGGER.error(e.toString(), e);
+                                long current = errors.get();
+                                if (current > 100) {
+                                    closed.set(true);
+                                    LOGGER.error("[stopped]max errors(" + current + ") reached");
+                                } else {
+                                    errors.set(current + 1);
+                                }
+                            }
+                            AJocClusterService.clearLogger();
+                        }
                     }
                 };
                 threadPool.submit(thread);
@@ -81,6 +99,7 @@ public class CleanupService extends AJocClusterService {
         AJocClusterService.setLogger(IDENTIFIER);
         LOGGER.info(String.format("[%s][%s]stop...", getIdentifier(), mode));
 
+        closed.set(true);
         close(mode);
         closeFactory();
         LOGGER.info(String.format("[%s][%s]stopped", getIdentifier(), mode));

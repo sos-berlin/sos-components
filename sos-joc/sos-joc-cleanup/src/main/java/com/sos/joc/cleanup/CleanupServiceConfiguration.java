@@ -6,6 +6,7 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 
 import scala.collection.mutable.StringBuilder;
@@ -21,6 +22,7 @@ public class CleanupServiceConfiguration {
     private ZoneId zoneId = ZoneId.of("UTC");
     private StartupMode startupMode = StartupMode.DAILY;
     private Period period = new Period(startupMode, "01-03");
+    private Age age = new Age("30d");
 
     public CleanupServiceConfiguration(Properties properties) {
         String timeZone = properties.getProperty("cleanup_time_zone");
@@ -40,6 +42,11 @@ public class CleanupServiceConfiguration {
         if (!SOSString.isEmpty(period)) {
             this.period = new Period(this.startupMode, period);
         }
+
+        String age = properties.getProperty("cleanup_age");
+        if (!SOSString.isEmpty(age)) {
+            this.age = new Age(age.trim());
+        }
     }
 
     public ZoneId getZoneId() {
@@ -52,6 +59,10 @@ public class CleanupServiceConfiguration {
 
     public Period getPeriod() {
         return period;
+    }
+
+    public Age getAge() {
+        return age;
     }
 
     private StartupMode getStartupMode(String startupMode) {
@@ -70,6 +81,12 @@ public class CleanupServiceConfiguration {
         sb.append(getClass().getSimpleName());
         sb.append(" zoneId=").append(zoneId);
         sb.append(",startupMode=").append(startupMode);
+        if (age == null) {
+            sb.append(",age=null");
+        } else {
+            sb.append(",age=[configured=").append(age.getConfigured());
+            sb.append(",minutes=").append(age.getMinutes()).append("]");
+        }
         if (period == null) {
             sb.append(",period=null");
         } else {
@@ -90,7 +107,7 @@ public class CleanupServiceConfiguration {
             } else {
                 sb.append(",to=[");
                 sb.append("configured=").append(period.getTo().getConfigured());
-                sb.append("hours=").append(period.getTo().getHours());
+                sb.append(",hours=").append(period.getTo().getHours());
                 sb.append(",minutes=").append(period.getTo().getMinutes());
                 sb.append(",seconds=").append(period.getTo().getSeconds());
                 sb.append("]");
@@ -101,25 +118,27 @@ public class CleanupServiceConfiguration {
         return sb.toString();
     }
 
-    public long parseDuration(String duration) {
-        duration = duration.toLowerCase();
-        if (duration.endsWith("s")) {
-            return Long.parseLong(duration.replaceAll(" ", "").replaceAll("s", ""));
-        } else if (duration.endsWith("m")) {
-            return Long.parseLong(duration.replaceAll(" ", "").replaceAll("m", "")) * 60;
-        } else if (duration.endsWith("h")) {
-            return Long.parseLong(duration.replaceAll(" ", "").replaceAll("h", "")) * 60 * 60;
-        } else if (duration.endsWith("d")) {
-            return Long.parseLong(duration.replaceAll(" ", "").replaceAll("d", "")) * 2 * 60 * 60;
-        } else {
-            if (!SOSString.isEmpty(duration)) {
-                try {
-                    return Long.parseLong(duration.replaceAll(" ", ""));
-                } catch (Throwable e) {
-                }
+    public class Age {
+
+        private String configured = null;
+        private Long minutes;
+
+        public Age(String configured) {
+            this.configured = configured;
+            try {
+                this.minutes = SOSDate.resolveAge("m", this.configured);
+            } catch (Exception e) {
+                LOGGER.error(String.format("[%s]%s", this.configured, e.toString()));
             }
         }
-        return 0;
+
+        public String getConfigured() {
+            return configured;
+        }
+
+        public Long getMinutes() {
+            return minutes;
+        }
     }
 
     public class Period {
