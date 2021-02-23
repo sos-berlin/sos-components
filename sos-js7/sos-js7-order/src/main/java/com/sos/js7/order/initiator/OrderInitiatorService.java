@@ -11,6 +11,8 @@ import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
+import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
+import com.sos.joc.cluster.bean.answer.JocServiceAnswer.JocServiceAnswerState;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
@@ -44,7 +46,7 @@ public class OrderInitiatorService extends AJocClusterService {
 
             LOGGER.info("[daily_plan_days_ahead_plan] onPeriodChange will create daily plan for " + settings.getDayAheadPlan() + " days ahead");
             LOGGER.info("[daily_plan_days_ahead_submit] onPeriodChange will submit daily plan for " + settings.getDayAheadSubmit() + " days ahead");
-                   if (settings.getDayAheadPlan() > 0) {
+            if (settings.getDayAheadPlan() > 0) {
                 resetStartPlannedOrderTimer(controllers);
             }
 
@@ -67,6 +69,12 @@ public class OrderInitiatorService extends AJocClusterService {
         }
         AJocClusterService.clearLogger();
         return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
+    }
+
+    @Override
+    public JocServiceAnswer getInfo() {
+        // TODO
+        return new JocServiceAnswer(JocServiceAnswerState.RELAX);
     }
 
     private void resetStartPlannedOrderTimer(List<ControllerConfiguration> controllers) {

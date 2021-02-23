@@ -109,6 +109,8 @@ public class HistoryControllerHandler {
     private Long lastReleaseEventId;
 
     private AtomicLong tornAfterEventId;
+    private AtomicLong lastActivityStart = new AtomicLong();
+    private AtomicLong lastActivityEnd = new AtomicLong();
 
     public HistoryControllerHandler(SOSHibernateFactory factory, Configuration config, ControllerConfiguration controllerConfig, Mailer notifier) {
         this.factory = factory;
@@ -126,7 +128,9 @@ public class HistoryControllerHandler {
         try {
             model = new HistoryModel(factory, historyConfig, controllerConfig);
             setIdentifier(controllerConfig.getCurrent().getType());
+            lastActivityStart.set(new Date().getTime());
             executeGetEventId();
+            lastActivityEnd.set(new Date().getTime());
             start(new AtomicLong(model.getStoredEventId()));
         } catch (Throwable e) {
             LOGGER.error(String.format("[%s][%s]%s", identifier, method, e.toString()), e);
@@ -211,9 +215,11 @@ public class HistoryControllerHandler {
                                 run = false;
                             } else {
                                 try {
+                                    lastActivityStart.set(new Date().getTime());
                                     eventId.set(model.process(list));
                                     releaseEvents(eventId.get());
                                     run = false;
+                                    lastActivityEnd.set(new Date().getTime());
                                 } catch (Throwable e) {
                                     LOGGER.error(e.toString(), e);
                                     wait(config.getHandler().getWaitIntervalOnError());
@@ -567,6 +573,14 @@ public class HistoryControllerHandler {
 
     public String getIdentifier() {
         return identifier;
+    }
+
+    public AtomicLong getLastActivityStart() {
+        return lastActivityStart;
+    }
+
+    public AtomicLong getLastActivityEnd() {
+        return lastActivityEnd;
     }
 
     private void executeGetEventId() {

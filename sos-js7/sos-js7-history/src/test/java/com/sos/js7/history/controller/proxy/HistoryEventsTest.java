@@ -6,6 +6,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.OptionalLong;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import org.junit.Ignore;
@@ -77,20 +79,23 @@ public class HistoryEventsTest {
 
     private static final String CONTROLLER_URI_PRIMARY = "http://localhost:5444";
     private static final String CONTROLLER_ID = "js7.x";
-    private static final int MAX_EXECUTION_TIME = 20; // seconds
+    private static final int MAX_EXECUTION_TIME = 30; // seconds
+    private static final int CHECKER_REFRESH_INTERVAL = 10; // seconds
     private static final Long START_EVENT_ID = 1613722418382001L;
 
     private EventFluxStopper stopper = new EventFluxStopper();
+    private AtomicBoolean stopped = new AtomicBoolean();
+    private AtomicLong lastExecution = new AtomicLong();
 
     @Ignore
     @Test
     public void testGetEvents() throws Exception {
         JProxyTestClass proxy = new JProxyTestClass();
-
         try {
             JControllerApi api = proxy.getControllerApi(ProxyUser.JOC, CONTROLLER_URI_PRIMARY);
 
             setStopper(stopper);
+            setChecker();
             process(api, new Long(START_EVENT_ID));
 
         } catch (Throwable e) {
@@ -134,9 +139,14 @@ public class HistoryEventsTest {
                     }
                 }
                 LOGGER.info("[HANDLE BLOCK][END]");
+                lastExecution.set(new Date().getTime());
             });
             return eventId;
         }
+    }
+
+    public AtomicLong getLastExecution() {
+        return lastExecution;
     }
 
     private AFatEvent map2fat(JEventAndControllerState<Event> eventAndState) {
@@ -390,6 +400,7 @@ public class HistoryEventsTest {
     }
 
     private void setStopper(EventFluxStopper stopper) {
+        stopped.set(false);
         Thread thread = new Thread() {
 
             public void run() {
@@ -403,8 +414,31 @@ public class HistoryEventsTest {
                 } finally {
                     stopper.stop();
                 }
-
+                stopped.set(true);
                 LOGGER.info(String.format("[%s][end][setStopper][%ss]", name, MAX_EXECUTION_TIME));
+            }
+        };
+        thread.start();
+    }
+
+    private void setChecker() {
+        Thread thread = new Thread() {
+
+            public void run() {
+                String name = Thread.currentThread().getName();
+                LOGGER.info(String.format("[%s][start][setChecker][%ss]...", name, CHECKER_REFRESH_INTERVAL));
+
+                while (!stopped.get()) {
+                    try {
+                        TimeUnit.SECONDS.sleep(CHECKER_REFRESH_INTERVAL);
+
+                        LOGGER.info("LAST EXECUTION=" + lastExecution);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                LOGGER.info(String.format("[%s][end][setChecker][%ss]", name, CHECKER_REFRESH_INTERVAL));
             }
         };
         thread.start();

@@ -653,23 +653,26 @@ public class JocInventory {
     }
 
     public static void deleteInventoryConfigurationAndPutToTrash(DBItemInventoryConfiguration item, InventoryDBLayer dbLayer) {
-        DBItemInventoryConfigurationTrash itemToTrash = new DBItemInventoryConfigurationTrash();
-        itemToTrash.setAuditLogId(item.getAuditLogId());
-        itemToTrash.setContent(item.getContent());
-        itemToTrash.setDocumentationId(item.getDocumentationId());
-        itemToTrash.setFolder(item.getFolder());
-        itemToTrash.setName(item.getName());
-        itemToTrash.setPath(item.getPath());
-        itemToTrash.setTitle(item.getTitle());
-        itemToTrash.setType(item.getType());
-        itemToTrash.setValid(item.getValid());
-        itemToTrash.setCreated(item.getCreated());
-        itemToTrash.setModified(item.getModified());
         try {
-            dbLayer.getSession().delete(item);
-            dbLayer.getSession().save(itemToTrash);
-            makeParentDirsForTrash(dbLayer, Paths.get(itemToTrash.getFolder()));
-            postEvent(item.getFolder());
+            List<DBItemInventoryConfigurationTrash> trashItems = dbLayer.getConfigurationFromTrashByName(item.getName(), item.getType());
+            if (trashItems == null || trashItems.isEmpty()) {
+                DBItemInventoryConfigurationTrash itemToTrash = new DBItemInventoryConfigurationTrash();
+                itemToTrash.setAuditLogId(item.getAuditLogId());
+                itemToTrash.setContent(item.getContent());
+                itemToTrash.setDocumentationId(item.getDocumentationId());
+                itemToTrash.setFolder(item.getFolder());
+                itemToTrash.setName(item.getName());
+                itemToTrash.setPath(item.getPath());
+                itemToTrash.setTitle(item.getTitle());
+                itemToTrash.setType(item.getType());
+                itemToTrash.setValid(item.getValid());
+                itemToTrash.setCreated(item.getCreated());
+                itemToTrash.setModified(item.getModified());
+                dbLayer.getSession().delete(item);
+                dbLayer.getSession().save(itemToTrash);
+                makeParentDirsForTrash(dbLayer, Paths.get(itemToTrash.getFolder()));
+                postEvent(item.getFolder());
+            }
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }

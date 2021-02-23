@@ -1659,11 +1659,12 @@ public abstract class PublishUtils {
         return deployedObjects;
     }
 
-    public static Set<DBItemDeploymentHistory> updateDeletedDepHistoryAndPutToTrash(List<DBItemDeploymentHistory> toDelete, DBLayerDeploy dbLayer) {
+    public static Set<DBItemDeploymentHistory> updateDeletedDepHistoryAndPutToTrash(List<DBItemDeploymentHistory> toDelete, DBLayerDeploy dbLayer, String commitId) {
         Set<DBItemDeploymentHistory> deletedObjects = new HashSet<DBItemDeploymentHistory>();
         try {
             for (DBItemDeploymentHistory delete : toDelete) {
                 delete.setId(null);
+                delete.setCommitId(commitId);
                 delete.setOperation(OperationType.DELETE.value());
                 delete.setState(DeploymentState.DEPLOYED.value());
                 delete.setDeleteDate(Date.from(Instant.now()));
