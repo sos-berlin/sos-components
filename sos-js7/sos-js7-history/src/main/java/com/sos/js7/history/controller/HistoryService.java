@@ -28,7 +28,6 @@ import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer.JocServiceAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.db.DBLayer;
@@ -148,13 +147,7 @@ public class HistoryService extends AJocClusterService {
                 }
             }
         }
-        JocServiceAnswerState state = null;
-        if (start == 0 && end == 0) {
-            state = JocServiceAnswerState.UNKNOWN;
-        } else {
-            state = start > end ? JocServiceAnswerState.BUSY : JocServiceAnswerState.RELAX;
-        }
-        return new JocServiceAnswer(state, start, end);
+        return new JocServiceAnswer(start, end);
     }
 
     private void setConfig() {

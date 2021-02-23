@@ -1,5 +1,7 @@
 package com.sos.joc.cleanup.model;
 
+import java.util.Date;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,8 +17,8 @@ public class CleanupTaskDailyplan extends CleanupTaskModel {
     }
 
     @Override
-    public void start() {
-        super.start();
+    public void start(Date date) {
+        super.start(date);
 
         LOGGER.info(String.format("[%s][mock-mode] start ...", getLogIdentifier()));
         waitFor(10);

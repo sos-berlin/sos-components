@@ -1,5 +1,8 @@
 package com.sos.joc.cleanup.model;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -19,13 +22,14 @@ public class CleanupTaskModel implements ICleanupTask {
     private AtomicBoolean stopped = new AtomicBoolean(false);
     private String logIdentifier = null;
     private JocServiceTaskAnswerState state = null;
+    private Date date = null;
 
     protected CleanupTaskModel(IJocClusterService service) {
         this.service = service;
     }
 
     @Override
-    public void start() {
+    public void start(Date date) {
         state = JocServiceTaskAnswerState.UNCOMPLETED;
         stopped.set(false);
     }
@@ -64,6 +68,10 @@ public class CleanupTaskModel implements ICleanupTask {
         return service;
     }
 
+    public Date getDate() {
+        return date;
+    }
+
     protected String getLogIdentifier() {
         if (logIdentifier == null) {
             logIdentifier = ClusterServices.cleanup.name() + "_" + service.getIdentifier();
@@ -90,6 +98,10 @@ public class CleanupTaskModel implements ICleanupTask {
                 }
             }
         }
+    }
+
+    public Date getCurrentDateTimeMinusMinutes(int minutes) {
+        return Date.from(LocalDateTime.now().atZone(ZoneId.of("UTC")).minusMinutes(minutes).toInstant());
     }
 
 }
