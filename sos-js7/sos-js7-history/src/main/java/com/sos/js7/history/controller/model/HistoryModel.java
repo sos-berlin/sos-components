@@ -306,8 +306,10 @@ public class HistoryModel {
                         postEventOrderUpdated(co);
                         break;
                     case OrderSuspended:
-                        orderNotCompleted(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderSuspended, endedOrderSteps);
+                        co = orderNotCompleted(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderSuspended, endedOrderSteps);
                         counter.getOrder().addSuspended();
+
+                        postEventOrderUpdated(co);
                         break;
                     case OrderCancelled:
                         FatEventOrderCancelled oc = (FatEventOrderCancelled) entry;
