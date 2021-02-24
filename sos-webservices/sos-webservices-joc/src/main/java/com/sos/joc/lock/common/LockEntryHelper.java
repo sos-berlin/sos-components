@@ -193,7 +193,7 @@ public class LockEntryHelper {
         WorkflowLock l = new WorkflowLock();
         l.setId(lockId);
         try {
-            JWorkflow jd = getFromEither(controllerState.idToWorkflow(JWorkflowId.of(lo.getOrder().getWorkflowId().getPath(), lo.getOrder()
+            JWorkflow jd = getFromEither(controllerState.repo().idToWorkflow(JWorkflowId.of(lo.getOrder().getWorkflowId().getPath(), lo.getOrder()
                     .getWorkflowId().getVersionId())), "workflow=" + lo.getOrder().getWorkflowId().getPath()).withPositions();
             Instruction in = jd.asScala().instruction(jo.workflowPosition().position().asScala());
             if (in != null && in instanceof LockInstruction) {

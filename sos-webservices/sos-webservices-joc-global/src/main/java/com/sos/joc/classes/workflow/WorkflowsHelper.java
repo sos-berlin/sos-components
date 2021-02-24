@@ -155,7 +155,7 @@ public class WorkflowsHelper {
         WorkflowStateText stateText = WorkflowStateText.UNKNOWN;
         if (currentstate != null) {
             stateText = WorkflowStateText.NOT_IN_SYNC;
-            Either<Problem, JWorkflow> workflowV = currentstate.idToWorkflow(JWorkflowId.of(JocInventory.pathToName(workflow.getPath()),
+            Either<Problem, JWorkflow> workflowV = currentstate.repo().idToWorkflow(JWorkflowId.of(JocInventory.pathToName(workflow.getPath()),
                     workflow.getVersionId()));
             //ProblemHelper.throwProblemIfExist(workflowV);
             if (workflowV != null && workflowV.isRight()) {

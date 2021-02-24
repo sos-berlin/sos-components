@@ -51,7 +51,6 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
-import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
@@ -677,7 +676,7 @@ public class JocInventory {
             trashItem.setModified(now);
             if (trashItem.getId() == null) {
                 dbLayer.getSession().save(trashItem); 
-                makeParentDirsForTrash(dbLayer, Paths.get(trashItem.getFolder()));
+                makeParentDirsForTrash(dbLayer, Paths.get(trashItem.getFolder()), trashItem.getAuditLogId());
             } else {
                 dbLayer.getSession().update(trashItem);
             }

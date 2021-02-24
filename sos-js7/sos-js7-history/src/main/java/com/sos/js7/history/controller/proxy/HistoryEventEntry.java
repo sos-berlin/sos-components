@@ -524,7 +524,7 @@ public class HistoryEventEntry {
                         throw new Exception(String.format("[%s][%s]missing WorkflowInfo", eventId, orderId));
                     }
 
-                    Either<Problem, JWorkflow> pw = state.idToWorkflow(workflowInfo.getWorkflowId());
+                    Either<Problem, JWorkflow> pw = state.repo().idToWorkflow(workflowInfo.getWorkflowId());
                     JWorkflow workflow = getFromEither(pw);
 
                     Either<Problem, Name> pn = workflow.checkedJobName(workflowInfo.getPosition().getUnderlying());

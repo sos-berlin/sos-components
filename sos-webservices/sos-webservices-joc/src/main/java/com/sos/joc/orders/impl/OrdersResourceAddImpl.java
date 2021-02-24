@@ -78,7 +78,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                 Either<Err419, JFreshOrder> either = null;
                 try {
                     CheckJavaVariableName.test("orderName", order.getOrderName());
-                    Either<Problem, JWorkflow> e = currentState.pathToWorkflow(WorkflowPath.of(JocInventory.pathToName(order.getWorkflowPath())));
+                    Either<Problem, JWorkflow> e = currentState.repo().pathToWorkflow(WorkflowPath.of(JocInventory.pathToName(order.getWorkflowPath())));
                     ProblemHelper.throwProblemIfExist(e);
                     Workflow workflow = Globals.objectMapper.readValue(e.get().toJson(), Workflow.class);
                     order.setArguments(OrdersHelper.checkArguments(order.getArguments(), workflow.getOrderRequirements()));

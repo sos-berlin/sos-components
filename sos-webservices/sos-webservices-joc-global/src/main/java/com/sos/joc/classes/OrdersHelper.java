@@ -234,7 +234,7 @@ public class OrdersHelper {
     
     public static Requirements getRequirements(JOrder jOrder, JControllerState currentState) throws JsonParseException, JsonMappingException,
             IOException {
-        Either<Problem, JWorkflow> eW = currentState.idToWorkflow(jOrder.workflowId());
+        Either<Problem, JWorkflow> eW = currentState.repo().idToWorkflow(jOrder.workflowId());
         ProblemHelper.throwProblemIfExist(eW);
         return Globals.objectMapper.readValue(eW.get().toJson(), Workflow.class).getOrderRequirements();
     }
@@ -324,7 +324,7 @@ public class OrdersHelper {
                         || (dailyplanModifyOrder.getRemoveVariables() != null && !dailyplanModifyOrder.getRemoveVariables().getAdditionalProperties()
                                 .isEmpty())) {
                     Variables vars = scalaValuedArgumentsToVariables(args);
-                    Either<Problem, JWorkflow> e = currentState.idToWorkflow(order.workflowId());
+                    Either<Problem, JWorkflow> e = currentState.repo().idToWorkflow(order.workflowId());
                     ProblemHelper.throwProblemIfExist(e);
                     Workflow workflow = Globals.objectMapper.readValue(e.get().toJson(), Workflow.class);
                     if (dailyplanModifyOrder.getVariables() != null && !dailyplanModifyOrder.getVariables().getAdditionalProperties().isEmpty()) {
