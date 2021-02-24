@@ -3,7 +3,6 @@ package com.sos.joc.workflow.resource;
 
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
-import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
@@ -14,10 +13,5 @@ public interface IWorkflowResource {
     @POST
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postWorkflowPermanent(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
-    
-    @POST
-    @Path("v")
-    @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postWorkflowVolatile(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 
 }

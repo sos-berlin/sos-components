@@ -48,7 +48,6 @@ public class JocAuditLog {
 			String timeSpent = "-";
 			String ticketLink = "-";
 			if (body != null) {
-				comment = body.getComment();
 				if (body.getComment() != null) {
 					comment = body.getComment();
 				}

@@ -2,7 +2,6 @@ package com.sos.joc.workflows.impl;
 
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -21,19 +20,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.workflow.Workflow;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.deploy.items.DeployedContent;
-import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.workflow.WorkflowId;
@@ -42,12 +38,7 @@ import com.sos.joc.model.workflow.WorkflowsFilter;
 import com.sos.joc.workflows.resource.IWorkflowsResource;
 import com.sos.schema.JsonValidator;
 
-import io.vavr.control.Either;
-import js7.base.problem.Problem;
-import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerState;
-import js7.data_for_java.workflow.JWorkflow;
-import js7.data_for_java.workflow.JWorkflowId;
 
 @Path("workflows")
 public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflowsResource {
@@ -116,49 +107,6 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
         }
     }
 
-    @Override
-    public JOCDefaultResponse postWorkflowsVolatile(String accessToken, byte[] filterBytes) {
-        try {
-            initLogging(API_CALL + "/v", filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, WorkflowsFilter.class);
-            WorkflowsFilter workflowsFilter = Globals.objectMapper.readValue(filterBytes, WorkflowsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(workflowsFilter.getControllerId(), getPermissonsJocCockpit(workflowsFilter
-                    .getControllerId(), accessToken).getWorkflow().getView().isStatus());
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
-            }
-
-            JControllerState currentState = Proxy.of(workflowsFilter.getControllerId()).currentState();
-            Long surveyDateMillis = currentState.eventId() / 1000;
-            Stream<DeployedContent> contentsStream = getVolatileDeployedContent(workflowsFilter, currentState);
-
-            boolean withRegex = workflowsFilter.getRegex() != null && !workflowsFilter.getRegex().isEmpty();
-            Predicate<String> regex = withRegex ? Pattern.compile(workflowsFilter.getRegex().replaceAll("%", ".*")).asPredicate() : s -> true;
-
-            Workflows workflows = new Workflows();
-            workflows.setWorkflows(contentsStream.map(c -> {
-                try {
-                    Workflow workflow = Globals.objectMapper.readValue(c.getContent(), Workflow.class);
-                    workflow.setPath(c.getPath());
-                    workflow.setIsCurrentVersion(c.isCurrentVersion());
-                    return workflow;
-                } catch (Exception e) {
-                    // TODO
-                    return null;
-                }
-            }).filter(Objects::nonNull).filter(w -> regex.test(w.getPath())).collect(Collectors.toList()));
-            workflows.setSurveyDate(Date.from(Instant.ofEpochMilli(surveyDateMillis)));
-            workflows.setDeliveryDate(Date.from(Instant.now()));
-
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(workflows));
-
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-        }
-    }
     
     private JControllerState getCurrentState(String controllerId) {
         JControllerState currentstate = null;
@@ -230,103 +178,6 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
         }
         return contents;
     }
-
-    private Stream<DeployedContent> getVolatileDeployedContent(WorkflowsFilter workflowsFilter, JControllerState currentState)
-            throws SOSHibernateException {
-        SOSHibernateSession connection = null;
-        try {
-
-            List<WorkflowId> workflowIds = workflowsFilter.getWorkflowIds();
-            final Set<Folder> folders = addPermittedFolder(workflowsFilter.getFolders());
-            List<DeployedContent> contents = null;
-
-            if (workflowIds != null && !workflowIds.isEmpty()) {
-                workflowsFilter.setRegex(null);
-                return workflowIds.stream().filter(w -> canAdd(w.getPath(), folders)).map(w -> {
-                    Either<Problem, JWorkflow> e = null;
-                    Boolean isCurrentVersion = null;
-                    if (w.getVersionId() != null) {
-                        e = currentState.idToWorkflow(JWorkflowId.of(JocInventory.pathToName(w.getPath()), w.getVersionId()));
-                    } else {
-                        e = currentState.pathToWorkflow(WorkflowPath.of(JocInventory.pathToName(w.getPath())));
-                        isCurrentVersion = true;
-                    }
-                    if (e != null && e.isRight()) {
-                        if (isCurrentVersion == null) {
-                            Either<Problem, JWorkflow> e2 = currentState.pathToWorkflow(WorkflowPath.of(JocInventory.pathToName(w.getPath())));
-                            isCurrentVersion = e2.get().id().versionId().equals(e.get().id().versionId());
-                        }
-                        return new DeployedContent(w.getPath(), e.get().withPositions().toJson(), w.getVersionId(), null, isCurrentVersion);
-                    }
-                    return null;
-                }).filter(Objects::nonNull);
-
-            } else {
-                DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
-                dbFilter.setControllerId(workflowsFilter.getControllerId());
-                dbFilter.setObjectTypes(Arrays.asList(DeployType.WORKFLOW.intValue()));
-
-                boolean withFolderFilter = workflowsFilter.getFolders() != null && !workflowsFilter.getFolders().isEmpty();
-                connection = Globals.createSosHibernateStatelessConnection(API_CALL + "/v");
-                DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
-
-                if (withFolderFilter && (folders == null || folders.isEmpty())) {
-                    // no folder permissions
-                } else if (folders != null && !folders.isEmpty()) {
-                    dbFilter.setFolders(folders);
-                    contents = dbLayer.getDeployedInventory(dbFilter);
-
-                    Set<WorkflowId> wIds = WorkflowsHelper.oldWorkflowIds(currentState).collect(Collectors.toSet());
-                    if (wIds != null && !wIds.isEmpty()) {
-                        dbFilter.setWorkflowIds(wIds);
-                        Map<WorkflowId, String> namePathMap = dbLayer.getNamePathMappingWithCommitIds(dbFilter);
-                        Stream<DeployedContent> oldWorkflows = wIds.stream().filter(wId -> namePathMap.containsKey(wId)).map(wId -> {
-                            Either<Problem, JWorkflow> e = currentState.idToWorkflow(JWorkflowId.of(wId.getPath(), wId.getVersionId()));
-                            if (e.isRight() && namePathMap.get(wId) != null) {
-                                return new DeployedContent(namePathMap.get(wId), e.get().withPositions().toJson(), e.get().id().versionId().string(),
-                                        null, false);
-                            }
-                            return null;
-                        }).filter(Objects::nonNull);
-
-                        if (contents == null) {
-                            return oldWorkflows;
-                        } else {
-                            return Stream.concat(addWorkflowPositions(contents, currentState), oldWorkflows);
-                        }
-                    }
-                    return addWorkflowPositions(contents, currentState);
-                } else {
-                    contents = dbLayer.getDeployedInventory(dbFilter);
-
-                    Set<WorkflowId> wIds = WorkflowsHelper.oldWorkflowIds(currentState).collect(Collectors.toSet());
-                    if (wIds != null && !wIds.isEmpty()) {
-                        dbFilter.setWorkflowIds(wIds);
-                        Map<WorkflowId, String> namePathMap = dbLayer.getNamePathMappingWithCommitIds(dbFilter);
-                        Stream<DeployedContent> oldWorkflows = wIds.stream().map(wId -> {
-                            Either<Problem, JWorkflow> e = currentState.idToWorkflow(JWorkflowId.of(wId.getPath(), wId.getVersionId()));
-                            if (e.isRight() && namePathMap.get(wId) != null) {
-                                return new DeployedContent(namePathMap.get(wId), e.get().withPositions().toJson(), e.get().id().versionId().string(),
-                                        null, false);
-                            }
-                            return null;
-                        }).filter(Objects::nonNull);
-
-                        if (contents == null) {
-                            return oldWorkflows;
-                        } else {
-                            return Stream.concat(addWorkflowPositions(contents, currentState), oldWorkflows);
-                        }
-                    }
-                    return addWorkflowPositions(contents, currentState);
-                }
-            }
-
-            return Stream.empty();
-        } finally {
-            Globals.disconnect(connection);
-        }
-    }
     
     private List<DeployedContent> getOlderWorkflows(WorkflowsFilter workflowsFilter, JControllerState currentState,
             DeployedConfigurationDBLayer dbLayer) {
@@ -367,20 +218,6 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
         }
 
         return contents;
-    }
-
-    private Stream<DeployedContent> addWorkflowPositions(Collection<DeployedContent> contents, JControllerState currentState) {
-        if (contents != null && !contents.isEmpty()) {
-            return contents.stream().map(w -> {
-                Either<Problem, JWorkflow> e = currentState.pathToWorkflow(WorkflowPath.of(JocInventory.pathToName(w.getPath())));
-                if (e.isRight()) {
-                    w.setContent(e.get().withPositions().toJson());
-                    return w;
-                }
-                return null;
-            }).filter(Objects::nonNull);
-        }
-        return Stream.empty();
     }
 
 }

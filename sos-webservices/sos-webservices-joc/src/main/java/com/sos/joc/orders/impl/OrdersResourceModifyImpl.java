@@ -172,7 +172,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             command(action, modifyOrders, jOrders.stream().map(JOrder::id).collect(Collectors.toSet())).thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                 if (either.isRight()) {
-                    OrdersHelper.createAuditLogFromJOrders(getJocAuditLog(), jOrders, controllerId, modifyOrders.getAuditLog()).thenAccept(
+                    OrdersHelper.createAuditLogFromJOrders(getJocAuditLog(), jOrders, controllerId, modifyOrders).thenAccept(
                             either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
                 }
             });

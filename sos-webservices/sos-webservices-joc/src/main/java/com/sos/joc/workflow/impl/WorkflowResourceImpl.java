@@ -13,8 +13,6 @@ import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.ProblemHelper;
-import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
@@ -26,12 +24,7 @@ import com.sos.joc.model.workflow.WorkflowFilter;
 import com.sos.joc.workflow.resource.IWorkflowResource;
 import com.sos.schema.JsonValidator;
 
-import io.vavr.control.Either;
-import js7.base.problem.Problem;
-import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerState;
-import js7.data_for_java.workflow.JWorkflow;
-import js7.data_for_java.workflow.JWorkflowId;
 
 @Path("workflow")
 public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowResource {
@@ -102,56 +95,6 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
         }
     }
 
-    public JOCDefaultResponse postWorkflowVolatile(String accessToken, byte[] filterBytes) {
-        try {
-            initLogging(API_CALL + "/v", filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, WorkflowFilter.class);
-            WorkflowFilter workflowFilter = Globals.objectMapper.readValue(filterBytes, WorkflowFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(workflowFilter.getControllerId(), getPermissonsJocCockpit(workflowFilter
-                    .getControllerId(), accessToken).getWorkflow().getView().isStatus());
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
-            }
-
-            // nameToPath mapping if workflowFilter.getWorkflowId().getPath() is a name
-            String workflowPath = workflowFilter.getWorkflowId().getPath();
-            if (workflowPath.contains("/")) {
-                checkFolderPermissions(workflowPath, folderPermissions.getListOfFolders());
-            }
-
-            String workflowName = JocInventory.pathToName(workflowPath);
-            JControllerState currentState = Proxy.of(workflowFilter.getControllerId()).currentState();
-            Long surveyDateMillis = currentState.eventId() / 1000;
-
-            String versionId = workflowFilter.getWorkflowId().getVersionId();
-            Either<Problem, JWorkflow> response = null;
-            if (versionId == null) {
-                response = currentState.pathToWorkflow(WorkflowPath.of(workflowName));
-            } else {
-                response = currentState.idToWorkflow(JWorkflowId.of(workflowName, versionId));
-            }
-            ProblemHelper.throwProblemIfExist(response);
-
-            com.sos.controller.model.workflow.Workflow workflow = Globals.objectMapper.readValue(response.get().withPositions().toJson(),
-                    com.sos.controller.model.workflow.Workflow.class);
-            workflow.setIsCurrentVersion(WorkflowsHelper.isCurrentVersion(versionId, currentState));
-            workflow.setPath(workflowPath);
-
-            Workflow entity = new Workflow();
-            entity.setSurveyDate(Date.from(Instant.ofEpochMilli(surveyDateMillis)));
-            entity.setDeliveryDate(Date.from(Instant.now()));
-            entity.setWorkflow(workflow);
-
-            return JOCDefaultResponse.responseStatus200(entity);
-
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-        }
-    }
-    
     private JControllerState getCurrentState(String controllerId) {
         JControllerState currentstate = null;
         try {

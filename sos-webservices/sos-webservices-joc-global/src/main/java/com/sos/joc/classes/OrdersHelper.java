@@ -456,7 +456,7 @@ public class OrdersHelper {
     }
     
     public static CompletableFuture<Either<Exception, Void>> createAuditLogFromJOrders(JocAuditLog jocAuditLog, Collection<JOrder> jOrders,
-            String controllerId, AuditParams auditParams) {
+            String controllerId, ModifyOrders modifyOrders) {
         return CompletableFuture.supplyAsync(() -> {
             if (jOrders != null) {
                 try {
@@ -466,7 +466,7 @@ public class OrdersHelper {
                         final Map<String, String> nameToPath = dbLayer.getNamePathMapping(controllerId, jOrders.stream().map(o -> o.workflowId()
                                 .path().string()).collect(Collectors.toSet()), DeployType.WORKFLOW.intValue());
                         jOrders.forEach(o -> {
-                            ModifyOrderAudit audit = new ModifyOrderAudit(o, controllerId, auditParams, nameToPath);
+                            ModifyOrderAudit audit = new ModifyOrderAudit(o, controllerId, modifyOrders, nameToPath);
                             jocAuditLog.logAuditMessage(audit);
                             jocAuditLog.storeAuditLogEntry(audit, connection);
                         });

@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.Schedule;
 import com.sos.inventory.model.calendar.Calendar;
@@ -46,6 +47,8 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.inventory.InventoryEvent;
+import com.sos.joc.exceptions.DBConnectionRefusedException;
+import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocSosHibernateException;
@@ -678,8 +681,10 @@ public class JocInventory {
             } else {
                 dbLayer.getSession().update(trashItem);
             }
-        } catch (SOSHibernateException e) {
-            throw new JocSosHibernateException(e);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
         }
     }
 }
