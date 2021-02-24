@@ -59,9 +59,15 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     private static final String API_CALL = "./inventory/deployment/deploy";
     private static final Logger LOGGER = LoggerFactory.getLogger(DeployImpl.class);
     private DBLayerDeploy dbLayer = null;
+    private boolean withoutFolderDeletion = false;
 
     @Override
     public JOCDefaultResponse postDeploy(String xAccessToken, byte[] filter) throws Exception {
+        return postDeploy(xAccessToken, filter, false);
+    }
+
+    public JOCDefaultResponse postDeploy(String xAccessToken, byte[] filter, boolean withoutFolderDeletion) throws Exception {
+        this.withoutFolderDeletion = withoutFolderDeletion;
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, filter, xAccessToken);
@@ -469,23 +475,25 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 configurationsToDelete.stream().forEach(item -> JocInventory.deleteInventoryConfigurationAndPutToTrash(item, invDbLayer));
 //                JocInventory.deleteConfigurations(configurationsToDelete);
                 JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);
-                if (foldersToDelete != null && !foldersToDelete.isEmpty()) {
-                    for (Config folder : foldersToDelete) {
-                        // check if deployable objects still exist in the folder
-                        Set<DBItemDeploymentHistory> stillActiveDeployments = PublishUtils.getLatestDepHistoryEntriesActiveForFolder(folder, dbLayer);
-                        if (checkDeploymentItemsStillExist(stillActiveDeployments)) {
-                            String controllersFormatted = stillActiveDeployments.stream()
-                                    .map(item -> item.getControllerId()).collect(Collectors.joining(", "));
-                            LOGGER.warn(String.format(
-                                    "removed folder \"%1$s\" can´t be deleted from inventory. Deployments still exist on controllers %2$s.", folder
-                                            .getConfiguration().getPath(), controllersFormatted));
-                        } else {
-                            try {
-                                JocInventory.deleteEmptyFolders(new InventoryDBLayer(newHibernateSession), folder.getConfiguration().getPath());
-                            } catch (SOSHibernateException e) {
-                                ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(e.toString())), getAccessToken(), getJocError(),
-                                        null);
-                           }
+                if (!withoutFolderDeletion) {
+                    if (foldersToDelete != null && !foldersToDelete.isEmpty()) {
+                        for (Config folder : foldersToDelete) {
+                            // check if deployable objects still exist in the folder
+                            Set<DBItemDeploymentHistory> stillActiveDeployments = PublishUtils.getLatestDepHistoryEntriesActiveForFolder(folder, dbLayer);
+                            if (checkDeploymentItemsStillExist(stillActiveDeployments)) {
+                                String controllersFormatted = stillActiveDeployments.stream()
+                                        .map(item -> item.getControllerId()).collect(Collectors.joining(", "));
+                                LOGGER.warn(String.format(
+                                        "removed folder \"%1$s\" can´t be deleted from inventory. Deployments still exist on controllers %2$s.", folder
+                                                .getConfiguration().getPath(), controllersFormatted));
+                            } else {
+                                try {
+                                    JocInventory.deleteEmptyFolders(new InventoryDBLayer(newHibernateSession), folder.getConfiguration().getPath());
+                                } catch (SOSHibernateException e) {
+                                    ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(e.toString())), getAccessToken(), getJocError(),
+                                            null);
+                               }
+                            }
                         }
                     }
                 }
