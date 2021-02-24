@@ -374,6 +374,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                         .collect(Collectors.toSet());
                 Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistoryAndPutToTrash(itemsToDelete, dbLayer, versionIdForDelete);
                 configurationsToDelete.stream().forEach(item -> JocInventory.deleteInventoryConfigurationAndPutToTrash(item, invDbLayer));
+                configurationsToDelete.stream().map(item -> item.getFolder()).distinct().forEach(item -> JocInventory.postEvent(item));
 //                JocInventory.deleteConfigurations(configurationsToDelete);
                 JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);
             } else if (either.isLeft()) {

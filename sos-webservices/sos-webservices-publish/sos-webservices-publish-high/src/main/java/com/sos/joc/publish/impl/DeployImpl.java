@@ -414,6 +414,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 Set<DBItemDeploymentHistory> deletedDeployItems = 
                         PublishUtils.updateDeletedDepHistoryAndPutToTrash(itemsToDelete, dbLayer, versionIdForDelete);
                 configurationsToDelete.stream().forEach(item -> JocInventory.deleteInventoryConfigurationAndPutToTrash(item, invDbLayer));
+                configurationsToDelete.stream().map(item -> item.getFolder()).distinct().forEach(item -> JocInventory.postEvent(item));
 //                JocInventory.deleteConfigurations(configurationsToDelete);
                 JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);
             } else if (either.isLeft()) {
@@ -457,6 +458,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         dbLayer.getInventoryConfigurationsByFolder(item.getConfiguration().getPath(), item.getConfiguration().getRecursive())));
                 Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistoryAndPutToTrash(itemsToDelete, dbLayer, versionIdForDelete);
                 configurationsToDelete.stream().forEach(item -> JocInventory.deleteInventoryConfigurationAndPutToTrash(item, invDbLayer));
+                configurationsToDelete.stream().map(item -> item.getFolder()).distinct().forEach(item -> JocInventory.postEvent(item));
 //                JocInventory.deleteConfigurations(configurationsToDelete);
                 JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);
                 if (!withoutFolderDeletion) {

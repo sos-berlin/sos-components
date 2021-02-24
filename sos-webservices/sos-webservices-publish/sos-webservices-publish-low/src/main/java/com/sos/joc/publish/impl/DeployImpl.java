@@ -436,6 +436,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 Set<DBItemDeploymentHistory> deletedDeployItems = 
                         PublishUtils.updateDeletedDepHistoryAndPutToTrash(itemsToDelete, dbLayer, versionIdForDelete);
                 configurationsToDelete.stream().forEach(item -> JocInventory.deleteInventoryConfigurationAndPutToTrash(item, invDbLayer));
+                configurationsToDelete.stream().map(item -> item.getFolder()).distinct().forEach(item -> JocInventory.postEvent(item));
 //                JocInventory.deleteConfigurations(configurationsToDelete);
                 JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);
             } else if (either.isLeft()) {
@@ -451,7 +452,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             }
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
-            ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(e.toString())), getAccessToken(), getJocError(), null);
+            ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), null);
         } finally {
             Globals.disconnect(newHibernateSession);
         }
@@ -473,6 +474,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         dbLayer.getInventoryConfigurationsByFolder(item.getConfiguration().getPath(), item.getConfiguration().getRecursive())));
                 Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistoryAndPutToTrash(itemsToDelete, dbLayer, versionIdForDelete);
                 configurationsToDelete.stream().forEach(item -> JocInventory.deleteInventoryConfigurationAndPutToTrash(item, invDbLayer));
+                configurationsToDelete.stream().map(item -> item.getFolder()).distinct().forEach(item -> JocInventory.postEvent(item));
 //                JocInventory.deleteConfigurations(configurationsToDelete);
                 JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);
                 if (!withoutFolderDeletion) {
@@ -490,8 +492,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                                 try {
                                     JocInventory.deleteEmptyFolders(new InventoryDBLayer(newHibernateSession), folder.getConfiguration().getPath());
                                 } catch (SOSHibernateException e) {
-                                    ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(e.toString())), getAccessToken(), getJocError(),
-                                            null);
+                                    ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), null);
                                }
                             }
                         }
@@ -510,7 +511,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             }
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
-            ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(e.toString())), getAccessToken(), getJocError(), null);
+            ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), null);
         } finally {
             Globals.disconnect(newHibernateSession);
         }

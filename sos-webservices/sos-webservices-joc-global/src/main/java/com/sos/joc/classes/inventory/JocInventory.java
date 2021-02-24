@@ -656,7 +656,6 @@ public class JocInventory {
         try {
             DBItemInventoryConfigurationTrash trashItem = dbLayer.getTrashConfiguration(item.getPath(), item.getType());
             deleteConfiguration(dbLayer, item);
-            postEvent(item.getFolder());
             Date now = Date.from(Instant.now());
             if (trashItem == null) {
                 trashItem = new DBItemInventoryConfigurationTrash();
