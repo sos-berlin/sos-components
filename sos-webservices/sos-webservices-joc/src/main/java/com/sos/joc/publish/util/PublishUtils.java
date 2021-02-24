@@ -1616,7 +1616,14 @@ public abstract class PublishUtils {
             DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
             deployedObjects = new HashSet<DBItemDeploymentHistory>();
             for (DBItemDeploymentHistory redeployed : redeployedWithSignature.keySet()) {
-                redeployed.setSignedContent(redeployedWithSignature.get(redeployed).getSignature());
+                DBItemDepSignatures signature = redeployedWithSignature.get(redeployed);
+                if (signature == null) {
+                    // simple item
+                    redeployed.setSignedContent("");
+                } else {
+                    // signed item
+                    redeployed.setSignedContent(signature.getSignature());
+                }
                 redeployed.setId(null);
                 redeployed.setAccount(account);
                 // TODO: get Version to set here
