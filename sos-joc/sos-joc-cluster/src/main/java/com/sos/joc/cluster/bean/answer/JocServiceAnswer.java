@@ -1,5 +1,10 @@
 package com.sos.joc.cluster.bean.answer;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
 public class JocServiceAnswer {
 
     public enum JocServiceAnswerState {
@@ -7,8 +12,9 @@ public class JocServiceAnswer {
     }
 
     private JocServiceAnswerState state;
-    private long lastActivityStart;
-    private long lastActivityEnd;
+    private ZonedDateTime lastActivityStart;
+    private ZonedDateTime lastActivityEnd;
+    private long nowMinutesDiff;
 
     public JocServiceAnswer() {
         this(null, 0, 0);
@@ -18,28 +24,37 @@ public class JocServiceAnswer {
         this(null, lastActivityStart, lastActivityEnd);
     }
 
-    public JocServiceAnswer(JocServiceAnswerState state, long lastActivityStart, long lastActivityEnd) {
-        if (state == null) {
-            if (lastActivityStart == 0 && lastActivityEnd == 0) {
-                state = JocServiceAnswerState.UNKNOWN;
+    private JocServiceAnswer(JocServiceAnswerState state, long lastActivityStart, long lastActivityEnd) {
+        if (lastActivityStart == 0 || lastActivityEnd == 0) {
+            this.state = JocServiceAnswerState.UNKNOWN;
+            this.lastActivityStart = null;
+            this.lastActivityEnd = null;
+        } else {
+            this.lastActivityStart = ZonedDateTime.ofInstant(Instant.ofEpochMilli(lastActivityStart), ZoneId.of("UTC"));
+            this.lastActivityEnd = ZonedDateTime.ofInstant(Instant.ofEpochMilli(lastActivityEnd), ZoneId.of("UTC"));
+            if (lastActivityStart > lastActivityEnd) {
+                this.state = JocServiceAnswerState.BUSY;
             } else {
-                state = lastActivityStart > lastActivityEnd ? JocServiceAnswerState.BUSY : JocServiceAnswerState.RELAX;
+                ZonedDateTime now = ZonedDateTime.ofInstant(Instant.now(), ZoneId.of("UTC"));
+                this.nowMinutesDiff = Duration.between(now, this.lastActivityEnd).abs().toMinutes();
+                this.state = this.nowMinutesDiff >= 1 ? JocServiceAnswerState.RELAX : JocServiceAnswerState.BUSY;
             }
         }
-        this.state = state;
-        this.lastActivityStart = lastActivityStart;
-        this.lastActivityEnd = lastActivityEnd;
     }
 
     public JocServiceAnswerState getState() {
         return state;
     }
 
-    public long getLastActivityStart() {
+    public ZonedDateTime getLastActivityStart() {
         return lastActivityStart;
     }
 
-    public long getLastActivityEnd() {
+    public ZonedDateTime getLastActivityEnd() {
         return lastActivityEnd;
+    }
+
+    public long getNowMinutesDiff() {
+        return nowMinutesDiff;
     }
 }

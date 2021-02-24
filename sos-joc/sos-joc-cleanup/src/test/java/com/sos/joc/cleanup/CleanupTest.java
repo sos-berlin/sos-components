@@ -2,6 +2,7 @@ package com.sos.joc.cleanup;
 
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -20,6 +21,13 @@ public class CleanupTest {
         String[] arr = dt.split("->");
 
         ZonedDateTime zdt = ZonedDateTime.parse(arr[0], DateTimeFormatter.ISO_ZONED_DATE_TIME);
-        LOGGER.info(zdt.toString());
+
+        Date now = new Date();
+
+        long l = now.getTime() * 1_000 + 999;
+
+        LOGGER.info("" + now.getTime());
+        LOGGER.info("" + now.getTime() * 1_000);
+        LOGGER.info("" + l);
     }
 }

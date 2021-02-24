@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -12,6 +13,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,20 +43,21 @@ public class CleanupServiceSchedule {
     private ZonedDateTime firstStart = null;
     private ZonedDateTime start = null;
     private ZonedDateTime end = null;
+    List<String> unclompleted = null;
 
     public CleanupServiceSchedule(CleanupService service) {
         this.service = service;
         this.task = new CleanupServiceTask(this);
     }
 
-    public void start(StartupMode mode) {
+    public void start(StartupMode mode) throws Exception {
         try {
             try {
                 long delay = computeNextDelay();
                 if (delay > 0) {
                     long timeout = computeTimeout();
                     JocClusterAnswer answer = setSchedule(mode, delay, timeout);
-                    LOGGER.info("RESULT = " + SOSString.toString(answer));
+                    LOGGER.info(SOSString.toString(answer));
                     updateJocVariableOnResult(answer);
                 } else {
                     LOGGER.error(String.format("[%s][%s][skip start]delay can't be computed", service.getIdentifier(), mode));
@@ -102,6 +106,7 @@ public class CleanupServiceSchedule {
             ZonedDateTime nextFromDB = null;
             ZonedDateTime nextToDB = null;
             String configuredDB = null;
+            unclompleted = null;
             if (item != null) {
                 LOGGER.info(String.format("[stored value]%s", item.getTextValue()));
                 String[] arr = item.getTextValue().split(DELIMITER);
@@ -133,6 +138,13 @@ public class CleanupServiceSchedule {
                         if (val.equalsIgnoreCase(JocClusterAnswerState.COMPLETED.name())) {
                             computeNewPeriod = true;
                             LOGGER.info(String.format("cleanup completed, compute next period..."));
+                        } else {
+                            if (val.startsWith(JocClusterAnswerState.UNCOMPLETED.name())) {
+                                String[] state = val.split("=");
+                                if (state.length > 1) {
+                                    unclompleted = Stream.of(state[1].split(",", -1)).collect(Collectors.toList());
+                                }
+                            }
                         }
                     } else {
 
@@ -167,6 +179,7 @@ public class CleanupServiceSchedule {
                             if (configuredDB != null && !configuredDB.equals(configured.getConfigured())) {
                                 LOGGER.info(String.format("[stored value][skip]period was changed (old=%s, new=%s)", configuredDB, configured
                                         .getConfigured()));
+                                firstStartDB = null;
                             } else {
                                 nextFrom = nextFromDB;
                                 nextTo = nextToDB;
@@ -180,7 +193,7 @@ public class CleanupServiceSchedule {
                                 nextFrom = null;
                             }
                         } else {
-                            LOGGER.info(String.format("nextFrom=%s, nextTo=%s", nextFrom, nextTo));
+                            LOGGER.debug(String.format("nextFrom=%s, nextTo=%s", nextFrom, nextTo));
                         }
                     }
 
@@ -234,7 +247,14 @@ public class CleanupServiceSchedule {
 
     public void close(StartupMode mode) {
         if (task != null) {
-            task.close();
+            JocClusterAnswer answer = task.close();
+            if (answer != null && answer.getState().equals(JocClusterAnswerState.UNCOMPLETED)) {
+                try {
+                    updateJocVariableOnResult(answer);
+                } catch (Throwable e) {
+                    LOGGER.error(e.toString(), e);
+                }
+            }
         }
         if (resultFuture != null) {
             resultFuture.cancel(false);
@@ -285,9 +305,13 @@ public class CleanupServiceSchedule {
     }
 
     private DBItemJocVariable insertJocVariable(DBLayerCleanup dbLayer) throws Exception {
+        return insertJocVariable(dbLayer, getInitialValue().toString());
+    }
+
+    private DBItemJocVariable insertJocVariable(DBLayerCleanup dbLayer, String value) throws Exception {
         try {
             dbLayer.getSession().beginTransaction();
-            DBItemJocVariable item = dbLayer.insertJocVariable(service.getIdentifier(), getInitialValue().toString());
+            DBItemJocVariable item = dbLayer.insertJocVariable(service.getIdentifier(), value);
             dbLayer.getSession().commit();
             return item;
         } catch (Exception e) {
@@ -320,7 +344,8 @@ public class CleanupServiceSchedule {
     }
 
     private void updateJocVariableOnResult(JocClusterAnswer answer) throws Exception {
-        if (answer == null || item == null) {
+        if (answer == null || answer.getState().equals(JocClusterAnswerState.STOPPED)) {
+            LOGGER.info("[skip store]STOPPED");
             return;
         }
 
@@ -334,10 +359,21 @@ public class CleanupServiceSchedule {
             dbLayer = new DBLayerCleanup(service.getFactory().openStatelessSession());
             dbLayer.getSession().setIdentifier(service.getIdentifier());
 
-            dbLayer.getSession().beginTransaction();
-            item.setTextValue(getInitialValue().append(DELIMITER).append(state).toString());
-            dbLayer.getSession().update(item);
-            dbLayer.getSession().commit();
+            String val = getInitialValue().append(DELIMITER).append(state).toString();
+            if (item == null) {
+                item = getJocVariable(dbLayer);
+                if (item == null) {
+                    item = insertJocVariable(dbLayer, val);
+                    val = null;
+                }
+            }
+            if (val != null) {
+                dbLayer.getSession().beginTransaction();
+                item.setTextValue(val);
+                dbLayer.getSession().update(item);
+                dbLayer.getSession().commit();
+            }
+            LOGGER.info("[stored]" + item.getTextValue());
         } catch (Exception e) {
             if (dbLayer != null) {
                 try {
@@ -359,6 +395,10 @@ public class CleanupServiceSchedule {
 
     public ZonedDateTime getFirstStart() {
         return firstStart;
+    }
+
+    public List<String> getUncompleted() {
+        return unclompleted;
     }
 
     private StringBuilder getInitialValue() {

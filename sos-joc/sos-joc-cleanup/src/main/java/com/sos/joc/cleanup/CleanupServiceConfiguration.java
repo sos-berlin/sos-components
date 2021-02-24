@@ -23,6 +23,7 @@ public class CleanupServiceConfiguration {
     private StartupMode startupMode = StartupMode.DAILY;
     private Period period = new Period(startupMode, "01:00-03:00");
     private Age age = new Age("30d");
+    private int batchSize = 1_000;
 
     public CleanupServiceConfiguration(Properties properties) {
         String timeZone = properties.getProperty("cleanup_time_zone");
@@ -47,6 +48,18 @@ public class CleanupServiceConfiguration {
         if (!SOSString.isEmpty(age)) {
             this.age = new Age(age.trim());
         }
+
+        String batchSize = properties.getProperty("cleanup_batch_size");
+        if (!SOSString.isEmpty(batchSize)) {
+            try {
+                int bz = Integer.parseInt(batchSize.trim());
+                if (bz > 0) {
+                    this.batchSize = bz;
+                }
+            } catch (Throwable e) {
+                LOGGER.error(String.format("[cleanup_batch_size=%s]%s", batchSize, e.toString()), e);
+            }
+        }
     }
 
     public ZoneId getZoneId() {
@@ -63,6 +76,10 @@ public class CleanupServiceConfiguration {
 
     public Age getAge() {
         return age;
+    }
+
+    public int getBatchSize() {
+        return batchSize;
     }
 
     private StartupMode getStartupMode(String startupMode) {

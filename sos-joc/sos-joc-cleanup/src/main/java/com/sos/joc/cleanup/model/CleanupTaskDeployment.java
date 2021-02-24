@@ -14,11 +14,11 @@ import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
 import com.sos.joc.db.DBLayer;
 
-public class CleanupTaskDailyplan extends CleanupTaskModel {
+public class CleanupTaskDeployment extends CleanupTaskModel {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CleanupTaskDailyplan.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CleanupTaskDeployment.class);
 
-    public CleanupTaskDailyplan(JocClusterHibernateFactory factory, IJocClusterService service, int batchSize) {
+    public CleanupTaskDeployment(JocClusterHibernateFactory factory, IJocClusterService service, int batchSize) {
         super(factory, service, batchSize);
     }
 
@@ -45,7 +45,7 @@ public class CleanupTaskDailyplan extends CleanupTaskModel {
                     waitFor(WAIT_INTERVAL_ON_BUSY);
                 }
             }
-        } catch (Exception e) {
+        } catch (SOSHibernateException e) {
             if (dbLayer != null) {
                 try {
                     dbLayer.getSession().rollback();

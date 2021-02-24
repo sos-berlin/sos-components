@@ -39,10 +39,10 @@ public class DBLayerCleanup {
         return session.executeUpdate(query);
     }
 
-    public DBItemJocVariable insertJocVariable(String name, String eventId) throws SOSHibernateException {
+    public DBItemJocVariable insertJocVariable(String name, String val) throws SOSHibernateException {
         DBItemJocVariable item = new DBItemJocVariable();
         item.setName(name);
-        item.setTextValue(String.valueOf(eventId));
+        item.setTextValue(String.valueOf(val));
         session.save(item);
         return item;
     }

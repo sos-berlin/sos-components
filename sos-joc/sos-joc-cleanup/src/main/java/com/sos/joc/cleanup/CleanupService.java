@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.cluster.AJocClusterService;
@@ -41,6 +42,7 @@ public class CleanupService extends AJocClusterService {
     private CleanupServiceSchedule schedule = null;
     private CleanupServiceConfiguration config = null;
     private AtomicBoolean closed = new AtomicBoolean(false);
+    private final Object lock = new Object();
 
     public CleanupService(JocConfiguration jocConf, ThreadGroup clusterThreadGroup) {
         super(jocConf, clusterThreadGroup, IDENTIFIER);
@@ -73,6 +75,10 @@ public class CleanupService extends AJocClusterService {
                             AJocClusterService.setLogger(IDENTIFIER);
                             try {
                                 schedule.start(mode);
+                                waitFor(30);
+                            } catch (SOSHibernateException e) {
+                                LOGGER.error(e.toString(), e);
+                                waitFor(60);
                             } catch (Throwable e) {
                                 LOGGER.error(e.toString(), e);
                                 long current = errors.get();
@@ -81,6 +87,7 @@ public class CleanupService extends AJocClusterService {
                                     LOGGER.error("[stopped]max errors(" + current + ") reached");
                                 } else {
                                     errors.set(current + 1);
+                                    waitFor(60);
                                 }
                             }
                             AJocClusterService.clearLogger();
@@ -125,6 +132,9 @@ public class CleanupService extends AJocClusterService {
     }
 
     private void close(StartupMode mode) {
+        synchronized (lock) {
+            lock.notifyAll();
+        }
         if (schedule != null) {
             schedule.close(mode);
         }
@@ -169,5 +179,26 @@ public class CleanupService extends AJocClusterService {
             factory = null;
         }
         LOGGER.info(String.format("[%s]database factory closed", getIdentifier()));
+    }
+
+    private void waitFor(int interval) {
+        if (!closed.get() && interval > 0) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[wait]%ss ...", interval));
+            }
+            try {
+                synchronized (lock) {
+                    lock.wait(interval * 1_000);
+                }
+            } catch (InterruptedException e) {
+                if (closed.get()) {
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("[wait]sleep interrupted due to task stop");
+                    }
+                } else {
+                    LOGGER.warn(String.format("[wait]%s", e.toString()), e);
+                }
+            }
+        }
     }
 }
