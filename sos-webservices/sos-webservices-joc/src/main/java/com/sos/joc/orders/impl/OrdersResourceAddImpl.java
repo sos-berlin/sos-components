@@ -103,7 +103,9 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     if (either.isRight()) {
                         proxy.api().removeOrdersWhenTerminated(freshOrders.keySet()).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e,
                                 accessToken, getJocError(), addOrders.getControllerId()));
-                        OrdersHelper.createAuditLogFromJFreshOrders(getJocAuditLog(), addOrders);
+                        // auditlog is written even "removeOrdersWhenTerminated" has a problem
+                        OrdersHelper.createAuditLogFromJFreshOrders(getJocAuditLog(), addOrders).thenAccept(either2 -> ProblemHelper
+                                .postExceptionEventIfExist(either2, accessToken, getJocError(), addOrders.getControllerId()));
                     } else {
                         ProblemHelper.postProblemEventIfExist(either, accessToken, getJocError(), addOrders.getControllerId());
                     }

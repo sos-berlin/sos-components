@@ -23,6 +23,7 @@ import com.sos.controller.model.order.OrderItem;
 import com.sos.controller.model.order.OrderModeType;
 import com.sos.controller.model.workflow.HistoricOutcome;
 import com.sos.controller.model.workflow.WorkflowId;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.workflow.Parameter;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
@@ -32,6 +33,7 @@ import com.sos.joc.classes.audit.ModifyOrderAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -363,8 +365,6 @@ public class OrdersHelper {
         modifyOrders.setControllerId(controllerId);
         modifyOrders.setOrderType(OrderModeType.FRESH_ONLY);
         
-        Map<String, String> nameToPath = Collections.emptyMap(); // TODO determine workflowPaths
-
         if (addOrders.containsKey(true) && !addOrders.get(true).isEmpty()) {
             final Map<OrderId, JFreshOrder> freshOrders = addOrders.get(true).stream().map(Either::get).collect(Collectors.toMap(JFreshOrder::id,
                     Function.identity()));
@@ -381,7 +381,8 @@ public class OrdersHelper {
                                             .postProblemEventIfExist(either4, accessToken, jocError, controllerId));
                                     // auditlog is written even removeOrdersWhenTerminated has a problem
                                     createAuditLogFromJFreshOrders(jocAuditLog, freshOrders.values(), controllerId, dailyplanModifyOrder
-                                            .getAuditLog(), nameToPath);
+                                            .getAuditLog()).thenAccept(either5 -> ProblemHelper.postExceptionEventIfExist(either5, accessToken,
+                                                    jocError, controllerId));
                                 }
                             });
                         }
@@ -454,53 +455,80 @@ public class OrdersHelper {
         return variables;
     }
     
-    public static void createAuditLogFromJOrders(JocAuditLog jocAuditLog, Collection<JOrder> jOrders, String controllerId, AuditParams auditParams,
-            Map<String, String> nameToPath) {
-        if (jOrders != null) {
-            final SOSHibernateSession connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntry");
-            try {
-                jOrders.forEach(o -> {
-                    ModifyOrderAudit audit = new ModifyOrderAudit(o, controllerId, auditParams, nameToPath);
-                    jocAuditLog.logAuditMessage(audit);
-                    jocAuditLog.storeAuditLogEntry(audit, connection);
-                });
-            } finally  {
-                Globals.disconnect(connection);
+    public static CompletableFuture<Either<Exception, Void>> createAuditLogFromJOrders(JocAuditLog jocAuditLog, Collection<JOrder> jOrders,
+            String controllerId, AuditParams auditParams) {
+        return CompletableFuture.supplyAsync(() -> {
+            if (jOrders != null) {
+                try {
+                    final SOSHibernateSession connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntry");
+                    try {
+                        DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
+                        final Map<String, String> nameToPath = dbLayer.getNamePathMapping(controllerId, jOrders.stream().map(o -> o.workflowId()
+                                .path().string()).collect(Collectors.toSet()), DeployType.WORKFLOW.intValue());
+                        jOrders.forEach(o -> {
+                            ModifyOrderAudit audit = new ModifyOrderAudit(o, controllerId, auditParams, nameToPath);
+                            jocAuditLog.logAuditMessage(audit);
+                            jocAuditLog.storeAuditLogEntry(audit, connection);
+                        });
+                    } finally {
+                        Globals.disconnect(connection);
+                    }
+                } catch (Exception e) {
+                    return Either.left(e);
+                }
             }
-        }
+            return Either.right(null);
+        });
     }
 
-    public static void createAuditLogFromJFreshOrders(JocAuditLog jocAuditLog, Collection<JFreshOrder> jOrders, String controllerId,
-            AuditParams auditParams, Map<String, String> nameToPath) {
-        if (jOrders != null) {
-            final SOSHibernateSession connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntry");
-            try {
-                jOrders.forEach(o -> {
-                    ModifyOrderAudit audit = new ModifyOrderAudit(o, controllerId, auditParams, nameToPath);
-                    jocAuditLog.logAuditMessage(audit);
-                    jocAuditLog.storeAuditLogEntry(audit, connection);
-                });
-            } finally  {
-                Globals.disconnect(connection);
+    public static CompletableFuture<Either<Exception, Void>> createAuditLogFromJFreshOrders(JocAuditLog jocAuditLog, Collection<JFreshOrder> jOrders,
+            String controllerId, AuditParams auditParams) {
+        return CompletableFuture.supplyAsync(() -> {
+            if (jOrders != null) {
+                try {
+                    final SOSHibernateSession connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntry");
+                    try {
+                        DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
+                        final Map<String, String> nameToPath = dbLayer.getNamePathMapping(controllerId, jOrders.stream().map(o -> o.asScala()
+                                .workflowPath().string()).collect(Collectors.toSet()), DeployType.WORKFLOW.intValue());
+                        jOrders.forEach(o -> {
+                            ModifyOrderAudit audit = new ModifyOrderAudit(o, controllerId, auditParams, nameToPath);
+                            jocAuditLog.logAuditMessage(audit);
+                            jocAuditLog.storeAuditLogEntry(audit, connection);
+                        });
+                    } finally {
+                        Globals.disconnect(connection);
+                    }
+                } catch (Exception e) {
+                    return Either.left(e);
+                }
             }
-        }
+            return Either.right(null);
+        });
     }
 
-    public static void createAuditLogFromJFreshOrders(JocAuditLog jocAuditLog, AddOrders addOrders) {
-        if (addOrders != null) {
-            final SOSHibernateSession connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntry");
-            String controllerId = addOrders.getControllerId();
-            AuditParams auditParams = addOrders.getAuditLog();
-            try {
-                addOrders.getOrders().stream().filter(o -> o.getOrderName().contains("#T")).forEach(o -> {
-                    AddOrderAudit audit = new AddOrderAudit(o, controllerId, auditParams);
-                    jocAuditLog.logAuditMessage(audit);
-                    jocAuditLog.storeAuditLogEntry(audit, connection);
-                });
-            } finally  {
-                Globals.disconnect(connection);
+    public static CompletableFuture<Either<Exception, Void>> createAuditLogFromJFreshOrders(JocAuditLog jocAuditLog, AddOrders addOrders) {
+        return CompletableFuture.supplyAsync(() -> {
+            if (addOrders != null) {
+                try {
+                    final SOSHibernateSession connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntry");
+                    String controllerId = addOrders.getControllerId();
+                    AuditParams auditParams = addOrders.getAuditLog();
+                    try {
+                        addOrders.getOrders().stream().filter(o -> o.getOrderName().contains("#T")).forEach(o -> {
+                            AddOrderAudit audit = new AddOrderAudit(o, controllerId, auditParams);
+                            jocAuditLog.logAuditMessage(audit);
+                            jocAuditLog.storeAuditLogEntry(audit, connection);
+                        });
+                    } finally {
+                        Globals.disconnect(connection);
+                    }
+                } catch (Exception e) {
+                    return Either.left(e);
+                }
             }
-        }
+            return Either.right(null);
+        });
     }
     
 }

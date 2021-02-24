@@ -1,8 +1,10 @@
 package com.sos.joc.event.impl;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -97,8 +99,8 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
         if (evt.getEventSnapshots() == null || evt.getEventSnapshots().isEmpty()) {
             return evt;
         }
-        
-        Set<String> workflowNames = evt.getEventSnapshots().stream().filter(e -> EventType.WORKFLOW.equals(e.getObjectType())).map(e -> (e
+        List<EventType> eventsWithWorkflow = Arrays.asList(EventType.WORKFLOW, EventType.JOB, EventType.TASKHISTORY, EventType.ORDERHISTORY);
+        Set<String> workflowNames = evt.getEventSnapshots().stream().filter(e -> eventsWithWorkflow.contains(e.getObjectType())).map(e -> (e
                 .getWorkflow() != null) ? e.getWorkflow().getPath() : e.getPath()).filter(Objects::nonNull).collect(Collectors.toSet());
 
         Set<String> lockNames = evt.getEventSnapshots().stream().filter(e -> EventType.LOCK.equals(e.getObjectType())).map(EventSnapshot::getPath)

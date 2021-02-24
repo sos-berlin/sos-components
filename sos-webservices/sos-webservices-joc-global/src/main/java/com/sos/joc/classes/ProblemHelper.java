@@ -84,4 +84,18 @@ public class ProblemHelper {
             }
         }
     }
+    
+    public static void postExceptionEventIfExist(Either<Exception, ?> either, String accessToken, JocError err, String controller) throws JocException {
+        if (either == null || either.isLeft()) {
+            if (err != null && !err.printMetaInfo().isEmpty()) {
+                LOGGER.info(err.printMetaInfo());
+            }
+            if (either == null) {
+                EventBus.getInstance().post(new ProblemEvent(accessToken, controller, "BadRequestError: Unknown problem"));
+            } else {
+                LOGGER.error("", either.getLeft());
+                EventBus.getInstance().post(new ProblemEvent(accessToken, controller, either.getLeft().toString()));
+            }
+        }
+    }
 }

@@ -5,7 +5,6 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -18,7 +17,6 @@ import javax.ws.rs.Path;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.workflow.WorkflowId;
-import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -27,9 +25,7 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
-import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.order.ModifyOrders;
 import com.sos.joc.orders.resource.IOrdersResourceModify;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
@@ -173,18 +169,22 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
         final Set<JOrder> jOrders = orderStream.collect(Collectors.toSet());
         if (!jOrders.isEmpty()) {
-            CompletableFuture<Either<Problem, Void>> command = command(action, modifyOrders, jOrders.stream().map(JOrder::id).collect(Collectors
-                    .toSet()));
-            callCommand(action, command, jOrders, controllerId, modifyOrders.getAuditLog());
+            command(action, modifyOrders, jOrders.stream().map(JOrder::id).collect(Collectors.toSet())).thenAccept(either -> {
+                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+                if (either.isRight()) {
+                    OrdersHelper.createAuditLogFromJOrders(getJocAuditLog(), jOrders, controllerId, modifyOrders.getAuditLog()).thenAccept(
+                            either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
+                }
+            });
         }
     }
     
     private static Stream<JOrder> cyclicFreshOrderIds(Collection<String> orderIds, JControllerState currentState) {
         Stream<JOrder> cyclicOrderStream = Stream.empty();
         // determine cyclic ids
-        Set<String> freshCyclicIds = orderIds.stream().filter(s -> s.matches(".*#C[0-9]+-.*")).map(s -> currentState.idToOrder(OrderId.of(
-                s))).filter(Optional::isPresent).map(Optional::get).filter(o -> Order.Fresh.class.isInstance(o.asScala().state())).map(o -> o
-                        .id().string().substring(0, 24)).collect(Collectors.toSet());
+        Set<String> freshCyclicIds = orderIds.stream().filter(s -> s.matches(".*#C[0-9]+-.*")).map(s -> currentState.idToOrder(OrderId.of(s))).filter(
+                Optional::isPresent).map(Optional::get).filter(o -> Order.Fresh.class.isInstance(o.asScala().state())).map(o -> o.id().string()
+                        .substring(0, 24)).collect(Collectors.toSet());
         if (!freshCyclicIds.isEmpty()) {
             Function1<Order<Order.State>, Object> cyclicOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class),
                     o -> freshCyclicIds.contains(o.id().string().substring(0, 24)));
@@ -212,25 +212,6 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             throw e;
         } finally {
             Globals.disconnect(sosHibernateSession);
-        }
-    }
-    
-    private void callCommand(Action action, CompletableFuture<Either<Problem, Void>> command, Set<JOrder> jOrders, String controllerId, AuditParams auditParams) throws SOSHibernateException {
-        SOSHibernateSession session = null;
-        try {
-            session = Globals.createSosHibernateStatelessConnection(API_CALL + "/" + action.name().toLowerCase());
-            DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
-            final Map<String, String> nameToPath = dbLayer.getNamePathMapping(controllerId, jOrders.stream().map(o -> o.workflowId().path().string())
-                    .collect(Collectors.toSet()), DeployType.WORKFLOW.intValue());
-
-            command.thenAccept(either -> {
-                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
-                if (either.isRight()) {
-                    OrdersHelper.createAuditLogFromJOrders(getJocAuditLog(), jOrders, controllerId, auditParams, nameToPath);
-                }
-            });
-        } finally {
-            Globals.disconnect(session);
         }
     }
 

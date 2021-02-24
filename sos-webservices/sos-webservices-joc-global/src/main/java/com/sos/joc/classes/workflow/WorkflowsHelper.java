@@ -150,6 +150,7 @@ public class WorkflowsHelper {
     }
 
     public static WorkflowState getState(JControllerState currentstate, Workflow workflow) {
+        // TODO Collection of available workflows should read from memory
         WorkflowState state = new WorkflowState();
         WorkflowStateText stateText = WorkflowStateText.UNKNOWN;
         if (currentstate != null) {

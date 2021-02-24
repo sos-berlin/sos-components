@@ -186,7 +186,7 @@ public class EventService {
                 // HistoryOrderStarted, HistoryOrderTerminated, HistoryOrderUpdated
                 eventSnapshot.setEventType(evt.getKey());
             }
-            eventSnapshot.setWorkflow(orders.get(orderId));
+            eventSnapshot.setWorkflow(orders.get(orderId.substring(0, 24)));
             eventSnapshot.setObjectType(EventType.ORDERHISTORY);
             //eventSnapshot.setPath(orderId);
             addEvent(eventSnapshot);
@@ -201,7 +201,7 @@ public class EventService {
             // HistoryTaskStarted, HistoryTaskTerminated
             eventSnapshot.setEventType(evt.getKey().replaceFirst("Order", ""));
             eventSnapshot.setObjectType(EventType.TASKHISTORY);
-            eventSnapshot.setWorkflow(orders.get(evt.getOrderId()));
+            eventSnapshot.setWorkflow(orders.get(evt.getOrderId().substring(0, 24)));
             //eventSnapshot.setPath(evt.getJobName());
             addEvent(eventSnapshot);
         }
@@ -250,10 +250,11 @@ public class EventService {
                 final OrderId orderId = (OrderId) key;
                 Optional<JOrder> opt = currentState.idToOrder(orderId);
                 if (opt.isPresent()) {
-                    WorkflowId w = orders.get(orderId.string());
+                    String mainOrderId = orderId.string().substring(0, 24);
+                    WorkflowId w = orders.get(mainOrderId);
                     if (w == null) {
                         w = mapWorkflowId(opt.get().workflowId());
-                        orders.put(orderId.string(), w);
+                        orders.put(mainOrderId, w);
                     }
                     addEvent(createWorkflowEventOfOrder(eventId, w));
                     if (evt instanceof OrderProcessingStarted$ || evt instanceof OrderProcessed || evt instanceof OrderProcessingKilled$) {
@@ -261,9 +262,10 @@ public class EventService {
                     }
                 } else {
                     if (evt instanceof OrderRemoved$) {
-                        if (orders.containsKey(orderId.string())) {
-                            addEvent(createWorkflowEventOfOrder(eventId, orders.get(orderId.string())));
-                            orders.remove(orderId.string());
+                        String mainOrderId = orderId.string().substring(0, 24);
+                        if (orders.containsKey(mainOrderId)) {
+                            addEvent(createWorkflowEventOfOrder(eventId, orders.get(mainOrderId)));
+                            orders.remove(mainOrderId);
                         }
                     }
                 }
@@ -441,7 +443,7 @@ public class EventService {
     private void setOrders() {
         try {
             orders = Proxy.of(controllerId).currentState().ordersBy(JOrderPredicates.any())
-                .collect(Collectors.toMap(o -> o.id().string(), o -> mapWorkflowId(o.workflowId())));
+                .collect(Collectors.toMap(o -> o.id().string().substring(0,24), o -> mapWorkflowId(o.workflowId())));
         } catch (Exception e) {
             //
         }
