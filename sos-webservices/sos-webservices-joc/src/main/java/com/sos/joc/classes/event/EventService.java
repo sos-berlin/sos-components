@@ -16,15 +16,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.controller.model.workflow.WorkflowId;
-import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.event.EventServiceFactory.EventCondition;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
-import com.sos.joc.event.bean.history.HistoryEvent;
-import com.sos.joc.event.bean.history.HistoryOrderTaskTerminated;
+import com.sos.joc.event.bean.history.HistoryOrderEvent;
+import com.sos.joc.event.bean.history.HistoryTaskEvent;
 import com.sos.joc.event.bean.inventory.InventoryEvent;
 import com.sos.joc.event.bean.problem.ProblemEvent;
 import com.sos.joc.event.bean.proxy.ProxyClosed;
@@ -41,7 +40,6 @@ import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.event.EventSnapshot;
 import com.sos.joc.model.event.EventType;
-import com.sos.joc.model.order.OrderStateText;
 
 import js7.data.agent.AgentId;
 import js7.data.agent.AgentRefStateEvent;
@@ -75,6 +73,7 @@ import js7.data.order.OrderId;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
+import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.proxy.javaapi.eventbus.JControllerEventBus;
 
@@ -95,7 +94,7 @@ public class EventService {
     private AtomicBoolean isCurrentController = new AtomicBoolean(false);
     private JControllerEventBus evtBus = null;
     private volatile CopyOnWriteArraySet<EventCondition> conditions = new CopyOnWriteArraySet<>();
-    private volatile Map<String, WorkflowId> unremovedTerminatedOrders = new ConcurrentHashMap<>();
+    private volatile Map<String, WorkflowId> orders = new ConcurrentHashMap<>();
 
     public EventService(String controllerId) {
         this.controllerId = controllerId;
@@ -116,7 +115,7 @@ public class EventService {
                 evtBus = Proxy.of(controllerId).controllerEventBus();
                 if (evtBus != null) {
                     evtBus.subscribe(eventsOfController, callbackOfController);
-                    setTerminatedOrders();
+                    setOrders();
                 }
             }
         } catch (Exception e) {
@@ -174,22 +173,42 @@ public class EventService {
         }
     }
     
-    @Subscribe({ HistoryEvent.class })
-    public void createEvent(HistoryEvent evt) {
-        EventSnapshot eventSnapshot = new EventSnapshot();
-        eventSnapshot.setEventId(evt.getEventId());
-        eventSnapshot.setEventType(evt.getKey()); // HistoryOrderStarted, HistoryOrderTerminated, HistoryOrderTaskTerminated
-        eventSnapshot.setObjectType(EventType.ORDERHISTORY);
-        if (evt instanceof HistoryOrderTaskTerminated) {
-            eventSnapshot.setObjectType(EventType.TASKHISTORY);
-            eventSnapshot.setEventType("HistoryTaskTerminated");
+    @Subscribe({ HistoryOrderEvent.class })
+    public void createHistoryOrderEvent(HistoryOrderEvent evt) {
+        if (controllerId.equals(evt.getControllerId())) {
+            EventSnapshot eventSnapshot = new EventSnapshot();
+            eventSnapshot.setEventId(evt.getEventId());
+            String orderId = evt.getVariables().get("orderId");
+            if (orderId.contains("|")) {
+                // HistoryChildOrderStarted, HistoryChildOrderTerminated, HistoryChildOrderUpdated
+                eventSnapshot.setEventType(evt.getKey().replaceFirst("Order", "ChildOrder"));
+            } else {
+                // HistoryOrderStarted, HistoryOrderTerminated, HistoryOrderUpdated
+                eventSnapshot.setEventType(evt.getKey());
+            }
+            eventSnapshot.setWorkflow(orders.get(orderId));
+            eventSnapshot.setObjectType(EventType.ORDERHISTORY);
+            //eventSnapshot.setPath(orderId);
+            addEvent(eventSnapshot);
         }
-        //eventSnapshot.setPath(evt.getOrderId());
-        addEvent(eventSnapshot);
+    }
+    
+    @Subscribe({ HistoryTaskEvent.class })
+    public void createHistoryTaskEvent(HistoryTaskEvent evt) {
+        if (controllerId.equals(evt.getControllerId())) {
+            EventSnapshot eventSnapshot = new EventSnapshot();
+            eventSnapshot.setEventId(evt.getEventId());
+            // HistoryTaskStarted, HistoryTaskTerminated
+            eventSnapshot.setEventType(evt.getKey().replaceFirst("Order", ""));
+            eventSnapshot.setObjectType(EventType.TASKHISTORY);
+            eventSnapshot.setWorkflow(orders.get(evt.getOrderId()));
+            //eventSnapshot.setPath(evt.getJobName());
+            addEvent(eventSnapshot);
+        }
     }
     
     @Subscribe({ InventoryEvent.class })
-    public void createEvent(InventoryEvent evt) {
+    public void createInventoryEvent(InventoryEvent evt) {
         EventSnapshot eventSnapshot = new EventSnapshot();
         eventSnapshot.setEventId(evt.getEventId());
         eventSnapshot.setEventType(evt.getKey()); // InventoryUpdated
@@ -209,9 +228,9 @@ public class EventService {
     
     @Subscribe({ ProxyCoupled.class })
     public void createEvent(ProxyCoupled evt) {
-        if (evt.getControllerId() != null && !evt.getControllerId().isEmpty() && evt.getControllerId().equals(controllerId)) {
+        if (controllerId.equals(evt.getControllerId())) {
             if (evt.isCoupled()) {
-                setTerminatedOrders();
+                setOrders();
             }
             addEvent(createProxyEvent(evt.getEventId(), evt.isCoupled()));
         } else {
@@ -231,9 +250,10 @@ public class EventService {
                 final OrderId orderId = (OrderId) key;
                 Optional<JOrder> opt = currentState.idToOrder(orderId);
                 if (opt.isPresent()) {
-                    WorkflowId w = mapWorkflowId(opt.get().workflowId());
-                    if (evt instanceof OrderTerminated) {
-                        unremovedTerminatedOrders.put(orderId.string(), w);
+                    WorkflowId w = orders.get(orderId.string());
+                    if (w == null) {
+                        w = mapWorkflowId(opt.get().workflowId());
+                        orders.put(orderId.string(), w);
                     }
                     addEvent(createWorkflowEventOfOrder(eventId, w));
                     if (evt instanceof OrderProcessingStarted$ || evt instanceof OrderProcessed || evt instanceof OrderProcessingKilled$) {
@@ -241,9 +261,9 @@ public class EventService {
                     }
                 } else {
                     if (evt instanceof OrderRemoved$) {
-                        if (unremovedTerminatedOrders.containsKey(orderId.string())) {
-                            addEvent(createWorkflowEventOfOrder(eventId, unremovedTerminatedOrders.get(orderId.string())));
-                            unremovedTerminatedOrders.remove(orderId.string());
+                        if (orders.containsKey(orderId.string())) {
+                            addEvent(createWorkflowEventOfOrder(eventId, orders.get(orderId.string())));
+                            orders.remove(orderId.string());
                         }
                     }
                 }
@@ -418,14 +438,10 @@ public class EventService {
         return EventServiceFactory.Mode.FALSE;
     }
 
-    private void setTerminatedOrders() {
+    private void setOrders() {
         try {
-            final List<OrderStateText> states = Arrays.asList(OrderStateText.CANCELLED, OrderStateText.FINISHED);
-            Map<String, WorkflowId> terminatedOrders = Proxy.of(controllerId).currentState().ordersBy(o -> states.contains(OrdersHelper.getGroupedState(o.state().getClass())))
+            orders = Proxy.of(controllerId).currentState().ordersBy(JOrderPredicates.any())
                 .collect(Collectors.toMap(o -> o.id().string(), o -> mapWorkflowId(o.workflowId())));
-            if (terminatedOrders != null && !terminatedOrders.isEmpty()) {
-                unremovedTerminatedOrders.putAll(terminatedOrders);
-            }
         } catch (Exception e) {
             //
         }

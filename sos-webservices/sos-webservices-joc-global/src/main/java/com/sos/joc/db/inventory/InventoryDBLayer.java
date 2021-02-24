@@ -31,6 +31,7 @@ import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue.ReturnType;
 import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
@@ -437,30 +438,29 @@ public class InventoryDBLayer extends DBLayer {
     }
 
     public DBItemInventoryConfiguration getConfiguration(String path, Integer type) throws SOSHibernateException {
+        return getConfiguration(path, type, DBLayer.DBITEM_INV_CONFIGURATIONS);
+    }
+
+    public DBItemInventoryConfigurationTrash getTrashConfiguration(String path, Integer type) throws SOSHibernateException {
+        return getConfiguration(path, type, DBLayer.DBITEM_INV_CONFIGURATION_TRASH);
+    }
+    
+    public <T extends DBItem> T getConfiguration(String path, Integer type, String tableName) throws SOSHibernateException {
         boolean isCalendar = JocInventory.isCalendar(type);
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        StringBuilder hql = new StringBuilder("from ").append(tableName);
         hql.append(" where lower(path)=:path");
         if (isCalendar) {
             hql.append(" and type in (:types)");
         } else {
             hql.append(" and type=:type");
         }
-        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        Query<T> query = getSession().createQuery(hql.toString());
         query.setParameter("path", path.toLowerCase());
         if (isCalendar) {
             query.setParameterList("types", JocInventory.getCalendarTypes());
         } else {
             query.setParameter("type", type);
         }
-        return getSession().getSingleResult(query);
-    }
-
-    public DBItemInventoryConfigurationTrash getTrashFolderConfiguration(String path) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATION_TRASH);
-        hql.append(" where lower(path)=:path");
-        hql.append(" and type = 0");
-        Query<DBItemInventoryConfigurationTrash> query = getSession().createQuery(hql.toString());
-        query.setParameter("path", path.toLowerCase());
         return getSession().getSingleResult(query);
     }
 
@@ -474,25 +474,6 @@ public class InventoryDBLayer extends DBLayer {
             hql.append(" and type=:type");
         }
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameter("name", name.toLowerCase());
-        if (isCalendar) {
-            query.setParameterList("types", JocInventory.getCalendarTypes());
-        } else {
-            query.setParameter("type", type);
-        }
-        return getSession().getResultList(query);
-    }
-
-    public List<DBItemInventoryConfigurationTrash> getConfigurationFromTrashByName(String name, Integer type) throws SOSHibernateException {
-        boolean isCalendar = JocInventory.isCalendar(type);
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATION_TRASH);
-        hql.append(" where lower(name)=:name");
-        if (isCalendar) {
-            hql.append(" and type in (:types)");
-        } else {
-            hql.append(" and type=:type");
-        }
-        Query<DBItemInventoryConfigurationTrash> query = getSession().createQuery(hql.toString());
         query.setParameter("name", name.toLowerCase());
         if (isCalendar) {
             query.setParameterList("types", JocInventory.getCalendarTypes());

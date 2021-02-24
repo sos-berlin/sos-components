@@ -282,7 +282,6 @@ public class HistoryModel {
                     case OrderStepStarted:
                         cos = orderStepStarted(dbLayer, (FatEventOrderStepStarted) entry);
                         counter.getOrderStep().addStarted();
-
                         postEventOrderTaskStarted(cos);
                         break;
                     case OrderStepStdoutWritten:
@@ -296,7 +295,7 @@ public class HistoryModel {
                     case OrderStepProcessed:
                         cos = orderStepProcessed(dbLayer, (FatEventOrderStepProcessed) entry, endedOrderSteps);
                         counter.getOrderStep().addProcessed();
-
+                        
                         postEventOrderTaskTerminated(cos);
                         break;
                     case OrderFailed:
@@ -407,15 +406,15 @@ public class HistoryModel {
 
     private void postEventOrderTaskStarted(CachedOrderStep cos) {
         if (cos != null) {
-            EventBus.getInstance().post(new HistoryOrderTaskStarted(controllerConfiguration.getCurrent().getId(), cos.getOrderId(), cos.getId(), cos
-                    .getHistoryOrderId()));
+            EventBus.getInstance().post(new HistoryOrderTaskStarted(controllerConfiguration.getCurrent().getId(), cos.getOrderId(), cos.getJobName(),
+                    cos.getId(), cos.getHistoryOrderId()));
         }
     }
 
     private void postEventOrderTaskTerminated(CachedOrderStep cos) {
         if (cos != null) {
             EventBus.getInstance().post(new HistoryOrderTaskTerminated(controllerConfiguration.getCurrent().getId(), cos.getOrderId(), cos
-                    .getSeverityAsText(), cos.getId(), cos.getHistoryOrderId()));
+                    .getJobName(), cos.getSeverityAsText(), cos.getId(), cos.getHistoryOrderId()));
 
             clearCache(CacheType.orderStep, cos.getOrderId());
         }

@@ -119,7 +119,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             Collection<TreeSet<JOrder>> cycledOrderColl = cycledOrderStream.collect(Collectors.groupingBy(o -> o.id().string().substring(0, 24),
                     Collectors.toCollection(() -> new TreeSet<>(comp)))).values();
             cycledOrderStream = cycledOrderColl.stream().map(t -> t.first());
-            Map<String, CyclicOrderInfos> cycleInfos = cycledOrderColl.stream().map(t -> {
+            Map<String, CyclicOrderInfos> cycleInfos = cycledOrderColl.stream().filter(t -> !t.isEmpty()).map(t -> {
                 CyclicOrderInfos cycle = new CyclicOrderInfos();
                 cycle.setCount(t.size());
                 cycle.setFirstOrderId(t.first().id().string());
