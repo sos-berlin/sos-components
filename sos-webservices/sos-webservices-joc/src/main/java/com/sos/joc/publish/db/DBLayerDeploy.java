@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -60,9 +59,7 @@ import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.publish.DeployablesFilter;
 import com.sos.joc.model.publish.DeployablesValidFilter;
 import com.sos.joc.model.publish.DeploymentState;
-import com.sos.joc.model.publish.ExcludeConfiguration;
 import com.sos.joc.model.publish.OperationType;
-import com.sos.joc.model.publish.RedeployFilter;
 import com.sos.joc.model.publish.ReleasablesFilter;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.model.publish.SetVersionsFilter;
@@ -2161,37 +2158,37 @@ public class DBLayerDeploy {
         }
     }
     
-    public List<DBItemDeploymentHistory> getDeploymentsToRedeploy(RedeployFilter filter) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-        if (filter.getControllerId() != null) {
-            hql.append(" where controllerId = :controllerId");
-        }
-        if (filter.getFolder() != null) {
-            hql.append(" and (folder = :folder or folder like :likeFolder)");
-        }
-        Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
-        query.setParameter("controllerId", filter.getControllerId());
-        query.setParameter("folder", filter.getFolder());
-        query.setParameter("likeFolder", MatchMode.START.toMatchString(filter.getFolder()));
-        List<DBItemDeploymentHistory> dbItems = query.getResultList();
-        Set<DBItemDeploymentHistory> excludes = new HashSet<DBItemDeploymentHistory>();
-        // remove excludes from result list
-        if (filter.getExcludes() != null && !filter.getExcludes().isEmpty()) {
-            for (ExcludeConfiguration exclude : filter.getExcludes()) {
-                excludes.addAll(
-                        dbItems.stream().map(item -> {
-                            if(item.getPath().equals(exclude.getPath()) && DeployType.fromValue(item.getType()).equals(exclude.getDeployType())) {
-                                return item;
-                            }
-                            return null;
-                        }).collect(Collectors.toSet())
-                );
-            }
-        }
-        dbItems.removeAll(excludes);
-        return dbItems;
-    }
-
+//    public List<DBItemDeploymentHistory> getDeploymentsToRedeploy(RedeployFilter filter) throws SOSHibernateException {
+//        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+//        if (filter.getControllerId() != null) {
+//            hql.append(" where controllerId = :controllerId");
+//        }
+//        if (filter.getFolder() != null) {
+//            hql.append(" and (folder = :folder or folder like :likeFolder)");
+//        }
+//        Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
+//        query.setParameter("controllerId", filter.getControllerId());
+//        query.setParameter("folder", filter.getFolder());
+//        query.setParameter("likeFolder", MatchMode.START.toMatchString(filter.getFolder()));
+//        List<DBItemDeploymentHistory> dbItems = query.getResultList();
+//        Set<DBItemDeploymentHistory> excludes = new HashSet<DBItemDeploymentHistory>();
+//        // remove excludes from result list
+//        if (filter.getExcludes() != null && !filter.getExcludes().isEmpty()) {
+//            for (ExcludeConfiguration exclude : filter.getExcludes()) {
+//                excludes.addAll(
+//                        dbItems.stream().map(item -> {
+//                            if(item.getPath().equals(exclude.getPath()) && DeployType.fromValue(item.getType()).equals(exclude.getDeployType())) {
+//                                return item;
+//                            }
+//                            return null;
+//                        }).collect(Collectors.toSet())
+//                );
+//            }
+//        }
+//        dbItems.removeAll(excludes);
+//        return dbItems;
+//    }
+//
     public String getAgentIdFromAgentName (String agentName, String controllerId){
         return getAgentIdFromAgentName (agentName, controllerId, null, null);
     }

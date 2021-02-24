@@ -1,8 +1,6 @@
 
 package com.sos.joc.model.publish;
 
-import java.util.ArrayList;
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -13,7 +11,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * re-deploy
+ * redeploy filter
  * <p>
  * 
  * 
@@ -22,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "folder",
-    "excludes",
+    "recursive",
     "auditLog"
 })
 public class RedeployFilter {
@@ -40,12 +38,13 @@ public class RedeployFilter {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("folder")
     private String folder;
-    @JsonProperty("excludes")
-    private List<ExcludeConfiguration> excludes = new ArrayList<ExcludeConfiguration>();
+    @JsonProperty("recursive")
+    private Boolean recursive = false;
     /**
      * auditParams
      * <p>
@@ -83,6 +82,7 @@ public class RedeployFilter {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("folder")
@@ -94,6 +94,7 @@ public class RedeployFilter {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("folder")
@@ -101,14 +102,14 @@ public class RedeployFilter {
         this.folder = folder;
     }
 
-    @JsonProperty("excludes")
-    public List<ExcludeConfiguration> getExcludes() {
-        return excludes;
+    @JsonProperty("recursive")
+    public Boolean getRecursive() {
+        return recursive;
     }
 
-    @JsonProperty("excludes")
-    public void setExcludes(List<ExcludeConfiguration> excludes) {
-        this.excludes = excludes;
+    @JsonProperty("recursive")
+    public void setRecursive(Boolean recursive) {
+        this.recursive = recursive;
     }
 
     /**
@@ -135,12 +136,12 @@ public class RedeployFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("folder", folder).append("excludes", excludes).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("folder", folder).append("recursive", recursive).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folder).append(excludes).append(controllerId).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(folder).append(controllerId).append(auditLog).append(recursive).toHashCode();
     }
 
     @Override
@@ -152,7 +153,7 @@ public class RedeployFilter {
             return false;
         }
         RedeployFilter rhs = ((RedeployFilter) other);
-        return new EqualsBuilder().append(folder, rhs.folder).append(excludes, rhs.excludes).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(folder, rhs.folder).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(recursive, rhs.recursive).isEquals();
     }
 
 }

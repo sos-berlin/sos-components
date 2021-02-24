@@ -3,12 +3,15 @@ package com.sos.joc.publish.impl;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
@@ -21,17 +24,21 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.RedeployAudit;
+import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
-import com.sos.joc.exceptions.BulkError;
-import com.sos.joc.exceptions.JocError;
+import com.sos.joc.db.inventory.DBItemInventoryCertificate;
+import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.JocSecurityLevel;
-import com.sos.joc.model.sign.JocKeyPair;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.RedeployFilter;
+import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.publish.db.DBLayerDeploy;
+import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.joc.publish.resource.IRedeploy;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
@@ -54,92 +61,90 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
         try {
             initLogging(API_CALL, filter, xAccessToken);
             JsonValidator.validateFailFast(filter, RedeployFilter.class);
-            RedeployFilter reDeployFilter = Globals.objectMapper.readValue(filter, RedeployFilter.class);
-            
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", 
-                    getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isDeploy());
+            RedeployFilter redeployFilter = Globals.objectMapper.readValue(filter, RedeployFilter.class);
+
+            JOCDefaultResponse jocDefaultResponse = 
+                    initPermissions("", getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isDeploy());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             dbLayer = new DBLayerDeploy(hibernateSession);
-            // get all available controller instances
-            // process filter
-            String controllerId = reDeployFilter.getControllerId();
-            // read all objects provided in the filter from the database
-            List<DBItemDeploymentHistory> reDeployables = dbLayer.getDeploymentsToRedeploy(reDeployFilter);
-
-            final Date deploymentDate = Date.from(Instant.now());
-            // all items will be signed or re-signed with current versionId
+            String controllerId = redeployFilter.getControllerId();
+            // get all latest active history objects from the database for the provided controllerId and folder from the filter
+            List<DBItemDeploymentHistory> latest = dbLayer.getLatestDepHistoryItemsFromFolder(redeployFilter.getFolder(), controllerId, 
+                    redeployFilter.getRecursive());
+            // all items will be resigned with a new commitId
+            final String commitId = UUID.randomUUID().toString();
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
             JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.MEDIUM);
-            // call updateRepo command via ControllerApi for given controllerId
-            String signerDN = null;
-            X509Certificate cert = null;
-            Set<String> versionIds = reDeployables.stream().flatMap(item -> Stream.of(item.getCommitId())).collect(Collectors.toSet());
-            for (String versionId : versionIds) {
-                switch(keyPair.getKeyAlgorithm()) {
+
+            Set<DBItemDeploymentHistory> unsignedRedeployables = null;
+            if (latest != null) {
+                unsignedRedeployables = new HashSet<DBItemDeploymentHistory>(latest);
+            }
+            // preparations
+            Set<UpdateableWorkflowJobAgentName> updateableAgentNames = new HashSet<UpdateableWorkflowJobAgentName>();
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedRedeployables = new HashMap<DBItemDeploymentHistory, DBItemDepSignatures>();
+
+            if (unsignedRedeployables != null && !unsignedRedeployables.isEmpty()) {
+                PublishUtils.updatePathWithNameInContent(unsignedRedeployables);
+                unsignedRedeployables.stream().filter(item -> ConfigurationType.WORKFLOW.equals(ConfigurationType.fromValue(item.getType()))).forEach(
+                        item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(item, controllerId, dbLayer)));
+                verifiedRedeployables.putAll(PublishUtils.getDeploymentsWithSignature(commitId, account, unsignedRedeployables, hibernateSession,
+                        JocSecurityLevel.MEDIUM));
+            }
+            if (verifiedRedeployables != null && !verifiedRedeployables.isEmpty()) {
+                // call updateItems command via ControllerApi for given controllers
+                boolean verified = false;
+                String signerDN = null;
+                List<DBItemInventoryCertificate> caCertificates = dbLayer.getCaCertificates();
+                X509Certificate cert = null;
+                switch (keyPair.getKeyAlgorithm()) {
                 case SOSKeyConstants.PGP_ALGORITHM_NAME:
-                    PublishUtils.updateItemsAddOrUpdatePGP(
-                            versionId,  
-                            reDeployables.stream()
-                                .map(item -> {
-                                    if(item.getCommitId().equals(versionId)) {
-                                        return item;
-                                    }
-                                    return null;
-                                })
-                                .collect(Collectors.toList()),
-                            controllerId)
-                        .thenAccept(either -> {
-                            processAfterAdd(either, reDeployables, account, versionId, controllerId, deploymentDate, reDeployFilter);
-                        }).get();
+                    PublishUtils.updateItemsAddOrUpdatePGP(commitId, null, verifiedRedeployables, controllerId, dbLayer).thenAccept(either -> {
+                        processAfterAdd(either, null, updateableAgentNames, verifiedRedeployables, account, commitId, controllerId, redeployFilter);
+                    });
                     break;
                 case SOSKeyConstants.RSA_ALGORITHM_NAME:
                     cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                    signerDN = cert.getSubjectDN().getName();
-                    PublishUtils.updateItemsAddOrUpdateWithX509Certificate(
-                            versionId,  
-                            reDeployables.stream()
-                                .map(item -> {
-                                    if(item.getCommitId().equals(versionId)) {
-                                        return item;
-                                    }
-                                    return null;
-                                })
-                                .collect(Collectors.toList()),
-                            controllerId, 
-                            SOSKeyConstants.RSA_SIGNER_ALGORITHM, 
-                            signerDN)
-                        .thenAccept(either -> {
-                            processAfterAdd(either, reDeployables, account, versionId, controllerId, deploymentDate, reDeployFilter);
-                        }).get();
+                    verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
+                    if (verified) {
+                        PublishUtils.updateItemsAddOrUpdateWithX509Certificate(commitId, null, verifiedRedeployables, controllerId, dbLayer,
+                                SOSKeyConstants.RSA_SIGNER_ALGORITHM, keyPair.getCertificate()).thenAccept(either -> {
+                                    processAfterAdd(either, null, updateableAgentNames, verifiedRedeployables, account, commitId, controllerId,
+                                            redeployFilter);
+                                });
+                    } else {
+                        signerDN = cert.getSubjectDN().getName();
+                        PublishUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId, null, verifiedRedeployables, controllerId, dbLayer,
+                                SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
+                                    processAfterAdd(either, null, updateableAgentNames, verifiedRedeployables, account, commitId, controllerId,
+                                            redeployFilter);
+                                });
+                    }
                     break;
                 case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
                     cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                    signerDN = cert.getSubjectDN().getName();
-                    PublishUtils.updateItemsAddOrUpdateWithX509Certificate(
-                            versionId,  
-                            reDeployables.stream()
-                                .map(item -> {
-                                    if(item.getCommitId().equals(versionId)) {
-                                        return item;
-                                    }
-                                    return null;
-                                })
-                                .collect(Collectors.toList()),
-                            controllerId, 
-                            SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, 
-                            signerDN)
-                        .thenAccept(either -> {
-                            processAfterAdd(either, reDeployables, account, versionId, controllerId, deploymentDate, reDeployFilter);
-                        }).get();
+                    verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
+                    if (verified) {
+                        PublishUtils.updateItemsAddOrUpdateWithX509Certificate(commitId, null, verifiedRedeployables, controllerId, dbLayer,
+                                SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair.getCertificate()).thenAccept(either -> {
+                                    processAfterAdd(either, null, updateableAgentNames, verifiedRedeployables, account, commitId, controllerId,
+                                            redeployFilter);
+                                });
+                    } else {
+                        signerDN = cert.getSubjectDN().getName();
+                        PublishUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId, null, verifiedRedeployables, controllerId, dbLayer,
+                                SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
+                                    processAfterAdd(either, null, updateableAgentNames, verifiedRedeployables, account, commitId, controllerId,
+                                            redeployFilter);
+                                });
+                    }
                     break;
                 }
             }
-            versionIds.stream().peek(versionId -> {
-            });
             if (hasErrors) {
                 return JOCDefaultResponse.responseStatus419(listOfErrors);
             } else {
@@ -155,53 +160,57 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
         }
     }
 
-    private void processAfterAdd (
+    private void processAfterAdd(
             Either<Problem, Void> either, 
-            List<DBItemDeploymentHistory> reDeployables,
-            String account,
-            String versionId,
-            String controllerId,
-            Date deploymentDate,
-            RedeployFilter filter) {
-        if (either.isRight()) {
-            // no error occurred
-            Set<DBItemDeploymentHistory> deployedObjects = 
-                    PublishUtils.cloneDepHistoryItemsToRedeployed(reDeployables, account, dbLayer, controllerId, deploymentDate);
-            LOGGER.info(String.format("Deploy to Controller \"%1$s\" was successful!", controllerId));
-            createAuditLogForEach(deployedObjects, filter, controllerId, versionId);
-        } else if (either.isLeft()) {
-            // an error occurred
-            String message = String.format(
-                    "Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
-            LOGGER.error(message);
-            // updateRepo command is atomic, therefore all items are rejected
-            List<DBItemDeploymentHistory> failedDeployUpdateItems = 
-                    dbLayer.updateFailedDeploymentForUpdate(reDeployables, controllerId, account, either.getLeft().message());
-            // if not successful the objects and the related controllerId have to be stored 
-            // in a submissions table for reprocessing
-            dbLayer.createSubmissionForFailedDeployments(failedDeployUpdateItems);
-            hasErrors = true;
-            if (either.getLeft().codeOrNull() != null) {
-                listOfErrors.add(
-                        new BulkError().get(new JocError(either.getLeft().codeOrNull().toString(), either.getLeft().message()), "/"));
-            } else {
-                listOfErrors.add(new BulkError().get(new JocError(either.getLeft().message()), "/"));
+            Map<DBItemInventoryConfiguration, 
+            DBItemDepSignatures> verifiedConfigurations,
+            Set<UpdateableWorkflowJobAgentName> updateableAgentNames, 
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedReDeployables,
+            String account, 
+            String commitId, 
+            String controllerId, 
+            RedeployFilter redeployFilter) {
+        // First create a new db session as the session of the parent web service can already been closed
+        SOSHibernateSession newHibernateSession = null;
+        try {
+            newHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
+            final Date deploymentDate = Date.from(Instant.now());
+            if (either.isRight()) {
+                // no error occurred
+                Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
+                if (verifiedReDeployables != null && !verifiedReDeployables.isEmpty()) {
+                    Set<DBItemDeploymentHistory> cloned = PublishUtils.cloneDepHistoryItemsToRedeployed(verifiedReDeployables, account, dbLayer,
+                            commitId, controllerId, deploymentDate);
+                    deployedObjects.addAll(cloned);
+                    // cleanup stored signatures
+                    dbLayer.cleanupSignatures(verifiedReDeployables.keySet().stream().map(item -> verifiedReDeployables.get(item)).filter(
+                            Objects::nonNull).collect(Collectors.toSet()));
+                    // cleanup stored commitIds
+                    cloned.stream().forEach(item -> dbLayer.cleanupCommitIds(item.getCommitId()));
+                }
+                if (!deployedObjects.isEmpty()) {
+                    LOGGER.info(String.format("Update command send to Controller \"%1$s\".", controllerId));
+                    JocInventory.handleWorkflowSearch(newHibernateSession, deployedObjects, false);
+                }
+            } else if (either.isLeft()) {
+                // an error occurred
+                String message = String.format("Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
+                LOGGER.error(message);
+                // updateRepo command is atomic, therefore all items are rejected
+                List<DBItemDeploymentHistory> failedDeployUpdateItems = dbLayer.updateFailedDeploymentForUpdate(verifiedConfigurations,
+                        verifiedReDeployables, controllerId, account, commitId, either.getLeft().message());
+                // if not successful the objects and the related controllerId have to be stored
+                // in a submissions table for reprocessing
+                dbLayer.createSubmissionForFailedDeployments(failedDeployUpdateItems);
+                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), null);
             }
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+            ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), null);
+        } finally {
+            Globals.disconnect(newHibernateSession);
         }
     }
-    
-    private void createAuditLogForEach(Collection<DBItemDeploymentHistory> depHistoryEntries, RedeployFilter filter, String controllerId,
-            String commitId) {
-        Set<RedeployAudit> audits = depHistoryEntries.stream().map(item -> {
-                return new RedeployAudit(filter, 
-                        controllerId, 
-                        commitId, 
-                        item.getId(), 
-                        item.getPath(), 
-                        String.format("object %1$s updated on controller %2$s", item.getPath(), controllerId));
-        }).collect(Collectors.toSet());
-        audits.stream().forEach(audit -> logAuditMessage(audit));
-        audits.stream().forEach(audit -> storeAuditLogEntry(audit));
-    }
-    
+
 }

@@ -693,72 +693,69 @@ public abstract class PublishUtils {
                     throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         Set<JUpdateItemOperation> updateItemOperationsSimple = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemOperationsVersioned = new HashSet<JUpdateItemOperation>();
-        updateItemOperationsSimple.addAll(
-                drafts.keySet().stream().filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(item -> {
-                    switch(item.getTypeAsEnum()) {
-                    case LOCK:
-                        try {
-                            Lock lock = om.readValue(item.getContent(), Lock.class);
-                            if (lock.getId() == null) {
-                                lock.setId(item.getName());
+        if (drafts != null) {
+            updateItemOperationsSimple.addAll(
+                    drafts.keySet().stream().filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(item -> {
+                        switch(item.getTypeAsEnum()) {
+                        case LOCK:
+                            try {
+                                Lock lock = om.readValue(item.getContent(), Lock.class);
+                                if (lock.getId() == null) {
+                                    lock.setId(item.getName());
+                                }
+                                return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                            } catch (Exception e) {
+                                throw new JocDeployException(e);
                             }
-                            return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
-                        } catch (Exception e) {
-                            throw new JocDeployException(e);
+                        case JUNCTION:
+                            // TODO: When implemented in controller
+                            return null;
+                        case JOBCLASS:
+                            // TODO: When implemented in controller
+                            return null;
+                        default:
+                            return null;
                         }
-                    case JUNCTION:
-                        // TODO: When implemented in controller
-                        return null;
-                    case JOBCLASS:
-                        // TODO: When implemented in controller
-                        return null;
-                    default:
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet()));
-        updateItemOperationsVersioned.addAll(
-                drafts.keySet().stream().filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(
-                        item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.of(
-                                item.getContent(),
-                                SOSKeyConstants.PGP_ALGORITHM_NAME,
-                                drafts.get(item).getSignature()))
-                        ).collect(Collectors.toSet())
-                );
-        updateItemOperationsSimple.addAll(
-                alreadyDeployed.keySet().stream().filter(item -> item.getType() != ConfigurationType.WORKFLOW.intValue()).map(item -> {
-                    switch(DeployType.fromValue(item.getType())) {
-                    case LOCK:
-                        try {
-                            Lock lock = om.readValue(item.getContent(), Lock.class);
-                            if (lock.getId() == null) {
-                                lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet()));
+            updateItemOperationsVersioned.addAll(
+                    drafts.keySet().stream().filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(
+                            item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.of(
+                                    item.getContent(),
+                                    SOSKeyConstants.PGP_ALGORITHM_NAME,
+                                    drafts.get(item).getSignature()))
+                            ).collect(Collectors.toSet())
+                    );
+        }
+        if (alreadyDeployed != null) {
+            updateItemOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() != ConfigurationType.WORKFLOW
+                    .intValue()).map(item -> {
+                        switch (DeployType.fromValue(item.getType())) {
+                        case LOCK:
+                            try {
+                                Lock lock = om.readValue(item.getContent(), Lock.class);
+                                if (lock.getId() == null) {
+                                    lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                                }
+                                return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                            } catch (Exception e) {
+                                throw new JocDeployException(e);
                             }
-                            return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
-                        } catch (Exception e) {
-                            throw new JocDeployException(e);
+                        case JUNCTION:
+                            // TODO: When implemented in controller
+                            return null;
+                        case JOBCLASS:
+                            // TODO: When implemented in controller
+                            return null;
+                        default:
+                            return null;
                         }
-                    case JUNCTION:
-                        // TODO: When implemented in controller
-                        return null;
-                    case JOBCLASS:
-                        // TODO: When implemented in controller
-                        return null;
-                    default:
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet()));
-        updateItemOperationsVersioned.addAll(
-                alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
-                        item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.of(
-                                item.getContent(),
-                                SOSKeyConstants.PGP_ALGORITHM_NAME,
-                                alreadyDeployed.get(item).getSignature()))
-                        ).collect(Collectors.toSet())
-                );
+                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
+            updateItemOperationsVersioned.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
+                    .map(item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.of(item.getContent(), SOSKeyConstants.PGP_ALGORITHM_NAME,
+                            alreadyDeployed.get(item).getSignature()))).collect(Collectors.toSet()));
+        }
         return ControllerApi.of(controllerId).updateItems(
                     Flux.concat(
                         Flux.fromIterable(updateItemOperationsSimple),

@@ -356,10 +356,7 @@ public class DeploymentTestUtils {
         RedeployFilter filter = new RedeployFilter();
         filter.setControllerId("js7-cluster");
         filter.setFolder("/myWorkflows/myIfElseWorkflow");
-        ExcludeConfiguration exclude = new ExcludeConfiguration();
-        exclude.setPath("/myWorkflows/myIfElseWorkflows/workflow_12");
-        exclude.setDeployType(ConfigurationType.WORKFLOW);
-        filter.getExcludes().add(exclude);
+        filter.setRecursive(true);
         return filter;
     }
     

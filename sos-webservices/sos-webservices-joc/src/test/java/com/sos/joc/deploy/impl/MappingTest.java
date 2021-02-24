@@ -161,10 +161,6 @@ public class MappingTest {
 //  @Test
     public void test07MapRedeployFilter () throws JsonProcessingException {
         RedeployFilter filter = DeploymentTestUtils.createDefaultRedeployFilter();
-        ExcludeConfiguration exclude = new ExcludeConfiguration();
-        exclude.setPath("/myWorkflows/myIfElseWorkflows/workflow_02");
-        exclude.setDeployType(ConfigurationType.WORKFLOW);
-        filter.getExcludes().add(exclude);
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         LOGGER.info("\n" + om.writeValueAsString(filter));
     }

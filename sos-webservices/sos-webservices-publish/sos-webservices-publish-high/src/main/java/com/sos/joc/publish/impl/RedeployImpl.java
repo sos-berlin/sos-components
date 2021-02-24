@@ -68,7 +68,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
             // process filter
             String controllerId = reDeployFilter.getControllerId();
             // read all objects provided in the filter from the database
-            List<DBItemDeploymentHistory> reDeployables = dbLayer.getDeploymentsToRedeploy(reDeployFilter);
+//            List<DBItemDeploymentHistory> reDeployables = dbLayer.getDeploymentsToRedeploy(reDeployFilter);
 
             final Date deploymentDate = Date.from(Instant.now());
             // all items will be signed or re-signed with current versionId
@@ -77,69 +77,69 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
             // call updateRepo command via ControllerApi for given controllerId
             String signerDN = null;
             X509Certificate cert = null;
-            Set<String> versionIds = reDeployables.stream().flatMap(item -> Stream.of(item.getCommitId())).collect(Collectors.toSet());
-            for (String versionId : versionIds) {
-                switch(keyPair.getKeyAlgorithm()) {
-                case SOSKeyConstants.PGP_ALGORITHM_NAME:
-                    PublishUtils.updateItemsAddOrUpdatePGP(
-                            versionId,  
-                            reDeployables.stream()
-                                .map(item -> {
-                                    if(item.getCommitId().equals(versionId)) {
-                                        return item;
-                                    }
-                                    return null;
-                                })
-                                .collect(Collectors.toList()),
-                            controllerId)
-                        .thenAccept(either -> {
-                            processAfterAdd(either, reDeployables, account, versionId, controllerId, deploymentDate, reDeployFilter);
-                        }).get();
-                    break;
-                case SOSKeyConstants.RSA_ALGORITHM_NAME:
-                    cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                    signerDN = cert.getSubjectDN().getName();
-                    PublishUtils.updateItemsAddOrUpdateWithX509Certificate(
-                            versionId,  
-                            reDeployables.stream()
-                                .map(item -> {
-                                    if(item.getCommitId().equals(versionId)) {
-                                        return item;
-                                    }
-                                    return null;
-                                })
-                                .collect(Collectors.toList()),
-                            controllerId, 
-                            SOSKeyConstants.RSA_SIGNER_ALGORITHM, 
-                            signerDN)
-                        .thenAccept(either -> {
-                            processAfterAdd(either, reDeployables, account, versionId, controllerId, deploymentDate, reDeployFilter);
-                        }).get();
-                    break;
-                case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
-                    cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                    signerDN = cert.getSubjectDN().getName();
-                    PublishUtils.updateItemsAddOrUpdateWithX509Certificate(
-                            versionId,  
-                            reDeployables.stream()
-                                .map(item -> {
-                                    if(item.getCommitId().equals(versionId)) {
-                                        return item;
-                                    }
-                                    return null;
-                                })
-                                .collect(Collectors.toList()),
-                            controllerId, 
-                            SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, 
-                            signerDN)
-                        .thenAccept(either -> {
-                            processAfterAdd(either, reDeployables, account, versionId, controllerId, deploymentDate, reDeployFilter);
-                        }).get();
-                    break;
-                }
-            }
-            versionIds.stream().peek(versionId -> {
-            });
+//            Set<String> versionIds = reDeployables.stream().flatMap(item -> Stream.of(item.getCommitId())).collect(Collectors.toSet());
+//            for (String versionId : versionIds) {
+//                switch(keyPair.getKeyAlgorithm()) {
+//                case SOSKeyConstants.PGP_ALGORITHM_NAME:
+//                    PublishUtils.updateItemsAddOrUpdatePGP(
+//                            versionId,  
+//                            reDeployables.stream()
+//                                .map(item -> {
+//                                    if(item.getCommitId().equals(versionId)) {
+//                                        return item;
+//                                    }
+//                                    return null;
+//                                })
+//                                .collect(Collectors.toList()),
+//                            controllerId)
+//                        .thenAccept(either -> {
+//                            processAfterAdd(either, reDeployables, account, versionId, controllerId, deploymentDate, reDeployFilter);
+//                        }).get();
+//                    break;
+//                case SOSKeyConstants.RSA_ALGORITHM_NAME:
+//                    cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+//                    signerDN = cert.getSubjectDN().getName();
+//                    PublishUtils.updateItemsAddOrUpdateWithX509Certificate(
+//                            versionId,  
+//                            reDeployables.stream()
+//                                .map(item -> {
+//                                    if(item.getCommitId().equals(versionId)) {
+//                                        return item;
+//                                    }
+//                                    return null;
+//                                })
+//                                .collect(Collectors.toList()),
+//                            controllerId, 
+//                            SOSKeyConstants.RSA_SIGNER_ALGORITHM, 
+//                            signerDN)
+//                        .thenAccept(either -> {
+//                            processAfterAdd(either, reDeployables, account, versionId, controllerId, deploymentDate, reDeployFilter);
+//                        }).get();
+//                    break;
+//                case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
+//                    cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+//                    signerDN = cert.getSubjectDN().getName();
+//                    PublishUtils.updateItemsAddOrUpdateWithX509Certificate(
+//                            versionId,  
+//                            reDeployables.stream()
+//                                .map(item -> {
+//                                    if(item.getCommitId().equals(versionId)) {
+//                                        return item;
+//                                    }
+//                                    return null;
+//                                })
+//                                .collect(Collectors.toList()),
+//                            controllerId, 
+//                            SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, 
+//                            signerDN)
+//                        .thenAccept(either -> {
+//                            processAfterAdd(either, reDeployables, account, versionId, controllerId, deploymentDate, reDeployFilter);
+//                        }).get();
+//                    break;
+//                }
+//            }
+//            versionIds.stream().peek(versionId -> {
+//            });
             if (hasErrors) {
                 return JOCDefaultResponse.responseStatus419(listOfErrors);
             } else {
