@@ -47,6 +47,7 @@ public class SOSHibernateFactory implements Serializable {
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateFactory.class);
+    private static final Logger CONNECTION_POOL_LOGGER = LoggerFactory.getLogger("ConnectionPool");
     private static final long serialVersionUID = 1L;
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
     private static final boolean isTraceEnabled = LOGGER.isTraceEnabled();
@@ -288,6 +289,7 @@ public class SOSHibernateFactory implements Serializable {
     public SOSHibernateSession openStatelessSession(String identifier) throws SOSHibernateOpenSessionException {
         SOSHibernateSession session = new SOSHibernateSession(this);
         session.setIsStatelessSession(true);
+        CONNECTION_POOL_LOGGER.info("--------> GET CONNECTION: " + identifier);
         session.setIdentifier(identifier);
         session.openSession();
         return session;

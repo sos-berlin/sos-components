@@ -54,6 +54,7 @@ import com.sos.commons.util.SOSString;
 public class SOSHibernateSession implements Serializable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateSession.class);
+    private static final Logger CONNECTION_POOL_LOGGER = LoggerFactory.getLogger("ConnectionPool");
     private static final long serialVersionUID = 1L;
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
     private static final boolean isTraceEnabled = LOGGER.isTraceEnabled();
@@ -188,6 +189,7 @@ public class SOSHibernateSession implements Serializable {
         if (isDebugEnabled) {
             LOGGER.debug(SOSHibernate.getMethodName(logIdentifier, "close"));
         }
+        CONNECTION_POOL_LOGGER.info("--------> RELEASE CONNECTION: " + getIdentifier());
         closeTransaction();
         closeSession();
     }
