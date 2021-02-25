@@ -94,6 +94,7 @@ public class Globals {
 
     public static SOSHibernateSession createSosHibernateStatelessConnection(String identifier) throws JocConfigurationException,
             DBOpenSessionException {
+        LOGGER.info("--------> GET DB-CONNECTION: " + identifier);
         try {
             getHibernateFactory();
             SOSHibernateSession sosHibernateSession = sosHibernateFactory.openStatelessSession(identifier);
@@ -380,6 +381,7 @@ public class Globals {
 
     public static void disconnect(SOSHibernateSession sosHibernateSession) {
         if (sosHibernateSession != null) {
+            LOGGER.info("--------> RELEASE DB-CONNECTION: " + sosHibernateSession.getIdentifier());
             sosHibernateSession.close();
         }
     }
