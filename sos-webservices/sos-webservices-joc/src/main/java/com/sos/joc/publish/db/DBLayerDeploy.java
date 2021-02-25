@@ -121,7 +121,7 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemDeploymentHistory> getDeployedConfigurations (Long inventoryConfigurationId) throws DBConnectionRefusedException,
+    public List<DBItemDeploymentHistory> getDeployedConfigurations(Long inventoryConfigurationId) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
@@ -129,6 +129,55 @@ public class DBLayerDeploy {
             sql.append(" where inventoryConfigurationId = :inventoryConfigurationId");
             Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
             query.setParameter("inventoryConfigurationId", inventoryConfigurationId);
+            return session.getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    public List<DBItemDeploymentHistory> getDepHistory(String commitId) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        return getDepHistory(commitId, (ConfigurationType)null);
+    }
+
+    public List<DBItemDeploymentHistory> getDepHistory(String commitId, ConfigurationType type) throws DBConnectionRefusedException, 
+            DBInvalidDataException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append(" from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            sql.append(" where commitId = :commitId");
+            if (type != null) {
+                sql.append(" and type = :type");
+            }
+            Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
+            query.setParameter("commitId", commitId);
+            if (type != null) {
+                query.setParameter("type", type.intValue());
+            }
+            return session.getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    public List<DBItemDeploymentHistory> getDepHistory(String commitId, Set<ConfigurationType> types) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append(" from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            sql.append(" where commitId = :commitId");
+            if (types != null) {
+                sql.append(" and type in (:types)");
+            }
+            Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
+            query.setParameter("commitId", commitId);
+            if (types != null) {
+                query.setParameterList("types", types.stream().map(item -> item.intValue()).collect(Collectors.toSet()));
+            }
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -1611,6 +1660,23 @@ public class DBLayerDeploy {
             } 
         }
         return depHistoryFailed;
+    }
+    
+    public void updateFailedDeploymentForRedeploy(List<DBItemDeploymentHistory> itemsToUpdate, 
+            String controllerId, String account, String versionId, String errorMessage) {
+        List<DBItemDeploymentHistory> depHistoryFailed = new ArrayList<DBItemDeploymentHistory>();
+        if (itemsToUpdate != null) {
+            itemsToUpdate.stream().forEach(item -> {
+                    item.setState(DeploymentState.NOT_DEPLOYED.value());
+                    item.setDeploymentDate(Date.from(Instant.now()));
+                    item.setErrorMessage(errorMessage);
+                    try {
+                        session.update(item);
+                    } catch (SOSHibernateException e) {
+                        throw new JocSosHibernateException(e);
+                    }
+            });
+        }
     }
     
     public List<DBItemDeploymentHistory> updateFailedDeploymentForImportDeploy(
