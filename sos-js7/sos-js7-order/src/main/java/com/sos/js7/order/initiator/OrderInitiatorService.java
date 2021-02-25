@@ -1,6 +1,6 @@
 package com.sos.js7.order.initiator;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 import java.util.Timer;
 
@@ -27,8 +27,8 @@ public class OrderInitiatorService extends AJocClusterService {
 
     private OrderInitiatorSettings settings;
     private Timer timer;
-    private long lastActivityStart;
-    private long lastActivityEnd;
+    private Instant lastActivityStart = null;
+    private Instant lastActivityEnd = null;
 
     public OrderInitiatorService(JocConfiguration jocConfiguration, ThreadGroup parentThreadGroup) {
         super(jocConfiguration, parentThreadGroup, IDENTIFIER);
@@ -40,7 +40,7 @@ public class OrderInitiatorService extends AJocClusterService {
     @Override
     public JocClusterAnswer start(List<ControllerConfiguration> controllers, StartupMode mode) {
         try {
-            lastActivityStart = new Date().getTime();
+            lastActivityStart = Instant.now();
 
             AJocClusterService.setLogger(IDENTIFIER);
             LOGGER.info(String.format("[%s][%s] start", getIdentifier(), mode));
@@ -53,8 +53,8 @@ public class OrderInitiatorService extends AJocClusterService {
             if (settings.getDayAheadPlan() > 0) {
                 resetStartPlannedOrderTimer(controllers);
             }
-            lastActivityEnd = new Date().getTime();
 
+            lastActivityEnd = Instant.now();
             return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);

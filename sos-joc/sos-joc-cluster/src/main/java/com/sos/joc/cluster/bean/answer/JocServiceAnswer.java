@@ -17,27 +17,23 @@ public class JocServiceAnswer {
     private long nowMinutesDiff;
 
     public JocServiceAnswer() {
-        this(null, 0, 0);
+        this(null, null);
     }
 
-    public JocServiceAnswer(long lastActivityStart, long lastActivityEnd) {
-        this(null, lastActivityStart, lastActivityEnd);
-    }
-
-    private JocServiceAnswer(JocServiceAnswerState state, long lastActivityStart, long lastActivityEnd) {
-        if (lastActivityStart == 0 || lastActivityEnd == 0) {
-            this.state = JocServiceAnswerState.UNKNOWN;
-            this.lastActivityStart = null;
-            this.lastActivityEnd = null;
+    public JocServiceAnswer(Instant start, Instant end) {
+        if (start == null || end == null) {
+            state = JocServiceAnswerState.UNKNOWN;
+            lastActivityStart = null;
+            lastActivityEnd = null;
         } else {
-            this.lastActivityStart = ZonedDateTime.ofInstant(Instant.ofEpochMilli(lastActivityStart), ZoneId.of("UTC"));
-            this.lastActivityEnd = ZonedDateTime.ofInstant(Instant.ofEpochMilli(lastActivityEnd), ZoneId.of("UTC"));
-            if (lastActivityStart > lastActivityEnd) {
-                this.state = JocServiceAnswerState.BUSY;
+            lastActivityStart = ZonedDateTime.ofInstant(start, ZoneId.of("UTC"));
+            lastActivityEnd = ZonedDateTime.ofInstant(end, ZoneId.of("UTC"));
+            if (lastActivityStart.isAfter(lastActivityEnd)) {
+                state = JocServiceAnswerState.BUSY;
             } else {
                 ZonedDateTime now = ZonedDateTime.ofInstant(Instant.now(), ZoneId.of("UTC"));
-                this.nowMinutesDiff = Duration.between(now, this.lastActivityEnd).abs().toMinutes();
-                this.state = this.nowMinutesDiff >= 1 ? JocServiceAnswerState.RELAX : JocServiceAnswerState.BUSY;
+                nowMinutesDiff = Duration.between(now, this.lastActivityEnd).abs().toMinutes();
+                state = nowMinutesDiff >= 1 ? JocServiceAnswerState.RELAX : JocServiceAnswerState.BUSY;
             }
         }
     }

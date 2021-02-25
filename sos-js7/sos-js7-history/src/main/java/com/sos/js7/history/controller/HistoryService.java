@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -147,7 +148,7 @@ public class HistoryService extends AJocClusterService {
                 }
             }
         }
-        return new JocServiceAnswer(start, end);
+        return new JocServiceAnswer(start == 0 ? null : Instant.ofEpochMilli(start), end == 0 ? null : Instant.ofEpochMilli(end));
     }
 
     private void setConfig() {

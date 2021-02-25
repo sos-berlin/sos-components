@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.joc.cleanup.db.DBLayerCleanup;
 import com.sos.joc.cluster.IJocClusterService;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
@@ -24,114 +23,108 @@ public class CleanupTaskDailyplan extends CleanupTaskModel {
 
     @Override
     public JocServiceTaskAnswerState cleanup(Date date) throws SOSHibernateException {
-        DBLayerCleanup dbLayer = null;
         try {
-
-            dbLayer = new DBLayerCleanup(getFactory().openStatelessSession());
-            dbLayer.getSession().setIdentifier(getIdentifier());
-
             boolean run = true;
             while (run) {
-                List<Long> r = getSubmissionIds(dbLayer, date);
+                getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
+                List<Long> r = getSubmissionIds(date);
+                getDbLayer().close();
+
                 if (r == null || r.size() == 0) {
                     return JocServiceTaskAnswerState.COMPLETED;
                 }
                 if (isStopped()) {
                     return JocServiceTaskAnswerState.UNCOMPLETED;
                 }
+
                 if (askService()) {
-                    cleanup(dbLayer, r);
+                    getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
+                    cleanup(r);
+                    getDbLayer().close();
                 } else {
                     waitFor(WAIT_INTERVAL_ON_BUSY);
                 }
             }
         } catch (Exception e) {
-            if (dbLayer != null) {
-                try {
-                    dbLayer.getSession().rollback();
-                } catch (Throwable ex) {
-                }
-            }
+            getDbLayer().rollback();
             throw e;
         } finally {
-            if (dbLayer != null) {
-                dbLayer.close();
-            }
+            getDbLayer().close();
         }
         return JocServiceTaskAnswerState.COMPLETED;
     }
 
-    private void cleanup(DBLayerCleanup dbLayer, List<Long> ids) throws SOSHibernateException {
-        dbLayer.getSession().beginTransaction();
+    private void cleanup(List<Long> ids) throws SOSHibernateException {
+        getDbLayer().getSession().beginTransaction();
         StringBuilder hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DAILY_PLAN_VARIABLES_DBITEM).append(" ");
         hql.append("where plannedOrderId in (");
         hql.append("    select id from ").append(DBLayer.DAILY_PLAN_ORDERS_DBITEM).append(" ");
         hql.append("    where submissionHistoryId in (:ids)");
         hql.append(")");
-        Query<?> query = dbLayer.getSession().createQuery(hql.toString());
+        Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
-        int r = dbLayer.getSession().executeUpdate(query);
+        int r = getDbLayer().getSession().executeUpdate(query);
         LOGGER.info(String.format("[%s][%s]deleted=%s", getIdentifier(), DBLayer.DAILY_PLAN_VARIABLES_TABLE, r));
-        dbLayer.getSession().commit();
+        getDbLayer().getSession().commit();
 
         if (isStopped()) {
             return;
         }
 
-        dbLayer.getSession().beginTransaction();
+        getDbLayer().getSession().beginTransaction();
         hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DAILY_PLAN_HISTORY_DBITEM).append(" ");
         hql.append("where orderId in (");
         hql.append("    select orderId from ").append(DBLayer.DAILY_PLAN_ORDERS_DBITEM).append(" ");
         hql.append("    where submissionHistoryId in (:ids)");
         hql.append(")");
-        query = dbLayer.getSession().createQuery(hql.toString());
+        query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
-        r = dbLayer.getSession().executeUpdate(query);
+        r = getDbLayer().getSession().executeUpdate(query);
         LOGGER.info(String.format("[%s][%s]deleted=%s", getIdentifier(), DBLayer.DAILY_PLAN_HISTORY_TABLE, r));
-        dbLayer.getSession().commit();
+        getDbLayer().getSession().commit();
 
         if (isStopped()) {
             return;
         }
 
-        dbLayer.getSession().beginTransaction();
+        getDbLayer().getSession().beginTransaction();
         hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DAILY_PLAN_ORDERS_DBITEM).append(" ");
         hql.append("where submissionHistoryId in (:ids)");
-        query = dbLayer.getSession().createQuery(hql.toString());
+        query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
-        r = dbLayer.getSession().executeUpdate(query);
+        r = getDbLayer().getSession().executeUpdate(query);
         LOGGER.info(String.format("[%s][%s]deleted=%s", getIdentifier(), DBLayer.DAILY_PLAN_ORDERS_TABLE, r));
-        dbLayer.getSession().commit();
+        getDbLayer().getSession().commit();
 
         if (isStopped()) {
             return;
         }
 
-        dbLayer.getSession().beginTransaction();
+        getDbLayer().getSession().beginTransaction();
         hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DAILY_PLAN_SUBMISSIONS_DBITEM).append(" ");
         hql.append("where id in (:ids)");
-        query = dbLayer.getSession().createQuery(hql.toString());
+        query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
-        r = dbLayer.getSession().executeUpdate(query);
+        r = getDbLayer().getSession().executeUpdate(query);
         LOGGER.info(String.format("[%s][%s]deleted=%s", getIdentifier(), DBLayer.DAILY_PLAN_SUBMISSIONS_TABLE, r));
-        dbLayer.getSession().commit();
+        getDbLayer().getSession().commit();
     }
 
-    private List<Long> getSubmissionIds(DBLayerCleanup dbLayer, Date date) throws SOSHibernateException {
-        dbLayer.getSession().beginTransaction();
+    private List<Long> getSubmissionIds(Date date) throws SOSHibernateException {
+        getDbLayer().getSession().beginTransaction();
         StringBuilder hql = new StringBuilder("select id from ");
         hql.append(DBLayer.DAILY_PLAN_SUBMISSIONS_DBITEM).append(" ");
         hql.append("where created < :created ");
-        Query<Long> query = dbLayer.getSession().createQuery(hql.toString());
+        Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameter("created", date);
         query.setMaxResults(getBatchSize());
-        List<Long> r = dbLayer.getSession().getResultList(query);
+        List<Long> r = getDbLayer().getSession().getResultList(query);
         LOGGER.info(String.format("[%s][%s]found=%s", getIdentifier(), DBLayer.DAILY_PLAN_SUBMISSIONS_TABLE, r.size()));
-        dbLayer.getSession().commit();
+        getDbLayer().getSession().commit();
         return r;
     }
 

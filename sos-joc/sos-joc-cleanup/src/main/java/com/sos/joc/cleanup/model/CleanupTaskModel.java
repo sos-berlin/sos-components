@@ -8,35 +8,57 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSString;
+import com.sos.joc.cleanup.db.DBLayerCleanup;
 import com.sos.joc.cluster.IJocClusterService;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
-import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer;
 import com.sos.joc.cluster.bean.answer.JocServiceAnswer.JocServiceAnswerState;
+import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
-import com.sos.joc.model.cluster.common.ClusterServices;
 
 public class CleanupTaskModel implements ICleanupTask {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupTaskModel.class);
 
+    public enum TaskType {
+        SERVICE_TASK, MANUAL_TASK
+    }
+
     protected static final int WAIT_INTERVAL_ON_BUSY = 65;
     protected static final int WAIT_INTERVAL_ON_ERROR = 60;
 
     private final JocClusterHibernateFactory factory;
+    private final DBLayerCleanup dbLayer;
     private final IJocClusterService service;
     private final int batchSize;
+    private final TaskType type;
+    private final String identifier;
     private final Object lock = new Object();
 
     private JocServiceTaskAnswerState state = null;
     private AtomicBoolean stopped = new AtomicBoolean(false);
     private Date date = null;
-    private String logIdentifier = null;
+
+    protected CleanupTaskModel(JocClusterHibernateFactory factory, int batchSize, String identifier) {
+        this(factory, null, batchSize, identifier);
+    }
 
     protected CleanupTaskModel(JocClusterHibernateFactory factory, IJocClusterService service, int batchSize) {
+        this(factory, service, batchSize, null);
+    }
+
+    private CleanupTaskModel(JocClusterHibernateFactory factory, IJocClusterService service, int batchSize, String identifier) {
         this.factory = factory;
         this.service = service;
         this.batchSize = batchSize;
+        if (this.service == null) {
+            this.type = TaskType.MANUAL_TASK;
+            this.identifier = identifier;
+        } else {
+            this.type = TaskType.SERVICE_TASK;
+            this.identifier = service.getIdentifier();
+        }
+        this.dbLayer = new DBLayerCleanup(this.identifier);
     }
 
     @Override
@@ -64,11 +86,6 @@ public class CleanupTaskModel implements ICleanupTask {
     }
 
     @Override
-    public JocServiceTaskAnswerState cleanup(Date date) throws SOSHibernateException {
-        return state;
-    }
-
-    @Override
     public JocServiceTaskAnswer stop() {
         stopped.set(true);
 
@@ -76,11 +93,6 @@ public class CleanupTaskModel implements ICleanupTask {
             lock.notifyAll();
         }
         return new JocServiceTaskAnswer(state);
-    }
-
-    @Override
-    public void setState(JocServiceTaskAnswerState val) {
-        state = val;
     }
 
     @Override
@@ -95,11 +107,32 @@ public class CleanupTaskModel implements ICleanupTask {
 
     @Override
     public String getIdentifier() {
-        return service == null ? null : service.getIdentifier();
+        return identifier;
+    }
+
+    @Override
+    public String getTypeName() {
+        return type == null ? "null" : type.name().toLowerCase();
+    }
+
+    public JocServiceTaskAnswerState cleanup(Date date) throws SOSHibernateException {
+        return state;
+    }
+
+    public TaskType getType() {
+        return type;
+    }
+
+    public void setState(JocServiceTaskAnswerState val) {
+        state = val;
     }
 
     public JocClusterHibernateFactory getFactory() {
         return factory;
+    }
+
+    public DBLayerCleanup getDbLayer() {
+        return dbLayer;
     }
 
     public int getBatchSize() {
@@ -114,18 +147,14 @@ public class CleanupTaskModel implements ICleanupTask {
         return date;
     }
 
-    protected String getLogIdentifier() {
-        if (logIdentifier == null) {
-            logIdentifier = ClusterServices.cleanup.name() + "_" + service.getIdentifier();
-        }
-        return logIdentifier;
-    }
-
     protected boolean askService() {
-        LOGGER.info(String.format("[%s]ask %s...", getLogIdentifier(), getIdentifier()));
-        JocServiceAnswer info = getService().getInfo();
-        LOGGER.info(String.format("[%s]%s", getLogIdentifier(), SOSString.toString(info)));
-        return info.getState().equals(JocServiceAnswerState.RELAX);
+        if (this.type.equals(TaskType.SERVICE_TASK)) {
+            LOGGER.info(String.format("[%s]ask %s service...", identifier, identifier));
+            JocServiceAnswer info = getService().getInfo();
+            LOGGER.info(String.format("[%s]%s", identifier, SOSString.toString(info)));
+            return info.getState().equals(JocServiceAnswerState.RELAX);
+        }
+        return true;
     }
 
     protected void waitFor(int interval) {

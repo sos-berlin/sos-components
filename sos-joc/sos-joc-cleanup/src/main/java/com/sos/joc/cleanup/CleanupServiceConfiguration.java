@@ -1,5 +1,6 @@
 package com.sos.joc.cleanup;
 
+import java.nio.file.Path;
 import java.time.ZoneId;
 import java.util.Properties;
 
@@ -24,6 +25,8 @@ public class CleanupServiceConfiguration {
     private Period period = new Period(startupMode, "01:00-03:00");
     private Age age = new Age("30d");
     private int batchSize = 1_000;
+
+    private Path hibernateConfiguration;
 
     public CleanupServiceConfiguration(Properties properties) {
         String timeZone = properties.getProperty("cleanup_time_zone");
@@ -80,6 +83,14 @@ public class CleanupServiceConfiguration {
 
     public int getBatchSize() {
         return batchSize;
+    }
+
+    public void setHibernateConfiguration(Path val) {
+        hibernateConfiguration = val;
+    }
+
+    public Path getHibernateConfiguration() {
+        return hibernateConfiguration;
     }
 
     private StartupMode getStartupMode(String startupMode) {

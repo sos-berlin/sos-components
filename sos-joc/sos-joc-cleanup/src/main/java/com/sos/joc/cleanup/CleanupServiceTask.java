@@ -16,11 +16,13 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.cleanup.model.CleanupTaskDailyplan;
+import com.sos.joc.cleanup.model.CleanupTaskDeployment;
 import com.sos.joc.cleanup.model.CleanupTaskHistory;
 import com.sos.joc.cleanup.model.ICleanupTask;
 import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.IJocClusterService;
 import com.sos.joc.cluster.JocCluster;
+import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.JocClusterThreadFactory;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
@@ -55,7 +57,13 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
             List<IJocClusterService> services = cluster.getHandler().getServices();
             LOGGER.info(String.format("[%s][run]found %s running services", logIdentifier, services.size()));
 
+            int batchSize = cleanupSchedule.getService().getConfig().getBatchSize();
+            ZonedDateTime date = CleanupService.getZonedDateTimeUTCMinusMinutes(cleanupSchedule.getFirstStart(), cleanupSchedule.getService()
+                    .getConfig().getAge().getMinutes());
+            String dateInfo = cleanupSchedule.getService().getConfig().getAge().getConfigured() + "=" + date;
+
             List<Supplier<JocClusterAnswer>> tasks = new ArrayList<Supplier<JocClusterAnswer>>();
+            // 1) service tasks
             for (IJocClusterService service : services) {
                 if (service.getIdentifier().equals(ClusterServices.cleanup.name())) {
                     LOGGER.info("  [service][skip]" + service.getIdentifier());
@@ -69,41 +77,40 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                         AJocClusterService.setLogger(identifier);
 
                         ICleanupTask task = null;
-                        int batchSize = cleanupSchedule.getService().getConfig().getBatchSize();
                         if (service.getIdentifier().equals(ClusterServices.history.name())) {
-                            task = new CleanupTaskHistory(cleanupSchedule.getService().getFactory(), service, batchSize);
+                            task = new CleanupTaskHistory(cleanupSchedule.getFactory(), service, batchSize);
                         } else if (service.getIdentifier().equals(ClusterServices.dailyplan.name())) {
-                            task = new CleanupTaskDailyplan(cleanupSchedule.getService().getFactory(), service, batchSize);
+                            task = new CleanupTaskDailyplan(cleanupSchedule.getFactory(), service, batchSize);
                         }
 
                         if (task == null) {
                             LOGGER.info(String.format("[%s][%s][skip]not implemented yet", logIdentifier, service.getIdentifier()));
                             LOGGER.info(String.format("[%s][%s]completed", logIdentifier, service.getIdentifier()));
                         } else {
-                            boolean run = true;
-                            if (cleanupSchedule.getUncompleted() != null) {
-                                if (!cleanupSchedule.getUncompleted().contains(service.getIdentifier())) {
-                                    run = false;
-                                    LOGGER.info(String.format("[%s][%s][skip]is already completed", logIdentifier, service.getIdentifier()));
-                                }
-                            }
-                            if (run) {
-                                ZonedDateTime zd = CleanupService.getZonedDateTimeUTCMinusMinutes(cleanupSchedule.getFirstStart(), cleanupSchedule
-                                        .getService().getConfig().getAge().getMinutes());
-                                String ds = cleanupSchedule.getService().getConfig().getAge().getConfigured() + "=" + zd;
-
-                                LOGGER.info(String.format("[%s][%s][%s]start...", logIdentifier, service.getIdentifier(), ds));
-                                cleanupTasks.add(task);
-                                task.start(CleanupService.toDate(zd));
-                                LOGGER.info(String.format("[%s][%s][%s]%s", logIdentifier, service.getIdentifier(), ds, SOSString.toString(task
-                                        .getState())));
-                                task.stop();
-                                LOGGER.info(String.format("[%s][%s][%s]completed", logIdentifier, service.getIdentifier(), ds));
-                            }
+                            executeTask(task, date, dateInfo, cleanupSchedule.getUncompleted());
                         }
 
                         AJocClusterService.clearLogger();
+                        return JocCluster.getOKAnswer(JocClusterAnswerState.COMPLETED);
+                    }
+                };
+                tasks.add(task);
+            }
 
+            // 2) manual tasks
+            List<ICleanupTask> manualTasks = getManualCleanupTasks(cleanupSchedule.getFactory(), batchSize);
+            LOGGER.info(String.format("[%s][run]found %s manual tasks", logIdentifier, manualTasks.size()));
+            for (ICleanupTask manualTask : manualTasks) {
+                LOGGER.info("  [manual]" + manualTask.getIdentifier());
+                Supplier<JocClusterAnswer> task = new Supplier<JocClusterAnswer>() {
+
+                    @Override
+                    public JocClusterAnswer get() {
+                        AJocClusterService.setLogger(identifier);
+
+                        executeTask(manualTask, date, dateInfo, cleanupSchedule.getUncompleted());
+
+                        AJocClusterService.clearLogger();
                         return JocCluster.getOKAnswer(JocClusterAnswerState.COMPLETED);
                     }
                 };
@@ -128,7 +135,34 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
         return getAnswer();
     }
 
-    public JocClusterAnswer close() {
+    private void executeTask(ICleanupTask task, ZonedDateTime date, String dateInfo, List<String> uncompleted) {
+        boolean run = true;
+        if (uncompleted != null) {
+            if (uncompleted.contains(task.getIdentifier())) {
+                run = false;
+                LOGGER.info(String.format("[%s][%s][%s][skip]is already completed", logIdentifier, task.getTypeName(), task.getIdentifier()));
+            }
+        }
+        if (run) {
+            LOGGER.info(String.format("[%s][%s][%s][%s]start...", logIdentifier, task.getTypeName(), task.getIdentifier(), dateInfo));
+            cleanupTasks.add(task);
+            task.start(CleanupService.toDate(date));
+            LOGGER.info(String.format("[%s][%s][%s][%s]%s", logIdentifier, task.getTypeName(), task.getIdentifier(), dateInfo, SOSString.toString(task
+                    .getState())));
+            task.stop();
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[%s][%s][%s][%s]completed", logIdentifier, task.getTypeName(), task.getIdentifier(), dateInfo));
+            }
+        }
+    }
+
+    private List<ICleanupTask> getManualCleanupTasks(JocClusterHibernateFactory factory, int batchSize) {
+        List<ICleanupTask> tasks = new ArrayList<ICleanupTask>();
+        tasks.add(new CleanupTaskDeployment(factory, batchSize, "deployment"));
+        return tasks;
+    }
+
+    public JocClusterAnswer stop() {
         return stopCleanupTasks();
     }
 
@@ -145,15 +179,16 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
 
                 @Override
                 public void run() {
+                    AJocClusterService.setLogger(identifier);
                     if (task.isStopped()) {
-                        LOGGER.info(String.format("[%s][%s][stop]already stopped", logIdentifier, task.getIdentifier()));
+                        LOGGER.info(String.format("[%s][%s][%s][stop]already stopped", logIdentifier, task.getTypeName(), task.getIdentifier()));
                     } else {
-                        AJocClusterService.setLogger(identifier);
-                        LOGGER.info(String.format("[%s][%s][stop]start...", logIdentifier, task.getIdentifier()));
+                        LOGGER.info(String.format("[%s][%s][%s][stop]start...", logIdentifier, task.getTypeName(), task.getIdentifier()));
                         JocServiceTaskAnswer answer = task.stop();
-                        LOGGER.info(String.format("[%s][%s][stop][end]%s", logIdentifier, task.getIdentifier(), SOSString.toString(answer)));
-                        AJocClusterService.clearLogger();
+                        LOGGER.info(String.format("[%s][%s][%s][stop][end]%s", logIdentifier, task.getTypeName(), task.getIdentifier(), SOSString
+                                .toString(answer)));
                     }
+                    AJocClusterService.clearLogger();
                 }
             };
             threadPool.submit(thread);

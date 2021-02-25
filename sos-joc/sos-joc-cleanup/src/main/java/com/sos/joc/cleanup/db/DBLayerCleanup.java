@@ -9,19 +9,36 @@ import com.sos.joc.db.joc.DBItemJocVariable;
 
 public class DBLayerCleanup {
 
-    private final SOSHibernateSession session;
+    private final String identifier;
+    private SOSHibernateSession session;
 
-    public DBLayerCleanup(SOSHibernateSession hibernateSession) {
+    public DBLayerCleanup(String identifier) {
+        this.identifier = identifier;
+    }
+
+    public void setSession(SOSHibernateSession hibernateSession) {
+        close();
         session = hibernateSession;
+        session.setIdentifier(identifier);
     }
 
     public SOSHibernateSession getSession() {
         return session;
     }
 
+    public void rollback() {
+        if (session != null) {
+            try {
+                session.rollback();
+            } catch (Throwable e) {
+            }
+        }
+    }
+
     public void close() {
         if (session != null) {
             session.close();
+            session = null;
         }
     }
 
