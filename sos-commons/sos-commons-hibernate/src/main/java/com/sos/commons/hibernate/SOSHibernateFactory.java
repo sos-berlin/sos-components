@@ -36,6 +36,7 @@ import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue;
 import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
 import com.sos.commons.hibernate.type.SOSHibernateJsonType;
 import com.sos.commons.util.SOSClassList;
+import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
@@ -289,9 +290,9 @@ public class SOSHibernateFactory implements Serializable {
     public SOSHibernateSession openStatelessSession(String identifier) throws SOSHibernateOpenSessionException {
         SOSHibernateSession session = new SOSHibernateSession(this);
         session.setIsStatelessSession(true);
-        CONNECTION_POOL_LOGGER.info("--------> GET CONNECTION: " + identifier);
         session.setIdentifier(identifier);
         session.openSession();
+        CONNECTION_POOL_LOGGER.info("--------> GET CONNECTION: " + session.getIdentifier() + " (" + SOSClassUtil.getMethodName(3) + ") --------");
         return session;
     }
 

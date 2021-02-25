@@ -48,6 +48,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateQueryException;
 import com.sos.commons.hibernate.exception.SOSHibernateQueryNonUniqueResultException;
 import com.sos.commons.hibernate.exception.SOSHibernateSessionException;
 import com.sos.commons.hibernate.exception.SOSHibernateTransactionException;
+import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 
@@ -189,7 +190,7 @@ public class SOSHibernateSession implements Serializable {
         if (isDebugEnabled) {
             LOGGER.debug(SOSHibernate.getMethodName(logIdentifier, "close"));
         }
-        CONNECTION_POOL_LOGGER.info("--------> RELEASE CONNECTION: " + getIdentifier());
+        CONNECTION_POOL_LOGGER.info("--------> RELEASE CONNECTION: " + getIdentifier() + " (" + SOSClassUtil.getMethodName(3) + ") --------");
         closeTransaction();
         closeSession();
     }
