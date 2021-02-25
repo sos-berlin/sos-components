@@ -111,8 +111,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                     if (verified) {
                         PublishUtils.updateItemsAddOrUpdateWithX509Certificate(commitId, null, verifiedRedeployables, controllerId, dbLayer,
                                 SOSKeyConstants.RSA_SIGNER_ALGORITHM, keyPair.getCertificate()).thenAccept(either -> {
-                                    processAfterAdd(either, null, updateableAgentNames, verifiedRedeployables, account, commitId, controllerId,
-                                            redeployFilter);
+                                    processAfterAdd(either, account, commitId, controllerId, redeployFilter);
                                 });
                     } else {
                         signerDN = cert.getSubjectDN().getName();
