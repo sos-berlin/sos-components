@@ -19,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
@@ -32,7 +31,6 @@ import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
-import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.keys.db.DBLayerKeys;
@@ -215,10 +213,11 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     // set new versionId for second round (delete items)
                     final String versionIdForDeleteRenamed = UUID.randomUUID().toString();
                     // call updateRepo command via Proxy of given controllers
-                    PublishUtils.updateItemsDelete(versionIdForDeleteRenamed, toDelete, controllerId, dbLayer, keyPair.getKeyAlgorithm()).thenAccept(
+                    PublishUtils.updateItemsDelete(versionIdForDeleteRenamed, toDelete, controllerId).thenAccept(
                             either -> {
-                                processAfterDelete(either, toDelete, controllerId, account, versionIdForDeleteRenamed, null);
-                            });// .get();
+                                DeleteDeployments.processAfterDelete(either, toDelete, controllerId, account, versionIdForDeleteRenamed,
+                                        getAccessToken(), getJocError());
+                            });
                 }
                 if ((verifiedConfigurations != null && !verifiedConfigurations.isEmpty()) || (verifiedReDeployables != null && !verifiedReDeployables
                         .isEmpty())) {
@@ -232,7 +231,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                                 dbLayer).thenAccept(either -> {
                                     processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account,
                                             versionIdForUpdate, controllerId, deployFilter, unmodified);
-                                });// .get()
+                                });
                         break;
                     case SOSKeyConstants.RSA_ALGORITHM_NAME:
                         cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
@@ -278,10 +277,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 }
                 if (depHistoryDBItemsToDeployDelete != null && !depHistoryDBItemsToDeployDelete.isEmpty()) {
                     final List<DBItemDeploymentHistory> itemsToDelete = depHistoryDBItemsToDeployDelete;
-                    PublishUtils.updateItemsDelete(versionIdForDelete, itemsToDelete, controllerId, dbLayer, keyPair.getKeyAlgorithm()).thenAccept(
-                            either -> {
-                                processAfterDelete(either, itemsToDelete, controllerId, account, versionIdForDelete, deployFilter);
-                            });// .get()
+                    PublishUtils.updateItemsDelete(versionIdForDelete, itemsToDelete, controllerId).thenAccept(either -> {
+                        DeleteDeployments.processAfterDelete(either, itemsToDelete, controllerId, account, versionIdForDelete, getAccessToken(), getJocError());
+                    });
+                    DeleteDeployments.storeDepHistoryAndDeleteSetOfConfigurations(dbLayer, itemsToDelete, versionIdForDelete);
                 }
                 // process folder to Delete
                 if (itemsFromFolderToDelete != null && !itemsFromFolderToDelete.isEmpty()) {
@@ -289,11 +288,14 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     final List<Config> folders = foldersToDelete;
                     final List<DBItemDeploymentHistory> itemsToDelete = itemsFromFolderToDelete.stream().filter(item -> item.getControllerId().equals(
                             controllerId) && !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation()))).collect(Collectors.toList());
-                    PublishUtils.updateItemsDelete(versionIdForDeleteFromFolder, itemsToDelete, controllerId, dbLayer, keyPair.getKeyAlgorithm())
-                            .thenAccept(either -> {
-                                processAfterDeleteFromFolder(either, itemsToDelete, folders, controllerId, account, versionIdForDeleteFromFolder,
-                                        deployFilter);
-                            });// .get()
+                    PublishUtils.updateItemsDelete(versionIdForDeleteFromFolder, itemsToDelete, controllerId).thenAccept(either -> {
+                        DeleteDeployments.processAfterDeleteFromFolder(either, itemsToDelete, 
+                                folders.stream().map(item -> item.getConfiguration()).collect(Collectors.toList()),
+                                controllerId, account, versionIdForDeleteFromFolder, getAccessToken(), getJocError(), false);
+                    });
+                    DeleteDeployments.storeDepHistoryAndDeleteConfigurationsFromFolder(dbLayer, 
+                            folders.stream().map(item -> item.getConfiguration()).collect(Collectors.toList()),
+                            itemsToDelete, versionIdForDeleteFromFolder, getAccessToken(), getJocError(), withoutFolderDeletion);
                 }
             }
 
@@ -417,111 +419,4 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         }
     }
     
-    private void processAfterDelete (
-            Either<Problem, Void> either, 
-            List<DBItemDeploymentHistory> itemsToDelete, 
-            String controllerId, 
-            String account, 
-            String versionIdForDelete,
-            DeployFilter deployFilter) {
-        SOSHibernateSession newHibernateSession = null;
-        try {
-            newHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            final DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
-            final InventoryDBLayer invDbLayer = new InventoryDBLayer(newHibernateSession);
-            if (either.isRight()) {
-                Set<DBItemInventoryConfiguration> configurationsToDelete = itemsToDelete.stream()
-                        .map(item -> dbLayer.getInventoryConfigurationByNameAndType(item.getName(), item.getType()))
-                        .collect(Collectors.toSet());
-                Set<DBItemDeploymentHistory> deletedDeployItems = 
-                        PublishUtils.updateDeletedDepHistoryAndPutToTrash(itemsToDelete, dbLayer, versionIdForDelete);
-                configurationsToDelete.stream().forEach(item -> JocInventory.deleteInventoryConfigurationAndPutToTrash(item, invDbLayer));
-                configurationsToDelete.stream().map(item -> item.getFolder()).distinct().forEach(item -> JocInventory.postEvent(item));
-//                JocInventory.deleteConfigurations(configurationsToDelete);
-                JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);
-            } else if (either.isLeft()) {
-                String message = String.format("Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
-                LOGGER.warn(message);
-                // updateRepo command is atomic, therefore all items are rejected
-                List<DBItemDeploymentHistory> failedDeployDeleteItems = dbLayer.updateFailedDeploymentForDelete(
-                        itemsToDelete, controllerId, account, versionIdForDelete, either.getLeft().message());
-                // if not successful the objects and the related controllerId have to be stored 
-                // in a submissions table for reprocessing
-                dbLayer.createSubmissionForFailedDeployments(failedDeployDeleteItems);
-                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), null);
-            }
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
-            ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), null);
-        } finally {
-            Globals.disconnect(newHibernateSession);
-        }
-    }
-
-    private void processAfterDeleteFromFolder(Either<Problem, Void> either, List<DBItemDeploymentHistory> itemsToDelete,
-            List<Config> foldersToDelete, String controllerId, String account, String versionIdForDelete, DeployFilter deployFilter) {
-        SOSHibernateSession newHibernateSession = null;
-        try {
-            newHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            final DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
-            final InventoryDBLayer invDbLayer = new InventoryDBLayer(newHibernateSession);
-            if (either.isRight()) {
-                Set<DBItemInventoryConfiguration> configurationsToDelete = itemsToDelete.stream()
-                        .map(item -> dbLayer.getInventoryConfigurationByNameAndType(item.getName(), item.getType()))
-                        .collect(Collectors.toSet());
-                foldersToDelete.stream()
-                    .forEach(item -> configurationsToDelete.addAll(
-                        dbLayer.getInventoryConfigurationsByFolder(item.getConfiguration().getPath(), item.getConfiguration().getRecursive())));
-                Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistoryAndPutToTrash(itemsToDelete, dbLayer, versionIdForDelete);
-                configurationsToDelete.stream().forEach(item -> JocInventory.deleteInventoryConfigurationAndPutToTrash(item, invDbLayer));
-                configurationsToDelete.stream().map(item -> item.getFolder()).distinct().forEach(item -> JocInventory.postEvent(item));
-//                JocInventory.deleteConfigurations(configurationsToDelete);
-                JocInventory.handleWorkflowSearch(newHibernateSession, deletedDeployItems, true);
-                if (!withoutFolderDeletion) {
-                    if (foldersToDelete != null && !foldersToDelete.isEmpty()) {
-                        for (Config folder : foldersToDelete) {
-                            // check if deployable objects still exist in the folder
-                            Set<DBItemDeploymentHistory> stillActiveDeployments = PublishUtils.getLatestDepHistoryEntriesActiveForFolder(folder, dbLayer);
-                            if (checkDeploymentItemsStillExist(stillActiveDeployments)) {
-                                String controllersFormatted = stillActiveDeployments.stream()
-                                        .map(item -> item.getControllerId()).collect(Collectors.joining(", "));
-                                LOGGER.warn(String.format(
-                                        "removed folder \"%1$s\" can´t be deleted from inventory. Deployments still exist on controllers %2$s.", folder
-                                                .getConfiguration().getPath(), controllersFormatted));
-                            } else {
-                                try {
-                                    JocInventory.deleteEmptyFolders(new InventoryDBLayer(newHibernateSession), folder.getConfiguration().getPath());
-                                } catch (SOSHibernateException e) {
-                                    ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), null);
-                               }
-                            }
-                        }
-                    }
-                }
-            } else if (either.isLeft()) {
-                String message = String.format("Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
-                LOGGER.warn(message);
-                // updateRepo command is atomic, therefore all items are rejected
-                List<DBItemDeploymentHistory> failedDeployDeleteItems = dbLayer.updateFailedDeploymentForDelete(itemsToDelete, controllerId, account,
-                        versionIdForDelete, either.getLeft().message());
-                // if not successful the objects and the related controllerId have to be stored
-                // in a submissions table for reprocessing
-                dbLayer.createSubmissionForFailedDeployments(failedDeployDeleteItems);
-                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), null);
-            }
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
-            ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), null);
-        } finally {
-            Globals.disconnect(newHibernateSession);
-        }
-    }
-
-    private boolean checkDeploymentItemsStillExist(Set<DBItemDeploymentHistory> deployments) {
-        if (deployments != null && !deployments.isEmpty()) {
-            return true;
-        }
-        return false;
-    }
-
 }
