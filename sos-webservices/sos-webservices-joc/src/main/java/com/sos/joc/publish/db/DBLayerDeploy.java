@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -1407,7 +1408,11 @@ public class DBLayerDeploy {
                 query.setParameter("folder", folder);
             }
             query.setParameter("controllerId", controllerId);
-            return session.getResultList(query);
+            List<DBItemDeploymentHistory> result = session.getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }

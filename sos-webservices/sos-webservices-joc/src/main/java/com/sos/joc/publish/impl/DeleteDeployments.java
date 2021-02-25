@@ -22,12 +22,10 @@ import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.OperationType;
-import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.util.PublishUtils;
 
@@ -62,10 +60,7 @@ public class DeleteDeployments {
         }
         final String versionIdForDelete = UUID.randomUUID().toString();
         final String versionIdForDeleteFromFolder = UUID.randomUUID().toString();
-        DBLayerKeys dbLayerKeys = new DBLayerKeys(dbLayer.getSession());
         
-        JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, secLevel);
-
         for (String controllerId : controllerIds) {
 
             List<DBItemDeploymentHistory> itemsFromFolderToDelete = Collections.emptyList();
@@ -78,7 +73,7 @@ public class DeleteDeployments {
 
             if (depHistoryDBItemsToDeployDelete != null && !depHistoryDBItemsToDeployDelete.isEmpty()) {
                 final List<DBItemDeploymentHistory> itemsToDelete = depHistoryDBItemsToDeployDelete;
-                PublishUtils.updateItemsDelete(versionIdForDelete, itemsToDelete, controllerId, dbLayer, keyPair.getKeyAlgorithm()).thenAccept(
+                PublishUtils.updateItemsDelete(versionIdForDelete, itemsToDelete, controllerId, dbLayer).thenAccept(
                         either -> processAfterDelete(either, itemsToDelete, controllerId, account, versionIdForDelete, accessToken, jocError));
             }
             // process folder to Delete
@@ -87,7 +82,7 @@ public class DeleteDeployments {
                 final List<Configuration> folders = foldersToDelete;
                 final List<DBItemDeploymentHistory> itemsToDelete = itemsFromFolderToDelete.stream().filter(item -> item.getControllerId().equals(
                         controllerId) && !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation()))).collect(Collectors.toList());
-                PublishUtils.updateItemsDelete(versionIdForDeleteFromFolder, itemsToDelete, controllerId, dbLayer, keyPair.getKeyAlgorithm())
+                PublishUtils.updateItemsDelete(versionIdForDeleteFromFolder, itemsToDelete, controllerId, dbLayer)
                         .thenAccept(either -> processAfterDeleteFromFolder(either, itemsToDelete, folders, controllerId, account,
                                 versionIdForDeleteFromFolder, accessToken, jocError, withoutFolderDeletion));
             }
