@@ -14,11 +14,19 @@ public interface IFolderResource {
 
     public static final String PATH = "read/folder";
     public static final String IMPL_PATH = JocInventory.getResourceImplPath(PATH);
+    public static final String TRASH_PATH = "trash/read/folder";
+    public static final String TRASH_IMPL_PATH = JocInventory.getResourceImplPath(PATH);
 
     @POST
     @Path(PATH)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse readFolder(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    
+    @POST
+    @Path(TRASH_PATH)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse readTrashFolder(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
 
 }

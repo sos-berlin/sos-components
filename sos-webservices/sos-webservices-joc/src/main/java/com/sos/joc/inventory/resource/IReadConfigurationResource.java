@@ -14,11 +14,19 @@ public interface IReadConfigurationResource {
 
     public static final String PATH = "read/configuration";
     public static final String IMPL_PATH = JocInventory.getResourceImplPath(PATH);
+    public static final String TRASH_PATH = "trash/read/configuration";
+    public static final String TRASH_IMPL_PATH = JocInventory.getResourceImplPath(PATH);
 
     @POST
     @Path(PATH)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse read(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    
+    @POST
+    @Path(TRASH_PATH)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse readTrash(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
 
 }

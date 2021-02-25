@@ -1336,8 +1336,7 @@ public abstract class PublishUtils {
     }
 
     public static CompletableFuture<Either<Problem, Void>> updateItemsDelete(String commitId,
-            List<DBItemDeploymentHistory> alreadyDeployedtoDelete, String controllerId, DBLayerDeploy dbLayer, String keyAlgorithm)
-                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+            List<DBItemDeploymentHistory> alreadyDeployedtoDelete, String controllerId, DBLayerDeploy dbLayer, String keyAlgorithm) {
         if ("RSA".equals(keyAlgorithm) || "ECDSA".equals(keyAlgorithm)) {
             keyAlgorithm = "X509";
         }
@@ -2700,6 +2699,14 @@ public abstract class PublishUtils {
                 .filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
     }
     
+    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolder(Configuration folder, DBLayerDeploy dbLayer) {
+        List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
+        entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(
+                folder.getPath()));
+        return entries.stream()
+                .filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
+    }
+    
     public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolder(Config folder, String controllerId,
             DBLayerDeploy dbLayer) {
         List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
@@ -3373,21 +3380,31 @@ public abstract class PublishUtils {
             }
         }
     }
+    
+    public static List<Configuration> handleFolders1(List<Configuration> foldersIn, DBLayerDeploy dbLayer) {
+        return foldersIn.stream().flatMap(item -> {
+            List<DBItemInventoryConfiguration> dbItems = dbLayer.getInvConfigurationFolders(item.getPath(), true);
+            return dbItems.stream().map(dbItem -> {
+                Configuration configuration = new Configuration();
+                configuration.setPath(dbItem.getPath());
+                configuration.setObjectType(ConfigurationType.FOLDER);
+                return configuration;
+            }).filter(Objects::nonNull);
+        }).collect(Collectors.toList());
+    }
 
     public static List<Config> handleFolders(List<Config> foldersIn, DBLayerDeploy dbLayer) {
-        List<Config> foldersOut = new ArrayList<Config>();
-        foldersIn.stream().forEach(item -> {
+        return foldersIn.stream().flatMap(item -> {
             List<DBItemInventoryConfiguration> dbItems = dbLayer.getInvConfigurationFolders(item.getConfiguration().getPath(), true);
-            foldersOut.addAll(dbItems.stream().map(dbItem -> {
+            return dbItems.stream().map(dbItem -> {
                 Config config = new Config();
                 Configuration configuration = new Configuration();
                 configuration.setPath(dbItem.getPath());
                 configuration.setObjectType(ConfigurationType.FOLDER);
                 config.setConfiguration(configuration);
                 return config;
-            }).filter(Objects::nonNull).collect(Collectors.toList()));
-        });
-        return foldersOut;
+            }).filter(Objects::nonNull);
+        }).collect(Collectors.toList());
     }
     
     public static boolean verifyCertificateAgainstCAs (X509Certificate cert, List<DBItemInventoryCertificate> caCertDBItems) {

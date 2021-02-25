@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
-import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -40,10 +39,32 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 
             in.setPath(normalizeFolder(in.getPath()));
-
-            JOCDefaultResponse response = checkPermissions(accessToken, in);
+            boolean permission = getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit();
+            JOCDefaultResponse response = checkPermissions(accessToken, in, permission);
             if (response == null) {
-                response = JOCDefaultResponse.responseStatus200(readFolder(in));
+                response = JOCDefaultResponse.responseStatus200(readFolder(in, IMPL_PATH));
+            }
+            return response;
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
+    
+    @Override
+    public JOCDefaultResponse readTrashFolder(final String accessToken, final byte[] inBytes) {
+        try {
+            initLogging(TRASH_IMPL_PATH, inBytes, accessToken);
+            JsonValidator.validateFailFast(inBytes, RequestFolder.class);
+            RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
+
+            in.setPath(normalizeFolder(in.getPath()));
+            boolean permission = getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isView();
+            JOCDefaultResponse response = checkPermissions(accessToken, in, permission);
+            if (response == null) {
+                response = JOCDefaultResponse.responseStatus200(readFolder(in, TRASH_IMPL_PATH));
             }
             return response;
         } catch (JocException e) {
@@ -54,10 +75,10 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
         }
     }
 
-    private ResponseFolder readFolder(RequestFolder in) throws Exception {
+    private ResponseFolder readFolder(RequestFolder in, String action) throws Exception {
         SOSHibernateSession session = null;
         try {
-            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+            session = Globals.createSosHibernateStatelessConnection(action);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
             Set<Integer> configTypes = null;
@@ -65,16 +86,14 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                 configTypes = in.getObjectTypes().stream().map(ConfigurationType::intValue).collect(Collectors.toSet());
             }
             
-            session.beginTransaction();
             List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder(in.getPath(), in.getRecursive() == Boolean.TRUE, configTypes, in
-                    .getOnlyValidObjects());
-            session.commit();
+                    .getOnlyValidObjects(), TRASH_IMPL_PATH.equals(action));
 
             ResponseFolder folder = new ResponseFolder();
             folder.setDeliveryDate(Date.from(Instant.now()));
             folder.setPath(in.getPath());
             
-            Map<String, Set<ResponseFolderItem>> orders = new HashMap<>();
+            Map<String, Set<ResponseFolderItem>> schedules = new HashMap<>();
             Set<ResponseFolderItem> workflows = new HashSet<>();
 
             if (items != null && !items.isEmpty()) {
@@ -100,8 +119,8 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                             break;
                         case SCHEDULE:
                             if (config.getWorkflowPath() != null) {
-                                orders.putIfAbsent(config.getWorkflowPath(), new LinkedHashSet<ResponseFolderItem>());
-                                orders.get(config.getWorkflowPath()).add(config);
+                                schedules.putIfAbsent(config.getWorkflowPath(), new LinkedHashSet<ResponseFolderItem>());
+                                schedules.get(config.getWorkflowPath()).add(config);
                             }
                             folder.getSchedules().add(config);
                             break;
@@ -119,7 +138,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                 
                 // put OrderTemplate to Workflow
                 workflows.stream().map(item -> {
-                    item.setOrders(sort(orders.remove(item.getPath())));
+                    item.setOrders(sort(schedules.remove(item.getPath())));
                     return item;
                 }).collect(Collectors.toSet());
                 
@@ -134,7 +153,6 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             }
             return folder;
         } catch (Throwable e) {
-            Globals.rollback(session);
             throw e;
         } finally {
             Globals.disconnect(session);
@@ -148,10 +166,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
         return set.stream().sorted(Comparator.comparing(ResponseFolderItem::getPath)).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
-    private JOCDefaultResponse checkPermissions(final String accessToken, final RequestFolder in) throws Exception {
-        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit("", accessToken);
-        boolean permission = permissions.getInventory().getConfigurations().isEdit();
-
+    private JOCDefaultResponse checkPermissions(final String accessToken, final RequestFolder in, boolean permission) throws Exception {
         JOCDefaultResponse response = initPermissions(null, permission);
         if (response == null) {
             if (JocInventory.ROOT_FOLDER.equals(in.getPath())) {

@@ -285,12 +285,21 @@ public class InventoryDBLayer extends DBLayer {
 
     public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive, Collection<Integer> configTypes,
             Boolean onlyValidObjects) throws SOSHibernateException {
+        return getConfigurationsByFolder(folder, recursive, configTypes, onlyValidObjects, false);
+    }
+    
+    public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive, Collection<Integer> configTypes,
+            Boolean onlyValidObjects, boolean forTrash) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryTreeFolderItem.class.getName());
-        hql.append("(ic, count(dh.id), count(irc.id)) from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
-        hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
-        hql.append("on ic.id=dh.inventoryConfigurationId ");
-        hql.append("left join ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" irc ");
-        hql.append("on ic.id=irc.cid ");
+        if (!forTrash) {
+            hql.append("(ic, count(dh.id), count(irc.id)) from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
+            hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
+            hql.append("on ic.id=dh.inventoryConfigurationId ");
+            hql.append("left join ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" irc ");
+            hql.append("on ic.id=irc.cid ");
+        } else {
+            hql.append("(ic) from ").append(DBLayer.DBITEM_INV_CONFIGURATION_TRASH).append(" ic ");
+        }
         hql.append("where ");
         if (recursive) {
             if (!"/".equals(folder)) {
@@ -417,6 +426,14 @@ public class InventoryDBLayer extends DBLayer {
 
     public DBItemInventoryConfiguration getConfiguration(Long id) throws SOSHibernateException {
         return getSession().get(DBItemInventoryConfiguration.class, id);
+    }
+    
+    public DBItemInventoryConfigurationTrash getTrashConfiguration(Long id) throws SOSHibernateException {
+        return getSession().get(DBItemInventoryConfigurationTrash.class, id);
+    }
+    
+    public DBItemInventoryConfigurationTrash getConfiguration1(Long id) throws SOSHibernateException {
+        return getSession().get(DBItemInventoryConfigurationTrash.class, id);
     }
 
     public <T> T getConfigurationProperty(Long id, String propertyName) throws SOSHibernateException {

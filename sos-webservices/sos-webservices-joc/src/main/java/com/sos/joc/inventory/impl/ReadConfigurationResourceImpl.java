@@ -12,6 +12,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
 import com.sos.joc.exceptions.JocException;
@@ -36,6 +37,28 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
             JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
             if (response == null) {
                 response = read(in);
+            }
+            return response;
+
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
+
+    @Override
+    public JOCDefaultResponse readTrash(final String accessToken, final byte[] inBytes) {
+        try {
+            // don't use JsonValidator.validateFailFast because of anyOf-Requirements
+            initLogging(TRASH_IMPL_PATH, inBytes, accessToken);
+            JsonValidator.validate(inBytes, RequestFilter.class);
+            RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
+
+            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isView());
+            if (response == null) {
+                response = readTrash(in);
             }
             return response;
 
@@ -76,21 +99,10 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                 
                 item.setReleased(false);
                 
-//                List<InventoryDeploymentItem> deployments = dbLayer.getDeploymentHistory(config.getId());
                 InventoryDeploymentItem lastDeployment = dbLayer.getLastDeploymentHistory(config.getId());
                 item.setHasDeployments(lastDeployment != null);
                 
-//                if (deployments != null && !deployments.isEmpty()) {
-//                    Collections.sort(deployments, Comparator.comparing(InventoryDeploymentItem::getDeploymentDate).reversed());
-//                    lastDeployment = deployments.get(0);
-//                }
-                
                 if (config.getDeployed()) {
-//                    if (lastDeployment == null) {
-//                        throw new DBMissingDataException(String.format("[%s][%s] deployments not found", config.getTypeAsEnum().name(), config
-//                                .getPath()));
-//                    }
-                    
                     if (item.getConfiguration() != null) {
                         item.setState(ItemStateEnum.DRAFT_NOT_EXIST);
                     }
@@ -109,22 +121,6 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                     } 
                 }
                 
-//                if (lastDeployment != null) {
-//                    if (item.getDeployments() == null) {
-//                        item.setDeployments(new HashSet<ResponseDeployableVersion>());
-//                    }
-//                    for (InventoryDeploymentItem d : deployments) {
-//                        ResponseDeployableVersion v = new ResponseDeployableVersion();
-//                        v.setId(config.getId());
-//                        v.setDeploymentId(d.getId());
-//                        v.setDeploymentOperation(OperationType.fromValue(d.getOperation()).name().toLowerCase());
-//                        v.setVersionDate(d.getDeploymentDate());
-//                        item.getDeployments().add(v);
-//                    }
-//                } else {
-//                    item.setDeployments(null);
-//                }
-                
             } else if (JocInventory.isReleasable(type)) {
                 
                 item.setDeployed(false);
@@ -137,11 +133,6 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
                 }
                 
                 if (config.getReleased()) {
-//                    if (releasedLastModified == null) {
-//                        throw new DBMissingDataException(String.format("[%s][%s] release not found", config.getTypeAsEnum().name(), config
-//                                .getPath()));
-//                    }
-
                     if (item.getConfiguration() != null) {
                         item.setState(ItemStateEnum.DRAFT_NOT_EXIST);
                     }
@@ -164,7 +155,36 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(item));
         } catch (Throwable e) {
-            Globals.rollback(session);
+            throw e;
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
+    
+    private JOCDefaultResponse readTrash(RequestFilter in) throws Exception {
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection(TRASH_IMPL_PATH);
+            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+            
+            DBItemInventoryConfigurationTrash config = JocInventory.getTrashConfiguration(dbLayer, in, folderPermissions);
+            ConfigurationType type = config.getTypeAsEnum();
+            
+            ConfigurationObject item = new ConfigurationObject();
+            item.setId(config.getId());
+            item.setDeliveryDate(Date.from(Instant.now()));
+            item.setPath(config.getPath());
+            item.setObjectType(type);
+            item.setValid(config.getValid());
+            item.setState(null);
+            item.setConfigurationDate(config.getModified());
+            item.setDeployments(null);
+            item.setHasDeployments(null);
+            item.setHasReleases(null);
+            item.setConfiguration(JocInventory.content2IJSObject(config.getContent(), config.getType()));
+            
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(item));
+        } catch (Throwable e) {
             throw e;
         } finally {
             Globals.disconnect(session);

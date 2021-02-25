@@ -470,6 +470,44 @@ public class JocInventory {
         }
         return config;
     }
+    
+    public static DBItemInventoryConfigurationTrash getTrashConfiguration(InventoryDBLayer dbLayer, RequestFilter in,
+            SOSShiroFolderPermissions folderPermissions) throws Exception {
+        return getTrashConfiguration(dbLayer, in.getId(), in.getPath(), in.getName(), in.getObjectType(), folderPermissions);
+    }
+
+    public static DBItemInventoryConfigurationTrash getTrashConfiguration(InventoryDBLayer dbLayer, Long id, String path, String name, ConfigurationType type,
+            SOSShiroFolderPermissions folderPermissions) throws Exception {
+        DBItemInventoryConfigurationTrash config = null;
+        if (id != null) {
+            config = dbLayer.getTrashConfiguration(id);
+            if (config == null) {
+                throw new DBMissingDataException(String.format("configuration not found: %s", id));
+            }
+            if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
+                throw new JocFolderPermissionsException("Access denied for folder: " + config.getFolder());
+            }
+        } else if (path != null) {
+            if (JocInventory.ROOT_FOLDER.equals(path) && ConfigurationType.FOLDER.equals(type)) {
+                config = new DBItemInventoryConfigurationTrash();
+                config.setId(0L);
+                config.setPath(path);
+                config.setType(type);
+                config.setFolder(path);
+                config.setValid(true);
+            } else {
+                path = normalizePath(path).toString().replace('\\', '/');
+                if (!folderPermissions.isPermittedForFolder(path)) {
+                    throw new JocFolderPermissionsException("Access denied for folder: " + path);
+                }
+                config = dbLayer.getTrashConfiguration(path, type.intValue());
+                if (config == null) {
+                    throw new DBMissingDataException(String.format("%s not found: %s", type.value().toLowerCase(), path));
+                }
+            }
+        }
+        return config;
+    }
 
     public static Path normalizePath(String path) {
         return Paths.get(JocInventory.ROOT_FOLDER).resolve(path).normalize();
@@ -491,8 +529,7 @@ public class JocInventory {
         Map<Long, List<DBItemDeploymentHistory>> groupedWorkflows = deployments.stream().filter(h -> h.getType().equals(ConfigurationType.WORKFLOW
                 .intValue())).collect(Collectors.groupingBy(DBItemDeploymentHistory::getInventoryConfigurationId));
 
-        groupedWorkflows.keySet().forEach(inventoryId -> {
-            List<DBItemDeploymentHistory> list = groupedWorkflows.get(inventoryId);
+        groupedWorkflows.forEach((inventoryId, list) -> {
             if (list.size() > 0) {
                 String content = list.get(0).getInvContent();
                 if (!SOSString.isEmpty(content)) {
