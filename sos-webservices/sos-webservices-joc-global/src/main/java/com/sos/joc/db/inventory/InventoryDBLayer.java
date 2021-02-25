@@ -105,17 +105,6 @@ public class InventoryDBLayer extends DBLayer {
         return null;
     }
 
-    // //invContent is missing in DBItemDepConfiguration
-    // public DBItemDepConfiguration getLastDeployedContent(Long configId) throws SOSHibernateException {
-    // StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
-    // hql.append(" where inventoryConfigurationId := configId");
-    // hql.append(" order by id desc");
-    // Query<DBItemDepConfiguration> query = getSession().createQuery(hql.toString());
-    // query.setParameter("configId", configId);
-    // query.setMaxResults(1);
-    // return getSession().getSingleResult(query);
-    // }
-
     public List<InventoryDeploymentItem> getDeploymentHistory(Long configId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryDeploymentItem.class.getName());
         hql.append("(");

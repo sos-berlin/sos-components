@@ -22,7 +22,6 @@ import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.OperationType;
@@ -38,12 +37,12 @@ public class DeleteDeployments {
 
     // account: LOW -> Globals.defaultProfileAccount, MEDIUM, HIGH -> jobschedulerUser.getSosShiroCurrentUser().getUsername()
 
-    public static boolean delete(List<DBItemDeploymentHistory> dbItems, Collection<String> controllerIds, DBLayerDeploy dbLayer, String account,
+    public static boolean delete(List<DBItemDeploymentHistory> dbItems, DBLayerDeploy dbLayer, String account,
             String accessToken, JocError jocError, boolean withoutFolderDeletion) throws SOSHibernateException {
         if (dbItems == null || dbItems.isEmpty()) {
             return true;
         }
-        for (String controllerId : controllerIds) {
+        for (String controllerId : dbItems.stream().map(DBItemDeploymentHistory::getControllerId).collect(Collectors.toSet())) {
             final String commitId = UUID.randomUUID().toString();
             final List<DBItemDeploymentHistory> itemsToDelete = 
                     dbItems.stream().filter(item -> controllerId.equals(item.getControllerId())).collect(Collectors.toList());
@@ -57,7 +56,7 @@ public class DeleteDeployments {
     }
     
     public static boolean delete(Collection<Configuration> confs, Collection<String> controllerIds, DBLayerDeploy dbLayer, String account,
-            String accessToken, JocError jocError, JocSecurityLevel secLevel, boolean withoutFolderDeletion) throws SOSHibernateException {
+            String accessToken, JocError jocError, boolean withoutFolderDeletion) throws SOSHibernateException {
         if (confs == null || confs.isEmpty()) {
             return true;
         }

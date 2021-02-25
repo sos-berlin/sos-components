@@ -14,7 +14,7 @@ public interface IDeleteConfigurationResource {
 
     public static final String PATH_DELETE = "remove";
     public static final String IMPL_PATH_DELETE = JocInventory.getResourceImplPath(PATH_DELETE);
-    public static final String PATH_UNDELETE = "recover";
+    public static final String PATH_UNDELETE = "trash/recover";
     public static final String IMPL_PATH_UNDELETE = JocInventory.getResourceImplPath(PATH_UNDELETE);
 
     @POST
