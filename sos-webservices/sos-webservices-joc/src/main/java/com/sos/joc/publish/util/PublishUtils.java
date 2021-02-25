@@ -1334,12 +1334,15 @@ public abstract class PublishUtils {
                         Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId))),
                         Flux.fromIterable(updateItemsOperationsVersioned)));
     }
+    
+    public static CompletableFuture<Either<Problem, Void>> updateItemsDelete(String commitId,
+            List<DBItemDeploymentHistory> alreadyDeployedtoDelete, String controllerId, DBLayerDeploy dbLayer) {
+        return updateItemsDelete(commitId, alreadyDeployedtoDelete, controllerId, dbLayer, null);
+    }
 
     public static CompletableFuture<Either<Problem, Void>> updateItemsDelete(String commitId,
             List<DBItemDeploymentHistory> alreadyDeployedtoDelete, String controllerId, DBLayerDeploy dbLayer, String keyAlgorithm) {
-        if ("RSA".equals(keyAlgorithm) || "ECDSA".equals(keyAlgorithm)) {
-            keyAlgorithm = "X509";
-        }
+        // keyAlgorithm obsolete
         Set<JUpdateItemOperation> updateItemOperationsVersioned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemOperationsSimple = new HashSet<JUpdateItemOperation>();
         if (alreadyDeployedtoDelete != null) {
