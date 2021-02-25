@@ -51,6 +51,7 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
+import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
@@ -716,6 +717,53 @@ public class JocInventory {
                 makeParentDirsForTrash(dbLayer, Paths.get(trashItem.getFolder()), trashItem.getAuditLogId());
             } else {
                 dbLayer.getSession().update(trashItem);
+            }
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public static void restoreInventoryConfigurationFromTrash(DBItemInventoryConfigurationTrash trashItem, InventoryDBLayer dbLayer) {
+        try {
+            List<DBItemInventoryConfiguration> items = dbLayer.getConfigurationByName(trashItem.getName(), trashItem.getType());
+            
+            Date now = Date.from(Instant.now());
+            DBItemInventoryConfiguration item = null;
+            if (items == null || items.isEmpty()) {
+                dbLayer.getSession().delete(trashItem);
+                item = new DBItemInventoryConfiguration();
+                item.setId(null);
+                item.setPath(trashItem.getPath());
+                item.setName(trashItem.getName());
+                item.setFolder(trashItem.getFolder());
+                item.setCreated(now);
+                item.setType(trashItem.getType());
+            } else {
+                if (items.get(0).getPath().equals(trashItem.getPath())) {
+                    item = items.get(0);
+                    dbLayer.getSession().delete(trashItem);
+                } else {
+                    throw new JocObjectAlreadyExistException(String.format("The name has to be unique: '%s' is already used in '%s'", trashItem
+                            .getName(), items.get(0).getPath()));
+                }
+            }
+            if (item != null) {
+                item.setAuditLogId(trashItem.getAuditLogId());
+                item.setContent(trashItem.getContent());
+                item.setDocumentationId(trashItem.getDocumentationId());
+                item.setTitle(trashItem.getTitle());
+                item.setValid(trashItem.getValid());
+                item.setDeployed(false);
+                item.setReleased(false);
+                item.setModified(now);
+                if (item.getId() == null) {
+                    insertConfiguration(dbLayer, item);
+                    makeParentDirsForTrash(dbLayer, Paths.get(item.getFolder()), item.getAuditLogId());
+                } else {
+                    updateConfiguration(dbLayer, item);
+                }
             }
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);

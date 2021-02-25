@@ -11,11 +11,11 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.InventoryAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IDeleteConfigurationResource;
@@ -126,10 +126,21 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
     private JOCDefaultResponse undelete(String accessToken, RequestFilter in) throws Exception {
         SOSHibernateSession session = null;
         try {
-//            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_DELETE);
-//            session.setAutoCommit(false);
-//            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-//            session.beginTransaction();
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_DELETE);
+            session.setAutoCommit(false);
+            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+            session.beginTransaction();
+            
+            // TODO auditLog
+            
+            DBItemInventoryConfigurationTrash config = JocInventory.getTrashConfiguration(dbLayer, in, folderPermissions);
+            final ConfigurationType type = config.getTypeAsEnum();
+            if (ConfigurationType.FOLDER.equals(type)) {
+                // TODO
+            } else {
+                JocInventory.restoreInventoryConfigurationFromTrash(config, dbLayer);
+                JocInventory.postEvent(config.getFolder());
+            }
             
             Globals.commit(session);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -140,11 +151,5 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             Globals.disconnect(session);
         }
     }
-
-//    private void storeAuditLog(ConfigurationType objectType, String path, String folder) {
-//        InventoryAudit audit = new InventoryAudit(objectType, path, folder);
-//        logAuditMessage(audit);
-//        storeAuditLogEntry(audit);
-//    }
 
 }
