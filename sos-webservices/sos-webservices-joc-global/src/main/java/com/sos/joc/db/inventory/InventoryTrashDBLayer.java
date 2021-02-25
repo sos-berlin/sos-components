@@ -3,7 +3,6 @@ package com.sos.joc.db.inventory;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -12,7 +11,6 @@ import java.util.stream.Collectors;
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
@@ -44,9 +42,6 @@ public class InventoryTrashDBLayer extends DBLayer {
                 } else {
                     whereClause.add("type in (:type)");
                 }
-            }
-            if (onlyValidObjects == Boolean.TRUE) {
-                whereClause.add("valid = 1");
             }
             if (!whereClause.isEmpty()) {
                 sql.append(whereClause.stream().collect(Collectors.joining(" and ", " where ", "")));
@@ -81,10 +76,13 @@ public class InventoryTrashDBLayer extends DBLayer {
                         folderWithParents.add(("/" + p.subpath(0, i + 1)).replace('\\', '/'));
                     }
                 }
-                Set<Tree> tree = getFoldersByFolder(folderWithParents);
+                Set<Tree> tree = folderWithParents.stream().map(s -> {
+                    Tree t = new Tree();
+                    t.setPath(s);
+                    return t;
+                }).collect(Collectors.toSet());
                 Tree root = new Tree();
                 root.setPath(JocInventory.ROOT_FOLDER);
-                root.setDeleted(false);
                 tree.add(root);
 
                 return tree;
@@ -95,26 +93,5 @@ public class InventoryTrashDBLayer extends DBLayer {
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
-    }
-
-    private Set<Tree> getFoldersByFolder(Collection<String> folders) throws SOSHibernateException {
-        if (folders != null && !folders.isEmpty()) {
-            StringBuilder sql = new StringBuilder();
-            sql.append("select path, deleted from ").append(DBLayer.DBITEM_INV_CONFIGURATION_TRASH);
-            sql.append(" where path in (:folders) and type=:type");
-            Query<Object[]> query = getSession().createQuery(sql.toString());
-            query.setParameterList("folders", folders);
-            query.setParameter("type", ConfigurationType.FOLDER.intValue());
-            List<Object[]> result = getSession().getResultList(query);
-            if (result != null && !result.isEmpty()) {
-                return result.stream().map(s -> {
-                    Tree tree = new Tree();
-                    tree.setPath((String) s[0]);
-                    tree.setDeleted((Boolean) s[1]);
-                    return tree;
-                }).collect(Collectors.toSet());
-            }
-        }
-        return new HashSet<>();
     }
 }
