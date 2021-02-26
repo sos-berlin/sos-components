@@ -1,5 +1,6 @@
 package com.sos.joc.publish.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -215,15 +216,26 @@ public class DeleteDeployments {
 
     public static void storeDepHistoryAndDeleteConfigurationsFromFolder(DBLayerDeploy dbLayer, List<Configuration> folders, 
             List<DBItemDeploymentHistory> itemsToDelete, String commitId, String accessToken, JocError jocError, boolean withoutFolderDeletion) {
-        Stream<DBItemInventoryConfiguration> configurationsToDeleteStream = itemsToDelete.stream().map(item -> dbLayer
-                .getInventoryConfigurationByNameAndType(item.getName(), item.getType()));
-
-        Stream<DBItemInventoryConfiguration> foldersToDeleteStream = folders.stream().map(item -> dbLayer
-                .getInventoryConfigurationsByFolder(item.getPath(), item.getRecursive())).filter(
-                        Objects::nonNull).flatMap(List::stream);
-
-        List<DBItemInventoryConfiguration> configurationsToDelete = Stream.concat(configurationsToDeleteStream, foldersToDeleteStream)
-                .collect(Collectors.toList());
+//        Stream<DBItemInventoryConfiguration> configurationsToDeleteStream = itemsToDelete.stream().map(item -> dbLayer
+//                .getInventoryConfigurationByNameAndType(item.getName(), item.getType())).filter(Objects::nonNull);
+        List<DBItemInventoryConfiguration> configurationsToDelete = new ArrayList<DBItemInventoryConfiguration>();
+        
+        for (DBItemDeploymentHistory item : itemsToDelete) {
+            DBItemInventoryConfiguration invCfg = dbLayer.getInventoryConfigurationByNameAndType(item.getName(), item.getType());
+            if (invCfg != null) {
+                configurationsToDelete.add(invCfg);               
+            }
+        }
+        
+//        Stream<DBItemInventoryConfiguration> foldersToDeleteStream = folders.stream().map(item -> dbLayer
+//                .getInventoryConfigurationsByFolder(item.getPath(), item.getRecursive())).filter(
+//                        Objects::nonNull).flatMap(List::stream).filter(Objects::nonNull);
+        for (Configuration folder : folders) {
+            configurationsToDelete.addAll(dbLayer.getInventoryConfigurationsByFolder(folder.getPath(), folder.getRecursive()));
+            
+        }
+//        List<DBItemInventoryConfiguration> configurationsToDelete = Stream.concat(configurationsToDeleteStream, foldersToDeleteStream)
+//                .collect(Collectors.toList());
         Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistoryAndPutToTrash(itemsToDelete, dbLayer,
                 commitId);
         InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
