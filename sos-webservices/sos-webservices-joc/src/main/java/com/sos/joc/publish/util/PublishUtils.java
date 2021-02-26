@@ -1836,18 +1836,18 @@ public abstract class PublishUtils {
                         workflowPublish.setContent(workflow);
                     } else {
                         throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
+                                Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""))));
                     }
-                    workflowPublish.setPath(("/" + entryName).replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""));
+                    workflowPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
                     workflowPublish.setObjectType(DeployType.WORKFLOW);
                     objects.add(workflowPublish);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-                    signaturePath.setObjectPath(("/" + entryName).replace(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value(), ""));
+                    signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value(), "")));
                     signature.setSignatureString(outBuffer.toString());
                     signaturePath.setSignature(signature);
                     signaturePaths.add(signaturePath);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value())) {
-                    signaturePath.setObjectPath(("/" + entryName).replace(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value(), ""));
+                    signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value(), "")));
                     signature.setSignatureString(outBuffer.toString());
                     signaturePath.setSignature(signature);
                     signaturePaths.add(signaturePath);
@@ -1858,9 +1858,9 @@ public abstract class PublishUtils {
                         lockPublish.setContent(lock);
                     } else {
                         throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
+                                Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""))));
                     }
-                    lockPublish.setPath(("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                    lockPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
                     lockPublish.setObjectType(DeployType.LOCK);
                     objects.add(lockPublish);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
@@ -1870,9 +1870,9 @@ public abstract class PublishUtils {
                         junctionPublish.setContent(junction);
                     } else {
                         throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
+                                Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), ""))));
                     }
-                    junctionPublish.setPath(("/" + entryName).replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), ""));
+                    junctionPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
                     junctionPublish.setObjectType(DeployType.JUNCTION);
                     objects.add(junctionPublish);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
@@ -1882,9 +1882,9 @@ public abstract class PublishUtils {
                         jobClassPublish.setContent(jobClass);
                     } else {
                         throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
+                                Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), ""))));
                     }
-                    jobClassPublish.setPath(("/" + entryName).replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), ""));
+                    jobClassPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
                     jobClassPublish.setObjectType(DeployType.JOBCLASS);
                     objects.add(jobClassPublish);
                 } 
@@ -1939,9 +1939,9 @@ public abstract class PublishUtils {
                         workflowEdit.setConfiguration(workflow);
                     } else {
                         throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
+                                Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""))));
                     }
-                    workflowEdit.setPath(("/" + entryName).replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""));
+                    workflowEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
                     workflowEdit.setObjectType(ConfigurationType.WORKFLOW);
                     objects.add(workflowEdit);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
@@ -1953,7 +1953,7 @@ public abstract class PublishUtils {
                         throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", 
                                 ("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
                     }
-                    lockEdit.setPath(("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                    lockEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
                     lockEdit.setObjectType(ConfigurationType.LOCK);
                     objects.add(lockEdit);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
@@ -1965,7 +1965,7 @@ public abstract class PublishUtils {
                         throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", 
                                 ("/" + entryName).replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
                     }
-                    junctionEdit.setPath(("/" + entryName).replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), ""));
+                    junctionEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
                     junctionEdit.setObjectType(ConfigurationType.JUNCTION);
                     objects.add(junctionEdit);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
@@ -1977,7 +1977,7 @@ public abstract class PublishUtils {
                         throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", 
                                 ("/" + entryName).replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
                     }
-                    jobClassEdit.setPath(("/" + entryName).replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), ""));
+                    jobClassEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
                     jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
                     objects.add(jobClassEdit);
                 } else if (entryName.endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value())) {
@@ -1989,7 +1989,7 @@ public abstract class PublishUtils {
                         throw new JocImportException(String.format("Schedule with path %1$s not imported. Object values could not be mapped.", 
                                 ("/" + entryName).replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(), "")));
                     }
-                    scheduleEdit.setPath(("/" + entryName).replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(), ""));
+                    scheduleEdit.setPath(Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(), "")));
                     scheduleEdit.setObjectType(ConfigurationType.SCHEDULE);
                     objects.add(scheduleEdit);
                 } else if (entryName.endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
@@ -1998,13 +1998,13 @@ public abstract class PublishUtils {
                         if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
                             WorkingDaysCalendarEdit wdcEdit = new WorkingDaysCalendarEdit();
                             wdcEdit.setConfiguration(cal);
-                            wdcEdit.setPath(("/" + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), ""));
+                            wdcEdit.setPath(Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), "")));
                             wdcEdit.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
                             objects.add(wdcEdit);
                         } else if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
                             NonWorkingDaysCalendarEdit nwdcEdit = new NonWorkingDaysCalendarEdit();
                             nwdcEdit.setConfiguration(cal);
-                            nwdcEdit.setPath(("/" + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), ""));
+                            nwdcEdit.setPath(Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), "")));
                             nwdcEdit.setObjectType(ConfigurationType.NONWORKINGDAYSCALENDAR);
                             objects.add(nwdcEdit);
                         }
@@ -2066,18 +2066,18 @@ public abstract class PublishUtils {
                         workflowPublish.setContent(workflow);
                     } else {
                         throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
+                                Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""))));
                     }
-                    workflowPublish.setPath(("/" + entryName).replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""));
+                    workflowPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
                     workflowPublish.setObjectType(DeployType.WORKFLOW);
                     objects.add(workflowPublish);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-                    signaturePath.setObjectPath(("/" + entryName).replace(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value(), ""));
+                    signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value(), "")));
                     signature.setSignatureString(outBuffer.toString());
                     signaturePath.setSignature(signature);
                     signaturePaths.add(signaturePath);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value())) {
-                    signaturePath.setObjectPath(("/" + entryName).replace(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value(), ""));
+                    signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value(), "")));
                     signature.setSignatureString(outBuffer.toString());
                     signaturePath.setSignature(signature);
                     signaturePaths.add(signaturePath);
@@ -2088,9 +2088,9 @@ public abstract class PublishUtils {
                         lockPublish.setContent(lock);
                     } else {
                         throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
+                                Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""))));
                     }
-                    lockPublish.setPath(("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                    lockPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
                     lockPublish.setObjectType(DeployType.LOCK);
                     objects.add(lockPublish);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
@@ -2100,9 +2100,9 @@ public abstract class PublishUtils {
                         junctionPublish.setContent(junction);
                     } else {
                         throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
+                                Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), ""))));
                     }
-                    junctionPublish.setPath(("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                    junctionPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
                     junctionPublish.setObjectType(DeployType.JUNCTION);
                     objects.add(junctionPublish);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
@@ -2112,9 +2112,9 @@ public abstract class PublishUtils {
                         jobClassPublish.setContent(jobClass);
                     } else {
                         throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
+                                Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), ""))));
                     }
-                    jobClassPublish.setPath(("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                    jobClassPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
                     jobClassPublish.setObjectType(DeployType.JOBCLASS);
                     objects.add(jobClassPublish);
                 }
@@ -2176,7 +2176,7 @@ public abstract class PublishUtils {
                         throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", 
                                 ("/" + entryName).replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
                     }
-                    workflowEdit.setPath(("/" + entryName).replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""));
+                    workflowEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
                     workflowEdit.setObjectType(ConfigurationType.WORKFLOW);
                     objects.add(workflowEdit);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
@@ -2188,7 +2188,7 @@ public abstract class PublishUtils {
                         throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", 
                                 ("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
                     }
-                    lockEdit.setPath(("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                    lockEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
                     lockEdit.setObjectType(ConfigurationType.LOCK);
                     objects.add(lockEdit);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
@@ -2200,7 +2200,7 @@ public abstract class PublishUtils {
                         throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", 
                                 ("/" + entryName).replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
                     }
-                    junctionEdit.setPath(("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                    junctionEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
                     junctionEdit.setObjectType(ConfigurationType.JUNCTION);
                     objects.add(junctionEdit);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
@@ -2212,7 +2212,7 @@ public abstract class PublishUtils {
                         throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", 
                                 ("/" + entryName).replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
                     }
-                    jobClassEdit.setPath(("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                    jobClassEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
                     jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
                     objects.add(jobClassEdit);
                 } else if (entryName.endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value())) {
@@ -2224,7 +2224,7 @@ public abstract class PublishUtils {
                         throw new JocImportException(String.format("Schedule with path %1$s not imported. Object values could not be mapped.", 
                                 ("/" + entryName).replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(), "")));
                     }
-                    scheduleEdit.setPath(("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                    scheduleEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
                     scheduleEdit.setObjectType(ConfigurationType.SCHEDULE);
                     objects.add(scheduleEdit);
                 } else if (entryName.endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
@@ -2233,13 +2233,13 @@ public abstract class PublishUtils {
                         if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
                             WorkingDaysCalendarEdit wdcEdit = new WorkingDaysCalendarEdit();
                             wdcEdit.setConfiguration(cal);
-                            wdcEdit.setPath(("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                            wdcEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
                             wdcEdit.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
                             objects.add(wdcEdit);
                         } else if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
                             NonWorkingDaysCalendarEdit nwdcEdit = new NonWorkingDaysCalendarEdit();
                             nwdcEdit.setConfiguration(cal);
-                            nwdcEdit.setPath(("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
+                            nwdcEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
                             nwdcEdit.setObjectType(ConfigurationType.NONWORKINGDAYSCALENDAR);
                             objects.add(nwdcEdit);
                         }
