@@ -100,7 +100,6 @@ public class JocAuditLog {
                 }
             } else {
                 try {
-                    connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntry");
                     connection.save(auditLogToDb);
                     return auditLogToDb;
                 } catch (Exception e) {

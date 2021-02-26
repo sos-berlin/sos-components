@@ -1,16 +1,14 @@
 
 package com.sos.joc.model.inventory.common;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
@@ -31,8 +29,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "deployed",
     "released",
     "hasDeployments",
-    "hasReleases",
-    "orders"
+    "hasReleases"
 })
 public class ResponseFolderItem {
 
@@ -92,15 +89,7 @@ public class ResponseFolderItem {
     private Boolean hasDeployments;
     @JsonProperty("hasReleases")
     private Boolean hasReleases;
-    /**
-     * only relevant for Workflows
-     * 
-     */
-    @JsonProperty("orders")
-    @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    @JsonPropertyDescription("only relevant for Workflows")
-    private Set<ResponseFolderItem> orders = new LinkedHashSet<ResponseFolderItem>();
-
+    
     /**
      * non negative long
      * <p>
@@ -277,32 +266,14 @@ public class ResponseFolderItem {
         this.hasReleases = hasReleases;
     }
 
-    /**
-     * only relevant for Workflows
-     * 
-     */
-    @JsonProperty("orders")
-    public Set<ResponseFolderItem> getOrders() {
-        return orders;
-    }
-
-    /**
-     * only relevant for Workflows
-     * 
-     */
-    @JsonProperty("orders")
-    public void setOrders(Set<ResponseFolderItem> orders) {
-        this.orders = orders;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("objectType", objectType).append("title", title).append("valid", valid).append("deleted", deleted).append("deployed", deployed).append("released", released).append("hasDeployments", hasDeployments).append("hasReleases", hasReleases).append("orders", orders).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("objectType", objectType).append("title", title).append("valid", valid).append("deleted", deleted).append("deployed", deployed).append("released", released).append("hasDeployments", hasDeployments).append("hasReleases", hasReleases).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(hasDeployments).append(deployed).append(title).append(objectType).append(valid).append(path).append(deleted).append(name).append(orders).append(id).append(released).append(hasReleases).toHashCode();
+        return new HashCodeBuilder().append(hasDeployments).append(deployed).append(title).append(objectType).append(valid).append(path).append(deleted).append(name).append(id).append(released).append(hasReleases).toHashCode();
     }
 
     @Override
@@ -314,7 +285,7 @@ public class ResponseFolderItem {
             return false;
         }
         ResponseFolderItem rhs = ((ResponseFolderItem) other);
-        return new EqualsBuilder().append(hasDeployments, rhs.hasDeployments).append(deployed, rhs.deployed).append(title, rhs.title).append(objectType, rhs.objectType).append(valid, rhs.valid).append(path, rhs.path).append(deleted, rhs.deleted).append(name, rhs.name).append(orders, rhs.orders).append(id, rhs.id).append(released, rhs.released).append(hasReleases, rhs.hasReleases).isEquals();
+        return new EqualsBuilder().append(hasDeployments, rhs.hasDeployments).append(deployed, rhs.deployed).append(title, rhs.title).append(objectType, rhs.objectType).append(valid, rhs.valid).append(path, rhs.path).append(deleted, rhs.deleted).append(name, rhs.name).append(id, rhs.id).append(released, rhs.released).append(hasReleases, rhs.hasReleases).isEquals();
     }
 
 }

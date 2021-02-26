@@ -93,17 +93,13 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             folder.setDeliveryDate(Date.from(Instant.now()));
             folder.setPath(in.getPath());
             
-            Map<String, Set<ResponseFolderItem>> schedules = new HashMap<>();
-            Set<ResponseFolderItem> workflows = new HashSet<>();
-
             if (items != null && !items.isEmpty()) {
                 for (InventoryTreeFolderItem config : items) {
                     ConfigurationType type = config.getObjectType();
                     if (type != null) {
                         switch (type) {
                         case WORKFLOW:
-                            workflows.add(config);
-                            //folder.getWorkflows().add(config);
+                            folder.getWorkflows().add(config);
                             break;
                         case JOB:
                             folder.getJobs().add(config);
@@ -118,10 +114,6 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                             folder.getJunctions().add(config);
                             break;
                         case SCHEDULE:
-                            if (config.getWorkflowPath() != null) {
-                                schedules.putIfAbsent(config.getWorkflowPath(), new LinkedHashSet<ResponseFolderItem>());
-                                schedules.get(config.getWorkflowPath()).add(config);
-                            }
                             folder.getSchedules().add(config);
                             break;
                         case WORKINGDAYSCALENDAR:
@@ -136,13 +128,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                     }
                 }
                 
-                // put OrderTemplate to Workflow
-                workflows.stream().map(item -> {
-                    item.setOrders(sort(schedules.remove(item.getPath())));
-                    return item;
-                }).collect(Collectors.toSet());
-                
-                folder.setWorkflows(sort(workflows));
+                folder.setWorkflows(sort(folder.getWorkflows()));
                 folder.setJobs(sort(folder.getJobs()));
                 folder.setJobClasses(sort(folder.getJobClasses()));
                 folder.setLocks(sort(folder.getLocks()));

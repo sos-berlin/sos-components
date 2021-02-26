@@ -1,26 +1,14 @@
 package com.sos.joc.db.inventory.items;
 
-import com.sos.inventory.model.Schedule;
-import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
-import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ResponseFolderItem;
 
 public class InventoryTreeFolderItem extends ResponseFolderItem {
 
-    private String workflowPath;
-
     public InventoryTreeFolderItem(DBItemInventoryConfiguration conf, Long countDeployments, Long countReleases) {
         if (conf != null) {
-            if (conf.getContent() != null && ConfigurationType.SCHEDULE.intValue() == conf.getType()) {
-                try {
-                    Schedule ot = Globals.objectMapper.readValue(conf.getContent(), Schedule.class);
-                    workflowPath = ot.getWorkflowPath();
-                } catch (Exception e) {
-                }
-            }
             conf.setContent(null);
             setId(conf.getId());
             setName(conf.getName());
@@ -38,13 +26,6 @@ public class InventoryTreeFolderItem extends ResponseFolderItem {
     
     public InventoryTreeFolderItem(DBItemInventoryConfigurationTrash conf) {
         if (conf != null) {
-            if (conf.getContent() != null && ConfigurationType.SCHEDULE.intValue() == conf.getType()) {
-                try {
-                    Schedule ot = Globals.objectMapper.readValue(conf.getContent(), Schedule.class);
-                    workflowPath = ot.getWorkflowPath();
-                } catch (Exception e) {
-                }
-            }
             conf.setContent(null);
             setId(conf.getId());
             setName(conf.getName());
@@ -55,10 +36,6 @@ public class InventoryTreeFolderItem extends ResponseFolderItem {
         }
         setHasDeployments(null);
         setHasReleases(null);
-    }
-
-    public String getWorkflowPath() {
-        return workflowPath;
     }
 
     private static boolean long2boolean(Long val) {

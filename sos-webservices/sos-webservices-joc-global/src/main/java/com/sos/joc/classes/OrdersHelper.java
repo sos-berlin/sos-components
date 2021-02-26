@@ -460,7 +460,7 @@ public class OrdersHelper {
         return CompletableFuture.supplyAsync(() -> {
             if (jOrders != null) {
                 try {
-                    final SOSHibernateSession connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntry");
+                    final SOSHibernateSession connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntryForOrders");
                     try {
                         DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
                         final Map<String, String> nameToPath = dbLayer.getNamePathMapping(controllerId, jOrders.stream().map(o -> o.workflowId()
@@ -491,7 +491,7 @@ public class OrdersHelper {
         return CompletableFuture.supplyAsync(() -> {
             if (jOrders != null) {
                 try {
-                    final SOSHibernateSession connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntry");
+                    final SOSHibernateSession connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntryForOrders");
                     try {
                         DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
                         final Map<String, String> nameToPath = dbLayer.getNamePathMapping(controllerId, jOrders.stream().map(o -> o.asScala()
@@ -521,7 +521,7 @@ public class OrdersHelper {
         return CompletableFuture.supplyAsync(() -> {
             if (addOrders != null) {
                 try {
-                    final SOSHibernateSession connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntry");
+                    final SOSHibernateSession connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntryForOrders");
                     String controllerId = addOrders.getControllerId();
                     AuditParams auditParams = addOrders.getAuditLog();
                     try {

@@ -47,8 +47,6 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
 
         Event entity = new Event();
         Session session = null;
-        SOSHibernateSession connection = null;
-        
         try {
             initLogging(API_CALL, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, Controller.class);
@@ -71,10 +69,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             entity.setControllerId(controllerId);
             entity.setEventSnapshots(Collections.emptyList());
             
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-            final DeployedConfigurationDBLayer dbCLayer = new DeployedConfigurationDBLayer(connection);
-
-            entity = processAfter(EventServiceFactory.getEvents(controllerId, eventId, accessToken, session), dbCLayer);
+            entity = processAfter(EventServiceFactory.getEvents(controllerId, eventId, accessToken, session));
 
         } catch (JobSchedulerConnectionRefusedException e) {
             e.addErrorMetaInfo(getJocError());
@@ -85,8 +80,6 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
         } catch (InvalidSessionException e) {
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-        } finally {
-            Globals.disconnect(connection);
         }
         if (EventServiceFactory.isClosed.get()) {
             return null;
@@ -95,53 +88,58 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
         return JOCDefaultResponse.responseStatus200(entity);
     }
     
-    public static Event processAfter(Event evt, DeployedConfigurationDBLayer dbCLayer) {
-        if (evt.getEventSnapshots() == null || evt.getEventSnapshots().isEmpty()) {
-            return evt;
-        }
-        List<EventType> eventsWithWorkflow = Arrays.asList(EventType.WORKFLOW, EventType.JOB, EventType.TASKHISTORY, EventType.ORDERHISTORY);
-        Set<String> workflowNames = evt.getEventSnapshots().stream().filter(e -> eventsWithWorkflow.contains(e.getObjectType())).map(e -> (e
-                .getWorkflow() != null) ? e.getWorkflow().getPath() : e.getPath()).filter(Objects::nonNull).collect(Collectors.toSet());
-
-        Set<String> lockNames = evt.getEventSnapshots().stream().filter(e -> EventType.LOCK.equals(e.getObjectType())).map(EventSnapshot::getPath)
-                .filter(Objects::nonNull).collect(Collectors.toSet());
-
-        Map<String, String> namePathWorkflowMap = null;
-        Map<String, String> namePathLockMap = null;
+    public static Event processAfter(Event evt) {
+        SOSHibernateSession connection = null;
         try {
-            if (dbCLayer != null) {
+            if (evt.getEventSnapshots() == null || evt.getEventSnapshots().isEmpty()) {
+                return evt;
+            }
+            
+            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+            final DeployedConfigurationDBLayer dbCLayer = new DeployedConfigurationDBLayer(connection);
+            
+            List<EventType> eventsWithWorkflow = Arrays.asList(EventType.WORKFLOW, EventType.JOB, EventType.TASKHISTORY, EventType.ORDERHISTORY);
+            Set<String> workflowNames = evt.getEventSnapshots().stream().filter(e -> eventsWithWorkflow.contains(e.getObjectType())).map(e -> (e
+                    .getWorkflow() != null) ? e.getWorkflow().getPath() : e.getPath()).filter(Objects::nonNull).collect(Collectors.toSet());
+
+            Set<String> lockNames = evt.getEventSnapshots().stream().filter(e -> EventType.LOCK.equals(e.getObjectType())).map(EventSnapshot::getPath)
+                    .filter(Objects::nonNull).collect(Collectors.toSet());
+
+            Map<String, String> namePathWorkflowMap = null;
+            Map<String, String> namePathLockMap = null;
+            try {
                 namePathWorkflowMap = dbCLayer.getNamePathMapping(evt.getControllerId(), workflowNames, DeployType.WORKFLOW.intValue());
+            } catch (SOSHibernateException e1) {
+                LOGGER.warn(e1.toString());
             }
-        } catch (SOSHibernateException e1) {
-            LOGGER.warn(e1.toString());
-        }
-        try {
-            if (dbCLayer != null) {
+            try {
                 namePathLockMap = dbCLayer.getNamePathMapping(evt.getControllerId(), lockNames, DeployType.LOCK.intValue());
+            } catch (SOSHibernateException e1) {
+                LOGGER.warn(e1.toString());
             }
-        } catch (SOSHibernateException e1) {
-            LOGGER.warn(e1.toString());
-        }
-        if (namePathWorkflowMap == null) {
-            namePathWorkflowMap = Collections.emptyMap();
-        }
-        if (namePathLockMap == null) {
-            namePathLockMap = Collections.emptyMap();
-        }
-        for (EventSnapshot e : evt.getEventSnapshots()) {
-            if (e.getWorkflow() != null) {
-                String name = e.getWorkflow().getPath();
-                if (name != null) {
-                    e.getWorkflow().setPath(namePathWorkflowMap.getOrDefault(name, name));
+            if (namePathWorkflowMap == null) {
+                namePathWorkflowMap = Collections.emptyMap();
+            }
+            if (namePathLockMap == null) {
+                namePathLockMap = Collections.emptyMap();
+            }
+            for (EventSnapshot e : evt.getEventSnapshots()) {
+                if (e.getWorkflow() != null) {
+                    String name = e.getWorkflow().getPath();
+                    if (name != null) {
+                        e.getWorkflow().setPath(namePathWorkflowMap.getOrDefault(name, name));
+                    }
+                }
+                if (EventType.WORKFLOW.equals(e.getObjectType()) && e.getPath() != null) {
+                    e.setPath(namePathWorkflowMap.getOrDefault(e.getPath(), e.getPath()));
+                } else if (EventType.LOCK.equals(e.getObjectType()) && e.getPath() != null) {
+                    e.setPath(namePathLockMap.getOrDefault(e.getPath(), e.getPath()));
                 }
             }
-            if (EventType.WORKFLOW.equals(e.getObjectType()) && e.getPath() != null) {
-                e.setPath(namePathWorkflowMap.getOrDefault(e.getPath(), e.getPath()));
-            } else if (EventType.LOCK.equals(e.getObjectType()) && e.getPath() != null) {
-                e.setPath(namePathLockMap.getOrDefault(e.getPath(), e.getPath()));
-            }
+            return evt;
+        } finally {
+            Globals.disconnect(connection);
         }
-        return evt;
     }
 
 }
