@@ -35,8 +35,8 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             TreeFilter treeBody = Globals.objectMapper.readValue(treeBodyBytes, TreeFilter.class);
 
             boolean treeForInventoryTrash = (treeBody.getForInventoryTrash() != null && treeBody.getForInventoryTrash());
-            boolean treeForInventory = (treeBody.getForInventory() != null && treeBody.getForInventory()) || (treeBody.getTypes() != null && treeBody
-                    .getTypes().contains(TreeType.INVENTORY));
+            boolean treeForInventory = !treeForInventoryTrash && ((treeBody.getForInventory() != null && treeBody.getForInventory()) || (treeBody
+                    .getTypes() != null && treeBody.getTypes().contains(TreeType.INVENTORY)));
             List<TreeType> types = TreePermanent.getAllowedTypes(treeBody.getTypes(), getPermissonsJocCockpit(treeBody.getControllerId(),
                     accessToken), treeForInventory, treeForInventoryTrash);
 

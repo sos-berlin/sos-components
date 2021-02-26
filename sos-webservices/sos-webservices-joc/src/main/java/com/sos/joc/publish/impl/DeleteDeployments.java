@@ -1,15 +1,16 @@
 package com.sos.joc.publish.impl;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,6 +77,7 @@ public class DeleteDeployments {
             // determine all (latest) entries from the given folder
             List<DBItemDeploymentHistory> itemsToDelete = dbLayer.getLatestDepHistoryItemsFromFolder(conf.getPath(), controllerId, conf
                     .getRecursive()).stream().filter(item -> OperationType.DELETE.value() != item.getOperation()).collect(Collectors.toList());
+            
             if (!itemsToDelete.isEmpty()) {
                 PublishUtils.updateItemsDelete(commitIdForDeleteFromFolder, itemsToDelete, controllerId).thenAccept(
                         either -> processAfterDeleteFromFolder(either, itemsToDelete, Collections.singletonList(conf), controllerId, account,
@@ -204,43 +206,46 @@ public class DeleteDeployments {
     
     public static void storeDepHistoryAndDeleteSetOfConfigurations(DBLayerDeploy dbLayer, List<DBItemDeploymentHistory> itemsToDelete,
             String commitId) {
-        Set<DBItemInventoryConfiguration> configurationsToDelete = itemsToDelete.stream().map(item -> 
-            dbLayer.getInventoryConfigurationByNameAndType(item.getName(), item.getType())).collect(Collectors.toSet());
-        Set<DBItemDeploymentHistory> deletedDeployItems = 
-                PublishUtils.updateDeletedDepHistoryAndPutToTrash(itemsToDelete, dbLayer, commitId);
-        configurationsToDelete.stream().forEach(item -> 
-            JocInventory.deleteInventoryConfigurationAndPutToTrash(item, new InventoryDBLayer(dbLayer.getSession())));
-        configurationsToDelete.stream().map(DBItemInventoryConfiguration::getFolder).distinct().forEach(item -> JocInventory.postEvent(item));
-        JocInventory.handleWorkflowSearch(dbLayer.getSession(), deletedDeployItems, true);
+        if (itemsToDelete != null) {
+            Set<DBItemInventoryConfiguration> configurationsToDelete = itemsToDelete.stream().map(item -> dbLayer
+                    .getInventoryConfigurationByNameAndType(item.getName(), item.getType())).collect(Collectors.toSet());
+            Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistoryAndPutToTrash(itemsToDelete, dbLayer, commitId);
+            InventoryDBLayer invDbLayer =  new InventoryDBLayer(dbLayer.getSession());
+            configurationsToDelete.stream().forEach(item -> JocInventory.deleteInventoryConfigurationAndPutToTrash(item, invDbLayer));
+            configurationsToDelete.stream().map(DBItemInventoryConfiguration::getFolder).distinct().forEach(item -> JocInventory.postEvent(item));
+            JocInventory.handleWorkflowSearch(dbLayer.getSession(), deletedDeployItems, true);
+        }
     }
-
+    
     public static void storeDepHistoryAndDeleteConfigurationsFromFolder(DBLayerDeploy dbLayer, List<Configuration> folders, 
             List<DBItemDeploymentHistory> itemsToDelete, String commitId, String accessToken, JocError jocError, boolean withoutFolderDeletion) {
-//        Stream<DBItemInventoryConfiguration> configurationsToDeleteStream = itemsToDelete.stream().map(item -> dbLayer
-//                .getInventoryConfigurationByNameAndType(item.getName(), item.getType())).filter(Objects::nonNull);
-        List<DBItemInventoryConfiguration> configurationsToDelete = new ArrayList<DBItemInventoryConfiguration>();
-        
-        for (DBItemDeploymentHistory item : itemsToDelete) {
-            DBItemInventoryConfiguration invCfg = dbLayer.getInventoryConfigurationByNameAndType(item.getName(), item.getType());
-            if (invCfg != null) {
-                configurationsToDelete.add(invCfg);               
-            }
-        }
-        
-//        Stream<DBItemInventoryConfiguration> foldersToDeleteStream = folders.stream().map(item -> dbLayer
-//                .getInventoryConfigurationsByFolder(item.getPath(), item.getRecursive())).filter(
-//                        Objects::nonNull).flatMap(List::stream).filter(Objects::nonNull);
-        for (Configuration folder : folders) {
-            configurationsToDelete.addAll(dbLayer.getInventoryConfigurationsByFolder(folder.getPath(), folder.getRecursive()));
-            
-        }
-//        List<DBItemInventoryConfiguration> configurationsToDelete = Stream.concat(configurationsToDeleteStream, foldersToDeleteStream)
-//                .collect(Collectors.toList());
+
         Set<DBItemDeploymentHistory> deletedDeployItems = PublishUtils.updateDeletedDepHistoryAndPutToTrash(itemsToDelete, dbLayer,
                 commitId);
         InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
-        configurationsToDelete.stream().forEach(item -> JocInventory.deleteInventoryConfigurationAndPutToTrash(item, invDbLayer));
-        configurationsToDelete.stream().map(item -> item.getFolder()).distinct().forEach(item -> JocInventory.postEvent(item));
+        Set<String> foldersForEvent = new HashSet<>();
+        if (folders != null) {
+            for (Configuration folder : folders) {
+                for (DBItemInventoryConfiguration item : dbLayer.getInventoryConfigurationsByFolder(folder.getPath(), folder.getRecursive())) {
+                    JocInventory.deleteInventoryConfigurationAndPutToTrash(item, invDbLayer);
+                }
+                if ("/".equals(folder.getPath())) {
+                    foldersForEvent.add("/");
+                } else {
+                    foldersForEvent.add(Paths.get(folder.getPath()).getParent().toString().replace('\\', '/'));
+                }
+            }
+        }
+        if (itemsToDelete != null) {
+            for (DBItemDeploymentHistory item : itemsToDelete) {
+                DBItemInventoryConfiguration invCfg = dbLayer.getInventoryConfigurationByNameAndType(item.getName(), item.getType());
+                if (invCfg != null) {
+                    JocInventory.deleteInventoryConfigurationAndPutToTrash(invCfg, invDbLayer);
+                    foldersForEvent.add(invCfg.getFolder());
+                }
+            }
+        }
+        
         JocInventory.handleWorkflowSearch(dbLayer.getSession(), deletedDeployItems, true);
         if (!withoutFolderDeletion) {
             if (folders != null && !folders.isEmpty()) {
@@ -264,6 +269,10 @@ public class DeleteDeployments {
                 }
             }
         }
+        
+        for (String folder: foldersForEvent) {
+            JocInventory.postEvent(folder);
+        }
     }
     
     private static void deleteConfigurationsFromFolder(DBLayerDeploy dbLayer, Configuration folder, boolean withoutFolderDeletion)
@@ -278,6 +287,10 @@ public class DeleteDeployments {
         if (!withoutFolderDeletion) {
             JocInventory.deleteEmptyFolders(invDbLayer, folder.getPath());
         }
-        JocInventory.postEvent(folder.getPath());
+        if ("/".equals(folder.getPath())) {
+            JocInventory.postEvent("/");
+        } else {
+            JocInventory.postEvent(Paths.get(folder.getPath()).getParent().toString().replace('\\', '/'));
+        }
     }
 }
