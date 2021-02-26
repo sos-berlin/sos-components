@@ -1680,16 +1680,13 @@ public abstract class PublishUtils {
                     toTrash.setTitle(orig.getTitle());
                     toTrash.setCreated(orig.getCreated());
                     toTrash.setModified(orig.getModified());
-                } else {
-                    toTrash.setCreated(delete.getDeleteDate());
-                    toTrash.setModified(delete.getDeleteDate());
+                    toTrash.setValid(orig.getValid());
+                    toTrash.setContent(orig.getContent());
+                    toTrash.setFolder(orig.getFolder());
+                    toTrash.setName(orig.getName());
+                    toTrash.setPath(orig.getPath());
+                    toTrash.setType(orig.getType());
                 }
-                toTrash.setContent(delete.getInvContent());
-                toTrash.setFolder(delete.getFolder());
-                toTrash.setName(delete.getName());
-                toTrash.setPath(delete.getPath());
-                toTrash.setType(delete.getType());
-                toTrash.setValid(true);
                 dbLayer.getSession().save(toTrash);
                 InventoryDBLayer invDBLayer = new InventoryDBLayer(dbLayer.getSession());
                 JocInventory.makeParentDirsForTrash(invDBLayer, Paths.get(toTrash.getFolder()));
