@@ -1,9 +1,12 @@
 package com.sos.joc.inventory.impl;
 
 import java.time.Instant;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
@@ -22,7 +25,7 @@ import com.sos.joc.inventory.resource.IDeleteConfigurationResource;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
-import com.sos.joc.model.publish.Configuration;
+import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.impl.DeleteDeployments;
 import com.sos.schema.JsonValidator;
@@ -89,11 +92,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
                 if (deployables != null && !deployables.isEmpty()) {
                     String account = JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel()) ? Globals.getDefaultProfileUserAccount()
                             : getAccount();
-                    Configuration c = new Configuration();
-                    c.setObjectType(type);
-                    c.setPath(config.getPath());
-                    c.setRecursive(true);
-                    DeleteDeployments.delete(Collections.singleton(c), Proxies.getControllerDbInstances().keySet(), new DBLayerDeploy(session),
+                    DeleteDeployments.deleteFolder(config.getPath(), true, Proxies.getControllerDbInstances().keySet(), new DBLayerDeploy(session),
                             account, accessToken, getJocError(), false);
                 }
                 
@@ -103,7 +102,14 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
                     
                 } else if (JocInventory.isDeployable(type)) {
                     DBLayerDeploy deployDbLayer = new DBLayerDeploy(session);
-                    List<DBItemDeploymentHistory> deployments = deployDbLayer.getDeployedConfigurations(config.getId());
+                    List<DBItemDeploymentHistory> allDeployments = deployDbLayer.getDeployedConfigurations(config.getId());
+                    Set<DBItemDeploymentHistory> deployments = null;
+                    if (allDeployments != null) {
+                        deployments = allDeployments.stream().filter(d -> OperationType.UPDATE.value() == d.getOperation()).collect(Collectors
+                                .groupingBy(DBItemDeploymentHistory::getControllerId, Collectors.maxBy(Comparator.comparingLong(
+                                        DBItemDeploymentHistory::getId)))).values().stream().filter(Optional::isPresent).map(Optional::get).collect(
+                                                Collectors.toSet());
+                    }
                     if (deployments == null || deployments.isEmpty()) {
                         JocInventory.deleteInventoryConfigurationAndPutToTrash(config, dbLayer);
                         JocInventory.postEvent(config.getFolder());
@@ -139,6 +145,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
                 // TODO
             } else {
                 JocInventory.restoreInventoryConfigurationFromTrash(config, dbLayer);
+                // TODO call validate
                 JocInventory.postEvent(config.getFolder());
             }
             

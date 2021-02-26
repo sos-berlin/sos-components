@@ -226,16 +226,15 @@ public class DBLayerDeploy {
             StringBuilder sql = new StringBuilder();
             sql.append("select id from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             if (recursive) {
-                sql.append(" where folder like :folder");
+                sql.append(" where (folder = :folder or folder like :likefolder)");
             } else {
                 sql.append(" where folder = :folder");
             }
             sql.append(" and type in (:types)");  
             Query<Long> query = session.createQuery(sql.toString());
+            query.setParameter("folder", folder);
             if (recursive) {
-                query.setParameter("folder", MatchMode.START.toMatchString(folder));
-            } else {
-                query.setParameter("folder", folder);
+                query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
             }
             query.setParameterList("types", Arrays.asList(new Integer[] {
                     ConfigurationType.WORKFLOW.intValue(), 
@@ -256,22 +255,17 @@ public class DBLayerDeploy {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             if (recursive) {
-                sql.append(" where folder like :folder");
+                sql.append(" where (folder = :folder or folder like :likefolder)");
             } else {
                 sql.append(" where folder = :folder");
             }
             sql.append(" and type in (:types)");  
             Query<DBItemInventoryConfiguration> query = session.createQuery(sql.toString());
+            query.setParameter("folder", folder);
             if (recursive) {
-                query.setParameter("folder", MatchMode.START.toMatchString(folder));
-            } else {
-                query.setParameter("folder", folder);
+                query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
             }
-            query.setParameterList("types", Arrays.asList(new Integer[] {
-                    ConfigurationType.WORKFLOW.intValue(), 
-                    ConfigurationType.JUNCTION.intValue(),
-                    ConfigurationType.JOBCLASS.intValue(),
-                    ConfigurationType.LOCK.intValue()}));
+            query.setParameterList("types", JocInventory.getDeployableTypes());
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -437,15 +431,14 @@ public class DBLayerDeploy {
             StringBuilder hql = new StringBuilder();
             hql.append(" from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
             if (recursive) {
-                hql.append(" where folder like :folder");
+                hql.append(" where (folder = :folder or folder like :likefolder)");
             } else {
                 hql.append(" where folder = :folder");
             }
             Query<DBItemInventoryReleasedConfiguration> query = session.createQuery(hql.toString());
+            query.setParameter("folder", folder);
             if (recursive) {
-                query.setParameter("folder", MatchMode.START.toMatchString(folder));
-            } else {
-                query.setParameter("folder", folder);
+                query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
             }
             return session.getResultList(query);
         } catch (SOSHibernateException e) {
@@ -458,7 +451,7 @@ public class DBLayerDeploy {
             StringBuilder hql = new StringBuilder();
             hql.append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             if (recursive) {
-                hql.append(" where folder like :folder");
+                hql.append(" where (folder = :folder or folder like :likefolder)");
             } else {
                 hql.append(" where folder = :folder");
             }
@@ -467,10 +460,9 @@ public class DBLayerDeploy {
             }
             hql.append(" and released = false");
             Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
+            query.setParameter("folder", folder);
             if (recursive) {
-                query.setParameter("folder", MatchMode.START.toMatchString(folder));
-            } else {
-                query.setParameter("folder", folder);
+                query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
             }
             return session.getResultList(query);
         } catch (SOSHibernateException e) {
@@ -488,7 +480,7 @@ public class DBLayerDeploy {
             StringBuilder hql = new StringBuilder();
             hql.append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             if (recursive) {
-                hql.append(" where folder like :folder");
+                hql.append(" where (folder = :folder or folder like :likefolder)");
             } else {
                 hql.append(" where folder = :folder");
             }
@@ -505,10 +497,9 @@ public class DBLayerDeploy {
                 hql.append(" and released = false");
             }
             Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
+            query.setParameter("folder", folder);
             if (recursive) {
-                query.setParameter("folder", MatchMode.START.toMatchString(folder));
-            } else {
-                query.setParameter("folder", folder);
+                query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
             }
             if (deployablesOnly) {
                 query.setParameterList("types", Arrays.asList(new Integer[] {
@@ -534,7 +525,7 @@ public class DBLayerDeploy {
             StringBuilder hql = new StringBuilder();
             hql.append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             if (recursive) {
-                hql.append(" where folder like :folder");
+                hql.append(" where (folder = :folder or folder like :likefolder)");
             } else {
                 hql.append(" where folder = :folder");
             }
@@ -546,10 +537,9 @@ public class DBLayerDeploy {
             }
             hql.append(" and deployed = false");
             Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
+            query.setParameter("folder", folder);
             if (recursive) {
-                query.setParameter("folder", MatchMode.START.toMatchString(folder));
-            } else {
-                query.setParameter("folder", folder);
+                query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
             }
             if (onlyDeployables) {
                 query.setParameterList("types", Arrays.asList(new Integer[] {
@@ -1385,7 +1375,7 @@ public class DBLayerDeploy {
          return getLatestDepHistoryItemsFromFolder(folder, controllerId, false);
     }
 
-    public List<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolder (String folder, String controllerId, boolean recursive) {
+    public List<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolder(String folder, String controllerId, boolean recursive) {
         try {
             StringBuilder hql = new StringBuilder("select dep from ")
                     .append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
@@ -1393,7 +1383,7 @@ public class DBLayerDeploy {
                 .append("select max(history.id) from ")
                 .append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
             if (recursive) {
-                hql.append(" where history.folder like :folder");
+                hql.append(" where (history.folder = :folder or history.folder like :likefolder)");
             } else {
                 hql.append(" where history.folder = :folder");
             }
@@ -1402,10 +1392,9 @@ public class DBLayerDeploy {
                 .append(" and history.path = dep.path")
                 .append(")");
             Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
+            query.setParameter("folder", folder);
             if (recursive) {
-                query.setParameter("folder", MatchMode.START.toMatchString(folder));
-            } else {
-                query.setParameter("folder", folder);
+                query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
             }
             query.setParameter("controllerId", controllerId);
             List<DBItemDeploymentHistory> result = session.getResultList(query);
@@ -1431,7 +1420,7 @@ public class DBLayerDeploy {
                 .append("select max(history.id) from ")
                 .append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
             if (recursive) {
-                hql.append(" where history.folder like :folder");
+                hql.append(" where (history.folder = :folder or history.folder like :likefolder)");
             } else {
                 hql.append(" where history.folder = :folder");
             }
@@ -1439,10 +1428,9 @@ public class DBLayerDeploy {
                 .append(" and history.path = dep.path")
                 .append(")");
             Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
+            query.setParameter("folder", folder);
             if (recursive) {
-                query.setParameter("folder", MatchMode.START.toMatchString(folder));
-            } else {
-                query.setParameter("folder", folder);
+                query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
             }
             return session.getResultList(query);
         } catch (SOSHibernateException e) {
@@ -1462,7 +1450,7 @@ public class DBLayerDeploy {
                 .append("select max(history.id) from ")
                 .append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
             if (recursive) {
-                hql.append(" where history.folder like :folder");
+                hql.append(" where (history.folder = :folder or history.folder like :likefolder");
             } else {
                 hql.append(" where history.folder = :folder");
             }
@@ -1471,10 +1459,9 @@ public class DBLayerDeploy {
                 .append(" and history.path = dep.path")
                 .append(")");
             Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
+            query.setParameter("folder", folder);
             if (recursive) {
-                query.setParameter("folder", MatchMode.START.toMatchString(folder));
-            } else {
-                query.setParameter("folder", folder);
+                query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
             }
             return session.getResultList(query);
         } catch (SOSHibernateException e) {
@@ -1490,7 +1477,7 @@ public class DBLayerDeploy {
                 .append("select max(history.id) from ")
                 .append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
             if (recursive) {
-                hql.append(" where history.folder like :folder");
+                hql.append(" where (history.folder = :folder or history.folder like :likefolder)");
             } else {
                 hql.append(" where history.folder = :folder");
             }
@@ -1499,10 +1486,9 @@ public class DBLayerDeploy {
                 .append(" and history.path = dep.path")
                 .append(")");
             Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
+            query.setParameter("folder", folder);
             if (recursive) {
-                query.setParameter("folder", MatchMode.START.toMatchString(folder));
-            } else {
-                query.setParameter("folder", folder);
+                query.setParameter("likefolder", MatchMode.START.toMatchString(folder +  "/"));
             }
             return session.getResultList(query);
         } catch (SOSHibernateException e) {
@@ -2328,16 +2314,15 @@ public class DBLayerDeploy {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             if (recursive) {
-                hql.append(" where path like :path");
+                hql.append(" where (path = :path or path like :likepath)");
             } else {
                 hql.append(" where path = :path");
             }
             hql.append(" and type = :type");
             Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+            query.setParameter("path", path);
             if(recursive) {
-                query.setParameter("path", MatchMode.START.toMatchString(path));
-            } else {
-                query.setParameter("path", path);
+                query.setParameter("likepath", MatchMode.START.toMatchString(path + "/"));
             }
             query.setParameter("type", ConfigurationType.FOLDER.intValue());
             return query.getResultList();
