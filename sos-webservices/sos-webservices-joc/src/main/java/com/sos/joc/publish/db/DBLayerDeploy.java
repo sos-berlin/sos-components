@@ -266,7 +266,11 @@ public class DBLayerDeploy {
                 query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
             }
             query.setParameterList("types", JocInventory.getDeployableTypes());
-            return session.getResultList(query);
+            List<DBItemInventoryConfiguration> result = session.getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result; 
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -302,7 +306,8 @@ public class DBLayerDeploy {
             Query<DBItemInventoryConfiguration> query = session.createQuery(sql.toString());
             query.setParameter("name", name);
             query.setParameter("type", type);
-            return session.getSingleResult(query);
+            DBItemInventoryConfiguration result = session.getSingleResult(query);
+            return result;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
