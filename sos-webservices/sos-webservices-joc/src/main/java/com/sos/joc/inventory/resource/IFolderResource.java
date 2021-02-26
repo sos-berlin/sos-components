@@ -15,7 +15,7 @@ public interface IFolderResource {
     public static final String PATH = "read/folder";
     public static final String IMPL_PATH = JocInventory.getResourceImplPath(PATH);
     public static final String TRASH_PATH = "trash/read/folder";
-    public static final String TRASH_IMPL_PATH = JocInventory.getResourceImplPath(PATH);
+    public static final String TRASH_IMPL_PATH = JocInventory.getResourceImplPath(TRASH_PATH);
 
     @POST
     @Path(PATH)
