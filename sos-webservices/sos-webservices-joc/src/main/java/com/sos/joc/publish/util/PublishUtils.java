@@ -1686,10 +1686,10 @@ public abstract class PublishUtils {
                     toTrash.setName(orig.getName());
                     toTrash.setPath(orig.getPath());
                     toTrash.setType(orig.getType());
+                    dbLayer.getSession().save(toTrash);
+                    InventoryDBLayer invDBLayer = new InventoryDBLayer(dbLayer.getSession());
+                    JocInventory.makeParentDirsForTrash(invDBLayer, Paths.get(toTrash.getFolder()));
                 }
-                dbLayer.getSession().save(toTrash);
-                InventoryDBLayer invDBLayer = new InventoryDBLayer(dbLayer.getSession());
-                JocInventory.makeParentDirsForTrash(invDBLayer, Paths.get(toTrash.getFolder()));
             }
             
         } catch (SOSHibernateException e) {
