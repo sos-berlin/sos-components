@@ -30,6 +30,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "inventoryVersion",
     "forceCommentsForAuditLog",
     "comments",
+    "copy",
+    "restore",
     "showViews"
 })
 public class Properties {
@@ -90,6 +92,22 @@ public class Properties {
      */
     @JsonProperty("comments")
     private List<String> comments = new ArrayList<String>();
+    /**
+     * suffix/prefix properties
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("copy")
+    private SuffixPrefix copy;
+    /**
+     * suffix/prefix properties
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("restore")
+    private SuffixPrefix restore;
     /**
      * 
      * (Required)
@@ -257,6 +275,50 @@ public class Properties {
     }
 
     /**
+     * suffix/prefix properties
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("copy")
+    public SuffixPrefix getCopy() {
+        return copy;
+    }
+
+    /**
+     * suffix/prefix properties
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("copy")
+    public void setCopy(SuffixPrefix copy) {
+        this.copy = copy;
+    }
+
+    /**
+     * suffix/prefix properties
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("restore")
+    public SuffixPrefix getRestore() {
+        return restore;
+    }
+
+    /**
+     * suffix/prefix properties
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("restore")
+    public void setRestore(SuffixPrefix restore) {
+        this.restore = restore;
+    }
+
+    /**
      * 
      * (Required)
      * 
@@ -278,12 +340,12 @@ public class Properties {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("title", title).append("securityLevel", securityLevel).append("defaultProfileAccount", defaultProfileAccount).append("apiVersion", apiVersion).append("inventoryVersion", inventoryVersion).append("forceCommentsForAuditLog", forceCommentsForAuditLog).append("comments", comments).append("showViews", showViews).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("title", title).append("securityLevel", securityLevel).append("defaultProfileAccount", defaultProfileAccount).append("apiVersion", apiVersion).append("inventoryVersion", inventoryVersion).append("forceCommentsForAuditLog", forceCommentsForAuditLog).append("comments", comments).append("copy", copy).append("restore", restore).append("showViews", showViews).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(securityLevel).append(forceCommentsForAuditLog).append(apiVersion).append(comments).append(inventoryVersion).append(showViews).append(deliveryDate).append(title).append(defaultProfileAccount).toHashCode();
+        return new HashCodeBuilder().append(securityLevel).append(forceCommentsForAuditLog).append(apiVersion).append(comments).append(restore).append(inventoryVersion).append(showViews).append(copy).append(deliveryDate).append(title).append(defaultProfileAccount).toHashCode();
     }
 
     @Override
@@ -295,7 +357,7 @@ public class Properties {
             return false;
         }
         Properties rhs = ((Properties) other);
-        return new EqualsBuilder().append(securityLevel, rhs.securityLevel).append(forceCommentsForAuditLog, rhs.forceCommentsForAuditLog).append(apiVersion, rhs.apiVersion).append(comments, rhs.comments).append(inventoryVersion, rhs.inventoryVersion).append(showViews, rhs.showViews).append(deliveryDate, rhs.deliveryDate).append(title, rhs.title).append(defaultProfileAccount, rhs.defaultProfileAccount).isEquals();
+        return new EqualsBuilder().append(securityLevel, rhs.securityLevel).append(forceCommentsForAuditLog, rhs.forceCommentsForAuditLog).append(apiVersion, rhs.apiVersion).append(comments, rhs.comments).append(restore, rhs.restore).append(inventoryVersion, rhs.inventoryVersion).append(showViews, rhs.showViews).append(copy, rhs.copy).append(deliveryDate, rhs.deliveryDate).append(title, rhs.title).append(defaultProfileAccount, rhs.defaultProfileAccount).isEquals();
     }
 
 }

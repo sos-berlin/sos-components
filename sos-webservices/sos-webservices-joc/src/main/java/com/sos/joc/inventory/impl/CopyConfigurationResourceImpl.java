@@ -27,6 +27,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.inventory.resource.ICopyConfigurationResource;
+import com.sos.joc.model.SuffixPrefix;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.copy.RequestFilter;
 import com.sos.schema.JsonValidator;
@@ -71,33 +72,50 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
             String newFolder = pWithoutFix.getParent().toString().replace('\\', '/');
             String newPathWithoutFix = pWithoutFix.toString().replace('\\', '/');
             
-            final String prefix = in.getPrefix() == null ? "" : in.getPrefix();
-            String suffix = in.getSuffix();
-            if (suffix == null) {
-                suffix = "";
-            }
-            boolean useDefaultSuffix = suffix.isEmpty();
-            
             // folder copy or (object copy where target and source name are the same)
             boolean fixMustUsed = JocInventory.isFolder(type) || (!JocInventory.isFolder(type) && oldPath.getFileName().toString().equals(pWithoutFix
                     .getFileName().toString()));
-
-            if (fixMustUsed && prefix.isEmpty() && suffix.isEmpty()) {
-                // determine number of default suffix "-copy<number>"
-                Integer num = dbLayer.getCopySuffixNumber();
-                suffix = JocInventory.DEFAULT_COPY_SUFFIX;
-                if (num > 0) {
-                    suffix += num;
+            
+            SuffixPrefix fix = Globals.copySuffixPrefix;
+            String prefix = in.getPrefix() == null ? "" : in.getPrefix().trim().replaceFirst("-+$", "");
+            String suffix = in.getSuffix() == null ? "" : in.getSuffix().trim().replaceFirst("^-+", "");
+            
+            if (fixMustUsed) {
+                if (!suffix.isEmpty()) { // suffix beats prefix
+                    prefix = "";
+                } else if (prefix.isEmpty()) {
+                    suffix = fix.getSuffix();
+                    if (suffix.isEmpty()) {
+                        prefix = fix.getPrefix();
+                    }
+                }
+                if (suffix.isEmpty() && prefix.isEmpty()) {
+                    suffix = JocInventory.DEFAULT_COPY_SUFFIX;
                 }
             } else {
-                if (prefix != null && !prefix.isEmpty()) {
-                    CheckJavaVariableName.test("prefix", prefix);
-                }
-                if (suffix != null && !suffix.isEmpty()) {
-                    CheckJavaVariableName.test("suffix", suffix);
+                if (!suffix.isEmpty()) { // suffix beats prefix
+                    prefix = "";
                 }
             }
             
+            if (!suffix.isEmpty()) {
+                CheckJavaVariableName.test("suffix", suffix);
+                // determine number of suffix "-suffix<number>"
+                Integer num = dbLayer.getSuffixNumber(suffix);
+                if (num > 0) {
+                    suffix += num;
+                }
+            } else if (!prefix.isEmpty()) {
+                CheckJavaVariableName.test("prefix", prefix);
+                // determine number of prefix "prefix<number>-"
+                Integer num = dbLayer.getPrefixNumber(prefix);
+                if (num > 0) {
+                    prefix += num;
+                }
+            }
+            
+            final List<String> replace = suffix.isEmpty() ? Arrays.asList("^(" + prefix + "[0-9]*-)?(.*)$", prefix + "-$2") : Arrays.asList("(.*?)(-"
+                    + suffix + "[0-9]*)?$", "$1-" + suffix);
             Set<String> events = new HashSet<>();
             
             // Check folder permissions
@@ -114,7 +132,6 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                     }
                 }
                 
-                final String suffix2 = suffix;
                 List<DBItemInventoryConfiguration> oldDBFolderContent = null;
                 if (in.getShallowCopy()) {
                     oldDBFolderContent = dbLayer.getFolderContent(config.getPath(), true, JocInventory.getTypesFromObjectsWithReferencesAndFolders());
@@ -128,35 +145,19 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                 if (!in.getShallowCopy()) {
                     List<Integer> typesForReferences = Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.WORKINGDAYSCALENDAR
                             .intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue(), ConfigurationType.LOCK.intValue());
-                    if (useDefaultSuffix) {
-                        oldToNewName = oldDBFolderContent.stream().filter(item -> typesForReferences.contains(item.getType())).collect(Collectors
-                                .groupingBy(DBItemInventoryConfiguration::getTypeAsEnum, Collectors.toMap(DBItemInventoryConfiguration::getName,
-                                        item -> prefix + item.getName().replaceFirst("(.*?)(-copy[0-9]*)?$", "$1" + suffix2))));
-                    } else {
-                        oldToNewName = oldDBFolderContent.stream().filter(item -> typesForReferences.contains(item.getType())).collect(Collectors
-                                .groupingBy(DBItemInventoryConfiguration::getTypeAsEnum, Collectors.toMap(DBItemInventoryConfiguration::getName,
-                                        item -> prefix + item.getName() + suffix2)));
+                    oldToNewName = oldDBFolderContent.stream().filter(item -> typesForReferences.contains(item.getType())).collect(Collectors
+                            .groupingBy(DBItemInventoryConfiguration::getTypeAsEnum, Collectors.toMap(DBItemInventoryConfiguration::getName,
+                                    item -> item.getName().replaceFirst(replace.get(0), replace.get(1)))));
+                }
+                oldDBFolderContent = oldDBFolderContent.stream().map(oldItem -> {
+                    java.nio.file.Path oldItemPath = Paths.get(oldItem.getPath());
+                    if (ConfigurationType.FOLDER.intValue() == oldItem.getType()) {
+                        return createItem(oldItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath)));
                     }
-                }
-                if (useDefaultSuffix) {
-                    oldDBFolderContent = oldDBFolderContent.stream().map(oldItem -> {
-                        java.nio.file.Path oldItemPath = Paths.get(oldItem.getPath());
-                        if (ConfigurationType.FOLDER.intValue() == oldItem.getType()) {
-                            return createItem(oldItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath)));
-                        }
-                        return createItem(oldItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath.getParent().resolve(prefix + oldItem.getName()
-                                .replaceFirst("(.*?)(-copy[0-9]*)?$", "$1" + suffix2)))));
-                    }).collect(Collectors.toList());
-                } else {
-                    oldDBFolderContent = oldDBFolderContent.stream().map(oldItem -> {
-                        java.nio.file.Path oldItemPath = Paths.get(oldItem.getPath());
-                        if (ConfigurationType.FOLDER.intValue() == oldItem.getType()) {
-                            return createItem(oldItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath)));
-                        }
-                        return createItem(oldItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath.getParent().resolve(prefix + oldItem.getName()
-                                + suffix2))));
-                    }).collect(Collectors.toList());
-                }
+                    return createItem(oldItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath.getParent().resolve(oldItem.getName()
+                            .replaceFirst(replace.get(0), replace.get(1))))));
+                }).collect(Collectors.toList());
+                
                 DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(newPathWithoutFix, ConfigurationType.FOLDER.intValue());
                 List<DBItemInventoryConfiguration> newDBFolderContent = null;
                 if (in.getShallowCopy()) {
@@ -194,7 +195,6 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                     }
                 } else {
                     for (DBItemInventoryConfiguration item : oldDBFolderContent) {
-                        // TODO deep copy -> change content
                         String json = item.getContent();
                         switch (item.getTypeAsEnum()) {
                         case WORKFLOW:
@@ -233,7 +233,11 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                 if (!folderPermissions.isPermittedForFolder(newFolder)) {
                     throw new JocFolderPermissionsException("Access denied for folder: " + newFolder);
                 }
-                final java.nio.file.Path p = pWithoutFix.getParent().resolve(prefix + pWithoutFix.getFileName().toString() + suffix);
+                
+                java.nio.file.Path p = pWithoutFix.getParent().resolve(pWithoutFix.getFileName().toString());
+                if (!suffix.isEmpty() || !prefix.isEmpty()) {
+                    p = pWithoutFix.getParent().resolve(pWithoutFix.getFileName().toString().replaceFirst(replace.get(0), replace.get(1)));
+                }
                 // Check Java variable name rules
                 for (int i = 0; i < p.getNameCount(); i++) {
                     if (i == p.getNameCount() - 1) {

@@ -44,6 +44,8 @@ public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResour
             entity.setDefaultProfileAccount(Globals.defaultProfileAccount);
             entity.setApiVersion(Globals.apiVersion);
             entity.setInventoryVersion(Globals.inventoryVersion);
+            entity.setCopy(Globals.copySuffixPrefix);
+            entity.setRestore(Globals.restoreSuffixPrefix);
             ShowViewProperties showViewProps = new ShowViewProperties();
             showViewProps.setAuditLog(readShowViewFromJocProperties("auditlog"));
             showViewProps.setConditions(readShowViewFromJocProperties("conditions"));

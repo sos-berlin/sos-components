@@ -20,6 +20,11 @@ public class InventoryEvent extends JOCEvent {
         putVariable("folder", folder);
     }
     
+    public InventoryEvent(String key, String folder) {
+        super(key, null, null);
+        putVariable("folder", folder);
+    }
+    
     @JsonIgnore
     public String getFolder() {
         return getVariables().get("folder");

@@ -27,14 +27,17 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
 import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
+import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.JocWebserviceDataContainer;
 import com.sos.joc.classes.SSLContext;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
+import com.sos.joc.model.SuffixPrefix;
 import com.sos.joc.model.common.JocSecurityLevel;
 
 public class Globals {
@@ -69,6 +72,8 @@ public class Globals {
     public static int httpConnectionTimeout = 2000;
     public static int httpSocketTimeout = 5000;
     public static boolean withHostnameVerification = false;
+    public static SuffixPrefix copySuffixPrefix = new SuffixPrefix();
+    public static SuffixPrefix restoreSuffixPrefix = new SuffixPrefix();
     public static boolean auditLogCommentsAreRequired = false;
 
     private static final String SHIRO_INI_FILENAME = "shiro.ini";
@@ -161,6 +166,8 @@ public class Globals {
             setForceCommentsForAuditLog();
             setTimeoutForTempFiles();
             getDefaultProfileUserAccount();
+            readCopySuffixPrefix();
+            readRestoreSuffixPrefix();
         }
         setSSLContext();
     }
@@ -233,6 +240,46 @@ public class Globals {
             throw new JocConfigurationException(String.format("hibernate configuration (%1$s) is set but file not found.", confFile));
         }
         return p;
+    }
+    
+    public static SuffixPrefix readCopySuffixPrefix() {
+        copySuffixPrefix = readSuffixPrefix("copy_paste", JocInventory.DEFAULT_COPY_SUFFIX);
+        return copySuffixPrefix;
+    }
+    
+    public static SuffixPrefix readRestoreSuffixPrefix() {
+        restoreSuffixPrefix = readSuffixPrefix("restore", JocInventory.DEFAULT_RESTORE_SUFFIX);
+        return restoreSuffixPrefix;
+    }
+    
+    private static SuffixPrefix readSuffixPrefix(String key, String defaultValue) {
+        SuffixPrefix sp = new SuffixPrefix();
+        sp.setSuffix("");
+        sp.setPrefix("");
+        if (sosCockpitProperties != null) {
+            sp.setSuffix(sosCockpitProperties.getProperty(key + "_suffix", defaultValue).trim().replaceFirst("^-+", ""));
+            if (defaultValue.equals(sp.getSuffix())) {
+                sp.setSuffix("");
+            }
+            sp.setPrefix(sosCockpitProperties.getProperty(key + "_prefix", "").trim().replaceFirst("-+$", ""));
+        }
+        if (!sp.getPrefix().isEmpty()) {
+            try {
+                CheckJavaVariableName.test(key + "_prefix in joc.properties", sp.getPrefix());
+            } catch (IllegalArgumentException e) {
+                sp.setPrefix("");
+                LOGGER.warn(e.toString());
+            }
+        }
+        if (!sp.getSuffix().isEmpty()) {
+            try {
+                CheckJavaVariableName.test(key + "_suffix in joc.properties", sp.getSuffix());
+            } catch (IllegalArgumentException e) {
+                sp.setSuffix("");
+                LOGGER.warn(e.toString());
+            }
+        }
+        return sp;
     }
 
     private static void readJocCockpitVersion() {

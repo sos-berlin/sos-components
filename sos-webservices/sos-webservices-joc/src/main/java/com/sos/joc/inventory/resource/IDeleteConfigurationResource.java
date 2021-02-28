@@ -14,19 +14,19 @@ public interface IDeleteConfigurationResource {
 
     public static final String PATH_DELETE = "remove";
     public static final String IMPL_PATH_DELETE = JocInventory.getResourceImplPath(PATH_DELETE);
-    public static final String PATH_UNDELETE = "trash/recover";
-    public static final String IMPL_PATH_UNDELETE = JocInventory.getResourceImplPath(PATH_UNDELETE);
+    public static final String PATH_TRASH_DELETE = "trash/delete";
+    public static final String IMPL_PATH_TRASH_DELETE = JocInventory.getResourceImplPath(PATH_TRASH_DELETE);
 
     @POST
     @Path(PATH_DELETE)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse delete(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse remove(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
     
     @POST
-    @Path(PATH_UNDELETE)
+    @Path(PATH_TRASH_DELETE)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse undelete(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    public JOCDefaultResponse delete(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
 
 }

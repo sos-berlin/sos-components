@@ -47,6 +47,7 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.inventory.InventoryEvent;
+import com.sos.joc.event.bean.inventory.InventoryTrashEvent;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -62,7 +63,8 @@ public class JocInventory {
     private static final Logger LOGGER = LoggerFactory.getLogger(JocInventory.class);
     public static final String APPLICATION_PATH = "inventory";
     public static final String ROOT_FOLDER = "/";
-    public static final String DEFAULT_COPY_SUFFIX = "-copy";
+    public static final String DEFAULT_COPY_SUFFIX = "copy";
+    public static final String DEFAULT_RESTORE_SUFFIX = "restored";
 
     public static final Map<ConfigurationType, String> SCHEMA_LOCATION = Collections.unmodifiableMap(new HashMap<ConfigurationType, String>() {
 
@@ -125,33 +127,6 @@ public class JocInventory {
 
     public static String getResourceImplPath(final String path) {
         return String.format("./%s/%s", APPLICATION_PATH, path);
-    }
-
-    public static void deleteConfigurations(Set<Long> ids) {
-        if (ids != null && ids.size() > 0) {
-            SOSHibernateSession session = null;
-            try {
-                session = Globals.createSosHibernateStatelessConnection(getResourceImplPath("deleteConfigurations"));
-                session.setAutoCommit(false);
-                InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-
-                session.beginTransaction();
-                // List<Object[]> items = dbLayer.getConfigurationProperties(ids, "id,type");
-                // for (Object[] item : items) {
-                // Long id = (Long) item[0];
-                // Integer type = (Integer) item[1];
-                // TODO handle types
-                // dbLayer.deleteConfiguration(id);
-                // }
-                dbLayer.deleteConfigurations(ids);
-                session.commit();
-            } catch (Throwable e) {
-                LOGGER.error(e.toString(), e);
-                Globals.rollback(session);
-            } finally {
-                Globals.disconnect(session);
-            }
-        }
     }
 
     public static ConfigurationType getType(Integer type) {
@@ -364,6 +339,10 @@ public class JocInventory {
 
     public static void postEvent(String folder) {
         EventBus.getInstance().post(new InventoryEvent(folder));
+    }
+    
+    public static void postTrashEvent(String folder) {
+        EventBus.getInstance().post(new InventoryTrashEvent(folder));
     }
 
     public static class InventoryPath {
@@ -693,35 +672,37 @@ public class JocInventory {
     }
 
     public static void deleteInventoryConfigurationAndPutToTrash(DBItemInventoryConfiguration item, InventoryDBLayer dbLayer) {
-        try {
-            DBItemInventoryConfigurationTrash trashItem = dbLayer.getTrashConfiguration(item.getPath(), item.getType());
-            deleteConfiguration(dbLayer, item);
-            Date now = Date.from(Instant.now());
-            if (trashItem == null) {
-                trashItem = new DBItemInventoryConfigurationTrash();
-                trashItem.setId(null);
-                trashItem.setPath(item.getPath());
-                trashItem.setName(item.getName());
-                trashItem.setFolder(item.getFolder());
-                trashItem.setCreated(now);
-                trashItem.setType(item.getType());
+        if (item != null) {
+            try {
+                DBItemInventoryConfigurationTrash trashItem = dbLayer.getTrashConfiguration(item.getPath(), item.getType());
+                deleteConfiguration(dbLayer, item);
+                Date now = Date.from(Instant.now());
+                if (trashItem == null) {
+                    trashItem = new DBItemInventoryConfigurationTrash();
+                    trashItem.setId(null);
+                    trashItem.setPath(item.getPath());
+                    trashItem.setName(item.getName());
+                    trashItem.setFolder(item.getFolder());
+                    trashItem.setCreated(now);
+                    trashItem.setType(item.getType());
+                }
+                trashItem.setAuditLogId(item.getAuditLogId());
+                trashItem.setContent(item.getContent());
+                trashItem.setDocumentationId(item.getDocumentationId());
+                trashItem.setTitle(item.getTitle());
+                trashItem.setValid(item.getValid());
+                trashItem.setModified(now);
+                if (trashItem.getId() == null) {
+                    dbLayer.getSession().save(trashItem);
+                    makeParentDirsForTrash(dbLayer, Paths.get(trashItem.getFolder()), trashItem.getAuditLogId());
+                } else {
+                    dbLayer.getSession().update(trashItem);
+                }
+            } catch (SOSHibernateInvalidSessionException ex) {
+                throw new DBConnectionRefusedException(ex);
+            } catch (Exception ex) {
+                throw new DBInvalidDataException(ex);
             }
-            trashItem.setAuditLogId(item.getAuditLogId());
-            trashItem.setContent(item.getContent());
-            trashItem.setDocumentationId(item.getDocumentationId());
-            trashItem.setTitle(item.getTitle());
-            trashItem.setValid(item.getValid());
-            trashItem.setModified(now);
-            if (trashItem.getId() == null) {
-                dbLayer.getSession().save(trashItem); 
-                makeParentDirsForTrash(dbLayer, Paths.get(trashItem.getFolder()), trashItem.getAuditLogId());
-            } else {
-                dbLayer.getSession().update(trashItem);
-            }
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
         }
     }
     

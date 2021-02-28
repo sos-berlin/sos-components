@@ -34,10 +34,31 @@ import com.sos.schema.JsonValidator;
 public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements IDeleteConfigurationResource {
 
     @Override
-    public JOCDefaultResponse delete(final String accessToken, final byte[] inBytes) {
+    public JOCDefaultResponse remove(final String accessToken, final byte[] inBytes) {
         try {
             // don't use JsonValidator.validateFailFast because of anyOf-Requirements
             initLogging(IMPL_PATH_DELETE, inBytes, accessToken);
+            JsonValidator.validate(inBytes, RequestFilter.class);
+            RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
+
+            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
+            if (response == null) {
+                response = remove(accessToken, in);
+            }
+            return response;
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
+
+    @Override
+    public JOCDefaultResponse delete(final String accessToken, final byte[] inBytes) {
+        try {
+            // don't use JsonValidator.validateFailFast because of anyOf-Requirements
+            initLogging(IMPL_PATH_TRASH_DELETE, inBytes, accessToken);
             JsonValidator.validate(inBytes, RequestFilter.class);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 
@@ -54,28 +75,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         }
     }
 
-    @Override
-    public JOCDefaultResponse undelete(final String accessToken, final byte[] inBytes) {
-        try {
-            // don't use JsonValidator.validateFailFast because of anyOf-Requirements
-            initLogging(IMPL_PATH_UNDELETE, inBytes, accessToken);
-            JsonValidator.validate(inBytes, RequestFilter.class);
-            RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
-
-            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
-            if (response == null) {
-                response = undelete(accessToken, in);
-            }
-            return response;
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-        }
-    }
-
-    private JOCDefaultResponse delete(String accessToken, RequestFilter in) throws Exception {
+    private JOCDefaultResponse remove(String accessToken, RequestFilter in) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_DELETE);
@@ -129,7 +129,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
         }
     }
     
-    private JOCDefaultResponse undelete(String accessToken, RequestFilter in) throws Exception {
+    private JOCDefaultResponse delete(String accessToken, RequestFilter in) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_DELETE);
@@ -142,12 +142,11 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             DBItemInventoryConfigurationTrash config = JocInventory.getTrashConfiguration(dbLayer, in, folderPermissions);
             final ConfigurationType type = config.getTypeAsEnum();
             if (ConfigurationType.FOLDER.equals(type)) {
-                // TODO
+                dbLayer.deleteTrashFolder(config.getPath());
             } else {
-                JocInventory.restoreInventoryConfigurationFromTrash(config, dbLayer);
-                // TODO call validate
-                JocInventory.postEvent(config.getFolder());
+                session.delete(config);
             }
+            JocInventory.postTrashEvent(config.getFolder());
             
             Globals.commit(session);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

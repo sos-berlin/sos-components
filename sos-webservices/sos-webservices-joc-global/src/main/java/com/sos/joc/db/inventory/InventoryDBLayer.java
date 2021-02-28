@@ -514,19 +514,47 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public Integer getCopySuffixNumber() throws SOSHibernateException {
+    public Integer getSuffixNumber(String suffix) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select name from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where lower(name) like :likename and type != :type");
         Query<String> query = getSession().createQuery(hql.toString());
-        query.setParameter("likename", "%" + JocInventory.DEFAULT_COPY_SUFFIX + "%");
+        query.setParameter("likename", "%-" + suffix + "%");
         query.setParameter("type", ConfigurationType.FOLDER.intValue());
 
         List<String> result = getSession().getResultList(query);
         if (result == null || result.isEmpty()) {
             return 0;
         }
-        Predicate<String> predicate = Pattern.compile(JocInventory.DEFAULT_COPY_SUFFIX + "[0-9]*$").asPredicate();
-        Function<String, Integer> mapper = n -> Integer.parseInt(n.replaceFirst(".*" + JocInventory.DEFAULT_COPY_SUFFIX + "([0-9]*)$", "0$1"));
+        Predicate<String> predicate = Pattern.compile(".+-" + suffix + "[0-9]*$").asPredicate();
+        Function<String, Integer> mapper = n -> Integer.parseInt(n.replaceFirst(".+-" + suffix + "([0-9]*)$", "0$1"));
+        SortedSet<Integer> numbers = result.stream().map(String::toLowerCase).distinct().filter(predicate).map(mapper).sorted().collect(Collectors
+                .toCollection(TreeSet::new));
+        if (numbers.isEmpty()) {
+            return 0;
+        }
+        Integer num = 0;
+        for (Integer number : numbers) {
+            if (num < number) {
+                break;
+            }
+            num = number + 1;
+        }
+        return num;
+    }
+    
+    public Integer getPrefixNumber(String prefix) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select name from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where lower(name) like :likename and type != :type");
+        Query<String> query = getSession().createQuery(hql.toString());
+        query.setParameter("likename", prefix + "%");
+        query.setParameter("type", ConfigurationType.FOLDER.intValue());
+
+        List<String> result = getSession().getResultList(query);
+        if (result == null || result.isEmpty()) {
+            return 0;
+        }
+        Predicate<String> predicate = Pattern.compile("^" + prefix + "[0-9]*-.+").asPredicate();
+        Function<String, Integer> mapper = n -> Integer.parseInt(n.replaceFirst("^" + prefix + "([0-9]*)-.+", "0$1"));
         SortedSet<Integer> numbers = result.stream().map(String::toLowerCase).distinct().filter(predicate).map(mapper).sorted().collect(Collectors
                 .toCollection(TreeSet::new));
         if (numbers.isEmpty()) {
@@ -823,12 +851,12 @@ public class InventoryDBLayer extends DBLayer {
         return 0;
     }
 
-    // TODO check usage - used by DeployImpl
-    public int deleteConfigurations(Set<Long> ids) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-        hql.append(" where id in (:ids)");
+    public int deleteTrashFolder(String folder) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_CONFIGURATION_TRASH);
+        hql.append(" where path =: folder or path like :likeFolder");
         Query<?> query = getSession().createQuery(hql.toString());
-        query.setParameterList("ids", ids);
+        query.setParameter("folder", folder);
+        query.setParameter("likeFolder", folder + "/%");
         return getSession().executeUpdate(query);
     }
 
