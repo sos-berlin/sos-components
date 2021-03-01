@@ -79,11 +79,16 @@ public class OrderInitiatorService extends AJocClusterService {
 
     @Override
     public JocServiceAnswer getInfo() {
-        if (orderInitiatorRunner != null){
-            this.lastActivityStart = Instant.ofEpochMilli(orderInitiatorRunner.getLastActivityStart().get()); 
-            this.lastActivityEnd = Instant.ofEpochMilli(orderInitiatorRunner.getLastActivityEnd().get()); 
-        };
-        
+        if (orderInitiatorRunner != null) {
+            Instant rla = Instant.ofEpochMilli(orderInitiatorRunner.getLastActivityStart().get());
+            if (rla.isAfter(this.lastActivityStart)) {
+                this.lastActivityStart = rla;
+            }
+            rla = Instant.ofEpochMilli(orderInitiatorRunner.getLastActivityEnd().get());
+            if (rla.isAfter(this.lastActivityEnd)) {
+                this.lastActivityEnd = rla;
+            }
+        }
         return new JocServiceAnswer(lastActivityStart, lastActivityEnd);
     }
 
