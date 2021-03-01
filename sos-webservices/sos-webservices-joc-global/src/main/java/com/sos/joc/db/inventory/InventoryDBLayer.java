@@ -420,10 +420,6 @@ public class InventoryDBLayer extends DBLayer {
     public DBItemInventoryConfigurationTrash getTrashConfiguration(Long id) throws SOSHibernateException {
         return getSession().get(DBItemInventoryConfigurationTrash.class, id);
     }
-    
-    public DBItemInventoryConfigurationTrash getConfiguration1(Long id) throws SOSHibernateException {
-        return getSession().get(DBItemInventoryConfigurationTrash.class, id);
-    }
 
     public <T> T getConfigurationProperty(Long id, String propertyName) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select ").append(propertyName).append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
@@ -679,13 +675,22 @@ public class InventoryDBLayer extends DBLayer {
         }
         return getSession().getResultList(query);
     }
-
+    
     public List<DBItemInventoryConfiguration> getFolderContent(String folder, boolean recursive, Collection<Integer> types)
             throws SOSHibernateException {
+        return getFolderContent(folder, recursive, types, DBLayer.DBITEM_INV_CONFIGURATIONS);
+    }
+    
+    public List<DBItemInventoryConfigurationTrash> getTrashFolderContent(String folder, boolean recursive, Collection<Integer> types)
+            throws SOSHibernateException {
+        return getFolderContent(folder, recursive, types, DBLayer.DBITEM_INV_CONFIGURATION_TRASH);
+    }
+    
+    public <T> List<T> getFolderContent(String folder, boolean recursive, Collection<Integer> types, String tableName) throws SOSHibernateException {
         if (folder == null) {
             folder = "/";
         }
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        StringBuilder hql = new StringBuilder("from ").append(tableName);
         if (recursive) {
             if (!"/".equals(folder)) {
                 hql.append(" where (folder=:folder or folder like :likeFolder)");
@@ -698,7 +703,7 @@ public class InventoryDBLayer extends DBLayer {
         if (types != null && !types.isEmpty()) {
             hql.append(" and type in (:types)");
         }
-        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        Query<T> query = getSession().createQuery(hql.toString());
         if (recursive) {
             if (!"/".equals(folder)) {
                 query.setParameter("folder", folder);
@@ -710,7 +715,11 @@ public class InventoryDBLayer extends DBLayer {
         if (types != null && !types.isEmpty()) {
             query.setParameterList("types", types);
         }
-        return getSession().getResultList(query);
+        List<T> result = getSession().getResultList(query);
+        if (result == null) {
+            return Collections.emptyList();
+        }
+        return result;
     }
 
     public List<DBItemJocLock> getJocLocks() throws DBConnectionRefusedException, DBInvalidDataException {
