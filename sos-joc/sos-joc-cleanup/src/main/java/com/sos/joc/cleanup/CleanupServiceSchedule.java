@@ -201,24 +201,6 @@ public class CleanupServiceSchedule {
                                 storedNextEnd = null;
                             }
                         }
-
-                        if (storedNextBegin != null) {
-                            if (storedNextBegin.getDayOfMonth() == now.getDayOfMonth()) {
-
-                            }
-                        }
-                    }
-
-                    if (storedNextBegin != null && !storedPeriod.getBegin().getConfigured().equals(period.getBegin().getConfigured())) {
-                        // if (storedNextBegin.getDayOfMonth() == now.getDayOfMonth() && storedState.equals(JocClusterAnswerState.COMPLETED)) {
-
-                        // } else {
-                        // LOGGER.info(String.format("[computeNextDelay][stored][skip]period was changed (old=%s, new=%s)", storedPeriod
-                        // .getConfigured(), period.getConfigured()));
-                        // storedFirstStart = null;
-                        // storedNextBegin = null;
-                        // storedNextEnd = null;
-                        // }
                     }
                 } else {
                     LOGGER.info(String.format("[computeNextDelay][stored]%s", item.getTextValue()));
@@ -255,7 +237,16 @@ public class CleanupServiceSchedule {
                 nextEnd = ZonedDateTime.of(now.getYear(), now.getMonthValue(), now.getDayOfMonth() + newPeriodDaysDiff, period.getEnd().getHours(),
                         period.getEnd().getMinutes(), period.getEnd().getSeconds(), 0, service.getConfig().getZoneId());
 
-                LOGGER.info(String.format("[weekdays]set new nextBegin=%s, nextEnd=%s", nextBegin, nextEnd));
+                if (now.isAfter(nextBegin)) {
+                    nwd = now.getDayOfWeek().getValue();
+                    for (Integer wd : weekDays) {
+                        if (wd > nwd) {
+                            newPeriodDaysDiff = wd - nwd;
+                            break;
+                        }
+                    }
+                }
+                LOGGER.info(String.format("[weekdays][newPeriodDaysDiff=%s][nextBegin=%s][nextEnd=%s]", newPeriodDaysDiff, nextBegin, nextEnd));
             } else {
                 if (computeNewPeriod) {
                     int nwd = now.getDayOfWeek().getValue();
@@ -284,7 +275,7 @@ public class CleanupServiceSchedule {
                             nextBegin = null;
                         }
                     } else {
-                        LOGGER.debug(String.format("[computeNextDelay]nextBegin=%s, nextEnd=%s", nextBegin, nextEnd));
+                        LOGGER.debug(String.format("[computeNextDelay][nextBegin=%s][nextEnd=%s]", nextBegin, nextEnd));
                     }
                 }
 
