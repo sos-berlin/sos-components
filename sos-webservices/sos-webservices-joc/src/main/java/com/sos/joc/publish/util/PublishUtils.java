@@ -1660,45 +1660,37 @@ public abstract class PublishUtils {
         return deployedObjects;
     }
 
-    public static Set<DBItemDeploymentHistory> updateDeletedDepHistoryAndPutToTrash(List<DBItemDeploymentHistory> toDelete, DBLayerDeploy dbLayer, String commitId) {
+    public static Set<DBItemDeploymentHistory> updateDeletedDepHistory(List<DBItemDeploymentHistory> toDelete, DBLayerDeploy dbLayer, String commitId, boolean withTrash) {
         Set<DBItemDeploymentHistory> deletedObjects = new HashSet<DBItemDeploymentHistory>();
-//        InventoryDBLayer invDBLayer = new InventoryDBLayer(dbLayer.getSession());
+        InventoryDBLayer invDBLayer = new InventoryDBLayer(dbLayer.getSession());
         try {
             if (toDelete != null) {
-            for (DBItemDeploymentHistory delete : toDelete) {
-                delete.setId(null);
-                delete.setCommitId(commitId);
-                delete.setOperation(OperationType.DELETE.value());
-                delete.setState(DeploymentState.DEPLOYED.value());
-                delete.setDeleteDate(Date.from(Instant.now()));
-                delete.setDeploymentDate(Date.from(Instant.now()));
-                dbLayer.getSession().save(delete);
-                deletedObjects.add(delete);
-//                DBItemInventoryConfiguration orig = dbLayer.getInventoryConfigurationByNameAndType(delete.getName(), delete.getType());
-////                DBItemInventoryConfigurationTrash toTrash = new DBItemInventoryConfigurationTrash();
-//                if (orig != null) {
-//                    JocInventory.deleteInventoryConfigurationAndPutToTrash(orig, invDBLayer);
-////                    toTrash.setAuditLogId(orig.getAuditLogId());
-////                    toTrash.setDocumentationId(orig.getDocumentationId());
-////                    toTrash.setTitle(orig.getTitle());
-////                    toTrash.setCreated(orig.getCreated());
-////                    toTrash.setModified(orig.getModified());
-////                    toTrash.setValid(orig.getValid());
-////                    toTrash.setContent(orig.getContent());
-////                    toTrash.setFolder(orig.getFolder());
-////                    toTrash.setName(orig.getName());
-////                    toTrash.setPath(orig.getPath());
-////                    toTrash.setType(orig.getType());
-////                    dbLayer.getSession().save(toTrash);
-//                    JocInventory.makeParentDirsForTrash(invDBLayer, Paths.get(orig.getFolder()));
-//                }
-            }
+                for (DBItemDeploymentHistory delete : toDelete) {
+                    delete.setId(null);
+                    delete.setCommitId(commitId);
+                    delete.setOperation(OperationType.DELETE.value());
+                    delete.setState(DeploymentState.DEPLOYED.value());
+                    delete.setDeleteDate(Date.from(Instant.now()));
+                    delete.setDeploymentDate(Date.from(Instant.now()));
+                    dbLayer.getSession().save(delete);
+                    deletedObjects.add(delete);
+                    if (withTrash) {
+                        DBItemInventoryConfiguration orig = dbLayer.getInventoryConfigurationByNameAndType(delete.getName(), delete.getType());
+                        if (orig != null) {
+                            JocInventory.deleteInventoryConfigurationAndPutToTrash(orig, invDBLayer);
+                        }
+                    }
+                }
             }
             
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }
         return deletedObjects;
+    }
+
+    public static Set<DBItemDeploymentHistory> updateDeletedDepHistoryAndPutToTrash(List<DBItemDeploymentHistory> toDelete, DBLayerDeploy dbLayer, String commitId) {
+        return updateDeletedDepHistory(toDelete, dbLayer, commitId, true);
     }
 
     public static void prepareNextInvConfigGeneration(Set<DBItemInventoryConfiguration> drafts, Set<DbItemConfWithOriginalContent> withOrigContent, 
