@@ -79,6 +79,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
             SuffixPrefix fix = Globals.copySuffixPrefix;
             String prefix = in.getPrefix() == null ? "" : in.getPrefix().trim().replaceFirst("-+$", "");
             String suffix = in.getSuffix() == null ? "" : in.getSuffix().trim().replaceFirst("^-+", "");
+            String name = JocInventory.isFolder(type) ? null : pWithoutFix.getFileName().toString();
             
             if (fixMustUsed) {
                 if (!suffix.isEmpty()) { // suffix beats prefix
@@ -101,14 +102,14 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
             if (!suffix.isEmpty()) {
                 CheckJavaVariableName.test("suffix", suffix);
                 // determine number of suffix "-suffix<number>"
-                Integer num = dbLayer.getSuffixNumber(suffix);
+                Integer num = dbLayer.getSuffixNumber(suffix, name, config.getType());
                 if (num > 0) {
                     suffix += num;
                 }
             } else if (!prefix.isEmpty()) {
                 CheckJavaVariableName.test("prefix", prefix);
                 // determine number of prefix "prefix<number>-"
-                Integer num = dbLayer.getPrefixNumber(prefix);
+                Integer num = dbLayer.getPrefixNumber(prefix, name, config.getType());
                 if (num > 0) {
                     prefix += num;
                 }

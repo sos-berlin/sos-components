@@ -510,13 +510,24 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public Integer getSuffixNumber(String suffix) throws SOSHibernateException {
+    public Integer getSuffixNumber(String suffix, String name, Integer type) throws SOSHibernateException {
+        if (name == null || name.isEmpty() || type == ConfigurationType.FOLDER.intValue()) {
+            name = "%";
+        }
         StringBuilder hql = new StringBuilder("select name from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-        hql.append(" where lower(name) like :likename and type != :type");
+        hql.append(" where lower(name) like :likename");
+        if (type == null || type == ConfigurationType.FOLDER.intValue()) {
+            hql.append(" and type != :type"); 
+        } else {
+            hql.append(" and type = :type"); 
+        }
         Query<String> query = getSession().createQuery(hql.toString());
-        query.setParameter("likename", "%-" + suffix + "%");
-        query.setParameter("type", ConfigurationType.FOLDER.intValue());
-
+        query.setParameter("likename", name + "-" + suffix + "%");
+        if (type == null || type == ConfigurationType.FOLDER.intValue()) {
+            query.setParameter("type", ConfigurationType.FOLDER.intValue());
+        } else {
+            query.setParameter("type", type);
+        }
         List<String> result = getSession().getResultList(query);
         if (result == null || result.isEmpty()) {
             return 0;
@@ -538,13 +549,25 @@ public class InventoryDBLayer extends DBLayer {
         return num;
     }
     
-    public Integer getPrefixNumber(String prefix) throws SOSHibernateException {
+    public Integer getPrefixNumber(String prefix, String name, Integer type) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select name from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-        hql.append(" where lower(name) like :likename and type != :type");
+        hql.append(" where lower(name) like :likename");
+        if (type == null || type == ConfigurationType.FOLDER.intValue()) {
+            hql.append(" and type != :type"); 
+        } else {
+            hql.append(" and type = :type"); 
+        }
         Query<String> query = getSession().createQuery(hql.toString());
-        query.setParameter("likename", prefix + "%");
-        query.setParameter("type", ConfigurationType.FOLDER.intValue());
-
+        if (name == null || name.isEmpty() || type == ConfigurationType.FOLDER.intValue()) {
+            query.setParameter("likename", prefix + "%");
+        } else {
+            query.setParameter("likename", prefix + "%-" + name);
+        }
+        if (type == null || type == ConfigurationType.FOLDER.intValue()) {
+            query.setParameter("type", ConfigurationType.FOLDER.intValue());
+        } else {
+            query.setParameter("type", type);
+        }
         List<String> result = getSession().getResultList(query);
         if (result == null || result.isEmpty()) {
             return 0;

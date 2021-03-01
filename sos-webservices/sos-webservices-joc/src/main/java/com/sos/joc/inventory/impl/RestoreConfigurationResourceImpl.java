@@ -74,6 +74,7 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
             SuffixPrefix fix = Globals.restoreSuffixPrefix;
             String prefix = in.getPrefix() == null ? "" : in.getPrefix().trim().replaceFirst("-+$", "");
             String suffix = in.getSuffix() == null ? "" : in.getSuffix().trim().replaceFirst("^-+", "");
+            String name = JocInventory.isFolder(type) ? null : config.getName();
             
             if (!suffix.isEmpty()) { // suffix beats prefix
                 prefix = "";
@@ -90,14 +91,14 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
             if (!suffix.isEmpty()) {
                 CheckJavaVariableName.test("suffix", suffix);
                 // determine number of suffix "-suffix<number>"
-                Integer num = dbLayer.getSuffixNumber(suffix);
+                Integer num = dbLayer.getSuffixNumber(suffix, name, config.getType());
                 if (num > 0) {
                     suffix += num;
                 }
             } else if (!prefix.isEmpty()) {
                 CheckJavaVariableName.test("prefix", prefix);
                 // determine number of prefix "prefix<number>-"
-                Integer num = dbLayer.getPrefixNumber(prefix);
+                Integer num = dbLayer.getPrefixNumber(prefix, name, config.getType());
                 if (num > 0) {
                     prefix += num;
                 }
@@ -137,14 +138,12 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
                 
                 DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(config.getPath(), ConfigurationType.FOLDER.intValue());
                 
-                Long auditLogId = 0L;
+                Long auditLogId = createAuditLog(config);
                 if (newItem == null) {
                     DBItemInventoryConfiguration newDbItem = createItem(config, pWithoutFix);
-                    auditLogId = createAuditLog(newDbItem);
+                    newDbItem.setAuditLogId(auditLogId);
                     JocInventory.insertConfiguration(dbLayer, newDbItem);
                     JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), newDbItem.getAuditLogId());
-                } else {
-                    auditLogId = createAuditLog(config);
                 }
                 for (DBItemInventoryConfiguration item : newDBFolderContent) {
                     item.setAuditLogId(auditLogId);
@@ -176,8 +175,9 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
                     }
                 }
                 
+                Long auditLogId = createAuditLog(config);
                 DBItemInventoryConfiguration newDbItem = createItem(config, p);
-                createAuditLog(newDbItem);
+                newDbItem.setAuditLogId(auditLogId);
                 JocInventory.insertConfiguration(dbLayer, newDbItem);
                 JocInventory.makeParentDirs(dbLayer, p.getParent(), newDbItem.getAuditLogId());
                 session.delete(config);
@@ -197,17 +197,6 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
         } finally {
             Globals.disconnect(session);
         }
-    }
-    
-    private Long createAuditLog(DBItemInventoryConfiguration config) throws Exception {
-        InventoryAudit audit = new InventoryAudit(config.getTypeAsEnum(), config.getPath(), config.getFolder());
-        logAuditMessage(audit);
-        DBItemJocAuditLog auditItem = storeAuditLogEntry(audit);
-        if (auditItem != null) {
-            config.setAuditLogId(auditItem.getId());
-            return auditItem.getId();
-        }
-        return 0L;
     }
     
     private Long createAuditLog(DBItemInventoryConfigurationTrash config) throws Exception {
