@@ -92,13 +92,10 @@ public class DeleteDeployments {
                             getInvConfigurationsForTrash(dbLayer, 
                                     storeNewDepHistoryEntries(dbLayer, Collections.singletonList(conf), itemsToDelete, commitIdForDeleteFromFolder)));
                 }
-                deleteConfigurations(dbLayer, Collections.singletonList(conf), invConfigurationsToDelete, commitIdForDeleteFromFolder, accessToken, jocError, 
-                        withoutFolderDeletion);
-                
-            } else {
-                deleteConfigurationsFromFolder(dbLayer, conf, withoutFolderDeletion); 
             }
         }
+        deleteConfigurations(dbLayer, Collections.singletonList(conf), invConfigurationsToDelete, commitIdForDeleteFromFolder, accessToken, jocError, 
+                withoutFolderDeletion);
         return true;
     }
     
@@ -160,10 +157,10 @@ public class DeleteDeployments {
                             getInvConfigurationsForTrash(dbLayer, 
                                     storeNewDepHistoryEntries(dbLayer, folders, itemsToDelete, commitIdForDeleteFromFolder)));
                 }
-                deleteConfigurations(dbLayer, folders, invConfigurationsToDelete, commitIdForDeleteFromFolder, accessToken, jocError, 
-                        withoutFolderDeletion);
             }
         }
+        deleteConfigurations(dbLayer, foldersToDelete, invConfigurationsToDelete, commitIdForDeleteFromFolder, accessToken, jocError, 
+                withoutFolderDeletion);
         return true;
     }
 
