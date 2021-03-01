@@ -26,9 +26,14 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -51,7 +56,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
+import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.sign.keys.sign.SignObject;
 import com.sos.commons.sign.keys.verify.VerifySignature;
@@ -478,6 +486,45 @@ public class DeploymentTest {
         LOGGER.info("");
     }
 
+    @Test
+    @Ignore
+    /* This is NO Unit test!
+     * This is an integration Test with hibernate and a DB!
+     * to run this test, adjust path to your hibernate configuration file
+     * uncomment the Ignore annotation
+     **/
+    public void test13DetermineItemsForCleanup() throws SOSHibernateException {
+        LOGGER.info("******************************  Determine Items For Cleanup Test  *******************");
+        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/sp_hibernate.cfg.xml"));
+        factory.setAutoCommit(true);
+        factory.addClassMapping(DBLayer.getJocClassMapping());
+        factory.addClassMapping(DBLayer.getHistoryClassMapping());
+        factory.build();
+        SOSHibernateSession session = factory.openStatelessSession();
+        DBLayerDeploy dbLayer = new DBLayerDeploy(session);
+        // First: get all deployments from history
+        List<DBItemDeploymentHistory> items = dbLayer.getAllDeployedConfigurations();
+        // Second: map per item name
+        Map<String, Set<DBItemDeploymentHistory>> mapPerItemName = 
+                items.stream().collect(Collectors.groupingBy(DBItemDeploymentHistory::getName, Collectors.toSet()));
+        for (Map.Entry<String, Set<DBItemDeploymentHistory>> entry : mapPerItemName.entrySet()) {
+            LOGGER.info("Object withName: " + entry.getKey());
+            LOGGER.info("has deployment count of: " + entry.getValue().size());
+            if(entry.getValue().size() <= 5) {
+                continue;
+            } else {
+                // Third: map by deployment date 
+                Map<Date, List<DBItemDeploymentHistory>> mapPerDate = 
+                        entry.getValue().stream().collect(Collectors.groupingBy(DBItemDeploymentHistory::getDeploymentDate));
+                
+                Set<Date> sortedDates = mapPerDate.keySet().stream().sorted(Comparator.comparing(Date::getTime)).collect(Collectors.toSet());
+                sortedDates.stream().sorted(Comparator.naturalOrder()).forEach(item -> LOGGER.info("Nat. Order" + item.toLocaleString()));
+                sortedDates.stream().sorted(Comparator.reverseOrder()).forEach(item -> LOGGER.info("Rev. Order" + item.toLocaleString()));
+            }
+        }
+        LOGGER.info("**************************** Determine Items For Cleanup Test finished **************");
+    }
+    
     private void exportWorkflows(Set<ControllerObject> jsObjectsToExport) throws IOException {
         exportWorkflows(jsObjectsToExport, TARGET_FILENAME, ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value());
     }
