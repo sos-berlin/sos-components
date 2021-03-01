@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.cluster.JocClusterService;
-import com.sos.joc.cleanup.model.CleanupTaskDailyplan;
+import com.sos.joc.cleanup.model.CleanupTaskDailyPlan;
 import com.sos.joc.cleanup.model.CleanupTaskDeployment;
 import com.sos.joc.cleanup.model.CleanupTaskHistory;
 import com.sos.joc.cleanup.model.ICleanupTask;
@@ -34,6 +34,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupServiceTask.class);
 
+    private final String MANUAL_TASK_IDENTIFIER_DEPLOYMENT = "deployment";
     private final CleanupServiceSchedule schedule;
     private final String identifier;
     private final String logIdentifier;
@@ -58,10 +59,6 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
             LOGGER.info(String.format("[%s][run]found %s running services", logIdentifier, services.size()));
 
             int batchSize = cleanupSchedule.getService().getConfig().getBatchSize();
-            ZonedDateTime date = CleanupService.getZonedDateTimeUTCMinusMinutes(cleanupSchedule.getFirstStart(), cleanupSchedule.getService()
-                    .getConfig().getAge().getMinutes());
-            String dateInfo = cleanupSchedule.getService().getConfig().getAge().getConfigured() + "=" + date;
-
             List<Supplier<JocClusterAnswer>> tasks = new ArrayList<Supplier<JocClusterAnswer>>();
             // 1) service tasks
             for (IJocClusterService service : services) {
@@ -77,10 +74,20 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                         AJocClusterService.setLogger(identifier);
 
                         ICleanupTask task = null;
+                        ZonedDateTime date = null;
+                        String dateInfo = null;
                         if (service.getIdentifier().equals(ClusterServices.history.name())) {
                             task = new CleanupTaskHistory(cleanupSchedule.getFactory(), service, batchSize);
+
+                            date = CleanupService.getZonedDateTimeUTCMinusMinutes(cleanupSchedule.getFirstStart(), cleanupSchedule.getService()
+                                    .getConfig().getOrderHistoryAge().getMinutes());
+                            dateInfo = cleanupSchedule.getService().getConfig().getOrderHistoryAge().getConfigured() + "=" + date;
                         } else if (service.getIdentifier().equals(ClusterServices.dailyplan.name())) {
-                            task = new CleanupTaskDailyplan(cleanupSchedule.getFactory(), service, batchSize);
+                            task = new CleanupTaskDailyPlan(cleanupSchedule.getFactory(), service, batchSize);
+
+                            date = CleanupService.getZonedDateTimeUTCMinusMinutes(cleanupSchedule.getFirstStart(), cleanupSchedule.getService()
+                                    .getConfig().getDailyPlanHistoryAge().getMinutes());
+                            dateInfo = cleanupSchedule.getService().getConfig().getDailyPlanHistoryAge().getConfigured() + "=" + date;
                         }
 
                         if (task == null) {
@@ -108,8 +115,12 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                     public JocClusterAnswer get() {
                         AJocClusterService.setLogger(identifier);
 
-                        executeTask(manualTask, date, dateInfo, cleanupSchedule.getUncompleted());
-
+                        if (manualTask.getIdentifier().equals(MANUAL_TASK_IDENTIFIER_DEPLOYMENT)) {
+                            executeTask(manualTask, cleanupSchedule.getService().getConfig().getDeploymentHistoryVersions(), cleanupSchedule
+                                    .getUncompleted());
+                        } else {
+                            LOGGER.info(String.format("  [%s][skip][%s]not implemented yet", manualTask.getTypeName(), manualTask.getIdentifier()));
+                        }
                         AJocClusterService.clearLogger();
                         return JocCluster.getOKAnswer(JocClusterAnswerState.COMPLETED);
                     }
@@ -138,7 +149,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
     private void executeTask(ICleanupTask task, ZonedDateTime date, String dateInfo, List<String> uncompleted) {
         boolean run = true;
         if (uncompleted != null) {
-            if (uncompleted.contains(task.getIdentifier())) {
+            if (!uncompleted.contains(task.getIdentifier())) {
                 run = false;
                 LOGGER.info(String.format("[%s][%s][%s][skip]is already completed", logIdentifier, task.getTypeName(), task.getIdentifier()));
             }
@@ -156,9 +167,30 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
         }
     }
 
+    private void executeTask(ICleanupTask task, int counter, List<String> uncompleted) {
+        boolean run = true;
+        if (uncompleted != null) {
+            if (!uncompleted.contains(task.getIdentifier())) {
+                run = false;
+                LOGGER.info(String.format("[%s][%s][%s][skip]is already completed", logIdentifier, task.getTypeName(), task.getIdentifier()));
+            }
+        }
+        if (run) {
+            LOGGER.info(String.format("[%s][%s][%s][%s]start...", logIdentifier, task.getTypeName(), task.getIdentifier(), counter));
+            cleanupTasks.add(task);
+            task.start(counter);
+            LOGGER.info(String.format("[%s][%s][%s][%s]%s", logIdentifier, task.getTypeName(), task.getIdentifier(), counter, SOSString.toString(task
+                    .getState())));
+            task.stop();
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[%s][%s][%s][%s]completed", logIdentifier, task.getTypeName(), task.getIdentifier(), counter));
+            }
+        }
+    }
+
     private List<ICleanupTask> getManualCleanupTasks(JocClusterHibernateFactory factory, int batchSize) {
         List<ICleanupTask> tasks = new ArrayList<ICleanupTask>();
-        tasks.add(new CleanupTaskDeployment(factory, batchSize, "deployment"));
+        tasks.add(new CleanupTaskDeployment(factory, batchSize, MANUAL_TASK_IDENTIFIER_DEPLOYMENT));
         return tasks;
     }
 

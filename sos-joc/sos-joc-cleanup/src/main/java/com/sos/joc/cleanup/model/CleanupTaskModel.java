@@ -37,7 +37,6 @@ public class CleanupTaskModel implements ICleanupTask {
 
     private JocServiceTaskAnswerState state = null;
     private AtomicBoolean stopped = new AtomicBoolean(false);
-    private Date date = null;
 
     protected CleanupTaskModel(JocClusterHibernateFactory factory, int batchSize, String identifier) {
         this(factory, null, batchSize, identifier);
@@ -63,6 +62,15 @@ public class CleanupTaskModel implements ICleanupTask {
 
     @Override
     public void start(Date date) {
+        start(date, -1);
+    }
+
+    @Override
+    public void start(int counter) {
+        start(null, counter);
+    }
+
+    private void start(Date date, int counter) {
         state = JocServiceTaskAnswerState.UNCOMPLETED;
         stopped.set(false);
 
@@ -73,7 +81,11 @@ public class CleanupTaskModel implements ICleanupTask {
                     return;
                 }
                 if (askService()) {
-                    setState(cleanup(date));
+                    if (date == null) {
+                        setState(cleanup(counter));
+                    } else {
+                        setState(cleanup(date));
+                    }
                     run = false;
                 } else {
                     waitFor(WAIT_INTERVAL_ON_BUSY);
@@ -119,6 +131,10 @@ public class CleanupTaskModel implements ICleanupTask {
         return state;
     }
 
+    public JocServiceTaskAnswerState cleanup(int counter) throws SOSHibernateException {
+        return state;
+    }
+
     public TaskType getType() {
         return type;
     }
@@ -141,10 +157,6 @@ public class CleanupTaskModel implements ICleanupTask {
 
     public IJocClusterService getService() {
         return service;
-    }
-
-    public Date getDate() {
-        return date;
     }
 
     protected boolean askService() {

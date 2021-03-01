@@ -13,11 +13,11 @@ import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
 import com.sos.joc.db.DBLayer;
 
-public class CleanupTaskDailyplan extends CleanupTaskModel {
+public class CleanupTaskDailyPlan extends CleanupTaskModel {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CleanupTaskDailyplan.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CleanupTaskDailyPlan.class);
 
-    public CleanupTaskDailyplan(JocClusterHibernateFactory factory, IJocClusterService service, int batchSize) {
+    public CleanupTaskDailyPlan(JocClusterHibernateFactory factory, IJocClusterService service, int batchSize) {
         super(factory, service, batchSize);
     }
 

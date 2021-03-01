@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
+import com.sos.joc.cleanup.exception.CleanupComputeException;
 import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterThreadFactory;
@@ -40,6 +41,7 @@ public class CleanupService extends AJocClusterService {
 
     public CleanupService(JocConfiguration jocConf, ThreadGroup clusterThreadGroup) {
         super(jocConf, clusterThreadGroup, IDENTIFIER);
+        AJocClusterService.setLogger(IDENTIFIER);
         setConfig();
     }
 
@@ -52,8 +54,9 @@ public class CleanupService extends AJocClusterService {
             LOGGER.info(String.format("[%s][%s]start...", getIdentifier(), mode));
             LOGGER.info(String.format("[%s][%s]%s", getIdentifier(), mode, config.toString()));
 
-            if (config.getPeriod() == null) {
-                LOGGER.error(String.format("[%s][%s][skip start]missing \"cleanup_period\" parameter", getIdentifier(), mode));
+            if (config.getPeriod() == null || config.getPeriod().getWeekDays().size() == 0) {
+                LOGGER.error(String.format("[%s][%s][stop]missing \"%s\" parameter", getIdentifier(), mode,
+                        CleanupServiceConfiguration.PROPERTY_NAME_PERIOD));
                 return JocCluster.getOKAnswer(JocClusterAnswerState.MISSING_CONFIGURATION);
             } else {
                 threadPool = Executors.newFixedThreadPool(1, new JocClusterThreadFactory(getThreadGroup(), IDENTIFIER + "-start"));
@@ -68,15 +71,22 @@ public class CleanupService extends AJocClusterService {
                             try {
                                 schedule.start(mode);
                                 waitFor(30);
+                            } catch (CleanupComputeException e) {
+                                closed.set(true);
+                                AJocClusterService.setLogger(IDENTIFIER);
+                                LOGGER.error(String.format("[%s][%s][start][stopped]%s", getIdentifier(), mode, e.toString()));
                             } catch (SOSHibernateException e) {
+                                AJocClusterService.setLogger(IDENTIFIER);
                                 LOGGER.error(e.toString(), e);
                                 waitFor(60);
                             } catch (Throwable e) {
+                                AJocClusterService.setLogger(IDENTIFIER);
                                 LOGGER.error(e.toString(), e);
                                 long current = errors.get();
                                 if (current > 100) {
                                     closed.set(true);
-                                    LOGGER.error("[stopped]max errors(" + current + ") reached");
+                                    AJocClusterService.setLogger(IDENTIFIER);
+                                    LOGGER.error(String.format("[%s][%s][start][stopped]max errors(%s) reached", getIdentifier(), mode, current));
                                 } else {
                                     errors.set(current + 1);
                                     waitFor(60);
