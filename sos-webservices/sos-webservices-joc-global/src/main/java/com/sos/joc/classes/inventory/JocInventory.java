@@ -393,12 +393,13 @@ public class JocInventory {
 
     public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, RequestFilter in,
             SOSShiroFolderPermissions folderPermissions) throws Exception {
-        return getConfiguration(dbLayer, in.getId(), in.getPath(), in.getName(), in.getObjectType(), folderPermissions);
+        return getConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), folderPermissions);
     }
 
-    public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, Long id, String path, String name, ConfigurationType type,
+    public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, Long id, String path, ConfigurationType type,
             SOSShiroFolderPermissions folderPermissions) throws Exception {
         DBItemInventoryConfiguration config = null;
+        String name = null;
         if (id != null) {
             config = dbLayer.getConfiguration(id);
             if (config == null) {
@@ -435,7 +436,7 @@ public class JocInventory {
                         throw new DBMissingDataException(String.format("%s not found: %s", type.value().toLowerCase(), path));
                     }
                 }
-            } else {// name
+            } else if (name != null) {// name
                 List<DBItemInventoryConfiguration> configs = dbLayer.getConfigurationByName(name, type.intValue());
                 if (configs == null || configs.size() == 0) {
                     throw new DBMissingDataException(String.format("configuration not found: %s", name));
@@ -453,10 +454,10 @@ public class JocInventory {
     
     public static DBItemInventoryConfigurationTrash getTrashConfiguration(InventoryDBLayer dbLayer, RequestFilter in,
             SOSShiroFolderPermissions folderPermissions) throws Exception {
-        return getTrashConfiguration(dbLayer, in.getId(), in.getPath(), in.getName(), in.getObjectType(), folderPermissions);
+        return getTrashConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), folderPermissions);
     }
 
-    public static DBItemInventoryConfigurationTrash getTrashConfiguration(InventoryDBLayer dbLayer, Long id, String path, String name, ConfigurationType type,
+    public static DBItemInventoryConfigurationTrash getTrashConfiguration(InventoryDBLayer dbLayer, Long id, String path, ConfigurationType type,
             SOSShiroFolderPermissions folderPermissions) throws Exception {
         DBItemInventoryConfigurationTrash config = null;
         if (id != null) {

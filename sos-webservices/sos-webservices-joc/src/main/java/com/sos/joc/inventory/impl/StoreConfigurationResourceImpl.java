@@ -62,7 +62,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             session.beginTransaction();
             DBItemInventoryConfiguration item;
             try {
-                item = JocInventory.getConfiguration(dbLayer, in.getId(), in.getPath(), null, in.getObjectType(), folderPermissions);
+                item = JocInventory.getConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), folderPermissions);
                 item = setProperties(in, item, dbLayer, false);
                 JocInventory.updateConfiguration(dbLayer, item, in.getConfiguration());
             } catch (DBMissingDataException e) {
