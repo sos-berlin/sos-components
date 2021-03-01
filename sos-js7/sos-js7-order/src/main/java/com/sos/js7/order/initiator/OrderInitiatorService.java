@@ -29,6 +29,7 @@ public class OrderInitiatorService extends AJocClusterService {
     private Timer timer;
     private Instant lastActivityStart = null;
     private Instant lastActivityEnd = null;
+    private OrderInitiatorRunner orderInitiatorRunner;
 
     public OrderInitiatorService(JocConfiguration jocConfiguration, ThreadGroup parentThreadGroup) {
         super(jocConfiguration, parentThreadGroup, IDENTIFIER);
@@ -78,7 +79,11 @@ public class OrderInitiatorService extends AJocClusterService {
 
     @Override
     public JocServiceAnswer getInfo() {
-        // TODO
+        if (orderInitiatorRunner != null){
+            this.lastActivityStart = Instant.ofEpochMilli(orderInitiatorRunner.getLastActivityStart().get()); 
+            this.lastActivityEnd = Instant.ofEpochMilli(orderInitiatorRunner.getLastActivityEnd().get()); 
+        };
+        
         return new JocServiceAnswer(lastActivityStart, lastActivityEnd);
     }
 
@@ -88,7 +93,8 @@ public class OrderInitiatorService extends AJocClusterService {
             timer.purge();
         }
         timer = new Timer();
-        timer.schedule(new OrderInitiatorRunner(controllers, settings, true), 0, 60 * 1000);
+        orderInitiatorRunner = new OrderInitiatorRunner(controllers, settings, true);
+        timer.schedule(orderInitiatorRunner, 0, 60 * 1000);
     }
 
     private String getProperty(JocCockpitProperties sosCockpitProperties, String prop, String defaults) {

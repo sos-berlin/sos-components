@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URISyntaxException;
 import java.text.ParseException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,6 +15,7 @@ import java.util.TimeZone;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,6 +71,7 @@ class CalendarCacheItem {
     Set<String> dates;
     PeriodResolver periodResolver;
 }
+
 public class OrderInitiatorRunner extends TimerTask {
 
     private static final String DAILYPLAN_RUNNER = "DailyplanRunner";
@@ -82,6 +82,8 @@ public class OrderInitiatorRunner extends TimerTask {
     private boolean firstStart = false;
     private Set<String> createdPlans;
     private List<ControllerConfiguration> controllers;
+    private AtomicLong lastActivityStart=new AtomicLong(0);
+    private AtomicLong lastActivityEnd=new AtomicLong(0);
 
     public List<Schedule> getListOfSchedules() {
         return listOfSchedules;
@@ -163,7 +165,8 @@ public class OrderInitiatorRunner extends TimerTask {
 
                 schedule.setVariables(variables);
 
-                FreshOrder freshOrder = buildFreshOrder(schedule, dbItemDailyPlanOrders.getPlannedStart().getTime(),dbItemDailyPlanOrders.getStartMode());
+                FreshOrder freshOrder = buildFreshOrder(schedule, dbItemDailyPlanOrders.getPlannedStart().getTime(), dbItemDailyPlanOrders
+                        .getStartMode());
                 freshOrder.setId(dbItemDailyPlanOrders.getOrderId());
                 p.setSchedule(schedule);
                 p.setFreshOrder(freshOrder);
@@ -180,7 +183,6 @@ public class OrderInitiatorRunner extends TimerTask {
         }
     }
 
-
     private List<DBItemDailyPlanSubmissions> getSubmissionsForDate(java.util.Calendar calendar, String controllerId) throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         try {
@@ -189,7 +191,7 @@ public class OrderInitiatorRunner extends TimerTask {
             DBLayerDailyPlanSubmissions dbLayerDailyPlan = new DBLayerDailyPlanSubmissions(sosHibernateSession);
             FilterDailyPlanSubmissions filter = new FilterDailyPlanSubmissions();
             filter.setControllerId(controllerId);
-            
+
             filter.setDateFor(calendar.getTime());
             List<DBItemDailyPlanSubmissions> listOfDailyPlanSubmissions = dbLayerDailyPlan.getDailyPlanSubmissions(filter, 0);
             return (listOfDailyPlanSubmissions);
@@ -230,7 +232,7 @@ public class OrderInitiatorRunner extends TimerTask {
                         LOGGER.debug("Creating daily plans for controller: " + controllerConfiguration.getCurrent().getId() + " from " + dailyPlanDate
                                 + " for " + OrderInitiatorGlobals.orderInitiatorSettings.getDayAheadPlan() + " days ahead");
                         generateDailyPlan(dailyPlanDate, false);
-                    }else {
+                    } else {
                         LOGGER.debug("Will not create for " + dailyPlanDate + " --> Submission found");
                     }
 
@@ -241,7 +243,8 @@ public class OrderInitiatorRunner extends TimerTask {
                 dailyPlanCalendar.setTime(savCalendar.getTime());
                 OrderInitiatorGlobals.dailyPlanDate = dailyPlanCalendar.getTime();
 
-                LOGGER.info("Submitting orders for daily plan for " + OrderInitiatorGlobals.orderInitiatorSettings.getDayAheadSubmit() + " days ahead");
+                LOGGER.info("Submitting orders for daily plan for " + OrderInitiatorGlobals.orderInitiatorSettings.getDayAheadSubmit()
+                        + " days ahead");
                 for (int day = 0; day < OrderInitiatorGlobals.orderInitiatorSettings.getDayAheadSubmit(); day++) {
 
                     submitDaysAhead(dailyPlanCalendar, controllerConfiguration.getCurrent().getId());
@@ -290,36 +293,42 @@ public class OrderInitiatorRunner extends TimerTask {
             createdPlans = new HashSet<String>();
         }
         LOGGER.debug("firstStart:" + firstStart);
-        
-        boolean generateFromManuelStart=false;
-        if (! firstStart && StartupMode.manual.equals(OrderInitiatorGlobals.orderInitiatorSettings.getStartMode())){
-           firstStart = true;
-           LOGGER.debug("generateFromManuelStart: true");
-           generateFromManuelStart = true;
+
+        boolean generateFromManuelStart = false;
+        if (!firstStart && StartupMode.manual.equals(OrderInitiatorGlobals.orderInitiatorSettings.getStartMode())) {
+            firstStart = true;
+            LOGGER.debug("generateFromManuelStart: true");
+            generateFromManuelStart = true;
         }
 
-        java.util.Calendar calendar = DailyPlanHelper.getDailyplanCalendar();
+        try {
+            lastActivityStart.set(new Date().getTime());
+            java.util.Calendar calendar = DailyPlanHelper.getDailyplanCalendar();
 
-        java.util.Calendar now = java.util.Calendar.getInstance(TimeZone.getTimeZone(OrderInitiatorGlobals.orderInitiatorSettings.getTimeZone()));
+            java.util.Calendar now = java.util.Calendar.getInstance(TimeZone.getTimeZone(OrderInitiatorGlobals.orderInitiatorSettings.getTimeZone()));
 
-        if (!createdPlans.contains(DailyPlanHelper.getDayOfYear(calendar)) && (generateFromManuelStart || OrderInitiatorGlobals.orderInitiatorSettings
-                .getDailyPlanDaysCreateOnStart() || (now.getTimeInMillis() - calendar.getTimeInMillis()) > 0)) {
-            
-            LOGGER.debug("Creating daily plan beginning with " + DailyPlanHelper.getDayOfYear(calendar));           
-            createdPlans.add(DailyPlanHelper.getDayOfYear(calendar));
-            try {
-                OrderInitiatorGlobals.submissionTime = new Date();
-                calendar.add(java.util.Calendar.DATE, 1);
-                calendar.set(java.util.Calendar.HOUR_OF_DAY, 0);
-                calendar.set(java.util.Calendar.MINUTE, 0);
-                calendar.set(java.util.Calendar.SECOND, 0);
-                calendar.set(java.util.Calendar.MILLISECOND, 0);
-                calendar.set(java.util.Calendar.MINUTE, 0);
-                createPlan(calendar);
-            } catch (JobSchedulerConnectionResetException | JobSchedulerConnectionRefusedException | ParseException | SOSException
-                    | URISyntaxException | InterruptedException | ExecutionException | TimeoutException e) {
-                LOGGER.error(e.getMessage(), e);
+            if (!createdPlans.contains(DailyPlanHelper.getDayOfYear(calendar)) && (generateFromManuelStart
+                    || OrderInitiatorGlobals.orderInitiatorSettings.getDailyPlanDaysCreateOnStart() || (now.getTimeInMillis() - calendar
+                            .getTimeInMillis()) > 0)) {
+
+                LOGGER.debug("Creating daily plan beginning with " + DailyPlanHelper.getDayOfYear(calendar));
+                createdPlans.add(DailyPlanHelper.getDayOfYear(calendar));
+                try {
+                    OrderInitiatorGlobals.submissionTime = new Date();
+                    calendar.add(java.util.Calendar.DATE, 1);
+                    calendar.set(java.util.Calendar.HOUR_OF_DAY, 0);
+                    calendar.set(java.util.Calendar.MINUTE, 0);
+                    calendar.set(java.util.Calendar.SECOND, 0);
+                    calendar.set(java.util.Calendar.MILLISECOND, 0);
+                    calendar.set(java.util.Calendar.MINUTE, 0);
+                    createPlan(calendar);
+                } catch (JobSchedulerConnectionResetException | JobSchedulerConnectionRefusedException | ParseException | SOSException
+                        | URISyntaxException | InterruptedException | ExecutionException | TimeoutException e) {
+                    LOGGER.error(e.getMessage(), e);
+                }
             }
+        } finally {
+            lastActivityEnd.set(new Date().getTime());
         }
     }
 
@@ -365,9 +374,9 @@ public class OrderInitiatorRunner extends TimerTask {
         }
     }
 
-    private FreshOrder buildFreshOrder(Schedule o, Long startTime,Integer startMode ) {
+    private FreshOrder buildFreshOrder(Schedule o, Long startTime, Integer startMode) {
         FreshOrder freshOrder = new FreshOrder();
-        freshOrder.setId(DailyPlanHelper.buildOrderId(o, startTime,startMode));
+        freshOrder.setId(DailyPlanHelper.buildOrderId(o, startTime, startMode));
         freshOrder.setScheduledFor(startTime);
         freshOrder.setArguments(o.getVariables());
         freshOrder.setWorkflowPath(o.getWorkflowName());
@@ -418,7 +427,7 @@ public class OrderInitiatorRunner extends TimerTask {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("OrderInitiatorRunner");
             DBItemDailyPlanSubmissions dbItemDailyPlanSubmissionHistory = null;
             OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer();
-           
+
             for (Schedule schedule : listOfSchedules) {
                 if (fromService && !schedule.getPlanOrderAutomatically()) {
                     LOGGER.debug(String.format("... schedule %s  will not be planned automatically", schedule.getPath()));
@@ -478,17 +487,17 @@ public class OrderInitiatorRunner extends TimerTask {
                             if (listOfNonWorkingDays != null && listOfNonWorkingDays.get(d) != null) {
                                 LOGGER.trace(d + "will be ignored as it is a non working day");
                             } else {
-                                Map<Long, Period> listOfStartTimes = calendarCacheItem.periodResolver.getStartTimes(d, dailyPlanDateAsString); 
-                                for (Entry<Long, Period> periodEntry :listOfStartTimes.entrySet()) {
-                                    
+                                Map<Long, Period> listOfStartTimes = calendarCacheItem.periodResolver.getStartTimes(d, dailyPlanDateAsString);
+                                for (Entry<Long, Period> periodEntry : listOfStartTimes.entrySet()) {
+
                                     Integer startMode;
                                     if (periodEntry.getValue().getSingleStart() == null) {
                                         startMode = 1;
-                                    }else {
+                                    } else {
                                         startMode = 0;
                                     }
-                                        
-                                    FreshOrder freshOrder = buildFreshOrder(schedule, periodEntry.getKey(),startMode);
+
+                                    FreshOrder freshOrder = buildFreshOrder(schedule, periodEntry.getKey(), startMode);
 
                                     PlannedOrder plannedOrder = new PlannedOrder();
                                     plannedOrder.setControllerId(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
@@ -537,6 +546,16 @@ public class OrderInitiatorRunner extends TimerTask {
             Globals.disconnect(sosHibernateSession);
         }
 
+    }
+
+    
+    public AtomicLong getLastActivityStart() {
+        return lastActivityStart;
+    }
+
+    
+    public AtomicLong getLastActivityEnd() {
+        return lastActivityEnd;
     }
 
 }
