@@ -304,6 +304,7 @@ public class DeleteDeployments {
         // post events
         for (String folder: foldersForEvent) {
             JocInventory.postEvent(folder);
+            JocInventory.postTrashEvent(folder);
         }
     }
     
@@ -362,25 +363,26 @@ public class DeleteDeployments {
         
         for (String folder: foldersForEvent) {
             JocInventory.postEvent(folder);
+            JocInventory.postTrashEvent(folder);
         }
     }
     
-    private static void deleteConfigurationsFromFolder(DBLayerDeploy dbLayer, Configuration folder, boolean withoutFolderDeletion)
-            throws SOSHibernateException {
-
-        List<DBItemInventoryConfiguration> folderItems = dbLayer.getInventoryConfigurationsByFolder(folder.getPath(), folder.getRecursive());
-
-        InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
-        for (DBItemInventoryConfiguration item : folderItems) {
-            JocInventory.deleteInventoryConfigurationAndPutToTrash(item, invDbLayer);
-        }
-        if (!withoutFolderDeletion) {
-            JocInventory.deleteEmptyFolders(invDbLayer, folder.getPath());
-        }
-        if ("/".equals(folder.getPath())) {
-            JocInventory.postEvent("/");
-        } else {
-            JocInventory.postEvent(Paths.get(folder.getPath()).getParent().toString().replace('\\', '/'));
-        }
-    }
+//    private static void deleteConfigurationsFromFolder(DBLayerDeploy dbLayer, Configuration folder, boolean withoutFolderDeletion)
+//            throws SOSHibernateException {
+//
+//        List<DBItemInventoryConfiguration> folderItems = dbLayer.getInventoryConfigurationsByFolder(folder.getPath(), folder.getRecursive());
+//
+//        InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
+//        for (DBItemInventoryConfiguration item : folderItems) {
+//            JocInventory.deleteInventoryConfigurationAndPutToTrash(item, invDbLayer);
+//        }
+//        if (!withoutFolderDeletion) {
+//            JocInventory.deleteEmptyFolders(invDbLayer, folder.getPath());
+//        }
+//        if ("/".equals(folder.getPath())) {
+//            JocInventory.postEvent("/");
+//        } else {
+//            JocInventory.postEvent(Paths.get(folder.getPath()).getParent().toString().replace('\\', '/'));
+//        }
+//    }
 }
