@@ -29,7 +29,7 @@ import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.inventory.resource.IRestoreConfigurationResource;
 import com.sos.joc.model.SuffixPrefix;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.inventory.copy.RequestFilter;
+import com.sos.joc.model.inventory.restore.RequestFilter;
 import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)

@@ -24,7 +24,12 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
     }
 
     @Override
-    public JocServiceTaskAnswerState cleanup(Date date) throws SOSHibernateException {
+    public JocServiceTaskAnswerState cleanup(int counter) throws SOSHibernateException {
+        LOGGER.info(String.format("[%s]currently under refactoring/development", getIdentifier()));
+        return JocServiceTaskAnswerState.COMPLETED;
+    }
+
+    public JocServiceTaskAnswerState oldCleanup(Date date) throws SOSHibernateException {
         try {
             getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
             List<Long> deployed = getDeployedIds();

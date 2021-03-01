@@ -82,8 +82,8 @@ public class OrderInitiatorRunner extends TimerTask {
     private boolean firstStart = false;
     private Set<String> createdPlans;
     private List<ControllerConfiguration> controllers;
-    private AtomicLong lastActivityStart=new AtomicLong(0);
-    private AtomicLong lastActivityEnd=new AtomicLong(0);
+    private AtomicLong lastActivityStart = new AtomicLong(0);
+    private AtomicLong lastActivityEnd = new AtomicLong(0);
 
     public List<Schedule> getListOfSchedules() {
         return listOfSchedules;
@@ -205,6 +205,7 @@ public class OrderInitiatorRunner extends TimerTask {
             ParseException, SOSException, URISyntaxException, InterruptedException, ExecutionException, TimeoutException {
 
         try {
+            lastActivityStart.set(new Date().getTime());
 
             java.util.Calendar savCalendar = java.util.Calendar.getInstance();
             savCalendar.setTime(calendar.getTime());
@@ -256,6 +257,8 @@ public class OrderInitiatorRunner extends TimerTask {
         } catch (SOSHibernateException | IOException | DBConnectionRefusedException | DBInvalidDataException | DBMissingDataException
                 | JocConfigurationException | DBOpenSessionException e) {
             LOGGER.error(e.getMessage(), e);
+        } finally {
+            lastActivityEnd.set(new Date().getTime());
         }
 
     }
@@ -301,34 +304,28 @@ public class OrderInitiatorRunner extends TimerTask {
             generateFromManuelStart = true;
         }
 
-        try {
-            lastActivityStart.set(new Date().getTime());
-            java.util.Calendar calendar = DailyPlanHelper.getDailyplanCalendar();
+        java.util.Calendar calendar = DailyPlanHelper.getDailyplanCalendar();
 
-            java.util.Calendar now = java.util.Calendar.getInstance(TimeZone.getTimeZone(OrderInitiatorGlobals.orderInitiatorSettings.getTimeZone()));
+        java.util.Calendar now = java.util.Calendar.getInstance(TimeZone.getTimeZone(OrderInitiatorGlobals.orderInitiatorSettings.getTimeZone()));
 
-            if (!createdPlans.contains(DailyPlanHelper.getDayOfYear(calendar)) && (generateFromManuelStart
-                    || OrderInitiatorGlobals.orderInitiatorSettings.getDailyPlanDaysCreateOnStart() || (now.getTimeInMillis() - calendar
-                            .getTimeInMillis()) > 0)) {
+        if (!createdPlans.contains(DailyPlanHelper.getDayOfYear(calendar)) && (generateFromManuelStart || OrderInitiatorGlobals.orderInitiatorSettings
+                .getDailyPlanDaysCreateOnStart() || (now.getTimeInMillis() - calendar.getTimeInMillis()) > 0)) {
 
-                LOGGER.debug("Creating daily plan beginning with " + DailyPlanHelper.getDayOfYear(calendar));
-                createdPlans.add(DailyPlanHelper.getDayOfYear(calendar));
-                try {
-                    OrderInitiatorGlobals.submissionTime = new Date();
-                    calendar.add(java.util.Calendar.DATE, 1);
-                    calendar.set(java.util.Calendar.HOUR_OF_DAY, 0);
-                    calendar.set(java.util.Calendar.MINUTE, 0);
-                    calendar.set(java.util.Calendar.SECOND, 0);
-                    calendar.set(java.util.Calendar.MILLISECOND, 0);
-                    calendar.set(java.util.Calendar.MINUTE, 0);
-                    createPlan(calendar);
-                } catch (JobSchedulerConnectionResetException | JobSchedulerConnectionRefusedException | ParseException | SOSException
-                        | URISyntaxException | InterruptedException | ExecutionException | TimeoutException e) {
-                    LOGGER.error(e.getMessage(), e);
-                }
+            LOGGER.debug("Creating daily plan beginning with " + DailyPlanHelper.getDayOfYear(calendar));
+            createdPlans.add(DailyPlanHelper.getDayOfYear(calendar));
+            try {
+                OrderInitiatorGlobals.submissionTime = new Date();
+                calendar.add(java.util.Calendar.DATE, 1);
+                calendar.set(java.util.Calendar.HOUR_OF_DAY, 0);
+                calendar.set(java.util.Calendar.MINUTE, 0);
+                calendar.set(java.util.Calendar.SECOND, 0);
+                calendar.set(java.util.Calendar.MILLISECOND, 0);
+                calendar.set(java.util.Calendar.MINUTE, 0);
+                createPlan(calendar);
+            } catch (JobSchedulerConnectionResetException | JobSchedulerConnectionRefusedException | ParseException | SOSException
+                    | URISyntaxException | InterruptedException | ExecutionException | TimeoutException e) {
+                LOGGER.error(e.getMessage(), e);
             }
-        } finally {
-            lastActivityEnd.set(new Date().getTime());
         }
     }
 
@@ -548,12 +545,10 @@ public class OrderInitiatorRunner extends TimerTask {
 
     }
 
-    
     public AtomicLong getLastActivityStart() {
         return lastActivityStart;
     }
 
-    
     public AtomicLong getLastActivityEnd() {
         return lastActivityEnd;
     }

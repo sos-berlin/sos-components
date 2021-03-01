@@ -25,6 +25,7 @@ import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.cleanup.CleanupServiceConfiguration.Period;
 import com.sos.joc.cleanup.db.DBLayerCleanup;
+import com.sos.joc.cleanup.exception.CleanupComputeException;
 import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
@@ -61,39 +62,38 @@ public class CleanupServiceSchedule {
     }
 
     public void start(StartupMode mode) throws Exception {
+        if (factory == null) {
+            createFactory(service.getConfig().getHibernateConfiguration());
+        }
         try {
-            if (factory == null) {
-                createFactory(service.getConfig().getHibernateConfiguration());
+            long delay = computeNextDelay();
+            if (delay > 0) {
+                long timeout = computeTimeout();
+                JocClusterAnswer answer = schedule(mode, delay, timeout);
+                LOGGER.info(SOSString.toString(answer));
+                updateJocVariableOnResult(answer);
+            } else {
+                throw new CleanupComputeException("delay can't be computed");
             }
-            try {
-                long delay = computeNextDelay();
-                if (delay > 0) {
-                    long timeout = computeTimeout();
-                    JocClusterAnswer answer = schedule(mode, delay, timeout);
-                    LOGGER.info(SOSString.toString(answer));
-                    updateJocVariableOnResult(answer);
-                } else {
-                    LOGGER.error(String.format("[%s][%s][skip start]delay can't be computed", service.getIdentifier(), mode));
-                }
-            } catch (TimeoutException e) {
-                LOGGER.info(String.format("[max end at %s reached]try stop..", end.toString()));
-                closeTasks(mode);
-            } catch (InterruptedException | ExecutionException e) {
-                LOGGER.error(e.toString(), e);
-                closeTasks(mode);
-            } catch (CancellationException e) {
-            }
-
-        } catch (Exception e) {
+        } catch (TimeoutException e) {
+            LOGGER.info(String.format("[max end at %s reached]try stop..", end.toString()));
+            closeTasks(mode);
+        } catch (InterruptedException | ExecutionException e) {
             LOGGER.error(e.toString(), e);
+            closeTasks(mode);
+        } catch (CancellationException e) {
+        } catch (CleanupComputeException e) {
+            closeTasks(mode);
+            throw e;
         }
     }
 
     private JocClusterAnswer schedule(StartupMode mode, long delay, long timeout) throws Exception {
         closeTasks(mode);
-
+        AJocClusterService.setLogger(service.getIdentifier());
         threadPool = Executors.newScheduledThreadPool(1, new JocClusterThreadFactory(service.getThreadGroup(), service.getIdentifier() + "-t"));
-        LOGGER.info(String.format("[planned][start=%s][max end=%s][timeout=%s] ...", start.toString(), end.toString(), SOSDate.getDuration(Duration
+        AJocClusterService.setLogger(service.getIdentifier());
+        LOGGER.info(String.format("[planned][begin=%s][max end=%s][timeout=%s] ...", start.toString(), end.toString(), SOSDate.getDuration(Duration
                 .ofSeconds(timeout))));
         resultFuture = threadPool.schedule(task, delay, TimeUnit.NANOSECONDS);
         return resultFuture.get(timeout, TimeUnit.SECONDS);
@@ -107,107 +107,210 @@ public class CleanupServiceSchedule {
             dbLayer.setSession(getFactory().openStatelessSession(service.getIdentifier()));
             item = getJocVariable();
 
-            String storedConfigure = null;
+            Period storedPeriod = null;
             ZonedDateTime storedFirstStart = null;
-            ZonedDateTime storedNextFrom = null;
-            ZonedDateTime storedNextTo = null;
+            ZonedDateTime storedNextBegin = null;
+            ZonedDateTime storedNextEnd = null;
+            JocClusterAnswerState storedState = null;
 
-            boolean computeNewPeriod = false;
+            Period period = service.getConfig().getPeriod();
+            List<Integer> weekDays = service.getConfig().getPeriod().getWeekDays();
+            ZonedDateTime nextEnd = null;
+            ZonedDateTime nextBegin = null;
+
+            long nanos = 0;
             ZonedDateTime now = Instant.now().atZone(service.getConfig().getZoneId());
+            boolean computeNewPeriod = false;
             if (item != null) {
-                LOGGER.info(String.format("[computeNextDelay][stored]%s", item.getTextValue()));
                 String[] arr = item.getTextValue().split(DELIMITER);
                 if (arr.length > 3) {
-                    storedConfigure = arr[0].trim();
-                    storedFirstStart = parseFromDb(arr[1].trim());
-                    storedNextFrom = parseFromDb(arr[2].trim());
-                    storedNextTo = parseFromDb(arr[3].trim());
+                    storedPeriod = parsePeriodFromDb(arr[0].trim());
+                    storedNextBegin = parseDateFromDb(arr[1].trim());
+                    storedNextEnd = parseDateFromDb(arr[2].trim());
+                    storedFirstStart = parseDateFromDb(arr[3].trim());
 
-                    if (storedNextFrom != null && storedNextTo != null && arr.length > 4) {
-                        String state = arr[4];
-                        if (state.equalsIgnoreCase(JocClusterAnswerState.COMPLETED.name())) {
-                            computeNewPeriod = true;
-                            LOGGER.info(String.format("cleanup completed, compute next period..."));
-                        } else {
-                            if (state.startsWith(JocClusterAnswerState.UNCOMPLETED.name())) {
-                                arr = state.split("=");// UNCOMPLETED=dayliplan,history
-                                if (arr.length > 1) {
-                                    unclompleted = Stream.of(arr[1].split(",", -1)).collect(Collectors.toList());
+                    LOGGER.info(String.format("[computeNextDelay][stored=%s][storedPeriod=%s]", item.getTextValue(), SOSString.toString(
+                            storedPeriod)));
+
+                    if (storedNextBegin != null && storedNextEnd != null) {
+                        storedState = JocClusterAnswerState.RESTARTED;
+                        if (storedNextBegin != null && arr.length > 4) {
+                            String state = arr[4];
+                            if (state.equalsIgnoreCase(JocClusterAnswerState.COMPLETED.name())) {
+                                storedState = JocClusterAnswerState.COMPLETED;
+                            } else {
+                                if (state.startsWith(JocClusterAnswerState.UNCOMPLETED.name())) {
+                                    storedState = JocClusterAnswerState.UNCOMPLETED;
+                                    arr = state.split("=");// UNCOMPLETED=dayliplan,history
+                                    if (arr.length > 1) {
+                                        unclompleted = Stream.of(arr[1].split(",", -1)).collect(Collectors.toList());
+                                    }
                                 }
                             }
                         }
+                        if (now.isAfter(storedNextBegin)) {
+                            if (storedState.equals(JocClusterAnswerState.COMPLETED)) {
+                                computeNewPeriod = true;
+                                LOGGER.info(String.format("[computeNextDelay][%s]compute next period...", storedState));
+                            } else {
+                                if (storedState.equals(JocClusterAnswerState.UNCOMPLETED)) {
+                                    LOGGER.info(String.format("[computeNextDelay][%s][stored][skip]now(%s) is after the storedNextBegin(%s)",
+                                            storedState, now, storedNextBegin));
+                                } else {
+                                    LOGGER.info(String.format("[computeNextDelay][stored][skip]now(%s) is after the storedNextBegin(%s)", now,
+                                            storedNextBegin));
+                                }
+                                storedFirstStart = null;
+                                storedNextBegin = null;
+                                storedNextEnd = null;
+                            }
+                        }
+                        if (storedNextBegin != null) {
+                            if (weekDays.contains(new Integer(storedNextBegin.getDayOfWeek().getValue()))) {
+                                int storedNextDayOfWeek = storedNextBegin.getDayOfWeek().getValue();
+                                int nowDayOfWeek = now.getDayOfWeek().getValue();
+                                for (Integer weekDay : weekDays) {
+                                    if (weekDay.intValue() < nowDayOfWeek) {
+                                        continue;
+                                    }
+                                    if (weekDay.intValue() == nowDayOfWeek) {
+                                        if (!storedPeriod.getWeekDays().contains(new Integer(nowDayOfWeek))) {
+                                            LOGGER.info(String.format(
+                                                    "[computeNextDelay][stored][skip]period was changed - today added (old=%s, new=%s)", storedPeriod
+                                                            .getConfigured(), period.getConfigured()));
+                                            storedFirstStart = null;
+                                            storedNextBegin = null;
+                                            storedNextEnd = null;
+                                            break;
+                                        }
+                                    } else if (weekDay.intValue() < storedNextDayOfWeek) {
+                                        LOGGER.info(String.format(
+                                                "[computeNextDelay][stored][skip]period was changed - weekday(%s) added (old=%s, new=%s)", weekDay,
+                                                storedPeriod.getConfigured(), period.getConfigured()));
+                                        storedFirstStart = null;
+                                        storedNextBegin = null;
+                                        storedNextEnd = null;
+                                        break;
+                                    }
+                                }
+                            } else {
+                                LOGGER.info(String.format("[computeNextDelay][stored][skip]stored dayOfWeek(%s) is no more configured",
+                                        storedNextBegin.getDayOfWeek()));
+                                storedFirstStart = null;
+                                storedNextBegin = null;
+                                storedNextEnd = null;
+                            }
+                        }
+
+                        if (storedNextBegin != null) {
+                            if (storedNextBegin.getDayOfMonth() == now.getDayOfMonth()) {
+
+                            }
+                        }
+                    }
+
+                    if (storedNextBegin != null && !storedPeriod.getBegin().getConfigured().equals(period.getBegin().getConfigured())) {
+                        // if (storedNextBegin.getDayOfMonth() == now.getDayOfMonth() && storedState.equals(JocClusterAnswerState.COMPLETED)) {
+
+                        // } else {
+                        // LOGGER.info(String.format("[computeNextDelay][stored][skip]period was changed (old=%s, new=%s)", storedPeriod
+                        // .getConfigured(), period.getConfigured()));
+                        // storedFirstStart = null;
+                        // storedNextBegin = null;
+                        // storedNextEnd = null;
+                        // }
                     }
                 } else {
-                    LOGGER.info(String.format("[stored][skip]old format"));
+                    LOGGER.info(String.format("[computeNextDelay][stored]%s", item.getTextValue()));
+                    LOGGER.info(String.format("[computeNextDelay][stored][skip]old format"));
                 }
             }
-            ZonedDateTime nextTo = null;
-            long nanos = 0;
-            switch (service.getConfig().getStartupMode()) {
-            case WEEKLY:
-                LOGGER.info("WEEKLY not implemented yet");
-                break;
-            case DAILY:
-                try {
-                    Period configured = service.getConfig().getPeriod();
-                    ZonedDateTime nextFrom = ZonedDateTime.of(now.getYear(), now.getMonthValue(), now.getDayOfMonth(), configured.getFrom()
-                            .getHours(), configured.getFrom().getMinutes(), configured.getFrom().getSeconds(), 0, service.getConfig().getZoneId());
 
-                    nextTo = ZonedDateTime.of(now.getYear(), now.getMonthValue(), now.getDayOfMonth(), configured.getTo().getHours(), configured
-                            .getTo().getMinutes(), configured.getTo().getSeconds(), 0, service.getConfig().getZoneId());
+            if (storedNextBegin != null) {
+                LOGGER.info(String.format("[computeNextDelay]use stored"));
+                storedFirstStart = storedFirstStart.withHour(period.getBegin().getHours()).withMinute(period.getBegin().getMinutes()).withSecond(
+                        period.getBegin().getSeconds()).withNano(0);
 
-                    if (!nextTo.isAfter(nextFrom)) {
-                        nextTo = nextTo.plusDays(1);
-                        LOGGER.info(String.format("set nextTo=%s", nextTo));
+                nextBegin = storedNextBegin.withHour(period.getBegin().getHours()).withMinute(period.getBegin().getMinutes()).withSecond(period
+                        .getBegin().getSeconds());
+                nextEnd = storedNextEnd.withHour(period.getEnd().getHours()).withMinute(period.getEnd().getMinutes()).withSecond(period.getEnd()
+                        .getSeconds());
+            }
+
+            int newPeriodDaysDiff = -1;
+            if (nextBegin == null) {
+                int nwd = now.getDayOfWeek().getValue();
+                for (Integer wd : weekDays) {
+                    if (wd == nwd) {
+                        newPeriodDaysDiff = 0;
+                        break;
                     }
+                    if (wd > nwd) {
+                        newPeriodDaysDiff = wd - nwd;
+                        break;
+                    }
+                }
+                nextBegin = ZonedDateTime.of(now.getYear(), now.getMonthValue(), now.getDayOfMonth() + newPeriodDaysDiff, period.getBegin()
+                        .getHours(), period.getBegin().getMinutes(), period.getBegin().getSeconds(), 0, service.getConfig().getZoneId());
+                nextEnd = ZonedDateTime.of(now.getYear(), now.getMonthValue(), now.getDayOfMonth() + newPeriodDaysDiff, period.getEnd().getHours(),
+                        period.getEnd().getMinutes(), period.getEnd().getSeconds(), 0, service.getConfig().getZoneId());
 
-                    if (!computeNewPeriod) {
-                        if (storedNextFrom != null && storedNextTo != null && storedNextFrom.isAfter(nextFrom)) {
-                            if (storedConfigure != null && !storedConfigure.equals(configured.getConfigured())) {
-                                LOGGER.info(String.format("[stored][skip]period was changed (old=%s, new=%s)", storedConfigure, configured
-                                        .getConfigured()));
-                                storedFirstStart = null;
-                            } else {
-                                nextFrom = storedNextFrom;
-                                nextTo = storedNextTo;
-                            }
+                LOGGER.info(String.format("[weekdays]set new nextBegin=%s, nextEnd=%s", nextBegin, nextEnd));
+            } else {
+                if (computeNewPeriod) {
+                    int nwd = now.getDayOfWeek().getValue();
+                    for (Integer wd : weekDays) {
+                        if (wd > nwd) {
+                            newPeriodDaysDiff = wd - nwd;
+                            break;
                         }
+                    }
+                }
+            }
 
-                        if (now.isAfter(nextFrom)) {
-                            if (now.isAfter(nextTo)) {
-                                computeNewPeriod = true;
-                            } else {
-                                nextFrom = null;
-                            }
+            try {
+                int nextEndDayDiff = 0;
+                if (!nextEnd.isAfter(nextBegin)) {
+                    nextEnd = nextEnd.plusDays(1);
+                    nextEndDayDiff = 1;
+                    LOGGER.info(String.format("[computeNextDelay]set nextEnd=(in 1d)%s", nextEnd));
+                }
+
+                if (!computeNewPeriod) {
+                    if (now.isAfter(nextBegin)) {
+                        if (now.isAfter(nextEnd)) {
+                            computeNewPeriod = true;
                         } else {
-                            LOGGER.debug(String.format("nextFrom=%s, nextTo=%s", nextFrom, nextTo));
+                            nextBegin = null;
                         }
+                    } else {
+                        LOGGER.debug(String.format("[computeNextDelay]nextBegin=%s, nextEnd=%s", nextBegin, nextEnd));
                     }
-
-                    if (computeNewPeriod) {
-                        nextFrom = nextFrom.plusDays(1);
-                        nextTo = nextTo.plusDays(1);
-                        storedFirstStart = null;
-                        LOGGER.info(String.format("set nextFrom=%s, nextTo=%s", nextFrom, nextTo));
-                    }
-
-                    now = Instant.now().atZone(service.getConfig().getZoneId());
-                    if (nextFrom == null) {
-                        nextFrom = now.plusSeconds(30);
-                        LOGGER.info(String.format("set nextFrom=(in 30s)%s", nextFrom));
-                    }
-                    firstStart = storedFirstStart == null ? nextFrom : storedFirstStart;
-                    nanos = now.until(nextFrom, ChronoUnit.NANOS);
-                } catch (Exception e) {
-                    LOGGER.error(e.toString(), e);
                 }
-            default:
-                break;
+
+                if (computeNewPeriod && nextBegin != null) {
+                    nextBegin = nextBegin.plusDays(newPeriodDaysDiff);
+                    nextEnd = nextEnd.plusDays(newPeriodDaysDiff);
+                    storedFirstStart = null;
+                    LOGGER.info(String.format("[computeNextDelay]set nextBegin=(in %sd)%s, nextEnd=(in %sd)%s", newPeriodDaysDiff, nextBegin,
+                            (newPeriodDaysDiff + nextEndDayDiff), nextEnd));
+                }
+
+                now = Instant.now().atZone(service.getConfig().getZoneId());
+                if (nextBegin == null) {
+                    nextBegin = now.plusSeconds(30);
+                    LOGGER.info(String.format("[computeNextDelay]set nextBegin=(in 30s)%s", nextBegin));
+                }
+                firstStart = storedFirstStart == null ? nextBegin : storedFirstStart;
+                nanos = now.until(nextBegin, ChronoUnit.NANOS);
+            } catch (Exception e) {
+                LOGGER.error(e.toString(), e);
             }
+
             if (nanos > 0) {
                 start = now.plusNanos(nanos);
-                if (nextTo != null) {
-                    end = nextTo;
+                if (nextEnd != null) {
+                    end = nextEnd;
                 }
                 if (item == null) {
                     insertJocVariable();
@@ -218,14 +321,24 @@ public class CleanupServiceSchedule {
             }
             return nanos;
 
-        } catch (Throwable e) {
+        } catch (
+
+        Throwable e) {
             throw e;
         } finally {
             dbLayer.close();
         }
     }
 
-    private ZonedDateTime parseFromDb(String date) {
+    private Period parsePeriodFromDb(String period) {
+        Period p = service.getConfig().new Period();
+        if (p.parse(period)) {
+            return p;
+        }
+        return service.getConfig().getPeriod();
+    }
+
+    private ZonedDateTime parseDateFromDb(String date) {
         try {
             return ZonedDateTime.parse(date, DateTimeFormatter.ISO_ZONED_DATE_TIME);
         } catch (Throwable e) {
@@ -311,6 +424,7 @@ public class CleanupServiceSchedule {
             dbLayer.getSession().beginTransaction();
             DBItemJocVariable item = dbLayer.insertJocVariable(service.getIdentifier(), value);
             dbLayer.getSession().commit();
+            LOGGER.info("[stored][inserted]" + item.getTextValue());
             return item;
         } catch (Exception e) {
             dbLayer.rollback();
@@ -324,6 +438,7 @@ public class CleanupServiceSchedule {
             item.setTextValue(getInitialValue().toString());
             dbLayer.getSession().update(item);
             dbLayer.getSession().commit();
+            LOGGER.info("[stored][updated]" + item.getTextValue());
             return item;
         } catch (Exception e) {
             dbLayer.rollback();
@@ -358,7 +473,7 @@ public class CleanupServiceSchedule {
                 dbLayer.getSession().update(item);
                 dbLayer.getSession().commit();
             }
-            LOGGER.info("[stored]" + item.getTextValue());
+            LOGGER.info("[stored][updated]" + item.getTextValue());
         } catch (Exception e) {
             dbLayer.rollback();
             throw e;
@@ -380,8 +495,8 @@ public class CleanupServiceSchedule {
     }
 
     private StringBuilder getInitialValue() {
-        return new StringBuilder(service.getConfig().getPeriod().getConfigured()).append(DELIMITER).append(firstStart.toString()).append(DELIMITER)
-                .append(start.toString()).append(DELIMITER).append(end.toString());
+        return new StringBuilder(service.getConfig().getPeriod().getConfigured()).append(DELIMITER).append(start.toString()).append(DELIMITER).append(
+                end.toString()).append(DELIMITER).append(firstStart.toString());
     }
 
     public JocClusterHibernateFactory getFactory() {
@@ -398,6 +513,7 @@ public class CleanupServiceSchedule {
     }
 
     private void closeFactory() {
+        AJocClusterService.setLogger(service.getIdentifier());
         if (factory != null) {
             factory.close();
             factory = null;
