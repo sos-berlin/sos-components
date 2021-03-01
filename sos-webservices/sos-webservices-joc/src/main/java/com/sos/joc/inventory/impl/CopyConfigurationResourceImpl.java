@@ -177,24 +177,25 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                         }
                         
                         oldDBFolderContent.removeAll(map.getOrDefault(true, Collections.emptyList()));
-                        // TODO remove all folder items from oldDBFolderContent which are in map.getOrDefault(true, Collections.emptyList())
-//                        for (DBItemInventoryConfiguration targetItem : map.getOrDefault(true, Collections.emptyList())) {
-//                            JocInventory.deleteConfiguration(dbLayer, targetItem);
-//                        }
                     }
                 }
+                Long auditLogId = 0L;
                 if (newItem == null) {
                     DBItemInventoryConfiguration newDbItem = createItem(config, pWithoutFix);
-                    createAuditLog(newDbItem);
+                    auditLogId = createAuditLog(newDbItem);
                     JocInventory.insertConfiguration(dbLayer, newDbItem);
                     JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), newDbItem.getAuditLogId());
+                } else if (!oldDBFolderContent.isEmpty()) {
+                    auditLogId = createAuditLog(newItem);
                 }
                 if (in.getShallowCopy()) {
                     for (DBItemInventoryConfiguration item : oldDBFolderContent) {
+                        item.setAuditLogId(auditLogId);
                         JocInventory.insertConfiguration(dbLayer, item);
                     }
                 } else {
                     for (DBItemInventoryConfiguration item : oldDBFolderContent) {
+                        item.setAuditLogId(auditLogId);
                         String json = item.getContent();
                         switch (item.getTypeAsEnum()) {
                         case WORKFLOW:
@@ -285,13 +286,15 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
         }
     }
     
-    private void createAuditLog(DBItemInventoryConfiguration config) throws Exception {
+    private Long createAuditLog(DBItemInventoryConfiguration config) throws Exception {
         InventoryAudit audit = new InventoryAudit(config.getTypeAsEnum(), config.getPath(), config.getFolder());
         logAuditMessage(audit);
         DBItemJocAuditLog auditItem = storeAuditLogEntry(audit);
         if (auditItem != null) {
             config.setAuditLogId(auditItem.getId());
+            return auditItem.getId();
         }
+        return 0L;
     }
 
     private static DBItemInventoryConfiguration createItem(DBItemInventoryConfiguration oldItem, java.nio.file.Path newItem) {
