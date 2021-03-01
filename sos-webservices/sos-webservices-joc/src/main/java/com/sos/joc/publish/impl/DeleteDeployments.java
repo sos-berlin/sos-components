@@ -46,13 +46,25 @@ public class DeleteDeployments {
         Map<String, List<DBItemDeploymentHistory>> dbItmesPerController = dbItems.stream().filter(Objects::nonNull).filter(
                 item -> OperationType.UPDATE.value() == item.getOperation()).collect(Collectors.groupingBy(DBItemDeploymentHistory::getControllerId));
         final String commitId = UUID.randomUUID().toString();
+        Set<DBItemInventoryConfiguration> invConfigurationsToDelete = Collections.emptySet();
+
         for (Map.Entry<String, List<DBItemDeploymentHistory>> entry : dbItmesPerController.entrySet()) {
             // Call ControllerApi
             PublishUtils.updateItemsDelete(commitId, entry.getValue(), entry.getKey()).thenAccept(either -> processAfterDelete(either, entry
                     .getValue(), entry.getKey(), account, commitId, accessToken, jocError));
-            // store history entries and delete configurations optimistically
-            storeDepHistoryAndDeleteSetOfConfigurations(dbLayer, entry.getValue(), commitId);
+            // store history entries optimistically
+            if (invConfigurationsToDelete.isEmpty()) {
+                invConfigurationsToDelete = new HashSet<>(
+                        getInvConfigurationsForTrash(dbLayer, 
+                                storeNewDepHistoryEntries(dbLayer, entry.getValue(), commitId)));
+            } else {
+                invConfigurationsToDelete.addAll(
+                        getInvConfigurationsForTrash(dbLayer, 
+                                storeNewDepHistoryEntries(dbLayer, entry.getValue(), commitId)));
+            }
         }
+        // delete configurations optimistically
+        deleteConfigurations(dbLayer, null, invConfigurationsToDelete, commitId, accessToken, jocError, withoutFolderDeletion);
         return true;
     }
     
@@ -83,17 +95,19 @@ public class DeleteDeployments {
                 PublishUtils.updateItemsDelete(commitIdForDeleteFromFolder, itemsToDelete, controllerId).thenAccept(
                         either -> processAfterDeleteFromFolder(either, itemsToDelete, Collections.singletonList(conf), controllerId, account,
                                 commitIdForDeleteFromFolder, accessToken, jocError, withoutFolderDeletion));
+                // store history entries optimistically
                 if (invConfigurationsToDelete.isEmpty()) {
                     invConfigurationsToDelete = new HashSet<>(
                             getInvConfigurationsForTrash(dbLayer, 
-                                    storeNewDepHistoryEntries(dbLayer, Collections.singletonList(conf), itemsToDelete, commitIdForDeleteFromFolder)));
+                                    storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitIdForDeleteFromFolder)));
                 } else {
                     invConfigurationsToDelete.addAll(
                             getInvConfigurationsForTrash(dbLayer, 
-                                    storeNewDepHistoryEntries(dbLayer, Collections.singletonList(conf), itemsToDelete, commitIdForDeleteFromFolder)));
+                                    storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitIdForDeleteFromFolder)));
                 }
             }
         }
+        // delete configurations optimistically
         deleteConfigurations(dbLayer, Collections.singletonList(conf), invConfigurationsToDelete, commitIdForDeleteFromFolder, accessToken, jocError, 
                 withoutFolderDeletion);
         return true;
@@ -137,7 +151,16 @@ public class DeleteDeployments {
                 final List<DBItemDeploymentHistory> itemsToDelete = depHistoryDBItemsToDeployDelete;
                 PublishUtils.updateItemsDelete(commitId, itemsToDelete, controllerId).thenAccept(
                         either -> processAfterDelete(either, itemsToDelete, controllerId, account, commitId, accessToken, jocError));
-                storeDepHistoryAndDeleteSetOfConfigurations(dbLayer, itemsToDelete, commitId);
+                // store history entries optimistically
+                if (invConfigurationsToDelete.isEmpty()) {
+                    invConfigurationsToDelete = new HashSet<>(
+                            getInvConfigurationsForTrash(dbLayer, 
+                                    storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitIdForDeleteFromFolder)));
+                } else {
+                    invConfigurationsToDelete.addAll(
+                            getInvConfigurationsForTrash(dbLayer, 
+                                    storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitIdForDeleteFromFolder)));
+                }
            }
             // process folder to Delete
             if (itemsFromFolderToDelete != null && !itemsFromFolderToDelete.isEmpty()) {
@@ -148,17 +171,19 @@ public class DeleteDeployments {
                 PublishUtils.updateItemsDelete(commitIdForDeleteFromFolder, itemsToDelete, controllerId)
                         .thenAccept(either -> processAfterDeleteFromFolder(either, itemsToDelete, folders, controllerId, account,
                                 commitIdForDeleteFromFolder, accessToken, jocError, withoutFolderDeletion));
+                // store history entries optimistically
                 if (invConfigurationsToDelete.isEmpty()) {
                     invConfigurationsToDelete = new HashSet<>(
                             getInvConfigurationsForTrash(dbLayer, 
-                                    storeNewDepHistoryEntries(dbLayer, folders, itemsToDelete, commitIdForDeleteFromFolder)));
+                                    storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitIdForDeleteFromFolder)));
                 } else {
                     invConfigurationsToDelete.addAll(
                             getInvConfigurationsForTrash(dbLayer, 
-                                    storeNewDepHistoryEntries(dbLayer, folders, itemsToDelete, commitIdForDeleteFromFolder)));
+                                    storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitIdForDeleteFromFolder)));
                 }
             }
         }
+        // delete configurations optimistically
         deleteConfigurations(dbLayer, foldersToDelete, invConfigurationsToDelete, commitIdForDeleteFromFolder, accessToken, jocError, 
                 withoutFolderDeletion);
         return true;
@@ -235,8 +260,7 @@ public class DeleteDeployments {
         }
     }
     
-    public static Set<DBItemDeploymentHistory> storeNewDepHistoryEntries(DBLayerDeploy dbLayer, List<Configuration> folders, 
-            List<DBItemDeploymentHistory> itemsToDelete, String commitId) {
+    public static Set<DBItemDeploymentHistory> storeNewDepHistoryEntries(DBLayerDeploy dbLayer, List<DBItemDeploymentHistory> itemsToDelete, String commitId) {
         return PublishUtils.updateDeletedDepHistory(itemsToDelete, dbLayer, commitId, false);
     }
 
