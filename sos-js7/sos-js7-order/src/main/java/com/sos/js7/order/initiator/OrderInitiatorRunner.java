@@ -99,6 +99,7 @@ public class OrderInitiatorRunner extends TimerTask {
     }
 
     public OrderInitiatorRunner(List<ControllerConfiguration> controllers, OrderInitiatorSettings orderInitiatorSettings, boolean fromService) {
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         OrderInitiatorGlobals.orderInitiatorSettings = orderInitiatorSettings;
         this.controllers = controllers;
         this.fromService = fromService;
@@ -305,23 +306,25 @@ public class OrderInitiatorRunner extends TimerTask {
         }
 
         java.util.Calendar calendar = DailyPlanHelper.getDailyplanCalendar();
-
         java.util.Calendar now = java.util.Calendar.getInstance(TimeZone.getTimeZone(OrderInitiatorGlobals.orderInitiatorSettings.getTimeZone()));
+
+        TimeZone timeZone = TimeZone.getTimeZone("UTC");
+        java.util.Calendar dailyPlanCalendar = java.util.Calendar.getInstance(timeZone);
 
         if (!createdPlans.contains(DailyPlanHelper.getDayOfYear(calendar)) && (generateFromManuelStart || OrderInitiatorGlobals.orderInitiatorSettings
                 .getDailyPlanDaysCreateOnStart() || (now.getTimeInMillis() - calendar.getTimeInMillis()) > 0)) {
 
-            LOGGER.debug("Creating daily plan beginning with " + DailyPlanHelper.getDayOfYear(calendar));
-            createdPlans.add(DailyPlanHelper.getDayOfYear(calendar));
+            LOGGER.debug("Creating daily plan beginning with " + DailyPlanHelper.getDayOfYear(dailyPlanCalendar));
+            createdPlans.add(DailyPlanHelper.getDayOfYear(dailyPlanCalendar));
             try {
                 OrderInitiatorGlobals.submissionTime = new Date();
-                calendar.add(java.util.Calendar.DATE, 1);
-                calendar.set(java.util.Calendar.HOUR_OF_DAY, 0);
-                calendar.set(java.util.Calendar.MINUTE, 0);
-                calendar.set(java.util.Calendar.SECOND, 0);
-                calendar.set(java.util.Calendar.MILLISECOND, 0);
-                calendar.set(java.util.Calendar.MINUTE, 0);
-                createPlan(calendar);
+                dailyPlanCalendar.add(java.util.Calendar.DATE, 1);
+                dailyPlanCalendar.set(java.util.Calendar.HOUR_OF_DAY, 0);
+                dailyPlanCalendar.set(java.util.Calendar.MINUTE, 0);
+                dailyPlanCalendar.set(java.util.Calendar.SECOND, 0);
+                dailyPlanCalendar.set(java.util.Calendar.MILLISECOND, 0);
+                dailyPlanCalendar.set(java.util.Calendar.MINUTE, 0);
+                createPlan(dailyPlanCalendar);
             } catch (JobSchedulerConnectionResetException | JobSchedulerConnectionRefusedException | ParseException | SOSException
                     | URISyntaxException | InterruptedException | ExecutionException | TimeoutException e) {
                 LOGGER.error(e.getMessage(), e);

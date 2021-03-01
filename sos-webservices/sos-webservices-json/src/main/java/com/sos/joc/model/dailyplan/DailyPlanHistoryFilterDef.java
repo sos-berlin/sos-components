@@ -22,6 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "submitted",
     "dateFrom",
     "dateTo",
+    "controllerId",
     "controllerIds"
 })
 public class DailyPlanHistoryFilterDef {
@@ -46,6 +47,14 @@ public class DailyPlanHistoryFilterDef {
     @JsonProperty("dateTo")
     @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
     private String dateTo;
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    private String controllerId;
     @JsonProperty("controllerIds")
     private List<String> controllerIds = null;
 
@@ -103,6 +112,28 @@ public class DailyPlanHistoryFilterDef {
         this.dateTo = dateTo;
     }
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
+    }
+
     @JsonProperty("controllerIds")
     public List<String> getControllerIds() {
         return controllerIds;
@@ -115,12 +146,12 @@ public class DailyPlanHistoryFilterDef {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("submitted", submitted).append("dateFrom", dateFrom).append("dateTo", dateTo).append("controllerIds", controllerIds).toString();
+        return new ToStringBuilder(this).append("submitted", submitted).append("dateFrom", dateFrom).append("dateTo", dateTo).append("controllerId", controllerId).append("controllerIds", controllerIds).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dateTo).append(submitted).append(dateFrom).append(controllerIds).toHashCode();
+        return new HashCodeBuilder().append(dateTo).append(submitted).append(dateFrom).append(controllerId).append(controllerIds).toHashCode();
     }
 
     @Override
@@ -132,7 +163,7 @@ public class DailyPlanHistoryFilterDef {
             return false;
         }
         DailyPlanHistoryFilterDef rhs = ((DailyPlanHistoryFilterDef) other);
-        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(submitted, rhs.submitted).append(dateFrom, rhs.dateFrom).append(controllerIds, rhs.controllerIds).isEquals();
+        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(submitted, rhs.submitted).append(dateFrom, rhs.dateFrom).append(controllerId, rhs.controllerId).append(controllerIds, rhs.controllerIds).isEquals();
     }
 
 }

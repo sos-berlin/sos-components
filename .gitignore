@@ -3,3 +3,4 @@
 **/.settings/*
 **/.classpath
 /sos-webservices/sos-webservices-deployment/.gitignore
+/.metadata/

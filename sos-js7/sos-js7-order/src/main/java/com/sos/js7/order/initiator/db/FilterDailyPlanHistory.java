@@ -12,19 +12,22 @@ import com.sos.joc.db.SOSFilter;
 public class FilterDailyPlanHistory extends SOSFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterDailyPlanHistory.class);
-    private String controllerId;
+    private List<String> listOfControllerIds;
     private Boolean submitted;
     private String orderId;
     private Date dailyPlanDate;
     private Date dailyPlanDateFrom;
     private Date dailyPlanDateTo;
 
-    public String getControllerId() {
-        return controllerId;
+    public void setControllerId(String controllerId) {
+        this.addControllerId(controllerId);
     }
 
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
+    public void addControllerId(String controllerId) {
+        if (listOfControllerIds == null) {
+            listOfControllerIds = new ArrayList<String>();
+        }
+        listOfControllerIds.add(controllerId);
     }
 
     public Date getDailyPlanDate() {
@@ -65,6 +68,16 @@ public class FilterDailyPlanHistory extends SOSFilter {
 
     public void setSubmitted(Boolean submitted) {
         this.submitted = submitted;
+    }
+
+    
+    public List<String> getListOfControllerIds() {
+        return listOfControllerIds;
+    }
+
+    
+    public void setListOfControllerIds(List<String> listOfControllerIds) {
+        this.listOfControllerIds = listOfControllerIds;
     }
 
 }

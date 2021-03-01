@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.orders.DBItemDailyPlanHistory;
 
@@ -49,12 +50,10 @@ public class DBLayerDailyPlanHistory {
             where += and + " submitted = :submitted";
             and = " and ";
         }
-
-        if (filter.getControllerId() != null && !"".equals(filter.getControllerId())) {
-            where += and + " controllerId = :controllerId";
+        if (filter.getListOfControllerIds() != null && filter.getListOfControllerIds().size() > 0) {
+            where += and + SearchStringHelper.getStringListSql(filter.getListOfControllerIds(), "controllerId");
             and = " and ";
         }
-
         if (filter.getOrderId() != null && !"".equals(filter.getOrderId())) {
             where += and + " orderId = :orderId";
             and = " and ";
@@ -77,11 +76,7 @@ public class DBLayerDailyPlanHistory {
         if (filter.getDailyPlanDateTo() != null) {
             query.setParameter("dailyPlanDateTo", filter.getDailyPlanDateTo());
         }
-
-        if (filter.getControllerId() != null && !"".equals(filter.getControllerId())) {
-            query.setParameter("controllerId", filter.getControllerId());
-        }
-
+ 
         if (filter.getOrderId() != null && !"".equals(filter.getOrderId())) {
             query.setParameter("orderId", filter.getOrderId());
         }

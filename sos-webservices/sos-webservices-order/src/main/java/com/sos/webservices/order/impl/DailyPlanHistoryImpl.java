@@ -186,9 +186,10 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             Globals.beginTransaction(sosHibernateSession);
 
             FilterDailyPlanHistory filter = new FilterDailyPlanHistory();
-            filter.setControllerId(dailyPlanHistoryFilter.getControllerId());
 
             if (dailyPlanHistoryFilter.getFilter() != null) {
+                filter.setListOfControllerIds(dailyPlanHistoryFilter.getFilter().getControllerIds());
+                filter.addControllerId(dailyPlanHistoryFilter.getFilter().getControllerId());
 
                 filter.setSubmitted(dailyPlanHistoryFilter.getFilter().getSubmitted());
                 if ((dailyPlanHistoryFilter.getFilter().getDateTo() != null) && (dailyPlanHistoryFilter.getFilter().getDateFrom() == null)) {
