@@ -52,7 +52,7 @@ public abstract class AJocClusterService implements IJocClusterService {
     }
 
     public static void setLogger(String identifier) {
-        MDC.put("clusterService", "service_" + identifier);
+        MDC.put("clusterService", "service-" + identifier);
     }
 
     public static void clearLogger() {
