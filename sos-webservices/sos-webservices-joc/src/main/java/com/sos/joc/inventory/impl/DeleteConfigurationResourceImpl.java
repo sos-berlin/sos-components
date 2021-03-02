@@ -30,7 +30,7 @@ import com.sos.joc.model.inventory.common.RequestFilters;
 import com.sos.joc.model.inventory.common.RequestFolder;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.publish.db.DBLayerDeploy;
-import com.sos.joc.publish.impl.DeleteDeployments;
+import com.sos.joc.publish.util.DeleteDeployments;
 import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
