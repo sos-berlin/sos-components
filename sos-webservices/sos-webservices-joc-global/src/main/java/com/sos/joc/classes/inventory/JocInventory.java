@@ -52,7 +52,6 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
-import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
@@ -705,52 +704,74 @@ public class JocInventory {
                 throw new DBInvalidDataException(ex);
             }
         }
-    }
+    } //List<DBItemInventoryConfiguration> dBFolderContent
     
-    public static void restoreInventoryConfigurationFromTrash(DBItemInventoryConfigurationTrash trashItem, InventoryDBLayer dbLayer) {
-        try {
-            List<DBItemInventoryConfiguration> items = dbLayer.getConfigurationByName(trashItem.getName(), trashItem.getType());
-            
-            Date now = Date.from(Instant.now());
-            DBItemInventoryConfiguration item = null;
-            if (items == null || items.isEmpty()) {
-                dbLayer.getSession().delete(trashItem);
-                item = new DBItemInventoryConfiguration();
-                item.setId(null);
-                item.setPath(trashItem.getPath());
-                item.setName(trashItem.getName());
-                item.setFolder(trashItem.getFolder());
-                item.setCreated(now);
-                item.setType(trashItem.getType());
-            } else {
-                if (items.get(0).getPath().equals(trashItem.getPath())) {
-                    item = items.get(0);
-                    dbLayer.getSession().delete(trashItem);
-                } else {
-                    throw new JocObjectAlreadyExistException(String.format("The name has to be unique: '%s' is already used in '%s'", trashItem
-                            .getName(), items.get(0).getPath()));
+    public static Set<String> deepCopy(DBItemInventoryConfiguration config, String newName, InventoryDBLayer dbLayer) throws JsonParseException,
+            JsonMappingException, SOSHibernateException, JsonProcessingException, IOException {
+        return deepCopy(config, newName, Collections.emptySet(), dbLayer);
+    }
+
+    public static Set<String> deepCopy(DBItemInventoryConfiguration config, String newName, Set<DBItemInventoryConfiguration> items,
+            InventoryDBLayer dbLayer) throws JsonParseException, JsonMappingException, SOSHibernateException, JsonProcessingException, IOException {
+        Set<String> events = new HashSet<>();
+        switch (config.getTypeAsEnum()) {
+        case LOCK: // determine Workflows with Lock instructions
+            List<DBItemInventoryConfiguration> workflows = null;
+            try {
+                workflows = dbLayer.getUsedWorkflowsByLockId(config.getName());
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                LOGGER.warn("", e);
+            }
+            if (workflows != null && !workflows.isEmpty()) {
+                for (DBItemInventoryConfiguration workflow : workflows) {
+                    workflow.setContent(workflow.getContent().replaceAll("(\"lockId\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName + "\""));
+                    workflow.setDeployed(false);
+                    if (items.remove(workflow)) {
+                        items.add(workflow);
+                    } else{
+                        JocInventory.updateConfiguration(dbLayer, workflow);
+                        events.add(workflow.getFolder());
+                    }
                 }
             }
-            if (item != null) {
-                item.setAuditLogId(trashItem.getAuditLogId());
-                item.setContent(trashItem.getContent());
-                item.setDocumentationId(trashItem.getDocumentationId());
-                item.setTitle(trashItem.getTitle());
-                item.setValid(trashItem.getValid());
-                item.setDeployed(false);
-                item.setReleased(false);
-                item.setModified(now);
-                if (item.getId() == null) {
-                    insertConfiguration(dbLayer, item);
-                    makeParentDirsForTrash(dbLayer, Paths.get(item.getFolder()), item.getAuditLogId());
-                } else {
-                    updateConfiguration(dbLayer, item);
+            break;
+        case WORKFLOW: // determine Schedules with Workflow reference
+            List<DBItemInventoryConfiguration> schedules = dbLayer.getUsedSchedulesByWorkflowName(config.getName());
+            if (schedules != null && !schedules.isEmpty()) {
+                for (DBItemInventoryConfiguration schedule : schedules) {
+                    schedule.setContent(schedule.getContent().replaceAll("(\"workflowName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName
+                            + "\""));
+                    schedule.setReleased(false);
+                    if (items.remove(schedule)) {
+                        items.add(schedule);
+                    } else{
+                        JocInventory.updateConfiguration(dbLayer, schedule);
+                        events.add(schedule.getFolder());
+                    }
                 }
             }
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
+            break;
+        case WORKINGDAYSCALENDAR: // determine Schedules with Calendar reference
+        case NONWORKINGDAYSCALENDAR:
+            List<DBItemInventoryConfiguration> schedules1 = dbLayer.getUsedSchedulesByCalendarName(config.getName());
+            if (schedules1 != null && !schedules1.isEmpty()) {
+                for (DBItemInventoryConfiguration schedule : schedules1) {
+                    schedule.setContent(schedule.getContent().replaceAll("(\"calendarName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName
+                            + "\""));
+                    schedule.setReleased(false);
+                    if (items.remove(schedule)) {
+                        items.add(schedule);
+                    } else{
+                        JocInventory.updateConfiguration(dbLayer, schedule);
+                        events.add(schedule.getFolder());
+                    }
+                }
+            }
+            break;
+        default:
+            break;
         }
+        return events;
     }
 }

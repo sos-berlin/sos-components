@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
@@ -66,7 +67,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             
             if (JocInventory.isFolder(type)) {
                 boolean isUpdated = false;
-                List<DBItemInventoryConfiguration> dBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null);
+                Set<DBItemInventoryConfiguration> dBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null).stream().collect(Collectors.toSet());
                 for (DBItemInventoryConfiguration item : dBFolderContent) {
                     if (ConfigurationType.FOLDER.intValue() == item.getType()) {
                         continue;
@@ -77,11 +78,13 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                         }
                         if (!item.getName().equalsIgnoreCase(newName)) {
                             CheckJavaVariableName.test("name", item.getName());
-                            List<DBItemInventoryConfiguration> names = dbLayer.getConfigurationByName(item.getName(), item.getType());
+                            List<DBItemInventoryConfiguration> names = dbLayer.getConfigurationByName(newName, item.getType());
                             if (!names.isEmpty()) {
-                                throw new JocObjectAlreadyExistException("Cannot rename to " + item.getName());
+                                throw new JocObjectAlreadyExistException("Cannot rename " + item.getName() + " to " + newName);
                             }
                         }
+                        events.addAll(JocInventory.deepCopy(item, newName, dBFolderContent, dbLayer));
+                        
                         setItem(item, Paths.get(item.getFolder()).resolve(newName));
                         JocInventory.updateConfiguration(dbLayer, item);
                         isUpdated = true;
@@ -122,47 +125,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                     }
                 }
                 
-                switch (type) {
-                case LOCK: // determine Workflows with Lock instructions
-                    List<DBItemInventoryConfiguration> workflows = dbLayer.getUsedWorkflowsByLockId(config.getName());
-                    if (workflows != null && !workflows.isEmpty()) {
-                        for (DBItemInventoryConfiguration workflow : workflows) {
-                            workflow.setContent(workflow.getContent().replaceAll("(\"lockId\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + p
-                                    .getFileName() + "\""));
-                            workflow.setDeployed(false);
-                            JocInventory.updateConfiguration(dbLayer, workflow);
-                            events.add(workflow.getFolder());
-                        }
-                    }
-                    break;
-                case WORKFLOW: // determine Schedules with Workflow reference
-                    List<DBItemInventoryConfiguration> schedules = dbLayer.getUsedSchedulesByWorkflowName(config.getName());
-                    if (schedules != null && !schedules.isEmpty()) {
-                        for (DBItemInventoryConfiguration schedule : schedules) {
-                            schedule.setContent(schedule.getContent().replaceAll("(\"workflowName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + p
-                                    .getFileName() + "\""));
-                            schedule.setReleased(false);
-                            JocInventory.updateConfiguration(dbLayer, schedule);
-                            events.add(schedule.getFolder());
-                        }
-                    }
-                    break;
-                case WORKINGDAYSCALENDAR: // determine Schedules with Calendar reference
-                case NONWORKINGDAYSCALENDAR:
-                    List<DBItemInventoryConfiguration> schedules1 = dbLayer.getUsedSchedulesByCalendarName(config.getName());
-                    if (schedules1 != null && !schedules1.isEmpty()) {
-                        for (DBItemInventoryConfiguration schedule : schedules1) {
-                            schedule.setContent(schedule.getContent().replaceAll("(\"calendarName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + p
-                                    .getFileName() + "\""));
-                            schedule.setReleased(false);
-                            JocInventory.updateConfiguration(dbLayer, schedule);
-                            events.add(schedule.getFolder());
-                        }
-                    }
-                    break;
-                default:
-                    break;
-                }
+                events.addAll(JocInventory.deepCopy(config, p.getFileName().toString(), dbLayer));
                 
                 setItem(config, p);
                 createAuditLog(config);
