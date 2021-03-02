@@ -111,6 +111,7 @@ public class OrderListSynchronizer {
             InterruptedException, ExecutionException, SOSHibernateException, TimeoutException, ParseException {
 
         LOGGER.debug(listOfPlannedOrders.size() + " orders will be submitted to the controller");
+        Map<String, Integer> listOfExceptions = new HashMap<String, Integer>();
 
         Set<PlannedOrder> addedOrders = new HashSet<PlannedOrder>();
         for (PlannedOrder p : listOfPlannedOrders.values()) {
@@ -126,7 +127,27 @@ public class OrderListSynchronizer {
             Globals.beginTransaction(sosHibernateSession);
 
             DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
-            OrderApi.addOrderToController(addedOrders);
+
+            try {
+                OrderApi.addOrderToController(addedOrders);
+            } catch (Exception e) {
+                Integer cnt = listOfExceptions.get(e.getMessage());
+                if (cnt == null) {
+                    cnt = 0;
+                }
+                cnt = cnt + 1;
+                listOfExceptions.put(e.getMessage(), cnt);
+            }
+
+            for (Entry<String, Integer> entry : listOfExceptions.entrySet()) {
+                Integer cnt = entry.getValue();
+                String s = "";
+                if (cnt > 1) {
+                    s = " occurs " + cnt + " times";
+                }
+
+                LOGGER.warn(entry.getKey() + s);
+            }
 
             Set<OrderId> setOfOrderIds = OrderApi.getNotMarkWithRemoveOrdersWhenTerminated();
 
@@ -219,9 +240,9 @@ public class OrderListSynchronizer {
                     cycleOrderKey.setRepeat(plannedOrder.getPeriod().getRepeat());
                     cycleOrderKey.setSchedulePath(plannedOrder.getSchedule().getPath());
                     cycleOrderKey.setWorkflowPath(plannedOrder.getSchedule().getWorkflowPath());
-                    
+
                     if (mapOfCycledOrders.get(cycleOrderKey) == null) {
-                        mapOfCycledOrders.put(cycleOrderKey,new ArrayList<PlannedOrder>());
+                        mapOfCycledOrders.put(cycleOrderKey, new ArrayList<PlannedOrder>());
                     }
                     mapOfCycledOrders.get(cycleOrderKey).add(plannedOrder);
                 }
@@ -231,19 +252,20 @@ public class OrderListSynchronizer {
                 int size = entry.getValue().size();
                 int nr = 1;
                 Long firstId = null;
-                for (PlannedOrder plannedOrder:entry.getValue()) {
- 
+                for (PlannedOrder plannedOrder : entry.getValue()) {
+
                     DBItemDailyPlanOrders dbItemDailyPlan = null;
                     dbItemDailyPlan = dbLayerDailyPlan.getUniqueDailyPlan(plannedOrder);
 
                     if (OrderInitiatorGlobals.orderInitiatorSettings.isOverwrite() || dbItemDailyPlan == null) {
-                        LOGGER.trace("snchronizer: adding planned cylced order to database: " + nr + " of " + size + " " + plannedOrder.uniqueOrderkey());
+                        LOGGER.trace("snchronizer: adding planned cylced order to database: " + nr + " of " + size + " " + plannedOrder
+                                .uniqueOrderkey());
                         plannedOrder.setAverageDuration(listOfDurations.get(plannedOrder.getSchedule().getWorkflowName()));
-                        Long fId = dbLayerDailyPlan.store(plannedOrder,firstId,nr,size);
-                        if (firstId == null){
+                        Long fId = dbLayerDailyPlan.store(plannedOrder, firstId, nr, size);
+                        if (firstId == null) {
                             firstId = fId;
                         }
-                        nr = nr +1;
+                        nr = nr + 1;
                         plannedOrder.setStoredInDb(true);
                     }
                 }
