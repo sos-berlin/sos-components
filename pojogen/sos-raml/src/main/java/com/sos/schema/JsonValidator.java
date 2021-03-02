@@ -126,6 +126,8 @@ public class JsonValidator {
             put("com.sos.joc.model.publish.SetVersionFilter", "publish/setVersion-schema.json");
             put("com.sos.joc.model.publish.SetVersionsFilter", "publish/setVersions-schema.json");
             put("com.sos.joc.model.publish.ShowDepHistoryFilter", "publish/showDepHistoryFilter-schema.json");
+            put("com.sos.joc.model.publish.ShowDepHistoryFilter", "publish/showDepHistoryFilter-schema.json");
+            put("com.sos.joc.model.publish.RedeployFilter", "publish/redeployFilter-schema.json");
            
             put("com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter", "orderManagement/dailyplan/dailyplanSubmissionsFilter-schema.json");
             put("com.sos.joc.model.dailyplan.DailyPlanOrderFilter", "orderManagement/dailyplan/dailyPlanOrdersFilter-schema.json");
