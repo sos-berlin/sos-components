@@ -46,6 +46,7 @@ import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.inventory.ConfigurationObject;
@@ -961,7 +962,7 @@ public class DBLayerDeploy {
             try {
                 Validator.validate(configuration.getObjectType(), configuration.getConfiguration(), new InventoryDBLayer(session), agentNames);
                 valid = true;
-            } catch (SOSJsonSchemaException | IOException e) {
+            } catch (SOSJsonSchemaException | JocConfigurationException | IOException e) {
                 valid = false;
             }
             // check if imported agentName is known. Has to be removed, when the Validator takes over the check!
@@ -1122,26 +1123,13 @@ public class DBLayerDeploy {
         String name = null;
         if (existingJsObject != null) {
             existingJsObject.setModified(Date.from(Instant.now()));
-            switch (type) {
-            case WORKFLOW:
-                // Why cast WorkflowPublish?
-                existingJsObject.setContent(om.writeValueAsString(((WorkflowPublish) jsObject).getContent()));
-                existingJsObject.setAuditLogId(auditLogId);
-                existingJsObject.setDocumentationId(0L);
-                existingJsObject.setDeployed(false);
-                // save or update signature in different Table
-                if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {
-                    saveOrUpdateSignature(existingJsObject.getId(), jsObject, account, type);
-                }
-                break;
-            case LOCK:
-                // TODO: 
-                break;
-            case JUNCTION:
-                // TODO: 
-                break;
-            default:
-                break;
+            existingJsObject.setContent(om.writeValueAsString(jsObject.getContent()));
+            existingJsObject.setAuditLogId(auditLogId);
+            existingJsObject.setDocumentationId(0L);
+            existingJsObject.setDeployed(false);
+            // save or update signature in different Table
+            if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {
+                saveOrUpdateSignature(existingJsObject.getId(), jsObject, account, type);
             }
             session.update(existingJsObject);
             return existingJsObject;
@@ -1150,34 +1138,21 @@ public class DBLayerDeploy {
             Date now = Date.from(Instant.now());
             newJsObject.setModified(now);
             newJsObject.setCreated(now);
-            switch (type) {
-            case WORKFLOW:
-                // Why cast WorkflowPublish?
-                newJsObject.setContent(om.writeValueAsString(((WorkflowPublish) jsObject).getContent()));
-                folderPath = Paths.get(((WorkflowPublish) jsObject).getContent().getPath() + ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION).getParent();
-                newJsObject.setFolder(folderPath.toString().replace('\\', '/'));
-                newJsObject.setPath(((WorkflowPublish) jsObject).getContent().getPath());
-                name = Paths.get(((WorkflowPublish) jsObject).getContent().getPath()).getFileName().toString();
-                newJsObject.setName(name);
-                newJsObject.setType(ConfigurationType.WORKFLOW);
-                newJsObject.setAuditLogId(auditLogId);
-                newJsObject.setDocumentationId(0L);
-                newJsObject.setDeployed(false);
-                newJsObject.setReleased(false);
-                session.save(newJsObject);
-                // save or update signature in different Table
-                if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {
-                    saveOrUpdateSignature(newJsObject.getId(), jsObject, account, type);
-                }
-                break;
-            case LOCK:
-                // TODO: 
-                break;
-            case JUNCTION:
-                // TODO: 
-                break;
-            default:
-                break;
+            newJsObject.setContent(om.writeValueAsString(jsObject.getContent()));
+            folderPath = Paths.get(((WorkflowPublish) jsObject).getContent().getPath() + ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION).getParent();
+            newJsObject.setFolder(folderPath.toString().replace('\\', '/'));
+            newJsObject.setPath(((WorkflowPublish) jsObject).getContent().getPath());
+            name = Paths.get(((WorkflowPublish) jsObject).getContent().getPath()).getFileName().toString();
+            newJsObject.setName(name);
+            newJsObject.setType(ConfigurationType.WORKFLOW);
+            newJsObject.setAuditLogId(auditLogId);
+            newJsObject.setDocumentationId(0L);
+            newJsObject.setDeployed(false);
+            newJsObject.setReleased(false);
+            session.save(newJsObject);
+            // save or update signature in different Table
+            if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {
+                saveOrUpdateSignature(newJsObject.getId(), jsObject, account, type);
             }
             return newJsObject;
         }
