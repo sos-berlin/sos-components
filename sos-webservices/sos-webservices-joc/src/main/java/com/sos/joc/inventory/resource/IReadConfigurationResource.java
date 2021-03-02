@@ -15,7 +15,7 @@ public interface IReadConfigurationResource {
     public static final String PATH = "read/configuration";
     public static final String IMPL_PATH = JocInventory.getResourceImplPath(PATH);
     public static final String TRASH_PATH = "trash/read/configuration";
-    public static final String TRASH_IMPL_PATH = JocInventory.getResourceImplPath(PATH);
+    public static final String TRASH_IMPL_PATH = JocInventory.getResourceImplPath(TRASH_PATH);
 
     @POST
     @Path(PATH)

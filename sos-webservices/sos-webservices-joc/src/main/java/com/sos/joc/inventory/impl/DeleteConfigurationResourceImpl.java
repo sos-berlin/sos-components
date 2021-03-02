@@ -190,16 +190,24 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
 
             DBItemInventoryConfiguration folder = JocInventory.getConfiguration(dbLayer, null, in.getPath(), ConfigurationType.FOLDER,
                     folderPermissions);
-            ReleaseResourceImpl.delete(folder, dbLayer, getJocAuditLog(), true, true);
+            ReleaseResourceImpl.delete(folder, dbLayer, getJocAuditLog(), true, false);
 
             List<DBItemInventoryConfiguration> deployables = dbLayer.getFolderContent(folder.getPath(), true, JocInventory.getDeployableTypes());
             if (deployables != null && !deployables.isEmpty()) {
                 String account = JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel()) ? Globals.getDefaultProfileUserAccount() : getAccount();
                 DeleteDeployments.deleteFolder(folder.getPath(), true, Proxies.getControllerDbInstances().keySet(), new DBLayerDeploy(session),
                         account, accessToken, getJocError(), false);
-            }  
+            }
+            
+            if (!JocInventory.ROOT_FOLDER.equals(folder.getPath())) {
+                List<DBItemInventoryConfiguration> content = dbLayer.getFolderContent(folder.getPath(), true, null);
+                if (content.isEmpty()) {
+                    session.delete(folder);
+                }
+            }
             
             Globals.commit(session);
+            JocInventory.postEvent(folder.getFolder());
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {
             Globals.rollback(session);
