@@ -1475,7 +1475,7 @@ public class DBLayerDeploy {
                 .append("select max(history.id) from ")
                 .append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
             if (recursive) {
-                hql.append(" where (history.folder = :folder or history.folder like :likefolder");
+                hql.append(" where (history.folder = :folder or history.folder like :likefolder)");
             } else {
                 hql.append(" where history.folder = :folder");
             }
