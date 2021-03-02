@@ -1084,7 +1084,7 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("where ic.type=:type ");
         hql.append("and sw.deployed=false ");
         hql.append("and ");
-        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "sw.instructions", "$.locks." + lockId)).append(" is not null");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "sw.instructions", "$.locks.\"" + lockId + "\"")).append(" is not null");
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.WORKFLOW.intValue());

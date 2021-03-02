@@ -437,7 +437,7 @@ public class JocInventory {
                 }
             } else if (name != null) {// name
                 List<DBItemInventoryConfiguration> configs = dbLayer.getConfigurationByName(name, type.intValue());
-                if (configs == null || configs.size() == 0) {
+                if (configs == null || configs.isEmpty()) {
                     throw new DBMissingDataException(String.format("configuration not found: %s", name));
                 }
                 config = configs.get(0); // TODO
@@ -708,27 +708,23 @@ public class JocInventory {
     
     public static Set<String> deepCopy(DBItemInventoryConfiguration config, String newName, InventoryDBLayer dbLayer) throws JsonParseException,
             JsonMappingException, SOSHibernateException, JsonProcessingException, IOException {
-        return deepCopy(config, newName, Collections.emptySet(), dbLayer);
+        return deepCopy(config, newName, Collections.emptyList(), dbLayer);
     }
 
-    public static Set<String> deepCopy(DBItemInventoryConfiguration config, String newName, Set<DBItemInventoryConfiguration> items,
+    public static Set<String> deepCopy(DBItemInventoryConfiguration config, String newName, List<DBItemInventoryConfiguration> items,
             InventoryDBLayer dbLayer) throws JsonParseException, JsonMappingException, SOSHibernateException, JsonProcessingException, IOException {
         Set<String> events = new HashSet<>();
         switch (config.getTypeAsEnum()) {
         case LOCK: // determine Workflows with Lock instructions
-            List<DBItemInventoryConfiguration> workflows = null;
-            try {
-                workflows = dbLayer.getUsedWorkflowsByLockId(config.getName());
-            } catch (Exception e) {
-                // TODO Auto-generated catch block
-                LOGGER.warn("", e);
-            }
+            List<DBItemInventoryConfiguration> workflows = dbLayer.getUsedWorkflowsByLockId(config.getName());
             if (workflows != null && !workflows.isEmpty()) {
                 for (DBItemInventoryConfiguration workflow : workflows) {
                     workflow.setContent(workflow.getContent().replaceAll("(\"lockId\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName + "\""));
                     workflow.setDeployed(false);
-                    if (items.remove(workflow)) {
-                        items.add(workflow);
+                    int i = items.indexOf(workflow);
+                    if (i != -1) {
+                        items.get(i).setContent(workflow.getContent());
+                        items.get(i).setDeployed(false);
                     } else{
                         JocInventory.updateConfiguration(dbLayer, workflow);
                         events.add(workflow.getFolder());
@@ -743,8 +739,10 @@ public class JocInventory {
                     schedule.setContent(schedule.getContent().replaceAll("(\"workflowName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName
                             + "\""));
                     schedule.setReleased(false);
-                    if (items.remove(schedule)) {
-                        items.add(schedule);
+                    int i = items.indexOf(schedule);
+                    if (i != -1) {
+                        items.get(i).setContent(schedule.getContent());
+                        items.get(i).setReleased(false);
                     } else{
                         JocInventory.updateConfiguration(dbLayer, schedule);
                         events.add(schedule.getFolder());
@@ -760,8 +758,10 @@ public class JocInventory {
                     schedule.setContent(schedule.getContent().replaceAll("(\"calendarName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName
                             + "\""));
                     schedule.setReleased(false);
-                    if (items.remove(schedule)) {
-                        items.add(schedule);
+                    int i = items.indexOf(schedule);
+                    if (i != -1) {
+                        items.get(i).setContent(schedule.getContent());
+                        items.get(i).setReleased(false);
                     } else{
                         JocInventory.updateConfiguration(dbLayer, schedule);
                         events.add(schedule.getFolder());

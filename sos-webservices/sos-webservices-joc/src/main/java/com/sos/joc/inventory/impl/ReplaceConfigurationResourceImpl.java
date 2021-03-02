@@ -6,6 +6,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -62,33 +64,28 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             ConfigurationType type = config.getTypeAsEnum();
             
             String search = in.getSearch().replaceAll("%", ".*");
+            Predicate<String> regex = Pattern.compile(search, Pattern.CASE_INSENSITIVE).asPredicate();
+            Predicate<DBItemInventoryConfiguration> regexFilter = item -> regex.test(item.getName());
+            Predicate<DBItemInventoryConfiguration> notFolderFilter = item -> ConfigurationType.FOLDER.intValue() != item.getType();
             
             Set<String> events = new HashSet<>();
             
             if (JocInventory.isFolder(type)) {
                 boolean isUpdated = false;
-                Set<DBItemInventoryConfiguration> dBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null).stream().collect(Collectors.toSet());
+                List<DBItemInventoryConfiguration> dBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null).stream().filter(
+                        notFolderFilter).filter(regexFilter).collect(Collectors.toList());
                 for (DBItemInventoryConfiguration item : dBFolderContent) {
-                    if (ConfigurationType.FOLDER.intValue() == item.getType()) {
-                        continue;
-                    } else {
-                        String newName = item.getName().replaceAll(search, in.getReplace());
-                        if (item.getName().equals(newName)) {
-                            continue;
-                        }
-                        if (!item.getName().equalsIgnoreCase(newName)) {
-                            CheckJavaVariableName.test("name", item.getName());
-                            List<DBItemInventoryConfiguration> names = dbLayer.getConfigurationByName(newName, item.getType());
-                            if (!names.isEmpty()) {
-                                throw new JocObjectAlreadyExistException("Cannot rename " + item.getName() + " to " + newName);
-                            }
-                        }
-                        events.addAll(JocInventory.deepCopy(item, newName, dBFolderContent, dbLayer));
-                        
-                        setItem(item, Paths.get(item.getFolder()).resolve(newName));
-                        JocInventory.updateConfiguration(dbLayer, item);
-                        isUpdated = true;
+                    String newName = item.getName().replaceAll(search, in.getReplace());
+                    CheckJavaVariableName.test("name", newName);
+                    List<DBItemInventoryConfiguration> names = dbLayer.getConfigurationByName(newName, item.getType());
+                    if (!names.isEmpty()) {
+                        throw new JocObjectAlreadyExistException("Cannot rename " + item.getName() + " to " + newName);
                     }
+                    events.addAll(JocInventory.deepCopy(item, newName, dBFolderContent, dbLayer));
+
+                    setItem(item, Paths.get(item.getFolder()).resolve(newName));
+                    JocInventory.updateConfiguration(dbLayer, item);
+                    isUpdated = true;
                 }
                 if (isUpdated) {
                     createAuditLog(config);
