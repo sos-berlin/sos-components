@@ -53,7 +53,7 @@ public class CleanupServiceSchedule {
     private ZonedDateTime firstStart = null;
     private ZonedDateTime start = null;
     private ZonedDateTime end = null;
-    List<String> unclompleted = null;
+    private List<String> unclompleted = null;
 
     public CleanupServiceSchedule(CleanupService service) {
         this.service = service;
@@ -312,9 +312,7 @@ public class CleanupServiceSchedule {
             }
             return nanos;
 
-        } catch (
-
-        Throwable e) {
+        } catch (Throwable e) {
             throw e;
         } finally {
             dbLayer.close();

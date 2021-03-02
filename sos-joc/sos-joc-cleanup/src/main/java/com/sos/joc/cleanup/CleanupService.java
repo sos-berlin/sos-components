@@ -147,10 +147,10 @@ public class CleanupService extends AJocClusterService {
     }
 
     public static Date toDate(ZonedDateTime dateTime) {
-        return Date.from(dateTime.toInstant());
+        return dateTime == null ? null : Date.from(dateTime.toInstant());
     }
 
-    public static ZonedDateTime getZonedDateTimeUTCMinusMinutes(ZonedDateTime datetime, Long minutes) {
+    public static ZonedDateTime getZonedDateTimeUTCMinusMinutes(ZonedDateTime datetime, long minutes) {
         return datetime.withZoneSameInstant(ZoneId.of("UTC")).minusMinutes(minutes);
     }
 

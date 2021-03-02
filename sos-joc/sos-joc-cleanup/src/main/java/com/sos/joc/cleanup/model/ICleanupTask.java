@@ -1,13 +1,14 @@
 package com.sos.joc.cleanup.model;
 
-import java.util.Date;
+import java.util.List;
 
+import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
 
 public interface ICleanupTask {
 
-    public void start(Date date);
+    public void start(List<TaskDateTime> datetimes);
 
     public void start(int counter);
 

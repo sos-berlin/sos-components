@@ -1,13 +1,17 @@
 package com.sos.joc.cleanup.model;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cluster.IJocClusterService;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
@@ -22,76 +26,225 @@ public class CleanupTaskHistory extends CleanupTaskModel {
     }
 
     @Override
-    public JocServiceTaskAnswerState cleanup(Date date) throws SOSHibernateException {
+    public JocServiceTaskAnswerState cleanup(List<TaskDateTime> datetimes) throws Exception {
         try {
-            getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
-            cleanupControllersAndAgents(date);
-            getDbLayer().close();
+            TaskDateTime orderDatetime = datetimes.get(0);
+            TaskDateTime logsDatetime = datetimes.get(1);
 
-            boolean runm = true;
-            while (runm) {
-                getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
-                List<Long> rm = getMainOrderIds(date);
-                getDbLayer().close();
-
-                if (rm == null || rm.size() == 0) {
-                    return JocServiceTaskAnswerState.COMPLETED;
-                }
-                if (isStopped()) {
-                    return JocServiceTaskAnswerState.UNCOMPLETED;
-                }
-
-                boolean runc = true;
-                while (runc) {
-                    if (isStopped()) {
-                        return JocServiceTaskAnswerState.UNCOMPLETED;
-                    }
-                    if (!askService()) {
-                        waitFor(WAIT_INTERVAL_ON_BUSY);
-                        continue;
-                    }
-
-                    getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
-                    List<Long> rc = getChildOrderIds(rm);
-                    if (rc != null && rc.size() > 0) {
-                        if (!cleanupOrders("childs", rc, false)) {
-                            return JocServiceTaskAnswerState.UNCOMPLETED;
-                        }
-                    }
-                    getDbLayer().close();
-                    runc = false;
-                }
-                getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
-                if (!cleanupOrders("main", rm, true)) {
-                    return JocServiceTaskAnswerState.UNCOMPLETED;
-                }
-                getDbLayer().close();
+            if (orderDatetime.getAge().getConfigured().equals(logsDatetime.getAge().getConfigured())) {
+                LOGGER.info(String.format("[%s][orders,logs][%s][%s]start cleanup", getIdentifier(), orderDatetime.getAge().getConfigured(),
+                        orderDatetime.getZonedDatetime()));
+                return cleanupOrders(orderDatetime, true);
             }
-        } catch (Exception e) {
+
+            JocServiceTaskAnswerState state = null;
+            if (logsDatetime.getDatetime() != null) {
+                LOGGER.info(String.format("[%s][logs][%s][%s]start cleanup", getIdentifier(), logsDatetime.getAge().getConfigured(), logsDatetime
+                        .getZonedDatetime()));
+                state = cleanupLogs(logsDatetime);
+                if (state.equals(JocServiceTaskAnswerState.COMPLETED)) {
+                    state = cleanupTempLogs(logsDatetime);
+                }
+            } else {
+                LOGGER.info(String.format("[%s][logs][%s]skip", getIdentifier(), logsDatetime.getAge().getConfigured()));
+            }
+
+            if (orderDatetime.getDatetime() != null && (state == null || state.equals(JocServiceTaskAnswerState.COMPLETED))) {
+                LOGGER.info(String.format("[%s][orders][%s][%s]start cleanup", getIdentifier(), orderDatetime.getAge().getConfigured(), orderDatetime
+                        .getZonedDatetime()));
+                state = cleanupOrders(orderDatetime, false);
+            } else {
+                LOGGER.info(String.format("[%s][orders][%s]skip", getIdentifier(), orderDatetime.getAge().getConfigured()));
+            }
+
+            return state;
+        } catch (Throwable e) {
             getDbLayer().rollback();
             throw e;
         } finally {
             getDbLayer().close();
         }
+    }
+
+    private JocServiceTaskAnswerState cleanupLogs(TaskDateTime datetime) throws Exception {
+
+        getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
+        List<Long> ids = getOrderIds(datetime);
+        getDbLayer().close();
+
+        if (ids == null || ids.size() == 0) {
+            return JocServiceTaskAnswerState.COMPLETED;
+        }
+
+        try {
+            getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
+            int size = ids.size();
+            if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
+                ArrayList<Long> copy = (ArrayList<Long>) ids.stream().collect(Collectors.toList());
+
+                JocServiceTaskAnswerState state = null;
+                for (int i = 0; i < size; i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                    List<Long> subList;
+                    if (size > i + SOSHibernate.LIMIT_IN_CLAUSE) {
+                        subList = copy.subList(i, (i + SOSHibernate.LIMIT_IN_CLAUSE));
+                    } else {
+                        subList = copy.subList(i, size);
+                    }
+                    state = deleteLogs(datetime, subList, null);
+                }
+                return state;
+
+            } else {
+                return deleteLogs(datetime, ids, null);
+            }
+        } catch (Throwable e) {
+            throw e;
+        } finally {
+            getDbLayer().close();
+        }
+    }
+
+    private JocServiceTaskAnswerState cleanupTempLogs(TaskDateTime datetime) throws Exception {
+        getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
+        List<Long> ids = getMainParentIdsFromTempLogs(datetime);
+        getDbLayer().close();
+        if (ids == null || ids.size() == 0) {
+            return JocServiceTaskAnswerState.COMPLETED;
+        }
+
+        try {
+            getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
+            return deleteLogs(datetime, ids, datetime.getDatetime());
+        } catch (Throwable e) {
+            throw e;
+        } finally {
+            getDbLayer().close();
+        }
+
+    }
+
+    private JocServiceTaskAnswerState deleteLogs(TaskDateTime datetime, List<Long> orderIds, Date tempLogsDate) throws SOSHibernateException {
+        getDbLayer().getSession().beginTransaction();
+        if (tempLogsDate == null) {
+            StringBuilder hql = new StringBuilder("delete from ");
+            hql.append(DBLayer.DBITEM_HISTORY_LOG).append(" ");
+            hql.append("where historyOrderId in (:orderIds)");
+            Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
+            query.setParameterList("orderIds", orderIds);
+            int r = getDbLayer().getSession().executeUpdate(query);
+            LOGGER.info(String.format("[%s][%s][%s]deleted=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.TABLE_HISTORY_LOGS, r));
+        } else {
+            StringBuilder hql = new StringBuilder("delete from ");
+            hql.append(DBLayer.DBITEM_HISTORY_TEMP_LOG).append(" ");
+            hql.append("where historyOrderMainParentId in (");
+            hql.append("select id from ").append(DBLayer.DBITEM_HISTORY_ORDER).append(" ");
+            hql.append("where id in (:orderIds) ");
+            hql.append("and startTime < :startTime");
+            hql.append(")");
+            Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
+            query.setParameterList("orderIds", orderIds);
+            query.setParameter("startTime", tempLogsDate);
+            int r = getDbLayer().getSession().executeUpdate(query);
+            LOGGER.info(String.format("[%s][%s][%s]deleted=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.TABLE_HISTORY_TEMP_LOGS,
+                    r));
+        }
+        getDbLayer().getSession().commit();
         return JocServiceTaskAnswerState.COMPLETED;
     }
 
-    private List<Long> getMainOrderIds(Date date) throws SOSHibernateException {
+    private JocServiceTaskAnswerState cleanupOrders(TaskDateTime datetime, boolean deleteLogs) throws SOSHibernateException {
+        getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
+        cleanupControllersAndAgents(datetime);
+        getDbLayer().close();
+
+        boolean runm = true;
+        while (runm) {
+            getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
+            List<Long> rm = getMainOrderIds(datetime);
+            getDbLayer().close();
+
+            if (rm == null || rm.size() == 0) {
+                return JocServiceTaskAnswerState.COMPLETED;
+            }
+            if (isStopped()) {
+                return JocServiceTaskAnswerState.UNCOMPLETED;
+            }
+
+            boolean runc = true;
+            while (runc) {
+                if (isStopped()) {
+                    return JocServiceTaskAnswerState.UNCOMPLETED;
+                }
+                if (!askService()) {
+                    waitFor(WAIT_INTERVAL_ON_BUSY);
+                    continue;
+                }
+
+                getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
+                List<Long> rc = getChildOrderIds(datetime, rm);
+                if (rc != null && rc.size() > 0) {
+                    if (!cleanupOrders(datetime, "childs", rc, deleteLogs, false)) {
+                        return JocServiceTaskAnswerState.UNCOMPLETED;
+                    }
+                }
+                getDbLayer().close();
+                runc = false;
+            }
+            getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
+            if (!cleanupOrders(datetime, "main", rm, deleteLogs, true)) {
+                return JocServiceTaskAnswerState.UNCOMPLETED;
+            }
+            getDbLayer().close();
+        }
+        return JocServiceTaskAnswerState.COMPLETED;
+    }
+
+    private List<Long> getMainOrderIds(TaskDateTime datetime) throws SOSHibernateException {
         getDbLayer().getSession().beginTransaction();
         StringBuilder hql = new StringBuilder("select id from ");
         hql.append(DBLayer.DBITEM_HISTORY_ORDER).append(" ");
         hql.append("where startTime < :startTime ");
         hql.append("and parentId=0");
         Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameter("startTime", date);
+        query.setParameter("startTime", datetime.getDatetime());
         query.setMaxResults(getBatchSize());
         List<Long> r = getDbLayer().getSession().getResultList(query);
-        LOGGER.info(String.format("[%s][%s][main]found=%s", getIdentifier(), DBLayer.TABLE_HISTORY_ORDERS, r.size()));
+        LOGGER.info(String.format("[%s][%s][%s][main]found=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.TABLE_HISTORY_ORDERS, r
+                .size()));
         getDbLayer().getSession().commit();
         return r;
     }
 
-    private List<Long> getChildOrderIds(List<Long> mainOrderIds) throws SOSHibernateException {
+    private List<Long> getOrderIds(TaskDateTime datetime) throws SOSHibernateException {
+        getDbLayer().getSession().beginTransaction();
+        StringBuilder hql = new StringBuilder("select id from ");
+        hql.append(DBLayer.DBITEM_HISTORY_ORDER).append(" ");
+        hql.append("where startTime < :startTime ");
+        Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
+        query.setParameter("startTime", datetime.getDatetime());
+        query.setMaxResults(getBatchSize());
+        List<Long> r = getDbLayer().getSession().getResultList(query);
+        LOGGER.info(String.format("[%s][%s][%s]found=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.TABLE_HISTORY_ORDERS, r
+                .size()));
+        getDbLayer().getSession().commit();
+        return r;
+    }
+
+    private List<Long> getMainParentIdsFromTempLogs(TaskDateTime datetime) throws SOSHibernateException {
+        getDbLayer().getSession().beginTransaction();
+        StringBuilder hql = new StringBuilder("select historyOrderMainParentId ");
+        hql.append("from ").append(DBLayer.DBITEM_HISTORY_TEMP_LOG).append(" ");
+        hql.append("group by historyOrderMainParentId");
+        Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
+        query.setMaxResults(SOSHibernate.LIMIT_IN_CLAUSE);
+        List<Long> r = getDbLayer().getSession().getResultList(query);
+        LOGGER.info(String.format("[%s][%s][%s]found=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.TABLE_HISTORY_TEMP_LOGS, r
+                .size()));
+        getDbLayer().getSession().commit();
+        return r;
+    }
+
+    private List<Long> getChildOrderIds(TaskDateTime datetime, List<Long> mainOrderIds) throws SOSHibernateException {
         getDbLayer().getSession().beginTransaction();
         StringBuilder hql = new StringBuilder("select id from ");
         hql.append(DBLayer.DBITEM_HISTORY_ORDER).append(" ");
@@ -100,12 +253,18 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         query.setParameterList("mainOrderIds", mainOrderIds);
         query.setMaxResults(getBatchSize());
         List<Long> r = getDbLayer().getSession().getResultList(query);
-        LOGGER.info(String.format("[%s][%s][childs]found=%s", getIdentifier(), DBLayer.TABLE_HISTORY_ORDERS, r.size()));
+        LOGGER.info(String.format("[%s][%s][%s][childs]found=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.TABLE_HISTORY_ORDERS, r
+                .size()));
         getDbLayer().getSession().commit();
         return r;
     }
 
-    private boolean cleanupOrders(String range, List<Long> orderIds, boolean deleteTmpLogs) throws SOSHibernateException {
+    private boolean cleanupOrders(TaskDateTime datetime, String range, List<Long> orderIds, boolean deleteLogs, boolean deleteTmpLogs)
+            throws SOSHibernateException {
+        StringBuilder log = new StringBuilder();
+        log.append("[").append(getIdentifier()).append("][deleted][").append(datetime.getAge().getConfigured()).append("][").append(range).append(
+                "]");
+
         getDbLayer().getSession().beginTransaction();
         StringBuilder hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_HISTORY_ORDER_STATE).append(" ");
@@ -113,10 +272,11 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("orderIds", orderIds);
         int r = getDbLayer().getSession().executeUpdate(query);
-        LOGGER.info(String.format("[%s][%s][%s]deleted=%s", getIdentifier(), range, DBLayer.TABLE_HISTORY_ORDER_STATES, r));
+        log.append("[").append(DBLayer.TABLE_HISTORY_ORDER_STATES).append("=").append(r).append("]");
         getDbLayer().getSession().commit();
 
         if (isStopped()) {
+            LOGGER.info(log.toString());
             return false;
         }
 
@@ -127,25 +287,29 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("orderIds", orderIds);
         r = getDbLayer().getSession().executeUpdate(query);
-        LOGGER.info(String.format("[%s][%s][%s]deleted=%s", getIdentifier(), range, DBLayer.TABLE_HISTORY_ORDER_STEPS, r));
+        log.append("[").append(DBLayer.TABLE_HISTORY_ORDER_STEPS).append("=").append(r).append("]");
         getDbLayer().getSession().commit();
 
         if (isStopped()) {
+            LOGGER.info(log.toString());
             return false;
         }
 
-        getDbLayer().getSession().beginTransaction();
-        hql = new StringBuilder("delete from ");
-        hql.append(DBLayer.DBITEM_HISTORY_LOG).append(" ");
-        hql.append("where historyOrderId in (:orderIds)");
-        query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameterList("orderIds", orderIds);
-        r = getDbLayer().getSession().executeUpdate(query);
-        LOGGER.info(String.format("[%s][%s][%s]deleted=%s", getIdentifier(), range, DBLayer.TABLE_HISTORY_LOGS, r));
-        getDbLayer().getSession().commit();
+        if (deleteLogs) {
+            getDbLayer().getSession().beginTransaction();
+            hql = new StringBuilder("delete from ");
+            hql.append(DBLayer.DBITEM_HISTORY_LOG).append(" ");
+            hql.append("where historyOrderId in (:orderIds)");
+            query = getDbLayer().getSession().createQuery(hql.toString());
+            query.setParameterList("orderIds", orderIds);
+            r = getDbLayer().getSession().executeUpdate(query);
+            log.append("[").append(DBLayer.TABLE_HISTORY_LOGS).append("=").append(r).append("]");
+            getDbLayer().getSession().commit();
 
-        if (isStopped()) {
-            return false;
+            if (isStopped()) {
+                LOGGER.info(log.toString());
+                return false;
+            }
         }
 
         if (deleteTmpLogs) {
@@ -156,10 +320,11 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             query = getDbLayer().getSession().createQuery(hql.toString());
             query.setParameterList("orderIds", orderIds);
             r = getDbLayer().getSession().executeUpdate(query);
-            LOGGER.info(String.format("[%s][%s][%s]deleted=%s", getIdentifier(), range, DBLayer.TABLE_HISTORY_TEMP_LOGS, r));
+            log.append("[").append(DBLayer.TABLE_HISTORY_TEMP_LOGS).append("=").append(r).append("]");
             getDbLayer().getSession().commit();
 
             if (isStopped()) {
+                LOGGER.info(log.toString());
                 return false;
             }
         }
@@ -171,14 +336,18 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("orderIds", orderIds);
         r = getDbLayer().getSession().executeUpdate(query);
-        LOGGER.info(String.format("[%s][%s][%s]deleted=%s", getIdentifier(), range, DBLayer.TABLE_HISTORY_ORDERS, r));
+        log.append("[").append(DBLayer.TABLE_HISTORY_ORDERS).append("=").append(r).append("]");
         getDbLayer().getSession().commit();
 
+        LOGGER.info(log.toString());
         return true;
     }
 
-    private void cleanupControllersAndAgents(Date date) throws SOSHibernateException {
-        Long eventId = new Long(date.getTime() * 1_000 + 999);
+    private void cleanupControllersAndAgents(TaskDateTime datetime) throws SOSHibernateException {
+        StringBuilder log = new StringBuilder();
+        log.append("[").append(getIdentifier()).append("][deleted][").append(datetime.getAge().getConfigured()).append("]");
+
+        Long eventId = new Long(datetime.getDatetime().getTime() * 1_000 + 999);
 
         getDbLayer().getSession().beginTransaction();
 
@@ -188,7 +357,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameter("eventId", eventId);
         int r = getDbLayer().getSession().executeUpdate(query);
-        LOGGER.info(String.format("[%s][%s]deleted=%s", getIdentifier(), DBLayer.TABLE_HISTORY_CONTROLLERS, r));
+        log.append("[").append(DBLayer.TABLE_HISTORY_CONTROLLERS).append("=").append(r).append("]");
 
         hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_HISTORY_AGENT).append(" ");
@@ -196,9 +365,10 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameter("eventId", eventId);
         r = getDbLayer().getSession().executeUpdate(query);
-        LOGGER.info(String.format("[%s][%s]deleted=%s", getIdentifier(), DBLayer.TABLE_HISTORY_AGENTS, r));
+        log.append("[").append(DBLayer.TABLE_HISTORY_AGENTS).append("=").append(r).append("]");
 
         getDbLayer().getSession().commit();
 
+        LOGGER.info(log.toString());
     }
 }

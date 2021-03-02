@@ -27,8 +27,9 @@ public class CleanupServiceConfiguration {
 
     private Period period = new Period("01:00", "04:00");// no default weekdays - if not configured the service will not start
     private ZoneId zoneId = ZoneId.of("UTC");
-    private Age orderHistoryAge = new Age("90d");
-    private Age dailyPlanHistoryAge = new Age("30d");
+    private Age orderHistoryAge = new Age("cleanup_order_history_age", "90d");
+    private Age orderHistoryLogsAge = new Age("cleanup_order_history_logs_age", "90d");
+    private Age dailyPlanHistoryAge = new Age("cleanup_daily_plan_history_age", "30d");
     private int deploymentHistoryVersions = 10;
     private int batchSize = 1_000;
 
@@ -62,12 +63,25 @@ public class CleanupServiceConfiguration {
 
         String orderHistoryAge = properties.getProperty("cleanup_order_history_age");
         if (!SOSString.isEmpty(orderHistoryAge)) {
-            this.orderHistoryAge = new Age(orderHistoryAge.trim());
+            this.orderHistoryAge = new Age("cleanup_order_history_age", orderHistoryAge.trim());
+        }
+
+        String orderHistoryLogsAge = properties.getProperty("cleanup_order_history_logs_age");
+        if (!SOSString.isEmpty(orderHistoryLogsAge)) {
+            this.orderHistoryLogsAge = new Age("cleanup_order_history_logs_age", orderHistoryLogsAge.trim());
+            if (this.orderHistoryAge.getMinutes() != 0 && this.orderHistoryLogsAge.getMinutes() != 0) {
+                if (this.orderHistoryAge.getMinutes() < this.orderHistoryLogsAge.getMinutes()) {
+                    LOGGER.info(String.format("[change][%s(%s) < %s(%s)][cleanup_order_history_logs_age=%s]", this.orderHistoryAge.getPropertyName(),
+                            this.orderHistoryAge.getConfigured(), this.orderHistoryLogsAge.getPropertyName(), this.orderHistoryLogsAge
+                                    .getConfigured(), this.orderHistoryAge.getConfigured()));
+                    this.orderHistoryLogsAge = this.orderHistoryAge.clone("cleanup_order_history_logs_age");
+                }
+            }
         }
 
         String dailyPlanHistoryAge = properties.getProperty("cleanup_daily_plan_history_age");
         if (!SOSString.isEmpty(dailyPlanHistoryAge)) {
-            this.dailyPlanHistoryAge = new Age(dailyPlanHistoryAge.trim());
+            this.dailyPlanHistoryAge = new Age("cleanup_daily_plan_history_age", dailyPlanHistoryAge.trim());
         }
 
         String deploymentHistoryVersions = properties.getProperty("cleanup_deployment_history_versions");
@@ -102,6 +116,10 @@ public class CleanupServiceConfiguration {
 
     public Age getOrderHistoryAge() {
         return orderHistoryAge;
+    }
+
+    public Age getOrderHistoryLogsAge() {
+        return orderHistoryLogsAge;
     }
 
     public Age getDailyPlanHistoryAge() {
@@ -147,6 +165,8 @@ public class CleanupServiceConfiguration {
         sb.append(",age=[");
         sb.append("orderHistory=[configured=").append(orderHistoryAge.getConfigured()).append(",minutes=").append(orderHistoryAge.getMinutes())
                 .append("]");
+        sb.append("orderHistoryLogs=[configured=").append(orderHistoryLogsAge.getConfigured()).append(",minutes=").append(orderHistoryLogsAge
+                .getMinutes()).append("]");
         sb.append(",dailyPlanHistory=[configured=").append(dailyPlanHistoryAge.getConfigured()).append(",minutes=").append(dailyPlanHistoryAge
                 .getMinutes()).append("]");
         sb.append(",deploymentHistoryVersions=").append(deploymentHistoryVersions);
@@ -157,26 +177,50 @@ public class CleanupServiceConfiguration {
 
     public class Age {
 
+        private String propertyName = null;
         private String configured = null;
-        private Long minutes;
+        private long minutes = 0;
 
-        public Age(String configured) {
-            this.configured = configured;
+        public Age(String propertyName, String configured) {
+            this.propertyName = propertyName;
+            this.configured = configured == null ? "" : configured;
             try {
-                if (StringUtils.isNumeric(this.configured)) {
-                    this.configured = this.configured + "d";
+                if (SOSString.isEmpty(this.configured) || this.configured.equals("0")) {
+                    minutes = 0;
+                } else {
+                    if (StringUtils.isNumeric(this.configured)) {
+                        this.configured = this.configured + "d";
+                    }
+                    minutes = SOSDate.resolveAge("m", this.configured).longValue();
+                    if (minutes < 0) {
+                        minutes = 0;
+                    }
                 }
-                this.minutes = SOSDate.resolveAge("m", this.configured);
             } catch (Exception e) {
+                minutes = 0;
                 LOGGER.error(String.format("[%s]%s", this.configured, e.toString()));
             }
+        }
+
+        private Age(String propertyName, String configured, long minutes) {
+            this.propertyName = propertyName;
+            this.configured = configured;
+            this.minutes = minutes;
+        }
+
+        public String getPropertyName() {
+            return propertyName;
         }
 
         public String getConfigured() {
             return configured;
         }
 
-        public Long getMinutes() {
+        public Age clone(String propertyName) {
+            return new Age(propertyName, this.configured, this.minutes);
+        }
+
+        public long getMinutes() {
             return minutes;
         }
     }

@@ -1,13 +1,13 @@
 package com.sos.joc.cleanup.model;
 
-import java.util.Date;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSString;
+import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cleanup.db.DBLayerCleanup;
 import com.sos.joc.cluster.IJocClusterService;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
@@ -61,8 +61,8 @@ public class CleanupTaskModel implements ICleanupTask {
     }
 
     @Override
-    public void start(Date date) {
-        start(date, -1);
+    public void start(List<TaskDateTime> datetimes) {
+        start(datetimes, -1);
     }
 
     @Override
@@ -70,7 +70,7 @@ public class CleanupTaskModel implements ICleanupTask {
         start(null, counter);
     }
 
-    private void start(Date date, int counter) {
+    private void start(List<TaskDateTime> datetimes, int counter) {
         state = JocServiceTaskAnswerState.UNCOMPLETED;
         stopped.set(false);
 
@@ -81,10 +81,10 @@ public class CleanupTaskModel implements ICleanupTask {
                     return;
                 }
                 if (askService()) {
-                    if (date == null) {
+                    if (datetimes == null) {
                         setState(cleanup(counter));
                     } else {
-                        setState(cleanup(date));
+                        setState(cleanup(datetimes));
                     }
                     run = false;
                 } else {
@@ -127,11 +127,11 @@ public class CleanupTaskModel implements ICleanupTask {
         return type == null ? "null" : type.name().toLowerCase();
     }
 
-    public JocServiceTaskAnswerState cleanup(Date date) throws SOSHibernateException {
+    public JocServiceTaskAnswerState cleanup(List<TaskDateTime> datetimes) throws Exception {
         return state;
     }
 
-    public JocServiceTaskAnswerState cleanup(int counter) throws SOSHibernateException {
+    public JocServiceTaskAnswerState cleanup(int counter) throws Exception {
         return state;
     }
 

@@ -2,6 +2,7 @@ package com.sos.joc.cleanup;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.cluster.JocClusterService;
+import com.sos.joc.cleanup.CleanupServiceConfiguration.Age;
 import com.sos.joc.cleanup.model.CleanupTaskDailyPlan;
 import com.sos.joc.cleanup.model.CleanupTaskDeployment;
 import com.sos.joc.cleanup.model.CleanupTaskHistory;
@@ -74,27 +76,44 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                         AJocClusterService.setLogger(identifier);
 
                         ICleanupTask task = null;
-                        ZonedDateTime date = null;
-                        String dateInfo = null;
+                        boolean disabled = false;
+                        List<TaskDateTime> datetimes = new ArrayList<TaskDateTime>();
                         if (service.getIdentifier().equals(ClusterServices.history.name())) {
-                            task = new CleanupTaskHistory(cleanupSchedule.getFactory(), service, batchSize);
+                            TaskDateTime orderDatetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getOrderHistoryAge(),
+                                    cleanupSchedule.getFirstStart());
 
-                            date = CleanupService.getZonedDateTimeUTCMinusMinutes(cleanupSchedule.getFirstStart(), cleanupSchedule.getService()
-                                    .getConfig().getOrderHistoryAge().getMinutes());
-                            dateInfo = cleanupSchedule.getService().getConfig().getOrderHistoryAge().getConfigured() + "=" + date;
+                            TaskDateTime orderLogsDatetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getOrderHistoryLogsAge(),
+                                    cleanupSchedule.getFirstStart());
+
+                            if (orderDatetime.getDatetime() == null && orderLogsDatetime.getDatetime() == null) {
+                                disabled = true;
+                            } else {
+                                task = new CleanupTaskHistory(cleanupSchedule.getFactory(), service, batchSize);
+                                datetimes.add(orderDatetime);
+                                datetimes.add(orderLogsDatetime);
+
+                            }
                         } else if (service.getIdentifier().equals(ClusterServices.dailyplan.name())) {
-                            task = new CleanupTaskDailyPlan(cleanupSchedule.getFactory(), service, batchSize);
-
-                            date = CleanupService.getZonedDateTimeUTCMinusMinutes(cleanupSchedule.getFirstStart(), cleanupSchedule.getService()
-                                    .getConfig().getDailyPlanHistoryAge().getMinutes());
-                            dateInfo = cleanupSchedule.getService().getConfig().getDailyPlanHistoryAge().getConfigured() + "=" + date;
+                            TaskDateTime datetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getDailyPlanHistoryAge(),
+                                    cleanupSchedule.getFirstStart());
+                            if (datetime.getDatetime() == null) {
+                                disabled = true;
+                            } else {
+                                task = new CleanupTaskDailyPlan(cleanupSchedule.getFactory(), service, batchSize);
+                                datetimes.add(datetime);
+                            }
                         }
 
-                        if (task == null) {
-                            LOGGER.info(String.format("[%s][%s][skip]not implemented yet", logIdentifier, service.getIdentifier()));
+                        if (disabled) {
+                            LOGGER.info(String.format("[%s][%s][skip]age=0", logIdentifier, service.getIdentifier()));
                             LOGGER.info(String.format("[%s][%s]completed", logIdentifier, service.getIdentifier()));
                         } else {
-                            executeTask(task, date, dateInfo, cleanupSchedule.getUncompleted());
+                            if (task == null) {
+                                LOGGER.info(String.format("[%s][%s][skip]not implemented yet", logIdentifier, service.getIdentifier()));
+                                LOGGER.info(String.format("[%s][%s]completed", logIdentifier, service.getIdentifier()));
+                            } else {
+                                executeTask(task, datetimes, cleanupSchedule.getUncompleted());
+                            }
                         }
 
                         AJocClusterService.clearLogger();
@@ -116,8 +135,12 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                         AJocClusterService.setLogger(identifier);
 
                         if (manualTask.getIdentifier().equals(MANUAL_TASK_IDENTIFIER_DEPLOYMENT)) {
-                            executeTask(manualTask, cleanupSchedule.getService().getConfig().getDeploymentHistoryVersions(), cleanupSchedule
-                                    .getUncompleted());
+                            int versions = cleanupSchedule.getService().getConfig().getDeploymentHistoryVersions();
+                            if (versions == 0) {
+                                LOGGER.info(String.format("[%s][%s][skip]versions=0", manualTask.getTypeName(), manualTask.getIdentifier()));
+                            } else {
+                                executeTask(manualTask, versions, cleanupSchedule.getUncompleted());
+                            }
                         } else {
                             LOGGER.info(String.format("  [%s][skip][%s]not implemented yet", manualTask.getTypeName(), manualTask.getIdentifier()));
                         }
@@ -146,7 +169,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
         return getAnswer();
     }
 
-    private void executeTask(ICleanupTask task, ZonedDateTime date, String dateInfo, List<String> uncompleted) {
+    private void executeTask(ICleanupTask task, List<TaskDateTime> datetimes, List<String> uncompleted) {
         boolean run = true;
         if (uncompleted != null) {
             if (!uncompleted.contains(task.getIdentifier())) {
@@ -155,14 +178,14 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
             }
         }
         if (run) {
-            LOGGER.info(String.format("[%s][%s][%s][%s]start...", logIdentifier, task.getTypeName(), task.getIdentifier(), dateInfo));
+            LOGGER.info(String.format("[%s][%s][%s]start...", logIdentifier, task.getTypeName(), task.getIdentifier()));
             cleanupTasks.add(task);
-            task.start(CleanupService.toDate(date));
-            LOGGER.info(String.format("[%s][%s][%s][%s]%s", logIdentifier, task.getTypeName(), task.getIdentifier(), dateInfo, SOSString.toString(task
+            task.start(datetimes);
+            LOGGER.info(String.format("[%s][%s][%s]%s", logIdentifier, task.getTypeName(), task.getIdentifier(), SOSString.toString(task
                     .getState())));
             task.stop();
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[%s][%s][%s][%s]completed", logIdentifier, task.getTypeName(), task.getIdentifier(), dateInfo));
+                LOGGER.debug(String.format("[%s][%s][%s]completed", logIdentifier, task.getTypeName(), task.getIdentifier()));
             }
         }
     }
@@ -248,5 +271,33 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
         } else {
             return JocCluster.getOKAnswer(JocClusterAnswerState.UNCOMPLETED, String.join(",", nonCompleted));
         }
+    }
+
+    public class TaskDateTime {
+
+        private final Age age;
+        private ZonedDateTime zonedDatetime = null;
+        private Date datetime;
+
+        public TaskDateTime(Age age, ZonedDateTime start) {
+            this.age = age;
+            if (this.age.getMinutes() > 0) {
+                this.zonedDatetime = CleanupService.getZonedDateTimeUTCMinusMinutes(start, this.age.getMinutes());
+                this.datetime = CleanupService.toDate(zonedDatetime);
+            }
+        }
+
+        public Age getAge() {
+            return age;
+        }
+
+        public ZonedDateTime getZonedDatetime() {
+            return zonedDatetime;
+        }
+
+        public Date getDatetime() {
+            return datetime;
+        }
+
     }
 }
