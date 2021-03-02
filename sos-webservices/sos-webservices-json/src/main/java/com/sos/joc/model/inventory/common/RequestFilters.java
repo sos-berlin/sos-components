@@ -1,8 +1,12 @@
 
 package com.sos.joc.model.inventory.common;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -16,19 +20,47 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-
+    "objects"
 })
 public class RequestFilters {
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("objects")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<RequestFilter> objects = new LinkedHashSet<RequestFilter>();
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("objects")
+    public Set<RequestFilter> getObjects() {
+        return objects;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("objects")
+    public void setObjects(Set<RequestFilter> objects) {
+        this.objects = objects;
+    }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).toString();
+        return new ToStringBuilder(this).append("objects", objects).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().toHashCode();
+        return new HashCodeBuilder().append(objects).toHashCode();
     }
 
     @Override
@@ -40,7 +72,7 @@ public class RequestFilters {
             return false;
         }
         RequestFilters rhs = ((RequestFilters) other);
-        return new EqualsBuilder().isEquals();
+        return new EqualsBuilder().append(objects, rhs.objects).isEquals();
     }
 
 }

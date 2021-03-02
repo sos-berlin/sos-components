@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -23,11 +25,14 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IDeleteDraftResource;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
+import com.sos.joc.model.inventory.common.RequestFilters;
+import com.sos.joc.model.inventory.common.RequestFolder;
 import com.sos.joc.model.inventory.delete.ResponseItem;
 import com.sos.schema.JsonValidator;
 
@@ -42,11 +47,31 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
         try {
             // don't use JsonValidator.validateFailFast because of oneOf-Requirements
             initLogging(IMPL_PATH, inBytes, accessToken);
-            JsonValidator.validate(inBytes, RequestFilter.class);
-            RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
+            JsonValidator.validate(inBytes, RequestFilters.class);
+            RequestFilters in = Globals.objectMapper.readValue(inBytes, RequestFilters.class);
             JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
             if (response == null) {
-                response = delete(in, true);
+                response = delete(in);
+            }
+            return response;
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
+    
+    @Override
+    public JOCDefaultResponse deleteFolder(final String accessToken, final byte[] inBytes) {
+        try {
+            // don't use JsonValidator.validateFailFast because of oneOf-Requirements
+            initLogging(IMPL_PATH_FOLDER, inBytes, accessToken);
+            JsonValidator.validate(inBytes, RequestFolder.class);
+            RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
+            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
+            if (response == null) {
+                response = deleteFolder(in, true);
             }
             return response;
         } catch (JocException e) {
@@ -57,56 +82,91 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
         }
     }
 
-    private JOCDefaultResponse delete(RequestFilter in, boolean withDeletionOfEmptyFolders) throws Exception {
+    private JOCDefaultResponse delete(RequestFilters in) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             session.setAutoCommit(false);
-            
-            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
-            DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, in, folderPermissions);
-            ConfigurationType type = config.getTypeAsEnum();
-            
-            ResponseItem entity = new ResponseItem();
-            
+            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             Globals.beginTransaction(session);
-            
-            if (ConfigurationType.FOLDER.equals(type)) {
-                List<DBItemInventoryConfiguration> dbFolderContent = dbLayer.getFolderContent(config.getPath(), true, null);
-                for (DBItemInventoryConfiguration item : dbFolderContent) {
-                    if (!item.getDeployed() && !item.getReleased() && !ConfigurationType.FOLDER.intValue().equals(item.getType())) {
-                        deleteUpdateDraft(item.getTypeAsEnum(), dbLayer, item);
+
+            if (in.getObjects().stream().parallel().anyMatch(r -> ConfigurationType.FOLDER.equals(r.getObjectType()))) {
+                // throw new
+            }
+            Set<String> foldersForEvent = new HashSet<>();
+            ResponseItem entity = new ResponseItem();
+            Set<RequestFilter> requests = in.getObjects().stream().filter(r -> !ConfigurationType.FOLDER.equals(r.getObjectType())).collect(Collectors
+                    .toSet());
+            for (RequestFilter r : requests) {
+                DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, r, folderPermissions);
+                if (config.getDeployed() || config.getReleased()) {
+                    if (requests.size() == 1) {
+                        throw new DBMissingDataException(String.format("Draft of [%s] doesn't exist", config.getPath()));
+                    } else {
+                        continue;
                     }
                 }
-                if (withDeletionOfEmptyFolders) {
-                    deleted.addAll(JocInventory.deleteEmptyFolders(dbLayer, config).stream().map(i -> {
-                        RequestFilter r = new RequestFilter();
-                        r.setId(i.getId());
-                        r.setPath(i.getPath());
-                        r.setObjectType(ConfigurationType.FOLDER);
-                        return r;
-                    }).collect(Collectors.toSet()));
-                }
-                
-            } else {
-                if (config.getDeployed() || config.getReleased()) {
-                    throw new DBMissingDataException(String.format("Draft of [%s] doesn't exist", config.getPath()));
-                }
-                deleteUpdateDraft(type, dbLayer, config);
+                deleteUpdateDraft(config.getTypeAsEnum(), dbLayer, config);
+                foldersForEvent.add(config.getFolder());
             }
-            
             Globals.commit(session);
 
             entity.setDeleted(deleted);
             entity.setUpdated(updated);
             entity.setDeliveryDate(Date.from(Instant.now()));
-            
-            // TODO consider other Inventory tables?
-            
+
+            if (deleted.size() + updated.size() > 0) {
+                for (String folder : foldersForEvent) {
+                    JocInventory.postEvent(folder);
+                }
+            }
+
+            return JOCDefaultResponse.responseStatus200(entity);
+        } catch (SOSHibernateException e) {
+            Globals.rollback(session);
+            throw e;
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
+    
+    private JOCDefaultResponse deleteFolder(RequestFolder in, boolean withDeletionOfEmptyFolders) throws Exception {
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_FOLDER);
+            session.setAutoCommit(false);
+
+            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+            Globals.beginTransaction(session);
+
+            DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, null, in.getPath(), ConfigurationType.FOLDER,
+                    folderPermissions);
+            ResponseItem entity = new ResponseItem();
+
+            List<DBItemInventoryConfiguration> dbFolderContent = dbLayer.getFolderContent(config.getPath(), true, null);
+            for (DBItemInventoryConfiguration item : dbFolderContent) {
+                if (!item.getDeployed() && !item.getReleased() && !ConfigurationType.FOLDER.intValue().equals(item.getType())) {
+                    deleteUpdateDraft(item.getTypeAsEnum(), dbLayer, item);
+                }
+            }
+            if (withDeletionOfEmptyFolders) {
+                deleted.addAll(JocInventory.deleteEmptyFolders(dbLayer, config).stream().map(i -> {
+                    RequestFilter r = new RequestFilter();
+                    r.setId(i.getId());
+                    r.setPath(i.getPath());
+                    r.setObjectType(ConfigurationType.FOLDER);
+                    return r;
+                }).collect(Collectors.toSet()));
+            }
+            Globals.commit(session);
+
+            entity.setDeleted(deleted);
+            entity.setUpdated(updated);
+            entity.setDeliveryDate(Date.from(Instant.now()));
+
             if (deleted.size() + updated.size() > 0) {
                 JocInventory.postEvent(config.getFolder());
-                storeAuditLog(type, config.getPath(), config.getFolder());
             }
 
             return JOCDefaultResponse.responseStatus200(entity);
@@ -118,10 +178,13 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
         }
     }
 
-    private void storeAuditLog(ConfigurationType objectType, String path, String folder) {
-        InventoryAudit audit = new InventoryAudit(objectType, path, folder);
+    private void createAuditLog(DBItemInventoryConfiguration config) {
+        InventoryAudit audit = new InventoryAudit(config.getTypeAsEnum(), config.getPath(), config.getFolder());
         logAuditMessage(audit);
-        storeAuditLogEntry(audit);
+        DBItemJocAuditLog auditItem = storeAuditLogEntry(audit);
+        if (auditItem != null) {
+            config.setAuditLogId(auditItem.getId());
+        }
     }
     
     private void deleteUpdateDraft(ConfigurationType type, InventoryDBLayer dbLayer, DBItemInventoryConfiguration item) throws SOSHibernateException,
@@ -130,6 +193,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
         r.setId(item.getId());
         r.setObjectType(item.getTypeAsEnum());
         r.setPath(item.getPath());
+        createAuditLog(item);
         if (JocInventory.isDeployable(type)) {
             InventoryDeploymentItem lastDeployment = dbLayer.getLastDeployedContent(item.getId());
             if (lastDeployment == null) {

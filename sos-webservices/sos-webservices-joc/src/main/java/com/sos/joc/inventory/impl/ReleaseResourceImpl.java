@@ -112,7 +112,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             Either<Err419, Void> either = null;
             try {
                 DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, folderPermissions);
-                delete(conf, dbLayer, auditLogger, withDeletionOfEmptyFolders);
+                delete(conf, dbLayer, auditLogger, withDeletionOfEmptyFolders, true);
                 either = Either.right(null);
             } catch (DBMissingDataException ex) {
                 // ignore missing objects at deletion
@@ -129,18 +129,22 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     }
     
     public static void delete(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer, JocAuditLog auditLogger,
-            boolean withDeletionOfEmptyFolders) throws SOSHibernateException {
+            boolean withDeletionOfEmptyFolders, boolean withEvent) throws SOSHibernateException {
         
         if (ConfigurationType.FOLDER.intValue() == conf.getType()) {
             deleteReleasedFolder(conf, dbLayer, auditLogger, withDeletionOfEmptyFolders);
-            JocInventory.postEvent(conf.getFolder());
+            if (withEvent) {
+                JocInventory.postEvent(conf.getFolder());
+            }
         } else if (!JocInventory.isReleasable(conf.getTypeAsEnum())) {
             throw new JobSchedulerInvalidResponseDataException(String.format("%s is not a 'Scheduling Object': %s", conf.getPath(), conf
                     .getTypeAsEnum()));
         } else {
             createAuditLog(conf, conf.getTypeAsEnum(), auditLogger);
             deleteReleasedObject(conf, dbLayer);
-            JocInventory.postEvent(conf.getFolder());
+            if (withEvent) {
+                JocInventory.postEvent(conf.getFolder());
+            }
         }
     }
     

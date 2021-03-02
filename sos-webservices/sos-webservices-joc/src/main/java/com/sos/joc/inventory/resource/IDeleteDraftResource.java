@@ -14,11 +14,19 @@ public interface IDeleteDraftResource {
 
     public static final String PATH = "delete_draft";
     public static final String IMPL_PATH = JocInventory.getResourceImplPath(PATH);
+    public static final String PATH_FOLDER = "delete_draft/folder";
+    public static final String IMPL_PATH_FOLDER = JocInventory.getResourceImplPath(PATH_FOLDER);
 
     @POST
     @Path(PATH)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse delete(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    
+    @POST
+    @Path(PATH_FOLDER)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse deleteFolder(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
 
 }

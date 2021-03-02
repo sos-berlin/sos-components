@@ -466,23 +466,33 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
-    public List<DBItemInventoryConfiguration> getConfigurationByName(String name, Integer type) throws SOSHibernateException {
-        boolean isCalendar = JocInventory.isCalendar(type);
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-        hql.append(" where lower(name)=:name");
-        if (isCalendar) {
-            hql.append(" and type in (:types)");
-        } else {
-            hql.append(" and type=:type");
+    public List<DBItemInventoryConfiguration> getConfigurationByName(String name, Integer type) throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            boolean isCalendar = JocInventory.isCalendar(type);
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            hql.append(" where lower(name)=:name");
+            if (isCalendar) {
+                hql.append(" and type in (:types)");
+            } else {
+                hql.append(" and type=:type");
+            }
+            Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+            query.setParameter("name", name.toLowerCase());
+            if (isCalendar) {
+                query.setParameterList("types", JocInventory.getCalendarTypes());
+            } else {
+                query.setParameter("type", type);
+            }
+            List<DBItemInventoryConfiguration> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
         }
-        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameter("name", name.toLowerCase());
-        if (isCalendar) {
-            query.setParameterList("types", JocInventory.getCalendarTypes());
-        } else {
-            query.setParameter("type", type);
-        }
-        return getSession().getResultList(query);
     }
 
     public List<DBItemInventoryConfiguration> getConfigurationByNames(Stream<String> namesStream, Integer type) throws SOSHibernateException {

@@ -14,8 +14,12 @@ public interface IDeleteConfigurationResource {
 
     public static final String PATH_DELETE = "remove";
     public static final String IMPL_PATH_DELETE = JocInventory.getResourceImplPath(PATH_DELETE);
+    public static final String PATH_FOLDER_DELETE = "remove/folder";
+    public static final String IMPL_PATH_FOLDER_DELETE = JocInventory.getResourceImplPath(PATH_FOLDER_DELETE);
     public static final String PATH_TRASH_DELETE = "trash/delete";
     public static final String IMPL_PATH_TRASH_DELETE = JocInventory.getResourceImplPath(PATH_TRASH_DELETE);
+    public static final String PATH_TRASH_FOLDER_DELETE = "trash/delete/folder";
+    public static final String IMPL_PATH_TRASH_FOLDER_DELETE = JocInventory.getResourceImplPath(PATH_TRASH_FOLDER_DELETE);
 
     @POST
     @Path(PATH_DELETE)
@@ -24,9 +28,21 @@ public interface IDeleteConfigurationResource {
     public JOCDefaultResponse remove(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
     
     @POST
+    @Path(PATH_FOLDER_DELETE)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse removeFolder(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    
+    @POST
     @Path(PATH_TRASH_DELETE)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse delete(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    
+    @POST
+    @Path(PATH_TRASH_FOLDER_DELETE)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse deleteFolder(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
 
 }

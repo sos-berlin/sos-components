@@ -234,29 +234,6 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
         oldItem.setDeployed(false);
         oldItem.setReleased(false);
         oldItem.setModified(Date.from(Instant.now()));
-//        if (!SOSString.isEmpty(item.getContent())) {
-//            ConfigurationType type = ConfigurationType.fromValue(item.getType());
-//            try {
-//                switch (type) {
-//                case JOB:
-//                    //obsolete: don't have path in json to update
-//                    break;
-//                case FOLDER:
-//                    //obsolete: don't have path in json to update
-//                    // but all item recursive get a new path, folder, ...
-//                    throw new JocNotImplementedException("renaming of a folder is not yet implemented!");
-//                    //break;
-//                default:
-//                    IConfigurationObject obj = (IConfigurationObject) Globals.objectMapper.readValue(item.getContent(),
-//                            JocInventory.CLASS_MAPPING.get(type));
-//                    obj.setPath(item.getPath());
-//                    oldItem.setContent(Globals.objectMapper.writeValueAsString(obj));
-//                    break;
-//                }
-//            } catch (Throwable e) {
-//                LOGGER.error(String.format("[%s]%s", config.getContent(), e.toString()), e);
-//            }
-//        }
     }
 
 }
