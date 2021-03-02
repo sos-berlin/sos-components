@@ -23,6 +23,7 @@ import com.sos.joc.model.workflow.WorkflowId;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
+import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
@@ -30,7 +31,7 @@ import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
 
 public class WorkflowsHelper {
-    
+
     public static final Map<WorkflowStateText, Integer> severityByStates = Collections.unmodifiableMap(new HashMap<WorkflowStateText, Integer>() {
 
         private static final long serialVersionUID = 1L;
@@ -41,39 +42,40 @@ public class WorkflowsHelper {
             put(WorkflowStateText.UNKNOWN, 2);
         }
     });
-    
+
     public static boolean isCurrentVersion(String versionId, JControllerState currentState) {
         if (versionId == null || versionId.isEmpty()) {
             return true;
         }
-        return currentState.ordersBy(currentState.orderIsInCurrentVersionWorkflow()).anyMatch(o -> o.workflowId().versionId().string().equals(versionId));
+        return currentState.ordersBy(currentState.orderIsInCurrentVersionWorkflow()).anyMatch(o -> o.workflowId().versionId().string().equals(
+                versionId));
     }
-    
+
     public static boolean isCurrentVersion(WorkflowId workflowId, JControllerState currentState) {
         if (workflowId == null) {
             return true;
         }
         return isCurrentVersion(workflowId.getVersionId(), currentState);
     }
-    
+
     public static Stream<String> currentVersions(JControllerState currentState) {
         return currentState.ordersBy(currentState.orderIsInCurrentVersionWorkflow()).map(o -> o.workflowId().versionId().string());
     }
-    
+
     public static Stream<JWorkflowId> currentJWorkflowIds(JControllerState currentState) {
         return currentState.ordersBy(currentState.orderIsInCurrentVersionWorkflow()).map(JOrder::workflowId);
     }
-    
+
     public static Stream<WorkflowId> currentWorkflowIds(JControllerState currentState) {
         return currentState.ordersBy(currentState.orderIsInCurrentVersionWorkflow()).map(o -> new WorkflowId(o.workflowId().path().string(), o
                 .workflowId().versionId().string()));
     }
-    
+
     public static Stream<String> oldVersions(JControllerState currentState) {
         return currentState.ordersBy(JOrderPredicates.not(currentState.orderIsInCurrentVersionWorkflow())).map(o -> o.workflowId().versionId()
                 .string());
     }
-    
+
     public static Stream<WorkflowId> oldWorkflowIds(JControllerState currentState) {
         return currentState.ordersBy(JOrderPredicates.not(currentState.orderIsInCurrentVersionWorkflow())).map(o -> new WorkflowId(o.workflowId()
                 .path().string(), o.workflowId().versionId().string()));
@@ -82,13 +84,13 @@ public class WorkflowsHelper {
     public static Stream<JWorkflowId> oldJWorkflowIds(JControllerState currentState) {
         return currentState.ordersBy(JOrderPredicates.not(currentState.orderIsInCurrentVersionWorkflow())).map(JOrder::workflowId);
     }
-    
+
     public static ImplicitEnd createImplicitEndInstruction() {
         ImplicitEnd i = new ImplicitEnd();
         i.setTYPE(InstructionType.IMPLICIT_END);
         return i;
     }
-    
+
     public static Workflow addWorkflowPositions(Workflow w) {
         if (w == null) {
             return null;
@@ -103,7 +105,7 @@ public class WorkflowsHelper {
         setWorkflowPositions(o, w.getInstructions());
         return w;
     }
-    
+
     private static void setWorkflowPositions(Object[] parentPosition, List<Instruction> insts) {
         if (insts != null) {
             for (int i = 0; i < insts.size(); i++) {
@@ -114,7 +116,7 @@ public class WorkflowsHelper {
                 switch (inst.getTYPE()) {
                 case FORK:
                     ForkJoin f = inst.cast();
-                    for(Branch b : f.getBranches()) {
+                    for (Branch b : f.getBranches()) {
                         setWorkflowPositions(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions());
                     }
                     break;
@@ -142,7 +144,7 @@ public class WorkflowsHelper {
             }
         }
     }
-    
+
     private static Object[] extendArray(Object[] position, Object extValue) {
         Object[] pos = Arrays.copyOf(position, position.length + 1);
         pos[position.length] = extValue;
@@ -157,9 +159,9 @@ public class WorkflowsHelper {
             stateText = WorkflowStateText.NOT_IN_SYNC;
             Either<Problem, JWorkflow> workflowV = currentstate.repo().idToWorkflow(JWorkflowId.of(JocInventory.pathToName(workflow.getPath()),
                     workflow.getVersionId()));
-            //ProblemHelper.throwProblemIfExist(workflowV);
+            // ProblemHelper.throwProblemIfExist(workflowV);
             if (workflowV != null && workflowV.isRight()) {
-                stateText = WorkflowStateText.IN_SYNC; 
+                stateText = WorkflowStateText.IN_SYNC;
             }
         }
         state.set_text(stateText);
@@ -167,4 +169,14 @@ public class WorkflowsHelper {
         return state;
     }
 
+    public static Boolean workflowCurrentlyExists(JControllerState currentstate, String workflow) {
+        Boolean exists = false;
+        if (currentstate != null) {
+            Either<Problem, JWorkflow> workflowV = currentstate.repo().pathToWorkflow(WorkflowPath.of(workflow));
+            if (workflowV != null && workflowV.isRight()) {
+                exists = true;
+            }
+        }
+        return exists;
+    }
 }

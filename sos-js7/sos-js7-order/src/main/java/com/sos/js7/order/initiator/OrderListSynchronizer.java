@@ -23,6 +23,8 @@ import com.sos.commons.util.SOSDurations;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.OrderHelper;
+import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.orders.DBItemDailyPlanHistory;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
@@ -44,24 +46,94 @@ import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 
 import js7.data.order.OrderId;
+import js7.data_for_java.controller.JControllerState;
 
 public class OrderListSynchronizer {
 
+    final JControllerState currentState;
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderListSynchronizer.class);
     private Map<PlannedOrderKey, PlannedOrder> listOfPlannedOrders;
     private Map<String, Long> listOfDurations;
+    private Map<WorkflowAtController, Boolean> listOfExistingWorkflows;
+
+    class WorkflowAtController {
+
+        protected String workflowName;
+        protected String controllerId;
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + getOuterType().hashCode();
+            result = prime * result + ((controllerId == null) ? 0 : controllerId.hashCode());
+            result = prime * result + ((workflowName == null) ? 0 : workflowName.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            WorkflowAtController other = (WorkflowAtController) obj;
+            if (!getOuterType().equals(other.getOuterType()))
+                return false;
+            if (controllerId == null) {
+                if (other.controllerId != null)
+                    return false;
+            } else if (!controllerId.equals(other.controllerId))
+                return false;
+            if (workflowName == null) {
+                if (other.workflowName != null)
+                    return false;
+            } else if (!workflowName.equals(other.workflowName))
+                return false;
+            return true;
+        }
+
+        private OrderListSynchronizer getOuterType() {
+            return OrderListSynchronizer.this;
+        }
+    }
 
     public OrderListSynchronizer() {
         listOfPlannedOrders = new TreeMap<PlannedOrderKey, PlannedOrder>();
+        currentState = getCurrentState(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
     }
 
-    public OrderListSynchronizer(OrderInitiatorSettings orderInitiatorSettings) {
-        listOfPlannedOrders = new TreeMap<PlannedOrderKey, PlannedOrder>();
-        OrderInitiatorGlobals.orderInitiatorSettings = orderInitiatorSettings;
+    private static JControllerState getCurrentState(String controllerId) {
+        JControllerState currentstate = null;
+        try {
+            currentstate = Proxy.of(controllerId).currentState();
+        } catch (Exception e) {
+            LOGGER.warn(e.toString());
+        }
+        return currentstate;
     }
 
     public void add(PlannedOrder o) {
-        listOfPlannedOrders.put(o.uniqueOrderkey(), o);
+        if (listOfExistingWorkflows == null) {
+            listOfExistingWorkflows = new HashMap<WorkflowAtController, Boolean>();
+            LOGGER.debug("Create list of existing workflows");
+        }
+        WorkflowAtController w = new WorkflowAtController();
+        w.controllerId = OrderInitiatorGlobals.orderInitiatorSettings.getControllerId();
+        w.workflowName = o.getSchedule().getWorkflowName();
+        if (listOfExistingWorkflows.get(w) == null) {
+            listOfExistingWorkflows.put(w, WorkflowsHelper.workflowCurrentlyExists(currentState, o.getSchedule().getWorkflowName()));
+            LOGGER.debug("Adding workflow " + w.workflowName + " for controller " + w.controllerId + " to list of existing workflows");
+        }
+
+        Boolean exists = listOfExistingWorkflows.get(w);
+        if (exists) {
+            listOfPlannedOrders.put(o.uniqueOrderkey(), o);
+        } else {
+            LOGGER.debug("Workflow " + w.workflowName + " not deployed for controller " + w.controllerId);
+        }
     }
 
     private void calculateDuration(PlannedOrder plannedOrder) throws SOSHibernateException, JocConfigurationException, DBConnectionRefusedException,

@@ -24,10 +24,12 @@ public class FilterDailyPlanHistory extends SOSFilter {
     }
 
     public void addControllerId(String controllerId) {
-        if (listOfControllerIds == null) {
-            listOfControllerIds = new ArrayList<String>();
+        if (controllerId != null) {
+            if (listOfControllerIds == null) {
+                listOfControllerIds = new ArrayList<String>();
+            }
+            listOfControllerIds.add(controllerId);
         }
-        listOfControllerIds.add(controllerId);
     }
 
     public Date getDailyPlanDate() {
@@ -70,12 +72,10 @@ public class FilterDailyPlanHistory extends SOSFilter {
         this.submitted = submitted;
     }
 
-    
     public List<String> getListOfControllerIds() {
         return listOfControllerIds;
     }
 
-    
     public void setListOfControllerIds(List<String> listOfControllerIds) {
         this.listOfControllerIds = listOfControllerIds;
     }
