@@ -1,5 +1,6 @@
 package com.sos.joc.inventory.impl;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Arrays;
@@ -20,6 +21,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.InventoryAudit;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -115,9 +117,9 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
                 List<DBItemInventoryConfiguration> newDBFolderContent = trashDBFolderContent.stream().map(trashItem -> {
                     java.nio.file.Path invItemPath = Paths.get(trashItem.getPath());
                     if (ConfigurationType.FOLDER.intValue() == trashItem.getType()) {
-                        return createItem(trashItem, invItemPath);
+                        return createItem(trashItem, invItemPath, dbLayer);
                     }
-                    return createItem(trashItem, invItemPath.getParent().resolve(trashItem.getName().replaceFirst(replace.get(0), replace.get(1))));
+                    return createItem(trashItem, invItemPath.getParent().resolve(trashItem.getName().replaceFirst(replace.get(0), replace.get(1))), dbLayer);
                 }).collect(Collectors.toList());
 
                 List<DBItemInventoryConfiguration> curDBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null);
@@ -140,7 +142,7 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
                 
                 Long auditLogId = createAuditLog(config);
                 if (newItem == null) {
-                    DBItemInventoryConfiguration newDbItem = createItem(config, pWithoutFix);
+                    DBItemInventoryConfiguration newDbItem = createItem(config, pWithoutFix, dbLayer);
                     newDbItem.setAuditLogId(auditLogId);
                     JocInventory.insertConfiguration(dbLayer, newDbItem);
                     JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), newDbItem.getAuditLogId());
@@ -176,7 +178,7 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
                 }
                 
                 Long auditLogId = createAuditLog(config);
-                DBItemInventoryConfiguration newDbItem = createItem(config, p);
+                DBItemInventoryConfiguration newDbItem = createItem(config, p, dbLayer);
                 newDbItem.setAuditLogId(auditLogId);
                 JocInventory.insertConfiguration(dbLayer, newDbItem);
                 JocInventory.makeParentDirs(dbLayer, p.getParent(), newDbItem.getAuditLogId());
@@ -199,6 +201,16 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
         }
     }
     
+    private static boolean validate(DBItemInventoryConfiguration item, InventoryDBLayer dbLayer) {
+
+        try {
+            Validator.validate(item.getTypeAsEnum(), item.getContent().getBytes(StandardCharsets.UTF_8), dbLayer, null);
+            return true;
+        } catch (Throwable e) {
+            return false;
+        }
+    }
+    
     private Long createAuditLog(DBItemInventoryConfigurationTrash config) throws Exception {
         InventoryAudit audit = new InventoryAudit(config.getTypeAsEnum(), config.getPath(), config.getFolder());
         logAuditMessage(audit);
@@ -209,7 +221,7 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
         return 0L;
     }
 
-    private static DBItemInventoryConfiguration createItem(DBItemInventoryConfigurationTrash oldItem, java.nio.file.Path newItem) {
+    private static DBItemInventoryConfiguration createItem(DBItemInventoryConfigurationTrash oldItem, java.nio.file.Path newItem, InventoryDBLayer dbLayer) {
         DBItemInventoryConfiguration item = new DBItemInventoryConfiguration();
         item.setId(null);
         item.setPath(newItem.toString().replace('\\', '/'));
@@ -224,8 +236,8 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
         item.setDocumentationId(oldItem.getDocumentationId());
         item.setTitle(oldItem.getTitle());
         item.setType(oldItem.getType());
-        item.setValid(false); // TODO
         item.setContent(oldItem.getContent());
+        item.setValid(validate(item, dbLayer));
         return item;
     }
 
