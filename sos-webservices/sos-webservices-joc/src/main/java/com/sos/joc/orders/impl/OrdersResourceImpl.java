@@ -18,6 +18,9 @@ import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.deploy.DeployType;
@@ -52,6 +55,7 @@ import scala.Function1;
 @Path("orders")
 public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResource {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrdersResourceImpl.class);
     private static final String API_CALL = "./orders";
     private final List<OrderStateText> orderStateWithRequirements = Arrays.asList(OrderStateText.PENDING, OrderStateText.BLOCKED,
             OrderStateText.SUSPENDED);
@@ -217,6 +221,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     either = Either.right(order);
                 } catch (Exception e) {
                     either = Either.left(e);
+                    LOGGER.warn(e.toString());
                 }
                 return either;
             });
