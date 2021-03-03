@@ -1602,34 +1602,34 @@ public abstract class PublishUtils {
         return deployedObjects;
     }
 
-    public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToRedeployed(
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> redeployedWithSignature, String account, DBLayerDeploy dbLayerDeploy,
+    public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToNewEntries(
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> deployedWithSignature, String account, DBLayerDeploy dbLayerDeploy,
             String commitId, String controllerId, Date deploymentDate) {
         Set<DBItemDeploymentHistory> deployedObjects = null;
         try {
             DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
             deployedObjects = new HashSet<DBItemDeploymentHistory>();
-            for (DBItemDeploymentHistory redeployed : redeployedWithSignature.keySet()) {
-                DBItemDepSignatures signature = redeployedWithSignature.get(redeployed);
+            for (DBItemDeploymentHistory deployed : deployedWithSignature.keySet()) {
+                DBItemDepSignatures signature = deployedWithSignature.get(deployed);
                 if (signature == null) {
                     // simple item
-                    redeployed.setSignedContent("");
+                    deployed.setSignedContent("");
                 } else {
                     // signed item
-                    redeployed.setSignedContent(signature.getSignature());
+                    deployed.setSignedContent(signature.getSignature());
                 }
-                redeployed.setId(null);
-                redeployed.setAccount(account);
+                deployed.setId(null);
+                deployed.setAccount(account);
                 // TODO: get Version to set here
-                redeployed.setVersion(null);
-                redeployed.setCommitId(commitId);
-                redeployed.setControllerId(controllerId);
-                redeployed.setControllerInstanceId(controllerInstance.getId());
-                redeployed.setDeploymentDate(deploymentDate);
-                redeployed.setOperation(OperationType.UPDATE.value());
-                redeployed.setState(DeploymentState.DEPLOYED.value());
-                dbLayerDeploy.getSession().save(redeployed);
-                deployedObjects.add(redeployed);
+                deployed.setVersion(null);
+                deployed.setCommitId(commitId);
+                deployed.setControllerId(controllerId);
+                deployed.setControllerInstanceId(controllerInstance.getId());
+                deployed.setDeploymentDate(deploymentDate);
+                deployed.setOperation(OperationType.UPDATE.value());
+                deployed.setState(DeploymentState.DEPLOYED.value());
+                dbLayerDeploy.getSession().save(deployed);
+                deployedObjects.add(deployed);
             }
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);

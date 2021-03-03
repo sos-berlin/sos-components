@@ -143,7 +143,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
             // no error occurred
             Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
             if (verifiedRedeployables != null && !verifiedRedeployables.isEmpty()) {
-                Set<DBItemDeploymentHistory> cloned = PublishUtils.cloneDepHistoryItemsToRedeployed(verifiedRedeployables, account, dbLayer,
+                Set<DBItemDeploymentHistory> cloned = PublishUtils.cloneDepHistoryItemsToNewEntries(verifiedRedeployables, account, dbLayer,
                         commitId, controllerId, deploymentDate);
                 deployedObjects.addAll(cloned);
                 // cleanup stored signatures

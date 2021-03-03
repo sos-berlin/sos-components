@@ -25,6 +25,7 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.Configuration;
+import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.publish.db.DBLayerDeploy;
 
@@ -214,7 +215,7 @@ public class DeleteDeployments {
     }
 
     public static void processAfterDeleteFromFolder(Either<Problem, Void> either, List<DBItemDeploymentHistory> itemsToDelete,
-            List<Configuration> foldersToDelete, String controllerId, String account, String versionIdForDelete, String accessToken,
+            List<Configuration> foldersToDelete, String controllerId, String account, String commitId, String accessToken,
             JocError jocError, boolean withoutFolderDeletion) {
         SOSHibernateSession newHibernateSession = null;
         try {
@@ -224,11 +225,23 @@ public class DeleteDeployments {
                 String message = String.format("Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
                 LOGGER.warn(message);
                 // updateRepo command is atomic, therefore all items are rejected
-                List<DBItemDeploymentHistory> failedDeployDeleteItems = dbLayer.updateFailedDeploymentForDelete(itemsToDelete, controllerId, account,
-                        versionIdForDelete, either.getLeft().message());
-                // if not successful the objects and the related controllerId have to be stored
+
+                // get all already optimistically stored entries for the commit
+                List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
+                // update all previously optimistically stored entries with the error message and change the state
+                for(DBItemDeploymentHistory optimistic : optimisticEntries) {
+                    optimistic.setErrorMessage(either.getLeft().message());
+                    optimistic.setState(DeploymentState.NOT_DEPLOYED.value());
+                    optimistic.setDeleteDate(null);
+                    dbLayer.getSession().update(optimistic);
+                    // update related inventory configuration,  Recover from trash?
+//                    DBItemInventoryConfiguration cfg = dbLayer.getConfiguration(optimistic.getInventoryConfigurationId());
+//                    cfg.setDeployed(false);
+//                    dbLayer.getSession().update(cfg);
+                }
+                // if not successful the objects and the related controllerId have to be stored 
                 // in a submissions table for reprocessing
-                dbLayer.createSubmissionForFailedDeployments(failedDeployDeleteItems);
+                dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
                 ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, null);
             }
         } catch (Exception e) {

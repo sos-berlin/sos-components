@@ -25,14 +25,11 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.ProblemHelper;
-import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
-import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.keys.db.DBLayerKeys;
@@ -49,10 +46,8 @@ import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.joc.publish.resource.IDeploy;
 import com.sos.joc.publish.util.DeleteDeployments;
 import com.sos.joc.publish.util.PublishUtils;
+import com.sos.joc.publish.util.StoreDeployments;
 import com.sos.schema.JsonValidator;
-
-import io.vavr.control.Either;
-import js7.base.problem.Problem;
 
 @Path("inventory/deployment")
 public class DeployImpl extends JOCResourceImpl implements IDeploy {
@@ -227,10 +222,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     X509Certificate cert = null;
                     switch(keyPair.getKeyAlgorithm()) {
                     case SOSKeyConstants.PGP_ALGORITHM_NAME:
-                        PublishUtils.updateItemsAddOrUpdatePGP(commitId, verifiedConfigurations, verifiedReDeployables, controllerId, 
-                                dbLayer).thenAccept(either -> {
-                                    processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account, 
-                                            commitId, controllerId, deployFilter, unmodified);
+                        PublishUtils.updateItemsAddOrUpdatePGP(commitId, verifiedConfigurations, verifiedReDeployables, controllerId, dbLayer)
+                            .thenAccept(either -> {
+                                    StoreDeployments.processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, commitId, controllerId, 
+                                            getAccessToken(), getJocError(), API_CALL);
                         });
                         break;
                     case SOSKeyConstants.RSA_ALGORITHM_NAME:
@@ -240,16 +235,16 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                             PublishUtils.updateItemsAddOrUpdateWithX509Certificate(commitId, verifiedConfigurations, verifiedReDeployables, controllerId,
                                     dbLayer, SOSKeyConstants.RSA_SIGNER_ALGORITHM, keyPair.getCertificate())
                                 .thenAccept(either -> {
-                                        processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account,
-                                                commitId, controllerId, deployFilter, unmodified);
+                                    StoreDeployments.processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, commitId, controllerId, 
+                                            getAccessToken(), getJocError(), API_CALL);
                                     });
                         } else {
                           signerDN = cert.getSubjectDN().getName();
                           PublishUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId, verifiedConfigurations, verifiedReDeployables, controllerId,
                                   dbLayer, SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN)
                               .thenAccept(either -> {
-                                      processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account,
-                                              commitId, controllerId, deployFilter, unmodified);
+                                  StoreDeployments.processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, commitId, controllerId, 
+                                          getAccessToken(), getJocError(), API_CALL);
                                   });
                         }
                         break;
@@ -260,20 +255,23 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                             PublishUtils.updateItemsAddOrUpdateWithX509Certificate(commitId, verifiedConfigurations, verifiedReDeployables, controllerId,
                                     dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair.getCertificate())
                                 .thenAccept(either -> {
-                                        processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account,
-                                                commitId, controllerId, deployFilter, unmodified);
+                                    StoreDeployments.processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, commitId, controllerId, 
+                                            getAccessToken(), getJocError(), API_CALL);
                                     });
                         } else {
                           signerDN = cert.getSubjectDN().getName();
                           PublishUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId, verifiedConfigurations, verifiedReDeployables, controllerId,
                                   dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN)
                               .thenAccept(either -> {
-                                      processAfterAdd(either, verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account,
-                                              commitId, controllerId, deployFilter, unmodified);
+                                  StoreDeployments.processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, commitId, controllerId, 
+                                          getAccessToken(), getJocError(), API_CALL);
                                   });
                         }
                         break;
                     }
+                    // store new history entries and update inventory for update operation optimistically
+                    StoreDeployments.storeNewDepHistoryEntries(verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account, commitId, 
+                            controllerId, unmodified, getAccessToken(), getJocError(), dbLayer);
                 }
             }
             // Delete from all known controllers
@@ -288,7 +286,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         DeleteDeployments.processAfterDelete(either, itemsToDelete, controllerId, account, commitIdForDelete, 
                                 getAccessToken(), getJocError());
                     });
-                    // store history entries optimistically
+                    // store history entries for delete operation optimistically
                     if (invConfigurationsToDelete.isEmpty()) {
                         invConfigurationsToDelete = new HashSet<>(
                                 DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
@@ -298,7 +296,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                                 DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
                                         DeleteDeployments.storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitId)));
                     }
-//                    DeleteDeployments.storeDepHistoryAndDeleteSetOfConfigurations(dbLayer, itemsToDelete, commitIdForDelete);
                 }
                 // process folder to Delete
                 if (itemsFromFolderToDelete != null && !itemsFromFolderToDelete.isEmpty()) {
@@ -311,7 +308,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                                 folders.stream().map(item -> item.getConfiguration()).collect(Collectors.toList()),
                                 controllerId, account, commitIdForDeleteFromFolder, getAccessToken(), getJocError(), false);
                     });
-                    // store history entries optimistically
+                    // store history entries for delete operation optimistically
                     if (invConfigurationsToDelete.isEmpty()) {
                         invConfigurationsToDelete = new HashSet<>(
                                 DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
@@ -387,71 +384,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     .map(Config::getConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
         } else {
           return new ArrayList<Configuration>();
-        }
-    }
-    
-    private void processAfterAdd (
-            Either<Problem, Void> either, 
-            Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations,
-            Set<UpdateableWorkflowJobAgentName> updateableAgentNames,
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedReDeployables,
-            String account,
-            String versionIdForUpdate,
-            String controllerId,
-            DeployFilter deployFilter,
-            Set<DbItemConfWithOriginalContent> cfgsDBItemsToStore) {
-        // First create a new db session as the session of the parent web service can already been closed
-        SOSHibernateSession newHibernateSession = null;
-        try {
-            newHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
-            final Date deploymentDate = Date.from(Instant.now());
-            if (either.isRight()) {
-                // no error occurred
-                Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
-                if (verifiedConfigurations != null && !verifiedConfigurations.isEmpty()) {
-                    deployedObjects.addAll(PublishUtils.cloneInvConfigurationsToDepHistoryItems(verifiedConfigurations,
-                        updateableAgentNames, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate));
-                    PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet().stream().collect(Collectors.toSet()),
-                            cfgsDBItemsToStore, controllerId, dbLayer.getSession());
-                    // cleanup stored signatures
-                    dbLayer.cleanupSignatures(verifiedConfigurations.keySet().stream()
-                        .map(item -> verifiedConfigurations.get(item)).filter(Objects::nonNull).collect(Collectors.toSet()));
-                    // cleanup stored commitIds
-                    deployedObjects.stream().forEach(item -> dbLayer.cleanupCommitIds(item.getCommitId()));
-                }
-                if (verifiedReDeployables != null && !verifiedReDeployables.isEmpty()) {
-                    Set<DBItemDeploymentHistory> cloned = PublishUtils.cloneDepHistoryItemsToRedeployed(
-                            verifiedReDeployables, account, dbLayer, versionIdForUpdate, controllerId, deploymentDate);
-                    deployedObjects.addAll(cloned);
-                    // cleanup stored signatures
-                    dbLayer.cleanupSignatures(verifiedReDeployables.keySet().stream()
-                            .map(item -> verifiedReDeployables.get(item)).filter(Objects::nonNull).collect(Collectors.toSet()));
-                    // cleanup stored commitIds
-                    cloned.stream().forEach(item -> dbLayer.cleanupCommitIds(item.getCommitId()));
-                }
-                if (!deployedObjects.isEmpty()) {
-                    LOGGER.info(String.format("Update command send to Controller \"%1$s\".", controllerId));
-                     JocInventory.handleWorkflowSearch(newHibernateSession, deployedObjects, false);
-                }
-            } else if (either.isLeft()) {
-                // an error occurred
-                String message = String.format(
-                        "Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
-                LOGGER.error(message);
-                // updateRepo command is atomic, therefore all items are rejected
-                List<DBItemDeploymentHistory> failedDeployUpdateItems = dbLayer.updateFailedDeploymentForUpdate(
-                        verifiedConfigurations, verifiedReDeployables, controllerId, account, versionIdForUpdate, either.getLeft().message());
-                // if not successful the objects and the related controllerId have to be stored 
-                // in a submissions table for reprocessing
-                dbLayer.createSubmissionForFailedDeployments(failedDeployUpdateItems);
-                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), null);
-            }
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
-            ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), null);
-        } finally {
-            Globals.disconnect(newHibernateSession);
         }
     }
     
