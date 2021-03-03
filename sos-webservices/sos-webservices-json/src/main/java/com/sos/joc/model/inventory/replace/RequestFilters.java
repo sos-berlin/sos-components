@@ -20,35 +20,48 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "search",
     "replace"
 })
-public class RequestFilter
-    extends com.sos.joc.model.inventory.common.RequestFilter
+public class RequestFilters
+    extends com.sos.joc.model.inventory.common.RequestFilters
 {
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("search")
     private String search;
     /**
-     * string without < and >
-     * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("replace")
     private String replace;
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("search")
     public String getSearch() {
         return search;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("search")
     public void setSearch(String search) {
         this.search = search;
     }
 
     /**
-     * string without < and >
-     * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("replace")
@@ -57,9 +70,8 @@ public class RequestFilter
     }
 
     /**
-     * string without < and >
-     * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("replace")
@@ -82,10 +94,10 @@ public class RequestFilter
         if (other == this) {
             return true;
         }
-        if ((other instanceof RequestFilter) == false) {
+        if ((other instanceof RequestFilters) == false) {
             return false;
         }
-        RequestFilter rhs = ((RequestFilter) other);
+        RequestFilters rhs = ((RequestFilters) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).append(replace, rhs.replace).append(search, rhs.search).isEquals();
     }
 

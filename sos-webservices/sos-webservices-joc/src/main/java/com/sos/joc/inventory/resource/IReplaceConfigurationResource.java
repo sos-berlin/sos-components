@@ -14,11 +14,19 @@ public interface IReplaceConfigurationResource {
 
     public static final String PATH = "replace";
     public static final String IMPL_PATH = JocInventory.getResourceImplPath(PATH);
+    public static final String PATH_FOLDER = "replace/folder";
+    public static final String IMPL_PATH_FOLDER = JocInventory.getResourceImplPath(PATH_FOLDER);
 
     @POST
     @Path(PATH)
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse replace(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
+    
+    @POST
+    @Path(PATH_FOLDER)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse replaceFolder(@HeaderParam("X-Access-Token") final String accessToken, final byte[] body);
 
 }

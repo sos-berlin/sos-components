@@ -104,7 +104,7 @@ public class JsonValidator {
             put("TreeFilter", "tree/treeFilter-schema.json");
 
             put("ReleaseFilter", "inventory/release/release-schema.json");
-            put("RequestFolder", "inventory/common/request-folder-schema.json");
+            put("com.sos.joc.model.inventory.common.RequestFolder", "inventory/common/request-folder-schema.json");
             put("com.sos.joc.model.inventory.common.RequestFilter", "inventory/common/request-filter-schema.json");
             put("com.sos.joc.model.inventory.common.RequestFilters", "inventory/common/request-filters-schema.json");
             put("com.sos.joc.model.inventory.deploy.DeployableFilter", "inventory/deploy/request-deployable-schema.json");
@@ -112,7 +112,8 @@ public class JsonValidator {
             put("com.sos.joc.model.inventory.release.ReleasableFilter", "inventory/release/request-releasable-schema.json");
             put("com.sos.joc.model.inventory.release.ReleasablesFilter", "inventory/release/request-releasables-schema.json");
             put("com.sos.joc.model.inventory.rename.RequestFilter", "inventory/rename/request-filter-schema.json");
-            put("com.sos.joc.model.inventory.replace.RequestFilter", "inventory/replace/request-filter-schema.json");
+            put("com.sos.joc.model.inventory.replace.RequestFilters", "inventory/replace/request-filters-schema.json");
+            put("com.sos.joc.model.inventory.replace.RequestFolder", "inventory/replace/request-folder-schema.json");
             put("com.sos.joc.model.inventory.copy.RequestFilter", "inventory/copy/request-filter-schema.json");
             put("com.sos.joc.model.inventory.restore.RequestFilter", "inventory/restore/request-filter-schema.json");
             put("com.sos.joc.model.inventory.ConfigurationObject", "inventory/configurationObject-schema.json");
