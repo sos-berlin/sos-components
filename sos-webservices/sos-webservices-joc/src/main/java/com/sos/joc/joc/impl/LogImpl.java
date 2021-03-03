@@ -82,8 +82,10 @@ public class LogImpl extends JOCResourceImpl implements ILogResource {
                 }
             };
             
-            // TODO log file could be already compressed
-            
+            // log file could be already compressed
+            if (logFilename.endsWith(".gz")) {
+                return JOCDefaultResponse.responseOctetStreamDownloadStatus200(fileStream, log.getFileName().toString(), 0L);
+            }
             return JOCDefaultResponse.responseOctetStreamDownloadStatus200(fileStream, log.getFileName().toString());
         } catch (Exception e) {
             ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, getJocError(), null);

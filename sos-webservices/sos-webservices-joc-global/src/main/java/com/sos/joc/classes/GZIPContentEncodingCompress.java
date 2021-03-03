@@ -22,9 +22,12 @@ public class GZIPContentEncodingCompress implements WriterInterceptor {
 
         MultivaluedMap<String, Object> headers = context.getHeaders();
         headers.add(HttpHeaders.CONTENT_ENCODING, "gzip");
+        
+        if (!headers.containsKey("X-Uncompressed-Length")) {
+            final OutputStream outputStream = context.getOutputStream();
+            context.setOutputStream(new GZIPOutputStream(outputStream));
+        }
 
-        final OutputStream outputStream = context.getOutputStream();
-        context.setOutputStream(new GZIPOutputStream(outputStream));
         context.proceed();
     }
 
