@@ -11,7 +11,8 @@ public enum ConfigurationType {
     CUSTOMIZATION("CUSTOMIZATION"),
     IGNORELIST("IGNORELIST"),
     PROFILE("PROFILE"),
-    SETTING("SETTING");
+    SETTING("SETTING"),
+    CLUSTER_SETTING("CLUSTER_SETTING");
     private final String value;
     private final static Map<String, ConfigurationType> CONSTANTS = new HashMap<String, ConfigurationType>();
 
