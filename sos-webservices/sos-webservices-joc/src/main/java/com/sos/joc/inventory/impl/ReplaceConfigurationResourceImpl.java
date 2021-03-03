@@ -89,7 +89,6 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 }
                 if (isUpdated) {
                     createAuditLog(config);
-                    events.add(config.getFolder());
                 }
 
             } else {
