@@ -174,7 +174,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     }
                     Instant dateToInstant = JobSchedulerDate.getInstantFromDateStr(dateTo, false, ordersFilter.getTimeZone());
                     final Instant until = (dateToInstant.isBefore(Instant.now())) ? Instant.now() : dateToInstant;
-                    orderStream = orderStream.filter(o -> {
+                    Predicate<JOrder> dateToFilter = o -> {
                         Order.State state = o.asScala().state();
                         if (OrderStateText.PENDING.equals(OrdersHelper.getGroupedState(state.getClass()))) {
                             if (!state.maybeDelayedUntil().isEmpty() && state.maybeDelayedUntil().get().toInstant().isAfter(until)) {
@@ -182,7 +182,8 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                             }
                         }
                         return true;
-                    });
+                    };
+                    orderStream = orderStream.filter(dateToFilter);
                 }
             }
 

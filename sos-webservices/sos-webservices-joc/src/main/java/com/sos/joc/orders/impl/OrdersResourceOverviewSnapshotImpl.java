@@ -4,7 +4,6 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -14,9 +13,11 @@ import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
+import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
@@ -30,10 +31,9 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderStateText;
+import com.sos.joc.model.order.OrdersFilterV;
 import com.sos.joc.model.order.OrdersSnapshot;
 import com.sos.joc.model.order.OrdersSummary;
-import com.sos.joc.model.workflow.WorkflowId;
-import com.sos.joc.model.workflow.WorkflowsFilter;
 import com.sos.joc.orders.resource.IOrdersResourceOverviewSnapshot;
 import com.sos.schema.JsonValidator;
 
@@ -55,8 +55,8 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
     public JOCDefaultResponse postOrdersOverviewSnapshot(String accessToken, byte[] filterBytes) {
         try {
             initLogging(API_CALL, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, WorkflowsFilter.class);
-            WorkflowsFilter body = Globals.objectMapper.readValue(filterBytes, WorkflowsFilter.class);
+            JsonValidator.validateFailFast(filterBytes, OrdersFilterV.class);
+            OrdersFilterV body = Globals.objectMapper.readValue(filterBytes, OrdersFilterV.class);
 
             JOCDefaultResponse jocDefaultResponse = initPermissions(body.getControllerId(), getPermissonsJocCockpit(body.getControllerId(),
                     accessToken).getOrder().getView().isStatus());
@@ -67,7 +67,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             boolean withWorkFlowFilter = body.getWorkflowIds() != null && !body.getWorkflowIds().isEmpty();
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
 
-            return JOCDefaultResponse.responseStatus200(getSnapshot(body.getControllerId(), checkFolderPermission(body.getWorkflowIds(),
+            return JOCDefaultResponse.responseStatus200(getSnapshot(body, checkFolderPermission(body.getWorkflowIds(),
                     permittedFolders), permittedFolders, withWorkFlowFilter));
 
         } catch (JobSchedulerConnectionResetException e) {
@@ -82,7 +82,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
 
     }
 
-    private static OrdersSnapshot getSnapshot(String controllerid, Set<VersionedItemId<WorkflowPath>> workflowIds, Set<Folder> permittedFolders,
+    private static OrdersSnapshot getSnapshot(OrdersFilterV body, Set<VersionedItemId<WorkflowPath>> workflowIds, Set<Folder> permittedFolders,
             boolean withWorkFlowFilter) throws JobSchedulerConnectionResetException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
 
@@ -100,7 +100,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
         OrdersSnapshot entity = new OrdersSnapshot();
         
         try {
-            JControllerState controllerState = Proxy.of(controllerid).currentState();
+            JControllerState controllerState = Proxy.of(body.getControllerId()).currentState();
             final long nowMillis = controllerState.eventId() / 1000;
             final Instant now = Instant.ofEpochMilli(nowMillis);
             Map<Class<? extends Order.State>, Integer> orderStates = null;
@@ -141,10 +141,25 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             int numOfFreshOrders = 0;
             if (freshOrders != null) {
                 Set<JOrder> freshOrderSet = freshOrders.collect(Collectors.toSet());
-                numOfFreshOrders = freshOrderSet.stream().map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(e -> 1).sum();
+                if (body.getDateTo() != null && !body.getDateTo().isEmpty()) {
+                    String dateTo = body.getDateTo();
+                    if ("0d".equals(dateTo)) {
+                        dateTo = "1d";
+                    }
+                    Instant dateToInstant = JobSchedulerDate.getInstantFromDateStr(dateTo, false, body.getTimeZone());
+                    final Instant until = (dateToInstant.isBefore(Instant.now())) ? Instant.now() : dateToInstant;
+                    Predicate<JOrder> dateToFilter = o -> {
+                        scala.Option<Timestamp> scheduledFor = o.asScala().state().maybeDelayedUntil();
+                        return scheduledFor.isEmpty() || !scheduledFor.get().toInstant().isAfter(until);
+                    };
+                    numOfFreshOrders = freshOrderSet.stream().filter(dateToFilter).map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(
+                            e -> 1).sum();
+                } else {
+                    numOfFreshOrders = freshOrderSet.stream().map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(e -> 1).sum();
+                }
                 numOfBlockedOrders = freshOrderSet.stream().filter(o -> {
                     scala.Option<Timestamp> scheduledFor = o.asScala().state().maybeDelayedUntil();
-                    return !scheduledFor.isEmpty()  && scheduledFor.get().toInstant().isBefore(now);
+                    return !scheduledFor.isEmpty() && scheduledFor.get().toInstant().isBefore(now);
                 }).map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(item -> 1).sum();
             }
             
@@ -176,7 +191,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
         return entity;
     }
 
-    private static Set<VersionedItemId<WorkflowPath>> checkFolderPermission(List<WorkflowId> workflowIds, Set<Folder> permittedFolders) {
+    private static Set<VersionedItemId<WorkflowPath>> checkFolderPermission(Set<WorkflowId> workflowIds, Set<Folder> permittedFolders) {
         Set<VersionedItemId<WorkflowPath>> wIds = new HashSet<>();
         if (workflowIds != null) {
             if (permittedFolders != null && !permittedFolders.isEmpty()) {
