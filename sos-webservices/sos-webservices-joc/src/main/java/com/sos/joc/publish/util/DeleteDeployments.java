@@ -190,7 +190,7 @@ public class DeleteDeployments {
     }
 
     public static void processAfterDelete(Either<Problem, Void> either, List<DBItemDeploymentHistory> itemsToDelete, String controllerId,
-            String account, String versionIdForDelete, String accessToken, JocError jocError) {
+            String account, String commitId, String accessToken, JocError jocError) {
         SOSHibernateSession newHibernateSession = null;
         try {
             newHibernateSession = Globals.createSosHibernateStatelessConnection("./inventory/deployment/deploy");
@@ -199,11 +199,21 @@ public class DeleteDeployments {
                 String message = String.format("Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
                 LOGGER.warn(message);
                 // updateRepo command is atomic, therefore all items are rejected
-                List<DBItemDeploymentHistory> failedDeployDeleteItems = dbLayer.updateFailedDeploymentForDelete(itemsToDelete, controllerId, account,
-                        versionIdForDelete, either.getLeft().message());
-                // if not successful the objects and the related controllerId have to be stored
+
+                // get all already optimistically stored entries for the commit
+                List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
+                // update all previously optimistically stored entries with the error message and change the state
+                for(DBItemDeploymentHistory optimistic : optimisticEntries) {
+                    optimistic.setErrorMessage(either.getLeft().message());
+                    optimistic.setState(DeploymentState.NOT_DEPLOYED.value());
+                    optimistic.setDeleteDate(null);
+                    dbLayer.getSession().update(optimistic);
+                    // TODO: restore related inventory configuration - Recover and remove from trash
+
+                }
+                // if not successful the objects and the related controllerId have to be stored 
                 // in a submissions table for reprocessing
-                dbLayer.createSubmissionForFailedDeployments(failedDeployDeleteItems);
+                dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
                 ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, null);
             }
         } catch (Exception e) {
@@ -234,10 +244,8 @@ public class DeleteDeployments {
                     optimistic.setState(DeploymentState.NOT_DEPLOYED.value());
                     optimistic.setDeleteDate(null);
                     dbLayer.getSession().update(optimistic);
-                    // update related inventory configuration,  Recover from trash?
-//                    DBItemInventoryConfiguration cfg = dbLayer.getConfiguration(optimistic.getInventoryConfigurationId());
-//                    cfg.setDeployed(false);
-//                    dbLayer.getSession().update(cfg);
+                    // TODO: restore related inventory configuration - Recover and remove from trash
+
                 }
                 // if not successful the objects and the related controllerId have to be stored 
                 // in a submissions table for reprocessing
