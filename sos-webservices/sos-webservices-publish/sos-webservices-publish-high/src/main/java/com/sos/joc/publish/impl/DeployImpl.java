@@ -91,7 +91,9 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             if (deployFilter.getDelete() != null) {
                 foldersToDelete = deployFilter.getDelete().getDeployConfigurations().stream()
                 .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER)).collect(Collectors.toList());
-                foldersToDelete = PublishUtils.handleFolders(foldersToDelete, dbLayer);
+                if (!(foldersToDelete.size() == 1 && "/".equals(foldersToDelete.get(0).getConfiguration().getPath()))) {
+                    foldersToDelete = PublishUtils.handleFolders(foldersToDelete, dbLayer);
+                }
             }
 
             // read all objects provided in the filter from the database
