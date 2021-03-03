@@ -12,9 +12,11 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -32,6 +34,9 @@ import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.util.DeleteDeployments;
 import com.sos.schema.JsonValidator;
+
+import io.vavr.control.Either;
+import js7.base.problem.Problem;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements IDeleteConfigurationResource {
@@ -190,21 +195,16 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
 
             DBItemInventoryConfiguration folder = JocInventory.getConfiguration(dbLayer, null, in.getPath(), ConfigurationType.FOLDER,
                     folderPermissions);
-            ReleaseResourceImpl.delete(folder, dbLayer, getJocAuditLog(), true, false);
+            ReleaseResourceImpl.delete(folder, dbLayer, getJocAuditLog(), false, false);
 
             List<DBItemInventoryConfiguration> deployables = dbLayer.getFolderContent(folder.getPath(), true, JocInventory.getDeployableTypes());
             if (deployables != null && !deployables.isEmpty()) {
                 String account = JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel()) ? Globals.getDefaultProfileUserAccount() : getAccount();
                 DeleteDeployments.deleteFolder(folder.getPath(), true, Proxies.getControllerDbInstances().keySet(), new DBLayerDeploy(session),
-                        account, accessToken, getJocError(), false);
+                        account, accessToken, getJocError(), true, false);
             }
             
-            if (!JocInventory.ROOT_FOLDER.equals(folder.getPath())) {
-                List<DBItemInventoryConfiguration> content = dbLayer.getFolderContent(folder.getPath(), true, null);
-                if (content.isEmpty()) {
-                    session.delete(folder);
-                }
-            }
+            JocInventory.deleteEmptyFolders(dbLayer, folder.getPath());
             
             Globals.commit(session);
             JocInventory.postEvent(folder.getFolder());
