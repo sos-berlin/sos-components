@@ -84,6 +84,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                 try {
                     Workflow workflow = Globals.objectMapper.readValue(w.getContent(), Workflow.class);
                     workflow.setPath(w.getPath());
+                    workflow.setVersionId(w.getCommitId());
                     workflow.setIsCurrentVersion(w.isCurrentVersion());
                     workflow.setVersionDate(w.getCreated());
                     workflow.setState(WorkflowsHelper.getState(currentstate, workflow));
