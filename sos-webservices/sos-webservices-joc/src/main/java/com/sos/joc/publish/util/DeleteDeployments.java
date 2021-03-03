@@ -69,16 +69,16 @@ public class DeleteDeployments {
     }
     
     public static boolean deleteFolder(String folder, boolean recursive, Collection<String> controllerIds, DBLayerDeploy dbLayer, String account,
-            String accessToken, JocError jocError, boolean withoutFolderDeletion) throws SOSHibernateException {
+            String accessToken, JocError jocError, boolean withoutFolderDeletion, boolean withEvents) throws SOSHibernateException {
         Configuration conf = new Configuration();
         conf.setObjectType(ConfigurationType.FOLDER);
         conf.setPath(folder);
         conf.setRecursive(recursive);
-        return deleteFolder(conf, controllerIds, dbLayer, account, accessToken, jocError, withoutFolderDeletion);
+        return deleteFolder(conf, controllerIds, dbLayer, account, accessToken, jocError, withoutFolderDeletion, withEvents);
     }
     
     public static boolean deleteFolder(Configuration conf, Collection<String> controllerIds, DBLayerDeploy dbLayer, String account,
-            String accessToken, JocError jocError, boolean withoutFolderDeletion) throws SOSHibernateException {
+            String accessToken, JocError jocError, boolean withoutFolderDeletion, boolean withEvents) throws SOSHibernateException {
         if (conf == null || conf.getPath() == null || conf.getPath().isEmpty()) {
             return true;
         }
@@ -263,15 +263,22 @@ public class DeleteDeployments {
     
     public static void deleteConfigurations(DBLayerDeploy dbLayer, List<Configuration> folders, Set<DBItemInventoryConfiguration> itemsToDelete, 
             String commitId, String accessToken, JocError jocError, boolean withoutFolderDeletion) {
+        deleteConfigurations(dbLayer, folders, itemsToDelete, commitId, accessToken, jocError, withoutFolderDeletion, true);
+    }
+    
+    public static void deleteConfigurations(DBLayerDeploy dbLayer, List<Configuration> folders, Set<DBItemInventoryConfiguration> itemsToDelete, 
+            String commitId, String accessToken, JocError jocError, boolean withoutFolderDeletion, boolean withEvents) {
         // add all elements from the folder(s)
         Set<String> foldersForEvent = new HashSet<>();
         if (folders != null) {
             for (Configuration folder : folders) {
                 itemsToDelete.addAll(dbLayer.getInventoryConfigurationsByFolder(folder.getPath(), folder.getRecursive()));
-                if ("/".equals(folder.getPath())) {
-                    foldersForEvent.add("/");
-                } else {
-                    foldersForEvent.add(Paths.get(folder.getPath()).getParent().toString().replace('\\', '/'));
+                if (withEvents) {
+                    if ("/".equals(folder.getPath())) {
+                        foldersForEvent.add("/");
+                    } else {
+                        foldersForEvent.add(Paths.get(folder.getPath()).getParent().toString().replace('\\', '/'));
+                    }
                 }
             }
         }
@@ -279,7 +286,9 @@ public class DeleteDeployments {
         InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
         for (DBItemInventoryConfiguration invConfiguration : itemsToDelete) {
             JocInventory.deleteInventoryConfigurationAndPutToTrash(invConfiguration, invDbLayer);
-            foldersForEvent.add(invConfiguration.getFolder());
+            if (withEvents) {
+                foldersForEvent.add(invConfiguration.getFolder());
+            }
         }
         if (!withoutFolderDeletion) {
             // delete folders
