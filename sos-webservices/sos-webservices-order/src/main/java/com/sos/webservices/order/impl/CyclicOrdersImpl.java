@@ -39,9 +39,8 @@ public class CyclicOrdersImpl extends JOCResourceImpl implements ICyclicOrdersRe
             JsonValidator.validateFailFast(filterBytes, DailyPlanSubmissionsFilter.class);
             OrdersFilterV ordersFilterV = Globals.objectMapper.readValue(filterBytes, OrdersFilterV.class);
 
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, ordersFilterV, accessToken, ordersFilterV.getControllerId(),
-                    getPermissonsJocCockpit(getControllerId(accessToken, ordersFilterV.getControllerId()), accessToken).getWorkflow().getExecute()
-                            .isAddOrder());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(ordersFilterV.getControllerId(), getPermissonsJocCockpit(ordersFilterV
+                    .getControllerId(), accessToken).getWorkflow().getExecute().isAddOrder());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -100,7 +99,7 @@ public class CyclicOrdersImpl extends JOCResourceImpl implements ICyclicOrdersRe
                     }
                 }
             } else {
-                LOGGER.warn("Expected one record for order-id " + filter.getOrderId());
+                //LOGGER.warn("Expected one record for order-id " + filter.getOrderId());
                 throw new DBMissingDataException("Expected one record for order-id " + filter.getOrderId());
             }
         } finally {

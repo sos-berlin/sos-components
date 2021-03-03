@@ -171,9 +171,8 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilter.class);
             DailyPlanHistoryFilter dailyPlanHistoryFilter = Globals.objectMapper.readValue(filterBytes, DailyPlanHistoryFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, dailyPlanHistoryFilter, accessToken, getControllerId(accessToken,
-                    dailyPlanHistoryFilter.getControllerId()), getPermissonsJocCockpit(dailyPlanHistoryFilter.getControllerId(), accessToken)
-                            .getDailyPlan().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanHistoryFilter.getControllerId(), getPermissonsJocCockpit(
+                    dailyPlanHistoryFilter.getControllerId(), accessToken).getDailyPlan().getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -294,12 +293,9 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
         } catch (
 
         JocException e) {
-            LOGGER.error(getJocError().getMessage(), e);
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            e.printStackTrace();
-            LOGGER.error(getJocError().getMessage(), e);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.disconnect(sosHibernateSession);

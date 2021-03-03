@@ -35,7 +35,6 @@ import com.sos.joc.model.dailyplan.PlannedOrders;
 import com.sos.joc.model.order.OrderState;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.order.initiator.classes.CycleOrderKey;
-import com.sos.js7.order.initiator.classes.PlannedOrder;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
@@ -134,10 +133,8 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DailyPlanOrderSelector.class);
             DailyPlanOrderFilter dailyPlanOrderFilter = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
-
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, dailyPlanOrderFilter, accessToken, dailyPlanOrderFilter.getControllerId(),
-                    getPermissonsJocCockpit(getControllerId(accessToken, dailyPlanOrderFilter.getControllerId()), accessToken).getDailyPlan()
-                            .getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanOrderFilter.getControllerId(), getPermissonsJocCockpit(
+                    dailyPlanOrderFilter.getControllerId(), accessToken).getDailyPlan().getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -272,12 +269,9 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
             return JOCDefaultResponse.responseStatus200(plannedOrders);
 
         } catch (JocException e) {
-            LOGGER.error(getJocError().getMessage(), e);
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            e.printStackTrace();
-            LOGGER.error(getJocError().getMessage(), e);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.disconnect(sosHibernateSession);

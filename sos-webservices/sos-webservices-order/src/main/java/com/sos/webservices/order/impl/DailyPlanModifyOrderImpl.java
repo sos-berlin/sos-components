@@ -72,9 +72,8 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
             JsonValidator.validateFailFast(filterBytes, DailyPlanModifyOrder.class);
             DailyPlanModifyOrder dailyplanModifyOrder = Globals.objectMapper.readValue(filterBytes, DailyPlanModifyOrder.class);
 
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_MODIFY_ORDER, dailyplanModifyOrder, accessToken, dailyplanModifyOrder
-                    .getControllerId(), getPermissonsJocCockpit(getControllerId(accessToken, dailyplanModifyOrder.getControllerId()), accessToken)
-                            .getDailyPlan().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyplanModifyOrder.getControllerId(), getPermissonsJocCockpit(
+                    dailyplanModifyOrder.getControllerId(), accessToken).getDailyPlan().getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -115,12 +114,9 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
         } catch (JocException e) {
-            LOGGER.error(getJocError().getMessage(), e);
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            e.printStackTrace();
-            LOGGER.error(getJocError().getMessage(), e);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
 

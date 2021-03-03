@@ -124,10 +124,9 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
             DailyPlanOrderFilter dailyPlanOrderFilter = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
             JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_DELETE, dailyPlanOrderFilter, accessToken, dailyPlanOrderFilter.getControllerId(),
-                    getPermissonsJocCockpit(getControllerId(accessToken, dailyPlanOrderFilter.getControllerId()), accessToken).getDailyPlan()
-                            .getView().isStatus());
-
+            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanOrderFilter.getControllerId(), getPermissonsJocCockpit(
+                    dailyPlanOrderFilter.getControllerId(), accessToken).getDailyPlan().getView().isStatus());
+            
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -138,12 +137,9 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
         } catch (JocException e) {
-            LOGGER.error(getJocError().getMessage(), e);
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            e.printStackTrace();
-            LOGGER.error(getJocError().getMessage(), e);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
 
