@@ -220,6 +220,16 @@ public class DBLayer implements Serializable {
         return cl;
     }
 
+    public static SOSClassList getJocClusterClassMapping() {
+        SOSClassList cl = new SOSClassList();
+        cl.add(DBItemInventoryOperatingSystem.class);
+        cl.add(DBItemJocInstance.class);
+        cl.add(DBItemJocCluster.class);
+        cl.add(DBItemInventoryJSInstance.class);
+        cl.add(DBItemJocConfiguration.class);
+        return cl;
+    }
+
     public static SOSClassList getHistoryClassMapping() {
         SOSClassList cl = new SOSClassList();
         cl.add(DBItemJocVariable.class);

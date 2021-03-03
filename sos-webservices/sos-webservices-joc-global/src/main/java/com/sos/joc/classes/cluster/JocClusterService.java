@@ -24,10 +24,7 @@ import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
-import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
-import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
-import com.sos.joc.db.joc.DBItemJocCluster;
-import com.sos.joc.db.joc.DBItemJocInstance;
+import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.cluster.ClusterRestart;
 import com.sos.joc.model.cluster.common.ClusterServices;
 
@@ -188,10 +185,7 @@ public class JocClusterService {
             factory.setIdentifier(JocClusterConfiguration.IDENTIFIER);
             factory.setAutoCommit(false);
             factory.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
-            factory.addClassMapping(DBItemInventoryOperatingSystem.class);
-            factory.addClassMapping(DBItemJocInstance.class);
-            factory.addClassMapping(DBItemJocCluster.class);
-            factory.addClassMapping(DBItemInventoryJSInstance.class);
+            factory.addClassMapping(DBLayer.getJocClusterClassMapping());
             factory.build();
         } catch (Throwable e) {
             throw e;
