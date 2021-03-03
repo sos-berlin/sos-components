@@ -12,6 +12,7 @@ import org.apache.shiro.config.Ini.Section;
 import org.apache.shiro.config.IniSecurityManagerFactory;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.session.Session;
+import org.apache.shiro.session.UnknownSessionException;
 import org.apache.shiro.session.mgt.DefaultSessionKey;
 import org.apache.shiro.session.mgt.SessionKey;
 import org.apache.shiro.subject.Subject;
@@ -122,6 +123,8 @@ public class SOSPermissionsCreator {
                     }
                 }
             }
+        } catch (UnknownSessionException e) {
+            LOGGER.warn(e.getMessage());
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -253,8 +256,6 @@ public class SOSPermissionsCreator {
             sosPermissionJocCockpit.getInventory().setConfigurations(o.createSOSPermissionJocCockpitInventoryConfigurations());
             sosPermissionJocCockpit.getInventory().getConfigurations().setPublish(o.createSOSPermissionJocCockpitInventoryConfigurationsPublish());
 
-            
-            
             sosPermissionJocCockpit.getJoc().getView().setLog(haveRight(controllerId, "sos:products:joc_cockpit:joc:view:log"));
 
             sosPermissionJocCockpit.getJS7Controller().getView().setStatus(haveRight(controllerId,
@@ -288,7 +289,7 @@ public class SOSPermissionsCreator {
                     "sos:products:joc_cockpit:inventory:configurations:edit"));
             sosPermissionJocCockpit.getInventory().getConfigurations().setView(haveRight(controllerId,
                     "sos:products:joc_cockpit:inventory:configurations:view"));
-          
+
             sosPermissionJocCockpit.getInventory().getConfigurations().getPublish().setDeploy(haveRight(controllerId,
                     "sos:products:joc_cockpit:inventory:configurations:publish:deploy"));
             sosPermissionJocCockpit.getInventory().getConfigurations().getPublish().setSetVersion(haveRight(controllerId,
