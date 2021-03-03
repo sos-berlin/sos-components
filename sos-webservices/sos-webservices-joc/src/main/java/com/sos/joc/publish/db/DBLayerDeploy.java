@@ -235,7 +235,11 @@ public class DBLayerDeploy {
             Query<Long> query = session.createQuery(sql.toString());
             query.setParameter("folder", folder);
             if (recursive) {
-                query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
+                if ("/".equals(folder)) {
+                    query.setParameter("likefolder", MatchMode.START.toMatchString(folder));
+                } else {
+                    query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
+                }
             }
             query.setParameterList("types", Arrays.asList(new Integer[] {
                     ConfigurationType.WORKFLOW.intValue(), 
@@ -264,7 +268,11 @@ public class DBLayerDeploy {
             Query<DBItemInventoryConfiguration> query = session.createQuery(sql.toString());
             query.setParameter("folder", folder);
             if (recursive) {
-                query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
+                if ("/".equals(folder)) {
+                    query.setParameter("likefolder", MatchMode.START.toMatchString(folder));
+                } else {
+                    query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
+                }
             }
             query.setParameterList("types", JocInventory.getDeployableTypes());
             List<DBItemInventoryConfiguration> result = session.getResultList(query);
@@ -464,7 +472,11 @@ public class DBLayerDeploy {
             Query<DBItemInventoryReleasedConfiguration> query = session.createQuery(hql.toString());
             query.setParameter("folder", folder);
             if (recursive) {
-                query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
+                if ("/".equals(folder)) {
+                    query.setParameter("likefolder", MatchMode.START.toMatchString(folder));
+                } else {
+                    query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
+                }
             }
             return session.getResultList(query);
         } catch (SOSHibernateException e) {
@@ -488,7 +500,11 @@ public class DBLayerDeploy {
             Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
             query.setParameter("folder", folder);
             if (recursive) {
-                query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
+                if ("/".equals(folder)) {
+                    query.setParameter("likefolder", MatchMode.START.toMatchString(folder));
+                } else {
+                    query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
+                }
             }
             return session.getResultList(query);
         } catch (SOSHibernateException e) {
@@ -525,7 +541,11 @@ public class DBLayerDeploy {
             Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
             query.setParameter("folder", folder);
             if (recursive) {
-                query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
+                if ("/".equals(folder)) {
+                    query.setParameter("likefolder", MatchMode.START.toMatchString(folder));
+                } else {
+                    query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
+                }
             }
             if (deployablesOnly) {
                 query.setParameterList("types", Arrays.asList(new Integer[] {
@@ -565,7 +585,11 @@ public class DBLayerDeploy {
             Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
             query.setParameter("folder", folder);
             if (recursive) {
-                query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
+                if ("/".equals(folder)) {
+                    query.setParameter("likefolder", MatchMode.START.toMatchString(folder));
+                } else {
+                    query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
+                }
             }
             if (onlyDeployables) {
                 query.setParameterList("types", Arrays.asList(new Integer[] {
@@ -1394,7 +1418,11 @@ public class DBLayerDeploy {
             Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
             query.setParameter("folder", folder);
             if (recursive) {
-                query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
+                if ("/".equals(folder)) {
+                    query.setParameter("likefolder", MatchMode.START.toMatchString(folder));
+                } else {
+                    query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
+                }
             }
             query.setParameter("controllerId", controllerId);
             List<DBItemDeploymentHistory> result = session.getResultList(query);
@@ -1430,7 +1458,11 @@ public class DBLayerDeploy {
             Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
             query.setParameter("folder", folder);
             if (recursive) {
-                query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
+                if ("/".equals(folder)) {
+                    query.setParameter("likefolder", MatchMode.START.toMatchString(folder));
+                } else {
+                    query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
+                }
             }
             return session.getResultList(query);
         } catch (SOSHibernateException e) {
@@ -1461,7 +1493,11 @@ public class DBLayerDeploy {
             Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
             query.setParameter("folder", folder);
             if (recursive) {
-                query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
+                if ("/".equals(folder)) {
+                    query.setParameter("likefolder", MatchMode.START.toMatchString(folder));
+                } else {
+                    query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
+                }
             }
             return session.getResultList(query);
         } catch (SOSHibernateException e) {
