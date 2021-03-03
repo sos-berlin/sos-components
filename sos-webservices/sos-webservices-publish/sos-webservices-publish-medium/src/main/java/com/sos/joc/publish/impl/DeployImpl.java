@@ -324,7 +324,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 }
             }
             // delete configurations optimistically
-            final List<Configuration> folders = foldersToDelete.stream().map(item -> item.getConfiguration()).collect(Collectors.toList());
+            List<Configuration> folders = null;
+            if (foldersToDelete != null) {
+                folders = foldersToDelete.stream().map(item -> item.getConfiguration()).collect(Collectors.toList());
+            }
             DeleteDeployments.deleteConfigurations(dbLayer, folders, invConfigurationsToDelete, commitIdForDeleteFromFolder, getAccessToken(), 
                     getJocError(), withoutFolderDeletion);
 

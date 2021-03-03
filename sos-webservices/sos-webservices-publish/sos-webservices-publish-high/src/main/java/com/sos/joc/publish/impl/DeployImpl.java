@@ -83,9 +83,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             dbLayer = new DBLayerDeploy(hibernateSession);
             List<DBItemInventoryCertificate> caCertificates = dbLayer.getCaCertificates();
-            // get all available controller instances
-            Map<String, List<DBItemInventoryJSInstance>> allControllers = 
-                    dbLayer.getAllControllers().stream().collect(Collectors.groupingBy(DBItemInventoryJSInstance::getControllerId));
             // process filter
             Set<String> controllerIds = new HashSet<String>(deployFilter.getControllerIds());
             List<Configuration> draftConfigsToStore = getDraftConfigurationsToStoreFromFilter(deployFilter);
@@ -308,7 +305,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 } 
             }
             // delete configurations optimistically
-            final List<Configuration> folders = foldersToDelete.stream().map(item -> item.getConfiguration()).collect(Collectors.toList());
+            List<Configuration> folders = null;
+            if (foldersToDelete != null) {
+                folders = foldersToDelete.stream().map(item -> item.getConfiguration()).collect(Collectors.toList());
+            }
             DeleteDeployments.deleteConfigurations(dbLayer, folders, invConfigurationsToDelete, commitIdForDeleteFromFolder, getAccessToken(), 
                     getJocError(), withoutFolderDeletion);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
