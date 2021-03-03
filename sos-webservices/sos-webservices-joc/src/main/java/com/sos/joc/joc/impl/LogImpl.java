@@ -251,11 +251,12 @@ public class LogImpl extends JOCResourceImpl implements ILogResource {
     }
     
     private static String toAbsolutePath(Path p) {
-        try {
-            return p.toAbsolutePath().toString();
-        } catch (Exception e) {
-            return p.toString();
-        }
+        return p.toString().replace('\\', '/');
+//        try {
+//            return p.toAbsolutePath().toString();
+//        } catch (Exception e) {
+//            return p.toString();
+//        }
     }
 
     private static DirectoryStream<Path> getFileListStream(final Path folder, final Predicate<String> pattern) throws IOException {

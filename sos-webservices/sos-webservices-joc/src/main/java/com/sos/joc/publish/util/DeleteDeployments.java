@@ -46,22 +46,14 @@ public class DeleteDeployments {
         Map<String, List<DBItemDeploymentHistory>> dbItemsPerController = dbItems.stream().filter(Objects::nonNull).filter(
                 item -> OperationType.UPDATE.value() == item.getOperation()).collect(Collectors.groupingBy(DBItemDeploymentHistory::getControllerId));
         final String commitId = UUID.randomUUID().toString();
-        Set<DBItemInventoryConfiguration> invConfigurationsToDelete = Collections.emptySet();
+        Set<DBItemInventoryConfiguration> invConfigurationsToDelete = new HashSet<>();
 
         for (Map.Entry<String, List<DBItemDeploymentHistory>> entry : dbItemsPerController.entrySet()) {
             // Call ControllerApi
             PublishUtils.updateItemsDelete(commitId, entry.getValue(), entry.getKey()).thenAccept(either -> processAfterDelete(either, entry
                     .getValue(), entry.getKey(), account, commitId, accessToken, jocError));
             // store history entries optimistically
-            if (invConfigurationsToDelete.isEmpty()) {
-                invConfigurationsToDelete = new HashSet<>(
-                        getInvConfigurationsForTrash(dbLayer, 
-                                storeNewDepHistoryEntries(dbLayer, entry.getValue(), commitId)));
-            } else {
-                invConfigurationsToDelete.addAll(
-                        getInvConfigurationsForTrash(dbLayer, 
-                                storeNewDepHistoryEntries(dbLayer, entry.getValue(), commitId)));
-            }
+            invConfigurationsToDelete.addAll(getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, entry.getValue(), commitId)));
         }
         // delete configurations optimistically
         deleteConfigurations(dbLayer, null, invConfigurationsToDelete, commitId, accessToken, jocError, withoutFolderDeletion);
@@ -84,7 +76,7 @@ public class DeleteDeployments {
         }
         
         final String commitIdForDeleteFromFolder = UUID.randomUUID().toString();
-        Set<DBItemInventoryConfiguration> invConfigurationsToDelete = Collections.emptySet();
+        Set<DBItemInventoryConfiguration> invConfigurationsToDelete = new HashSet<>();
         
         for (String controllerId : controllerIds) {
             // determine all (latest) entries from the given folder
@@ -96,20 +88,13 @@ public class DeleteDeployments {
                         either -> processAfterDeleteFromFolder(either, itemsToDelete, Collections.singletonList(conf), controllerId, account,
                                 commitIdForDeleteFromFolder, accessToken, jocError, withoutFolderDeletion));
                 // store history entries optimistically
-                if (invConfigurationsToDelete.isEmpty()) {
-                    invConfigurationsToDelete = new HashSet<>(
-                            getInvConfigurationsForTrash(dbLayer, 
-                                    storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitIdForDeleteFromFolder)));
-                } else {
-                    invConfigurationsToDelete.addAll(
-                            getInvConfigurationsForTrash(dbLayer, 
-                                    storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitIdForDeleteFromFolder)));
-                }
+                invConfigurationsToDelete.addAll(getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, itemsToDelete,
+                        commitIdForDeleteFromFolder)));
             }
         }
         // delete configurations optimistically
         deleteConfigurations(dbLayer, Collections.singletonList(conf), invConfigurationsToDelete, commitIdForDeleteFromFolder, accessToken, jocError, 
-                withoutFolderDeletion);
+                withoutFolderDeletion, withEvents);
         return true;
     }
     
@@ -136,7 +121,7 @@ public class DeleteDeployments {
         
         final String commitId = UUID.randomUUID().toString();
         final String commitIdForDeleteFromFolder = UUID.randomUUID().toString();
-        Set<DBItemInventoryConfiguration> invConfigurationsToDelete = Collections.emptySet();
+        Set<DBItemInventoryConfiguration> invConfigurationsToDelete = new HashSet<>();
         for (String controllerId : controllerIds) {
 
             List<DBItemDeploymentHistory> itemsFromFolderToDelete = Collections.emptyList();
@@ -149,38 +134,24 @@ public class DeleteDeployments {
 
             if (depHistoryDBItemsToDeployDelete != null && !depHistoryDBItemsToDeployDelete.isEmpty()) {
                 final List<DBItemDeploymentHistory> itemsToDelete = depHistoryDBItemsToDeployDelete;
-                PublishUtils.updateItemsDelete(commitId, itemsToDelete, controllerId).thenAccept(
-                        either -> processAfterDelete(either, itemsToDelete, controllerId, account, commitId, accessToken, jocError));
+                PublishUtils.updateItemsDelete(commitId, itemsToDelete, controllerId).thenAccept(either -> processAfterDelete(either, itemsToDelete,
+                        controllerId, account, commitId, accessToken, jocError));
                 // store history entries optimistically
-                if (invConfigurationsToDelete.isEmpty()) {
-                    invConfigurationsToDelete = new HashSet<>(
-                            getInvConfigurationsForTrash(dbLayer, 
-                                    storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitIdForDeleteFromFolder)));
-                } else {
-                    invConfigurationsToDelete.addAll(
-                            getInvConfigurationsForTrash(dbLayer, 
-                                    storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitIdForDeleteFromFolder)));
-                }
-           }
+                invConfigurationsToDelete.addAll(getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, itemsToDelete,
+                        commitIdForDeleteFromFolder)));
+            }
             // process folder to Delete
             if (itemsFromFolderToDelete != null && !itemsFromFolderToDelete.isEmpty()) {
                 // determine all (latest) entries from the given folder
                 final List<Configuration> folders = foldersToDelete;
                 final List<DBItemDeploymentHistory> itemsToDelete = itemsFromFolderToDelete.stream().filter(item -> item.getControllerId().equals(
                         controllerId) && !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation()))).collect(Collectors.toList());
-                PublishUtils.updateItemsDelete(commitIdForDeleteFromFolder, itemsToDelete, controllerId)
-                        .thenAccept(either -> processAfterDeleteFromFolder(either, itemsToDelete, folders, controllerId, account,
-                                commitIdForDeleteFromFolder, accessToken, jocError, withoutFolderDeletion));
+                PublishUtils.updateItemsDelete(commitIdForDeleteFromFolder, itemsToDelete, controllerId).thenAccept(
+                        either -> processAfterDeleteFromFolder(either, itemsToDelete, folders, controllerId, account, commitIdForDeleteFromFolder,
+                                accessToken, jocError, withoutFolderDeletion));
                 // store history entries optimistically
-                if (invConfigurationsToDelete.isEmpty()) {
-                    invConfigurationsToDelete = new HashSet<>(
-                            getInvConfigurationsForTrash(dbLayer, 
-                                    storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitIdForDeleteFromFolder)));
-                } else {
-                    invConfigurationsToDelete.addAll(
-                            getInvConfigurationsForTrash(dbLayer, 
-                                    storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitIdForDeleteFromFolder)));
-                }
+                invConfigurationsToDelete.addAll(getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, itemsToDelete,
+                        commitIdForDeleteFromFolder)));
             }
         }
         // delete configurations optimistically

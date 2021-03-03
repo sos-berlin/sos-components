@@ -56,6 +56,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
     private JOCDefaultResponse rename(RequestFilter in) throws Exception {
         SOSHibernateSession session = null;
         try {
+            
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
@@ -63,6 +64,10 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
             session.beginTransaction();
             DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, in, folderPermissions);
             ConfigurationType type = config.getTypeAsEnum();
+            
+            if (JocInventory.isFolder(type) && JocInventory.ROOT_FOLDER.equals(config.getPath())) {
+                throw new JocFolderPermissionsException("Root folder cannot be renamed");
+            }
             
             final java.nio.file.Path oldPath = Paths.get(config.getPath());
             final java.nio.file.Path p = Paths.get(config.getFolder()).resolve(in.getNewPath()).normalize();
