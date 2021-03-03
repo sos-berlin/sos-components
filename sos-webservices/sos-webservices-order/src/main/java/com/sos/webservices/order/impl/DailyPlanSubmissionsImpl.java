@@ -1,18 +1,10 @@
 package com.sos.webservices.order.impl;
 
-import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.zone.ZoneRules;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
-import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.Path;
 
@@ -49,10 +41,8 @@ public class DailyPlanSubmissionsImpl extends JOCResourceImpl implements IDailyP
             JsonValidator.validateFailFast(filterBytes, DailyPlanSubmissionsFilter.class);
             DailyPlanSubmissionsFilter dailyPlanSubmissionHistoryFilter = Globals.objectMapper.readValue(filterBytes,
                     DailyPlanSubmissionsFilter.class);
-
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, dailyPlanSubmissionHistoryFilter, accessToken, getControllerId(accessToken,
-                    dailyPlanSubmissionHistoryFilter.getControllerId()), getPermissonsJocCockpit(dailyPlanSubmissionHistoryFilter.getControllerId(),
-                            accessToken).getDailyPlan().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanSubmissionHistoryFilter.getControllerId(), getPermissonsJocCockpit(
+                    dailyPlanSubmissionHistoryFilter.getControllerId(), accessToken).getDailyPlan().getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -101,12 +91,9 @@ public class DailyPlanSubmissionsImpl extends JOCResourceImpl implements IDailyP
             return JOCDefaultResponse.responseStatus200(dailyPlanSubmissions);
 
         } catch (JocException e) {
-            LOGGER.error(getJocError().getMessage(), e);
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            e.printStackTrace();
-            LOGGER.error(getJocError().getMessage(), e);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.disconnect(sosHibernateSession);

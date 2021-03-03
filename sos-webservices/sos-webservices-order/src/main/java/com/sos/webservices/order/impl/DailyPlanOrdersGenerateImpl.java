@@ -39,10 +39,8 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DailyPlanOrderSelector.class);
             DailyPlanOrderSelector dailyPlanOrderSelector = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderSelector.class);
-
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, dailyPlanOrderSelector, accessToken, dailyPlanOrderSelector.getControllerId(),
-                    getPermissonsJocCockpit(getControllerId(accessToken, dailyPlanOrderSelector.getControllerId()), accessToken).getDailyPlan()
-                            .getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanOrderSelector.getControllerId(), getPermissonsJocCockpit(
+                    dailyPlanOrderSelector.getControllerId(), accessToken).getDailyPlan().getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

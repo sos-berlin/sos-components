@@ -39,9 +39,9 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DailyPlanSubmissionsFilter.class);
             OrderFilter orderFilter = Globals.objectMapper.readValue(filterBytes, OrderFilter.class);
-
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, "", accessToken, orderFilter.getControllerId(), getPermissonsJocCockpit(
-                    getControllerId(accessToken, orderFilter.getControllerId()), accessToken).getOrder().getView().isStatus());
+            
+            JOCDefaultResponse jocDefaultResponse = initPermissions(orderFilter.getControllerId(), getPermissonsJocCockpit(
+                    orderFilter.getControllerId(), accessToken).getOrder().getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -84,12 +84,9 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(variables));
 
         } catch (JocException e) {
-            LOGGER.error(getJocError().getMessage(), e);
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            e.printStackTrace();
-            LOGGER.error(getJocError().getMessage(), e);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.disconnect(sosHibernateSession);
