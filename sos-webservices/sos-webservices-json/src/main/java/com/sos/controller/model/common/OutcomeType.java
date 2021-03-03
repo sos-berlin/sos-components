@@ -11,7 +11,8 @@ public enum OutcomeType {
     Succeeded("Succeeded"),
     Failed("Failed"),
     Disrupted("Disrupted"),
-    Cancelled("Cancelled");
+    Cancelled("Cancelled"),
+    Killed("Killed");
     private final String value;
     private final static Map<String, OutcomeType> CONSTANTS = new HashMap<String, OutcomeType>();
 

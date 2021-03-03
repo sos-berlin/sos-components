@@ -18,18 +18,17 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "required",
     "TYPE",
-    "namedValues"
+    "namedValues",
+    "outcome"
 })
 public class Outcome {
 
-    @JsonProperty("required")
-    private Object required;
     /**
      * outcomeType
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("TYPE")
@@ -43,6 +42,14 @@ public class Outcome {
     @JsonProperty("namedValues")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables namedValues;
+    /**
+     * outcome
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("outcome")
+    private Outcome outcome;
 
     /**
      * No args constructor for use in serialization
@@ -55,29 +62,20 @@ public class Outcome {
      * 
      * @param namedValues
      * @param tYPE
-     * @param required
+     * @param outcome
      */
-    public Outcome(Object required, OutcomeType tYPE, Variables namedValues) {
+    public Outcome(OutcomeType tYPE, Variables namedValues, Outcome outcome) {
         super();
-        this.required = required;
         this.tYPE = tYPE;
         this.namedValues = namedValues;
-    }
-
-    @JsonProperty("required")
-    public Object getRequired() {
-        return required;
-    }
-
-    @JsonProperty("required")
-    public void setRequired(Object required) {
-        this.required = required;
+        this.outcome = outcome;
     }
 
     /**
      * outcomeType
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("TYPE")
@@ -89,6 +87,7 @@ public class Outcome {
      * outcomeType
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("TYPE")
@@ -118,14 +117,36 @@ public class Outcome {
         this.namedValues = namedValues;
     }
 
+    /**
+     * outcome
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("outcome")
+    public Outcome getOutcome() {
+        return outcome;
+    }
+
+    /**
+     * outcome
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("outcome")
+    public void setOutcome(Outcome outcome) {
+        this.outcome = outcome;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("required", required).append("tYPE", tYPE).append("namedValues", namedValues).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("namedValues", namedValues).append("outcome", outcome).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(tYPE).append(required).append(namedValues).toHashCode();
+        return new HashCodeBuilder().append(tYPE).append(outcome).append(namedValues).toHashCode();
     }
 
     @Override
@@ -137,7 +158,7 @@ public class Outcome {
             return false;
         }
         Outcome rhs = ((Outcome) other);
-        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(required, rhs.required).append(namedValues, rhs.namedValues).isEquals();
+        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(outcome, rhs.outcome).append(namedValues, rhs.namedValues).isEquals();
     }
 
 }

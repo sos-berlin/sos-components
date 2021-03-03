@@ -471,6 +471,10 @@ public class Globals {
         }
         return Globals.jocSecurityLevel;
     }
+    
+    public static void setJocSecurityLevel(JocSecurityLevel level) {
+        Globals.jocSecurityLevel = level;
+    }
 
     public static void setServletBaseUri(UriInfo uriInfo) {
 
