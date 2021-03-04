@@ -6,24 +6,25 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum ClusterSettingValueType {
+public enum ClusterSettingsSectionValueType {
 
     ZONE("ZONE"),
     AGE("AGE"),
     WEEKDAYS("WEEKDAYS"),
     TIME("TIME"),
     POSITIVENUMBER("POSITIVENUMBER"),
-    NONNEGATIVENUMBER("NONNEGATIVENUMBER");
+    NONNEGATIVENUMBER("NONNEGATIVENUMBER"),
+    STRING("STRING");
     private final String value;
-    private final static Map<String, ClusterSettingValueType> CONSTANTS = new HashMap<String, ClusterSettingValueType>();
+    private final static Map<String, ClusterSettingsSectionValueType> CONSTANTS = new HashMap<String, ClusterSettingsSectionValueType>();
 
     static {
-        for (ClusterSettingValueType c: values()) {
+        for (ClusterSettingsSectionValueType c: values()) {
             CONSTANTS.put(c.value, c);
         }
     }
 
-    private ClusterSettingValueType(String value) {
+    private ClusterSettingsSectionValueType(String value) {
         this.value = value;
     }
 
@@ -38,8 +39,8 @@ public enum ClusterSettingValueType {
     }
 
     @JsonCreator
-    public static ClusterSettingValueType fromValue(String value) {
-        ClusterSettingValueType constant = CONSTANTS.get(value);
+    public static ClusterSettingsSectionValueType fromValue(String value) {
+        ClusterSettingsSectionValueType constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {

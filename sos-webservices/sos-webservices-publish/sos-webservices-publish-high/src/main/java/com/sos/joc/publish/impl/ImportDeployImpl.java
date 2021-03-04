@@ -40,7 +40,6 @@ import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
@@ -56,13 +55,13 @@ import com.sos.joc.model.inventory.workflow.WorkflowPublish;
 import com.sos.joc.model.joc.JocMetaInfo;
 import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.model.publish.ControllerObject;
-import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.ImportDeployFilter;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.sign.SignaturePath;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.IImportDeploy;
 import com.sos.joc.publish.util.PublishUtils;
+import com.sos.joc.publish.util.StoreDeployments;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
@@ -245,7 +244,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             case SOSKeyConstants.PGP_ALGORITHM_NAME:
                 PublishUtils.updateItemsAddOrUpdatePGP2(commitIdForUpdate, importedObjects, null, controllerId, dbLayer)
                     .thenAccept(either -> {
-                        processAfterAdd(either, importedObjects, null, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError());
+                        StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL);
                 });
                 break;
             case SOSKeyConstants.RSA_ALGORITHM_NAME:
@@ -254,13 +253,13 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 if (verified) {
                     PublishUtils.updateItemsAddOrUpdateWithX509CertificateFromImport(commitIdForUpdate, importedObjects, null, controllerId, dbLayer,
                             SOSKeyConstants.RSA_SIGNER_ALGORITHM, keyPair.getCertificate()).thenAccept(either -> {
-                                processAfterAdd(either, importedObjects, null, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError());
+                                StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL);
                     });
                 } else {
                     signerDN = cert.getSubjectDN().getName();
                     PublishUtils.updateItemsAddOrUpdateWithX509SignerDNFromImport(commitIdForUpdate, importedObjects, null, controllerId, dbLayer,
                             SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
-                                processAfterAdd(either, importedObjects, null, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError());
+                                StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL);
                     });
                 }
                 break;
@@ -270,13 +269,13 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 if (verified) {
                     PublishUtils.updateItemsAddOrUpdateWithX509CertificateFromImport(commitIdForUpdate, importedObjects, null, controllerId, dbLayer,
                             SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair.getCertificate()).thenAccept(either -> {
-                                processAfterAdd(either, importedObjects, null, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError());
+                                StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL);
                     });
                 } else {
                     signerDN = cert.getSubjectDN().getName();
                     PublishUtils.updateItemsAddOrUpdateWithX509SignerDNFromImport(commitIdForUpdate, importedObjects, null, controllerId, dbLayer,
                             SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
-                                processAfterAdd(either, importedObjects, null, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError());
+                                StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL);
                     });
                 }
                 break;
@@ -319,53 +318,6 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
         }
 	}
 
-    private void processAfterAdd (
-            Either<Problem, Void> either, 
-            Map<ControllerObject, DBItemDepSignatures> verifiedConfigurations,
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedReDeployables,
-            String account,
-            String commitId,
-            String controllerId,
-            String accessToken, 
-            JocError jocError) {
-        // asynchronous processing:  this method is called from a CompletableFuture and therefore 
-        // creates a new db session as the session of the caller may already be closed
-        SOSHibernateSession newHibernateSession = null;
-        try {
-            newHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
-            if (either.isLeft()) {
-                // an error occurred
-                String message = String.format(
-                        "Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
-                LOGGER.error(message);
-                // updateRepo command is atomic, therefore all items are rejected
-
-                // get all already optimistically stored entries for the commit
-                List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
-                // update all previously optimistically stored entries with the error message and change the state
-                for(DBItemDeploymentHistory optimistic : optimisticEntries) {
-                    optimistic.setErrorMessage(either.getLeft().message());
-                    optimistic.setState(DeploymentState.NOT_DEPLOYED.value());
-                    dbLayer.getSession().update(optimistic);
-                    // update related inventory configuration to deployed=false 
-                    DBItemInventoryConfiguration cfg = dbLayer.getConfiguration(optimistic.getInventoryConfigurationId());
-                    cfg.setDeployed(false);
-                    dbLayer.getSession().update(cfg);
-                }
-                // if not successful the objects and the related controllerId have to be stored 
-                // in a submissions table for reprocessing
-                dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
-                ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, null);
-            }
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
-            ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(e.toString())), getAccessToken(), getJocError(), null);
-        } finally {
-            Globals.disconnect(newHibernateSession);
-        }
-    }
-    
     private void processAfterDelete (
             Either<Problem, Void> either, 
             List<DBItemDeploymentHistory> itemsToDelete, 

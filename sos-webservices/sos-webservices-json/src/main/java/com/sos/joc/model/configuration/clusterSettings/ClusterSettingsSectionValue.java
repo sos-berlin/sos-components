@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "type",
     "default"
 })
-public class ClusterSetting {
+public class ClusterSettingsSectionValue {
 
     /**
      * string without < and >
@@ -50,7 +50,7 @@ public class ClusterSetting {
      * 
      */
     @JsonProperty("type")
-    private ClusterSettingValueType type;
+    private ClusterSettingsSectionValueType type;
     /**
      * string without < and >
      * <p>
@@ -117,7 +117,7 @@ public class ClusterSetting {
      * 
      */
     @JsonProperty("type")
-    public ClusterSettingValueType getType() {
+    public ClusterSettingsSectionValueType getType() {
         return type;
     }
 
@@ -129,7 +129,7 @@ public class ClusterSetting {
      * 
      */
     @JsonProperty("type")
-    public void setType(ClusterSettingValueType type) {
+    public void setType(ClusterSettingsSectionValueType type) {
         this.type = type;
     }
 
@@ -170,10 +170,10 @@ public class ClusterSetting {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ClusterSetting) == false) {
+        if ((other instanceof ClusterSettingsSectionValue) == false) {
             return false;
         }
-        ClusterSetting rhs = ((ClusterSetting) other);
+        ClusterSettingsSectionValue rhs = ((ClusterSettingsSectionValue) other);
         return new EqualsBuilder().append(name, rhs.name).append(_default, rhs._default).append(type, rhs.type).append(value, rhs.value).isEquals();
     }
 
