@@ -14,28 +14,28 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * cluster settings
+ * cluster setting
  * <p>
- * a map for arbitrary key-value pairs (String, ClusterSettingsSection)
+ * a map for arbitrary key-value pairs (String, ClusterSettingsSectionValue)
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
 
 })
-public class ClusterSettings {
+public class ClusterSettingsSection {
 
     //re: manually changed from HashMap to LinkedHashMap
     @JsonIgnore
-    private Map<String, ClusterSettingsSection> additionalProperties = new LinkedHashMap<String, ClusterSettingsSection>();
+    private Map<String, ClusterSettingsSectionValue> additionalProperties = new LinkedHashMap<String, ClusterSettingsSectionValue>();
 
     @JsonAnyGetter
-    public Map<String, ClusterSettingsSection> getAdditionalProperties() {
+    public Map<String, ClusterSettingsSectionValue> getAdditionalProperties() {
         return this.additionalProperties;
     }
 
     @JsonAnySetter
-    public void setAdditionalProperty(String name, ClusterSettingsSection value) {
+    public void setAdditionalProperty(String name, ClusterSettingsSectionValue value) {
         this.additionalProperties.put(name, value);
     }
 
@@ -54,10 +54,10 @@ public class ClusterSettings {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ClusterSettings) == false) {
+        if ((other instanceof ClusterSettingsSection) == false) {
             return false;
         }
-        ClusterSettings rhs = ((ClusterSettings) other);
+        ClusterSettingsSection rhs = ((ClusterSettingsSection) other);
         return new EqualsBuilder().append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 
