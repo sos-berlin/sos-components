@@ -12,10 +12,11 @@ import org.junit.Test;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
-import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
+import com.sos.joc.cluster.configuration.JocConfiguration;
+import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.model.common.JocSecurityLevel;
-import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
+import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
 
 public class HistoryServiceTest {
 
@@ -78,7 +79,8 @@ public class HistoryServiceTest {
                 "", 0);
 
         HistoryService hm = new HistoryService(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
-        hm.start(getControllers(), StartupMode.manual);
+        GlobalSettingsSection settings = null;
+        hm.start(getControllers(), settings, StartupMode.manual);
         HistoryServiceTest.exitAfter(hm, 2 * 60);
 
     }

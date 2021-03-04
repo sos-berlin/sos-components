@@ -9,10 +9,14 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.codec.Charsets;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -26,17 +30,24 @@ import com.sos.joc.cluster.JocClusterHandler.PerformType;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
-import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
+import com.sos.joc.cluster.configuration.JocConfiguration;
+import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.db.DBLayerJocCluster;
 import com.sos.joc.cluster.instances.JocInstance;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.joc.DBItemJocCluster;
+import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
-import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
+import com.sos.joc.model.cluster.common.ClusterServices;
+import com.sos.joc.model.configuration.ConfigurationType;
+import com.sos.joc.model.configuration.globals.GlobalSettings;
+import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
+import com.sos.joc.model.configuration.globals.GlobalSettingsSectionEntry;
+import com.sos.joc.model.configuration.globals.GlobalSettingsSectionValueType;
 import com.sos.js7.event.http.HttpClient;
 
 public class JocCluster {
@@ -58,6 +69,7 @@ public class JocCluster {
     private volatile boolean closed;
 
     private List<ControllerConfiguration> controllers;
+    private GlobalSettings settings;
     private String activeMemberId;
     private String lastActiveMemberId;
     private boolean skipPerform;
@@ -111,91 +123,202 @@ public class JocCluster {
         }
     }
 
-    public List<ControllerConfiguration> getControllers() {
+    public void readCurrentDbInfos() {
         boolean run = true;
+        controllers = null;
+        settings = null;
         while (run) {
+            DBLayerJocCluster dbLayer = null;
             try {
                 if (closed) {
-                    return controllers;
+                    return;
                 }
-                getControllersFromDb();
+                dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession("currentDbInfos"));
+                readCurrentDbInfoControllers(dbLayer);
+                readCurrentDbInfoSettings(dbLayer);
                 if (controllers != null && controllers.size() > 0) {
                     run = false;
+                    dbLayer.close();
+                    dbLayer = null;
                 } else {
+                    dbLayer.close();
+                    dbLayer = null;
                     LOGGER.info(String.format("[%s]no controllers found. sleep 1m and try again ...", jocConfig.getSecurityLevel().name()));
                     wait(60);
                 }
             } catch (Exception e) {
+                if (dbLayer != null) {
+                    dbLayer.rollback();
+                    dbLayer.close();
+                    dbLayer = null;
+                }
                 LOGGER.error(String.format("[error occured][sleep 1m and try again ...]%s", e.toString()));
                 wait(60);
+            } finally {
+                if (dbLayer != null) {
+                    dbLayer.close();
+                    dbLayer = null;
+                }
             }
         }
-        return controllers;
     }
 
-    private List<ControllerConfiguration> getControllersFromDb() throws Exception {
+    private void readCurrentDbInfoControllers(DBLayerJocCluster dbLayer) throws Exception {
         if (controllers == null) {
-            SOSHibernateSession session = null;
-            try {
-                session = dbFactory.openStatelessSession("history");
-                session.beginTransaction();
-                StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_JS_INSTANCES).append(" ");
-                hql.append("where securityLevel=:securityLevel");
-                Query<DBItemInventoryJSInstance> query = session.createQuery(hql.toString());
-                query.setParameter("securityLevel", jocConfig.getSecurityLevel().intValue());
-                List<DBItemInventoryJSInstance> result = session.getResultList(query);
-                session.commit();
-                session.close();
-                session = null;
+            dbLayer.beginTransaction();
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_JS_INSTANCES).append(" ");
+            hql.append("where securityLevel=:securityLevel");
+            Query<DBItemInventoryJSInstance> query = dbLayer.getSession().createQuery(hql.toString());
+            query.setParameter("securityLevel", jocConfig.getSecurityLevel().intValue());
+            List<DBItemInventoryJSInstance> result = dbLayer.getSession().getResultList(query);
+            dbLayer.commit();
 
-                if (result != null && result.size() > 0) {
-                    controllers = new ArrayList<ControllerConfiguration>();
-                    Map<String, Properties> map = new HashMap<String, Properties>();
-                    for (int i = 0; i < result.size(); i++) {
-                        DBItemInventoryJSInstance item = result.get(i);
+            if (result != null && result.size() > 0) {
+                controllers = new ArrayList<ControllerConfiguration>();
+                Map<String, Properties> map = new HashMap<String, Properties>();
+                for (int i = 0; i < result.size(); i++) {
+                    DBItemInventoryJSInstance item = result.get(i);
 
-                        Properties p = null;
-                        if (map.containsKey(item.getControllerId())) {
-                            p = map.get(item.getControllerId());
-                        } else {
-                            p = new Properties();
+                    Properties p = null;
+                    if (map.containsKey(item.getControllerId())) {
+                        p = map.get(item.getControllerId());
+                    } else {
+                        p = new Properties();
+                    }
+                    p.setProperty("controller_id", item.getControllerId());
+                    if (item.getIsPrimary()) {
+                        p.setProperty("primary_controller_uri", item.getUri());
+                        if (item.getClusterUri() != null) {
+                            p.setProperty("primary_controller_cluster_uri", item.getClusterUri());
                         }
-                        p.setProperty("controller_id", item.getControllerId());
-                        if (item.getIsPrimary()) {
-                            p.setProperty("primary_controller_uri", item.getUri());
-                            if (item.getClusterUri() != null) {
-                                p.setProperty("primary_controller_cluster_uri", item.getClusterUri());
-                            }
-                        } else {
-                            p.setProperty("secondary_controller_uri", item.getUri());
-                            if (item.getClusterUri() != null) {
-                                p.setProperty("secondary_controller_cluster_uri", item.getClusterUri());
-                            }
+                    } else {
+                        p.setProperty("secondary_controller_uri", item.getUri());
+                        if (item.getClusterUri() != null) {
+                            p.setProperty("secondary_controller_cluster_uri", item.getClusterUri());
                         }
-                        map.put(item.getControllerId(), p);
                     }
-                    for (Map.Entry<String, Properties> entry : map.entrySet()) {
-                        LOGGER.info(String.format("[add][controllerConfiguration]%s", entry));
-                        ControllerConfiguration mc = new ControllerConfiguration();
-                        mc.load(entry.getValue());
-                        controllers.add(mc);
-                    }
+                    map.put(item.getControllerId(), p);
                 }
-            } catch (Exception e) {
-                if (session != null) {
-                    try {
-                        session.rollback();
-                    } catch (SOSHibernateException e1) {
-                    }
-                }
-                throw e;
-            } finally {
-                if (session != null) {
-                    session.close();
+                for (Map.Entry<String, Properties> entry : map.entrySet()) {
+                    LOGGER.info(String.format("[add][controllerConfiguration]%s", entry));
+                    ControllerConfiguration mc = new ControllerConfiguration();
+                    mc.load(entry.getValue());
+                    controllers.add(mc);
                 }
             }
         }
-        return controllers;
+    }
+
+    private void readCurrentDbInfoSettings(DBLayerJocCluster dbLayer) throws Exception {
+        if (settings == null) {
+            settings = getAllSettings(dbLayer, null);
+        }
+    }
+
+    public static GlobalSettings getAllSettings(SOSHibernateSession session) throws Exception {
+        return getAllSettings(null, session);
+    }
+
+    public static GlobalSettingsSection getSettings(SOSHibernateSession session, ClusterServices service) throws Exception {
+        GlobalSettings settings = getAllSettings(null, session);
+        return settings == null ? null : settings.getAdditionalProperties().get(service.name());
+    }
+
+    private static GlobalSettings getAllSettings(DBLayerJocCluster dbLayer, SOSHibernateSession session) throws Exception {
+        ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
+                SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+
+        GlobalSettings settings = null;
+        if (dbLayer == null) {
+            dbLayer = new DBLayerJocCluster(session);
+        }
+        try {
+            dbLayer.beginTransaction();
+            DBItemJocConfiguration item = dbLayer.getClusterSettings();
+            if (item == null) {
+                settings = getDefaultSettings();
+
+                item = new DBItemJocConfiguration();
+                item.setSchedulerId(".");
+                item.setInstanceId(0L);
+                item.setAccount(".");
+                item.setObjectType(null);
+                item.setConfigurationType(ConfigurationType.GLOBALS.name());
+                item.setShared(false);
+                item.setConfigurationItem(new String(mapper.writeValueAsBytes(settings), Charsets.UTF_8));
+                item.setModified(new Date());
+
+                dbLayer.getSession().save(item);
+            } else {
+                try {
+                    settings = mapper.readValue(item.getConfigurationItem(), GlobalSettings.class);
+                } catch (Throwable e) {
+                    LOGGER.error(String.format("[can't read settings]%s", e.toString()), e);
+                    throw e;
+                }
+            }
+            dbLayer.commit();
+        } catch (SOSHibernateException e) {
+            dbLayer.rollback();
+        }
+        return settings;
+    }
+
+    private static GlobalSettings getDefaultSettings() {
+        GlobalSettings s = new GlobalSettings();
+        s.setAdditionalProperty(ClusterServices.dailyplan.name(), getDailyPlanDefaultSettings(0));
+        s.setAdditionalProperty(ClusterServices.cleanup.name(), getCleanupDefaultSettings(1));
+        return s;
+    }
+
+    public static GlobalSettingsSection getDailyPlanDefaultSettings(int order) {
+        GlobalSettingsSection s = new GlobalSettingsSection();
+        s.setOrder(order);
+        addEntry(s, 0, "zone", "UTC", GlobalSettingsSectionValueType.ZONE);
+        addEntry(s, 1, "period_begin", "00:00:00", GlobalSettingsSectionValueType.TIME);
+        addEntry(s, 2, "days_ahead_plan", "1", GlobalSettingsSectionValueType.NONNEGATIVENUMBER);
+        addEntry(s, 3, "days_ahead_submit", "1", GlobalSettingsSectionValueType.NONNEGATIVENUMBER);
+        return s;
+    }
+
+    public static GlobalSettingsSection getCleanupDefaultSettings(int order) {
+        GlobalSettingsSection s = new GlobalSettingsSection();
+        s.setOrder(order);
+        addEntry(s, 0, "zone", "UTC", GlobalSettingsSectionValueType.ZONE);
+        addEntry(s, 1, "period", "1,2,3,4,5,6,7", "", GlobalSettingsSectionValueType.WEEKDAYS);
+        addEntry(s, 2, "period_begin", "01:00:00", GlobalSettingsSectionValueType.TIME);
+        addEntry(s, 3, "period_end", "04:00:00", GlobalSettingsSectionValueType.TIME);
+        addEntry(s, 4, "batch_size", "1000", GlobalSettingsSectionValueType.POSITIVENUMBER);
+
+        addEntry(s, 5, "order_history_age", "90d", GlobalSettingsSectionValueType.AGE);
+        addEntry(s, 6, "order_history_logs_age", "90d", GlobalSettingsSectionValueType.AGE);
+        addEntry(s, 7, "daily_plan_history_age", "30d", GlobalSettingsSectionValueType.AGE);
+        addEntry(s, 8, "deployment_history_versions", "10", GlobalSettingsSectionValueType.NONNEGATIVENUMBER);
+        return s;
+    }
+
+    public static void addEntry(GlobalSettingsSection s, int order, String valueName, String defaultValue, GlobalSettingsSectionValueType valueType) {
+        addEntry(s, order, valueName, null, defaultValue, valueType);
+    }
+
+    public static void addEntry(GlobalSettingsSection s, int order, String valueName, String value, String defaultValue,
+            GlobalSettingsSectionValueType valueType) {
+        GlobalSettingsSectionEntry e = new GlobalSettingsSectionEntry();
+        e.setOrder(order);
+        e.setName(valueName);
+        e.setDefault(defaultValue);
+        e.setValue(value == null ? e.getDefault() : value);
+        e.setType(valueType);
+        s.setAdditionalProperty(e.getName(), e);
+    }
+
+    public static String getValue(GlobalSettingsSection section, String entryName) {
+        try {
+            return section.getAdditionalProperties().get(entryName).getValue();
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[%s]can't get value=%s", entryName, e.toString()), e);
+            return null;
+        }
     }
 
     private synchronized void process(StartupMode mode) throws Exception {
@@ -203,10 +326,10 @@ public class JocCluster {
         DBItemJocCluster item = null;
         try {
             dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());
-            dbLayer.getSession().beginTransaction();
+            dbLayer.beginTransaction();
             dbLayer.updateInstanceHeartBeat(currentMemberId);
             item = dbLayer.getCluster();
-            dbLayer.getSession().commit();
+            dbLayer.commit();
 
             activeMemberId = item == null ? null : item.getMemberId();
             if (lastActiveMemberId == null) {
@@ -240,7 +363,7 @@ public class JocCluster {
         } catch (SOSHibernateObjectOperationStaleStateException e) {// @Version
             // locked
             if (dbLayer != null) {
-                dbLayer.getSession().rollback();
+                dbLayer.rollback();
             }
             LOGGER.error(e.toString(), e);
             LOGGER.error(String.format("[%s][exception][current=%s][active=%s][lastActive=%s][locked]%s", mode, currentMemberId, activeMemberId,
@@ -248,7 +371,7 @@ public class JocCluster {
 
         } catch (SOSHibernateObjectOperationException e) {
             if (dbLayer != null) {
-                dbLayer.getSession().rollback();
+                dbLayer.rollback();
             }
             LOGGER.error(e.toString(), e);
             LOGGER.error(String.format("[%s][exception][current=%s][active=%s][lastActive=%s]%s", mode, currentMemberId, activeMemberId,
@@ -256,12 +379,12 @@ public class JocCluster {
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
             if (dbLayer != null) {
-                dbLayer.getSession().rollback();
+                dbLayer.rollback();
             }
             throw e;
         } finally {
             if (dbLayer != null) {
-                dbLayer.getSession().close();
+                dbLayer.close();
             }
             if (!skipPerform) {
                 if (item != null) {
@@ -299,9 +422,9 @@ public class JocCluster {
             item.setId(JocClusterConfiguration.IDENTIFIER);
             item.setMemberId(currentMemberId);
 
-            dbLayer.getSession().beginTransaction();
+            dbLayer.beginTransaction();
             dbLayer.getSession().save(item);
-            dbLayer.getSession().commit();
+            dbLayer.commit();
 
             if (!isAutomaticStartup(item.getHeartBeat())) {
                 mode = StartupMode.automatic_switchover;
@@ -331,9 +454,9 @@ public class JocCluster {
                         item.setSwitchMemberId(null);
                         item.setSwitchHeartBeat(null);
 
-                        dbLayer.getSession().beginTransaction();
+                        dbLayer.beginTransaction();
                         dbLayer.getSession().update(item);
-                        dbLayer.getSession().commit();
+                        dbLayer.commit();
 
                         mode = StartupMode.automatic_switchover;
                         item.setStartupMode(mode.name());
@@ -359,7 +482,6 @@ public class JocCluster {
         }
 
         try {
-            DBLayerJocCluster dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());
             synchronized (lockObject) {
                 boolean run = true;
                 int errorCounter = 0;
@@ -369,16 +491,30 @@ public class JocCluster {
                         return getOKAnswer(JocClusterAnswerState.STOPPED);
                     }
 
+                    DBLayerJocCluster dbLayer = null;
                     try {
+                        dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());
                         answer = setSwitchMember(mode, dbLayer, newMemberId);
                         run = false;
+
+                        dbLayer.close();
+                        dbLayer = null;
                     } catch (Exception e) {
+                        if (dbLayer != null) {
+                            dbLayer.close();
+                            dbLayer = null;
+                        }
                         LOGGER.warn(String.format("[%s][%s]%s", mode, errorCounter, e.toString()), e);
                         errorCounter += 1;
                         if (errorCounter >= config.getSwitchMemberWaitCounterOnError()) {
                             throw e;
                         }
                         wait(config.getSwitchMemberWaitIntervalOnError());
+                    } finally {
+                        if (dbLayer != null) {
+                            dbLayer.close();
+                            dbLayer = null;
+                        }
                     }
                 }
             }
@@ -423,9 +559,9 @@ public class JocCluster {
 
         JocClusterAnswer answer = getOKAnswer(JocClusterAnswerState.SWITCH);
         try {
-            dbLayer.getSession().beginTransaction();
+            dbLayer.beginTransaction();
             DBItemJocCluster item = dbLayer.getCluster();
-            dbLayer.getSession().commit();
+            dbLayer.commit();
             if (item == null) {
                 return getErrorAnswer(new Exception("db cluster not found"));
             }
@@ -448,9 +584,9 @@ public class JocCluster {
                     item.setSwitchMemberId(newMemberId);
                     item.setSwitchHeartBeat(new Date());
 
-                    dbLayer.getSession().beginTransaction();
+                    dbLayer.beginTransaction();
                     dbLayer.getSession().update(item);
-                    dbLayer.getSession().commit();
+                    dbLayer.commit();
 
                     LOGGER.info("[" + mode + "][switch][end][new]" + newMemberId);
                     activeMemberId = newMemberId;
@@ -468,9 +604,9 @@ public class JocCluster {
                         item.setSwitchMemberId(newMemberId);
                         item.setSwitchHeartBeat(new Date());
 
-                        dbLayer.getSession().beginTransaction();
+                        dbLayer.beginTransaction();
                         dbLayer.getSession().update(item);
-                        dbLayer.getSession().commit();
+                        dbLayer.commit();
                         LOGGER.info("[" + mode + "][switch]" + SOSHibernate.toString(item));
                         // watchSwitch(newMemberId);
                     }
@@ -479,7 +615,7 @@ public class JocCluster {
 
         } catch (Exception e) {
             if (dbLayer != null) {
-                dbLayer.getSession().rollback();
+                dbLayer.rollback();
             }
             throw e;
         }
@@ -498,9 +634,9 @@ public class JocCluster {
                 item.setSwitchMemberId(null);
                 item.setSwitchHeartBeat(null);
 
-                dbLayer.getSession().beginTransaction();
+                dbLayer.beginTransaction();
                 dbLayer.getSession().update(item);
-                dbLayer.getSession().commit();
+                dbLayer.commit();
             } else {
                 boolean run = true;
                 int errorCounter = 0;
@@ -524,9 +660,9 @@ public class JocCluster {
                         // item.setSwitchMemberId(null);
                         // item.setSwitchHeartBeat(null);
 
-                        dbLayer.getSession().beginTransaction();
+                        dbLayer.beginTransaction();
                         dbLayer.getSession().update(item);
-                        dbLayer.getSession().commit();
+                        dbLayer.commit();
                         run = false;
                     } catch (Exception e) {
                         LOGGER.warn(String.format("[%s][%s]%s", mode, errorCounter, e.toString()), e);
@@ -539,9 +675,9 @@ public class JocCluster {
                 }
             }
         } else {
-            dbLayer.getSession().beginTransaction();
+            dbLayer.beginTransaction();
             dbLayer.getSession().update(item);
-            dbLayer.getSession().commit();
+            dbLayer.commit();
         }
         return item;
     }
@@ -550,19 +686,19 @@ public class JocCluster {
         DBLayerJocCluster dbLayer = null;
         try {
             dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());
-            dbLayer.getSession().beginTransaction();
+            dbLayer.beginTransaction();
             DBItemJocInstance item = dbLayer.getInstance(memberId);
-            dbLayer.getSession().commit();
+            dbLayer.commit();
             return item;
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
             if (dbLayer != null) {
-                dbLayer.getSession().rollback();
+                dbLayer.rollback();
             }
             throw e;
         } finally {
             if (dbLayer != null) {
-                dbLayer.getSession().close();
+                dbLayer.close();
             }
         }
     }
@@ -632,9 +768,9 @@ public class JocCluster {
         int result = 0;
         try {
             dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());
-            dbLayer.getSession().beginTransaction();
+            dbLayer.beginTransaction();
             result = dbLayer.deleteCluster(currentMemberId, true);
-            dbLayer.getSession().commit();
+            dbLayer.commit();
 
             if (Math.abs(result) > 0) {
                 LOGGER.info(String.format("[active current memberId deleted]%s", currentMemberId));
@@ -643,19 +779,13 @@ public class JocCluster {
             // ignore exceptions - not me
             LOGGER.error(e.toString(), e);
             if (dbLayer != null) {
-                try {
-                    dbLayer.getSession().rollback();
-                } catch (SOSHibernateException e1) {
-                }
+                dbLayer.rollback();
             }
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
 
             if (dbLayer != null) {
-                try {
-                    dbLayer.getSession().rollback();
-                } catch (SOSHibernateException e1) {
-                }
+                dbLayer.rollback();
             }
         }
         return result;
@@ -745,5 +875,13 @@ public class JocCluster {
 
     public JocClusterHandler getHandler() {
         return handler;
+    }
+
+    public List<ControllerConfiguration> getControllers() {
+        return controllers;
+    }
+
+    public GlobalSettings getSettings() {
+        return settings;
     }
 }

@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -16,6 +15,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
+import com.sos.joc.cluster.JocCluster;
+import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
 
 import scala.collection.mutable.StringBuilder;
 
@@ -23,32 +24,32 @@ public class CleanupServiceConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupServiceConfiguration.class);
 
-    public static final String PROPERTY_NAME_PERIOD = "cleanup_period";
+    public static final String PROPERTY_NAME_PERIOD = "period";
 
     private Period period = new Period("01:00", "04:00");// no default weekdays - if not configured the service will not start
     private ZoneId zoneId = ZoneId.of("UTC");
-    private Age orderHistoryAge = new Age("cleanup_order_history_age", "90d");
-    private Age orderHistoryLogsAge = new Age("cleanup_order_history_logs_age", "90d");
-    private Age dailyPlanHistoryAge = new Age("cleanup_daily_plan_history_age", "30d");
+    private Age orderHistoryAge = new Age("order_history_age", "90d");
+    private Age orderHistoryLogsAge = new Age("order_history_logs_age", "90d");
+    private Age dailyPlanHistoryAge = new Age("daily_plan_history_age", "30d");
     private int deploymentHistoryVersions = 10;
     private int batchSize = 1_000;
 
     private Path hibernateConfiguration;
 
-    public CleanupServiceConfiguration(Properties properties) {
-        String timeZone = properties.getProperty("cleanup_time_zone");
+    public CleanupServiceConfiguration(GlobalSettingsSection settings) {
+        String timeZone = JocCluster.getValue(settings, "zone");
         if (!SOSString.isEmpty(timeZone)) {
             try {
                 this.zoneId = ZoneId.of(timeZone);
             } catch (Throwable e) {
-                LOGGER.error(String.format("[cleanup_time_zone=%s]%s", timeZone, e.toString()), e);
+                LOGGER.error(String.format("[zone=%s]%s", timeZone, e.toString()), e);
             }
         }
 
-        String period = properties.getProperty(PROPERTY_NAME_PERIOD);
+        String period = JocCluster.getValue(settings, PROPERTY_NAME_PERIOD);
         if (!SOSString.isEmpty(period)) {
-            String periodBegin = properties.getProperty("cleanup_period_begin");
-            String periodEnd = properties.getProperty("cleanup_period_end");
+            String periodBegin = JocCluster.getValue(settings, "period_begin");
+            String periodEnd = JocCluster.getValue(settings, "period_end");
 
             if (SOSString.isEmpty(periodBegin)) {
                 periodBegin = this.period.getBegin().getConfigured();
@@ -61,39 +62,39 @@ public class CleanupServiceConfiguration {
 
         }
 
-        String orderHistoryAge = properties.getProperty("cleanup_order_history_age");
+        String orderHistoryAge = JocCluster.getValue(settings, "order_history_age");
         if (!SOSString.isEmpty(orderHistoryAge)) {
-            this.orderHistoryAge = new Age("cleanup_order_history_age", orderHistoryAge.trim());
+            this.orderHistoryAge = new Age("order_history_age", orderHistoryAge.trim());
         }
 
-        String orderHistoryLogsAge = properties.getProperty("cleanup_order_history_logs_age");
+        String orderHistoryLogsAge = JocCluster.getValue(settings, "order_history_logs_age");
         if (!SOSString.isEmpty(orderHistoryLogsAge)) {
             this.orderHistoryLogsAge = new Age("cleanup_order_history_logs_age", orderHistoryLogsAge.trim());
             if (this.orderHistoryAge.getMinutes() != 0 && this.orderHistoryLogsAge.getMinutes() != 0) {
                 if (this.orderHistoryAge.getMinutes() < this.orderHistoryLogsAge.getMinutes()) {
-                    LOGGER.info(String.format("[change][%s(%s) < %s(%s)][cleanup_order_history_logs_age=%s]", this.orderHistoryAge.getPropertyName(),
+                    LOGGER.info(String.format("[change][%s(%s) < %s(%s)][order_history_logs_age=%s]", this.orderHistoryAge.getPropertyName(),
                             this.orderHistoryAge.getConfigured(), this.orderHistoryLogsAge.getPropertyName(), this.orderHistoryLogsAge
                                     .getConfigured(), this.orderHistoryAge.getConfigured()));
-                    this.orderHistoryLogsAge = this.orderHistoryAge.clone("cleanup_order_history_logs_age");
+                    this.orderHistoryLogsAge = this.orderHistoryAge.clone("order_history_logs_age");
                 }
             }
         }
 
-        String dailyPlanHistoryAge = properties.getProperty("cleanup_daily_plan_history_age");
+        String dailyPlanHistoryAge = JocCluster.getValue(settings, "daily_plan_history_age");
         if (!SOSString.isEmpty(dailyPlanHistoryAge)) {
-            this.dailyPlanHistoryAge = new Age("cleanup_daily_plan_history_age", dailyPlanHistoryAge.trim());
+            this.dailyPlanHistoryAge = new Age("daily_plan_history_age", dailyPlanHistoryAge.trim());
         }
 
-        String deploymentHistoryVersions = properties.getProperty("cleanup_deployment_history_versions");
+        String deploymentHistoryVersions = JocCluster.getValue(settings, "deployment_history_versions");
         if (!SOSString.isEmpty(deploymentHistoryVersions)) {
             try {
                 this.deploymentHistoryVersions = Integer.parseInt(deploymentHistoryVersions);
             } catch (Throwable e) {
-                LOGGER.error(String.format("[cleanup_deployment_history_versions=%s]%s", deploymentHistoryVersions, e.toString()), e);
+                LOGGER.error(String.format("[deployment_history_versions=%s]%s", deploymentHistoryVersions, e.toString()), e);
             }
         }
 
-        String batchSize = properties.getProperty("cleanup_batch_size");
+        String batchSize = JocCluster.getValue(settings, "batch_size");
         if (!SOSString.isEmpty(batchSize)) {
             try {
                 int bz = Integer.parseInt(batchSize.trim());
@@ -101,7 +102,7 @@ public class CleanupServiceConfiguration {
                     this.batchSize = bz;
                 }
             } catch (Throwable e) {
-                LOGGER.error(String.format("[cleanup_batch_size=%s]%s", batchSize, e.toString()), e);
+                LOGGER.error(String.format("[batch_size=%s]%s", batchSize, e.toString()), e);
             }
         }
     }

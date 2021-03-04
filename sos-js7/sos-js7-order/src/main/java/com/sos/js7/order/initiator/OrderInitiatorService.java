@@ -16,8 +16,9 @@ import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
+import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.model.cluster.common.ClusterServices;
-import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
+import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
 
 public class OrderInitiatorService extends AJocClusterService {
 
@@ -39,14 +40,14 @@ public class OrderInitiatorService extends AJocClusterService {
     }
 
     @Override
-    public JocClusterAnswer start(List<ControllerConfiguration> controllers, StartupMode mode) {
+    public JocClusterAnswer start(List<ControllerConfiguration> controllers, GlobalSettingsSection globalSettings, StartupMode mode) {
         try {
             lastActivityStart = Instant.now();
 
             AJocClusterService.setLogger(IDENTIFIER);
             LOGGER.info(String.format("[%s][%s] start", getIdentifier(), mode));
 
-            setSettings();
+            setSettings(globalSettings);
             settings.setStartMode(mode);
 
             LOGGER.info("[daily_plan_days_ahead_plan] onPeriodChange will create daily plan for " + settings.getDayAheadPlan() + " days ahead");
@@ -115,12 +116,17 @@ public class OrderInitiatorService extends AJocClusterService {
         return val;
     }
 
-    private void setSettings() throws Exception {
+    private void setSettings(GlobalSettingsSection globalSettings) throws Exception {
         settings = new OrderInitiatorSettings();
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties(getJocConfig().getResourceDirectory().resolve("joc.properties"));
         }
-
+        
+        //JocCluster.getValue(globalSettings, "zone");
+        //JocCluster.getValue(globalSettings, "period_begin");
+        //JocCluster.getValue(globalSettings, "days_ahead_plan");
+        //JocCluster.getValue(globalSettings, "days_ahead_submit");
+                
         LOGGER.debug("...Settings from " + getJocConfig().getResourceDirectory().resolve("joc.properties").normalize());
 
         settings.setDayAheadPlan(getProperty(Globals.sosCockpitProperties, "daily_plan_days_ahead_plan", "0"));

@@ -1,7 +1,7 @@
 
 package com.sos.joc.model.configuration.globals;
 
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
@@ -26,7 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class GlobalSettings {
 
     @JsonIgnore
-    private Map<String, GlobalSettingsSection> additionalProperties = new LinkedHashMap<String, GlobalSettingsSection>();
+    private Map<String, GlobalSettingsSection> additionalProperties = new HashMap<String, GlobalSettingsSection>();
 
     @JsonAnyGetter
     public Map<String, GlobalSettingsSection> getAdditionalProperties() {

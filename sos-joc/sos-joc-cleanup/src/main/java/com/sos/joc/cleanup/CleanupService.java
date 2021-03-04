@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDate;
-import com.sos.joc.Globals;
 import com.sos.joc.cleanup.exception.CleanupComputeException;
 import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
@@ -24,8 +23,9 @@ import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
+import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.model.cluster.common.ClusterServices;
-import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
+import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
 
 public class CleanupService extends AJocClusterService {
 
@@ -42,14 +42,15 @@ public class CleanupService extends AJocClusterService {
     public CleanupService(JocConfiguration jocConf, ThreadGroup clusterThreadGroup) {
         super(jocConf, clusterThreadGroup, IDENTIFIER);
         AJocClusterService.setLogger(IDENTIFIER);
-        setConfig();
     }
 
     @Override
-    public JocClusterAnswer start(List<ControllerConfiguration> controllers, StartupMode mode) {
+    public JocClusterAnswer start(List<ControllerConfiguration> controllers, GlobalSettingsSection settings, StartupMode mode) {
         try {
             closed.set(false);
             AJocClusterService.setLogger(IDENTIFIER);
+
+            setConfig(settings);
 
             LOGGER.info(String.format("[%s][%s]start...", getIdentifier(), mode));
             LOGGER.info(String.format("[%s][%s]%s", getIdentifier(), mode, config.toString()));
@@ -124,8 +125,8 @@ public class CleanupService extends AJocClusterService {
         return new JocServiceAnswer();
     }
 
-    private void setConfig() {
-        config = new CleanupServiceConfiguration(Globals.sosCockpitProperties.getProperties());
+    private void setConfig(GlobalSettingsSection settings) {
+        config = new CleanupServiceConfiguration(settings);
         config.setHibernateConfiguration(getJocConfig().getHibernateConfiguration());
     }
 

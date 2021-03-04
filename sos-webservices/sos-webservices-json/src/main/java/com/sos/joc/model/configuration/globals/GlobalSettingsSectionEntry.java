@@ -20,9 +20,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "name",
     "value",
     "type",
-    "default"
+    "default",
+    "order"
 })
-public class GlobalSettingsSectionValue {
+public class GlobalSettingsSectionEntry {
 
     /**
      * string without < and >
@@ -60,6 +61,14 @@ public class GlobalSettingsSectionValue {
      */
     @JsonProperty("default")
     private String _default;
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("order")
+    private Integer order;
 
     /**
      * string without < and >
@@ -155,14 +164,36 @@ public class GlobalSettingsSectionValue {
         this._default = _default;
     }
 
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("order")
+    public Integer getOrder() {
+        return order;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("order")
+    public void setOrder(Integer order) {
+        this.order = order;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("name", name).append("value", value).append("type", type).append("_default", _default).toString();
+        return new ToStringBuilder(this).append("name", name).append("value", value).append("type", type).append("_default", _default).append("order", order).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(_default).append(type).append(value).toHashCode();
+        return new HashCodeBuilder().append(name).append(_default).append(type).append(value).append(order).toHashCode();
     }
 
     @Override
@@ -170,11 +201,11 @@ public class GlobalSettingsSectionValue {
         if (other == this) {
             return true;
         }
-        if ((other instanceof GlobalSettingsSectionValue) == false) {
+        if ((other instanceof GlobalSettingsSectionEntry) == false) {
             return false;
         }
-        GlobalSettingsSectionValue rhs = ((GlobalSettingsSectionValue) other);
-        return new EqualsBuilder().append(name, rhs.name).append(_default, rhs._default).append(type, rhs.type).append(value, rhs.value).isEquals();
+        GlobalSettingsSectionEntry rhs = ((GlobalSettingsSectionEntry) other);
+        return new EqualsBuilder().append(name, rhs.name).append(_default, rhs._default).append(type, rhs.type).append(value, rhs.value).append(order, rhs.order).isEquals();
     }
 
 }
