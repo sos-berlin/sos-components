@@ -135,7 +135,28 @@
 								<exclude>user/*.json</exclude>
 								<exclude>calendar/*.json</exclude>
 								<exclude>inventory/*.json</exclude>
+								<exclude>configuration/globals/*.json</exclude>
 							</excludes>
+						</configuration>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>generate-joc-model-cluster-settings</id>
+						<phase>generate-sources</phase>
+						<configuration>
+							<sourceDirectory>${basedir}/src/main/resources/raml/api/schemas</sourceDirectory>
+							<targetPackage>com.sos.joc.model</targetPackage>
+							<removeOldOutput>false</removeOldOutput>
+							<annotationStyle>jackson2</annotationStyle>
+							<propertyWordDelimiters>- </propertyWordDelimiters>
+							<includeAdditionalProperties>true</includeAdditionalProperties>
+							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
+							<addCompileSourceRoot>false</addCompileSourceRoot>
+							<includes>
+								<include>configuration/globals/*.json</include>
+							</includes>
 						</configuration>
 						<goals>
 							<goal>generate</goal>
