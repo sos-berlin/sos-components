@@ -3,6 +3,7 @@ package com.sos.joc.publish.util;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -48,15 +49,18 @@ public class DeleteDeployments {
         final String commitId = UUID.randomUUID().toString();
         Set<DBItemInventoryConfiguration> invConfigurationsToDelete = new HashSet<>();
 
+        // optimistic DB operations
         for (Map.Entry<String, List<DBItemDeploymentHistory>> entry : dbItemsPerController.entrySet()) {
-            // Call ControllerApi
-            PublishUtils.updateItemsDelete(commitId, entry.getValue(), entry.getKey()).thenAccept(either -> processAfterDelete(either, entry
-                    .getValue(), entry.getKey(), account, commitId, accessToken, jocError));
             // store history entries optimistically
             invConfigurationsToDelete.addAll(getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, entry.getValue(), commitId)));
         }
         // delete configurations optimistically
         deleteConfigurations(dbLayer, null, invConfigurationsToDelete, commitId, accessToken, jocError, withoutFolderDeletion);
+        // send commands to controllers
+        for (Map.Entry<String, List<DBItemDeploymentHistory>> entry : dbItemsPerController.entrySet()) {
+            PublishUtils.updateItemsDelete(commitId, entry.getValue(), entry.getKey()).thenAccept(either -> processAfterDelete(either, entry.getKey(), 
+                    account, commitId, accessToken, jocError));
+        }
         return true;
     }
     
@@ -78,23 +82,29 @@ public class DeleteDeployments {
         final String commitIdForDeleteFromFolder = UUID.randomUUID().toString();
         Set<DBItemInventoryConfiguration> invConfigurationsToDelete = new HashSet<>();
         
+        Map<String, List<DBItemDeploymentHistory>> itemsToDeletePerController = new HashMap<String, List<DBItemDeploymentHistory>>();
+        // optimistic DB operations
         for (String controllerId : controllerIds) {
             // determine all (latest) entries from the given folder
-            List<DBItemDeploymentHistory> itemsToDelete = dbLayer.getLatestDepHistoryItemsFromFolder(conf.getPath(), controllerId, conf
-                    .getRecursive()).stream().filter(item -> OperationType.DELETE.value() != item.getOperation()).collect(Collectors.toList());
-            
-            if (!itemsToDelete.isEmpty()) {
-                PublishUtils.updateItemsDelete(commitIdForDeleteFromFolder, itemsToDelete, controllerId).thenAccept(
-                        either -> processAfterDeleteFromFolder(either, itemsToDelete, Collections.singletonList(conf), controllerId, account,
-                                commitIdForDeleteFromFolder, accessToken, jocError, withoutFolderDeletion));
+            itemsToDeletePerController.put(controllerId, dbLayer.getLatestDepHistoryItemsFromFolder(conf.getPath(), controllerId, conf.getRecursive())
+                    .stream().filter(item -> OperationType.DELETE.value() != item.getOperation()).collect(Collectors.toList()));
+            if (!itemsToDeletePerController.get(controllerId).isEmpty()) {
                 // store history entries optimistically
-                invConfigurationsToDelete.addAll(getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, itemsToDelete,
-                        commitIdForDeleteFromFolder)));
+                invConfigurationsToDelete.addAll(getInvConfigurationsForTrash(dbLayer, 
+                        storeNewDepHistoryEntries(dbLayer, itemsToDeletePerController.get(controllerId), commitIdForDeleteFromFolder)));
             }
         }
         // delete configurations optimistically
         deleteConfigurations(dbLayer, Collections.singletonList(conf), invConfigurationsToDelete, commitIdForDeleteFromFolder, accessToken, jocError, 
                 withoutFolderDeletion, withEvents);
+
+        // send commands to controllers
+        for (Map.Entry<String, List<DBItemDeploymentHistory>> entry : itemsToDeletePerController.entrySet()) {
+            if (entry.getValue() != null && !entry.getValue().isEmpty()) {
+                PublishUtils.updateItemsDelete(commitIdForDeleteFromFolder, entry.getValue(), entry.getKey()).thenAccept(
+                        either -> processAfterDelete(either, entry.getKey(), account, commitIdForDeleteFromFolder, accessToken, jocError));
+            }
+        }
         return true;
     }
     
@@ -122,82 +132,48 @@ public class DeleteDeployments {
         final String commitId = UUID.randomUUID().toString();
         final String commitIdForDeleteFromFolder = UUID.randomUUID().toString();
         Set<DBItemInventoryConfiguration> invConfigurationsToDelete = new HashSet<>();
+        Map<String, List<DBItemDeploymentHistory>> itemsToDeletePerController = new HashMap<String, List<DBItemDeploymentHistory>>();
+        Map<String, List<DBItemDeploymentHistory>> itemsFromFolderToDeletePerController = new HashMap<String, List<DBItemDeploymentHistory>>();
+
+        // optimistic DB operations
         for (String controllerId : controllerIds) {
-
-            List<DBItemDeploymentHistory> itemsFromFolderToDelete = Collections.emptyList();
-
             if (foldersToDelete != null && !foldersToDelete.isEmpty()) {
-                itemsFromFolderToDelete = foldersToDelete.stream().map(item -> dbLayer
-                        .getLatestDepHistoryItemsFromFolder(item.getPath(), controllerId, item.getRecursive())).filter(Objects::nonNull).flatMap(
-                                List::stream).collect(Collectors.toList());
+                itemsFromFolderToDeletePerController.put(controllerId, foldersToDelete.stream().map(item -> dbLayer
+                            .getLatestDepHistoryItemsFromFolder(item.getPath(), controllerId, item.getRecursive())).filter(Objects::nonNull).flatMap(
+                                    List::stream).collect(Collectors.toList()));
+                // store history entries optimistically
+                invConfigurationsToDelete.addAll(getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, 
+                        itemsFromFolderToDeletePerController.get(controllerId), commitIdForDeleteFromFolder)));
             }
-
             if (depHistoryDBItemsToDeployDelete != null && !depHistoryDBItemsToDeployDelete.isEmpty()) {
-                final List<DBItemDeploymentHistory> itemsToDelete = depHistoryDBItemsToDeployDelete;
-                PublishUtils.updateItemsDelete(commitId, itemsToDelete, controllerId).thenAccept(either -> processAfterDelete(either, itemsToDelete,
-                        controllerId, account, commitId, accessToken, jocError));
+                itemsToDeletePerController.put(controllerId, depHistoryDBItemsToDeployDelete);
                 // store history entries optimistically
-                invConfigurationsToDelete.addAll(getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, itemsToDelete,
-                        commitIdForDeleteFromFolder)));
-            }
-            // process folder to Delete
-            if (itemsFromFolderToDelete != null && !itemsFromFolderToDelete.isEmpty()) {
-                // determine all (latest) entries from the given folder
-                final List<Configuration> folders = foldersToDelete;
-                final List<DBItemDeploymentHistory> itemsToDelete = itemsFromFolderToDelete.stream().filter(item -> item.getControllerId().equals(
-                        controllerId) && !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation()))).collect(Collectors.toList());
-                PublishUtils.updateItemsDelete(commitIdForDeleteFromFolder, itemsToDelete, controllerId).thenAccept(
-                        either -> processAfterDeleteFromFolder(either, itemsToDelete, folders, controllerId, account, commitIdForDeleteFromFolder,
-                                accessToken, jocError, withoutFolderDeletion));
-                // store history entries optimistically
-                invConfigurationsToDelete.addAll(getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, itemsToDelete,
-                        commitIdForDeleteFromFolder)));
+                invConfigurationsToDelete.addAll(getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, 
+                        itemsToDeletePerController.get(controllerId), commitIdForDeleteFromFolder)));
             }
         }
         // delete configurations optimistically
         deleteConfigurations(dbLayer, foldersToDelete, invConfigurationsToDelete, commitIdForDeleteFromFolder, accessToken, jocError, 
                 withoutFolderDeletion);
+
+        // send commands to controllers
+        for (String controllerId : controllerIds) {
+            if (itemsToDeletePerController.get(controllerId) != null && !itemsToDeletePerController.get(controllerId).isEmpty()) {
+                // send command to controller
+                PublishUtils.updateItemsDelete(commitId, itemsToDeletePerController.get(controllerId), controllerId).thenAccept(
+                        either -> processAfterDelete(either, controllerId, account, commitId, accessToken, jocError));
+            }
+            // process folder to Delete
+            if (itemsFromFolderToDeletePerController.get(controllerId) != null && !itemsFromFolderToDeletePerController.get(controllerId).isEmpty()) {
+                PublishUtils.updateItemsDelete(commitIdForDeleteFromFolder, itemsFromFolderToDeletePerController.get(controllerId), controllerId).thenAccept(
+                        either -> processAfterDelete(either, controllerId, account, commitIdForDeleteFromFolder, accessToken, jocError));
+            }
+        }
         return true;
     }
 
-    public static void processAfterDelete(Either<Problem, Void> either, List<DBItemDeploymentHistory> itemsToDelete, String controllerId,
-            String account, String commitId, String accessToken, JocError jocError) {
-        SOSHibernateSession newHibernateSession = null;
-        try {
-            newHibernateSession = Globals.createSosHibernateStatelessConnection("./inventory/deployment/deploy");
-            final DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
-            if (either.isLeft()) {
-                String message = String.format("Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
-                LOGGER.warn(message);
-                // updateRepo command is atomic, therefore all items are rejected
-
-                // get all already optimistically stored entries for the commit
-                List<DBItemDeploymentHistory> optimisticEntries = dbLayer.getDepHistory(commitId);
-                // update all previously optimistically stored entries with the error message and change the state
-                for(DBItemDeploymentHistory optimistic : optimisticEntries) {
-                    optimistic.setErrorMessage(either.getLeft().message());
-                    optimistic.setState(DeploymentState.NOT_DEPLOYED.value());
-                    optimistic.setDeleteDate(null);
-                    dbLayer.getSession().update(optimistic);
-                    // TODO: restore related inventory configuration - Recover and remove from trash
-
-                }
-                // if not successful the objects and the related controllerId have to be stored 
-                // in a submissions table for reprocessing
-                dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
-                ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, null);
-            }
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
-            ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, null);
-        } finally {
-            Globals.disconnect(newHibernateSession);
-        }
-    }
-
-    public static void processAfterDeleteFromFolder(Either<Problem, Void> either, List<DBItemDeploymentHistory> itemsToDelete,
-            List<Configuration> foldersToDelete, String controllerId, String account, String commitId, String accessToken,
-            JocError jocError, boolean withoutFolderDeletion) {
+    public static void processAfterDelete(Either<Problem, Void> either, String controllerId, String account, String commitId, 
+            String accessToken, JocError jocError) {
         SOSHibernateSession newHibernateSession = null;
         try {
             if (either.isLeft()) {
@@ -216,6 +192,7 @@ public class DeleteDeployments {
                     optimistic.setDeleteDate(null);
                     dbLayer.getSession().update(optimistic);
                     // TODO: restore related inventory configuration - Recover and remove from trash
+                    
 
                 }
                 // if not successful the objects and the related controllerId have to be stored 
