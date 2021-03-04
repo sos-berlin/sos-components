@@ -292,7 +292,7 @@ public class SOSHibernateFactory implements Serializable {
         session.setIsStatelessSession(true);
         session.setIdentifier(identifier);
         session.openSession();
-        CONNECTION_POOL_LOGGER.info("--------> GET CONNECTION: " + session.getIdentifier() + " (" + SOSClassUtil.getMethodName(3) + ") --------");
+        CONNECTION_POOL_LOGGER.debug("--------> GET CONNECTION: " + session.getIdentifier() + " (" + SOSClassUtil.getMethodName(3) + ") --------");
         return session;
     }
 

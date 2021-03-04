@@ -190,7 +190,7 @@ public class SOSHibernateSession implements Serializable {
         if (isDebugEnabled) {
             LOGGER.debug(SOSHibernate.getMethodName(logIdentifier, "close"));
         }
-        CONNECTION_POOL_LOGGER.info("--------> RELEASE CONNECTION: " + getIdentifier() + " (" + SOSClassUtil.getMethodName(3) + ") --------");
+        CONNECTION_POOL_LOGGER.debug("--------> RELEASE CONNECTION: " + getIdentifier() + " (" + SOSClassUtil.getMethodName(3) + ") --------");
         closeTransaction();
         closeSession();
     }

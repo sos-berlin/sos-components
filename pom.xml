@@ -37,7 +37,7 @@
 		<jackson.databind.version>2.9.10.7</jackson.databind.version>
 		<jsonschema2pojo.version>0.5.1</jsonschema2pojo.version>
 		<junit.version>4.11</junit.version>
-		<slf4j.version>1.7.25</slf4j.version>
+		<slf4j.version>1.7.30</slf4j.version>
 		<!-- guava.version>29.0-jre</guava.version -->
 		<javassist.version>3.25.0-GA</javassist.version>
 		<log4j2.version>2.13.2</log4j2.version>
