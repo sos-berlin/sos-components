@@ -25,14 +25,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class Outcome {
 
     /**
-     * outcomeType
-     * <p>
-     * 
+     * Succeeded, Failed, Disrupted, Cancelled, Killed
      * (Required)
      * 
      */
     @JsonProperty("TYPE")
-    private OutcomeType tYPE;
+    @JsonPropertyDescription("Succeeded, Failed, Disrupted, Cancelled, Killed")
+    private String tYPE;
     /**
      * key-value pairs
      * <p>
@@ -64,7 +63,7 @@ public class Outcome {
      * @param tYPE
      * @param outcome
      */
-    public Outcome(OutcomeType tYPE, Variables namedValues, Outcome outcome) {
+    public Outcome(String tYPE, Variables namedValues, Outcome outcome) {
         super();
         this.tYPE = tYPE;
         this.namedValues = namedValues;
@@ -72,26 +71,22 @@ public class Outcome {
     }
 
     /**
-     * outcomeType
-     * <p>
-     * 
+     * Succeeded, Failed, Disrupted, Cancelled, Killed
      * (Required)
      * 
      */
     @JsonProperty("TYPE")
-    public OutcomeType getTYPE() {
+    public String getTYPE() {
         return tYPE;
     }
 
     /**
-     * outcomeType
-     * <p>
-     * 
+     * Succeeded, Failed, Disrupted, Cancelled, Killed
      * (Required)
      * 
      */
     @JsonProperty("TYPE")
-    public void setTYPE(OutcomeType tYPE) {
+    public void setTYPE(String tYPE) {
         this.tYPE = tYPE;
     }
 
