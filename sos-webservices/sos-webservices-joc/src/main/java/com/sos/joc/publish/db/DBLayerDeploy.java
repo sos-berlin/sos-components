@@ -1293,8 +1293,8 @@ public class DBLayerDeploy {
     public DBItemDeploymentHistory getLatestDepHistoryItem (Long configurationId, String controllerId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
         hql.append(" where dep.id = (select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
-        hql.append(" where dep.inventoryConfigurationId = :cid");
-        hql.append(" and dep.controllerId = :controllerId").append(")");
+        hql.append(" where history.inventoryConfigurationId = :cid");
+        hql.append(" and history.controllerId = :controllerId").append(")");
         Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
         query.setParameter("cid", configurationId);
         query.setParameter("controllerId", controllerId);
@@ -1431,7 +1431,7 @@ public class DBLayerDeploy {
                 hql.append(" and history.folder = :folder");
             }
             hql.append(" and history.controllerId = :controllerId")
-                .append(" and history.path = dep.path")
+                .append(" and history.name = dep.name")
                 .append(")");
             Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
             if (recursive) {
