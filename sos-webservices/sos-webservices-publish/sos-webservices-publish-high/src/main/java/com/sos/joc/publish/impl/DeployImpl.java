@@ -208,8 +208,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     case SOSKeyConstants.PGP_ALGORITHM_NAME:
                         PublishUtils.updateItemsAddOrUpdatePGP(commitId, verifiedConfigurations, verifiedReDeployables, controllerId, 
                                 dbLayer).thenAccept(either -> {
-                                    StoreDeployments.processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, commitId, controllerId, 
-                                            getAccessToken(), getJocError(), API_CALL);
+                                    StoreDeployments.processAfterAdd(either, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
                                 });
                         break;
                     case SOSKeyConstants.RSA_ALGORITHM_NAME:
@@ -219,16 +218,14 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                             PublishUtils.updateItemsAddOrUpdateWithX509Certificate(commitId, verifiedConfigurations, verifiedReDeployables, controllerId,
                                     dbLayer, SOSKeyConstants.RSA_SIGNER_ALGORITHM, keyPair.getCertificate())
                                 .thenAccept(either -> {
-                                    StoreDeployments.processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, commitId, controllerId, 
-                                            getAccessToken(), getJocError(), API_CALL);
+                                    StoreDeployments.processAfterAdd(either, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
                                     });
                         } else {
                           signerDN = cert.getSubjectDN().getName();
                           PublishUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId, verifiedConfigurations, verifiedReDeployables, controllerId,
                                   dbLayer, SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN)
                               .thenAccept(either -> {
-                                  StoreDeployments.processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, commitId, controllerId, 
-                                          getAccessToken(), getJocError(), API_CALL);
+                                  StoreDeployments.processAfterAdd(either, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
                                   });
                         }
                         break;
@@ -239,16 +236,14 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                             PublishUtils.updateItemsAddOrUpdateWithX509Certificate(commitId, verifiedConfigurations, verifiedReDeployables, controllerId,
                                     dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair.getCertificate())
                                 .thenAccept(either -> {
-                                    StoreDeployments.processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, commitId, controllerId, 
-                                            getAccessToken(), getJocError(), API_CALL);
+                                    StoreDeployments.processAfterAdd(either, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
                                     });
                         } else {
                           signerDN = cert.getSubjectDN().getName();
                           PublishUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId, verifiedConfigurations, verifiedReDeployables, controllerId,
                                   dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN)
                               .thenAccept(either -> {
-                                  StoreDeployments.processAfterAdd(either, verifiedConfigurations, verifiedReDeployables, account, commitId, controllerId, 
-                                          getAccessToken(), getJocError(), API_CALL);
+                                  StoreDeployments.processAfterAdd(either, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
                                   });
                         }
                         break;

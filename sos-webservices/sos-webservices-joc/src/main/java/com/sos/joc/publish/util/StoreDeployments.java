@@ -33,6 +33,10 @@ public class StoreDeployments {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreDeployments.class);
     
+    public static void storeNewDepHistoryEntriesForRedeploy(Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedDeployables,
+            String account, String commitId, String controllerId, String accessToken, JocError jocError, DBLayerDeploy dbLayer) {
+        storeNewDepHistoryEntries(null, null, verifiedDeployables, account, commitId, controllerId, null, accessToken, jocError, dbLayer);
+    }
     
     public static void storeNewDepHistoryEntries(Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations,
             Set<UpdateableWorkflowJobAgentName> updateableAgentNames, Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedDeployables,
@@ -79,9 +83,8 @@ public class StoreDeployments {
         } 
     }
     
-    public static void processAfterAdd(Either<Problem, Void> either, Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations,
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedDeployables, String account, String commitId, String controllerId, 
-            String accessToken, JocError jocError, String wsIdentifier) {
+    public static void processAfterAdd(Either<Problem, Void> either, String account, String commitId, String controllerId, String accessToken, 
+            JocError jocError, String wsIdentifier) {
         // asynchronous processing:  this method is called from a CompletableFuture and therefore 
         // creates a new db session as the session of the caller may already be closed
         SOSHibernateSession newHibernateSession = null;
