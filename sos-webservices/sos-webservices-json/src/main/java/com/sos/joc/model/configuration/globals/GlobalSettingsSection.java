@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.configuration.clusterSettings;
+package com.sos.joc.model.configuration.globals;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -16,26 +16,26 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * cluster setting
  * <p>
- * a map for arbitrary key-value pairs (String, ClusterSettingsSectionValue)
+ * a map for arbitrary key-value pairs (String, GlobalSettingsSectionValue)
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
 
 })
-public class ClusterSettingsSection {
+public class GlobalSettingsSection {
 
     //re: manually changed from HashMap to LinkedHashMap
     @JsonIgnore
-    private Map<String, ClusterSettingsSectionValue> additionalProperties = new LinkedHashMap<String, ClusterSettingsSectionValue>();
+    private Map<String, GlobalSettingsSectionValue> additionalProperties = new LinkedHashMap<String, GlobalSettingsSectionValue>();
 
     @JsonAnyGetter
-    public Map<String, ClusterSettingsSectionValue> getAdditionalProperties() {
+    public Map<String, GlobalSettingsSectionValue> getAdditionalProperties() {
         return this.additionalProperties;
     }
 
     @JsonAnySetter
-    public void setAdditionalProperty(String name, ClusterSettingsSectionValue value) {
+    public void setAdditionalProperty(String name, GlobalSettingsSectionValue value) {
         this.additionalProperties.put(name, value);
     }
 
@@ -54,10 +54,10 @@ public class ClusterSettingsSection {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ClusterSettingsSection) == false) {
+        if ((other instanceof GlobalSettingsSection) == false) {
             return false;
         }
-        ClusterSettingsSection rhs = ((ClusterSettingsSection) other);
+        GlobalSettingsSection rhs = ((GlobalSettingsSection) other);
         return new EqualsBuilder().append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 

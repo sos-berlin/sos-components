@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.configuration.clusterSettings;
+package com.sos.joc.model.configuration.globals;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "type",
     "default"
 })
-public class ClusterSettingsSectionValue {
+public class GlobalSettingsSectionValue {
 
     /**
      * string without < and >
@@ -50,7 +50,7 @@ public class ClusterSettingsSectionValue {
      * 
      */
     @JsonProperty("type")
-    private ClusterSettingsSectionValueType type;
+    private GlobalSettingsSectionValueType type;
     /**
      * string without < and >
      * <p>
@@ -117,7 +117,7 @@ public class ClusterSettingsSectionValue {
      * 
      */
     @JsonProperty("type")
-    public ClusterSettingsSectionValueType getType() {
+    public GlobalSettingsSectionValueType getType() {
         return type;
     }
 
@@ -129,7 +129,7 @@ public class ClusterSettingsSectionValue {
      * 
      */
     @JsonProperty("type")
-    public void setType(ClusterSettingsSectionValueType type) {
+    public void setType(GlobalSettingsSectionValueType type) {
         this.type = type;
     }
 
@@ -170,10 +170,10 @@ public class ClusterSettingsSectionValue {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ClusterSettingsSectionValue) == false) {
+        if ((other instanceof GlobalSettingsSectionValue) == false) {
             return false;
         }
-        ClusterSettingsSectionValue rhs = ((ClusterSettingsSectionValue) other);
+        GlobalSettingsSectionValue rhs = ((GlobalSettingsSectionValue) other);
         return new EqualsBuilder().append(name, rhs.name).append(_default, rhs._default).append(type, rhs.type).append(value, rhs.value).isEquals();
     }
 

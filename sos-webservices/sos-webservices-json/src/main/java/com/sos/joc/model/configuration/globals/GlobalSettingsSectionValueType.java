@@ -1,12 +1,12 @@
 
-package com.sos.joc.model.configuration.clusterSettings;
+package com.sos.joc.model.configuration.globals;
 
 import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum ClusterSettingsSectionValueType {
+public enum GlobalSettingsSectionValueType {
 
     ZONE("ZONE"),
     AGE("AGE"),
@@ -16,15 +16,15 @@ public enum ClusterSettingsSectionValueType {
     NONNEGATIVENUMBER("NONNEGATIVENUMBER"),
     STRING("STRING");
     private final String value;
-    private final static Map<String, ClusterSettingsSectionValueType> CONSTANTS = new HashMap<String, ClusterSettingsSectionValueType>();
+    private final static Map<String, GlobalSettingsSectionValueType> CONSTANTS = new HashMap<String, GlobalSettingsSectionValueType>();
 
     static {
-        for (ClusterSettingsSectionValueType c: values()) {
+        for (GlobalSettingsSectionValueType c: values()) {
             CONSTANTS.put(c.value, c);
         }
     }
 
-    private ClusterSettingsSectionValueType(String value) {
+    private GlobalSettingsSectionValueType(String value) {
         this.value = value;
     }
 
@@ -39,8 +39,8 @@ public enum ClusterSettingsSectionValueType {
     }
 
     @JsonCreator
-    public static ClusterSettingsSectionValueType fromValue(String value) {
-        ClusterSettingsSectionValueType constant = CONSTANTS.get(value);
+    public static GlobalSettingsSectionValueType fromValue(String value) {
+        GlobalSettingsSectionValueType constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {

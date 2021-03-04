@@ -12,7 +12,7 @@ public enum ConfigurationType {
     IGNORELIST("IGNORELIST"),
     PROFILE("PROFILE"),
     SETTING("SETTING"),
-    CLUSTER_SETTING("CLUSTER_SETTING");
+    GLOBALS("GLOBALS");
     private final String value;
     private final static Map<String, ConfigurationType> CONSTANTS = new HashMap<String, ConfigurationType>();
 

@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.configuration.clusterSettings;
+package com.sos.joc.model.configuration.globals;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -16,26 +16,25 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * cluster settings
  * <p>
- * a map for arbitrary key-value pairs (String, ClusterSettingsSection)
+ * a map for arbitrary key-value pairs (String, GlobalSettingsSection)
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
 
 })
-public class ClusterSettings {
+public class GlobalSettings {
 
-    //re: manually changed from HashMap to LinkedHashMap
     @JsonIgnore
-    private Map<String, ClusterSettingsSection> additionalProperties = new LinkedHashMap<String, ClusterSettingsSection>();
+    private Map<String, GlobalSettingsSection> additionalProperties = new LinkedHashMap<String, GlobalSettingsSection>();
 
     @JsonAnyGetter
-    public Map<String, ClusterSettingsSection> getAdditionalProperties() {
+    public Map<String, GlobalSettingsSection> getAdditionalProperties() {
         return this.additionalProperties;
     }
 
     @JsonAnySetter
-    public void setAdditionalProperty(String name, ClusterSettingsSection value) {
+    public void setAdditionalProperty(String name, GlobalSettingsSection value) {
         this.additionalProperties.put(name, value);
     }
 
@@ -54,10 +53,10 @@ public class ClusterSettings {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ClusterSettings) == false) {
+        if ((other instanceof GlobalSettings) == false) {
             return false;
         }
-        ClusterSettings rhs = ((ClusterSettings) other);
+        GlobalSettings rhs = ((GlobalSettings) other);
         return new EqualsBuilder().append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 
