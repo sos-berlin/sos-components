@@ -26,7 +26,7 @@ public class JobSchedulerUser {
 			sosShiroCurrentUser = Globals.jocWebserviceDataContainer.getCurrentUsersList().getUser(accessToken);
 		}
 		if (sosShiroCurrentUser == null) {
-			throw new SessionNotExistException("Session doesn't exist");
+			throw new SessionNotExistException("Session doesn't exist [" + accessToken + "]");
 		}
 		return sosShiroCurrentUser;
 	}

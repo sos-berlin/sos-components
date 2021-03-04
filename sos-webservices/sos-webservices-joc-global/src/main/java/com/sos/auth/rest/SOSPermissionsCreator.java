@@ -69,7 +69,7 @@ public class SOSPermissionsCreator {
                 } catch (SOSHibernateException e) {
                     throw new DBInvalidDataException(e);
                 }
-                sosHibernateSession.close();
+                Globals.disconnect(sosHibernateSession);
 
                 IniSecurityManagerFactory factory = Globals.getShiroIniSecurityManagerFactory();
                 SecurityManager securityManager = factory.getInstance();
@@ -124,7 +124,7 @@ public class SOSPermissionsCreator {
                 }
             }
         } catch (UnknownSessionException e) {
-            LOGGER.warn(e.getMessage());
+            LOGGER.debug(e.getMessage());
         } finally {
             Globals.disconnect(sosHibernateSession);
         }

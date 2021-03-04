@@ -1,13 +1,10 @@
 package com.sos.js7.order.initiator;
 
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -15,6 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.TimeZone;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,8 +24,6 @@ import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 
 public class PeriodResolver {
 
-    private static final String DATE_FORMAT_ISO = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-    private static final String DATE_FORMAT_TIME ="HH:mm:ss";
     private static final String DATE_FORMAT_SIMPLE = "yyyy-M-dd HH:mm:ss";
     private static final Logger LOGGER = LoggerFactory.getLogger(PeriodResolver.class);
     private Map<Long, Period> listOfStartTimes;
@@ -54,6 +50,7 @@ public class PeriodResolver {
     }
 
     private void add(String start, Period period) {
+
         LOGGER.debug("Adding " + start);
         Period p = listOfPeriods.get(start);
         if (p == null) {
@@ -68,19 +65,27 @@ public class PeriodResolver {
     private void addRepeat(Period period, String dailyPlanDate, String timeZone) throws ParseException {
         if (!period.getRepeat().isEmpty() && !"00:00:00".equals(period.getRepeat())) {
 
-            ZonedDateTime startUtc = JobSchedulerDate.convertDateTimeZoneToTimeZone(DATE_FORMAT_SIMPLE, timeZone, "UTC", dailyPlanDate + " " + period.getBegin());
+            ZonedDateTime startUtc = JobSchedulerDate.convertDateTimeZoneToTimeZone(DATE_FORMAT_SIMPLE, timeZone, "UTC", dailyPlanDate + " " + period
+                    .getBegin());
             period.setBegin(JobSchedulerDate.asTimeString(startUtc));
 
-            ZonedDateTime endUtc = JobSchedulerDate.convertDateTimeZoneToTimeZone(DATE_FORMAT_SIMPLE, timeZone, "UTC", dailyPlanDate + " " + period.getEnd());
+            ZonedDateTime endUtc = JobSchedulerDate.convertDateTimeZoneToTimeZone(DATE_FORMAT_SIMPLE, timeZone, "UTC", dailyPlanDate + " " + period
+                    .getEnd());
             period.setEnd(JobSchedulerDate.asTimeString(endUtc));
 
             Date repeat = getDate(dailyPlanDate, period.getRepeat(), DATE_FORMAT_SIMPLE);
             Calendar calendar = GregorianCalendar.getInstance();
             calendar.setTime(repeat);
             long offset = (calendar.get(Calendar.HOUR_OF_DAY) * 60 * 60 + calendar.get(Calendar.MINUTE) * 60 + calendar.get(Calendar.SECOND));
-            while (offset > 0 && startUtc.isBefore(endUtc)) {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-                String s = startUtc.format(formatter);
+             while (offset > 0 && startUtc.isBefore(endUtc)) {
+                Calendar cal = Calendar.getInstance();
+                cal.setTimeInMillis(startUtc.toEpochSecond()*1000);
+                TimeZone timeZoneFromCalendar = TimeZone.getTimeZone(timeZone);
+
+                DateFormat dateFormat = new SimpleDateFormat( "HH:mm:ss" );
+                dateFormat.setTimeZone( timeZoneFromCalendar );
+                String s = dateFormat.format( cal.getTime() ); 
+                
                 add(s, period);
                 startUtc = startUtc.plusSeconds(offset);
             }
@@ -160,21 +165,14 @@ public class PeriodResolver {
         return p;
     }
 
-    private String getTimeFromIso(Instant instant) {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern(DATE_FORMAT_ISO);
-        LocalDateTime dateTime = LocalDateTime.parse(instant.toString(), dtf);
-        dtf = DateTimeFormatter.ofPattern(DATE_FORMAT_TIME);
-        return dtf.format(dateTime);
-    }
-
     public void addStartTimes(Period period, String dailyPlanDate, String timeZone) throws ParseException, SOSInvalidDataException {
         period = normalizePeriod(period);
         if (period.getSingleStart() != null && !period.getSingleStart().isEmpty()) {
-           Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(dailyPlanDate + " " + period.getSingleStart(), timeZone);
-           
-            //period.setSingleStart(getTimeFromIso(scheduledFor.get()));
-           // add(getTimeFromIso(scheduledFor.get()), period);
-           add(period.getSingleStart(), period);
+            Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(dailyPlanDate + " " + period.getSingleStart(), timeZone);
+
+            // period.setSingleStart(getTimeFromIso(scheduledFor.get()));
+            // add(scheduledFor.get().getEpochSecond(), period);
+            add(period.getSingleStart(), period);
         }
         addRepeat(period, dailyPlanDate, timeZone);
     }
@@ -182,37 +180,40 @@ public class PeriodResolver {
     public Map<Long, Period> getStartTimes() {
         return listOfStartTimes;
     }
-    
-    private Date dateAsUtc(Date d) {
-        LocalDateTime ldt = LocalDateTime.ofInstant(d.toInstant(), ZoneId.of("UTC"));
-        return java.sql.Timestamp.valueOf(ldt); 
-    }
 
-    private boolean dayIsInPlan(Date start, String dailyPlanDate) throws ParseException {
-        start = dateAsUtc(start);
-        String timeZone = OrderInitiatorGlobals.orderInitiatorSettings.getTimeZone();
+    private boolean dayIsInPlan(Date start, String dailyPlanDate, String timeZone) throws ParseException {
+        String timeZoneDailyplan = OrderInitiatorGlobals.orderInitiatorSettings.getTimeZone();
         String periodBegin = OrderInitiatorGlobals.orderInitiatorSettings.getPeriodBegin();
         String dateInString = String.format("%s %s", dailyPlanDate, periodBegin);
 
-        Instant instant = JobSchedulerDate.getScheduledForInUTC(dateInString, timeZone).get();
+        Instant instant = JobSchedulerDate.getScheduledForInUTC(dateInString, timeZoneDailyplan).get();
         Date dailyPlanStartPeriod = Date.from(instant);
 
         java.util.Calendar calendar = java.util.Calendar.getInstance();
         calendar.setTime(dailyPlanStartPeriod);
         calendar.add(java.util.Calendar.HOUR, 24);
         Date dailyPlanEndPeriod = calendar.getTime();
-
+        
+          
+        SimpleDateFormat sdfUtc = new SimpleDateFormat("yyyyyy-MM-dd HH:mm:ss");
+        sdfUtc.setTimeZone(TimeZone.getTimeZone("UTC"));
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyyy-MM-dd HH:mm:ss");
+        sdf.setTimeZone(TimeZone.getTimeZone(timeZone));
+        start = sdf.parse(sdfUtc.format(start ));
+ 
+        
         return (start.after(JobSchedulerDate.nowInUtc()) && start.after(dailyPlanStartPeriod) || start.equals(dailyPlanStartPeriod)) && (start.before(
                 dailyPlanEndPeriod));
 
     }
 
-    public Map<Long, Period> getStartTimes(String d, String dailyPlanDate) throws ParseException {
+    public Map<Long, Period> getStartTimes(String d, String dailyPlanDate, String timeZone) throws ParseException {
         listOfStartTimes = new HashMap<Long, Period>();
         for (Entry<String, Period> periodEntry : listOfPeriods.entrySet()) {
             Date start = getDate(d, periodEntry.getKey(), DATE_FORMAT_SIMPLE);
-            if (dayIsInPlan(start, dailyPlanDate)) {
-                listOfStartTimes.put(start.getTime(), periodEntry.getValue());
+            if (dayIsInPlan(start, dailyPlanDate, timeZone)) {
+                Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(dailyPlanDate + " " + periodEntry.getKey(), timeZone);
+                listOfStartTimes.put(scheduledFor.get().getEpochSecond()*1000, periodEntry.getValue());
             }
         }
         return listOfStartTimes;

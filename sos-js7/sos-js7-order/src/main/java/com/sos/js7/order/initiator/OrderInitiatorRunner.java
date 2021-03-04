@@ -68,6 +68,7 @@ import com.sos.js7.order.initiator.db.FilterOrderVariables;
 class CalendarCacheItem {
 
     Calendar calendar;
+    String timeZone;
     Set<String> dates;
     PeriodResolver periodResolver;
 }
@@ -454,7 +455,7 @@ public class OrderInitiatorRunner extends TimerTask {
 
                         if (calendarCacheItem == null) {
                             calendarCacheItem = new CalendarCacheItem();
-
+                            calendarCacheItem.timeZone = assignedCalendar.getTimeZone();
                             calendarCacheItem.periodResolver = new PeriodResolver();
                             Calendar calendar = getCalendar(controllerId, assignedCalendar.getCalendarName(), ConfigurationType.WORKINGDAYSCALENDAR);
                             Calendar restrictions = new Calendar();
@@ -487,7 +488,7 @@ public class OrderInitiatorRunner extends TimerTask {
                             if (listOfNonWorkingDays != null && listOfNonWorkingDays.get(d) != null) {
                                 LOGGER.trace(d + "will be ignored as it is a non working day");
                             } else {
-                                Map<Long, Period> listOfStartTimes = calendarCacheItem.periodResolver.getStartTimes(d, dailyPlanDateAsString);
+                                Map<Long, Period> listOfStartTimes = calendarCacheItem.periodResolver.getStartTimes(d, dailyPlanDateAsString,calendarCacheItem.timeZone);
                                 for (Entry<Long, Period> periodEntry : listOfStartTimes.entrySet()) {
 
                                     Integer startMode;
