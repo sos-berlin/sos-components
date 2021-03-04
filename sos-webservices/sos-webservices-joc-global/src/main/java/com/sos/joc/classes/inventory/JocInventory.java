@@ -674,17 +674,27 @@ public class JocInventory {
     public static void deleteInventoryConfigurationAndPutToTrash(DBItemInventoryConfiguration item, InventoryDBLayer dbLayer) {
         if (item != null) {
             try {
-                DBItemInventoryConfigurationTrash trashItem = dbLayer.getTrashConfiguration(item.getPath(), item.getType());
+                List<DBItemInventoryConfigurationTrash> trashItems = dbLayer.getTrashConfigurationByName(item.getName(), item.getType());
                 deleteConfiguration(dbLayer, item);
                 Date now = Date.from(Instant.now());
-                if (trashItem == null) {
+                boolean createParentFolder = true;
+                DBItemInventoryConfigurationTrash trashItem = null;
+                if (trashItems.isEmpty()) {
                     trashItem = new DBItemInventoryConfigurationTrash();
                     trashItem.setId(null);
-                    trashItem.setPath(item.getPath());
-                    trashItem.setName(item.getName());
-                    trashItem.setFolder(item.getFolder());
                     trashItem.setCreated(now);
                     trashItem.setType(item.getType());
+                    trashItem.setName(item.getName());
+                } else {
+                    trashItem = trashItems.remove(0);
+                    createParentFolder = !trashItem.getPath().equals(item.getPath());
+                    for (DBItemInventoryConfigurationTrash tItem : trashItems) {
+                        dbLayer.getSession().delete(tItem);
+                    }
+                }
+                if (createParentFolder) {
+                    trashItem.setPath(item.getPath());
+                    trashItem.setFolder(item.getFolder());
                 }
                 trashItem.setAuditLogId(item.getAuditLogId());
                 trashItem.setContent(item.getContent());
@@ -697,6 +707,9 @@ public class JocInventory {
                     makeParentDirsForTrash(dbLayer, Paths.get(trashItem.getFolder()), trashItem.getAuditLogId());
                 } else {
                     dbLayer.getSession().update(trashItem);
+                    if (createParentFolder) {
+                        makeParentDirsForTrash(dbLayer, Paths.get(trashItem.getFolder()), trashItem.getAuditLogId());
+                    }
                 }
             } catch (SOSHibernateInvalidSessionException ex) {
                 throw new DBConnectionRefusedException(ex);
@@ -704,7 +717,7 @@ public class JocInventory {
                 throw new DBInvalidDataException(ex);
             }
         }
-    } //List<DBItemInventoryConfiguration> dBFolderContent
+    }
     
     public static Set<String> deepCopy(DBItemInventoryConfiguration config, String newName, InventoryDBLayer dbLayer) throws JsonParseException,
             JsonMappingException, SOSHibernateException, JsonProcessingException, IOException {
