@@ -187,8 +187,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     final String versionIdForDeleteRenamed = UUID.randomUUID().toString();
                     // call updateRepo command via Proxy of given controllers
                     PublishUtils.updateItemsDelete(versionIdForDeleteRenamed, toDelete, controllerId).thenAccept(either -> {
-                        DeleteDeployments.processAfterDelete(
-                                either, toDelete, controllerId, account, versionIdForDeleteRenamed, getAccessToken(), getJocError());
+                        DeleteDeployments.processAfterDelete(either, controllerId, account, versionIdForDeleteRenamed, getAccessToken(), getJocError());
                     });
                 }
                 // determine all (latest) entries from the given folders
@@ -262,8 +261,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     // call updateRepo command via Proxy of given controllers
                     final List<DBItemDeploymentHistory> toDelete = depHistoryDBItemsToDeployDelete;
                     PublishUtils.updateItemsDelete(commitIdForDelete, toDelete, controllerId).thenAccept(either -> {
-                        DeleteDeployments.processAfterDelete(either, toDelete, controllerId, account, commitIdForDelete, getAccessToken(),
-                                getJocError());
+                        DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError());
                     });
                     // store history entries for delete operation optimistically
                     if (invConfigurationsToDelete.isEmpty()) {
@@ -283,8 +281,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     final List<DBItemDeploymentHistory> itemsToDelete = itemsFromFolderToDelete.stream().filter(item -> item.getControllerId().equals(
                             controllerId) && !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation()))).collect(Collectors.toList());
                     PublishUtils.updateItemsDelete(commitIdForDeleteFromFolder, itemsToDelete, controllerId).thenAccept(either -> {
-                        DeleteDeployments.processAfterDeleteFromFolder(either, itemsToDelete, folders.stream().map(item -> item.getConfiguration())
-                                .collect(Collectors.toList()), controllerId, account, commitIdForDelete, getAccessToken(), getJocError(), false);
+                        DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError());
                     });
                     // store history entries for delete operation optimistically
                     if (invConfigurationsToDelete.isEmpty()) {

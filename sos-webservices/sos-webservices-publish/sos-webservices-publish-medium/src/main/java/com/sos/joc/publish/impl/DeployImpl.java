@@ -212,8 +212,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     final String versionIdForDeleteRenamed = UUID.randomUUID().toString();
                         // call updateRepo command via Proxy of given controllers
                         PublishUtils.updateItemsDelete(versionIdForDeleteRenamed, toDelete, controllerId).thenAccept(either -> {
-                            DeleteDeployments.processAfterDelete(either, toDelete, controllerId, account, versionIdForDeleteRenamed,
-                                    getAccessToken(), getJocError());
+                            DeleteDeployments.processAfterDelete(either, controllerId, account, versionIdForDeleteRenamed, getAccessToken(), getJocError());
                         });
                 }
                 if ((verifiedConfigurations != null && !verifiedConfigurations.isEmpty())
@@ -274,25 +273,18 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             // Delete from all known controllers
             final String commitIdForDelete = UUID.randomUUID().toString();
             final String commitIdForDeleteFromFolder = UUID.randomUUID().toString();
-            Set<DBItemInventoryConfiguration> invConfigurationsToDelete = Collections.emptySet();
+            Set<DBItemInventoryConfiguration> invConfigurationsToDelete = new HashSet<DBItemInventoryConfiguration>();
 
             for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
                 if (depHistoryDBItemsToDeployDelete != null && !depHistoryDBItemsToDeployDelete.isEmpty()) {
                     final List<DBItemDeploymentHistory> itemsToDelete = depHistoryDBItemsToDeployDelete;
                     PublishUtils.updateItemsDelete(commitIdForDelete, itemsToDelete, controllerId).thenAccept(either -> {
-                        DeleteDeployments.processAfterDelete(either, itemsToDelete, controllerId, account, commitIdForDelete, 
-                                getAccessToken(), getJocError());
+                        DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError());
                     });
                     // store history entries for delete operation optimistically
-                    if (invConfigurationsToDelete.isEmpty()) {
-                        invConfigurationsToDelete = new HashSet<>(
-                                DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
-                                        DeleteDeployments.storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitId)));
-                    } else {
-                        invConfigurationsToDelete.addAll(
-                                DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
-                                        DeleteDeployments.storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitId)));
-                    }
+                    invConfigurationsToDelete.addAll(
+                            DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
+                                    DeleteDeployments.storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitId)));
                 }
                 // process folder to Delete
                 if (itemsFromFolderToDelete != null && !itemsFromFolderToDelete.isEmpty()) {
@@ -301,20 +293,12 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     final List<DBItemDeploymentHistory> itemsToDelete = itemsFromFolderToDelete.stream().filter(item -> item.getControllerId().equals(
                             controllerId) && !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation()))).collect(Collectors.toList());
                     PublishUtils.updateItemsDelete(commitIdForDeleteFromFolder, itemsToDelete, controllerId).thenAccept(either -> {
-                        DeleteDeployments.processAfterDeleteFromFolder(either, itemsToDelete, 
-                                folders.stream().map(item -> item.getConfiguration()).collect(Collectors.toList()),
-                                controllerId, account, commitIdForDeleteFromFolder, getAccessToken(), getJocError(), false);
+                        DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDeleteFromFolder, getAccessToken(), getJocError());
                     });
                     // store history entries for delete operation optimistically
-                    if (invConfigurationsToDelete.isEmpty()) {
-                        invConfigurationsToDelete = new HashSet<>(
-                                DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
-                                        DeleteDeployments.storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitId)));
-                    } else {
-                        invConfigurationsToDelete.addAll(
-                                DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
-                                        DeleteDeployments.storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitId)));
-                    }
+                    invConfigurationsToDelete.addAll(
+                            DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
+                                    DeleteDeployments.storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitId)));
                 }
             }
             // delete configurations optimistically
