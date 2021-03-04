@@ -30,6 +30,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.controller.model.event.EventType;
 import com.sos.inventory.model.job.JobCriticality;
 import com.sos.joc.classes.history.HistoryPosition;
+import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.db.history.DBItemHistoryAgent;
 import com.sos.joc.db.history.DBItemHistoryController;
 import com.sos.joc.db.history.DBItemHistoryLog;
@@ -47,7 +48,6 @@ import com.sos.joc.event.bean.history.HistoryOrderTerminated;
 import com.sos.joc.event.bean.history.HistoryOrderUpdated;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.event.controller.EventMeta;
-import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 import com.sos.js7.history.controller.HistoryService;
 import com.sos.js7.history.controller.configuration.HistoryConfiguration;
 import com.sos.js7.history.controller.exception.FatEventOrderNotFoundException;
@@ -295,7 +295,7 @@ public class HistoryModel {
                     case OrderStepProcessed:
                         cos = orderStepProcessed(dbLayer, (FatEventOrderStepProcessed) entry, endedOrderSteps);
                         counter.getOrderStep().addProcessed();
-                        
+
                         postEventOrderTaskTerminated(cos);
                         break;
                     case OrderFailed:

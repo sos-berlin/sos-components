@@ -1,12 +1,13 @@
 
 package com.sos.joc.model.configuration.globals;
 
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -16,37 +17,66 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * cluster setting
  * <p>
- * a map for arbitrary key-value pairs (String, GlobalSettingsSectionValue)
+ * a map for arbitrary key-value pairs (String, GlobalSettingsSectionEntry)
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-
+    "order"
 })
 public class GlobalSettingsSection {
 
-    //re: manually changed from HashMap to LinkedHashMap
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("order")
+    private Integer order;
     @JsonIgnore
-    private Map<String, GlobalSettingsSectionValue> additionalProperties = new LinkedHashMap<String, GlobalSettingsSectionValue>();
+    private Map<String, GlobalSettingsSectionEntry> additionalProperties = new HashMap<String, GlobalSettingsSectionEntry>();
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("order")
+    public Integer getOrder() {
+        return order;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("order")
+    public void setOrder(Integer order) {
+        this.order = order;
+    }
 
     @JsonAnyGetter
-    public Map<String, GlobalSettingsSectionValue> getAdditionalProperties() {
+    public Map<String, GlobalSettingsSectionEntry> getAdditionalProperties() {
         return this.additionalProperties;
     }
 
     @JsonAnySetter
-    public void setAdditionalProperty(String name, GlobalSettingsSectionValue value) {
+    public void setAdditionalProperty(String name, GlobalSettingsSectionEntry value) {
         this.additionalProperties.put(name, value);
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("order", order).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(order).append(additionalProperties).toHashCode();
     }
 
     @Override
@@ -58,7 +88,7 @@ public class GlobalSettingsSection {
             return false;
         }
         GlobalSettingsSection rhs = ((GlobalSettingsSection) other);
-        return new EqualsBuilder().append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(order, rhs.order).append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 
 }

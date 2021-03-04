@@ -232,6 +232,14 @@ public class CleanupServiceSchedule {
                         break;
                     }
                 }
+                if (newPeriodDaysDiff == -1) {
+                    for (Integer wd : weekDays) {
+                        if (wd < nwd) {
+                            newPeriodDaysDiff = (7 - nwd) + wd;
+                            break;
+                        }
+                    }
+                }
                 nextBegin = ZonedDateTime.of(now.getYear(), now.getMonthValue(), now.getDayOfMonth() + newPeriodDaysDiff, period.getBegin()
                         .getHours(), period.getBegin().getMinutes(), period.getBegin().getSeconds(), 0, service.getConfig().getZoneId());
                 nextEnd = ZonedDateTime.of(now.getYear(), now.getMonthValue(), now.getDayOfMonth() + newPeriodDaysDiff, period.getEnd().getHours(),

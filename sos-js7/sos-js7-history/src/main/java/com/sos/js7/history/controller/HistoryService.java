@@ -31,11 +31,12 @@ import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
+import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.DBItemHistoryTempLog;
 import com.sos.joc.model.cluster.common.ClusterServices;
+import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
 import com.sos.js7.event.controller.configuration.Configuration;
-import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
 import com.sos.js7.event.notifier.Mailer;
 import com.sos.js7.history.controller.configuration.HistoryConfiguration;
 
@@ -74,22 +75,22 @@ public class HistoryService extends AJocClusterService {
     }
 
     @Override
-    public JocClusterAnswer start(List<ControllerConfiguration> controllers, StartupMode mode) {
+    public JocClusterAnswer start(List<ControllerConfiguration> controllers, GlobalSettingsSection settings, StartupMode mode) {
         try {
             AJocClusterService.setLogger(IDENTIFIER);
             LOGGER.info(String.format("[%s][%s]start...", getIdentifier(), mode));
 
             processingStarted = false;
             Mailer mailer = new Mailer(config.getMailer());
-            config.setControllers(controllers);
+            // config.setControllers(controllers);
 
             checkLogDirectory();
-            createFactory(getJocConfig().getHibernateConfiguration());
+            createFactory(getJocConfig().getHibernateConfiguration(), controllers.size());
             handleTempLogsOnStart();
-            threadPool = Executors.newFixedThreadPool(config.getControllers().size(), new JocClusterThreadFactory(getThreadGroup(), IDENTIFIER));
+            threadPool = Executors.newFixedThreadPool(controllers.size(), new JocClusterThreadFactory(getThreadGroup(), IDENTIFIER));
             AJocClusterService.clearLogger();
 
-            for (ControllerConfiguration controllerConfig : config.getControllers()) {
+            for (ControllerConfiguration controllerConfig : controllers) {
                 HistoryControllerHandler controllerHandler = new HistoryControllerHandler(factory, config, controllerConfig, mailer);
                 activeHandlers.add(controllerHandler);
 
@@ -378,8 +379,8 @@ public class HistoryService extends AJocClusterService {
         }
     }
 
-    private void createFactory(Path configFile) throws Exception {
-        factory = new JocClusterHibernateFactory(configFile, 1, config.getControllers().size());
+    private void createFactory(Path configFile, int maxPoolSize) throws Exception {
+        factory = new JocClusterHibernateFactory(configFile, 1, maxPoolSize);
         factory.setIdentifier(IDENTIFIER);
         factory.setAutoCommit(false);
         factory.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);

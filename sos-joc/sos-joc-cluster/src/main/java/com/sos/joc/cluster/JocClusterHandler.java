@@ -18,7 +18,7 @@ import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
-import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
+import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 
 public class JocClusterHandler {
 
@@ -55,6 +55,8 @@ public class JocClusterHandler {
             }
         }
 
+        cluster.readCurrentDbInfos();
+
         final List<ControllerConfiguration> controllers = cluster.getControllers();
         if (isStart) {
             if (controllers == null || controllers.size() == 0) {
@@ -84,9 +86,9 @@ public class JocClusterHandler {
                             for (ControllerConfiguration m : controllers) {
                                 newControllers.add(m.copy(s.getControllerApiUser(), s.getControllerApiUserPassword()));
                             }
-                            answer = s.start(newControllers, mode);
+                            answer = s.start(newControllers, cluster.getSettings().getAdditionalProperties().get(s.getIdentifier()), mode);
                         } else {
-                            answer = s.start(controllers, mode);
+                            answer = s.start(controllers, cluster.getSettings().getAdditionalProperties().get(s.getIdentifier()), mode);
                         }
                     } else {
                         answer = s.stop(mode);
@@ -184,7 +186,7 @@ public class JocClusterHandler {
         ThreadHelper.print(mode, "[" + identifier + "]after stop");
         AJocClusterService.clearLogger();
 
-        s.start(cluster.getControllers(), mode);
+        s.start(cluster.getControllers(), cluster.getSettings().getAdditionalProperties().get(s.getIdentifier()), mode);
 
         AJocClusterService.setLogger();
         LOGGER.info(String.format("[%s][restart][%s]completed", mode, identifier));

@@ -26,11 +26,13 @@ public class Configuration {
         controllers = new ArrayList<ControllerConfiguration>();
     }
 
-    public List<ControllerConfiguration> getControllers() {
+    @SuppressWarnings("unused")
+    private List<ControllerConfiguration> getControllers() {
         return controllers;
     }
 
-    public void setControllers(List<ControllerConfiguration> val) {
+    @SuppressWarnings("unused")
+    private void setControllers(List<ControllerConfiguration> val) {
         controllers = val;
     }
 

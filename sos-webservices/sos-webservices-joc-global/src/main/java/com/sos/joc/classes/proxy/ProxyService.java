@@ -13,7 +13,8 @@ import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
-import com.sos.js7.event.controller.configuration.controller.ControllerConfiguration;
+import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
+import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
 
 public class ProxyService extends AJocClusterService {
 
@@ -24,7 +25,7 @@ public class ProxyService extends AJocClusterService {
     }
 
     @Override
-    public JocClusterAnswer start(List<ControllerConfiguration> controllers, StartupMode mode) {
+    public JocClusterAnswer start(List<ControllerConfiguration> controllers, GlobalSettingsSection settings, StartupMode mode) {
         MDC.put("clusterService", IDENTIFIER);
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties();
