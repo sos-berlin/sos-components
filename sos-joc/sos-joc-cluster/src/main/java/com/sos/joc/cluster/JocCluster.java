@@ -9,7 +9,6 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.codec.Charsets;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +42,7 @@ import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
 import com.sos.joc.model.cluster.common.ClusterServices;
+import com.sos.joc.model.configuration.ConfigurationObjectType;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.configuration.globals.GlobalSettings;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
@@ -56,6 +56,9 @@ public class JocCluster {
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     public static final int MAX_AWAIT_TERMINATION_TIMEOUT = 30;
+    public static final String GLOBAL_SETTINGS_CONTROLLER_ID = ".";
+    public static final String GLOBAL_SETTINGS_ACCOUNT = ".";
+    public static final ConfigurationObjectType GLOBAL_SETTINGS_OBJECT_TYPE = null;
 
     private final SOSHibernateFactory dbFactory;
     private final JocClusterConfiguration config;
@@ -239,13 +242,13 @@ public class JocCluster {
                 settings = getDefaultSettings();
 
                 item = new DBItemJocConfiguration();
-                item.setSchedulerId(".");
+                item.setSchedulerId(GLOBAL_SETTINGS_CONTROLLER_ID);
                 item.setInstanceId(0L);
-                item.setAccount(".");
-                item.setObjectType(null);
+                item.setAccount(GLOBAL_SETTINGS_ACCOUNT);
+                item.setObjectType(GLOBAL_SETTINGS_OBJECT_TYPE == null ? null : GLOBAL_SETTINGS_OBJECT_TYPE.name());
                 item.setConfigurationType(ConfigurationType.GLOBALS.name());
                 item.setShared(false);
-                item.setConfigurationItem(new String(mapper.writeValueAsBytes(settings), Charsets.UTF_8));
+                item.setConfigurationItem(mapper.writeValueAsString(settings));
                 item.setModified(new Date());
 
                 dbLayer.getSession().save(item);
@@ -276,8 +279,9 @@ public class JocCluster {
         s.setOrder(order);
         addEntry(s, 0, "zone", "UTC", GlobalSettingsSectionValueType.ZONE);
         addEntry(s, 1, "period_begin", "00:00:00", GlobalSettingsSectionValueType.TIME);
-        addEntry(s, 2, "days_ahead_plan", "1", GlobalSettingsSectionValueType.NONNEGATIVENUMBER);
-        addEntry(s, 3, "days_ahead_submit", "1", GlobalSettingsSectionValueType.NONNEGATIVENUMBER);
+        addEntry(s, 2, "start_time", "", GlobalSettingsSectionValueType.TIME);
+        addEntry(s, 3, "days_ahead_plan", "1", GlobalSettingsSectionValueType.NONNEGATIVENUMBER);
+        addEntry(s, 4, "days_ahead_submit", "1", GlobalSettingsSectionValueType.NONNEGATIVENUMBER);
         return s;
     }
 

@@ -15,6 +15,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.configurations.resource.IJocConfigurationsResource;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
@@ -38,7 +39,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             throws Exception {
         return postConfigurations(getAccessToken(xAccessToken, accessToken), configurationsFilter);
     }
-    
+
     @Override
     public JOCDefaultResponse postConfigurationsDelete(String xAccessToken, String accessToken, ConfigurationsDeleteFilter configurationsFilter)
             throws Exception {
@@ -49,7 +50,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
         SOSHibernateSession connection = null;
         try {
 
-            if (configurationsFilter.getControllerId() == null){
+            if (configurationsFilter.getControllerId() == null) {
                 configurationsFilter.setControllerId("");
             }
 
@@ -57,7 +58,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
- 
+
             String objectType = null;
             if (configurationsFilter.getObjectType() != null) {
                 objectType = configurationsFilter.getObjectType().name();
@@ -66,14 +67,25 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             String configurationType = null;
             if (configurationsFilter.getConfigurationType() != null) {
                 configurationType = configurationsFilter.getConfigurationType().name();
-                if (configurationsFilter.getConfigurationType() == ConfigurationType.PROFILE) {
+                switch (configurationsFilter.getConfigurationType()) {
+                case PROFILE:
                     String userName = getJobschedulerUser(accessToken).getSosShiroCurrentUser().getUsername();
                     if (configurationsFilter.getAccount() == null || configurationsFilter.getAccount().isEmpty()) {
                         configurationsFilter.setAccount(userName);
                     } else if (!configurationsFilter.getAccount().equals(userName)) {
                         throw new JobSchedulerBadRequestException("You can only read your own profile.");
                     }
+                    break;
+                case GLOBALS:
+                    configurationsFilter.setControllerId(JocCluster.GLOBAL_SETTINGS_CONTROLLER_ID);
+                    configurationsFilter.setAccount(JocCluster.GLOBAL_SETTINGS_ACCOUNT);
+                    configurationsFilter.setObjectType(JocCluster.GLOBAL_SETTINGS_OBJECT_TYPE);
+
+                    break;
+                default:
+                    break;
                 }
+
             }
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
@@ -91,8 +103,8 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             List<Configuration> listOfConfigurations = new ArrayList<Configuration>();
             // cleanup wrongfully duplicated Profile entries
             listOfJocConfigurationDbItem = cleanupProfileDuplicates(listOfJocConfigurationDbItem);
-            
-            //if profile is new then try default_profile_account from joc.properties if exists
+
+            // if profile is new then try default_profile_account from joc.properties if exists
             if (configurationsFilter.getConfigurationType() == ConfigurationType.PROFILE && (listOfJocConfigurationDbItem == null
                     || listOfJocConfigurationDbItem.isEmpty() || listOfJocConfigurationDbItem.get(0).getConfigurationItem() == null
                     || listOfJocConfigurationDbItem.get(0).getConfigurationItem().isEmpty())) {
@@ -104,7 +116,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                 if (!defaultProfileAccount.isEmpty() && !defaultProfileAccount.equals(currentAccount)) {
                     filter.setAccount(defaultProfileAccount);
                     listOfJocConfigurationDbItem = cleanupProfileDuplicates(jocConfigurationDBLayer.getJocConfigurationList(filter, 0));
-                    //if default_profile_account profile exist then store it for new user
+                    // if default_profile_account profile exist then store it for new user
                     if (listOfJocConfigurationDbItem != null && !listOfJocConfigurationDbItem.isEmpty()) {
                         listOfJocConfigurationDbItem.get(0).setAccount(currentAccount);
                         listOfJocConfigurationDbItem.get(0).setId(null);
@@ -112,7 +124,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                     }
                 }
             }
-            
+
             if (listOfJocConfigurationDbItem != null && !listOfJocConfigurationDbItem.isEmpty()) {
                 boolean sharePerm = getPermissonsJocCockpit(configurationsFilter.getControllerId(), accessToken).getJOCConfigurations().getShare()
                         .getView().isStatus();
@@ -149,7 +161,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             Globals.disconnect(connection);
         }
     }
-    
+
     public JOCDefaultResponse postConfigurationsDelete(String accessToken, ConfigurationsDeleteFilter configurationsFilter) throws Exception {
         SOSHibernateSession connection = null;
         try {
