@@ -398,7 +398,6 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         entity.setHasRole(false);
         entity.setIsPermitted(false);
         entity.setIsAuthenticated(sosJobschedulerUser.isAuthenticated());
-        //LOGGER.error(message);
         entity.setMessage(message);
         return entity;
     }

@@ -3,7 +3,6 @@ package com.sos.webservices.order.impl;
 import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -29,6 +28,7 @@ import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.CyclicOrderInfos;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.joc.model.dailyplan.DailyPlanOrderSelector;
+import com.sos.joc.model.dailyplan.DailyPlanOrdersSummary;
 import com.sos.joc.model.dailyplan.Period;
 import com.sos.joc.model.dailyplan.PlannedOrderItem;
 import com.sos.joc.model.dailyplan.PlannedOrders;
@@ -38,14 +38,13 @@ import com.sos.js7.order.initiator.classes.CycleOrderKey;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
-import com.sos.webservices.order.resource.IDailyPlanOrdersResource;
+import com.sos.webservices.order.resource.IDailyPlanOrdersSummaryResource;
 
 @Path("daily_plan")
-public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOrdersResource {
+public class DailyPlanOrdersSummaryImpl extends JOCResourceImpl implements IDailyPlanOrdersSummaryResource {
 
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanOrdersImpl.class);
-    private static final String API_CALL = "./daily_plan/orders";
+    private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanOrdersSummaryImpl.class);
+    private static final String API_CALL = "./daily_plan/orders/summary";
 
     private PlannedOrderItem createPlanItem(DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory) {
 
@@ -90,15 +89,17 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
     }
 
     @Override
-    public JOCDefaultResponse postDailyPlan(String accessToken, byte[] filterBytes) throws JocException {
+    public JOCDefaultResponse postDailyPlanOrdersSummary(String accessToken, byte[] filterBytes) throws JocException {
         SOSHibernateSession sosHibernateSession = null;
         try {
 
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DailyPlanOrderSelector.class);
             DailyPlanOrderFilter dailyPlanOrderFilter = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanOrderFilter.getControllerId(), getPermissonsJocCockpit(
-                    dailyPlanOrderFilter.getControllerId(), accessToken).getDailyPlan().getView().isStatus());
+
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, dailyPlanOrderFilter, accessToken, dailyPlanOrderFilter.getControllerId(),
+                    getPermissonsJocCockpit(getControllerId(accessToken, dailyPlanOrderFilter.getControllerId()), accessToken).getDailyPlan()
+                            .getView().isStatus());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -147,20 +148,9 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
             filter.setListOfSubmissionIds(dailyPlanOrderFilter.getFilter().getSubmissionHistoryIds());
             filter.setListOfScheduleNames(dailyPlanOrderFilter.getFilter().getScheduleNames());
             filter.setListOfOrders(dailyPlanOrderFilter.getFilter().getOrderIds());
-
             filter.setDailyPlanDate(dailyPlanOrderFilter.getFilter().getDailyPlanDate());
-
             filter.setLate(dailyPlanOrderFilter.getFilter().getLate());
 
-            boolean stateFilterContainsPendingOrPlanned = false;
-            if (dailyPlanOrderFilter.getFilter().getStates() != null) {
-                for (OrderStateText state : dailyPlanOrderFilter.getFilter().getStates()) {
-                    if (state.equals(OrderStateText.PENDING) || state.equals(OrderStateText.PLANNED)) {
-                        stateFilterContainsPendingOrPlanned = true;
-                    }
-                    filter.addState(state);
-                }
-            }
             if (withFolderFilter && (folders == null || folders.isEmpty())) {
                 hasPermission = false;
             } else if (folders != null && !folders.isEmpty()) {
@@ -168,41 +158,39 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
             }
 
             ArrayList<PlannedOrderItem> listOfPlannedOrderItems = new ArrayList<PlannedOrderItem>();
-            PlannedOrders plannedOrders = new PlannedOrders();
+
             DateFormat periodFormat = new SimpleDateFormat("hh:mm:ss");
 
+            DailyPlanOrdersSummary dailyPlanOrdersSummary = new DailyPlanOrdersSummary();
+            dailyPlanOrdersSummary.setFinished(0);
+            dailyPlanOrdersSummary.setPending(0);
+            dailyPlanOrdersSummary.setPendingLate(0);
+            dailyPlanOrdersSummary.setPlanned(0);
+            dailyPlanOrdersSummary.setPlannedLate(0);
             if (hasPermission) {
                 List<DBItemDailyPlanWithHistory> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanWithHistoryList(filter, 0);
+
                 Map<CycleOrderKey, List<PlannedOrderItem>> mapOfCycledOrders = new TreeMap<CycleOrderKey, List<PlannedOrderItem>>();
 
                 for (DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory : listOfPlannedOrders) {
 
-                    boolean add = true;
-                    PlannedOrderItem p = createPlanItem(dbItemDailyPlanWithHistory);                
+                    PlannedOrderItem p = createPlanItem(dbItemDailyPlanWithHistory);
 
-                    if (dailyPlanOrderFilter.getFilter().getStates() != null && !stateFilterContainsPendingOrPlanned && dbItemDailyPlanWithHistory
-                            .getOrderHistoryId() == null) {
-                        add = false;
-                    }
-
-                    if (add) {
-
-                        if ((p.getStartMode() == 1 && !dailyPlanOrderFilter.getExpandCycleOrders())) {
-                            CycleOrderKey cycleOrderKey = new CycleOrderKey();
-                            cycleOrderKey.setPeriodBegin(periodFormat.format(p.getPeriod().getBegin()));
-                            cycleOrderKey.setPeriodEnd(periodFormat.format(p.getPeriod().getEnd()));
-                            cycleOrderKey.setRepeat(String.valueOf(p.getPeriod().getRepeat()));
-                            cycleOrderKey.setSchedulePath(p.getSchedulePath());
-                            cycleOrderKey.setWorkflowPath(p.getWorkflowPath());
-                            if (mapOfCycledOrders.get(cycleOrderKey) == null) {
-                                mapOfCycledOrders.put(cycleOrderKey, new ArrayList<PlannedOrderItem>());
-                            }
-
-                            mapOfCycledOrders.get(cycleOrderKey).add(p);
-
-                        } else {
-                            listOfPlannedOrderItems.add(p);
+                    if ((p.getStartMode() == 1 && !dailyPlanOrderFilter.getExpandCycleOrders())) {
+                        CycleOrderKey cycleOrderKey = new CycleOrderKey();
+                        cycleOrderKey.setPeriodBegin(periodFormat.format(p.getPeriod().getBegin()));
+                        cycleOrderKey.setPeriodEnd(periodFormat.format(p.getPeriod().getEnd()));
+                        cycleOrderKey.setRepeat(String.valueOf(p.getPeriod().getRepeat()));
+                        cycleOrderKey.setSchedulePath(p.getSchedulePath());
+                        cycleOrderKey.setWorkflowPath(p.getWorkflowPath());
+                        if (mapOfCycledOrders.get(cycleOrderKey) == null) {
+                            mapOfCycledOrders.put(cycleOrderKey, new ArrayList<PlannedOrderItem>());
                         }
+
+                        mapOfCycledOrders.get(cycleOrderKey).add(p);
+
+                    } else {
+                        listOfPlannedOrderItems.add(p);
                     }
                 }
 
@@ -220,18 +208,38 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
                     }
                 }
 
+                for (PlannedOrderItem p : listOfPlannedOrderItems) {
+                    if (OrderStateText.PENDING.value().equals(p.getState().get_text().value())) {
+                        if (p.getLate()) {
+                            dailyPlanOrdersSummary.setPendingLate(dailyPlanOrdersSummary.getPendingLate() + 1);
+                        } else {
+                            dailyPlanOrdersSummary.setPending(dailyPlanOrdersSummary.getPending() + 1);
+                        }
+                    }
+                    if (OrderStateText.PLANNED.value().equals(p.getState().get_text().value())) {
+                        if (p.getLate()) {
+                            dailyPlanOrdersSummary.setPlannedLate(dailyPlanOrdersSummary.getPlannedLate() + 1);
+                        } else {
+                            dailyPlanOrdersSummary.setPlanned(dailyPlanOrdersSummary.getPlanned() + 1);
+                        }
+                    }
+                    if (OrderStateText.FINISHED.value().equals(p.getState().get_text().value())) {
+                        dailyPlanOrdersSummary.setFinished(dailyPlanOrdersSummary.getFinished() + 1);
+                    }
+                }
+
                 Globals.commit(sosHibernateSession);
             }
 
-            plannedOrders.setPlannedOrderItems(listOfPlannedOrderItems);
-            plannedOrders.setDeliveryDate(Date.from(Instant.now()));
-
-            return JOCDefaultResponse.responseStatus200(plannedOrders);
+            return JOCDefaultResponse.responseStatus200(dailyPlanOrdersSummary);
 
         } catch (JocException e) {
+            LOGGER.error(getJocError().getMessage(), e);
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
+            e.printStackTrace();
+            LOGGER.error(getJocError().getMessage(), e);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.disconnect(sosHibernateSession);
