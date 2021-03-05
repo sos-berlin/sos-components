@@ -260,9 +260,9 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             
             DBItemInventoryConfigurationTrash config = JocInventory.getTrashConfiguration(dbLayer, null, in.getPath(), ConfigurationType.FOLDER, folderPermissions);
             dbLayer.deleteTrashFolder(config.getPath());
+            Globals.commit(session);
             JocInventory.postTrashEvent(config.getFolder());
             
-            Globals.commit(session);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {
             Globals.rollback(session);
