@@ -161,6 +161,9 @@ public class JocClusterService {
         case dailyplan:
             answer = cluster.getHandler().restartService(ClusterServices.dailyplan.name(), mode);
             break;
+        case cleanup:
+            answer = cluster.getHandler().restartService(ClusterServices.cleanup.name(), mode);
+            break;
         default:
             answer = JocCluster.getErrorAnswer(new Exception(String.format("%s restart not yet supported for %s", mode, r.getType())));
         }
