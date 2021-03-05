@@ -3,6 +3,7 @@ package com.sos.joc.db.inventory;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -86,8 +87,11 @@ public class InventoryTrashDBLayer extends DBLayer {
                 tree.add(root);
 
                 return tree;
+            } else {
+                Tree t = new Tree();
+                t.setPath(JocInventory.ROOT_FOLDER);
+                return Collections.singleton(t);
             }
-            return new HashSet<>();
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {

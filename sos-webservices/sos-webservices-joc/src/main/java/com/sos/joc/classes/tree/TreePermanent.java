@@ -154,7 +154,7 @@ public class TreePermanent {
 
         SOSHibernateSession session = null;
         try {
-            session = Globals.createSosHibernateStatelessConnection("initFoldersByFoldersForInventory");
+            session = Globals.createSosHibernateStatelessConnection("initTreeForInventory");
             Globals.beginTransaction(session);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             DocumentationDBLayer dbDocLayer = new DocumentationDBLayer(session);
@@ -221,13 +221,13 @@ public class TreePermanent {
             throws JocException {
         Set<Integer> inventoryTypes = new HashSet<Integer>();
         inventoryTypes = treeBody.getTypes().stream().map(TreeType::intValue).collect(Collectors.toSet());
-        // DOCUMENTATION is not part of INV_CONFIGURATIONS
+        // DOCUMENTATION is not part of INV_CONFIGURATION_TRASH
         inventoryTypes.removeIf(i -> i == TreeType.DOCUMENTATION.intValue());
         
 
         SOSHibernateSession session = null;
         try {
-            session = Globals.createSosHibernateStatelessConnection("initFoldersByFoldersForInventory");
+            session = Globals.createSosHibernateStatelessConnection("initTreeForInventoryTrash");
             Globals.beginTransaction(session);
             InventoryTrashDBLayer dbLayer = new InventoryTrashDBLayer(session);
 
@@ -288,7 +288,7 @@ public class TreePermanent {
 
         SOSHibernateSession session = null;
         try {
-            session = Globals.createSosHibernateStatelessConnection("initFoldersByFoldersForViews");
+            session = Globals.createSosHibernateStatelessConnection("initTreeForViews");
             Globals.beginTransaction(session);
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
             DocumentationDBLayer dbDocLayer = new DocumentationDBLayer(session);
