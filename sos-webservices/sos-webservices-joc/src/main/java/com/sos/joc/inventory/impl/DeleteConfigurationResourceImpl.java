@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -128,14 +129,14 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             session.beginTransaction();
             
-            if (in.getObjects().stream().parallel().anyMatch(r -> ConfigurationType.FOLDER.equals(r.getObjectType()))) {
+            Predicate<RequestFilter> isFolder = r -> ConfigurationType.FOLDER.equals(r.getObjectType());
+            if (in.getObjects().stream().parallel().anyMatch(isFolder)) {
                 //throw new 
             }
             Set<DBItemDeploymentHistory> allDeployments = new HashSet<>();
             DBLayerDeploy deployDbLayer = new DBLayerDeploy(session);
             Set<String> foldersForEvent = new HashSet<>();
-            for (RequestFilter r : in.getObjects().stream().filter(r -> !ConfigurationType.FOLDER.equals(r.getObjectType())).collect(Collectors
-                    .toSet())) {
+            for (RequestFilter r : in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet())) {
                 DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, r, folderPermissions);
                 final ConfigurationType type = config.getTypeAsEnum();
 
@@ -222,12 +223,12 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             
             // TODO auditLog
             
-            if (in.getObjects().stream().parallel().anyMatch(r -> ConfigurationType.FOLDER.equals(r.getObjectType()))) {
+            Predicate<RequestFilter> isFolder = r -> ConfigurationType.FOLDER.equals(r.getObjectType());
+            if (in.getObjects().stream().parallel().anyMatch(isFolder)) {
                 //throw new 
             }
             Set<String> foldersForEvent = new HashSet<>();
-            for (RequestFilter r : in.getObjects().stream().filter(r -> !ConfigurationType.FOLDER.equals(r.getObjectType())).collect(Collectors
-                    .toSet())) {
+            for (RequestFilter r : in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet())) {
                 DBItemInventoryConfigurationTrash config = JocInventory.getTrashConfiguration(dbLayer, r, folderPermissions);
                 session.delete(config);
                 foldersForEvent.add(config.getFolder());
@@ -255,14 +256,15 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             session.beginTransaction();
-            
+
             // TODO auditLog
-            
-            DBItemInventoryConfigurationTrash config = JocInventory.getTrashConfiguration(dbLayer, null, in.getPath(), ConfigurationType.FOLDER, folderPermissions);
+
+            DBItemInventoryConfigurationTrash config = JocInventory.getTrashConfiguration(dbLayer, null, in.getPath(), ConfigurationType.FOLDER,
+                    folderPermissions);
             dbLayer.deleteTrashFolder(config.getPath());
             Globals.commit(session);
             JocInventory.postTrashEvent(config.getFolder());
-            
+
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {
             Globals.rollback(session);

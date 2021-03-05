@@ -134,13 +134,13 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             final InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             session.beginTransaction();
 
-            if (in.getObjects().stream().parallel().anyMatch(r -> ConfigurationType.FOLDER.equals(r.getObjectType()))) {
+            Predicate<RequestFilter> isFolder = r -> ConfigurationType.FOLDER.equals(r.getObjectType());
+            if (in.getObjects().stream().parallel().anyMatch(isFolder)) {
                 // throw new
             }
             Set<String> events = new HashSet<>();
             String search = in.getSearch().replaceAll("%", ".*");
-            Set<RequestFilter> requests = in.getObjects().stream().filter(r -> !ConfigurationType.FOLDER.equals(r.getObjectType())).collect(Collectors
-                    .toSet());
+            Set<RequestFilter> requests = in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet());
             for (RequestFilter r : requests) {
                 DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, r, folderPermissions);
 

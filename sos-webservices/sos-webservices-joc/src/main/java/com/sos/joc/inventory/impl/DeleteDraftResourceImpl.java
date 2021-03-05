@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -91,13 +92,13 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             Globals.beginTransaction(session);
 
-            if (in.getObjects().stream().parallel().anyMatch(r -> ConfigurationType.FOLDER.equals(r.getObjectType()))) {
+            Predicate<RequestFilter> isFolder = r -> ConfigurationType.FOLDER.equals(r.getObjectType());
+            if (in.getObjects().stream().parallel().anyMatch(isFolder)) {
                 // throw new
             }
             Set<String> foldersForEvent = new HashSet<>();
             ResponseItem entity = new ResponseItem();
-            Set<RequestFilter> requests = in.getObjects().stream().filter(r -> !ConfigurationType.FOLDER.equals(r.getObjectType())).collect(Collectors
-                    .toSet());
+            Set<RequestFilter> requests = in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet());
             for (RequestFilter r : requests) {
                 DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, r, folderPermissions);
                 if (config.getDeployed() || config.getReleased()) {
