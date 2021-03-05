@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -58,6 +59,8 @@ public class JocServletContainer extends ServletContainer {
         } catch (Exception e) {
             LOGGER.warn("cleanup deployed files: ", e);
         }
+        
+        cleanupOldLogFiles(0);
     }
 
     @Override
@@ -122,35 +125,14 @@ public class JocServletContainer extends ServletContainer {
                     } catch (DirectoryNotEmptyException e) {
                         //
                     } catch (IOException e) {
-                        // throw new RuntimeException(e);
                         LOGGER.warn("cleanup deployed files: " + e.toString());
                     }
                 });
             } catch (IOException e) {
-                // throw new RuntimeException(e);
                 LOGGER.warn("cleanup deployed files: " + e.toString());
             }
         });
     }
-
-    // private void cleanupCurrentDeployedFolderExceptJars(final Path currentDeployFolder) throws IOException {
-    // final Path libDir = currentDeployFolder.resolve("webapp/WEB-INF/lib");
-    // final List<Path> libDirAndParents = Arrays.asList(currentDeployFolder, currentDeployFolder.resolve("webapp"), currentDeployFolder.resolve(
-    // "webapp/WEB-INF"), libDir);
-    // Predicate<Path> exceptJars = f -> !libDirAndParents.contains(f) && !f.startsWith(libDir);
-    // Files.walk(currentDeployFolder).sorted(Comparator.reverseOrder()).filter(exceptJars).forEach(f -> {
-    // try {
-    // Files.deleteIfExists(f);
-    // } catch (DirectoryNotEmptyException e) {
-    // //
-    // } catch (AccessDeniedException e) {
-    // throw new RuntimeException(e);
-    // } catch (IOException e) {
-    // // throw new RuntimeException(e);
-    // LOGGER.warn("cleanup deployed files: " + e.toString());
-    // }
-    // });
-    // }
 
     private void cleanupOldDeployedFolders(boolean withCurrentFolder) throws IOException {
         if (System.getProperty("os.name").toString().startsWith("Windows")) {
@@ -158,10 +140,25 @@ public class JocServletContainer extends ServletContainer {
             final Optional<Path> currentDeployedFolder = getCurrentDeployedFolder(deployedFolders);
             if (currentDeployedFolder.isPresent() && deployedFolders.remove(currentDeployedFolder.get())) {
                 cleanupOldDeployedFolders(deployedFolders);
-                // returns always AccessDeniedException
-                // if (withCurrentFolder) {
-                // cleanupCurrentDeployedFolderExceptJars(currentDeployedFolder.get());
-                // }
+            }
+        }
+    }
+    
+    private void cleanupOldLogFiles(int retainDays) {
+        // TODO retainDays???
+        Path logDir = Paths.get("logs");
+        Predicate<Path> jettyLogFilter = p -> Pattern.compile("jetty\\.log\\.[0-9]+").asPredicate().test(p.getFileName().toString());
+        if (Files.exists(logDir)) {
+            try {
+                Files.list(logDir).filter(jettyLogFilter).forEach(p -> {
+                    try {
+                        Files.deleteIfExists(p);
+                    } catch (IOException e) {
+                        LOGGER.warn("cleanup log files: " + e.toString());
+                    }
+                });
+            } catch (Exception e) {
+                LOGGER.warn("cleanup log files: " + e.toString());
             }
         }
     }
