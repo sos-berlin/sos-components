@@ -11,7 +11,6 @@ import org.junit.Test;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
-import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
@@ -82,10 +81,10 @@ public class TestOrderInitiatorService {
 
         OrderInitiatorService hm = new OrderInitiatorService(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
         GlobalSettingsSection settings = new GlobalSettingsSection();
-        JocCluster.addEntry(settings, 0, "zone", "UTC", GlobalSettingsSectionValueType.ZONE);
-        JocCluster.addEntry(settings, 1, "period_begin", "00:00:00", GlobalSettingsSectionValueType.TIME);
-        JocCluster.addEntry(settings, 2, "days_ahead_plan", "1", GlobalSettingsSectionValueType.NONNEGATIVENUMBER);
-        JocCluster.addEntry(settings, 3, "days_ahead_submit", "1", GlobalSettingsSectionValueType.NONNEGATIVENUMBER);
+        JocClusterConfiguration.addDefaultEntry(settings, 0, "time_zone", "UTC", GlobalSettingsSectionValueType.TIMEZONE, true);
+        JocClusterConfiguration.addDefaultEntry(settings, 1, "period_begin", "00:00:00", GlobalSettingsSectionValueType.TIME, true);
+        JocClusterConfiguration.addDefaultEntry(settings, 2, "days_ahead_plan", "1", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER, true);
+        JocClusterConfiguration.addDefaultEntry(settings, 3, "days_ahead_submit", "1", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER, true);
 
         hm.start(getControllers(), settings, StartupMode.manual);
         TestOrderInitiatorService.exitAfter(hm, 13 * 60);

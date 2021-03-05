@@ -17,23 +17,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "name",
     "value",
     "type",
     "default",
-    "order"
+    "ordering"
 })
 public class GlobalSettingsSectionEntry {
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("name")
-    private String name;
     /**
      * string without < and >
      * <p>
@@ -67,32 +57,8 @@ public class GlobalSettingsSectionEntry {
      * 
      * 
      */
-    @JsonProperty("order")
-    private Integer order;
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("name")
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("name")
-    public void setName(String name) {
-        this.name = name;
-    }
+    @JsonProperty("ordering")
+    private Integer ordering;
 
     /**
      * string without < and >
@@ -170,9 +136,9 @@ public class GlobalSettingsSectionEntry {
      * 
      * 
      */
-    @JsonProperty("order")
-    public Integer getOrder() {
-        return order;
+    @JsonProperty("ordering")
+    public Integer getOrdering() {
+        return ordering;
     }
 
     /**
@@ -181,19 +147,19 @@ public class GlobalSettingsSectionEntry {
      * 
      * 
      */
-    @JsonProperty("order")
-    public void setOrder(Integer order) {
-        this.order = order;
+    @JsonProperty("ordering")
+    public void setOrdering(Integer ordering) {
+        this.ordering = ordering;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("name", name).append("value", value).append("type", type).append("_default", _default).append("order", order).toString();
+        return new ToStringBuilder(this).append("value", value).append("type", type).append("_default", _default).append("ordering", ordering).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(_default).append(type).append(value).append(order).toHashCode();
+        return new HashCodeBuilder().append(_default).append(type).append(value).append(ordering).toHashCode();
     }
 
     @Override
@@ -205,7 +171,7 @@ public class GlobalSettingsSectionEntry {
             return false;
         }
         GlobalSettingsSectionEntry rhs = ((GlobalSettingsSectionEntry) other);
-        return new EqualsBuilder().append(name, rhs.name).append(_default, rhs._default).append(type, rhs.type).append(value, rhs.value).append(order, rhs.order).isEquals();
+        return new EqualsBuilder().append(_default, rhs._default).append(type, rhs.type).append(value, rhs.value).append(ordering, rhs.ordering).isEquals();
     }
 
 }

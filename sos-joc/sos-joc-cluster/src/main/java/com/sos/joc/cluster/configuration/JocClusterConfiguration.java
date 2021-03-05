@@ -8,6 +8,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.model.cluster.common.ClusterServices;
+import com.sos.joc.model.configuration.globals.GlobalSettings;
+import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
+import com.sos.joc.model.configuration.globals.GlobalSettingsSectionEntry;
+import com.sos.joc.model.configuration.globals.GlobalSettingsSectionValueType;
 
 public class JocClusterConfiguration {
 
@@ -47,6 +51,65 @@ public class JocClusterConfiguration {
         }
         threadGroup = new ThreadGroup(JocClusterConfiguration.IDENTIFIER);
         register();
+    }
+
+    public static GlobalSettings getDefaultSettings(boolean withValues) {
+        GlobalSettings s = new GlobalSettings();
+        s.setAdditionalProperty(ClusterServices.dailyplan.name(), getDailyPlanDefaultSettings(withValues));
+        s.setAdditionalProperty(ClusterServices.history.name(), getHistoryDefaultSettings(withValues));
+        return s;
+    }
+
+    public static GlobalSettingsSection getDailyPlanDefaultSettings(boolean withValues) {
+        GlobalSettingsSection s = new GlobalSettingsSection();
+        s.setOrdering(0);
+        addDefaultEntry(s, 0, "time_zone", "UTC", GlobalSettingsSectionValueType.TIMEZONE, withValues);
+        addDefaultEntry(s, 1, "period_begin", "00:00:00", GlobalSettingsSectionValueType.TIME, withValues);
+        addDefaultEntry(s, 2, "start_time", "", GlobalSettingsSectionValueType.TIME, withValues);
+        addDefaultEntry(s, 3, "days_ahead_plan", "1", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER, withValues);
+        addDefaultEntry(s, 4, "days_ahead_submit", "1", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER, withValues);
+        return s;
+    }
+
+    public static GlobalSettingsSection getHistoryDefaultSettings(boolean withValues) {
+        GlobalSettingsSection s = new GlobalSettingsSection();
+        s.setOrdering(1);
+        addDefaultEntry(s, 0, "time_zone", "UTC", GlobalSettingsSectionValueType.TIMEZONE, withValues);
+        addDefaultEntry(s, 1, "period", "1,2,3,4,5,6,7", null, GlobalSettingsSectionValueType.WEEKDAYS, withValues);
+        addDefaultEntry(s, 2, "period_begin", "01:00:00", GlobalSettingsSectionValueType.TIME, withValues);
+        addDefaultEntry(s, 3, "period_end", "04:00:00", GlobalSettingsSectionValueType.TIME, withValues);
+        addDefaultEntry(s, 4, "batch_size", "1000", GlobalSettingsSectionValueType.POSITIVEINTEGER, withValues);
+
+        addDefaultEntry(s, 5, "order_history_age", "90d", GlobalSettingsSectionValueType.DURATION, withValues);
+        addDefaultEntry(s, 6, "order_history_logs_age", "90d", GlobalSettingsSectionValueType.DURATION, withValues);
+        addDefaultEntry(s, 7, "daily_plan_history_age", "30d", GlobalSettingsSectionValueType.DURATION, withValues);
+        addDefaultEntry(s, 8, "deployment_history_versions", "10", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER, withValues);
+        return s;
+    }
+
+    public static void addDefaultEntry(GlobalSettingsSection s, int ordering, String valueName, String defaultValue,
+            GlobalSettingsSectionValueType valueType, boolean withValue) {
+        addDefaultEntry(s, ordering, valueName, null, defaultValue, valueType, withValue);
+    }
+
+    public static void addDefaultEntry(GlobalSettingsSection s, int ordering, String valueName, String value, String defaultValue,
+            GlobalSettingsSectionValueType valueType, boolean withValue) {
+        GlobalSettingsSectionEntry e = new GlobalSettingsSectionEntry();
+        e.setOrdering(ordering);
+        e.setDefault(defaultValue);
+        if (withValue) {
+            e.setValue(value == null ? e.getDefault() : value);
+        }
+        e.setType(valueType);
+        s.setAdditionalProperty(valueName, e);
+    }
+
+    public static String getValue(GlobalSettingsSection section, String entryName) {
+        try {
+            return section.getAdditionalProperties().get(entryName).getValue();
+        } catch (Throwable e) {
+            return null;
+        }
     }
 
     private void register() {

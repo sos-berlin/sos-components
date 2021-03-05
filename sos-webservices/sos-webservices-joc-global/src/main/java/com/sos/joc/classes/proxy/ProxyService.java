@@ -46,4 +46,5 @@ public class ProxyService extends AJocClusterService {
     public JocServiceAnswer getInfo() {
         return new JocServiceAnswer();
     }
+
 }

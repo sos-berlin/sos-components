@@ -8,12 +8,14 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum GlobalSettingsSectionValueType {
 
-    ZONE("ZONE"),
-    AGE("AGE"),
+    TIMEZONE("TIMEZONE"),
+    DURATION("DURATION"),
     WEEKDAYS("WEEKDAYS"),
     TIME("TIME"),
     POSITIVENUMBER("POSITIVENUMBER"),
     NONNEGATIVENUMBER("NONNEGATIVENUMBER"),
+    POSITIVEINTEGER("POSITIVEINTEGER"),
+    NONNEGATIVEINTEGER("NONNEGATIVEINTEGER"),
     STRING("STRING");
     private final String value;
     private final static Map<String, GlobalSettingsSectionValueType> CONSTANTS = new HashMap<String, GlobalSettingsSectionValueType>();

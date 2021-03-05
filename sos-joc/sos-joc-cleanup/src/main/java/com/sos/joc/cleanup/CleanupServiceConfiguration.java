@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
-import com.sos.joc.cluster.JocCluster;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
 
 import scala.collection.mutable.StringBuilder;
@@ -37,7 +37,10 @@ public class CleanupServiceConfiguration {
     private Path hibernateConfiguration;
 
     public CleanupServiceConfiguration(GlobalSettingsSection settings) {
-        String timeZone = JocCluster.getValue(settings, "zone");
+        if (settings == null) {
+            return;
+        }
+        String timeZone = JocClusterConfiguration.getValue(settings, "time_zone");
         if (!SOSString.isEmpty(timeZone)) {
             try {
                 this.zoneId = ZoneId.of(timeZone);
@@ -46,10 +49,10 @@ public class CleanupServiceConfiguration {
             }
         }
 
-        String period = JocCluster.getValue(settings, PROPERTY_NAME_PERIOD);
+        String period = JocClusterConfiguration.getValue(settings, PROPERTY_NAME_PERIOD);
         if (!SOSString.isEmpty(period)) {
-            String periodBegin = JocCluster.getValue(settings, "period_begin");
-            String periodEnd = JocCluster.getValue(settings, "period_end");
+            String periodBegin = JocClusterConfiguration.getValue(settings, "period_begin");
+            String periodEnd = JocClusterConfiguration.getValue(settings, "period_end");
 
             if (SOSString.isEmpty(periodBegin)) {
                 periodBegin = this.period.getBegin().getConfigured();
@@ -62,12 +65,12 @@ public class CleanupServiceConfiguration {
 
         }
 
-        String orderHistoryAge = JocCluster.getValue(settings, "order_history_age");
+        String orderHistoryAge = JocClusterConfiguration.getValue(settings, "order_history_age");
         if (!SOSString.isEmpty(orderHistoryAge)) {
             this.orderHistoryAge = new Age("order_history_age", orderHistoryAge.trim());
         }
 
-        String orderHistoryLogsAge = JocCluster.getValue(settings, "order_history_logs_age");
+        String orderHistoryLogsAge = JocClusterConfiguration.getValue(settings, "order_history_logs_age");
         if (!SOSString.isEmpty(orderHistoryLogsAge)) {
             this.orderHistoryLogsAge = new Age("cleanup_order_history_logs_age", orderHistoryLogsAge.trim());
             if (this.orderHistoryAge.getMinutes() != 0 && this.orderHistoryLogsAge.getMinutes() != 0) {
@@ -80,12 +83,12 @@ public class CleanupServiceConfiguration {
             }
         }
 
-        String dailyPlanHistoryAge = JocCluster.getValue(settings, "daily_plan_history_age");
+        String dailyPlanHistoryAge = JocClusterConfiguration.getValue(settings, "daily_plan_history_age");
         if (!SOSString.isEmpty(dailyPlanHistoryAge)) {
             this.dailyPlanHistoryAge = new Age("daily_plan_history_age", dailyPlanHistoryAge.trim());
         }
 
-        String deploymentHistoryVersions = JocCluster.getValue(settings, "deployment_history_versions");
+        String deploymentHistoryVersions = JocClusterConfiguration.getValue(settings, "deployment_history_versions");
         if (!SOSString.isEmpty(deploymentHistoryVersions)) {
             try {
                 this.deploymentHistoryVersions = Integer.parseInt(deploymentHistoryVersions);
@@ -94,7 +97,7 @@ public class CleanupServiceConfiguration {
             }
         }
 
-        String batchSize = JocCluster.getValue(settings, "batch_size");
+        String batchSize = JocClusterConfiguration.getValue(settings, "batch_size");
         if (!SOSString.isEmpty(batchSize)) {
             try {
                 int bz = Integer.parseInt(batchSize.trim());

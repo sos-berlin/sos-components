@@ -16,6 +16,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.cluster.JocCluster;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.configurations.resource.IJocConfigurationsResource;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
@@ -27,6 +28,7 @@ import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.configuration.Configurations;
 import com.sos.joc.model.configuration.ConfigurationsDeleteFilter;
 import com.sos.joc.model.configuration.ConfigurationsFilter;
+import com.sos.joc.model.configuration.globals.GlobalSettings;
 
 @Path("configurations")
 public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJocConfigurationsResource {
@@ -65,6 +67,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             }
 
             String configurationType = null;
+            GlobalSettings defaultGlobalSettings = null;
             if (configurationsFilter.getConfigurationType() != null) {
                 configurationType = configurationsFilter.getConfigurationType().name();
                 switch (configurationsFilter.getConfigurationType()) {
@@ -81,6 +84,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                     configurationsFilter.setAccount(JocCluster.GLOBAL_SETTINGS_ACCOUNT);
                     configurationsFilter.setObjectType(JocCluster.GLOBAL_SETTINGS_OBJECT_TYPE);
 
+                    defaultGlobalSettings = JocClusterConfiguration.getDefaultSettings(false);
                     break;
                 default:
                     break;
@@ -150,8 +154,9 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
 
             configurations.setDeliveryDate(new Date());
             configurations.setConfigurations(listOfConfigurations);
+            configurations.setDefaultGlobals(defaultGlobalSettings);
 
-            return JOCDefaultResponse.responseStatus200(configurations);
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(configurations));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);

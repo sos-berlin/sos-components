@@ -121,12 +121,16 @@ public class OrderInitiatorService extends AJocClusterService {
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties(getJocConfig().getResourceDirectory().resolve("joc.properties"));
         }
-        
-        //JocCluster.getValue(globalSettings, "zone");
-        //JocCluster.getValue(globalSettings, "period_begin");
-        //JocCluster.getValue(globalSettings, "days_ahead_plan");
-        //JocCluster.getValue(globalSettings, "days_ahead_submit");
-                
+
+        // if(globalSettings!=null){
+        // each setting can be null (not stored in the database) - defaults should be used
+        // JocClusterConfiguration.getValue(globalSettings, "time_zone");
+        // JocClusterConfiguration.getValue(globalSettings, "period_begin");
+        // JocClusterConfiguration.getValue(globalSettings, "start_time");
+        // JocClusterConfiguration.getValue(globalSettings, "days_ahead_plan");
+        // JocClusterConfiguration.getValue(globalSettings, "days_ahead_submit");
+        // }
+
         LOGGER.debug("...Settings from " + getJocConfig().getResourceDirectory().resolve("joc.properties").normalize());
 
         settings.setDayAheadPlan(getProperty(Globals.sosCockpitProperties, "daily_plan_days_ahead_plan", "0"));

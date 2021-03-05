@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "order"
+    "ordering"
 })
 public class GlobalSettingsSection {
 
@@ -32,8 +32,8 @@ public class GlobalSettingsSection {
      * 
      * 
      */
-    @JsonProperty("order")
-    private Integer order;
+    @JsonProperty("ordering")
+    private Integer ordering;
     @JsonIgnore
     private Map<String, GlobalSettingsSectionEntry> additionalProperties = new HashMap<String, GlobalSettingsSectionEntry>();
 
@@ -43,9 +43,9 @@ public class GlobalSettingsSection {
      * 
      * 
      */
-    @JsonProperty("order")
-    public Integer getOrder() {
-        return order;
+    @JsonProperty("ordering")
+    public Integer getOrdering() {
+        return ordering;
     }
 
     /**
@@ -54,9 +54,9 @@ public class GlobalSettingsSection {
      * 
      * 
      */
-    @JsonProperty("order")
-    public void setOrder(Integer order) {
-        this.order = order;
+    @JsonProperty("ordering")
+    public void setOrdering(Integer ordering) {
+        this.ordering = ordering;
     }
 
     @JsonAnyGetter
@@ -71,12 +71,12 @@ public class GlobalSettingsSection {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("order", order).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("ordering", ordering).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(order).append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().append(ordering).append(additionalProperties).toHashCode();
     }
 
     @Override
@@ -88,7 +88,7 @@ public class GlobalSettingsSection {
             return false;
         }
         GlobalSettingsSection rhs = ((GlobalSettingsSection) other);
-        return new EqualsBuilder().append(order, rhs.order).append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().append(ordering, rhs.ordering).append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 
 }

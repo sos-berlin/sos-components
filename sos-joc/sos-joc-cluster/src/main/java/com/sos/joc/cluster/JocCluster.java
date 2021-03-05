@@ -46,8 +46,6 @@ import com.sos.joc.model.configuration.ConfigurationObjectType;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.configuration.globals.GlobalSettings;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
-import com.sos.joc.model.configuration.globals.GlobalSettingsSectionEntry;
-import com.sos.joc.model.configuration.globals.GlobalSettingsSectionValueType;
 import com.sos.js7.event.http.HttpClient;
 
 public class JocCluster {
@@ -58,6 +56,7 @@ public class JocCluster {
     public static final int MAX_AWAIT_TERMINATION_TIMEOUT = 30;
     public static final String GLOBAL_SETTINGS_CONTROLLER_ID = ".";
     public static final String GLOBAL_SETTINGS_ACCOUNT = ".";
+    public static final String GLOBAL_DEFAULT_CONFIGURATION_ITEM = "{}";
     public static final ConfigurationObjectType GLOBAL_SETTINGS_OBJECT_TYPE = null;
 
     private final SOSHibernateFactory dbFactory;
@@ -138,7 +137,7 @@ public class JocCluster {
                 }
                 dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession("currentDbInfos"));
                 readCurrentDbInfoControllers(dbLayer);
-                readCurrentDbInfoSettings(dbLayer);
+                readCurrentDbInfoStoredSettings(dbLayer);
                 if (controllers != null && controllers.size() > 0) {
                     run = false;
                     dbLayer.close();
@@ -212,22 +211,22 @@ public class JocCluster {
         }
     }
 
-    private void readCurrentDbInfoSettings(DBLayerJocCluster dbLayer) throws Exception {
+    private void readCurrentDbInfoStoredSettings(DBLayerJocCluster dbLayer) throws Exception {
         if (settings == null) {
-            settings = getAllSettings(dbLayer, null);
+            settings = getStoredSettings(dbLayer, null);
         }
     }
 
-    public static GlobalSettings getAllSettings(SOSHibernateSession session) throws Exception {
-        return getAllSettings(null, session);
+    public static GlobalSettings getStoredSettings(SOSHibernateSession session) throws Exception {
+        return getStoredSettings(null, session);
     }
 
-    public static GlobalSettingsSection getSettings(SOSHibernateSession session, ClusterServices service) throws Exception {
-        GlobalSettings settings = getAllSettings(null, session);
+    public static GlobalSettingsSection getStoredSettings(SOSHibernateSession session, ClusterServices service) throws Exception {
+        GlobalSettings settings = getStoredSettings(null, session);
         return settings == null ? null : settings.getAdditionalProperties().get(service.name());
     }
 
-    private static GlobalSettings getAllSettings(DBLayerJocCluster dbLayer, SOSHibernateSession session) throws Exception {
+    private static GlobalSettings getStoredSettings(DBLayerJocCluster dbLayer, SOSHibernateSession session) throws Exception {
         ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
                 SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
@@ -239,7 +238,7 @@ public class JocCluster {
             dbLayer.beginTransaction();
             DBItemJocConfiguration item = dbLayer.getClusterSettings();
             if (item == null) {
-                settings = getDefaultSettings();
+                settings = JocClusterConfiguration.getDefaultSettings(true);
 
                 item = new DBItemJocConfiguration();
                 item.setSchedulerId(GLOBAL_SETTINGS_CONTROLLER_ID);
@@ -253,76 +252,22 @@ public class JocCluster {
 
                 dbLayer.getSession().save(item);
             } else {
-                try {
-                    settings = mapper.readValue(item.getConfigurationItem(), GlobalSettings.class);
-                } catch (Throwable e) {
-                    LOGGER.error(String.format("[can't read settings]%s", e.toString()), e);
-                    throw e;
+                if (!SOSString.isEmpty(item.getConfigurationItem())) {
+                    if (!item.getConfigurationItem().equals(GLOBAL_DEFAULT_CONFIGURATION_ITEM)) {
+                        try {
+                            settings = mapper.readValue(item.getConfigurationItem(), GlobalSettings.class);
+                        } catch (Throwable e) {
+                            LOGGER.error(String.format("[can't read settings]%s", e.toString()), e);
+                            throw e;
+                        }
+                    }
                 }
             }
             dbLayer.commit();
         } catch (SOSHibernateException e) {
             dbLayer.rollback();
         }
-        return settings;
-    }
-
-    private static GlobalSettings getDefaultSettings() {
-        GlobalSettings s = new GlobalSettings();
-        s.setAdditionalProperty(ClusterServices.dailyplan.name(), getDailyPlanDefaultSettings(0));
-        s.setAdditionalProperty(ClusterServices.cleanup.name(), getCleanupDefaultSettings(1));
-        return s;
-    }
-
-    public static GlobalSettingsSection getDailyPlanDefaultSettings(int order) {
-        GlobalSettingsSection s = new GlobalSettingsSection();
-        s.setOrder(order);
-        addEntry(s, 0, "zone", "UTC", GlobalSettingsSectionValueType.ZONE);
-        addEntry(s, 1, "period_begin", "00:00:00", GlobalSettingsSectionValueType.TIME);
-        addEntry(s, 2, "start_time", "", GlobalSettingsSectionValueType.TIME);
-        addEntry(s, 3, "days_ahead_plan", "1", GlobalSettingsSectionValueType.NONNEGATIVENUMBER);
-        addEntry(s, 4, "days_ahead_submit", "1", GlobalSettingsSectionValueType.NONNEGATIVENUMBER);
-        return s;
-    }
-
-    public static GlobalSettingsSection getCleanupDefaultSettings(int order) {
-        GlobalSettingsSection s = new GlobalSettingsSection();
-        s.setOrder(order);
-        addEntry(s, 0, "zone", "UTC", GlobalSettingsSectionValueType.ZONE);
-        addEntry(s, 1, "period", "1,2,3,4,5,6,7", "", GlobalSettingsSectionValueType.WEEKDAYS);
-        addEntry(s, 2, "period_begin", "01:00:00", GlobalSettingsSectionValueType.TIME);
-        addEntry(s, 3, "period_end", "04:00:00", GlobalSettingsSectionValueType.TIME);
-        addEntry(s, 4, "batch_size", "1000", GlobalSettingsSectionValueType.POSITIVENUMBER);
-
-        addEntry(s, 5, "order_history_age", "90d", GlobalSettingsSectionValueType.AGE);
-        addEntry(s, 6, "order_history_logs_age", "90d", GlobalSettingsSectionValueType.AGE);
-        addEntry(s, 7, "daily_plan_history_age", "30d", GlobalSettingsSectionValueType.AGE);
-        addEntry(s, 8, "deployment_history_versions", "10", GlobalSettingsSectionValueType.NONNEGATIVENUMBER);
-        return s;
-    }
-
-    public static void addEntry(GlobalSettingsSection s, int order, String valueName, String defaultValue, GlobalSettingsSectionValueType valueType) {
-        addEntry(s, order, valueName, null, defaultValue, valueType);
-    }
-
-    public static void addEntry(GlobalSettingsSection s, int order, String valueName, String value, String defaultValue,
-            GlobalSettingsSectionValueType valueType) {
-        GlobalSettingsSectionEntry e = new GlobalSettingsSectionEntry();
-        e.setOrder(order);
-        e.setName(valueName);
-        e.setDefault(defaultValue);
-        e.setValue(value == null ? e.getDefault() : value);
-        e.setType(valueType);
-        s.setAdditionalProperty(e.getName(), e);
-    }
-
-    public static String getValue(GlobalSettingsSection section, String entryName) {
-        try {
-            return section.getAdditionalProperties().get(entryName).getValue();
-        } catch (Throwable e) {
-            LOGGER.error(String.format("[%s]can't get value=%s", entryName, e.toString()), e);
-            return null;
-        }
+        return settings == null ? new GlobalSettings() : settings;
     }
 
     private synchronized void process(StartupMode mode) throws Exception {
