@@ -12,11 +12,9 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -34,9 +32,6 @@ import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.util.DeleteDeployments;
 import com.sos.schema.JsonValidator;
-
-import io.vavr.control.Either;
-import js7.base.problem.Problem;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements IDeleteConfigurationResource {

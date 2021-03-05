@@ -906,10 +906,14 @@ public class InventoryDBLayer extends DBLayer {
 
     public int deleteTrashFolder(String folder) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_CONFIGURATION_TRASH);
-        hql.append(" where path =: folder or path like :likeFolder");
+        if (!JocInventory.ROOT_FOLDER.equals(folder)) {
+            hql.append(" where path =: folder or path like :likeFolder");
+        }
         Query<?> query = getSession().createQuery(hql.toString());
-        query.setParameter("folder", folder);
-        query.setParameter("likeFolder", folder + "/%");
+        if (!JocInventory.ROOT_FOLDER.equals(folder)) {
+            query.setParameter("folder", folder);
+            query.setParameter("likeFolder", folder + "/%");
+        }
         return getSession().executeUpdate(query);
     }
 

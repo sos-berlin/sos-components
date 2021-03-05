@@ -3,6 +3,7 @@ package com.sos.joc.inventory.impl;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -73,32 +74,37 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
             
             if (JocInventory.isFolder(type)) {
                 
-                List<DBItemInventoryConfigurationTrash> trashDBFolderContent = dbLayer.getTrashFolderContent(config.getPath(), true, null);
-                List<DBItemInventoryConfiguration> curDBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null);
-                Map<Boolean, List<DBItemInventoryConfiguration>> map = curDBFolderContent.stream().collect(Collectors.groupingBy(
-                        item -> ConfigurationType.FOLDER.intValue() == item.getType()));
-                Set<String> folderPaths = map.getOrDefault(true, Collections.emptyList()).stream().map(DBItemInventoryConfiguration::getPath).collect(
-                        Collectors.toSet());
-                Long auditLogId = createAuditLog(config);
+                List<ConfigurationType> restoreOrder = Arrays.asList(ConfigurationType.LOCK, ConfigurationType.NONWORKINGDAYSCALENDAR,
+                        ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.WORKFLOW, ConfigurationType.SCHEDULE);
 
-                for (DBItemInventoryConfigurationTrash trashItem : trashDBFolderContent) {
-                    java.nio.file.Path invItemPath = Paths.get(trashItem.getPath());
-                    if (ConfigurationType.FOLDER.intValue() == trashItem.getType()) {
-                        if (!folderPaths.contains(trashItem.getPath())) {
-                            DBItemInventoryConfiguration item = createItem(trashItem, invItemPath, auditLogId, dbLayer);
-                            JocInventory.insertConfiguration(dbLayer, item);
-                        }
-                    } else {
-                        List<DBItemInventoryConfiguration> targetItems = dbLayer.getConfigurationByName(trashItem.getName(), trashItem.getType());
-                        if (targetItems.isEmpty()) {
-                            JocInventory.insertConfiguration(dbLayer, createItem(trashItem, invItemPath, auditLogId, dbLayer));
+                List<DBItemInventoryConfigurationTrash> trashDBFolderContent = dbLayer.getTrashFolderContent(config.getPath(), true, null);
+                Map<ConfigurationType, List<DBItemInventoryConfigurationTrash>> trashMap = trashDBFolderContent.stream().collect(Collectors
+                        .groupingBy(DBItemInventoryConfigurationTrash::getTypeAsEnum));
+                List<DBItemInventoryConfiguration> curDBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null);
+                Set<String> folderPaths = curDBFolderContent.stream().filter(i -> ConfigurationType.FOLDER.intValue() == i.getType()).map(
+                        DBItemInventoryConfiguration::getPath).collect(Collectors.toSet());
+                Long auditLogId = createAuditLog(config);
+                
+                for (ConfigurationType objType : restoreOrder) {
+                    for (DBItemInventoryConfigurationTrash trashItem : trashMap.getOrDefault(objType, Collections.emptyList())) {
+                        java.nio.file.Path invItemPath = Paths.get(trashItem.getPath());
+                        if (ConfigurationType.FOLDER.intValue() == trashItem.getType()) {
+                            if (!folderPaths.contains(trashItem.getPath())) {
+                                DBItemInventoryConfiguration item = createItem(trashItem, invItemPath, auditLogId, dbLayer);
+                                JocInventory.insertConfiguration(dbLayer, item);
+                            }
                         } else {
-                            JocInventory.insertConfiguration(dbLayer, createItem(trashItem, invItemPath.getParent().resolve(trashItem.getName()
-                                    .replaceFirst(replace.get(0), replace.get(1))), auditLogId, dbLayer));
+                            List<DBItemInventoryConfiguration> targetItems = dbLayer.getConfigurationByName(trashItem.getName(), trashItem.getType());
+                            if (targetItems.isEmpty()) {
+                                JocInventory.insertConfiguration(dbLayer, createItem(trashItem, invItemPath, auditLogId, dbLayer));
+                            } else {
+                                JocInventory.insertConfiguration(dbLayer, createItem(trashItem, invItemPath.getParent().resolve(trashItem.getName()
+                                        .replaceFirst(replace.get(0), replace.get(1))), auditLogId, dbLayer));
+                            }
                         }
                     }
                 }
-                
+
                 if (!JocInventory.ROOT_FOLDER.equals(config.getPath())) {
                     DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(config.getPath(), ConfigurationType.FOLDER.intValue());
 
