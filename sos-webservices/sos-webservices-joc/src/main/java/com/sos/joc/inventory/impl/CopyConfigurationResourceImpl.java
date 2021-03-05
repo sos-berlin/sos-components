@@ -76,47 +76,10 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
             boolean fixMustUsed = JocInventory.isFolder(type) || (!JocInventory.isFolder(type) && oldPath.getFileName().toString().equals(pWithoutFix
                     .getFileName().toString()));
             
-            SuffixPrefix fix = Globals.copySuffixPrefix;
-            String prefix = in.getPrefix() == null ? "" : in.getPrefix().trim().replaceFirst("-+$", "");
-            String suffix = in.getSuffix() == null ? "" : in.getSuffix().trim().replaceFirst("^-+", "");
-            String name = JocInventory.isFolder(type) ? null : pWithoutFix.getFileName().toString();
+            final SuffixPrefix suffixPrefix = JocInventory.getSuffixPrefix(in.getSuffix(), in.getPrefix(), Globals.copySuffixPrefix,
+                    JocInventory.DEFAULT_COPY_SUFFIX, fixMustUsed, pWithoutFix.getFileName().toString(), type, dbLayer);
             
-            if (fixMustUsed) {
-                if (!suffix.isEmpty()) { // suffix beats prefix
-                    prefix = "";
-                } else if (prefix.isEmpty()) {
-                    suffix = fix.getSuffix();
-                    if (suffix.isEmpty()) {
-                        prefix = fix.getPrefix();
-                    }
-                }
-                if (suffix.isEmpty() && prefix.isEmpty()) {
-                    suffix = JocInventory.DEFAULT_COPY_SUFFIX;
-                }
-            } else {
-                if (!suffix.isEmpty()) { // suffix beats prefix
-                    prefix = "";
-                }
-            }
-            
-            if (!suffix.isEmpty()) {
-                CheckJavaVariableName.test("suffix", suffix);
-                // determine number of suffix "-suffix<number>"
-                Integer num = dbLayer.getSuffixNumber(suffix, name, config.getType());
-                if (num > 0) {
-                    suffix += num;
-                }
-            } else if (!prefix.isEmpty()) {
-                CheckJavaVariableName.test("prefix", prefix);
-                // determine number of prefix "prefix<number>-"
-                Integer num = dbLayer.getPrefixNumber(prefix, name, config.getType());
-                if (num > 0) {
-                    prefix += num;
-                }
-            }
-            
-            final List<String> replace = suffix.isEmpty() ? Arrays.asList("^(" + prefix + "[0-9]*-)?(.*)$", prefix + "-$2") : Arrays.asList("(.*?)(-"
-                    + suffix + "[0-9]*)?$", "$1-" + suffix);
+            final List<String> replace = JocInventory.getSearchReplace(suffixPrefix);
             Set<String> events = new HashSet<>();
             
             // Check folder permissions
@@ -237,7 +200,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                 }
                 
                 java.nio.file.Path p = pWithoutFix.getParent().resolve(pWithoutFix.getFileName().toString());
-                if (!suffix.isEmpty() || !prefix.isEmpty()) {
+                if (!suffixPrefix.getSuffix().isEmpty() || !suffixPrefix.getPrefix().isEmpty()) {
                     p = pWithoutFix.getParent().resolve(pWithoutFix.getFileName().toString().replaceFirst(replace.get(0), replace.get(1)));
                 }
                 // Check Java variable name rules

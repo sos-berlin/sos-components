@@ -52,6 +52,7 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
+import com.sos.joc.model.SuffixPrefix;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
@@ -786,5 +787,57 @@ public class JocInventory {
             break;
         }
         return events;
+    }
+    
+    public static SuffixPrefix getSuffixPrefix(String _suffix, String _prefix, SuffixPrefix setting, String defaultValue, boolean fixMustUsed, String _name,
+            ConfigurationType type, InventoryDBLayer dbLayer) throws SOSHibernateException {
+        String prefix = _prefix == null ? "" : _prefix.trim().replaceFirst("-+$", "");
+        String suffix = _suffix == null ? "" : _suffix.trim().replaceFirst("^-+", "");
+        String name = isFolder(type) ? null : _name;
+        
+        if (fixMustUsed) {
+            if (!suffix.isEmpty()) { // suffix beats prefix
+                prefix = "";
+            } else if (prefix.isEmpty()) {
+                suffix = setting.getSuffix();
+                if (suffix.isEmpty()) {
+                    prefix = setting.getPrefix();
+                }
+            }
+            if (suffix.isEmpty() && prefix.isEmpty()) {
+                suffix = defaultValue;
+            }
+        } else {
+            if (!suffix.isEmpty()) { // suffix beats prefix
+                prefix = "";
+            }
+        }
+
+        if (!suffix.isEmpty()) {
+            CheckJavaVariableName.test("suffix", suffix);
+            // determine number of suffix "-suffix<number>"
+            Integer num = dbLayer.getSuffixNumber(suffix, name, type.intValue());
+            if (num > 0) {
+                suffix += num;
+            }
+        } else if (!prefix.isEmpty()) {
+            CheckJavaVariableName.test("prefix", prefix);
+            // determine number of prefix "prefix<number>-"
+            Integer num = dbLayer.getPrefixNumber(prefix, name, type.intValue());
+            if (num > 0) {
+                prefix += num;
+            }
+        }
+        
+        SuffixPrefix suffixPrefix = new SuffixPrefix();
+        suffixPrefix.setPrefix(prefix);
+        suffixPrefix.setSuffix(suffix);
+        
+        return suffixPrefix;
+    }
+    
+    public static List<String> getSearchReplace(SuffixPrefix suffixPrefix) {
+        return suffixPrefix.getSuffix().isEmpty() ? Arrays.asList("^(" + suffixPrefix.getPrefix() + "[0-9]*-)?(.*)$", suffixPrefix.getPrefix()
+                + "-$2") : Arrays.asList("(.*?)(-" + suffixPrefix.getSuffix() + "[0-9]*)?$", "$1-" + suffixPrefix.getSuffix());
     }
 }

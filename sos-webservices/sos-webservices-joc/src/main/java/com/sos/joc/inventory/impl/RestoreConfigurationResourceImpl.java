@@ -3,7 +3,6 @@ package com.sos.joc.inventory.impl;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -16,7 +15,6 @@ import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.InventoryAudit;
@@ -27,9 +25,7 @@ import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.inventory.resource.IRestoreConfigurationResource;
-import com.sos.joc.model.SuffixPrefix;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.restore.RequestFilter;
 import com.sos.schema.JsonValidator;
@@ -69,121 +65,64 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
             ConfigurationType type = config.getTypeAsEnum();
             
             final java.nio.file.Path pWithoutFix = Paths.get(config.getPath());
-            // without any prefix/suffix
-//            String trashFolder = pWithoutFix.getParent().toString().replace('\\', '/');
-//            String trashPathWithoutFix = pWithoutFix.toString().replace('\\', '/');
             
-            SuffixPrefix fix = Globals.restoreSuffixPrefix;
-            String prefix = in.getPrefix() == null ? "" : in.getPrefix().trim().replaceFirst("-+$", "");
-            String suffix = in.getSuffix() == null ? "" : in.getSuffix().trim().replaceFirst("^-+", "");
-            String name = JocInventory.isFolder(type) ? null : config.getName();
-            
-            if (!suffix.isEmpty()) { // suffix beats prefix
-                prefix = "";
-            } else if (prefix.isEmpty()) {
-                suffix = fix.getSuffix();
-                if (suffix.isEmpty()) {
-                    prefix = fix.getPrefix();
-                }
-            }
-            if (suffix.isEmpty() && prefix.isEmpty()) {
-                suffix = JocInventory.DEFAULT_RESTORE_SUFFIX;
-            }
-            
-            if (!suffix.isEmpty()) {
-                CheckJavaVariableName.test("suffix", suffix);
-                // determine number of suffix "-suffix<number>"
-                Integer num = dbLayer.getSuffixNumber(suffix, name, config.getType());
-                if (num > 0) {
-                    suffix += num;
-                }
-            } else if (!prefix.isEmpty()) {
-                CheckJavaVariableName.test("prefix", prefix);
-                // determine number of prefix "prefix<number>-"
-                Integer num = dbLayer.getPrefixNumber(prefix, name, config.getType());
-                if (num > 0) {
-                    prefix += num;
-                }
-            }
-            
-            final List<String> replace = suffix.isEmpty() ? Arrays.asList("^(" + prefix + "[0-9]*-)?(.*)$", prefix + "-$2") : Arrays.asList("(.*?)(-"
-                    + suffix + "[0-9]*)?$", "$1-" + suffix);
+            final List<String> replace = JocInventory.getSearchReplace(JocInventory.getSuffixPrefix(in.getSuffix(), in.getPrefix(),
+                    Globals.restoreSuffixPrefix, JocInventory.DEFAULT_RESTORE_SUFFIX, true, config.getName(), type, dbLayer));
+
             Set<String> events = new HashSet<>();
             
             if (JocInventory.isFolder(type)) {
                 
                 List<DBItemInventoryConfigurationTrash> trashDBFolderContent = dbLayer.getTrashFolderContent(config.getPath(), true, null);
-                
-                List<DBItemInventoryConfiguration> newDBFolderContent = trashDBFolderContent.stream().map(trashItem -> {
+                List<DBItemInventoryConfiguration> curDBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null);
+                Map<Boolean, List<DBItemInventoryConfiguration>> map = curDBFolderContent.stream().collect(Collectors.groupingBy(
+                        item -> ConfigurationType.FOLDER.intValue() == item.getType()));
+                Set<String> folderPaths = map.getOrDefault(true, Collections.emptyList()).stream().map(DBItemInventoryConfiguration::getPath).collect(
+                        Collectors.toSet());
+                Long auditLogId = createAuditLog(config);
+
+                for (DBItemInventoryConfigurationTrash trashItem : trashDBFolderContent) {
                     java.nio.file.Path invItemPath = Paths.get(trashItem.getPath());
                     if (ConfigurationType.FOLDER.intValue() == trashItem.getType()) {
-                        return createItem(trashItem, invItemPath, dbLayer);
-                    }
-                    return createItem(trashItem, invItemPath.getParent().resolve(trashItem.getName().replaceFirst(replace.get(0), replace.get(1))), dbLayer);
-                }).collect(Collectors.toList());
-
-                List<DBItemInventoryConfiguration> curDBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null);
-                
-                if (curDBFolderContent != null && !curDBFolderContent.isEmpty()) {
-                    curDBFolderContent.retainAll(newDBFolderContent);
-                    if (!curDBFolderContent.isEmpty()) {
-                        Map<Boolean, List<DBItemInventoryConfiguration>> map = curDBFolderContent.stream().collect(Collectors.groupingBy(
-                                item -> ConfigurationType.FOLDER.intValue() == item.getType()));
-                        if (!map.getOrDefault(false, Collections.emptyList()).isEmpty()) { // all not folder items
-                            throw new JocObjectAlreadyExistException("Cannot restore to " + config.getPath() + ": common objects are " + map.get(false).stream()
-                                    .map(DBItemInventoryConfiguration::getPath).collect(Collectors.joining("', '", "'", "'")));
+                        if (!folderPaths.contains(trashItem.getPath())) {
+                            DBItemInventoryConfiguration item = createItem(trashItem, invItemPath, auditLogId, dbLayer);
+                            JocInventory.insertConfiguration(dbLayer, item);
                         }
-                        
-                        newDBFolderContent.removeAll(map.getOrDefault(true, Collections.emptyList()));
+                    } else {
+                        List<DBItemInventoryConfiguration> targetItems = dbLayer.getConfigurationByName(trashItem.getName(), trashItem.getType());
+                        if (targetItems.isEmpty()) {
+                            JocInventory.insertConfiguration(dbLayer, createItem(trashItem, invItemPath, auditLogId, dbLayer));
+                        } else {
+                            JocInventory.insertConfiguration(dbLayer, createItem(trashItem, invItemPath.getParent().resolve(trashItem.getName()
+                                    .replaceFirst(replace.get(0), replace.get(1))), auditLogId, dbLayer));
+                        }
                     }
                 }
                 
                 DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(config.getPath(), ConfigurationType.FOLDER.intValue());
                 
-                Long auditLogId = createAuditLog(config);
                 if (newItem == null) {
-                    DBItemInventoryConfiguration newDbItem = createItem(config, pWithoutFix, dbLayer);
-                    newDbItem.setAuditLogId(auditLogId);
+                    DBItemInventoryConfiguration newDbItem = createItem(config, pWithoutFix, auditLogId, dbLayer);
                     JocInventory.insertConfiguration(dbLayer, newDbItem);
-                    JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), newDbItem.getAuditLogId());
+                    JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), auditLogId);
                 }
-                for (DBItemInventoryConfiguration item : newDBFolderContent) {
-                    item.setAuditLogId(auditLogId);
-                    JocInventory.insertConfiguration(dbLayer, item);
-                }
+                
                 dbLayer.deleteTrashFolder(config.getPath());
                 
                 events.add(config.getFolder());
                 
             } else {
                 
-                java.nio.file.Path p = pWithoutFix.getParent().resolve(pWithoutFix.getFileName().toString().replaceFirst(replace.get(0), replace.get(1)));
-                
-                String newPath = p.toString().replace('\\', '/');
-                DBItemInventoryConfiguration targetItem = dbLayer.getConfiguration(newPath, config.getType());
-
-                if (targetItem != null) { // this can occur if prefix/suffix is badly chosen
-                    throw new JocObjectAlreadyExistException(String.format("%s %s already exists", ConfigurationType.fromValue(config.getType())
-                            .value().toLowerCase(), targetItem.getPath()));
-                } else {
-                    // check unique name - this can occur if prefix/suffix is badly chosen
-                    List<DBItemInventoryConfiguration> namedItems = dbLayer.getConfigurationByName(p.getFileName().toString(), config.getType());
-                    if (namedItems != null) {
-                        namedItems.remove(config);
-                        if (!namedItems.isEmpty()) {
-                            throw new JocObjectAlreadyExistException(String.format("The name has to be unique: '%s' is already used in '%s'", p
-                                    .getFileName().toString(), namedItems.get(0).getPath()));
-                        }
-                    }
-                }
-                
                 Long auditLogId = createAuditLog(config);
-                DBItemInventoryConfiguration newDbItem = createItem(config, p, dbLayer);
-                newDbItem.setAuditLogId(auditLogId);
-                JocInventory.insertConfiguration(dbLayer, newDbItem);
-                JocInventory.makeParentDirs(dbLayer, p.getParent(), newDbItem.getAuditLogId());
+                if (dbLayer.getConfigurationByName(config.getName(), config.getType()).isEmpty()) {
+                    JocInventory.insertConfiguration(dbLayer, createItem(config, pWithoutFix, auditLogId, dbLayer));
+                } else {
+                    JocInventory.insertConfiguration(dbLayer, createItem(config, pWithoutFix.getParent().resolve(pWithoutFix.getFileName().toString()
+                            .replaceFirst(replace.get(0), replace.get(1))), auditLogId, dbLayer));
+                }
+                JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), auditLogId);
                 session.delete(config);
-                events.add(newDbItem.getFolder());
+                events.add(config.getFolder());
             }
 
             session.commit();
@@ -202,7 +141,9 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
     }
     
     private static boolean validate(DBItemInventoryConfiguration item, InventoryDBLayer dbLayer) {
-
+        if (ConfigurationType.FOLDER.intValue() == item.getType()) {
+            return true;
+        }
         try {
             Validator.validate(item.getTypeAsEnum(), item.getContent().getBytes(StandardCharsets.UTF_8), dbLayer, null);
             return true;
@@ -221,7 +162,7 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
         return 0L;
     }
 
-    private static DBItemInventoryConfiguration createItem(DBItemInventoryConfigurationTrash oldItem, java.nio.file.Path newItem, InventoryDBLayer dbLayer) {
+    private static DBItemInventoryConfiguration createItem(DBItemInventoryConfigurationTrash oldItem, java.nio.file.Path newItem, Long auditLogId, InventoryDBLayer dbLayer) {
         DBItemInventoryConfiguration item = new DBItemInventoryConfiguration();
         item.setId(null);
         item.setPath(newItem.toString().replace('\\', '/'));
@@ -232,7 +173,7 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
         item.setModified(Date.from(Instant.now()));
         item.setCreated(item.getModified());
         item.setDeleted(false);
-        item.setAuditLogId(0L);
+        item.setAuditLogId(auditLogId);
         item.setDocumentationId(oldItem.getDocumentationId());
         item.setTitle(oldItem.getTitle());
         item.setType(oldItem.getType());
