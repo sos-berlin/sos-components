@@ -99,12 +99,14 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
                     }
                 }
                 
-                DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(config.getPath(), ConfigurationType.FOLDER.intValue());
-                
-                if (newItem == null) {
-                    DBItemInventoryConfiguration newDbItem = createItem(config, pWithoutFix, auditLogId, dbLayer);
-                    JocInventory.insertConfiguration(dbLayer, newDbItem);
-                    JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), auditLogId);
+                if (!JocInventory.ROOT_FOLDER.equals(config.getPath())) {
+                    DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(config.getPath(), ConfigurationType.FOLDER.intValue());
+
+                    if (newItem == null) {
+                        DBItemInventoryConfiguration newDbItem = createItem(config, pWithoutFix, auditLogId, dbLayer);
+                        JocInventory.insertConfiguration(dbLayer, newDbItem);
+                        JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), auditLogId);
+                    }
                 }
                 
                 dbLayer.deleteTrashFolder(config.getPath());

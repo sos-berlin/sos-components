@@ -122,7 +122,6 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                             .replaceFirst(replace.get(0), replace.get(1))))));
                 }).collect(Collectors.toList());
                 
-                DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(newPathWithoutFix, ConfigurationType.FOLDER.intValue());
                 List<DBItemInventoryConfiguration> newDBFolderContent = null;
                 if (in.getShallowCopy()) {
                     newDBFolderContent = dbLayer.getFolderContent(newPathWithoutFix, true, JocInventory.getTypesFromObjectsWithReferencesAndFolders());
@@ -144,13 +143,17 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                     }
                 }
                 Long auditLogId = 0L;
-                if (newItem == null) {
-                    DBItemInventoryConfiguration newDbItem = createItem(config, pWithoutFix);
-                    auditLogId = createAuditLog(newDbItem);
-                    JocInventory.insertConfiguration(dbLayer, newDbItem);
-                    JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), newDbItem.getAuditLogId());
-                } else if (!oldDBFolderContent.isEmpty()) {
-                    auditLogId = createAuditLog(newItem);
+                
+                if (!JocInventory.ROOT_FOLDER.equals(config.getPath())) {
+                    DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(newPathWithoutFix, ConfigurationType.FOLDER.intValue());
+                    if (newItem == null) {
+                        DBItemInventoryConfiguration newDbItem = createItem(config, pWithoutFix);
+                        auditLogId = createAuditLog(newDbItem);
+                        JocInventory.insertConfiguration(dbLayer, newDbItem);
+                        JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), newDbItem.getAuditLogId());
+                    } else if (!oldDBFolderContent.isEmpty()) {
+                        auditLogId = createAuditLog(newItem);
+                    }
                 }
                 if (in.getShallowCopy()) {
                     for (DBItemInventoryConfiguration item : oldDBFolderContent) {
