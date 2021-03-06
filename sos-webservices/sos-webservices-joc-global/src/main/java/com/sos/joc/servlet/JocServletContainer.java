@@ -42,6 +42,7 @@ public class JocServletContainer extends ServletContainer {
     public void init() throws ServletException {
         LOGGER.debug("----> init on starting JOC");
         super.init();
+        cleanupOldLogFiles(0);
 
         Globals.sosCockpitProperties = new JocCockpitProperties();
         Proxies.startAll(Globals.sosCockpitProperties, ProxyUser.JOC);
@@ -59,8 +60,6 @@ public class JocServletContainer extends ServletContainer {
         } catch (Exception e) {
             LOGGER.warn("cleanup deployed files: ", e);
         }
-        
-        cleanupOldLogFiles(0);
     }
 
     @Override
@@ -97,8 +96,8 @@ public class JocServletContainer extends ServletContainer {
 
     private Set<Path> getDeployedFolders() throws IOException {
         final Path deployParentDir = Paths.get(System.getProperty("java.io.tmpdir").toString());
-        final Pattern pattern = Pattern.compile("^jetty-\\d{1,3}(\\.\\d{1,3}){3}-\\d{1,5}-joc.war-_joc-.+\\.dir$");
-        return Files.list(deployParentDir).filter(p -> pattern.matcher(p.getFileName().toString()).find()).collect(Collectors.toSet());
+        final Predicate<String> pattern = Pattern.compile("^jetty-\\d{1,3}(\\.\\d{1,3}){3}-\\d{1,5}-joc.war-_joc-.+\\.dir$").asPredicate();
+        return Files.list(deployParentDir).filter(p -> pattern.test(p.getFileName().toString())).collect(Collectors.toSet());
     }
 
     private Optional<Path> getCurrentDeployedFolder(Set<Path> deployedFolders) throws IOException {
@@ -146,7 +145,8 @@ public class JocServletContainer extends ServletContainer {
     
     private void cleanupOldLogFiles(int retainDays) {
         // TODO retainDays???
-        Path logDir = Paths.get("logs");
+        Path logDir = Paths.get(System.getProperty("jetty.base"), "logs");
+        LOGGER.info("cleanup log files: " + logDir.toString());
         Predicate<Path> jettyLogFilter = p -> Pattern.compile("jetty\\.log\\.[0-9]+").asPredicate().test(p.getFileName().toString());
         if (Files.exists(logDir)) {
             try {
@@ -160,6 +160,8 @@ public class JocServletContainer extends ServletContainer {
             } catch (Exception e) {
                 LOGGER.warn("cleanup log files: " + e.toString());
             }
+        } else {
+            LOGGER.warn("cleanup log files: " + logDir.toString() + " not found");
         }
     }
 
