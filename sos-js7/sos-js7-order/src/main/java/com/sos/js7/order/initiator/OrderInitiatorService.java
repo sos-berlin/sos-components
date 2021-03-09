@@ -19,6 +19,8 @@ import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
+import com.sos.js7.order.initiator.classes.DailyPlanHelper;
+import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 
 public class OrderInitiatorService extends AJocClusterService {
 
@@ -50,8 +52,13 @@ public class OrderInitiatorService extends AJocClusterService {
             setSettings(globalSettings);
             settings.setStartMode(mode);
 
-            LOGGER.info("[daily_plan_days_ahead_plan] onPeriodChange will create daily plan for " + settings.getDayAheadPlan() + " days ahead");
-            LOGGER.info("[daily_plan_days_ahead_submit] onPeriodChange will submit daily plan for " + settings.getDayAheadSubmit() + " days ahead");
+            OrderInitiatorGlobals.orderInitiatorSettings = settings;
+
+            LOGGER.info("will start at " + DailyPlanHelper.getStartTimeAsString() + " " + settings.getTimeZone() + " creating daily plan for "
+                    + settings.getDayAheadPlan() + " days ahead");
+            LOGGER.info("will start at " + DailyPlanHelper.getStartTimeAsString() + " " + settings.getTimeZone() + " submitting daily plan for "
+                    + settings.getDayAheadSubmit() + " days ahead");
+            
             if (settings.getDayAheadPlan() > 0) {
                 resetStartPlannedOrderTimer(controllers);
             }
@@ -138,7 +145,8 @@ public class OrderInitiatorService extends AJocClusterService {
         settings.setTimeZone(getProperty(Globals.sosCockpitProperties, "daily_plan_time_zone", "UTC"));
         settings.setPeriodBegin(getProperty(Globals.sosCockpitProperties, "daily_plan_period_begin", "00:00"));
         settings.setDailyPlanDaysCreateOnStart("1".equals(getProperty(Globals.sosCockpitProperties, "daily_plan_days_create_on_start", "0")));
-
+        settings.setDailyPlanStartTime(getProperty(Globals.sosCockpitProperties, "daily_plan_start_time", "12:00"));
+         
         settings.setHibernateConfigurationFile(getJocConfig().getHibernateConfiguration());
 
         settings.setHibernateConfigurationFile(getJocConfig().getHibernateConfiguration());

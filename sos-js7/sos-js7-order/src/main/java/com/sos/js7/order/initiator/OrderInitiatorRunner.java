@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -38,6 +39,7 @@ import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.Period;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.calendar.FrequencyResolver;
+import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -51,6 +53,7 @@ import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.js7.order.initiator.classes.DailyPlanHelper;
@@ -64,6 +67,8 @@ import com.sos.js7.order.initiator.db.FilterDailyPlanSubmissions;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterInventoryConfigurations;
 import com.sos.js7.order.initiator.db.FilterOrderVariables;
+
+import js7.data_for_java.controller.JControllerState;
 
 class CalendarCacheItem {
 
@@ -85,6 +90,7 @@ public class OrderInitiatorRunner extends TimerTask {
     private List<ControllerConfiguration> controllers;
     private AtomicLong lastActivityStart = new AtomicLong(0);
     private AtomicLong lastActivityEnd = new AtomicLong(0);
+    private JControllerState currentstate;
 
     public List<Schedule> getListOfSchedules() {
         return listOfSchedules;
@@ -106,19 +112,27 @@ public class OrderInitiatorRunner extends TimerTask {
         this.fromService = fromService;
     }
 
-    public void generateDailyPlan(String dailyPlanDate, Boolean withSubmit) throws JsonParseException, JsonMappingException,
+    public void generateDailyPlan(JocError jocError,String accessToken, String dailyPlanDate, Boolean withSubmit) throws JsonParseException, JsonMappingException,
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
             IOException, ParseException, SOSException, URISyntaxException, JobSchedulerConnectionResetException,
             JobSchedulerConnectionRefusedException, InterruptedException, ExecutionException, TimeoutException {
-
+      
+       
         orderListSynchronizer = calculateStartTimes(DailyPlanHelper.stringAsDate(dailyPlanDate));
+        orderListSynchronizer.setJocError(jocError);
+        orderListSynchronizer.setAccessToken(accessToken);
+        
         if (orderListSynchronizer.getListOfPlannedOrders().size() > 0) {
             orderListSynchronizer.addPlannedOrderToControllerAndDB(withSubmit);
         }
         orderListSynchronizer.resetListOfPlannedOrders();
     }
+    
+    public void generateDailyPlan(String dailyPlanDate, Boolean withSubmit) throws JsonParseException, JsonMappingException, DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, IOException, ParseException, SOSException, URISyntaxException, InterruptedException, ExecutionException, TimeoutException {
+        generateDailyPlan(null,"",dailyPlanDate,withSubmit);
+    }
 
-    public void submitOrders(List<DBItemDailyPlanOrders> listOfPlannedOrders) throws JsonParseException, JsonMappingException,
+    public void submitOrders(JocError jocError,String accessToken, List<DBItemDailyPlanOrders> listOfPlannedOrders) throws JsonParseException, JsonMappingException,
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
             IOException, ParseException, SOSException, URISyntaxException, JobSchedulerConnectionResetException,
             JobSchedulerConnectionRefusedException, InterruptedException, ExecutionException, TimeoutException {
@@ -128,8 +142,16 @@ public class OrderInitiatorRunner extends TimerTask {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("submitOrders");
             DBLayerOrderVariables dbLayerOrderVariables = new DBLayerOrderVariables(sosHibernateSession);
 
-            OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer();
+            if (currentstate == null){
+                currentstate = getCurrentState(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
+            }
+            OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer(currentstate);
+
+            orderListSynchronizer.setAccessToken(accessToken);
+            orderListSynchronizer.setJocError(jocError);
+
             for (DBItemDailyPlanOrders dbItemDailyPlanOrders : listOfPlannedOrders) {
+                
                 PlannedOrder p = new PlannedOrder();
                 Schedule schedule = new Schedule();
                 schedule.setPath(dbItemDailyPlanOrders.getSchedulePath());
@@ -184,6 +206,11 @@ public class OrderInitiatorRunner extends TimerTask {
             Globals.disconnect(sosHibernateSession);
         }
     }
+    
+    public void submitOrders(List<DBItemDailyPlanOrders> listOfPlannedOrders) throws JsonParseException, JsonMappingException, DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, IOException, ParseException, SOSException, URISyntaxException, InterruptedException, ExecutionException, TimeoutException {
+        submitOrders(null,"",listOfPlannedOrders);
+    }
+
 
     private List<DBItemDailyPlanSubmissions> getSubmissionsForDate(java.util.Calendar calendar, String controllerId) throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
@@ -221,6 +248,8 @@ public class OrderInitiatorRunner extends TimerTask {
                 ScheduleSource scheduleSource = new ScheduleSourceDB(controllerConfiguration.getCurrent().getId());
                 readSchedules(scheduleSource);
                 boolean logDailyPlan = false;
+                
+                currentstate = getCurrentState(controllerConfiguration.getCurrent().getId());
 
                 for (int day = 0; day < OrderInitiatorGlobals.orderInitiatorSettings.getDayAheadPlan(); day++) {
                     String dailyPlanDate = DailyPlanHelper.dateAsString(dailyPlanCalendar.getTime());
@@ -306,16 +335,27 @@ public class OrderInitiatorRunner extends TimerTask {
             generateFromManuelStart = true;
         }
 
-        java.util.Calendar calendar = DailyPlanHelper.getDailyplanCalendar();
+        java.util.Calendar calendar = DailyPlanHelper.getDailyplanCalendar(OrderInitiatorGlobals.orderInitiatorSettings.getPeriodBegin());
+        calendar.add(java.util.Calendar.DATE, 1);
+
         java.util.Calendar now = java.util.Calendar.getInstance(TimeZone.getTimeZone(OrderInitiatorGlobals.orderInitiatorSettings.getTimeZone()));
+        java.util.Calendar startCalendar;
+        if (!"".equals(OrderInitiatorGlobals.orderInitiatorSettings.getDailyPlanStartTime())) {
+            startCalendar = DailyPlanHelper.getDailyplanCalendar(OrderInitiatorGlobals.orderInitiatorSettings.getDailyPlanStartTime());
+        } else {
+            startCalendar = DailyPlanHelper.getDailyplanCalendar(OrderInitiatorGlobals.orderInitiatorSettings.getPeriodBegin());
+            startCalendar.add(java.util.Calendar.DATE, 1);
+            startCalendar.add(java.util.Calendar.MINUTE, -30);
+        }
 
         TimeZone timeZone = TimeZone.getTimeZone("UTC");
         java.util.Calendar dailyPlanCalendar = java.util.Calendar.getInstance(timeZone);
 
         if (!createdPlans.contains(DailyPlanHelper.getDayOfYear(calendar)) && (generateFromManuelStart || OrderInitiatorGlobals.orderInitiatorSettings
-                .getDailyPlanDaysCreateOnStart() || (now.getTimeInMillis() - calendar.getTimeInMillis()) > 0)) {
+                .getDailyPlanDaysCreateOnStart() || (now.getTimeInMillis() - startCalendar.getTimeInMillis()) > 0)) {
 
-            LOGGER.debug("Creating daily plan beginning with " + DailyPlanHelper.getDayOfYear(dailyPlanCalendar));
+
+            LOGGER.info("Creating daily plan beginning with " + DailyPlanHelper.getDayOfYear(dailyPlanCalendar));
             createdPlans.add(DailyPlanHelper.getDayOfYear(dailyPlanCalendar));
             try {
                 OrderInitiatorGlobals.submissionTime = new Date();
@@ -412,6 +452,26 @@ public class OrderInitiatorRunner extends TimerTask {
         }
     }
 
+   
+    private static JControllerState getCurrentState(String controllerId) {
+        JControllerState currentstate = null;
+        try {
+            int i = 0;
+            do {
+                try {
+                    currentstate = Proxy.of(controllerId).currentState();
+                } catch (JobSchedulerConnectionRefusedException e) {
+                    i = i + 1;
+                    TimeUnit.SECONDS.sleep(1);
+                }
+            } while ((currentstate == null) && (i < 60));
+
+        } catch (Exception e) {
+            LOGGER.warn(e.toString());
+        }
+        return currentstate;
+    }
+
     private OrderListSynchronizer calculateStartTimes(Date dailyPlanDate) throws JsonParseException, JsonMappingException,
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, IOException, SOSMissingDataException,
             SOSInvalidDataException, ParseException, JocConfigurationException, SOSHibernateException, DBOpenSessionException {
@@ -427,7 +487,10 @@ public class OrderInitiatorRunner extends TimerTask {
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("OrderInitiatorRunner");
             DBItemDailyPlanSubmissions dbItemDailyPlanSubmissionHistory = null;
-            OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer();
+            if (currentstate == null){
+                currentstate = getCurrentState(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
+            }
+            OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer(currentstate);
 
             for (Schedule schedule : listOfSchedules) {
                 if (fromService && !schedule.getPlanOrderAutomatically()) {
@@ -488,7 +551,8 @@ public class OrderInitiatorRunner extends TimerTask {
                             if (listOfNonWorkingDays != null && listOfNonWorkingDays.get(d) != null) {
                                 LOGGER.trace(d + "will be ignored as it is a non working day");
                             } else {
-                                Map<Long, Period> listOfStartTimes = calendarCacheItem.periodResolver.getStartTimes(d, dailyPlanDateAsString,calendarCacheItem.timeZone);
+                                Map<Long, Period> listOfStartTimes = calendarCacheItem.periodResolver.getStartTimes(d, dailyPlanDateAsString,
+                                        calendarCacheItem.timeZone);
                                 for (Entry<Long, Period> periodEntry : listOfStartTimes.entrySet()) {
 
                                     Integer startMode;
@@ -532,14 +596,14 @@ public class OrderInitiatorRunner extends TimerTask {
 
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("OrderInitiatorRunner");
-            DBLayerDailyPlanSubmissions dbLayer = new DBLayerDailyPlanSubmissions(sosHibernateSession);
+            DBLayerDailyPlanSubmissions dbLayerDailyPlanSubmissions = new DBLayerDailyPlanSubmissions(sosHibernateSession);
             DBItemDailyPlanSubmissions dbItemDailyPlanSubmissionHistory = new DBItemDailyPlanSubmissions();
             dbItemDailyPlanSubmissionHistory.setControllerId(controllerId);
             dbItemDailyPlanSubmissionHistory.setSubmissionForDate(dateForPlan);
             dbItemDailyPlanSubmissionHistory.setUserAccount(OrderInitiatorGlobals.orderInitiatorSettings.getUserAccount());
 
             Globals.beginTransaction(sosHibernateSession);
-            dbLayer.storePlan(dbItemDailyPlanSubmissionHistory);
+            dbLayerDailyPlanSubmissions.storeSubmission(dbItemDailyPlanSubmissionHistory);
 
             Globals.commit(sosHibernateSession);
             return dbItemDailyPlanSubmissionHistory;

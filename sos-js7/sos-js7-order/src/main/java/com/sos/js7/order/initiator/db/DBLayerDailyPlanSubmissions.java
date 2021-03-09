@@ -106,7 +106,7 @@ public class DBLayerDailyPlanSubmissions {
         return sosHibernateSession.getResultList(query);
     }
 
-    public int deletePlan(FilterDailyPlanSubmissions filter) throws SOSHibernateException {
+    public int deleteSubmission(FilterDailyPlanSubmissions filter) throws SOSHibernateException {
         String hql = "delete from " + DBItemDailyPlanSubmissions + getWhere(filter);
         Query<DBItemDailyPlanSubmissions> query = sosHibernateSession.createQuery(hql);
         bindParameters(filter, query);
@@ -114,7 +114,7 @@ public class DBLayerDailyPlanSubmissions {
         return row;
     }
 
-    public void storePlan(DBItemDailyPlanSubmissions dbItemDailyPlanSubmissions) throws SOSHibernateException {
+    public void storeSubmission(DBItemDailyPlanSubmissions dbItemDailyPlanSubmissions) throws SOSHibernateException {
         dbItemDailyPlanSubmissions.setCreated(OrderInitiatorGlobals.submissionTime);
         sosHibernateSession.save(dbItemDailyPlanSubmissions);
     }

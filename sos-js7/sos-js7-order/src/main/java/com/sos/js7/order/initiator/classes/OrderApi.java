@@ -1,28 +1,23 @@
 package com.sos.js7.order.initiator.classes;
 
 import java.math.BigDecimal;
-import java.net.URISyntaxException;
-import java.text.ParseException;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.sos.commons.exception.SOSException;
+import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.order.FreshOrder;
-import com.sos.inventory.model.Schedule;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
-import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.db.orders.DBItemDailyPlanHistory;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -30,18 +25,14 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
-import com.sos.joc.exceptions.JobSchedulerNoResponseException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.common.Err419;
-import com.sos.joc.model.order.AddOrder;
-import com.sos.joc.model.order.AddOrders;
-import com.sos.js7.order.initiator.OrderInitiatorSettings;
-import com.sos.js7.order.initiator.OrderListSynchronizer;
+import com.sos.js7.order.initiator.db.DBLayerDailyPlanHistory;
+import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
+import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 
 import io.vavr.control.Either;
-import js7.base.problem.Problem;
-import js7.data.controller.ControllerCommand.AddOrdersResponse;
 import js7.data.order.OrderId;
 import js7.data.value.BooleanValue;
 import js7.data.value.NumberValue;
@@ -49,48 +40,10 @@ import js7.data.value.StringValue;
 import js7.data.value.Value;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.order.JFreshOrder;
-import js7.data_for_java.order.JOrder;
-import js7.data_for_java.order.JOrderPredicates;
+import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 
 public class OrderApi {
-
-    public static void addOrders__not_used____(AddOrders startOrders, String userAccount) throws JocConfigurationException,
-            DBConnectionRefusedException, DBOpenSessionException, JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException,
-            DBMissingDataException, DBInvalidDataException, JsonProcessingException, SOSException, URISyntaxException, ParseException,
-            InterruptedException, ExecutionException, TimeoutException {
-        OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
-        orderInitiatorSettings.setUserAccount(userAccount);
-
-        orderInitiatorSettings.setTimeZone(Globals.sosCockpitProperties.getProperty("daily_plan_timezone", Globals.DEFAULT_TIMEZONE_DAILY_PLAN));
-        orderInitiatorSettings.setPeriodBegin(Globals.sosCockpitProperties.getProperty("daily_plan_period_begin", Globals.DEFAULT_PERIOD_DAILY_PLAN));
-        orderInitiatorSettings.setControllerId(startOrders.getControllerId());
-
-        OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer();
-
-        for (AddOrder startOrder : startOrders.getOrders()) {
-            PlannedOrder plannedOrder = new PlannedOrder();
-            plannedOrder.setControllerId(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
-            Schedule schedule = new Schedule();
-            schedule.setPath(startOrder.getOrderName());
-            schedule.setVariables(startOrder.getArguments());
-            schedule.setSubmitOrderToControllerWhenPlanned(true);
-            schedule.setWorkflowPath(startOrder.getWorkflowPath());
-
-            plannedOrder.setSchedule(schedule);
-            FreshOrder freshOrder = new FreshOrder();
-            freshOrder.setId(startOrder.getOrderName());
-            Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(startOrder.getScheduledFor(), startOrder.getTimeZone());
-            scheduledFor.ifPresent(instant -> freshOrder.setScheduledFor(instant.toEpochMilli()));
-            freshOrder.setWorkflowPath(startOrder.getWorkflowPath());
-            freshOrder.setArguments(startOrder.getArguments());
-
-            plannedOrder.setFreshOrder(freshOrder);
-            orderListSynchronizer.add(plannedOrder);
-        }
-
-        orderListSynchronizer.addPlannedOrderToControllerAndDB(true);
-    }
 
     private static JFreshOrder mapToFreshOrder(FreshOrder order) {
         OrderId orderId = OrderId.of(order.getId());
@@ -121,10 +74,11 @@ public class OrderApi {
         return JFreshOrder.of(orderId, WorkflowPath.of(order.getWorkflowPath()), scheduledFor, arguments);
     }
 
-    public static Set<PlannedOrder> addOrderToController(Set<PlannedOrder> orders) throws JobSchedulerConnectionResetException,
+    public static Set<PlannedOrder> addOrderToController(JocError jocError, String accessToken, Set<PlannedOrder> orders,
+            List<DBItemDailyPlanHistory> listOfInsertHistoryEntries) throws JobSchedulerConnectionResetException,
             JobSchedulerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, InterruptedException, ExecutionException {
-        JocError jocError = new JocError();
+
         Function<PlannedOrder, Either<Err419, JFreshOrder>> mapper = order -> {
             Either<Err419, JFreshOrder> either = null;
             try {
@@ -135,35 +89,64 @@ public class OrderApi {
             return either;
         };
 
+        String controllerId = OrderInitiatorGlobals.orderInitiatorSettings.getControllerId();
         Map<Boolean, Set<Either<Err419, JFreshOrder>>> freshOrders = orders.stream().map(mapper).collect(Collectors.groupingBy(Either::isRight,
                 Collectors.toSet()));
+        final Map<OrderId, JFreshOrder> freshOrderMappedIds = freshOrders.get(true).stream().map(Either::get).collect(Collectors.toMap(
+                JFreshOrder::id, Function.identity()));
 
         if (freshOrders.containsKey(true) && !freshOrders.get(true).isEmpty()) {
-            try {
-                Either<Problem, AddOrdersResponse> response = Proxy.of(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId()).addOrders(Flux
-                        .fromStream(freshOrders.get(true).stream().map(Either::get))).get(99, TimeUnit.SECONDS);
-                // TODO: response.getLeft() in die DB
-                ProblemHelper.throwProblemIfExist(response);
 
-            } catch (TimeoutException e) {
-                throw new JobSchedulerNoResponseException(String.format("No response from controller '%s' after %ds",
-                        OrderInitiatorGlobals.orderInitiatorSettings.getControllerId(), 99));
-            }
+            JControllerProxy jControllerProxy = Proxy.of(controllerId);
+
+            jControllerProxy.addOrders(Flux.fromIterable(freshOrderMappedIds.values())).thenAccept(either -> {
+                if (either.isRight()) {
+                    SOSHibernateSession sosHibernateSession = null;
+
+                    try {
+                        sosHibernateSession = Globals.createSosHibernateStatelessConnection("submitOrdersToController");
+                        sosHibernateSession.setAutoCommit(false);
+                        Globals.beginTransaction(sosHibernateSession);
+
+                        OrderApi.updatePlannedOrders(sosHibernateSession, jocError, accessToken, orders);
+                        OrderApi.updateHistory(sosHibernateSession, jocError, accessToken, listOfInsertHistoryEntries);
+                        jControllerProxy.api().removeOrdersWhenTerminated(freshOrderMappedIds.keySet()).thenAccept(e -> ProblemHelper
+                                .postProblemEventIfExist(e, accessToken, jocError, controllerId));
+                        Globals.commit(sosHibernateSession);
+
+                    } catch (Exception e) {
+                        ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, controllerId);
+                    } finally {
+                        Globals.disconnect(sosHibernateSession);
+                    }
+                } else {
+                    ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
+                }
+            });
         }
         return orders;
     }
 
-    public static Set<OrderId> getNotMarkWithRemoveOrdersWhenTerminated() throws JobSchedulerConnectionResetException,
-            JobSchedulerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
-            DBConnectionRefusedException, ExecutionException {
-        return Proxy.of(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId()).currentState().ordersBy(JOrderPredicates
-                .markedAsRemoveWhenTerminated(false)).map(JOrder::id).collect(Collectors.toSet());
+    public static void updatePlannedOrders(SOSHibernateSession sosHibernateSession, JocError jocError, String accessToken,
+            Set<PlannedOrder> addedOrders) throws SOSHibernateException {
+
+        DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
+
+        FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+        filter.setControllerId(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
+        filter.setSetOfPlannedOrder(addedOrders);
+        filter.setSubmitted(true);
+        dbLayerDailyPlannedOrders.setSubmitted(filter);
     }
 
-    public static void setRemoveOrdersWhenTerminated(Set<OrderId> activeOrderIds) throws JobSchedulerConnectionResetException,
-            JobSchedulerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
-            DBConnectionRefusedException, InterruptedException, ExecutionException, TimeoutException {
-        ControllerApi.of(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId()).removeOrdersWhenTerminated(activeOrderIds).get(99,
-                TimeUnit.SECONDS);
+    public static void updateHistory(SOSHibernateSession sosHibernateSession, JocError jocError, String accessToken,
+            List<DBItemDailyPlanHistory> listOfInsertHistoryEntries) throws SOSHibernateException {
+
+        DBLayerDailyPlanHistory dbLayerDailyPlanHistory = new DBLayerDailyPlanHistory(sosHibernateSession);
+        for (DBItemDailyPlanHistory dbItemDailyPlanHistory : listOfInsertHistoryEntries) {
+            dbItemDailyPlanHistory.setSubmitted(true);
+            dbLayerDailyPlanHistory.updateDailyPlanHistory(dbItemDailyPlanHistory);
+        }
+
     }
 }

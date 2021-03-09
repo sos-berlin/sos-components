@@ -163,7 +163,7 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
                     Globals.DEFAULT_PERIOD_DAILY_PLAN));
             OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings, false);
 
-            orderInitiatorRunner.submitOrders(listOfPlannedOrders);
+            orderInitiatorRunner.submitOrders(getJocError(),getAccessToken(),listOfPlannedOrders);
         }
     }
 

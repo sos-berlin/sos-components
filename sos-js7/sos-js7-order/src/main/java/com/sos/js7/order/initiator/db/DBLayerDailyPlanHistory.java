@@ -103,5 +103,7 @@ public class DBLayerDailyPlanHistory {
     public void storeDailyPlanHistory(DBItemDailyPlanHistory dbItemDailyPlanHistory) throws SOSHibernateException {
         sosHibernateSession.save(dbItemDailyPlanHistory);
     }
-
+    public void updateDailyPlanHistory(DBItemDailyPlanHistory dbItemDailyPlanHistory) throws SOSHibernateException {
+        sosHibernateSession.update(dbItemDailyPlanHistory);
+    }
 }

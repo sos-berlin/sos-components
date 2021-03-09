@@ -21,6 +21,7 @@ public class OrderInitiatorSettings {
     private String userAccount = "JS7";
     private String timeZone = "UTC";
     private String periodBegin = "00:00";
+    private String dailyPlanStartTime;
     private boolean overwrite = false;
     private boolean submit = true;
     private StartupMode startMode;
@@ -149,6 +150,16 @@ public class OrderInitiatorSettings {
     
     public void setStartMode(StartupMode startMode) {
         this.startMode = startMode;
+    }
+
+    
+    public String getDailyPlanStartTime() {
+        return dailyPlanStartTime;
+    }
+
+    
+    public void setDailyPlanStartTime(String dailyPlanStartTime) {
+        this.dailyPlanStartTime = dailyPlanStartTime;
     }
 
 }

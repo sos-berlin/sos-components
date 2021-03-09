@@ -2,11 +2,11 @@ package com.sos.js7.order.initiator.classes;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,39 +41,40 @@ public class DailyPlanHelper {
         return calendar.getTime();
     }
 
-    public static java.util.Calendar getDailyplanCalendar() {
-        String periodBegin = OrderInitiatorGlobals.orderInitiatorSettings.getPeriodBegin();
+    public static java.util.Calendar getDailyplanCalendar(String time) {
+   
         String timeZoneName = OrderInitiatorGlobals.orderInitiatorSettings.getTimeZone();
-        if (periodBegin == null) {
-            periodBegin = "00:00";
+        if (time == null) {
+            time = "00:00";
         }
 
-        LOGGER.debug("Timezone for period is " + timeZoneName);
+        LOGGER.debug("Timezone is " + timeZoneName);
         TimeZone timeZone = TimeZone.getTimeZone(timeZoneName);
         java.util.Calendar calendar = java.util.Calendar.getInstance(timeZone);
 
-        String[] period = periodBegin.split(":");
+        String[] timeArray = time.split(":");
         int hours = 0;
         int minutes = 0;
-        if (period.length == 1) {
+        if (timeArray.length == 1) {
             try {
-                hours = Integer.parseInt(period[0]);
+                hours = Integer.parseInt(timeArray[0]);
+                minutes = 0;
             } catch (NumberFormatException e) {
-                LOGGER.warn("Wrong time format for sos.jobstream_period_begin: " + periodBegin);
+                LOGGER.warn("Wrong time format for: " + time);
                 hours = 0;
                 minutes = 0;
-                periodBegin = "00:00";
+                time = "00:00";
             }
         }
-        if (period.length == 2) {
+        if (timeArray.length == 2) {
             try {
-                hours = Integer.parseInt(period[0]);
-                minutes = Integer.parseInt(period[1]);
+                hours = Integer.parseInt(timeArray[0]);
+                minutes = Integer.parseInt(timeArray[1]);
             } catch (NumberFormatException e) {
-                LOGGER.warn("Wrong time format for period_begin: " + periodBegin);
+                LOGGER.warn("Wrong time format for: " + time);
                 hours = 0;
                 minutes = 0;
-                periodBegin = "00:00";
+                time = "00:00";
             }
         }
 
@@ -81,11 +82,32 @@ public class DailyPlanHelper {
         calendar.set(java.util.Calendar.MINUTE, minutes);
         calendar.set(java.util.Calendar.SECOND, 0);
         calendar.set(java.util.Calendar.MILLISECOND, 0);
-        calendar.add(java.util.Calendar.DATE, 1);
-        calendar.add(java.util.Calendar.MINUTE, -30);
+        calendar.getTimeInMillis();
 
         return calendar;
     }
+    
+    public static String getStartTimeAsString(){
+        java.util.Calendar startCalendar;
+        if (!"".equals(OrderInitiatorGlobals.orderInitiatorSettings.getDailyPlanStartTime())) {
+            startCalendar = DailyPlanHelper.getDailyplanCalendar(OrderInitiatorGlobals.orderInitiatorSettings.getDailyPlanStartTime());
+        } else {
+            startCalendar = DailyPlanHelper.getDailyplanCalendar(OrderInitiatorGlobals.orderInitiatorSettings.getPeriodBegin());
+            startCalendar.add(java.util.Calendar.DATE, 1);
+            startCalendar.add(java.util.Calendar.MINUTE, -30);
+        }
+        
+        String timeZoneName = OrderInitiatorGlobals.orderInitiatorSettings.getTimeZone();
+      
+        TimeZone timeZone = TimeZone.getTimeZone(timeZoneName);
+
+        SimpleDateFormat startTimeFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        startTimeFormatter.setTimeZone(timeZone);
+        String startTime = startTimeFormatter.format(startCalendar.getTime());
+        return startTime;
+
+    }
+
 
     public static String getDayOfYear(java.util.Calendar calendar) {
 

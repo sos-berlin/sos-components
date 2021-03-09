@@ -28,14 +28,14 @@ public class ProblemHelper {
         case 503:
             return new JobSchedulerServiceUnavailableException(getErrorMessage(problem));
         default:
-            //UnknownKey
+            // UnknownKey
             if (problem.codeOrNull() != null && UNKNOWN_KEY.equalsIgnoreCase(problem.codeOrNull().string())) {
                 return new JobSchedulerObjectNotExistException(problem.message());
             }
             return new JobSchedulerBadRequestException(getErrorMessage(problem));
         }
     }
-    
+
     public static ProblemEvent getEventOfProblem(Problem problem, String accessToken, String controller) throws JocException {
         // TODO stacktrace logging
         switch (problem.httpStatusCode()) {
@@ -47,7 +47,7 @@ public class ProblemHelper {
             LOGGER.error("ServiceUnavailableError: " + getErrorMessage(problem));
             return new ProblemEvent(accessToken, controller, "ServiceUnavailableError: " + getErrorMessage(problem));
         default:
-            //UnknownKey
+            // UnknownKey
             if (problem.codeOrNull() != null && UNKNOWN_KEY.equalsIgnoreCase(problem.codeOrNull().string())) {
                 LOGGER.error("ObjectNotExistError: " + getErrorMessage(problem));
                 return new ProblemEvent(accessToken, controller, "ObjectNotExistError: " + getErrorMessage(problem));
@@ -71,30 +71,41 @@ public class ProblemHelper {
             throw getExceptionOfProblem(either.getLeft());
         }
     }
-    
+
     public static void postProblemEventIfExist(Either<Problem, ?> either, String accessToken, JocError err, String controller) throws JocException {
         if (either == null || either.isLeft()) {
             if (err != null && !err.printMetaInfo().isEmpty()) {
                 LOGGER.info(err.printMetaInfo());
             }
             if (either == null) {
-                EventBus.getInstance().post(new ProblemEvent(accessToken, controller, "BadRequestError: Unknown problem"));
+                if (accessToken != null && !accessToken.isEmpty()) {
+                    EventBus.getInstance().post(new ProblemEvent(accessToken, controller, "BadRequestError: Unknown problem"));
+                }
             } else {
-                EventBus.getInstance().post(getEventOfProblem(either.getLeft(), accessToken, controller));
+                if (accessToken != null && !accessToken.isEmpty()) {
+                    EventBus.getInstance().post(getEventOfProblem(either.getLeft(), accessToken, controller));
+                } else {
+                    getEventOfProblem(either.getLeft(), accessToken, controller);
+                }
             }
         }
     }
-    
-    public static void postExceptionEventIfExist(Either<Exception, ?> either, String accessToken, JocError err, String controller) throws JocException {
+
+    public static void postExceptionEventIfExist(Either<Exception, ?> either, String accessToken, JocError err, String controller)
+            throws JocException {
         if (either == null || either.isLeft()) {
             if (err != null && !err.printMetaInfo().isEmpty()) {
                 LOGGER.info(err.printMetaInfo());
             }
             if (either == null) {
-                EventBus.getInstance().post(new ProblemEvent(accessToken, controller, "BadRequestError: Unknown problem"));
+                if (accessToken != null && !accessToken.isEmpty()) {
+                    EventBus.getInstance().post(new ProblemEvent(accessToken, controller, "BadRequestError: Unknown problem"));
+                }
             } else {
                 LOGGER.error("", either.getLeft());
-                EventBus.getInstance().post(new ProblemEvent(accessToken, controller, either.getLeft().toString()));
+                if (accessToken != null && !accessToken.isEmpty()) {
+                    EventBus.getInstance().post(new ProblemEvent(accessToken, controller, either.getLeft().toString()));
+                }
             }
         }
     }
