@@ -1,9 +1,7 @@
 package com.sos.joc.publish.impl;
 
-import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,19 +14,13 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.sign.keys.SOSKeyConstants;
-import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
-import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingKeyException;
@@ -42,6 +34,7 @@ import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.DbItemConfWithOriginalContent;
+import com.sos.joc.publish.mapper.SignedItemsSpec;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.joc.publish.resource.IDeploy;
 import com.sos.joc.publish.util.DeleteDeployments;
@@ -53,7 +46,6 @@ import com.sos.schema.JsonValidator;
 public class DeployImpl extends JOCResourceImpl implements IDeploy {
 
     private static final String API_CALL = "./inventory/deployment/deploy";
-    private static final Logger LOGGER = LoggerFactory.getLogger(DeployImpl.class);
     private DBLayerDeploy dbLayer = null;
     private boolean withoutFolderDeletion = false;
 
@@ -77,18 +69,14 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             String account = Globals.defaultProfileAccount;
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             dbLayer = new DBLayerDeploy(hibernateSession);
-            List<DBItemInventoryCertificate> caCertificates = dbLayer.getCaCertificates();
             // process filter
             Set<String> controllerIds = new HashSet<String>(deployFilter.getControllerIds());
             List<Configuration> draftConfigsToStore = getDraftConfigurationsToStoreFromFilter(deployFilter);
             List<Configuration> draftFoldersToStore = getDraftConfigurationFoldersToStoreFromFilter(deployFilter);
-            /*
-             * TODO: - check for configurationIds with -marked-for-delete- set - get all deployments from history related to the given configurationId - get all
-             * controllers from those deployments - delete all those existing deployments from all determined controllers
-             **/
             List<Configuration> deployConfigsToStoreAgain = getDeployConfigurationsToStoreFromFilter(deployFilter);
             List<Configuration> deployFoldersToStoreAgain = getDeployConfigurationFoldersToStoreFromFilter(deployFilter);
             List<Configuration> deployConfigsToDelete = getDeployConfigurationsToDeleteFromFilter(deployFilter);
+            
             List<Config> foldersToDelete = null;
             if (deployFilter.getDelete() != null) {
                 foldersToDelete = deployFilter.getDelete().getDeployConfigurations().stream()
@@ -97,7 +85,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     foldersToDelete = PublishUtils.handleFolders(foldersToDelete, dbLayer);
                 }
             }
-
             // read all objects provided in the filter from the database
             List<DBItemInventoryConfiguration> configurationDBItemsToStore = null;
             if (!draftConfigsToStore.isEmpty()) {
@@ -217,100 +204,33 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 }
                 if ((verifiedConfigurations != null && !verifiedConfigurations.isEmpty())
                         || (verifiedReDeployables != null && !verifiedReDeployables.isEmpty())) {
-                    // call updateRepo command via ControllerApi for given controllers
-                    boolean verified = false;
-                    String signerDN = null;
-                    X509Certificate cert = null;
-                    switch(keyPair.getKeyAlgorithm()) {
-                    case SOSKeyConstants.PGP_ALGORITHM_NAME:
-                        PublishUtils.updateItemsAddOrUpdatePGP(commitId, verifiedConfigurations, verifiedReDeployables, controllerId, dbLayer)
-                            .thenAccept(either -> {
-                                    StoreDeployments.processAfterAdd(either, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
-                        });
-                        break;
-                    case SOSKeyConstants.RSA_ALGORITHM_NAME:
-                        cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                        verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
-                        if (verified) {
-                            PublishUtils.updateItemsAddOrUpdateWithX509Certificate(commitId, verifiedConfigurations, verifiedReDeployables, controllerId,
-                                    dbLayer, SOSKeyConstants.RSA_SIGNER_ALGORITHM, keyPair.getCertificate())
-                                .thenAccept(either -> {
-                                    StoreDeployments.processAfterAdd(either, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
-                                    });
-                        } else {
-                          signerDN = cert.getSubjectDN().getName();
-                          PublishUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId, verifiedConfigurations, verifiedReDeployables, controllerId,
-                                  dbLayer, SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN)
-                              .thenAccept(either -> {
-                                  StoreDeployments.processAfterAdd(either, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
-                                  });
-                        }
-                        break;
-                    case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
-                        cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                        verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
-                        if (verified) {
-                            PublishUtils.updateItemsAddOrUpdateWithX509Certificate(commitId, verifiedConfigurations, verifiedReDeployables, controllerId,
-                                    dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair.getCertificate())
-                                .thenAccept(either -> {
-                                    StoreDeployments.processAfterAdd(either, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
-                                    });
-                        } else {
-                          signerDN = cert.getSubjectDN().getName();
-                          PublishUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId, verifiedConfigurations, verifiedReDeployables, controllerId,
-                                  dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN)
-                              .thenAccept(either -> {
-                                  StoreDeployments.processAfterAdd(either, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
-                                  });
-                        }
-                        break;
-                    }
-                    // store new history entries and update inventory for update operation optimistically
-                    StoreDeployments.storeNewDepHistoryEntries(verifiedConfigurations, updateableAgentNames, verifiedReDeployables, account, commitId, 
-                            controllerId, unmodified, getAccessToken(), getJocError(), dbLayer);
+                    SignedItemsSpec signedItemsSpec = 
+                            new SignedItemsSpec(keyPair, verifiedConfigurations, verifiedReDeployables, updateableAgentNames, unmodified);
+                    // call updateRepo command via ControllerApi for given controller
+                    StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
                 }
             }
             // Delete from all known controllers
             final String commitIdForDelete = UUID.randomUUID().toString();
             final String commitIdForDeleteFromFolder = UUID.randomUUID().toString();
-            Set<DBItemInventoryConfiguration> invConfigurationsToDelete = Collections.emptySet();
-
+            Set<DBItemInventoryConfiguration> invConfigurationsToDelete = new HashSet<DBItemInventoryConfiguration>();
+            Map<String, List<DBItemDeploymentHistory>> itemsFromFolderToDeletePerController = new HashMap<String, List<DBItemDeploymentHistory>>();
+            // loop 1: store db entries optimistically
             for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
+                // store history entries for delete operation optimistically
                 if (depHistoryDBItemsToDeployDelete != null && !depHistoryDBItemsToDeployDelete.isEmpty()) {
-                    final List<DBItemDeploymentHistory> itemsToDelete = depHistoryDBItemsToDeployDelete;
-                    PublishUtils.updateItemsDelete(commitIdForDelete, itemsToDelete, controllerId).thenAccept(either -> {
-                        DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError());
-                    });
-                    // store history entries for delete operation optimistically
-                    if (invConfigurationsToDelete.isEmpty()) {
-                        invConfigurationsToDelete = new HashSet<>(
-                                DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
-                                        DeleteDeployments.storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitId)));
-                    } else {
-                        invConfigurationsToDelete.addAll(
-                                DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
-                                        DeleteDeployments.storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitId)));
-                    }
+                    invConfigurationsToDelete.addAll(
+                            DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
+                                    DeleteDeployments.storeNewDepHistoryEntries(dbLayer, depHistoryDBItemsToDeployDelete, commitIdForDelete)));
                 }
-                // process folder to Delete
                 if (itemsFromFolderToDelete != null && !itemsFromFolderToDelete.isEmpty()) {
-                    // determine all (latest) entries from the given folder
-                    final List<Config> folders = foldersToDelete;
+                    // store history entries for delete operation optimistically
                     final List<DBItemDeploymentHistory> itemsToDelete = itemsFromFolderToDelete.stream().filter(item -> item.getControllerId().equals(
                             controllerId) && !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation()))).collect(Collectors.toList());
-                    PublishUtils.updateItemsDelete(commitIdForDeleteFromFolder, itemsToDelete, controllerId).thenAccept(either -> {
-                        DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDeleteFromFolder, getAccessToken(), getJocError());
-                    });
-                    // store history entries for delete operation optimistically
-                    if (invConfigurationsToDelete.isEmpty()) {
-                        invConfigurationsToDelete = new HashSet<>(
-                                DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
-                                        DeleteDeployments.storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitId)));
-                    } else {
-                        invConfigurationsToDelete.addAll(
-                                DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
-                                        DeleteDeployments.storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitId)));
-                    }
+                    itemsFromFolderToDeletePerController.put(controllerId, itemsToDelete);
+                    invConfigurationsToDelete.addAll(
+                            DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
+                                    DeleteDeployments.storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitIdForDeleteFromFolder)));
                 }
             }
             // delete configurations optimistically
@@ -321,6 +241,24 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             DeleteDeployments.deleteConfigurations(dbLayer, folders, invConfigurationsToDelete, commitIdForDeleteFromFolder, getAccessToken(), 
                     getJocError(), withoutFolderDeletion);
 
+            // loop 2: send commands to controllers
+            for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
+                if (depHistoryDBItemsToDeployDelete != null && !depHistoryDBItemsToDeployDelete.isEmpty()) {
+                    // set new versionId for second round (delete items)
+                    // call updateRepo command via Proxy of given controllers
+                    final List<DBItemDeploymentHistory> toDelete = depHistoryDBItemsToDeployDelete;
+                    PublishUtils.updateItemsDelete(commitIdForDelete, toDelete, controllerId).thenAccept(either -> {
+                        DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError());
+                    });
+                }
+                // process folder to Delete
+                if (itemsFromFolderToDelete != null && !itemsFromFolderToDelete.isEmpty()) {
+                    PublishUtils.updateItemsDelete(commitIdForDeleteFromFolder, itemsFromFolderToDeletePerController.get(controllerId), controllerId)
+                        .thenAccept(either -> {
+                            DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError());
+                        }); 
+                } 
+            }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

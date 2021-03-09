@@ -1,5 +1,8 @@
 package com.sos.joc.publish.util;
 
+import java.io.IOException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashSet;
@@ -7,23 +10,31 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.sign.keys.SOSKeyConstants;
+import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
+import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DeploymentState;
+import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.DbItemConfWithOriginalContent;
+import com.sos.joc.publish.mapper.SignedItemsSpec;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 
 import io.vavr.control.Either;
@@ -49,23 +60,12 @@ public class StoreDeployments {
             if (verifiedConfigurations != null && !verifiedConfigurations.isEmpty()) {
                 deployedObjects.addAll(PublishUtils.cloneInvConfigurationsToDepHistoryItems(verifiedConfigurations,
                     updateableAgentNames, account, dbLayer, commitId, controllerId, deploymentDate));
-                PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet().stream().collect(Collectors.toSet()),
-                        cfgsDBItemsToStore, controllerId, dbLayer.getSession());
-                // cleanup stored signatures
-                dbLayer.cleanupSignatures(verifiedConfigurations.keySet().stream()
-                    .map(item -> verifiedConfigurations.get(item)).filter(Objects::nonNull).collect(Collectors.toSet()));
-                // cleanup stored commitIds
-                deployedObjects.stream().forEach(item -> dbLayer.cleanupCommitIds(item.getCommitId()));
+                PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet().stream().collect(Collectors.toSet()), dbLayer.getSession());
             }
             if (verifiedDeployables != null && !verifiedDeployables.isEmpty()) {
                 Set<DBItemDeploymentHistory> cloned = PublishUtils.cloneDepHistoryItemsToNewEntries(verifiedDeployables, account, dbLayer,
                         commitId, controllerId, deploymentDate);
                 deployedObjects.addAll(cloned);
-                // cleanup stored signatures
-                dbLayer.cleanupSignatures(verifiedDeployables.keySet().stream().map(item -> verifiedDeployables.get(item))
-                        .filter(Objects::nonNull).collect(Collectors.toSet()));
-                // cleanup stored commitIds
-                cloned.stream().forEach(item -> dbLayer.cleanupCommitIds(item.getCommitId()));
             }
             if (!deployedObjects.isEmpty()) {
                 long countWorkflows = deployedObjects.stream().filter(item -> ConfigurationType.WORKFLOW.intValue() == item.getType()).count();
@@ -91,7 +91,12 @@ public class StoreDeployments {
         try {
             newHibernateSession = Globals.createSosHibernateStatelessConnection(wsIdentifier);
             DBLayerDeploy dbLayer = new DBLayerDeploy(newHibernateSession);
-            if (either.isLeft()) {
+            if(either.isRight()) {
+                // cleanup stored signatures
+                dbLayer.cleanupSignatures(commitId, controllerId);
+                // cleanup stored commitIds
+                dbLayer.cleanupCommitIds(commitId);
+            } else  if (either.isLeft()) {
                 // an error occurred
                 String message = String.format(
                         "Response from Controller \"%1$s:\": %2$s", controllerId, either.getLeft().message());
@@ -123,4 +128,62 @@ public class StoreDeployments {
         }
     }
     
+    public static void callUpdateItemsFor(DBLayerDeploy dbLayer,
+            SignedItemsSpec signedItemsSpec,
+            String account, String commitId, String controllerId, String accessToken, JocError jocError, String wsIdentifier) 
+                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException, CertificateException {
+        
+        if ((signedItemsSpec.getVerifiedConfigurations() != null && !signedItemsSpec.getVerifiedConfigurations().isEmpty())
+                || (signedItemsSpec.getVerifiedDeployables() != null && !signedItemsSpec.getVerifiedDeployables().isEmpty())) {
+            
+            // store new history entries and update inventory for update operation optimistically
+            storeNewDepHistoryEntries(signedItemsSpec.getVerifiedConfigurations(), signedItemsSpec.getUpdateableAgentNames(),
+                    signedItemsSpec.getVerifiedDeployables(), account, commitId, controllerId, signedItemsSpec.getUnmodified(), 
+                    accessToken, jocError, dbLayer);
+
+            List<DBItemInventoryCertificate> caCertificates = dbLayer.getCaCertificates();
+            boolean verified = false;
+            String signerDN = null;
+            X509Certificate cert = null;
+            // call updateItems command via ControllerApi for the given controller
+            switch(signedItemsSpec.getKeyPair().getKeyAlgorithm()) {
+            case SOSKeyConstants.PGP_ALGORITHM_NAME:
+                PublishUtils.updateItemsAddOrUpdatePGP(commitId, signedItemsSpec.getVerifiedConfigurations(), signedItemsSpec.getVerifiedDeployables(), 
+                        controllerId, dbLayer).thenAccept(either -> 
+                            processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
+                break;
+            case SOSKeyConstants.RSA_ALGORITHM_NAME:
+                cert = KeyUtil.getX509Certificate(signedItemsSpec.getKeyPair().getCertificate());
+                verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
+                if (verified) {
+                    PublishUtils.updateItemsAddOrUpdateWithX509Certificate(commitId, signedItemsSpec.getVerifiedConfigurations(), 
+                            signedItemsSpec.getVerifiedDeployables(), controllerId, dbLayer, SOSKeyConstants.RSA_SIGNER_ALGORITHM, 
+                            signedItemsSpec.getKeyPair().getCertificate()).thenAccept(either -> 
+                                processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
+                } else {
+                  signerDN = cert.getSubjectDN().getName();
+                  PublishUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId, signedItemsSpec.getVerifiedConfigurations(), 
+                          signedItemsSpec.getVerifiedDeployables(), controllerId, dbLayer, SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN)
+                      .thenAccept(either -> processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
+                }
+                break;
+            case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
+                cert = KeyUtil.getX509Certificate(signedItemsSpec.getKeyPair().getCertificate());
+                verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
+                if (verified) {
+                    PublishUtils.updateItemsAddOrUpdateWithX509Certificate(commitId, signedItemsSpec.getVerifiedConfigurations(), 
+                            signedItemsSpec.getVerifiedDeployables(), controllerId, dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, 
+                            signedItemsSpec.getKeyPair().getCertificate()).thenAccept(either -> 
+                            processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
+                } else {
+                  signerDN = cert.getSubjectDN().getName();
+                  PublishUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId, signedItemsSpec.getVerifiedConfigurations(), 
+                          signedItemsSpec.getVerifiedDeployables(), controllerId, dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN)
+                      .thenAccept(either -> processAfterAdd(either, account, commitId, controllerId, accessToken, jocError, wsIdentifier));
+                }
+                break;
+            }
+        }
+    }
+
 }

@@ -32,8 +32,6 @@ import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
-import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.publish.ExcludeConfiguration;
 import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.publish.RedeployFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;

@@ -12,9 +12,6 @@ import java.util.UUID;
 
 import javax.ws.rs.Path;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
@@ -24,6 +21,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.JocSecurityLevel;
@@ -31,6 +29,7 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.RedeployFilter;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.publish.db.DBLayerDeploy;
+import com.sos.joc.publish.mapper.SignedItemsSpec;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.joc.publish.resource.IRedeploy;
 import com.sos.joc.publish.util.PublishUtils;
@@ -41,7 +40,6 @@ import com.sos.schema.JsonValidator;
 public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
 
     private static final String API_CALL = "./inventory/deployment/redeploy";
-    private static final Logger LOGGER = LoggerFactory.getLogger(RedeployImpl.class);
     private DBLayerDeploy dbLayer = null;
 
     @Override
@@ -85,7 +83,13 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                         JocSecurityLevel.MEDIUM));
             }
             if (verifiedRedeployables != null && !verifiedRedeployables.isEmpty()) {
+                StoreDeployments.storeNewDepHistoryEntriesForRedeploy(verifiedRedeployables, account, commitId, controllerId, getAccessToken(), 
+                        getJocError(), dbLayer);
                 // call updateItems command via ControllerApi for given controllers
+                SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, null, verifiedRedeployables, null, null);
+                StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
+
+                
                 boolean verified = false;
                 String signerDN = null;
                 List<DBItemInventoryCertificate> caCertificates = dbLayer.getCaCertificates();
@@ -130,8 +134,6 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                     break;
                 }
             }
-            StoreDeployments.storeNewDepHistoryEntriesForRedeploy(verifiedRedeployables, account, commitId, controllerId, getAccessToken(), 
-                    getJocError(), dbLayer);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

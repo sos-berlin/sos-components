@@ -2022,6 +2022,26 @@ public class DBLayerDeploy {
         }
     }
     
+    public void cleanupSignatures (String commitId, String controllerId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder();
+        hql.append("select sig from ").append(DBLayer.DBITEM_DEP_SIGNATURES).append(" as sig ");
+        hql.append(" where sig.depHistoryId in (");
+        hql.append(" select dep.id from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep ");
+        hql.append(" where dep.commitId = :commitId ");
+        hql.append(" and dep.controllerId = :controllerId ");
+        hql.append(")");
+        Query<DBItemDepSignatures> query = session.createQuery(hql.toString());
+        query.setParameter("commitId", commitId);
+        query.setParameter("controllerId", controllerId);
+        List<DBItemDepSignatures> signaturesToDelete = session.getResultList(query);
+        if(signaturesToDelete == null) {
+            signaturesToDelete = Collections.emptyList();
+        }
+        for (DBItemDepSignatures sig : signaturesToDelete) {
+            session.delete(sig);
+        }
+    }
+    
     public void cleanupSignatures (Set<DBItemDepSignatures> signatures) {
         if (signatures != null && !signatures.isEmpty()) {
             for (DBItemDepSignatures sig : signatures) {
@@ -2072,9 +2092,9 @@ public class DBLayerDeploy {
         try {
             StringBuilder hql = new StringBuilder();
             hql.append("from ").append(DBLayer.DBITEM_DEP_COMMIT_IDS);
-            hql.append(" where commitId = :versionId");
+            hql.append(" where commitId = :commitId");
             Query<DBItemDepCommitIds> query = session.createQuery(hql.toString());
-            query.setParameter("versionId", commitId);
+            query.setParameter("commitId", commitId);
             List<DBItemDepCommitIds> commitIdsToDelete = session.getResultList(query);
             if (commitIdsToDelete != null && !commitIdsToDelete.isEmpty()) {
                 for (DBItemDepCommitIds item : commitIdsToDelete) {
@@ -2083,21 +2103,6 @@ public class DBLayerDeploy {
             }
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e.getCause());
-        }
-    }
-    
-    public void cleanupCommitIdsForRedeployments (Set<DBItemDeploymentHistory> deployments) throws SOSHibernateException {
-        Set<Long> depHistoryIds = deployments.stream().map(DBItemDeploymentHistory::getId).collect(Collectors.toSet());
-        StringBuilder hql = new StringBuilder();
-        hql.append("from ").append(DBLayer.DBITEM_DEP_COMMIT_IDS);
-        hql.append(" where depHistoryId in (:depHistoryIds)");
-        Query<DBItemDepCommitIds> query = session.createQuery(hql.toString());
-        query.setParameterList("depHistoryIds", depHistoryIds);
-        List<DBItemDepCommitIds> commitIdsToDelete = session.getResultList(query);
-        if (commitIdsToDelete != null && !commitIdsToDelete.isEmpty()) {
-            for (DBItemDepCommitIds commitId : commitIdsToDelete) {
-                session.delete(commitId);
-            }
         }
     }
     
