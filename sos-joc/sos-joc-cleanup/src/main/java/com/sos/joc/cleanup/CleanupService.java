@@ -1,5 +1,6 @@
 package com.sos.joc.cleanup;
 
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Date;
@@ -37,6 +38,8 @@ public class CleanupService extends AJocClusterService {
     private CleanupServiceSchedule schedule = null;
     private CleanupServiceConfiguration config = null;
     private AtomicBoolean closed = new AtomicBoolean(false);
+    private AtomicLong lastActivityStart = new AtomicLong();
+    private AtomicLong lastActivityEnd = new AtomicLong();
     private final Object lock = new Object();
 
     public CleanupService(JocConfiguration jocConf, ThreadGroup clusterThreadGroup) {
@@ -48,13 +51,14 @@ public class CleanupService extends AJocClusterService {
     public JocClusterAnswer start(List<ControllerConfiguration> controllers, GlobalSettingsSection settings, StartupMode mode) {
         try {
             closed.set(false);
+            lastActivityStart.set(new Date().getTime());
             AJocClusterService.setLogger(IDENTIFIER);
 
             setConfig(settings);
 
             LOGGER.info(String.format("[%s][%s]start...", getIdentifier(), mode));
             LOGGER.info(String.format("[%s][%s]%s", getIdentifier(), mode, config.toString()));
-
+            lastActivityEnd.set(new Date().getTime());
             if (config.getPeriod() == null || config.getPeriod().getWeekDays().size() == 0) {
                 LOGGER.error(String.format("[%s][%s][stop]missing \"%s\" parameter", getIdentifier(), mode,
                         CleanupServiceConfiguration.PROPERTY_NAME_PERIOD));
@@ -122,7 +126,7 @@ public class CleanupService extends AJocClusterService {
 
     @Override
     public JocServiceAnswer getInfo() {
-        return new JocServiceAnswer();
+        return new JocServiceAnswer(Instant.ofEpochMilli(lastActivityStart.get()), Instant.ofEpochMilli(lastActivityEnd.get()));
     }
 
     private void setConfig(GlobalSettingsSection settings) {
@@ -182,5 +186,13 @@ public class CleanupService extends AJocClusterService {
                 }
             }
         }
+    }
+
+    protected void setLastActivityStart(Long val) {
+        lastActivityStart.set(val);
+    }
+
+    protected void setLastActivityEnd(Long val) {
+        lastActivityEnd.set(val);
     }
 }

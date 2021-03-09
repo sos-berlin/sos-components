@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -66,9 +67,12 @@ public class CleanupServiceSchedule {
             createFactory(service.getConfig().getHibernateConfiguration());
         }
         try {
+            service.setLastActivityStart(new Date().getTime());
             long delay = computeNextDelay();
             if (delay > 0) {
                 long timeout = computeTimeout();
+                service.setLastActivityEnd(new Date().getTime());
+
                 JocClusterAnswer answer = schedule(mode, delay, timeout);
                 LOGGER.info(SOSString.toString(answer));
                 updateJocVariableOnResult(answer);
@@ -85,6 +89,8 @@ public class CleanupServiceSchedule {
         } catch (CleanupComputeException e) {
             closeTasks(mode);
             throw e;
+        } finally {
+            service.setLastActivityEnd(new Date().getTime());
         }
     }
 

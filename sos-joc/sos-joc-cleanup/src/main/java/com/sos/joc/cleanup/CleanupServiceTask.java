@@ -53,6 +53,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
         cleanupTasks = new ArrayList<>();
         AJocClusterService.setLogger(identifier);
 
+        schedule.getService().setLastActivityStart(new Date().getTime());
         LOGGER.info(String.format("[%s][run]start ...", logIdentifier));
         JocCluster cluster = JocClusterService.getInstance().getCluster();
         if (cluster.getHandler().isActive()) {
@@ -165,6 +166,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
             LOGGER.info(String.format("[%s][run][skip]cluster not active", logIdentifier));
         }
         LOGGER.info(String.format("[%s][run]end", logIdentifier));
+        schedule.getService().setLastActivityEnd(new Date().getTime());
 
         return getAnswer();
     }
@@ -225,6 +227,8 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
         if (cleanupTasks == null || cleanupTasks.size() == 0) {
             return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
         }
+        schedule.getService().setLastActivityStart(new Date().getTime());
+
         // close all cleanups
         ExecutorService threadPool = Executors.newFixedThreadPool(cleanupTasks.size(), new JocClusterThreadFactory(schedule.getService()
                 .getThreadGroup(), identifier + "-t-h-stop"));
@@ -255,6 +259,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
         AJocClusterService.clearLogger();
 
         cleanupTasks = new ArrayList<>();
+        schedule.getService().setLastActivityEnd(new Date().getTime());
         return answer;
     }
 

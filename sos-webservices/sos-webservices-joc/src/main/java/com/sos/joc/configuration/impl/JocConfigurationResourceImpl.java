@@ -1,11 +1,16 @@
 package com.sos.joc.configuration.impl;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import javax.ws.rs.Path;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -15,6 +20,8 @@ import com.sos.joc.configuration.resource.IJocConfigurationResource;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.configuration.ConfigurationGlobalsChanged;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.configuration.Configuration;
@@ -22,9 +29,13 @@ import com.sos.joc.model.configuration.Configuration200;
 import com.sos.joc.model.configuration.ConfigurationObjectType;
 import com.sos.joc.model.configuration.ConfigurationOk;
 import com.sos.joc.model.configuration.ConfigurationType;
+import com.sos.joc.model.configuration.globals.GlobalSettings;
+import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
 
 @Path("configuration")
 public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJocConfigurationResource {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JocConfigurationResourceImpl.class);
 
     private static final String API_CALL_READ = "./configuration";
     private static final String API_CALL_SAVE = "./configuration/save";
@@ -113,6 +124,9 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                         configuration.setId(dbItem.getId());
                     }
                 }
+                if (dbItem.getId().longValue() > 0) {
+                    postGlobalsChangedEvent(configuration.getControllerId(), dbItem.getConfigurationItem(), configuration.getConfigurationItem());
+                }
                 dbItem.setControllerId(JocClusterGlobalSettings.CONTROLLER_ID);
                 dbItem.setInstanceId(JocClusterGlobalSettings.INSTANCE_ID);
                 dbItem.setAccount(JocClusterGlobalSettings.ACCOUNT);
@@ -181,6 +195,42 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             Globals.disconnect(connection);
         }
 
+    }
+
+    private void postGlobalsChangedEvent(String controllerId, String storedSettings, String currentSettings) {
+        try {
+            GlobalSettings stored = Globals.objectMapper.readValue(storedSettings, GlobalSettings.class);
+            GlobalSettings current = Globals.objectMapper.readValue(currentSettings, GlobalSettings.class);
+            if (stored == null && current == null) {
+                return;
+            }
+            if (stored == null || current == null) {
+                return;// TODO all services
+            }
+            List<String> sections = new ArrayList<String>();
+            stored.getAdditionalProperties().entrySet().stream().forEach(section -> {
+                GlobalSettingsSection storedSection = section.getValue();
+                GlobalSettingsSection currentSection = current.getAdditionalProperties().get(section.getKey());
+                if (currentSection == null) {
+                    sections.add(section.getKey());
+                } else {
+                    try {
+                        if (!Globals.objectMapper.writeValueAsString(storedSection).equals(Globals.objectMapper.writeValueAsString(currentSection))) {
+                            sections.add(section.getKey());
+                        }
+                    } catch (JsonProcessingException e) {
+                        LOGGER.error(e.toString(), e);
+                    }
+                }
+            });
+            if (sections.size() > 0) {
+                EventBus.getInstance().post(new ConfigurationGlobalsChanged(controllerId, ConfigurationType.GLOBALS.name(), sections));
+            }
+        } catch (
+
+        Throwable e) {
+            LOGGER.error(e.toString(), e);
+        }
     }
 
     public JOCDefaultResponse postReadConfiguration(String accessToken, Configuration configuration) throws Exception {

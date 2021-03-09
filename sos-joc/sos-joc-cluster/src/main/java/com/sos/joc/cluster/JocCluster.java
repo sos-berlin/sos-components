@@ -5,9 +5,14 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
@@ -28,6 +33,8 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.JocClusterHandler.PerformType;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
+import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
+import com.sos.joc.cluster.bean.answer.JocServiceAnswer.JocServiceAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocClusterGlobalSettings;
@@ -41,17 +48,19 @@ import com.sos.joc.db.joc.DBItemJocCluster;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.event.EventBus;
+import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
+import com.sos.joc.event.bean.configuration.ConfigurationGlobalsChanged;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.configuration.globals.GlobalSettings;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
-import com.sos.js7.event.http.HttpClient;
 
 public class JocCluster {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JocCluster.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
+    private final static long SUBMIT_SETTING_CHANGES = TimeUnit.MINUTES.toMillis(1);
 
     public static final int MAX_AWAIT_TERMINATION_TIMEOUT = 30;
 
@@ -59,8 +68,8 @@ public class JocCluster {
     private final JocClusterConfiguration config;
     private final JocConfiguration jocConfig;
     private final JocClusterHandler handler;
-    private final HttpClient httpClient;
-    private final Object lockObject = new Object();
+    private final Object lock = new Object();
+    private final Object lockMember = new Object();
     private final String currentMemberId;
     private final Date jocStartTime;
 
@@ -68,6 +77,9 @@ public class JocCluster {
 
     private List<ControllerConfiguration> controllers;
     private GlobalSettings settings;
+    private Timer settingsChangedTimer;
+    private AtomicReference<List<String>> settingsChanged = new AtomicReference<List<String>>();
+    private final Object lockSettings = new Object();
     private String activeMemberId;
     private String lastActiveMemberId;
     private boolean skipPerform;
@@ -79,9 +91,10 @@ public class JocCluster {
         this.config = jocClusterConfiguration;
         this.jocConfig = jocConfiguration;
         this.handler = new JocClusterHandler(this);
-        this.httpClient = new HttpClient();
         this.currentMemberId = jocConfig.getMemberId();
         this.jocStartTime = jocStartTime;
+
+        EventBus.getInstance().register(this);
     }
 
     public void doProcessing(StartupMode mode) {
@@ -93,10 +106,10 @@ public class JocCluster {
             try {
                 process(mode);
 
-                wait(config.getPollingInterval());
+                waitFor(config.getPollingInterval());
             } catch (Throwable e) {
                 LOGGER.error(e.toString(), e);
-                wait(config.getPollingWaitIntervalOnError());
+                waitFor(config.getPollingWaitIntervalOnError());
             }
         }
     }
@@ -116,7 +129,7 @@ public class JocCluster {
             } catch (Throwable e) {
                 LOGGER.error(e.toString());
                 LOGGER.info("wait 30s and try again ...");
-                wait(30);
+                waitFor(30);
             }
         }
     }
@@ -142,7 +155,7 @@ public class JocCluster {
                     dbLayer.close();
                     dbLayer = null;
                     LOGGER.info(String.format("[%s]no controllers found. sleep 1m and try again ...", jocConfig.getSecurityLevel().name()));
-                    wait(60);
+                    waitFor(60);
                 }
             } catch (Exception e) {
                 if (dbLayer != null) {
@@ -151,7 +164,7 @@ public class JocCluster {
                     dbLayer = null;
                 }
                 LOGGER.error(String.format("[error occured][sleep 1m and try again ...]%s", e.toString()));
-                wait(60);
+                waitFor(60);
             } finally {
                 if (dbLayer != null) {
                     dbLayer.close();
@@ -311,7 +324,7 @@ public class JocCluster {
             }
 
             skipPerform = false;
-            synchronized (lockObject) {
+            synchronized (lockMember) {
                 item = handleCurrentMemberOnProcess(mode, dbLayer, item);
                 if (item != null) {
                     activeMemberId = item.getMemberId();
@@ -364,12 +377,12 @@ public class JocCluster {
                     }
                 }
             }
-            postEvents();
+            postActiveClusterChangedEvent();
             lastActiveMemberId = activeMemberId;
         }
     }
 
-    private void postEvents() {
+    private void postActiveClusterChangedEvent() {
         if (activeMemberId != null) {
             if (lastActiveMemberId == null || !lastActiveMemberId.equals(activeMemberId)) {
                 try {
@@ -452,7 +465,7 @@ public class JocCluster {
         }
 
         try {
-            synchronized (lockObject) {
+            synchronized (lockMember) {
                 boolean run = true;
                 int errorCounter = 0;
                 while (run) {
@@ -479,7 +492,7 @@ public class JocCluster {
                         if (errorCounter >= config.getSwitchMemberWaitCounterOnError()) {
                             throw e;
                         }
-                        wait(config.getSwitchMemberWaitIntervalOnError());
+                        waitFor(config.getSwitchMemberWaitIntervalOnError());
                     } finally {
                         if (dbLayer != null) {
                             dbLayer.close();
@@ -560,7 +573,7 @@ public class JocCluster {
 
                     LOGGER.info("[" + mode + "][switch][end][new]" + newMemberId);
                     activeMemberId = newMemberId;
-                    postEvents();
+                    postActiveClusterChangedEvent();
                     lastActiveMemberId = activeMemberId;
                 }
             } else {
@@ -640,7 +653,7 @@ public class JocCluster {
                         if (errorCounter >= config.getSwitchMemberWaitCounterOnError()) {
                             throw e;
                         }
-                        wait(config.getSwitchMemberWaitIntervalOnError());
+                        waitFor(config.getSwitchMemberWaitIntervalOnError());
                     }
                 }
             }
@@ -707,10 +720,13 @@ public class JocCluster {
     public void close(StartupMode mode, boolean deleteActiveCurrentMember) {
         LOGGER.info("[" + mode + "][cluster][close]start ...----------------------------------------------");
         closed = true;
-        httpClient.close();
-        synchronized (httpClient) {
-            httpClient.notifyAll();
+        synchronized (lock) {
+            lock.notifyAll();
         }
+        synchronized (lockMember) {
+            lockMember.notifyAll();
+        }
+        stopSettingsChangedTimer();
         closeServices(mode);
         if (deleteActiveCurrentMember) {
             tryDeleteActiveCurrentMember();
@@ -759,6 +775,66 @@ public class JocCluster {
             }
         }
         return result;
+    }
+
+    @Subscribe({ ConfigurationGlobalsChanged.class })
+    public void respondConfigurationChanges(ConfigurationGlobalsChanged evt) {
+        if (!handler.isActive()) {
+            return;
+        }
+
+        stopSettingsChangedTimer();
+        settingsChanged.compareAndSet(settingsChanged.get(), evt.getSections());
+
+        synchronized (lockSettings) {
+            settingsChangedTimer = new Timer();
+            settingsChangedTimer.scheduleAtFixedRate(new TimerTask() {
+
+                @Override
+                public void run() {
+                    AJocClusterService.setLogger(JocClusterConfiguration.IDENTIFIER);
+                    List<String> sections = settingsChanged.get();
+                    settingsChanged = new AtomicReference<List<String>>();
+
+                    sections = sections.stream().distinct().collect(Collectors.toList());
+                    LOGGER.info(String.format("[global settings][changed]restart %s services", sections.size()));
+                    // TODO restart asynchronous
+                    for (String identifier : sections) {
+                        LOGGER.info(String.format("[global settings][changed][%s]restart ...", identifier));
+
+                        Optional<IJocClusterService> os = handler.getServices().stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
+                        if (!os.isPresent()) {
+                            LOGGER.info(String.format("[global settings][changed][%s][skip]service not found ", identifier));
+                            continue;
+                        }
+
+                        IJocClusterService service = os.get();
+                        JocServiceAnswer answer = service.getInfo();
+                        if (answer.getState().equals(JocServiceAnswerState.RELAX)) {
+                            handler.restartService(identifier, StartupMode.automatic);
+                        } else {
+                            LOGGER.info(String.format("[global settings][changed][%s][wait 60s]service status %s", identifier, answer.getState()));
+                            waitFor(60);
+
+                            answer = service.getInfo();
+                            if (answer.getState().equals(JocServiceAnswerState.RELAX)) {
+                                handler.restartService(identifier, StartupMode.automatic);
+                            } else {
+                                LOGGER.info(String.format("[global settings][changed][%s][skip]service status %s", identifier, answer.getState()));
+                            }
+                        }
+                    }
+                }
+
+            }, SUBMIT_SETTING_CHANGES, SUBMIT_SETTING_CHANGES);
+        }
+    }
+
+    private void stopSettingsChangedTimer() {
+        if (settingsChangedTimer != null) {
+            settingsChangedTimer.cancel();
+            settingsChangedTimer.purge();
+        }
     }
 
     public static JocClusterAnswer getOKAnswer(JocClusterAnswerState state) {
@@ -813,15 +889,15 @@ public class JocCluster {
         }
     }
 
-    public void wait(int interval) {
+    public void waitFor(int interval) {
         if (!closed && interval > 0) {
             String method = "wait";
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("%s(%s) %ss ...", method, SOSClassUtil.getMethodName(2), interval));
             }
             try {
-                synchronized (httpClient) {
-                    httpClient.wait(interval * 1_000);
+                synchronized (lock) {
+                    lock.wait(interval * 1_000);
                 }
             } catch (InterruptedException e) {
                 if (closed) {
