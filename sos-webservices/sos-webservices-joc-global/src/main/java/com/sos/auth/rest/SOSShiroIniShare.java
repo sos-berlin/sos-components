@@ -91,7 +91,7 @@ public class SOSShiroIniShare {
             jocConfigurationDbItem.setName("shiro.ini");
             jocConfigurationDbItem.setShared(true);
             jocConfigurationDbItem.setInstanceId(0L);
-            jocConfigurationDbItem.setSchedulerId("");
+            jocConfigurationDbItem.setControllerId("");
         }
 
         String content = new String(Files.readAllBytes(Paths.get(iniFile.getAbsolutePath())), "UTF-8");

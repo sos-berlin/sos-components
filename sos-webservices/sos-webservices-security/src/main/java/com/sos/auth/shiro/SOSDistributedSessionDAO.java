@@ -65,7 +65,7 @@ public class SOSDistributedSessionDAO extends CachingSessionDAO {
                 jocConfigurationDbItem.setName(sessionId.toString());
                 jocConfigurationDbItem.setShared(true);
                 jocConfigurationDbItem.setInstanceId(0L);
-                jocConfigurationDbItem.setSchedulerId("");
+                jocConfigurationDbItem.setControllerId("");
             }
 
             jocConfigurationDbItem.setConfigurationItem(session);

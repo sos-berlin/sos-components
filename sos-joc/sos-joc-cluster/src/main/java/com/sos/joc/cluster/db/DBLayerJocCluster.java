@@ -1,6 +1,7 @@
 package com.sos.joc.cluster.db;
 
 import java.util.Date;
+import java.util.List;
 
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
@@ -67,7 +68,22 @@ public class DBLayerJocCluster extends DBLayer {
         sql.append("where configurationType=:configurationType ");
         Query<DBItemJocConfiguration> query = getSession().createQuery(sql.toString());
         query.setParameter("configurationType", ConfigurationType.GLOBALS.name());
-        return getSession().getSingleResult(query);
+        List<DBItemJocConfiguration> result = getSession().getResultList(query);
+        if (result == null || result.size() == 0) {
+            return null;
+        }
+        DBItemJocConfiguration r = result.get(0);
+        if (result.size() > 1) {
+            sql = new StringBuilder("delete from ");
+            sql.append(DBLayer.DBITEM_JOC_CONFIGURATIONS).append(" ");
+            sql.append("where configurationType=:configurationType ");
+            sql.append("and id!=:id ");
+            query = getSession().createQuery(sql.toString());
+            query.setParameter("configurationType", ConfigurationType.GLOBALS.name());
+            query.setParameter("id", r.getId());
+            getSession().executeUpdate(query);
+        }
+        return r;
     }
 
     public DBItemJocCluster getCluster() throws Exception {

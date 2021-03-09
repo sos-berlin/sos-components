@@ -30,6 +30,7 @@ import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
+import com.sos.joc.cluster.configuration.JocClusterGlobalSettings;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.db.DBLayerJocCluster;
@@ -42,7 +43,6 @@ import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
 import com.sos.joc.model.cluster.common.ClusterServices;
-import com.sos.joc.model.configuration.ConfigurationObjectType;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.configuration.globals.GlobalSettings;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
@@ -54,10 +54,6 @@ public class JocCluster {
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     public static final int MAX_AWAIT_TERMINATION_TIMEOUT = 30;
-    public static final String GLOBAL_SETTINGS_CONTROLLER_ID = ".";
-    public static final String GLOBAL_SETTINGS_ACCOUNT = ".";
-    public static final String GLOBAL_DEFAULT_CONFIGURATION_ITEM = "{}";
-    public static final ConfigurationObjectType GLOBAL_SETTINGS_OBJECT_TYPE = null;
 
     private final SOSHibernateFactory dbFactory;
     private final JocClusterConfiguration config;
@@ -212,18 +208,40 @@ public class JocCluster {
     }
 
     private void readCurrentDbInfoStoredSettings(DBLayerJocCluster dbLayer) throws Exception {
-        if (settings == null) {
-            settings = getStoredSettings(dbLayer, null);
-        }
+        settings = getStoredSettings(dbLayer, null);
     }
 
-    public static GlobalSettings getStoredSettings(SOSHibernateSession session) throws Exception {
+    @SuppressWarnings("unused")
+    private static GlobalSettings getStoredSettings(SOSHibernateSession session) throws Exception {
         return getStoredSettings(null, session);
     }
 
-    public static GlobalSettingsSection getStoredSettings(SOSHibernateSession session, ClusterServices service) throws Exception {
+    @SuppressWarnings("unused")
+    private static GlobalSettingsSection getStoredSettings(SOSHibernateSession session, ClusterServices service) throws Exception {
         GlobalSettings settings = getStoredSettings(null, session);
         return settings == null ? null : settings.getAdditionalProperties().get(service.name());
+    }
+
+    @SuppressWarnings("unused")
+    private GlobalSettingsSection getStoredSettings(ClusterServices service) throws Exception {
+        return getStoredSettings(service.name());
+    }
+
+    protected GlobalSettingsSection getStoredSettings(String serviceIdentifier) throws Exception {
+        DBLayerJocCluster dbLayer = null;
+        try {
+            dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession("stored_settings_" + serviceIdentifier));
+            GlobalSettings settings = getStoredSettings(dbLayer, null);
+            dbLayer.close();
+            dbLayer = null;
+            return settings == null ? null : settings.getAdditionalProperties().get(serviceIdentifier);
+        } catch (Throwable e) {
+            throw e;
+        } finally {
+            if (dbLayer != null) {
+                dbLayer.close();
+            }
+        }
     }
 
     private static GlobalSettings getStoredSettings(DBLayerJocCluster dbLayer, SOSHibernateSession session) throws Exception {
@@ -234,26 +252,29 @@ public class JocCluster {
         if (dbLayer == null) {
             dbLayer = new DBLayerJocCluster(session);
         }
+
         try {
             dbLayer.beginTransaction();
             DBItemJocConfiguration item = dbLayer.getClusterSettings();
             if (item == null) {
-                settings = JocClusterConfiguration.getDefaultSettings(true);
+                settings = JocClusterGlobalSettings.getDefaultSettings();
+                JocClusterGlobalSettings.useAndRemoveDefaultInfos(settings);
+                JocClusterGlobalSettings.setCleanupInitialPeriod(settings);
 
                 item = new DBItemJocConfiguration();
-                item.setSchedulerId(GLOBAL_SETTINGS_CONTROLLER_ID);
-                item.setInstanceId(0L);
-                item.setAccount(GLOBAL_SETTINGS_ACCOUNT);
-                item.setObjectType(GLOBAL_SETTINGS_OBJECT_TYPE == null ? null : GLOBAL_SETTINGS_OBJECT_TYPE.name());
+                item.setControllerId(JocClusterGlobalSettings.CONTROLLER_ID);
+                item.setInstanceId(JocClusterGlobalSettings.INSTANCE_ID);
+                item.setAccount(JocClusterGlobalSettings.ACCOUNT);
+                item.setShared(JocClusterGlobalSettings.SHARED);
+                item.setObjectType(JocClusterGlobalSettings.OBJECT_TYPE == null ? null : JocClusterGlobalSettings.OBJECT_TYPE.name());
                 item.setConfigurationType(ConfigurationType.GLOBALS.name());
-                item.setShared(false);
                 item.setConfigurationItem(mapper.writeValueAsString(settings));
                 item.setModified(new Date());
 
                 dbLayer.getSession().save(item);
             } else {
                 if (!SOSString.isEmpty(item.getConfigurationItem())) {
-                    if (!item.getConfigurationItem().equals(GLOBAL_DEFAULT_CONFIGURATION_ITEM)) {
+                    if (!item.getConfigurationItem().equals(JocClusterGlobalSettings.DEFAULT_CONFIGURATION_ITEM)) {
                         try {
                             settings = mapper.readValue(item.getConfigurationItem(), GlobalSettings.class);
                         } catch (Throwable e) {
@@ -267,7 +288,7 @@ public class JocCluster {
         } catch (SOSHibernateException e) {
             dbLayer.rollback();
         }
-        return settings == null ? new GlobalSettings() : settings;
+        return settings == null ? new GlobalSettings() : JocClusterGlobalSettings.addDefaultInfos(settings);
     }
 
     private synchronized void process(StartupMode mode) throws Exception {

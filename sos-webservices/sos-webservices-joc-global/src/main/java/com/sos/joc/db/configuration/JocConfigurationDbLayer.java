@@ -14,6 +14,7 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.configuration.Profile;
 
 public class JocConfigurationDbLayer {
@@ -59,8 +60,8 @@ public class JocConfigurationDbLayer {
             where += and + " name = :name";
             and = " and ";
         }
-        if (filter.getSchedulerId() != null) {
-            where += and + " schedulerId = :schedulerId ";
+        if (filter.getControllerId() != null) {
+            where += and + " controllerId = :controllerId ";
             and = " and ";
         }
         if (filter.getId() != null) {
@@ -93,8 +94,8 @@ public class JocConfigurationDbLayer {
         if (filter.getName() != null && !"".equals(filter.getName())) {
             query.setParameter("name", filter.getName());
         }
-        if (filter.getSchedulerId() != null) {
-            query.setParameter("schedulerId", filter.getSchedulerId());
+        if (filter.getControllerId() != null) {
+            query.setParameter("controllerId", filter.getControllerId());
         }
         if (filter.getId() != null) {
             query.setParameter("id", filter.getId());
@@ -140,6 +141,14 @@ public class JocConfigurationDbLayer {
 
     public DBItemJocConfiguration getJocConfiguration(Long id) throws SOSHibernateException {
         return session.get(DBItemJocConfiguration.class, id);
+    }
+
+    public List<DBItemJocConfiguration> getJocConfigurations(ConfigurationType type) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_JOC_CONFIGURATIONS).append(" ");
+        hql.append("where configurationType=:type");
+        Query<DBItemJocConfiguration> query = session.createQuery(hql.toString());
+        query.setParameter("type", type.name());
+        return session.getResultList(query);
     }
 
     public List<DBItemJocConfiguration> getJocConfigurations(JocConfigurationFilter filter, final int limit) throws SOSHibernateException {

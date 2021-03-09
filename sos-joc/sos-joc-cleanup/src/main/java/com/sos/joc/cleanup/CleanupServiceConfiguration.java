@@ -15,8 +15,10 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
-import com.sos.joc.cluster.configuration.JocClusterConfiguration;
+import com.sos.joc.cluster.configuration.JocClusterGlobalSettings;
+import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
+import com.sos.joc.model.configuration.globals.GlobalSettingsSectionEntry;
 
 import scala.collection.mutable.StringBuilder;
 
@@ -26,33 +28,35 @@ public class CleanupServiceConfiguration {
 
     public static final String PROPERTY_NAME_PERIOD = "period";
 
-    private Period period = new Period("01:00", "04:00");// no default weekdays - if not configured the service will not start
-    private ZoneId zoneId = ZoneId.of("UTC");
-    private Age orderHistoryAge = new Age("order_history_age", "90d");
-    private Age orderHistoryLogsAge = new Age("order_history_logs_age", "90d");
-    private Age dailyPlanHistoryAge = new Age("daily_plan_history_age", "30d");
-    private int deploymentHistoryVersions = 10;
-    private int batchSize = 1_000;
+    private ZoneId zoneId;
+    private Period period;
+    private Age orderHistoryAge;
+    private Age orderHistoryLogsAge;
+    private Age dailyPlanHistoryAge;
+    private int deploymentHistoryVersions;
+    private int batchSize;
 
     private Path hibernateConfiguration;
 
     public CleanupServiceConfiguration(GlobalSettingsSection settings) {
+        setDefaults();
+
         if (settings == null) {
             return;
         }
-        String timeZone = JocClusterConfiguration.getValue(settings, "time_zone");
+        String timeZone = JocClusterGlobalSettings.getValue(settings, "time_zone");
         if (!SOSString.isEmpty(timeZone)) {
             try {
                 this.zoneId = ZoneId.of(timeZone);
             } catch (Throwable e) {
-                LOGGER.error(String.format("[zone=%s]%s", timeZone, e.toString()), e);
+                LOGGER.error(String.format("[time_zone=%s]%s", timeZone, e.toString()), e);
             }
         }
 
-        String period = JocClusterConfiguration.getValue(settings, PROPERTY_NAME_PERIOD);
+        String period = JocClusterGlobalSettings.getValue(settings, PROPERTY_NAME_PERIOD);
         if (!SOSString.isEmpty(period)) {
-            String periodBegin = JocClusterConfiguration.getValue(settings, "period_begin");
-            String periodEnd = JocClusterConfiguration.getValue(settings, "period_end");
+            String periodBegin = JocClusterGlobalSettings.getValue(settings, "period_begin");
+            String periodEnd = JocClusterGlobalSettings.getValue(settings, "period_end");
 
             if (SOSString.isEmpty(periodBegin)) {
                 periodBegin = this.period.getBegin().getConfigured();
@@ -60,17 +64,15 @@ public class CleanupServiceConfiguration {
                     periodEnd = this.period.getEnd().getConfigured();
                 }
             }
-            this.period = new Period();
-            this.period.set(period, periodBegin, periodEnd);
-
+            this.period = new Period(period, periodBegin, periodEnd);
         }
 
-        String orderHistoryAge = JocClusterConfiguration.getValue(settings, "order_history_age");
+        String orderHistoryAge = JocClusterGlobalSettings.getValue(settings, "order_history_age");
         if (!SOSString.isEmpty(orderHistoryAge)) {
             this.orderHistoryAge = new Age("order_history_age", orderHistoryAge.trim());
         }
 
-        String orderHistoryLogsAge = JocClusterConfiguration.getValue(settings, "order_history_logs_age");
+        String orderHistoryLogsAge = JocClusterGlobalSettings.getValue(settings, "order_history_logs_age");
         if (!SOSString.isEmpty(orderHistoryLogsAge)) {
             this.orderHistoryLogsAge = new Age("cleanup_order_history_logs_age", orderHistoryLogsAge.trim());
             if (this.orderHistoryAge.getMinutes() != 0 && this.orderHistoryLogsAge.getMinutes() != 0) {
@@ -83,12 +85,12 @@ public class CleanupServiceConfiguration {
             }
         }
 
-        String dailyPlanHistoryAge = JocClusterConfiguration.getValue(settings, "daily_plan_history_age");
+        String dailyPlanHistoryAge = JocClusterGlobalSettings.getValue(settings, "daily_plan_history_age");
         if (!SOSString.isEmpty(dailyPlanHistoryAge)) {
             this.dailyPlanHistoryAge = new Age("daily_plan_history_age", dailyPlanHistoryAge.trim());
         }
 
-        String deploymentHistoryVersions = JocClusterConfiguration.getValue(settings, "deployment_history_versions");
+        String deploymentHistoryVersions = JocClusterGlobalSettings.getValue(settings, "deployment_history_versions");
         if (!SOSString.isEmpty(deploymentHistoryVersions)) {
             try {
                 this.deploymentHistoryVersions = Integer.parseInt(deploymentHistoryVersions);
@@ -97,7 +99,7 @@ public class CleanupServiceConfiguration {
             }
         }
 
-        String batchSize = JocClusterConfiguration.getValue(settings, "batch_size");
+        String batchSize = JocClusterGlobalSettings.getValue(settings, "batch_size");
         if (!SOSString.isEmpty(batchSize)) {
             try {
                 int bz = Integer.parseInt(batchSize.trim());
@@ -107,6 +109,38 @@ public class CleanupServiceConfiguration {
             } catch (Throwable e) {
                 LOGGER.error(String.format("[batch_size=%s]%s", batchSize, e.toString()), e);
             }
+        }
+    }
+
+    private void setDefaults() {
+        try {
+            GlobalSettingsSection defaultSettings = JocClusterGlobalSettings.getDefaultSettings(ClusterServices.cleanup);
+
+            GlobalSettingsSectionEntry timezone = JocClusterGlobalSettings.getSectionEntry(defaultSettings, "time_zone");
+            this.zoneId = ZoneId.of(timezone.getDefault());
+
+            GlobalSettingsSectionEntry period = JocClusterGlobalSettings.getSectionEntry(defaultSettings, "period");
+            GlobalSettingsSectionEntry periodBegin = JocClusterGlobalSettings.getSectionEntry(defaultSettings, "period_begin");
+            GlobalSettingsSectionEntry periodEnd = JocClusterGlobalSettings.getSectionEntry(defaultSettings, "period_end");
+            this.period = new Period(period.getDefault(), periodBegin.getDefault(), periodEnd.getDefault());
+
+            GlobalSettingsSectionEntry orderHistoryAge = JocClusterGlobalSettings.getSectionEntry(defaultSettings, "order_history_age");
+            this.orderHistoryAge = new Age("order_history_age", orderHistoryAge.getDefault());
+
+            GlobalSettingsSectionEntry orderHistoryLogsAge = JocClusterGlobalSettings.getSectionEntry(defaultSettings, "order_history_logs_age");
+            this.orderHistoryLogsAge = new Age("order_history_logs_age", orderHistoryLogsAge.getDefault());
+
+            GlobalSettingsSectionEntry dailyPlanHistoryAge = JocClusterGlobalSettings.getSectionEntry(defaultSettings, "daily_plan_history_age");
+            this.dailyPlanHistoryAge = new Age("daily_plan_history_age", dailyPlanHistoryAge.getDefault());
+
+            GlobalSettingsSectionEntry deploymentHistoryVersions = JocClusterGlobalSettings.getSectionEntry(defaultSettings,
+                    "deployment_history_versions");
+            this.deploymentHistoryVersions = Integer.parseInt(deploymentHistoryVersions.getDefault());
+
+            GlobalSettingsSectionEntry batchSize = JocClusterGlobalSettings.getSectionEntry(defaultSettings, "batch_size");
+            this.batchSize = Integer.parseInt(batchSize.getDefault());
+        } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
         }
     }
 
@@ -238,10 +272,6 @@ public class CleanupServiceConfiguration {
 
         public Period() {
 
-        }
-
-        public Period(String periodBegin, String periodEnd) {
-            set(null, periodBegin, periodEnd);
         }
 
         public Period(String periodWeekdays, String periodBegin, String periodEnd) {

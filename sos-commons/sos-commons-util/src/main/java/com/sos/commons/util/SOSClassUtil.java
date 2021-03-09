@@ -12,13 +12,15 @@ public class SOSClassUtil extends java.lang.Object {
     }
 
     public static String getMethodName(int index) {
-        try {
-            StackTraceElement trace = new Throwable().getStackTrace()[index];
-            // String line = trace.getLineNumber() > 0 ? "(" + trace.getLineNumber() + ")" : "";
-            // return getSimpleName(trace.getClassName()) + "." + trace.getMethodName() + line;
-            return getSimpleName(trace.getClassName()) + "." + trace.getMethodName();
-        } catch (Exception e) {
-            LOGGER.error(e.toString(), e);
+        while (index >= 0) {
+            try {
+                StackTraceElement trace = new Throwable().getStackTrace()[index];
+                // String line = trace.getLineNumber() > 0 ? "(" + trace.getLineNumber() + ")" : "";
+                // return getSimpleName(trace.getClassName()) + "." + trace.getMethodName() + line;
+                return getSimpleName(trace.getClassName()) + "." + trace.getMethodName();
+            } catch (Exception e) {
+                index = index - 1;
+            }
         }
         return "";
     }

@@ -186,7 +186,15 @@ public class JocClusterHandler {
         ThreadHelper.print(mode, "[" + identifier + "]after stop");
         AJocClusterService.clearLogger();
 
-        s.start(cluster.getControllers(), cluster.getSettings().getAdditionalProperties().get(s.getIdentifier()), mode);
+        try {
+            s.start(cluster.getControllers(), cluster.getStoredSettings(s.getIdentifier()), mode);
+        } catch (Exception e) {
+            AJocClusterService.setLogger();
+            LOGGER.error(String.format("[%s][restart][%s]%s", mode, identifier, e.toString()), e);
+            AJocClusterService.clearLogger();
+
+            return JocCluster.getErrorAnswer(e);
+        }
 
         AJocClusterService.setLogger();
         LOGGER.info(String.format("[%s][restart][%s]completed", mode, identifier));

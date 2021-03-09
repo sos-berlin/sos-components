@@ -5,7 +5,7 @@ import com.sos.joc.db.SOSFilter;
 public class JocConfigurationFilter extends SOSFilter{
 
     private Long id;
-    private String schedulerId;
+    private String controllerId;
     private String account;
     private String objectType;
     private String configurationType;
@@ -24,12 +24,12 @@ public class JocConfigurationFilter extends SOSFilter{
         this.id = id;
     }
 
-    public String getSchedulerId() {
-        return schedulerId;
+    public String getControllerId() {
+        return controllerId;
     }
 
-    public void setSchedulerId(String schedulerId) {
-        this.schedulerId = schedulerId;
+    public void setControllerId(String val) {
+        controllerId = val;
     }
 
     public String getAccount() {

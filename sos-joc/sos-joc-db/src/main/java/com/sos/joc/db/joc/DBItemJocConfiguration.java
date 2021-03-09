@@ -19,7 +19,7 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_JOC_CONFIGURATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[JOBSCHEDULER_ID]", "[ACCOUNT]",
+@Table(name = DBLayer.TABLE_JOC_CONFIGURATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONTROLLER_ID]", "[ACCOUNT]",
         "[OBJECT_TYPE]", "[CONFIGURATION_TYPE]", "[NAME]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_JOC_CONFIGURATIONS_SEQUENCE, sequenceName = DBLayer.TABLE_JOC_CONFIGURATIONS_SEQUENCE, allocationSize = 1)
 public class DBItemJocConfiguration extends DBItem {
@@ -34,6 +34,9 @@ public class DBItemJocConfiguration extends DBItem {
     /** Foreign key INVENTORY_INSTANCES.ID */
     @Column(name = "[INSTANCE_ID]", nullable = false)
     private Long instanceId;
+
+    @Column(name = "[CONTROLLER_ID]", nullable = true)
+    private String controllerId;
 
     @Column(name = "[ACCOUNT]", nullable = false)
     private String account;
@@ -58,90 +61,87 @@ public class DBItemJocConfiguration extends DBItem {
     @Column(name = "[MODIFIED]", nullable = false)
     private Date modified;
 
-    @Column(name = "[JOBSCHEDULER_ID]", nullable = true)
-    private String schedulerId;
-
     public DBItemJocConfiguration() {
     }
 
     public Long getId() {
-        return this.id;
+        return id;
     }
 
     public void setId(Long val) {
-        this.id = val;
+        id = val;
     }
 
     public Long getInstanceId() {
-        return this.instanceId;
+        return instanceId;
     }
 
     public void setInstanceId(Long val) {
-        this.instanceId = val;
+        instanceId = val;
+    }
+
+    public void setControllerId(String val) {
+        controllerId = val;
+    }
+
+    public String getControllerId() {
+        return controllerId;
     }
 
     public void setConfigurationItem(String val) {
-        this.configurationItem = val;
+        configurationItem = val;
     }
 
     public String getConfigurationItem() {
-        return this.configurationItem;
+        return configurationItem;
     }
 
     public void setAccount(String val) {
-        this.account = val;
+        account = val;
     }
 
     public String getAccount() {
-        return this.account;
+        return account;
     }
 
     public void setObjectType(String val) {
-        this.objectType = val;
+        objectType = val;
     }
 
     public String getObjectType() {
-        return this.objectType;
+        return objectType;
     }
 
     public void setConfigurationType(String val) {
-        this.configurationType = val;
+        configurationType = val;
     }
 
     public String getConfigurationType() {
-        return this.configurationType;
+        return configurationType;
     }
 
     public void setName(String val) {
-        this.name = val;
+        name = val;
     }
 
     public String getName() {
-        return this.name;
+        return name;
     }
 
     public void setShared(Boolean val) {
-        this.shared = val;
+        shared = val;
     }
 
     public Boolean getShared() {
-        return this.shared;
+        return shared;
     }
 
     public void setModified(Date val) {
-        this.modified = val;
+        modified = val;
     }
 
     public Date getModified() {
-        return this.modified;
-    }
-
-    public void setSchedulerId(String val) {
-        this.schedulerId = val;
-    }
-
-    public String getSchedulerId() {
-        return this.schedulerId;
+        return modified;
     }
 
 }

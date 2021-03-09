@@ -10,16 +10,15 @@ import java.util.List;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JocCockpitProperties;
-import com.sos.joc.cluster.JocCluster;
-import com.sos.joc.cluster.configuration.JocClusterConfiguration;
+import com.sos.joc.cluster.configuration.JocClusterGlobalSettings;
 import com.sos.joc.configurations.resource.IJocConfigurationsResource;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
+import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.exceptions.JobSchedulerBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.configuration.Configuration;
@@ -80,11 +79,11 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                     }
                     break;
                 case GLOBALS:
-                    configurationsFilter.setControllerId(JocCluster.GLOBAL_SETTINGS_CONTROLLER_ID);
-                    configurationsFilter.setAccount(JocCluster.GLOBAL_SETTINGS_ACCOUNT);
-                    configurationsFilter.setObjectType(JocCluster.GLOBAL_SETTINGS_OBJECT_TYPE);
+                    configurationsFilter.setControllerId(JocClusterGlobalSettings.CONTROLLER_ID);
+                    configurationsFilter.setAccount(JocClusterGlobalSettings.ACCOUNT);
+                    configurationsFilter.setObjectType(JocClusterGlobalSettings.OBJECT_TYPE);
 
-                    defaultGlobalSettings = JocClusterConfiguration.getDefaultSettings(false);
+                    defaultGlobalSettings = JocClusterGlobalSettings.getDefaultSettings();
                     break;
                 default:
                     break;
@@ -97,7 +96,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             JocConfigurationFilter filter = new JocConfigurationFilter();
 
             filter.setObjectType(objectType);
-            filter.setSchedulerId(configurationsFilter.getControllerId());
+            filter.setControllerId(configurationsFilter.getControllerId());
             filter.setConfigurationType(configurationType);
             filter.setAccount(configurationsFilter.getAccount());
             filter.setShared(configurationsFilter.getShared());
