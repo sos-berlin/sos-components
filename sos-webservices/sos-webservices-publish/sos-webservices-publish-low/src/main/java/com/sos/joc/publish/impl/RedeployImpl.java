@@ -28,6 +28,7 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.RedeployFilter;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.publish.db.DBLayerDeploy;
+import com.sos.joc.publish.mapper.SignedItemsSpec;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.joc.publish.resource.IRedeploy;
 import com.sos.joc.publish.util.PublishUtils;
@@ -84,6 +85,10 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                 StoreDeployments.storeNewDepHistoryEntriesForRedeploy(verifiedRedeployables, account, commitId, controllerId, getAccessToken(), 
                         getJocError(), dbLayer);
                 // call updateItems command via ControllerApi for given controllers
+                SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, null, verifiedRedeployables, null, null);
+                StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
+
+                
                 boolean verified = false;
                 String signerDN = null;
                 List<DBItemInventoryCertificate> caCertificates = dbLayer.getCaCertificates();
