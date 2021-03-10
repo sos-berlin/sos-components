@@ -1,4 +1,4 @@
-package com.sos.joc2.poc.jetty.servlets;
+package com.sos.js7.joc.poc.jetty.servlets;
 
 import java.io.IOException;
 import java.security.cert.X509Certificate;
@@ -11,9 +11,15 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class ReadCertificateServlet extends HttpServlet {
+public class ReadCertificateTestServlet extends HttpServlet {
 
     private static final long serialVersionUID = -6942752272134678128L;
+    private X509Certificate clientCertificate;
+    private X509Certificate[] clientCertificateChain;
+    private String subjectDN;
+    private String clientCN;
+    private String sslSessionIdHex;
+    private String jsonResponse;
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         /*
@@ -35,23 +41,26 @@ public class ReadCertificateServlet extends HttpServlet {
         while(reqAttributeNames.hasMoreElements()) {
             attributeNames.add(reqAttributeNames.nextElement());
         }
-        X509Certificate[] certificates = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
+        clientCertificateChain = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
         String cipherSuiteName = (String) request.getAttribute("javax.servlet.request.cipher_suite");
         Integer keySize = (Integer) request.getAttribute("javax.servlet.request.key_size");
-        String sessionId = (String) request.getAttribute("javax.servlet.request.ssl_session_id");
+        sslSessionIdHex = (String) request.getAttribute("javax.servlet.request.ssl_session_id");
         response.setContentType("application/json");
         response.setStatus(HttpServletResponse.SC_OK);
         StringBuilder strb = new StringBuilder();
         
-        if ((certificates == null || certificates.length == 0) && cipherSuiteName == null && keySize == null && sessionId == null) {
+        if ((clientCertificateChain == null || clientCertificateChain.length == 0) && cipherSuiteName == null && keySize == null && sslSessionIdHex == null) {
             strb.append("{\n");
             strb.append("  \"message\" : \"no information received from request.\"\n");
             strb.append("}\n");
         } else {
+            clientCertificate = clientCertificateChain[0];
+            subjectDN = clientCertificate.getSubjectDN().getName();
+            clientCN = ((sun.security.x509.X500Name)clientCertificate.getSubjectDN()).getCommonName();
             strb.append("{\n");
-            strb.append(String.format("  \"IssuerDN\" : \"%1$s\",\n",certificates[0].getIssuerDN().getName()));
-            strb.append(String.format("  \"SubjectDN\" : \"%1$s\",\n",certificates[0].getSubjectDN().getName()));
-            boolean[] keyUsages = certificates[0].getKeyUsage();
+            strb.append(String.format("  \"IssuerDN\" : \"%1$s\",\n", clientCertificate.getIssuerDN().getName()));
+            strb.append(String.format("  \"SubjectDN\" : \"%1$s\",\n", subjectDN));
+            boolean[] keyUsages = clientCertificate.getKeyUsage();
     /*        
             KeyUsage ::= BIT STRING {
                 digitalSignature        (0),
@@ -78,7 +87,7 @@ public class ReadCertificateServlet extends HttpServlet {
             strb.append("  ],\n");
             strb.append(String.format("  \"cipherSuiteName\" : \"%1$s\",\n", cipherSuiteName));
             strb.append(String.format("  \"keySize\" : \"%1$d\",\n", keySize));
-            strb.append(String.format("  \"sessionId\" : \"%1$s\"\n", sessionId));
+            strb.append(String.format("  \"sslSessionId\" : \"%1$s\"\n", sslSessionIdHex));
             strb.append("}");
         }
         response.getWriter().println(strb.toString());
