@@ -52,8 +52,7 @@ public class OrderInitiatorService extends AJocClusterService {
             AJocClusterService.setLogger(IDENTIFIER);
             LOGGER.info(String.format("[%s][%s] start", getIdentifier(), mode));
 
-            setSettings(globalSettings);
-            settings.setStartMode(mode);
+            setSettings(mode, globalSettings);
 
             OrderInitiatorGlobals.orderInitiatorSettings = settings;
 
@@ -144,9 +143,11 @@ public class OrderInitiatorService extends AJocClusterService {
         settings.setDayAheadSubmit(daysAheadSubmit.getDefault());
     }
 
-    private void setSettings(GlobalSettingsSection globalSettings) throws Exception {
+    private void setSettings(StartupMode mode, GlobalSettingsSection globalSettings) throws Exception {
         settings = new OrderInitiatorSettings();
         settings.setHibernateConfigurationFile(getJocConfig().getHibernateConfiguration());
+        settings.setStartMode(mode);
+
         setDefaults();
         if (globalSettings == null) {
             return;
