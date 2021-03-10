@@ -111,7 +111,7 @@ public class CleanupServiceSchedule {
         unclompleted = null;
         try {
             dbLayer.setSession(getFactory().openStatelessSession(service.getIdentifier()));
-            if (mode.equals(StartupMode.manual) || mode.equals(StartupMode.automatic_settings)) {
+            if (mode.equals(StartupMode.manual) || mode.equals(StartupMode.settings_changed)) {
                 deleteJocVariable();
             } else {
                 item = getJocVariable();

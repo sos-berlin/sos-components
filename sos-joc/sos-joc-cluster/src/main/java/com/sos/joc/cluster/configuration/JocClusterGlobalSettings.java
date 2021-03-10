@@ -24,7 +24,7 @@ public class JocClusterGlobalSettings {
         s.setOrdering(0);
         addDefaultEntry(s, 0, "time_zone", "UTC", GlobalSettingsSectionValueType.TIMEZONE);
         addDefaultEntry(s, 1, "period_begin", "00:00", GlobalSettingsSectionValueType.TIME);
-        addDefaultEntry(s, 2, "start_time", "23:30", GlobalSettingsSectionValueType.TIME);
+        addDefaultEntry(s, 2, "start_time", "", GlobalSettingsSectionValueType.TIME);
         addDefaultEntry(s, 3, "days_ahead_plan", "7", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
         addDefaultEntry(s, 4, "days_ahead_submit", "3", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
         return s;

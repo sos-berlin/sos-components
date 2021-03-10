@@ -794,11 +794,11 @@ public class JocCluster {
                     settingsChanged = new AtomicReference<List<String>>();
 
                     sections = sections.stream().distinct().collect(Collectors.toList());
-                    LOGGER.info(String.format("[%s][changed]restart %s services", StartupMode.automatic_settings.name(), sections.size()));
+                    LOGGER.info(String.format("[%s]restart %s services", StartupMode.settings_changed.name(), sections.size()));
                     // TODO restart asynchronous
                     for (String identifier : sections) {
-                        LOGGER.info(String.format("[%s][changed][%s]restart ...", StartupMode.automatic_settings.name(), identifier));
-                        handler.restartService(identifier, StartupMode.automatic_settings);
+                        LOGGER.info(String.format("[%s][%s]restart ...", StartupMode.settings_changed.name(), identifier));
+                        handler.restartService(identifier, StartupMode.settings_changed);
                     }
                 }
 
