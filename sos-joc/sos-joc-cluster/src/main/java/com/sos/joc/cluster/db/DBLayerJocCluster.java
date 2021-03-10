@@ -74,6 +74,8 @@ public class DBLayerJocCluster extends DBLayer {
         }
         DBItemJocConfiguration r = result.get(0);
         if (result.size() > 1) {
+            boolean autoCommit = getSession().isAutoCommit();
+            getSession().setAutoCommit(false);// for JOC sessions with the autocommit true
             sql = new StringBuilder("delete from ");
             sql.append(DBLayer.DBITEM_JOC_CONFIGURATIONS).append(" ");
             sql.append("where configurationType=:configurationType ");
@@ -82,6 +84,7 @@ public class DBLayerJocCluster extends DBLayer {
             query.setParameter("configurationType", ConfigurationType.GLOBALS.name());
             query.setParameter("id", r.getId());
             getSession().executeUpdate(query);
+            getSession().setAutoCommit(autoCommit);
         }
         return r;
     }

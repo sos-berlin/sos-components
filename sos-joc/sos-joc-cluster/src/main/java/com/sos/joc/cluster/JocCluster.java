@@ -268,14 +268,7 @@ public class JocCluster {
             dbLayer.beginTransaction();
             DBItemJocConfiguration item = dbLayer.getGlobalsSettings();
             if (item == null) {
-                settings = JocClusterGlobalSettings.getDefaultSettings();
-                JocClusterGlobalSettings.useAndRemoveDefaultInfos(settings);
-                JocClusterGlobalSettings.setCleanupInitialPeriod(settings);
-
-                if (!SOSString.isEmpty(jocTimeZone)) {
-                    JocClusterGlobalSettings.setCleanupInitialTimeZone(settings, jocTimeZone);
-                    JocClusterGlobalSettings.setDailyPlanInitialTimeZone(settings, jocTimeZone);
-                }
+                settings = getInitialSettings();
 
                 item = new DBItemJocConfiguration();
                 item.setControllerId(JocClusterGlobalSettings.CONTROLLER_ID);
@@ -294,8 +287,12 @@ public class JocCluster {
                         try {
                             settings = mapper.readValue(item.getConfigurationItem(), GlobalSettings.class);
                         } catch (Throwable e) {
-                            LOGGER.error(String.format("[can't read settings]%s", e.toString()), e);
-                            throw e;
+                            LOGGER.error(String.format("[can't map stored settings][%s]%s", item.getConfigurationItem(), e.toString()), e);
+                            LOGGER.info("store and use default settings ...");
+                            settings = getInitialSettings();
+                            item.setConfigurationItem(mapper.writeValueAsString(settings));
+                            item.setModified(new Date());
+                            dbLayer.getSession().update(item);
                         }
                     }
                 }
@@ -305,6 +302,18 @@ public class JocCluster {
             dbLayer.rollback();
         }
         return settings == null ? new GlobalSettings() : JocClusterGlobalSettings.addDefaultInfos(settings);
+    }
+
+    private static GlobalSettings getInitialSettings() {
+        GlobalSettings settings = JocClusterGlobalSettings.getDefaultSettings();
+        JocClusterGlobalSettings.useAndRemoveDefaultInfos(settings);
+        JocClusterGlobalSettings.setCleanupInitialPeriod(settings);
+
+        if (!SOSString.isEmpty(jocTimeZone)) {
+            JocClusterGlobalSettings.setCleanupInitialTimeZone(settings, jocTimeZone);
+            JocClusterGlobalSettings.setDailyPlanInitialTimeZone(settings, jocTimeZone);
+        }
+        return settings;
     }
 
     private synchronized void process(StartupMode mode) throws Exception {
