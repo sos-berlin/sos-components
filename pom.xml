@@ -79,6 +79,10 @@
 		<bouncycastle.version>1.66</bouncycastle.version>
 		<dom4j.version>1.6.1</dom4j.version>
 		<xml.apis.version>1.4.01</xml.apis.version>
+
+    <!-- SP: for sos-webservice-server proof-of-concept with jetty -->
+    <jetty.version>9.4.18.v20190429</jetty.version>
+
 		<!--javax.jms-api.version>2.0.1</javax.jms-api.version> <xerces.version>2.12.0</xerces.version> 
 			<xalan.version>2.7.1</xalan.version> <jcifs.version>1.3.17</jcifs.version> 
 			<org.jdom.version>1.1</org.jdom.version> <h2.version>1.3.170</h2.version> 
@@ -664,6 +668,18 @@
 				<artifactId>xml-apis</artifactId>
 				<version>${xml.apis.version}</version>
 			</dependency>
+    <!-- SP: for sos-webservice-server proof-of-concept with jetty -->
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-server</artifactId>
+        <version>${jetty.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-servlet</artifactId>
+        <version>${jetty.version}</version>
+      </dependency>
+
 		</dependencies>
 	</dependencyManagement>
 	<repositories>
