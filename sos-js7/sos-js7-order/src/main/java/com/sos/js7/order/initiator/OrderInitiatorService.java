@@ -177,7 +177,7 @@ public class OrderInitiatorService extends AJocClusterService {
         if (!SOSString.isEmpty(daysAheadSubmit)) {
             this.settings.setDayAheadSubmit(daysAheadSubmit);
         }
-        LOGGER.info(SOSString.toString(settings));
+        LOGGER.debug(SOSString.toString(settings));
     }
 
     @SuppressWarnings("unused")
