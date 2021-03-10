@@ -9,6 +9,7 @@ import javax.ws.rs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -22,6 +23,7 @@ import com.sos.js7.order.initiator.OrderInitiatorSettings;
 import com.sos.js7.order.initiator.ScheduleSource;
 import com.sos.js7.order.initiator.ScheduleSourceDB;
 import com.sos.js7.order.initiator.classes.DailyPlanHelper;
+import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
 import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.resource.IDailyPlanOrdersGenerateResource;
@@ -31,6 +33,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanOrdersGenerateImpl.class);
     private static final String API_CALL = "./daily_plan/orders/generate";
+    private OrderInitiatorSettings settings;
 
     @Override
     public JOCDefaultResponse postOrdersGenerate(String accessToken, byte[] filterBytes) throws JocException {
@@ -47,6 +50,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
             }
 
             this.checkRequiredParameter("dailyPlanDate", dailyPlanOrderSelector.getDailyPlanDate());
+            setSettings();
 
             if (dailyPlanOrderSelector.getSelector() == null) {
                 Folder root = new Folder();
@@ -68,10 +72,8 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
             orderInitiatorSettings.setOverwrite(dailyPlanOrderSelector.getOverwrite());
             orderInitiatorSettings.setSubmit(dailyPlanOrderSelector.getWithSubmit());
 
-            orderInitiatorSettings.setTimeZone(Globals.sosCockpitProperties.getProperty("daily_plan_timezone", Globals.DEFAULT_TIMEZONE_DAILY_PLAN));
-            orderInitiatorSettings.setPeriodBegin(Globals.sosCockpitProperties.getProperty("daily_plan_period_begin",
-                    Globals.DEFAULT_PERIOD_DAILY_PLAN));
-            
+            orderInitiatorSettings.setTimeZone(settings.getTimeZone());
+            orderInitiatorSettings.setPeriodBegin(settings.getPeriodBegin());
 
             OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings, false);
             if (dailyPlanOrderSelector.getControllerIds() == null) {
@@ -86,7 +88,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
             OrderInitiatorGlobals.dailyPlanDate = DailyPlanHelper.getDailyPlanDateAsDate(DailyPlanHelper.stringAsDate(dailyPlanOrderSelector
                     .getDailyPlanDate()).getTime());
             OrderInitiatorGlobals.submissionTime = new Date();
-            
+
             for (String controllerId : dailyPlanOrderSelector.getControllerIds()) {
                 orderInitiatorSettings.setControllerId(controllerId);
 
@@ -94,7 +96,8 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
                 scheduleSource = new ScheduleSourceDB(dailyPlanOrderSelector);
 
                 orderInitiatorRunner.readSchedules(scheduleSource);
-                orderInitiatorRunner.generateDailyPlan(getJocError(),accessToken, dailyPlanOrderSelector.getDailyPlanDate(), dailyPlanOrderSelector.getWithSubmit());
+                orderInitiatorRunner.generateDailyPlan(getJocError(), accessToken, dailyPlanOrderSelector.getDailyPlanDate(), dailyPlanOrderSelector
+                        .getWithSubmit());
 
                 DailyPlanAudit orderAudit = new DailyPlanAudit(controllerId, dailyPlanOrderSelector.getAuditLog());
                 logAuditMessage(orderAudit);
@@ -111,6 +114,17 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
 
+    }
+
+    private void setSettings() throws Exception {
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection(API_CALL);
+            GlobalSettingsReader reader = new GlobalSettingsReader();
+            this.settings = reader.getSettings(session);
+        } finally {
+            Globals.disconnect(session);
+        }
     }
 
 }

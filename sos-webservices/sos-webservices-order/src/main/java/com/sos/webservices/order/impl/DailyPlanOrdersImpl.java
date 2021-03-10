@@ -34,7 +34,9 @@ import com.sos.joc.model.dailyplan.PlannedOrderItem;
 import com.sos.joc.model.dailyplan.PlannedOrders;
 import com.sos.joc.model.order.OrderState;
 import com.sos.joc.model.order.OrderStateText;
+import com.sos.js7.order.initiator.OrderInitiatorSettings;
 import com.sos.js7.order.initiator.classes.CycleOrderKey;
+import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
@@ -43,51 +45,9 @@ import com.sos.webservices.order.resource.IDailyPlanOrdersResource;
 @Path("daily_plan")
 public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOrdersResource {
 
-
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanOrdersImpl.class);
     private static final String API_CALL = "./daily_plan/orders";
-
-    private PlannedOrderItem createPlanItem(DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory) {
-
-        PlannedOrderItem p = new PlannedOrderItem();
-        p.setLate(dbItemDailyPlanWithHistory.isLate());
-        Period period = new Period();
-        period.setBegin(dbItemDailyPlanWithHistory.getPeriodBegin());
-        period.setEnd(dbItemDailyPlanWithHistory.getPeriodEnd());
-        period.setRepeat(dbItemDailyPlanWithHistory.getRepeatInterval());
-        p.setPeriod(period);
-
-        p.setPlannedStartTime(dbItemDailyPlanWithHistory.getPlannedStart());
-        p.setExpectedEndTime(dbItemDailyPlanWithHistory.getExpectedEnd());
-        p.setLate(dbItemDailyPlanWithHistory.isLate());
-        p.setSurveyDate(dbItemDailyPlanWithHistory.getPlannedOrderCreated());
-
-        p.setStartMode(dbItemDailyPlanWithHistory.getStartMode());
-
-        p.setWorkflowPath(dbItemDailyPlanWithHistory.getWorkflowPath());
-        p.setOrderId(dbItemDailyPlanWithHistory.getOrderId());
-        p.setSchedulePath(dbItemDailyPlanWithHistory.getSchedulePath());
-
-        OrderState orderState = new OrderState();
-        if (dbItemDailyPlanWithHistory.isSubmitted()) {
-            orderState.set_text(dbItemDailyPlanWithHistory.getStateText());
-            orderState.setSeverity(OrdersHelper.severityByGroupedStates.get(orderState.get_text()));
-        } else {
-            orderState.set_text(OrderStateText.PLANNED);
-            orderState.setSeverity(OrdersHelper.severityByGroupedStates.get(orderState.get_text()));
-        }
-        p.setState(orderState);
-
-        if (dbItemDailyPlanWithHistory.getOrderHistoryId() != null) {
-            if (dbItemDailyPlanWithHistory.getStartTime().after(new Date(0L))) {
-                p.setStartTime(dbItemDailyPlanWithHistory.getStartTime());
-                p.setEndTime(dbItemDailyPlanWithHistory.getEndTime());
-            }
-            p.setHistoryId(String.valueOf(dbItemDailyPlanWithHistory.getOrderHistoryId()));
-        }
-        return p;
-
-    }
+    private OrderInitiatorSettings settings;
 
     @Override
     public JOCDefaultResponse postDailyPlan(String accessToken, byte[] filterBytes) throws JocException {
@@ -107,6 +67,7 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
             this.checkRequiredParameter("filter", dailyPlanOrderFilter.getFilter());
             this.checkRequiredParameter("dailyPlanDate", dailyPlanOrderFilter.getFilter().getDailyPlanDate());
 
+            setSettings();
             LOGGER.debug("Reading the daily plan for day " + dailyPlanOrderFilter.getFilter().getDailyPlanDate());
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
@@ -148,7 +109,7 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
             filter.setListOfScheduleNames(dailyPlanOrderFilter.getFilter().getScheduleNames());
             filter.setListOfOrders(dailyPlanOrderFilter.getFilter().getOrderIds());
 
-            filter.setDailyPlanDate(dailyPlanOrderFilter.getFilter().getDailyPlanDate());
+            filter.setDailyPlanDate(dailyPlanOrderFilter.getFilter().getDailyPlanDate(), settings.getTimeZone(), settings.getPeriodBegin());
 
             filter.setLate(dailyPlanOrderFilter.getFilter().getLate());
 
@@ -178,7 +139,7 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
                 for (DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory : listOfPlannedOrders) {
 
                     boolean add = true;
-                    PlannedOrderItem p = createPlanItem(dbItemDailyPlanWithHistory);                
+                    PlannedOrderItem p = createPlanItem(dbItemDailyPlanWithHistory);
 
                     if (dailyPlanOrderFilter.getFilter().getStates() != null && !stateFilterContainsPendingOrPlanned && dbItemDailyPlanWithHistory
                             .getOrderHistoryId() == null) {
@@ -238,4 +199,56 @@ public class DailyPlanOrdersImpl extends JOCResourceImpl implements IDailyPlanOr
         }
     }
 
+    private PlannedOrderItem createPlanItem(DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory) {
+
+        PlannedOrderItem p = new PlannedOrderItem();
+        p.setLate(dbItemDailyPlanWithHistory.isLate());
+        Period period = new Period();
+        period.setBegin(dbItemDailyPlanWithHistory.getPeriodBegin());
+        period.setEnd(dbItemDailyPlanWithHistory.getPeriodEnd());
+        period.setRepeat(dbItemDailyPlanWithHistory.getRepeatInterval());
+        p.setPeriod(period);
+
+        p.setPlannedStartTime(dbItemDailyPlanWithHistory.getPlannedStart());
+        p.setExpectedEndTime(dbItemDailyPlanWithHistory.getExpectedEnd());
+        p.setLate(dbItemDailyPlanWithHistory.isLate());
+        p.setSurveyDate(dbItemDailyPlanWithHistory.getPlannedOrderCreated());
+
+        p.setStartMode(dbItemDailyPlanWithHistory.getStartMode());
+
+        p.setWorkflowPath(dbItemDailyPlanWithHistory.getWorkflowPath());
+        p.setOrderId(dbItemDailyPlanWithHistory.getOrderId());
+        p.setSchedulePath(dbItemDailyPlanWithHistory.getSchedulePath());
+
+        OrderState orderState = new OrderState();
+        if (dbItemDailyPlanWithHistory.isSubmitted()) {
+            orderState.set_text(dbItemDailyPlanWithHistory.getStateText());
+            orderState.setSeverity(OrdersHelper.severityByGroupedStates.get(orderState.get_text()));
+        } else {
+            orderState.set_text(OrderStateText.PLANNED);
+            orderState.setSeverity(OrdersHelper.severityByGroupedStates.get(orderState.get_text()));
+        }
+        p.setState(orderState);
+
+        if (dbItemDailyPlanWithHistory.getOrderHistoryId() != null) {
+            if (dbItemDailyPlanWithHistory.getStartTime().after(new Date(0L))) {
+                p.setStartTime(dbItemDailyPlanWithHistory.getStartTime());
+                p.setEndTime(dbItemDailyPlanWithHistory.getEndTime());
+            }
+            p.setHistoryId(String.valueOf(dbItemDailyPlanWithHistory.getOrderHistoryId()));
+        }
+        return p;
+
+    }
+
+    private void setSettings() throws Exception {
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection(API_CALL);
+            GlobalSettingsReader reader = new GlobalSettingsReader();
+            this.settings = reader.getSettings(session);
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
 }

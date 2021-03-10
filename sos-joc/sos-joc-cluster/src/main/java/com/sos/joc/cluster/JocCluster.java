@@ -222,12 +222,11 @@ public class JocCluster {
     }
 
     @SuppressWarnings("unused")
-    private static GlobalSettings getStoredSettings(SOSHibernateSession session) throws Exception {
+    public static GlobalSettings getStoredSettings(SOSHibernateSession session) throws Exception {
         return getStoredSettings(null, session);
     }
 
-    @SuppressWarnings("unused")
-    private static GlobalSettingsSection getStoredSettings(SOSHibernateSession session, ClusterServices service) throws Exception {
+    public static GlobalSettingsSection getStoredSettings(SOSHibernateSession session, ClusterServices service) throws Exception {
         GlobalSettings settings = getStoredSettings(null, session);
         return settings == null ? null : settings.getAdditionalProperties().get(service.name());
     }

@@ -13,7 +13,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.SOSFilter;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
@@ -78,10 +77,10 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         listOfOrders.add(orderId);
     }
 
-    public void setDailyPlanDate(String dailyPlanDate) {
+    public void setDailyPlanDate(String dailyPlanDate, String timeZone, String periodBegin) {
         if (dailyPlanDate != null) {
             this.dailyPlanDate = dailyPlanDate;
-            setOrderPlanDateInterval();
+            setOrderPlanDateInterval(timeZone, periodBegin);
         }
     }
 
@@ -92,9 +91,9 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         listOfScheduleNames.add(scheduleName);
     }
 
-    private void setOrderPlanDateInterval() {
-        String timeZone = Globals.sosCockpitProperties.getProperty("daily_plan_timezone", Globals.DEFAULT_TIMEZONE_DAILY_PLAN);
-        String periodBegin = Globals.sosCockpitProperties.getProperty("daily_plan_period_begin", Globals.DEFAULT_PERIOD_DAILY_PLAN);
+    private void setOrderPlanDateInterval(String timeZone, String periodBegin) {
+        // String timeZone = Globals.sosCockpitProperties.getProperty("daily_plan_timezone", Globals.DEFAULT_TIMEZONE_DAILY_PLAN);
+        // String periodBegin = Globals.sosCockpitProperties.getProperty("daily_plan_period_begin", Globals.DEFAULT_PERIOD_DAILY_PLAN);
         String dateInString = String.format("%s %s", dailyPlanDate, periodBegin);
 
         Optional<Instant> oInstant = JobSchedulerDate.getScheduledForInUTC(dateInString, timeZone);

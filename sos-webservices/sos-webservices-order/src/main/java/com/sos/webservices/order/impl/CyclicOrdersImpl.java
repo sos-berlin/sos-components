@@ -19,6 +19,8 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter;
 import com.sos.joc.model.order.OrderIds;
 import com.sos.joc.model.order.OrdersFilterV;
+import com.sos.js7.order.initiator.OrderInitiatorSettings;
+import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
@@ -29,6 +31,7 @@ public class CyclicOrdersImpl extends JOCResourceImpl implements ICyclicOrdersRe
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CyclicOrdersImpl.class);
     private static final String API_CALL = "./daily_plan/orders/cyclic";
+    private OrderInitiatorSettings settings;
 
     @Override
     public JOCDefaultResponse postCyclicOrders(String accessToken, byte[] filterBytes) {
@@ -45,7 +48,7 @@ public class CyclicOrdersImpl extends JOCResourceImpl implements ICyclicOrdersRe
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-
+            setSettings();
             OrderIds expandedOrderIds = new OrderIds();
             for (String orderId : ordersFilterV.getOrderIds()) {
                 expandedOrderIds.getOrderIds().add(orderId);
@@ -89,7 +92,7 @@ public class CyclicOrdersImpl extends JOCResourceImpl implements ICyclicOrdersRe
                     filterCyclic.setPeriodEnd(dbItemDailyPlanOrder.getPeriodEnd());
                     filterCyclic.setWorkflowName(dbItemDailyPlanOrder.getWorkflowName());
                     filterCyclic.setScheduleName(dbItemDailyPlanOrder.getScheduleName());
-                    filterCyclic.setDailyPlanDate(dbItemDailyPlanOrder.getDailyPlanDate());
+                    filterCyclic.setDailyPlanDate(dbItemDailyPlanOrder.getDailyPlanDate(), settings.getTimeZone(), settings.getPeriodBegin());
 
                     List<DBItemDailyPlanOrders> listOfPlannedCyclicOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filterCyclic, 0);
                     for (DBItemDailyPlanOrders dbItemDailyPlanOrders : listOfPlannedCyclicOrders) {
@@ -99,11 +102,22 @@ public class CyclicOrdersImpl extends JOCResourceImpl implements ICyclicOrdersRe
                     }
                 }
             } else {
-                //LOGGER.warn("Expected one record for order-id " + filter.getOrderId());
+                // LOGGER.warn("Expected one record for order-id " + filter.getOrderId());
                 throw new DBMissingDataException("Expected one record for order-id " + filter.getOrderId());
             }
         } finally {
             Globals.disconnect(sosHibernateSession);
+        }
+    }
+
+    private void setSettings() throws Exception {
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection(API_CALL);
+            GlobalSettingsReader reader = new GlobalSettingsReader();
+            this.settings = reader.getSettings(session);
+        } finally {
+            Globals.disconnect(session);
         }
     }
 

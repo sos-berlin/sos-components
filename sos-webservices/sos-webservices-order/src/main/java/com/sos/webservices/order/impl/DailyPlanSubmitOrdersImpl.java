@@ -39,6 +39,7 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter;
 import com.sos.js7.order.initiator.OrderInitiatorRunner;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
+import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
@@ -49,19 +50,26 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanSubmitOrdersImpl.class);
     private static final String API_CALL = "./daily_plan/orders/submit";
+    private OrderInitiatorSettings settings;
 
     private void submitOrdersToController(DailyPlanOrderFilter dailyPlanOrderFilter) throws JsonParseException, JsonMappingException,
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
             JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, IOException, ParseException, SOSException,
             URISyntaxException, InterruptedException, ExecutionException, TimeoutException {
 
+        try {
+            setSettings();
+        } catch (Exception e) {
+            throw new SOSException(e);
+        }
+
         OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
         orderInitiatorSettings.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
         orderInitiatorSettings.setOverwrite(false);
         orderInitiatorSettings.setSubmit(true);
 
-        orderInitiatorSettings.setTimeZone(Globals.sosCockpitProperties.getProperty("daily_plan_timezone", Globals.DEFAULT_TIMEZONE_DAILY_PLAN));
-        orderInitiatorSettings.setPeriodBegin(Globals.sosCockpitProperties.getProperty("daily_plan_period_begin", Globals.DEFAULT_PERIOD_DAILY_PLAN));
+        orderInitiatorSettings.setTimeZone(settings.getTimeZone());
+        orderInitiatorSettings.setPeriodBegin(settings.getPeriodBegin());
         OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings, false);
 
         SOSHibernateSession sosHibernateSession = null;
@@ -77,7 +85,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
 
                 for (String orderId : orderIds) {
                     dbLayerDailyPlannedOrders.addCyclicOrderIds(dailyPlanOrderFilter.getFilter().getOrderIds(), orderId, dailyPlanOrderFilter
-                            .getControllerId());
+                            .getControllerId(), orderInitiatorSettings.getTimeZone(), orderInitiatorSettings.getPeriodBegin());
                 }
             }
 
@@ -110,7 +118,8 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
 
                 filter.setListOfOrders(dailyPlanOrderFilter.getFilter().getOrderIds());
                 filter.setSubmitted(false);
-                filter.setDailyPlanDate(dailyPlanOrderFilter.getFilter().getDailyPlanDate());
+                filter.setDailyPlanDate(dailyPlanOrderFilter.getFilter().getDailyPlanDate(), orderInitiatorSettings.getTimeZone(),
+                        orderInitiatorSettings.getPeriodBegin());
                 filter.setListOfOrders(dailyPlanOrderFilter.getFilter().getOrderIds());
                 filter.setListOfSubmissionIds(dailyPlanOrderFilter.getFilter().getSubmissionHistoryIds());
 
@@ -144,7 +153,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
 
                     List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
                     Globals.commit(sosHibernateSession);
-                    orderInitiatorRunner.submitOrders(getJocError(),getAccessToken(), listOfPlannedOrders);
+                    orderInitiatorRunner.submitOrders(getJocError(), getAccessToken(), listOfPlannedOrders);
                 }
             }
         } finally {
@@ -182,4 +191,14 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
         }
     }
 
+    private void setSettings() throws Exception {
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection(API_CALL);
+            GlobalSettingsReader reader = new GlobalSettingsReader();
+            this.settings = reader.getSettings(session);
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
 }

@@ -34,7 +34,9 @@ import com.sos.joc.model.dailyplan.PlannedOrderItem;
 import com.sos.joc.model.dailyplan.PlannedOrders;
 import com.sos.joc.model.order.OrderState;
 import com.sos.joc.model.order.OrderStateText;
+import com.sos.js7.order.initiator.OrderInitiatorSettings;
 import com.sos.js7.order.initiator.classes.CycleOrderKey;
+import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
@@ -45,6 +47,7 @@ public class DailyPlanOrdersSummaryImpl extends JOCResourceImpl implements IDail
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanOrdersSummaryImpl.class);
     private static final String API_CALL = "./daily_plan/orders/summary";
+    private OrderInitiatorSettings settings;
 
     private PlannedOrderItem createPlanItem(DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory) {
 
@@ -107,7 +110,7 @@ public class DailyPlanOrdersSummaryImpl extends JOCResourceImpl implements IDail
 
             this.checkRequiredParameter("filter", dailyPlanOrderFilter.getFilter());
             this.checkRequiredParameter("dailyPlanDate", dailyPlanOrderFilter.getFilter().getDailyPlanDate());
-
+            setSettings();
             LOGGER.debug("Reading the daily plan for day " + dailyPlanOrderFilter.getFilter().getDailyPlanDate());
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
@@ -148,7 +151,7 @@ public class DailyPlanOrdersSummaryImpl extends JOCResourceImpl implements IDail
             filter.setListOfSubmissionIds(dailyPlanOrderFilter.getFilter().getSubmissionHistoryIds());
             filter.setListOfScheduleNames(dailyPlanOrderFilter.getFilter().getScheduleNames());
             filter.setListOfOrders(dailyPlanOrderFilter.getFilter().getOrderIds());
-            filter.setDailyPlanDate(dailyPlanOrderFilter.getFilter().getDailyPlanDate());
+            filter.setDailyPlanDate(dailyPlanOrderFilter.getFilter().getDailyPlanDate(), settings.getTimeZone(), settings.getPeriodBegin());
             filter.setLate(dailyPlanOrderFilter.getFilter().getLate());
 
             if (withFolderFilter && (folders == null || folders.isEmpty())) {
@@ -246,4 +249,14 @@ public class DailyPlanOrdersSummaryImpl extends JOCResourceImpl implements IDail
         }
     }
 
+    private void setSettings() throws Exception {
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection(API_CALL);
+            GlobalSettingsReader reader = new GlobalSettingsReader();
+            this.settings = reader.getSettings(session);
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
 }

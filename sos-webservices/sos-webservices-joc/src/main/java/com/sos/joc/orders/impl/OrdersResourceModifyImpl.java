@@ -4,9 +4,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
@@ -29,16 +27,13 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
-import com.sos.joc.db.orders.DBItemDailyPlanVariables;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.common.VariableType;
 import com.sos.joc.model.order.ModifyOrders;
 import com.sos.joc.orders.resource.IOrdersResourceModify;
+import com.sos.js7.order.initiator.OrderInitiatorSettings;
+import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
-import com.sos.js7.order.initiator.db.DBLayerOrderVariables;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
-import com.sos.js7.order.initiator.db.FilterOrderVariables;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
@@ -61,6 +56,7 @@ import scala.Function1;
 public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrdersResourceModify {
 
     private static final String API_CALL = "./orders";
+    private OrderInitiatorSettings settings;
 
     private enum Action {
         CANCEL, SUSPEND, RESUME, REMOVE_WHEN_TERMINATED
@@ -75,6 +71,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            setSettings();
             postOrdersModify(Action.SUSPEND, modifyOrders);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -118,7 +115,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
                 FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
                 filter.setControllerId(modifyOrders.getControllerId());
-                filter.setDailyPlanDate(modifyOrders.getDailyPlanDate());
+                filter.setDailyPlanDate(modifyOrders.getDailyPlanDate(), settings.getTimeZone(), settings.getPeriodBegin());
                 filter.setSubmitted(true);
                 List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
                 for (DBItemDailyPlanOrders dbItemDailyPlanOrders : listOfPlannedOrders) {
@@ -294,6 +291,17 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         initLogging(API_CALL + "/" + action.name().toLowerCase(), filterBytes, accessToken);
         JsonValidator.validate(filterBytes, ModifyOrders.class);
         return Globals.objectMapper.readValue(filterBytes, ModifyOrders.class);
+    }
+
+    private void setSettings() throws Exception {
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection(API_CALL);
+            GlobalSettingsReader reader = new GlobalSettingsReader();
+            this.settings = reader.getSettings(session);
+        } finally {
+            Globals.disconnect(session);
+        }
     }
 
 }

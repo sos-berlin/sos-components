@@ -31,6 +31,8 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.joc.model.order.OrderStateText;
+import com.sos.js7.order.initiator.OrderInitiatorSettings;
+import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
@@ -41,12 +43,42 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanDeleteOrdersImpl.class);
     private static final String API_CALL_DELETE = "./daily_plan/orders/delete";
+    private OrderInitiatorSettings settings;
 
-  
+    @Override
+    public JOCDefaultResponse postDeleteOrders(String accessToken, byte[] filterBytes) {
 
-    private FilterDailyPlannedOrders getFilter(SOSHibernateSession sosHibernateSession, DailyPlanOrderFilter dailyPlanOrderFilter) throws SOSHibernateException {
+        LOGGER.debug("Delete orders from the daily plan");
+        try {
+            initLogging(API_CALL_DELETE, filterBytes, accessToken);
+            DailyPlanOrderFilter dailyPlanOrderFilter = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
+            JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilter.class);
 
-      
+            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanOrderFilter.getControllerId(), getPermissonsJocCockpit(
+                    dailyPlanOrderFilter.getControllerId(), accessToken).getDailyPlan().getView().isStatus());
+
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            this.checkRequiredParameter("filter", dailyPlanOrderFilter.getFilter());
+            this.checkRequiredParameter("dailyPlanDate", dailyPlanOrderFilter.getFilter().getDailyPlanDate());
+
+            setSettings();
+            deleteOrdersFromPlan(dailyPlanOrderFilter);
+            return JOCDefaultResponse.responseStatusJSOk(new Date());
+
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+
+    }
+
+    private FilterDailyPlannedOrders getFilter(SOSHibernateSession sosHibernateSession, DailyPlanOrderFilter dailyPlanOrderFilter)
+            throws SOSHibernateException {
+
         DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
 
         List<String> orderIds = new ArrayList<String>();
@@ -54,13 +86,14 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
             orderIds.addAll(dailyPlanOrderFilter.getFilter().getOrderIds());
 
             for (String orderId : orderIds) {
-                dbLayerDailyPlannedOrders.addCyclicOrderIds(dailyPlanOrderFilter.getFilter().getOrderIds(), orderId, dailyPlanOrderFilter.getControllerId());
+                dbLayerDailyPlannedOrders.addCyclicOrderIds(dailyPlanOrderFilter.getFilter().getOrderIds(), orderId, dailyPlanOrderFilter
+                        .getControllerId(), settings.getTimeZone(), settings.getPeriodBegin());
             }
         }
         FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
         filter.setListOfOrders(dailyPlanOrderFilter.getFilter().getOrderIds());
         filter.setControllerId(dailyPlanOrderFilter.getControllerId());
-        filter.setDailyPlanDate(dailyPlanOrderFilter.getFilter().getDailyPlanDate());
+        filter.setDailyPlanDate(dailyPlanOrderFilter.getFilter().getDailyPlanDate(), settings.getTimeZone(), settings.getPeriodBegin());
         filter.setListOfSubmissionIds(dailyPlanOrderFilter.getFilter().getSubmissionHistoryIds());
 
         if (dailyPlanOrderFilter.getFilter().getSchedulePaths() != null) {
@@ -101,7 +134,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
 
-            FilterDailyPlannedOrders filter = getFilter(sosHibernateSession,dailyPlanOrderFilter);
+            FilterDailyPlannedOrders filter = getFilter(sosHibernateSession, dailyPlanOrderFilter);
             filter.addState(OrderStateText.PLANNED);
             dbLayerDailyPlannedOrders.deleteCascading(filter);
             Globals.commit(sosHibernateSession);
@@ -115,34 +148,15 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
         }
     }
 
-    @Override
-    public JOCDefaultResponse postDeleteOrders(String accessToken, byte[] filterBytes) {
-
-        LOGGER.debug("Delete orders from the daily plan");
+    private void setSettings() throws Exception {
+        SOSHibernateSession session = null;
         try {
-            initLogging(API_CALL_DELETE, filterBytes, accessToken);
-            DailyPlanOrderFilter dailyPlanOrderFilter = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
-            JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilter.class);
-
-            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanOrderFilter.getControllerId(), getPermissonsJocCockpit(
-                    dailyPlanOrderFilter.getControllerId(), accessToken).getDailyPlan().getView().isStatus());
-            
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
-            }
-            this.checkRequiredParameter("filter", dailyPlanOrderFilter.getFilter());
-            this.checkRequiredParameter("dailyPlanDate", dailyPlanOrderFilter.getFilter().getDailyPlanDate());
-
-            deleteOrdersFromPlan(dailyPlanOrderFilter);
-            return JOCDefaultResponse.responseStatusJSOk(new Date());
-
-        } catch (JocException e) {
-            e.addErrorMetaInfo(getJocError());
-            return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (Exception e) {
-            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+            session = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
+            GlobalSettingsReader reader = new GlobalSettingsReader();
+            this.settings = reader.getSettings(session);
+        } finally {
+            Globals.disconnect(session);
         }
-
     }
 
 }

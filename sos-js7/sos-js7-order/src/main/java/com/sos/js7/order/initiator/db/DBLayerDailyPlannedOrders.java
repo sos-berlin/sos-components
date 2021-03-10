@@ -461,7 +461,6 @@ public class DBLayerDailyPlannedOrders {
         return row;
     }
 
-    
     public void store(PlannedOrder plannedOrder) throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException,
             ParseException {
         store(plannedOrder, null, 0, 0);
@@ -479,8 +478,8 @@ public class DBLayerDailyPlannedOrders {
         return dbItemDailyPlanOrders;
     }
 
-    
-    public void addCyclicOrderIds(List<String> orderIds, String orderId, String controllerId) throws SOSHibernateException {
+    public void addCyclicOrderIds(List<String> orderIds, String orderId, String controllerId, String timeZone, String periodBegin)
+            throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("addCyclicOrderIds");
@@ -496,7 +495,7 @@ public class DBLayerDailyPlannedOrders {
             if (listOfPlannedOrders.size() == 1) {
                 DBItemDailyPlanOrders dbItemDailyPlanOrder = listOfPlannedOrders.get(0);
                 if (dbItemDailyPlanOrder.getStartMode() == 1) {
-                    
+
                     FilterDailyPlannedOrders filterCyclic = new FilterDailyPlannedOrders();
                     filterCyclic.setControllerId(controllerId);
                     filterCyclic.setRepeatInterval(dbItemDailyPlanOrder.getRepeatInterval());
@@ -504,9 +503,8 @@ public class DBLayerDailyPlannedOrders {
                     filterCyclic.setPeriodEnd(dbItemDailyPlanOrder.getPeriodEnd());
                     filterCyclic.setWorkflowName(dbItemDailyPlanOrder.getWorkflowName());
                     filterCyclic.setScheduleName(dbItemDailyPlanOrder.getScheduleName());
-                    filterCyclic.setDailyPlanDate(dbItemDailyPlanOrder.getDailyPlanDate());
+                    filterCyclic.setDailyPlanDate(dbItemDailyPlanOrder.getDailyPlanDate(), timeZone, periodBegin);
 
-                    
                     List<DBItemDailyPlanOrders> listOfPlannedCyclicOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filterCyclic, 0);
                     for (DBItemDailyPlanOrders dbItemDailyPlanOrders : listOfPlannedCyclicOrders) {
                         if (!dbItemDailyPlanOrders.getOrderId().equals(orderId)) {
@@ -523,6 +521,6 @@ public class DBLayerDailyPlannedOrders {
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
-    }    
-    
+    }
+
 }

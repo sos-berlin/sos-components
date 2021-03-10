@@ -49,6 +49,7 @@ import com.sos.joc.model.dailyplan.DailyPlanModifyOrder;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.order.initiator.OrderInitiatorRunner;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
+import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.DBLayerOrderVariables;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
@@ -61,6 +62,8 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanModifyOrderImpl.class);
     private static final String API_CALL_MODIFY_ORDER = "./daily_plan/orders/modify";
+
+    private OrderInitiatorSettings settings;
 
     @Override
     public JOCDefaultResponse postModifyOrder(String accessToken, byte[] filterBytes) throws JocException {
@@ -79,8 +82,8 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
                 return jocDefaultResponse;
             }
 
-            //TODO this check is not necessary if schema specifies orderIds as required and with minItems:1
-            // uniqueItems should also better 
+            // TODO this check is not necessary if schema specifies orderIds as required and with minItems:1
+            // uniqueItems should also better
             this.checkRequiredParameter("orderIds", dailyplanModifyOrder.getOrderIds());
             if (dailyplanModifyOrder.getStartTime() == null && dailyplanModifyOrder.getRemoveVariables() == null && dailyplanModifyOrder
                     .getVariables() == null) {
@@ -88,12 +91,13 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
             }
             checkRequiredComment(dailyplanModifyOrder.getAuditLog());
 
+            setSettings();
             List<String> orderIds = dailyplanModifyOrder.getOrderIds();
             Set<String> temporaryOrderIds = orderIds.stream().filter(id -> id.matches(".*#T[0-9]+-.*")).collect(Collectors.toSet());
             List<Err419> errors = OrdersHelper.cancelAndAddFreshOrder(temporaryOrderIds, dailyplanModifyOrder, accessToken, getJocError(),
                     getJocAuditLog());
             orderIds.removeAll(temporaryOrderIds);
-            
+
             List<String> listOfOrderIds = new ArrayList<String>();
             for (String orderId : orderIds) {
                 listOfOrderIds.add(orderId);
@@ -106,7 +110,7 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
             for (String orderId : listOfOrderIds) {
                 modifyOrder(orderId, dailyplanModifyOrder);
             }
-            
+
             if (!errors.isEmpty()) {
                 return JOCDefaultResponse.responseStatus419(errors);
             }
@@ -122,12 +126,24 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
 
     }
 
+    private void setSettings() throws Exception {
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER);
+            GlobalSettingsReader reader = new GlobalSettingsReader();
+            this.settings = reader.getSettings(session);
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
+
     private void addCyclicOrderIds(List<String> orderIds, String orderId, DailyPlanModifyOrder dailyplanModifyOrder) throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER);
             DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
-            dbLayerDailyPlannedOrders.addCyclicOrderIds(orderIds, orderId, dailyplanModifyOrder.getControllerId());
+            dbLayerDailyPlannedOrders.addCyclicOrderIds(orderIds, orderId, dailyplanModifyOrder.getControllerId(), settings.getTimeZone(), settings
+                    .getPeriodBegin());
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -158,12 +174,11 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
             orderInitiatorSettings.setOverwrite(false);
             orderInitiatorSettings.setSubmit(true);
 
-            orderInitiatorSettings.setTimeZone(Globals.sosCockpitProperties.getProperty("daily_plan_timezone", Globals.DEFAULT_TIMEZONE_DAILY_PLAN));
-            orderInitiatorSettings.setPeriodBegin(Globals.sosCockpitProperties.getProperty("daily_plan_period_begin",
-                    Globals.DEFAULT_PERIOD_DAILY_PLAN));
+            orderInitiatorSettings.setTimeZone(settings.getTimeZone());
+            orderInitiatorSettings.setPeriodBegin(settings.getPeriodBegin());
             OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings, false);
 
-            orderInitiatorRunner.submitOrders(getJocError(),getAccessToken(),listOfPlannedOrders);
+            orderInitiatorRunner.submitOrders(getJocError(), getAccessToken(), listOfPlannedOrders);
         }
     }
 

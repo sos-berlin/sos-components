@@ -7,7 +7,6 @@ import java.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.cluster.AJocClusterService;
@@ -16,13 +15,12 @@ import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
-import com.sos.joc.cluster.configuration.JocClusterGlobalSettings;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
-import com.sos.joc.model.configuration.globals.GlobalSettingsSectionEntry;
 import com.sos.js7.order.initiator.classes.DailyPlanHelper;
+import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
 import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 
 public class OrderInitiatorService extends AJocClusterService {
@@ -125,59 +123,19 @@ public class OrderInitiatorService extends AJocClusterService {
         return val;
     }
 
-    private void setDefaults() {
-        GlobalSettingsSection defaultSettings = JocClusterGlobalSettings.getDefaultSettings(ClusterServices.dailyplan);
-        GlobalSettingsSectionEntry timezone = JocClusterGlobalSettings.getSectionEntry(defaultSettings, "time_zone");
-        settings.setTimeZone(timezone.getDefault());
-
-        GlobalSettingsSectionEntry periodBegin = JocClusterGlobalSettings.getSectionEntry(defaultSettings, "period_begin");
-        settings.setPeriodBegin(periodBegin.getDefault());
-
-        GlobalSettingsSectionEntry startTime = JocClusterGlobalSettings.getSectionEntry(defaultSettings, "start_time");
-        settings.setDailyPlanStartTime(startTime.getDefault());
-
-        GlobalSettingsSectionEntry daysAheadPlan = JocClusterGlobalSettings.getSectionEntry(defaultSettings, "days_ahead_plan");
-        settings.setDayAheadPlan(daysAheadPlan.getDefault());
-
-        GlobalSettingsSectionEntry daysAheadSubmit = JocClusterGlobalSettings.getSectionEntry(defaultSettings, "days_ahead_submit");
-        settings.setDayAheadSubmit(daysAheadSubmit.getDefault());
-    }
-
     private void setSettings(StartupMode mode, GlobalSettingsSection globalSettings) throws Exception {
         settings = new OrderInitiatorSettings();
         settings.setHibernateConfigurationFile(getJocConfig().getHibernateConfiguration());
         settings.setStartMode(mode);
 
-        setDefaults();
-        if (globalSettings == null) {
-            return;
-        }
+        GlobalSettingsReader reader = new GlobalSettingsReader();
+        OrderInitiatorSettings readerSettings = reader.getSettings(globalSettings);
 
-        String timeZone = JocClusterGlobalSettings.getValue(globalSettings, "time_zone");
-        if (!SOSString.isEmpty(timeZone)) {
-            this.settings.setTimeZone(timeZone);
-        }
-
-        String periodBegin = JocClusterGlobalSettings.getValue(globalSettings, "period_begin");
-        if (!SOSString.isEmpty(periodBegin)) {
-            this.settings.setPeriodBegin(periodBegin);
-        }
-
-        String startTime = JocClusterGlobalSettings.getValue(globalSettings, "start_time");
-        if (!SOSString.isEmpty(startTime)) {
-            this.settings.setDailyPlanStartTime(startTime);
-        }
-
-        String daysAheadPlan = JocClusterGlobalSettings.getValue(globalSettings, "days_ahead_plan");
-        if (!SOSString.isEmpty(daysAheadPlan)) {
-            this.settings.setDayAheadPlan(daysAheadPlan);
-        }
-
-        String daysAheadSubmit = JocClusterGlobalSettings.getValue(globalSettings, "days_ahead_submit");
-        if (!SOSString.isEmpty(daysAheadSubmit)) {
-            this.settings.setDayAheadSubmit(daysAheadSubmit);
-        }
-        LOGGER.debug(SOSString.toString(settings));
+        settings.setTimeZone(readerSettings.getTimeZone());
+        settings.setPeriodBegin(readerSettings.getPeriodBegin());
+        settings.setDailyPlanStartTime(readerSettings.getDailyPlanStartTime());
+        settings.setDayAheadPlan(readerSettings.getDayAheadPlan());
+        settings.setDayAheadSubmit(readerSettings.getDayAheadSubmit());
     }
 
     @SuppressWarnings("unused")
@@ -186,15 +144,6 @@ public class OrderInitiatorService extends AJocClusterService {
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties(getJocConfig().getResourceDirectory().resolve("joc.properties"));
         }
-
-        // if(globalSettings!=null){
-        // each setting can be null (not stored in the database) - defaults should be used
-        // JocClusterConfiguration.getValue(globalSettings, "time_zone");
-        // JocClusterConfiguration.getValue(globalSettings, "period_begin");
-        // JocClusterConfiguration.getValue(globalSettings, "start_time");
-        // JocClusterConfiguration.getValue(globalSettings, "days_ahead_plan");
-        // JocClusterConfiguration.getValue(globalSettings, "days_ahead_submit");
-        // }
 
         LOGGER.debug("...Settings from " + getJocConfig().getResourceDirectory().resolve("joc.properties").normalize());
 
