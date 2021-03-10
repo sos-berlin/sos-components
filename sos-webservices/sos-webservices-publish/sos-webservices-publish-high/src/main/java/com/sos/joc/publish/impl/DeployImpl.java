@@ -40,7 +40,6 @@ import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.publish.db.DBLayerDeploy;
-import com.sos.joc.publish.mapper.DbItemConfWithOriginalContent;
 import com.sos.joc.publish.resource.IDeploy;
 import com.sos.joc.publish.util.DeleteDeployments;
 import com.sos.joc.publish.util.PublishUtils;
@@ -100,13 +99,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             if (draftConfigsToStore != null) {
                 configurationDBItemsToStore = dbLayer.getFilteredInventoryConfiguration(draftConfigsToStore);
             }
-            Set<DbItemConfWithOriginalContent> cfgsDBItemsToStore = null;
-            if (configurationDBItemsToStore != null) {
-                cfgsDBItemsToStore = configurationDBItemsToStore.stream()
-                        .map(item -> new DbItemConfWithOriginalContent(item, item.getContent()))
-                        .filter(Objects::nonNull).collect(Collectors.toSet());
-            }
-            final Set<DbItemConfWithOriginalContent> unmodified = cfgsDBItemsToStore;
             List<DBItemDeploymentHistory> depHistoryDBItemsToStore = null;
             if (!deployConfigsToStoreAgain.isEmpty()) {
                 depHistoryDBItemsToStore = dbLayer.getFilteredDeploymentHistory(deployConfigsToStoreAgain);
@@ -168,8 +160,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             // call ControllerApi for all provided Controllers
             for (String controllerId : controllerIds) {
                 // store new history entries and update inventory for update operation optimistically
-                StoreDeployments.storeNewDepHistoryEntries(verifiedConfigurations, null, verifiedReDeployables, account, commitId, controllerId, 
-                        unmodified, getAccessToken(), getJocError(), dbLayer);
+                StoreDeployments.storeNewDepHistoryEntries(verifiedConfigurations, null, verifiedReDeployables, account, commitId, controllerId,
+                        getAccessToken(), getJocError(), dbLayer);
                 // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename
                 List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkPathRenamingForUpdate(verifiedConfigurations.keySet(),
                         controllerId, dbLayer, keyPair.getKeyAlgorithm());

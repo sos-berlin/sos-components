@@ -33,7 +33,6 @@ import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.publish.db.DBLayerDeploy;
-import com.sos.joc.publish.mapper.DbItemConfWithOriginalContent;
 import com.sos.joc.publish.mapper.SignedItemsSpec;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.joc.publish.resource.IDeploy;
@@ -96,13 +95,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 }
                 configurationDBItemsToStore.addAll(PublishUtils.getValidDeployableDraftInventoryConfigurationsfromFolders(draftFoldersToStore, dbLayer));
             }
-            Set<DbItemConfWithOriginalContent> cfgsDBItemsToStore = null;
-            if (configurationDBItemsToStore != null) {
-                cfgsDBItemsToStore = configurationDBItemsToStore.stream()
-                        .map(item -> new DbItemConfWithOriginalContent(item, item.getContent()))
-                        .filter(Objects::nonNull).collect(Collectors.toSet());
-            }
-            final Set<DbItemConfWithOriginalContent> unmodified = cfgsDBItemsToStore;
             List<DBItemDeploymentHistory> depHistoryDBItemsToStore = null;
             if (!deployConfigsToStoreAgain.isEmpty()) {
                 depHistoryDBItemsToStore = dbLayer.getFilteredDeploymentHistory(deployConfigsToStoreAgain);
@@ -205,7 +197,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 if ((verifiedConfigurations != null && !verifiedConfigurations.isEmpty())
                         || (verifiedReDeployables != null && !verifiedReDeployables.isEmpty())) {
                     SignedItemsSpec signedItemsSpec = 
-                            new SignedItemsSpec(keyPair, verifiedConfigurations, verifiedReDeployables, updateableAgentNames, unmodified);
+                            new SignedItemsSpec(keyPair, verifiedConfigurations, verifiedReDeployables, updateableAgentNames);
                     // call updateRepo command via ControllerApi for given controller
                     StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
                 }

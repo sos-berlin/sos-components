@@ -31,7 +31,6 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.publish.db.DBLayerDeploy;
-import com.sos.joc.publish.mapper.DbItemConfWithOriginalContent;
 import com.sos.joc.publish.mapper.SignedItemsSpec;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 
@@ -44,13 +43,12 @@ public class StoreDeployments {
     
     public static void storeNewDepHistoryEntriesForRedeploy(Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedDeployables,
             String account, String commitId, String controllerId, String accessToken, JocError jocError, DBLayerDeploy dbLayer) {
-        storeNewDepHistoryEntries(null, null, verifiedDeployables, account, commitId, controllerId, null, accessToken, jocError, dbLayer);
+        storeNewDepHistoryEntries(null, null, verifiedDeployables, account, commitId, controllerId, accessToken, jocError, dbLayer);
     }
     
     public static void storeNewDepHistoryEntries(Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations,
             Set<UpdateableWorkflowJobAgentName> updateableAgentNames, Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedDeployables,
-            String account, String commitId, String controllerId, Set<DbItemConfWithOriginalContent> cfgsDBItemsToStore, String accessToken,
-            JocError jocError, DBLayerDeploy dbLayer) {
+            String account, String commitId, String controllerId, String accessToken, JocError jocError, DBLayerDeploy dbLayer) {
         try {
             final Date deploymentDate = Date.from(Instant.now());
             // no error occurred
@@ -136,8 +134,7 @@ public class StoreDeployments {
             
             // store new history entries and update inventory for update operation optimistically
             storeNewDepHistoryEntries(signedItemsSpec.getVerifiedConfigurations(), signedItemsSpec.getUpdateableAgentNames(),
-                    signedItemsSpec.getVerifiedDeployables(), account, commitId, controllerId, signedItemsSpec.getUnmodified(), 
-                    accessToken, jocError, dbLayer);
+                    signedItemsSpec.getVerifiedDeployables(), account, commitId, controllerId, accessToken, jocError, dbLayer);
 
             List<DBItemInventoryCertificate> caCertificates = dbLayer.getCaCertificates();
             boolean verified = false;

@@ -81,7 +81,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                 StoreDeployments.storeNewDepHistoryEntriesForRedeploy(verifiedRedeployables, account, commitId, controllerId, getAccessToken(), 
                         getJocError(), dbLayer);
                 // call updateItems command via ControllerApi for given controllers
-                SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, null, verifiedRedeployables, null, null);
+                SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, null, verifiedRedeployables, null);
                 StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
             }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

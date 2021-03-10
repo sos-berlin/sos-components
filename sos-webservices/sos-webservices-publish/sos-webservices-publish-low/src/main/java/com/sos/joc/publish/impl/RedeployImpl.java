@@ -1,6 +1,5 @@
 package com.sos.joc.publish.impl;
 
-import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
@@ -13,14 +12,11 @@ import java.util.UUID;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.sign.keys.SOSKeyConstants;
-import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
-import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.common.JocSecurityLevel;
@@ -85,53 +81,8 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                 StoreDeployments.storeNewDepHistoryEntriesForRedeploy(verifiedRedeployables, account, commitId, controllerId, getAccessToken(), 
                         getJocError(), dbLayer);
                 // call updateItems command via ControllerApi for given controllers
-                SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, null, verifiedRedeployables, null, null);
+                SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, null, verifiedRedeployables, null);
                 StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
-
-                
-                boolean verified = false;
-                String signerDN = null;
-                List<DBItemInventoryCertificate> caCertificates = dbLayer.getCaCertificates();
-                X509Certificate cert = null;
-                switch (keyPair.getKeyAlgorithm()) {
-                case SOSKeyConstants.PGP_ALGORITHM_NAME:
-                    PublishUtils.updateItemsAddOrUpdatePGP(commitId, null, verifiedRedeployables, controllerId, dbLayer).thenAccept(either -> {
-                        StoreDeployments.processAfterAdd(either, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
-                    });
-                    break;
-                case SOSKeyConstants.RSA_ALGORITHM_NAME:
-                    cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                    verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
-                    if (verified) {
-                        PublishUtils.updateItemsAddOrUpdateWithX509Certificate(commitId, null, verifiedRedeployables, controllerId, dbLayer,
-                                SOSKeyConstants.RSA_SIGNER_ALGORITHM, keyPair.getCertificate()).thenAccept(either -> {
-                                    StoreDeployments.processAfterAdd(either, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
-                                });
-                    } else {
-                        signerDN = cert.getSubjectDN().getName();
-                        PublishUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId, null, verifiedRedeployables, controllerId, dbLayer,
-                                SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
-                                    StoreDeployments.processAfterAdd(either, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
-                                });
-                    }
-                    break;
-                case SOSKeyConstants.ECDSA_ALGORITHM_NAME:
-                    cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                    verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
-                    if (verified) {
-                        PublishUtils.updateItemsAddOrUpdateWithX509Certificate(commitId, null, verifiedRedeployables, controllerId, dbLayer,
-                                SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair.getCertificate()).thenAccept(either -> {
-                                    StoreDeployments.processAfterAdd(either, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
-                                });
-                    } else {
-                        signerDN = cert.getSubjectDN().getName();
-                        PublishUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId, null, verifiedRedeployables, controllerId, dbLayer,
-                                SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
-                                    StoreDeployments.processAfterAdd(either, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
-                                });
-                    }
-                    break;
-                }
             }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
