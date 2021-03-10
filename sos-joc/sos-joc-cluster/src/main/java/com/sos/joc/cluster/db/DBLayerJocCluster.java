@@ -62,7 +62,7 @@ public class DBLayerJocCluster extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
-    public DBItemJocConfiguration getClusterSettings() throws Exception {
+    public DBItemJocConfiguration getGlobalsSettings() throws Exception {
         StringBuilder sql = new StringBuilder("from ");
         sql.append(DBLayer.DBITEM_JOC_CONFIGURATIONS).append(" ");
         sql.append("where configurationType=:configurationType ");

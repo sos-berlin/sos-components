@@ -97,6 +97,20 @@ public class JocClusterGlobalSettings {
         }
     }
 
+    public static void setCleanupInitialTimeZone(GlobalSettings settings, String timeZone) {
+        try {
+            settings.getAdditionalProperties().get(ClusterServices.cleanup.name()).getAdditionalProperties().get("time_zone").setValue(timeZone);
+        } catch (Throwable e) {
+        }
+    }
+
+    public static void setDailyPlanInitialTimeZone(GlobalSettings settings, String timeZone) {
+        try {
+            settings.getAdditionalProperties().get(ClusterServices.dailyplan.name()).getAdditionalProperties().get("time_zone").setValue(timeZone);
+        } catch (Throwable e) {
+        }
+    }
+
     private static void addDefaultEntry(GlobalSettingsSection s, int ordering, String entryName, String defaultValue,
             GlobalSettingsSectionValueType valueType) {
         GlobalSettingsSectionEntry e = new GlobalSettingsSectionEntry();

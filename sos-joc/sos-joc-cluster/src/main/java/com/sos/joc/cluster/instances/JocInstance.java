@@ -34,21 +34,25 @@ public class JocInstance {
                 item.setDataDirectory(config.getDataDirectory().toString());
                 item.setSecurityLevel(config.getSecurityLevel().name());
                 item.setStartedAt(startTime);
-                item.setTimezone(config.getTimezone());
+                item.setTimezone(config.getTimeZone());
                 item.setTitle(config.getTitle());
                 item.setOrdering(config.getOrdering());
                 item.setUri(null);// TODO
                 item.setHeartBeat(new Date());
                 dbLayer.getSession().save(item);
             } else {
+                // item.setTimezone(config.getTimeZone());
+                // item.setTitle(config.getTitle());
+                // item.setOrdering(config.getOrdering());
+                // item.setUri(null);
+
                 item.setSecurityLevel(config.getSecurityLevel().name());
                 item.setStartedAt(startTime);
-                item.setTimezone(config.getTimezone());
-                item.setTitle(config.getTitle());
-                item.setOrdering(config.getOrdering());
-                // item.setUri(null);
                 item.setHeartBeat(new Date());
                 dbLayer.getSession().update(item);
+
+                config.setTimeZone(item.getTimezone());
+                config.setTitle(item.getTitle());
             }
             dbLayer.getSession().commit();
             return item;

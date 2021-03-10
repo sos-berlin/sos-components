@@ -74,6 +74,7 @@ public class JocCluster {
 
     private List<ControllerConfiguration> controllers;
     private GlobalSettings settings;
+    private static String jocTimeZone = null;
     private Timer settingsChangedTimer;
     private AtomicReference<List<String>> settingsChanged = new AtomicReference<List<String>>();
     private final Object lockSettings = new Object();
@@ -122,6 +123,7 @@ public class JocCluster {
                     return;
                 }
                 instance.getInstance(jocStartTime);
+                jocTimeZone = jocConfig.getTimeZone();
                 instanceProcessed = true;
             } catch (Throwable e) {
                 LOGGER.error(e.toString());
@@ -222,7 +224,7 @@ public class JocCluster {
     }
 
     @SuppressWarnings("unused")
-    public static GlobalSettings getStoredSettings(SOSHibernateSession session) throws Exception {
+    private static GlobalSettings getStoredSettings(SOSHibernateSession session) throws Exception {
         return getStoredSettings(null, session);
     }
 
@@ -264,11 +266,16 @@ public class JocCluster {
 
         try {
             dbLayer.beginTransaction();
-            DBItemJocConfiguration item = dbLayer.getClusterSettings();
+            DBItemJocConfiguration item = dbLayer.getGlobalsSettings();
             if (item == null) {
                 settings = JocClusterGlobalSettings.getDefaultSettings();
                 JocClusterGlobalSettings.useAndRemoveDefaultInfos(settings);
                 JocClusterGlobalSettings.setCleanupInitialPeriod(settings);
+
+                if (!SOSString.isEmpty(jocTimeZone)) {
+                    JocClusterGlobalSettings.setCleanupInitialTimeZone(settings, jocTimeZone);
+                    JocClusterGlobalSettings.setDailyPlanInitialTimeZone(settings, jocTimeZone);
+                }
 
                 item = new DBItemJocConfiguration();
                 item.setControllerId(JocClusterGlobalSettings.CONTROLLER_ID);

@@ -16,21 +16,21 @@ public class JocConfiguration {
     private static final Logger LOGGER = LoggerFactory.getLogger(JocConfiguration.class);
 
     private final Path dataDirectory;
-    private final String timezone;
     private final Path hibernateConfiguration;
     private final Path resourceDirectory;
     private final JocSecurityLevel securityLevel;
     private final String memberId;
-    private final String title;
-    private final Integer ordering;
 
+    private String timeZone;
+    private String title;
+    private Integer ordering;
     private String hostname;
 
-    public JocConfiguration(String jocDataDirectory, String jocTimezone, Path jocHibernateConfig, Path jocResourceDir,
+    public JocConfiguration(String jocDataDirectory, String jocTimeZone, Path jocHibernateConfig, Path jocResourceDir,
             JocSecurityLevel jocSecurityLevel, String jocTitle, Integer jocOrdering) {
         setHostname();
         dataDirectory = Paths.get(jocDataDirectory);
-        timezone = jocTimezone;
+        timeZone = jocTimeZone;
         hibernateConfiguration = jocHibernateConfig;
         resourceDirectory = jocResourceDir;
         securityLevel = jocSecurityLevel;
@@ -67,6 +67,10 @@ public class JocConfiguration {
         return title;
     }
 
+    public void setTitle(String val) {
+        title = val;
+    }
+
     public Integer getOrdering() {
         return ordering;
     }
@@ -75,8 +79,12 @@ public class JocConfiguration {
         return securityLevel;
     }
 
-    public String getTimezone() {
-        return timezone;
+    public String getTimeZone() {
+        return timeZone;
+    }
+
+    public void setTimeZone(String val) {
+        timeZone = val;
     }
 
     public Path getHibernateConfiguration() {
