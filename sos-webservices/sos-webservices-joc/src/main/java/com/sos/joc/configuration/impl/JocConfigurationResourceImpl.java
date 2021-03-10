@@ -115,7 +115,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             }
             switch (configuration.getConfigurationType()) {
             case GLOBALS:
-                if (dbItem.getId().longValue() == 0) {
+                if (dbItem.getId() == null || dbItem.getId().longValue() == 0) {
                     List<DBItemJocConfiguration> result = jocConfigurationDBLayer.getJocConfigurations(ConfigurationType.GLOBALS);
                     if (result == null || result.size() == 0) {
                         configuration.setConfigurationItem(JocClusterGlobalSettings.DEFAULT_CONFIGURATION_ITEM);
@@ -124,7 +124,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                         configuration.setId(dbItem.getId());
                     }
                 }
-                if (dbItem.getId().longValue() > 0) {
+                if (dbItem.getId() != null && dbItem.getId().longValue() > 0) {
                     postGlobalsChangedEvent(configuration.getControllerId(), dbItem.getConfigurationItem(), configuration.getConfigurationItem());
                 }
                 dbItem.setControllerId(JocClusterGlobalSettings.CONTROLLER_ID);
