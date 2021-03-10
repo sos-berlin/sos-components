@@ -15,7 +15,9 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
+import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
+import com.sos.joc.cluster.bean.answer.JocServiceAnswer.JocServiceAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
@@ -170,6 +172,18 @@ public class JocClusterHandler {
             return JocCluster.getErrorAnswer(new Exception(String.format("handler not found for %s", identifier)));
         }
         IJocClusterService s = os.get();
+
+        JocServiceAnswer answer = s.getInfo();
+        if (!answer.getState().equals(JocServiceAnswerState.RELAX)) {
+            AJocClusterService.setLogger();
+            LOGGER.info(String.format("[%s][restart][%s][wait 60s]service status %s", mode, identifier, answer.getState()));
+            cluster.waitFor(60);
+            answer = s.getInfo();
+            String msg = String.format("[%s][restart][%s][skip]service status %s", mode, identifier, answer.getState());
+            LOGGER.error(msg);
+            AJocClusterService.clearLogger();
+            return JocCluster.getErrorAnswer(msg);
+        }
 
         AJocClusterService.setLogger();
         LOGGER.info(String.format("[%s][restart][%s]start...", mode, identifier));

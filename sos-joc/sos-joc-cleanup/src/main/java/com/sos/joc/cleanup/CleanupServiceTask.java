@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.cleanup.CleanupServiceConfiguration.Age;
+import com.sos.joc.cleanup.model.CleanupTaskAuditLog;
 import com.sos.joc.cleanup.model.CleanupTaskDailyPlan;
 import com.sos.joc.cleanup.model.CleanupTaskDeployment;
 import com.sos.joc.cleanup.model.CleanupTaskHistory;
@@ -37,6 +38,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupServiceTask.class);
 
     private final String MANUAL_TASK_IDENTIFIER_DEPLOYMENT = "deployment";
+    private final String MANUAL_TASK_IDENTIFIER_AUDITLOG = "auditlog";
     private final CleanupServiceSchedule schedule;
     private final String identifier;
     private final String logIdentifier;
@@ -142,6 +144,19 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                             } else {
                                 executeTask(manualTask, versions, cleanupSchedule.getUncompleted());
                             }
+                        }
+                        if (manualTask.getIdentifier().equals(MANUAL_TASK_IDENTIFIER_AUDITLOG)) {
+                            List<TaskDateTime> datetimes = new ArrayList<TaskDateTime>();
+                            TaskDateTime datetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getAuditLogAge(), cleanupSchedule
+                                    .getFirstStart());
+                            if (datetime.getDatetime() == null) {
+                                LOGGER.info(String.format("[%s][%s][skip]age=0", logIdentifier, manualTask.getIdentifier()));
+                                LOGGER.info(String.format("[%s][%s]completed", logIdentifier, manualTask.getIdentifier()));
+                            } else {
+                                datetimes.add(datetime);
+                                executeTask(manualTask, datetimes, cleanupSchedule.getUncompleted());
+                            }
+
                         } else {
                             LOGGER.info(String.format("  [%s][skip][%s]not implemented yet", manualTask.getTypeName(), manualTask.getIdentifier()));
                         }
@@ -216,6 +231,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
     private List<ICleanupTask> getManualCleanupTasks(JocClusterHibernateFactory factory, int batchSize) {
         List<ICleanupTask> tasks = new ArrayList<ICleanupTask>();
         tasks.add(new CleanupTaskDeployment(factory, batchSize, MANUAL_TASK_IDENTIFIER_DEPLOYMENT));
+        tasks.add(new CleanupTaskAuditLog(factory, batchSize, MANUAL_TASK_IDENTIFIER_AUDITLOG));
         return tasks;
     }
 

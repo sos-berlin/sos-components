@@ -23,10 +23,10 @@ public class JocClusterGlobalSettings {
         GlobalSettingsSection s = new GlobalSettingsSection();
         s.setOrdering(0);
         addDefaultEntry(s, 0, "time_zone", "UTC", GlobalSettingsSectionValueType.TIMEZONE);
-        addDefaultEntry(s, 1, "period_begin", "00:00:00", GlobalSettingsSectionValueType.TIME);
-        addDefaultEntry(s, 2, "start_time", "", GlobalSettingsSectionValueType.TIME);
-        addDefaultEntry(s, 3, "days_ahead_plan", "1", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
-        addDefaultEntry(s, 4, "days_ahead_submit", "1", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
+        addDefaultEntry(s, 1, "period_begin", "00:00", GlobalSettingsSectionValueType.TIME);
+        addDefaultEntry(s, 2, "start_time", "23:30", GlobalSettingsSectionValueType.TIME);
+        addDefaultEntry(s, 3, "days_ahead_plan", "7", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
+        addDefaultEntry(s, 4, "days_ahead_submit", "3", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
         return s;
     }
 
@@ -35,14 +35,15 @@ public class JocClusterGlobalSettings {
         s.setOrdering(1);
         addDefaultEntry(s, 0, "time_zone", "UTC", GlobalSettingsSectionValueType.TIMEZONE);
         addDefaultEntry(s, 1, "period", null, GlobalSettingsSectionValueType.WEEKDAYS);
-        addDefaultEntry(s, 2, "period_begin", "01:00:00", GlobalSettingsSectionValueType.TIME);
-        addDefaultEntry(s, 3, "period_end", "04:00:00", GlobalSettingsSectionValueType.TIME);
+        addDefaultEntry(s, 2, "period_begin", "01:00", GlobalSettingsSectionValueType.TIME);
+        addDefaultEntry(s, 3, "period_end", "04:00", GlobalSettingsSectionValueType.TIME);
         addDefaultEntry(s, 4, "batch_size", "1000", GlobalSettingsSectionValueType.POSITIVEINTEGER);
 
         addDefaultEntry(s, 5, "order_history_age", "90d", GlobalSettingsSectionValueType.DURATION);
         addDefaultEntry(s, 6, "order_history_logs_age", "90d", GlobalSettingsSectionValueType.DURATION);
         addDefaultEntry(s, 7, "daily_plan_history_age", "30d", GlobalSettingsSectionValueType.DURATION);
-        addDefaultEntry(s, 8, "deployment_history_versions", "10", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
+        addDefaultEntry(s, 8, "audit_log_age", "90d", GlobalSettingsSectionValueType.DURATION);
+        addDefaultEntry(s, 9, "deployment_history_versions", "10", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
         return s;
     }
 

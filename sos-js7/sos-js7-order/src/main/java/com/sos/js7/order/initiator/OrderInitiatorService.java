@@ -7,6 +7,7 @@ import java.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.cluster.AJocClusterService;
@@ -15,10 +16,12 @@ import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
+import com.sos.joc.cluster.configuration.JocClusterGlobalSettings;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
+import com.sos.joc.model.configuration.globals.GlobalSettingsSectionEntry;
 import com.sos.js7.order.initiator.classes.DailyPlanHelper;
 import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 
@@ -58,7 +61,7 @@ public class OrderInitiatorService extends AJocClusterService {
                     + settings.getDayAheadPlan() + " days ahead");
             LOGGER.info("will start at " + DailyPlanHelper.getStartTimeAsString() + " " + settings.getTimeZone() + " submitting daily plan for "
                     + settings.getDayAheadSubmit() + " days ahead");
-            
+
             if (settings.getDayAheadPlan() > 0) {
                 resetStartPlannedOrderTimer(controllers);
             }
@@ -123,7 +126,61 @@ public class OrderInitiatorService extends AJocClusterService {
         return val;
     }
 
+    private void setDefaults() {
+        GlobalSettingsSection defaultSettings = JocClusterGlobalSettings.getDefaultSettings(ClusterServices.dailyplan);
+        GlobalSettingsSectionEntry timezone = JocClusterGlobalSettings.getSectionEntry(defaultSettings, "time_zone");
+        settings.setTimeZone(timezone.getDefault());
+
+        GlobalSettingsSectionEntry periodBegin = JocClusterGlobalSettings.getSectionEntry(defaultSettings, "period_begin");
+        settings.setPeriodBegin(periodBegin.getDefault());
+
+        GlobalSettingsSectionEntry startTime = JocClusterGlobalSettings.getSectionEntry(defaultSettings, "start_time");
+        settings.setDailyPlanStartTime(startTime.getDefault());
+
+        GlobalSettingsSectionEntry daysAheadPlan = JocClusterGlobalSettings.getSectionEntry(defaultSettings, "days_ahead_plan");
+        settings.setDayAheadPlan(daysAheadPlan.getDefault());
+
+        GlobalSettingsSectionEntry daysAheadSubmit = JocClusterGlobalSettings.getSectionEntry(defaultSettings, "days_ahead_submit");
+        settings.setDayAheadSubmit(daysAheadSubmit.getDefault());
+    }
+
     private void setSettings(GlobalSettingsSection globalSettings) throws Exception {
+        settings = new OrderInitiatorSettings();
+        settings.setHibernateConfigurationFile(getJocConfig().getHibernateConfiguration());
+        setDefaults();
+        if (globalSettings == null) {
+            return;
+        }
+
+        String timeZone = JocClusterGlobalSettings.getValue(globalSettings, "time_zone");
+        if (!SOSString.isEmpty(timeZone)) {
+            this.settings.setTimeZone(timeZone);
+        }
+
+        String periodBegin = JocClusterGlobalSettings.getValue(globalSettings, "period_begin");
+        if (!SOSString.isEmpty(periodBegin)) {
+            this.settings.setPeriodBegin(periodBegin);
+        }
+
+        String startTime = JocClusterGlobalSettings.getValue(globalSettings, "start_time");
+        if (!SOSString.isEmpty(startTime)) {
+            this.settings.setDailyPlanStartTime(startTime);
+        }
+
+        String daysAheadPlan = JocClusterGlobalSettings.getValue(globalSettings, "days_ahead_plan");
+        if (!SOSString.isEmpty(daysAheadPlan)) {
+            this.settings.setDayAheadPlan(daysAheadPlan);
+        }
+
+        String daysAheadSubmit = JocClusterGlobalSettings.getValue(globalSettings, "days_ahead_submit");
+        if (!SOSString.isEmpty(daysAheadSubmit)) {
+            this.settings.setDayAheadSubmit(daysAheadSubmit);
+        }
+        LOGGER.info(SOSString.toString(settings));
+    }
+
+    @SuppressWarnings("unused")
+    private void setSettingsOld(GlobalSettingsSection globalSettings) throws Exception {
         settings = new OrderInitiatorSettings();
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties(getJocConfig().getResourceDirectory().resolve("joc.properties"));
@@ -146,7 +203,7 @@ public class OrderInitiatorService extends AJocClusterService {
         settings.setPeriodBegin(getProperty(Globals.sosCockpitProperties, "daily_plan_period_begin", "00:00"));
         settings.setDailyPlanDaysCreateOnStart("1".equals(getProperty(Globals.sosCockpitProperties, "daily_plan_days_create_on_start", "0")));
         settings.setDailyPlanStartTime(getProperty(Globals.sosCockpitProperties, "daily_plan_start_time", "00:00"));
-         
+
         settings.setHibernateConfigurationFile(getJocConfig().getHibernateConfiguration());
 
         settings.setHibernateConfigurationFile(getJocConfig().getHibernateConfiguration());

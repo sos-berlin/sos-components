@@ -33,6 +33,7 @@ public class CleanupServiceConfiguration {
     private Age orderHistoryAge;
     private Age orderHistoryLogsAge;
     private Age dailyPlanHistoryAge;
+    private Age auditLogAge;
     private int deploymentHistoryVersions;
     private int batchSize;
 
@@ -90,6 +91,11 @@ public class CleanupServiceConfiguration {
             this.dailyPlanHistoryAge = new Age("daily_plan_history_age", dailyPlanHistoryAge.trim());
         }
 
+        String auditLogAge = JocClusterGlobalSettings.getValue(settings, "audit_log_age");
+        if (!SOSString.isEmpty(auditLogAge)) {
+            this.auditLogAge = new Age("audit_log_age", auditLogAge.trim());
+        }
+
         String deploymentHistoryVersions = JocClusterGlobalSettings.getValue(settings, "deployment_history_versions");
         if (!SOSString.isEmpty(deploymentHistoryVersions)) {
             try {
@@ -133,6 +139,9 @@ public class CleanupServiceConfiguration {
             GlobalSettingsSectionEntry dailyPlanHistoryAge = JocClusterGlobalSettings.getSectionEntry(defaultSettings, "daily_plan_history_age");
             this.dailyPlanHistoryAge = new Age("daily_plan_history_age", dailyPlanHistoryAge.getDefault());
 
+            GlobalSettingsSectionEntry auditLogAge = JocClusterGlobalSettings.getSectionEntry(defaultSettings, "audit_log_age");
+            this.auditLogAge = new Age("audit_log_age", auditLogAge.getDefault());
+
             GlobalSettingsSectionEntry deploymentHistoryVersions = JocClusterGlobalSettings.getSectionEntry(defaultSettings,
                     "deployment_history_versions");
             this.deploymentHistoryVersions = Integer.parseInt(deploymentHistoryVersions.getDefault());
@@ -162,6 +171,10 @@ public class CleanupServiceConfiguration {
 
     public Age getDailyPlanHistoryAge() {
         return dailyPlanHistoryAge;
+    }
+
+    public Age getAuditLogAge() {
+        return auditLogAge;
     }
 
     public int getDeploymentHistoryVersions() {
@@ -207,6 +220,7 @@ public class CleanupServiceConfiguration {
                 .getMinutes()).append("]");
         sb.append(",dailyPlanHistory=[configured=").append(dailyPlanHistoryAge.getConfigured()).append(",minutes=").append(dailyPlanHistoryAge
                 .getMinutes()).append("]");
+        sb.append(",auditLogAge=[configured=").append(auditLogAge.getConfigured()).append(",minutes=").append(auditLogAge.getMinutes()).append("]");
         sb.append(",deploymentHistoryVersions=").append(deploymentHistoryVersions);
         sb.append("]");
         sb.append("]");

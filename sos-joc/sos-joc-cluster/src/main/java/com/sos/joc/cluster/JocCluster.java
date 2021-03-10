@@ -5,7 +5,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -33,8 +32,6 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.JocClusterHandler.PerformType;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
-import com.sos.joc.cluster.bean.answer.JocServiceAnswer.JocServiceAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocClusterGlobalSettings;
@@ -797,32 +794,11 @@ public class JocCluster {
                     settingsChanged = new AtomicReference<List<String>>();
 
                     sections = sections.stream().distinct().collect(Collectors.toList());
-                    LOGGER.info(String.format("[global settings][changed]restart %s services", sections.size()));
+                    LOGGER.info(String.format("[%s][changed]restart %s services", StartupMode.automatic_settings.name(), sections.size()));
                     // TODO restart asynchronous
                     for (String identifier : sections) {
-                        LOGGER.info(String.format("[global settings][changed][%s]restart ...", identifier));
-
-                        Optional<IJocClusterService> os = handler.getServices().stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
-                        if (!os.isPresent()) {
-                            LOGGER.info(String.format("[global settings][changed][%s][skip]service not found ", identifier));
-                            continue;
-                        }
-
-                        IJocClusterService service = os.get();
-                        JocServiceAnswer answer = service.getInfo();
-                        if (answer.getState().equals(JocServiceAnswerState.RELAX)) {
-                            handler.restartService(identifier, StartupMode.automatic);
-                        } else {
-                            LOGGER.info(String.format("[global settings][changed][%s][wait 60s]service status %s", identifier, answer.getState()));
-                            waitFor(60);
-
-                            answer = service.getInfo();
-                            if (answer.getState().equals(JocServiceAnswerState.RELAX)) {
-                                handler.restartService(identifier, StartupMode.automatic);
-                            } else {
-                                LOGGER.info(String.format("[global settings][changed][%s][skip]service status %s", identifier, answer.getState()));
-                            }
-                        }
+                        LOGGER.info(String.format("[%s][changed][%s]restart ...", StartupMode.automatic_settings.name(), identifier));
+                        handler.restartService(identifier, StartupMode.automatic_settings);
                     }
                 }
 
@@ -843,6 +819,10 @@ public class JocCluster {
 
     public static JocClusterAnswer getOKAnswer(JocClusterAnswerState state, String message) {
         return new JocClusterAnswer(state, message);
+    }
+
+    public static JocClusterAnswer getErrorAnswer(String msg) {
+        return getErrorAnswer(JocClusterAnswerState.ERROR, new Exception(msg));
     }
 
     public static JocClusterAnswer getErrorAnswer(JocClusterAnswerState state) {

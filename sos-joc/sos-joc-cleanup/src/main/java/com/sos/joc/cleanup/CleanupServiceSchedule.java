@@ -68,7 +68,7 @@ public class CleanupServiceSchedule {
         }
         try {
             service.setLastActivityStart(new Date().getTime());
-            long delay = computeNextDelay();
+            long delay = computeNextDelay(mode);
             if (delay > 0) {
                 long timeout = computeTimeout();
                 service.setLastActivityEnd(new Date().getTime());
@@ -105,13 +105,17 @@ public class CleanupServiceSchedule {
         return resultFuture.get(timeout, TimeUnit.SECONDS);
     }
 
-    private long computeNextDelay() throws Exception {
+    private long computeNextDelay(StartupMode mode) throws Exception {
         AJocClusterService.setLogger(service.getIdentifier());
 
         unclompleted = null;
         try {
             dbLayer.setSession(getFactory().openStatelessSession(service.getIdentifier()));
-            item = getJocVariable();
+            if (mode.equals(StartupMode.manual) || mode.equals(StartupMode.automatic_settings)) {
+                deleteJocVariable();
+            } else {
+                item = getJocVariable();
+            }
 
             Period storedPeriod = null;
             ZonedDateTime storedFirstStart = null;
@@ -404,9 +408,9 @@ public class CleanupServiceSchedule {
     }
 
     private void deleteJocVariable() throws Exception {
-        if (item == null) {
-            return;
-        }
+        // if (item == null) {
+        // return;
+        // }
         try {
             dbLayer.getSession().beginTransaction();
             dbLayer.deleteVariable(service.getIdentifier());
