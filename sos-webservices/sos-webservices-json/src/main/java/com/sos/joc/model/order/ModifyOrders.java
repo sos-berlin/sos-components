@@ -29,6 +29,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "orderIds",
+    "dailyPlanDate",
     "workflowIds",
     "orderType",
     "kill",
@@ -55,6 +56,15 @@ public class ModifyOrders {
     @JsonProperty("orderIds")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<String> orderIds = new LinkedHashSet<String>();
+    /**
+     * date
+     * <p>
+     * ISO date YYYY-MM-DD
+     * 
+     */
+    @JsonProperty("dailyPlanDate")
+    @JsonPropertyDescription("ISO date YYYY-MM-DD")
+    private String dailyPlanDate;
     @JsonProperty("workflowIds")
     private List<WorkflowId> workflowIds = new ArrayList<WorkflowId>();
     /**
@@ -137,6 +147,28 @@ public class ModifyOrders {
     @JsonProperty("orderIds")
     public void setOrderIds(Set<String> orderIds) {
         this.orderIds = orderIds;
+    }
+
+    /**
+     * date
+     * <p>
+     * ISO date YYYY-MM-DD
+     * 
+     */
+    @JsonProperty("dailyPlanDate")
+    public String getDailyPlanDate() {
+        return dailyPlanDate;
+    }
+
+    /**
+     * date
+     * <p>
+     * ISO date YYYY-MM-DD
+     * 
+     */
+    @JsonProperty("dailyPlanDate")
+    public void setDailyPlanDate(String dailyPlanDate) {
+        this.dailyPlanDate = dailyPlanDate;
     }
 
     @JsonProperty("workflowIds")
@@ -249,12 +281,12 @@ public class ModifyOrders {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("orderType", orderType).append("kill", kill).append("position", position).append("arguments", arguments).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("dailyPlanDate", dailyPlanDate).append("workflowIds", workflowIds).append("orderType", orderType).append("kill", kill).append("position", position).append("arguments", arguments).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowIds).append(orderType).append(controllerId).append(auditLog).append(arguments).append(orderIds).append(position).append(kill).toHashCode();
+        return new HashCodeBuilder().append(workflowIds).append(orderType).append(dailyPlanDate).append(controllerId).append(auditLog).append(arguments).append(orderIds).append(position).append(kill).toHashCode();
     }
 
     @Override
@@ -266,7 +298,7 @@ public class ModifyOrders {
             return false;
         }
         ModifyOrders rhs = ((ModifyOrders) other);
-        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(orderType, rhs.orderType).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(arguments, rhs.arguments).append(orderIds, rhs.orderIds).append(position, rhs.position).append(kill, rhs.kill).isEquals();
+        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(orderType, rhs.orderType).append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(arguments, rhs.arguments).append(orderIds, rhs.orderIds).append(position, rhs.position).append(kill, rhs.kill).isEquals();
     }
 
 }

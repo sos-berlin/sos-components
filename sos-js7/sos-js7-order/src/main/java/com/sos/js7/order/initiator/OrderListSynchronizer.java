@@ -109,7 +109,8 @@ public class OrderListSynchronizer {
 
 
 
-    public void add(PlannedOrder o) {
+    public boolean add(PlannedOrder o) {
+        boolean added = false;
         if (listOfExistingWorkflows == null) {
             listOfExistingWorkflows = new HashMap<WorkflowAtController, Boolean>();
             LOGGER.debug("Create list of existing workflows");
@@ -124,10 +125,12 @@ public class OrderListSynchronizer {
 
         Boolean exists = listOfExistingWorkflows.get(w);
         if (exists) {
+            added = true;
             listOfPlannedOrders.put(o.uniqueOrderkey(), o);
         } else {
             LOGGER.debug("Workflow " + w.workflowName + " not deployed for controller " + w.controllerId);
         }
+        return added;
     }
 
     private void calculateDuration(PlannedOrder plannedOrder) throws SOSHibernateException, JocConfigurationException, DBConnectionRefusedException,

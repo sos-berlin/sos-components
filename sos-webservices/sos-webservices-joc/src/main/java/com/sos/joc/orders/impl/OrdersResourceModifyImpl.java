@@ -4,9 +4,12 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -25,11 +28,17 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.db.orders.DBItemDailyPlanOrders;
+import com.sos.joc.db.orders.DBItemDailyPlanVariables;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.common.VariableType;
 import com.sos.joc.model.order.ModifyOrders;
 import com.sos.joc.orders.resource.IOrdersResourceModify;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
+import com.sos.js7.order.initiator.db.DBLayerOrderVariables;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
+import com.sos.js7.order.initiator.db.FilterOrderVariables;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
@@ -95,6 +104,32 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         }
     }
 
+    private void addSubmittedOrderIdsFromDailyplanDate(ModifyOrders modifyOrders) throws SOSHibernateException {
+        if (modifyOrders.getDailyPlanDate() != null) {
+            SOSHibernateSession sosHibernateSession = null;
+            if (modifyOrders.getOrderIds() == null) {
+                modifyOrders.setOrderIds(new TreeSet<String>());
+            }
+
+            try {
+                sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+                sosHibernateSession.setAutoCommit(false);
+                DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
+
+                FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+                filter.setControllerId(modifyOrders.getControllerId());
+                filter.setDailyPlanDate(modifyOrders.getDailyPlanDate());
+                filter.setSubmitted(true);
+                List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
+                for (DBItemDailyPlanOrders dbItemDailyPlanOrders : listOfPlannedOrders) {
+                    modifyOrders.getOrderIds().add(dbItemDailyPlanOrders.getOrderId());
+                }
+            } finally {
+                Globals.disconnect(sosHibernateSession);
+            }
+        }
+    }
+
     @Override
     public JOCDefaultResponse postOrdersCancel(String accessToken, byte[] filterBytes) {
         try {
@@ -105,7 +140,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-           
+
+            addSubmittedOrderIdsFromDailyplanDate(modifyOrders);
+
             postOrdersModify(Action.CANCEL, modifyOrders);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -140,6 +177,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         checkRequiredComment(modifyOrders.getAuditLog());
 
         Set<String> orders = modifyOrders.getOrderIds();
+
         List<WorkflowId> workflowIds = modifyOrders.getWorkflowIds();
         // final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
 
@@ -172,13 +210,13 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             command(action, modifyOrders, jOrders.stream().map(JOrder::id).collect(Collectors.toSet())).thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                 if (either.isRight()) {
-                    OrdersHelper.createAuditLogFromJOrders(getJocAuditLog(), jOrders, controllerId, modifyOrders).thenAccept(
-                            either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
+                    OrdersHelper.createAuditLogFromJOrders(getJocAuditLog(), jOrders, controllerId, modifyOrders).thenAccept(either2 -> ProblemHelper
+                            .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
                 }
             });
         }
     }
-    
+
     private static Stream<JOrder> cyclicFreshOrderIds(Collection<String> orderIds, JControllerState currentState) {
         Stream<JOrder> cyclicOrderStream = Stream.empty();
         // determine cyclic ids
@@ -205,7 +243,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             filter.setListOfOrders(orderIds);
             filter.setSubmitted(false);
             dbLayerDailyPlannedOrders.setSubmitted(filter);
-            
+
             Globals.commit(sosHibernateSession);
         } catch (Exception e) {
             Globals.rollback(sosHibernateSession);
@@ -217,14 +255,14 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
     private static CompletableFuture<Either<Problem, Void>> command(Action action, ModifyOrders modifyOrders, Set<OrderId> oIds)
             throws SOSHibernateException {
-        
+
         switch (action) {
         case CANCEL:
 
             // TODO This update must be removed when dailyplan service receives events for order state changes
             // this is the wrong place anyway -> must be in thenAccept if "Either" right
             updateDailyPlan(oIds.stream().map(OrderId::string).filter(s -> !s.matches(".*#T[0-9]+-.*")).collect(Collectors.toList()));
-            
+
             return OrdersHelper.cancelOrders(modifyOrders, oIds);
 
         case RESUME:
