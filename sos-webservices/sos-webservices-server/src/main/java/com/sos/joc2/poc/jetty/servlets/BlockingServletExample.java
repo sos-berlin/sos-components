@@ -1,0 +1,23 @@
+package com.sos.joc2.poc.jetty.servlets;
+
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+public class BlockingServletExample extends HttpServlet {
+
+    private static final long serialVersionUID = 1131387267005476044L;
+
+    protected void doGet(
+      HttpServletRequest request, 
+      HttpServletResponse response)
+      throws ServletException, IOException {
+ 
+        response.setContentType("application/json");
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.getWriter().println("{ \"status\": \"🙉Jetty 🙉 läuft!🙊\" }");
+    }
+}
