@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -56,7 +56,6 @@ import scala.Function1;
 public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrdersResourceModify {
 
     private static final String API_CALL = "./orders";
-    private OrderInitiatorSettings settings;
 
     private enum Action {
         CANCEL, SUSPEND, RESUME, REMOVE_WHEN_TERMINATED
@@ -71,7 +70,6 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            setSettings();
             postOrdersModify(Action.SUSPEND, modifyOrders);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -101,16 +99,18 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         }
     }
 
-    private void addSubmittedOrderIdsFromDailyplanDate(ModifyOrders modifyOrders) throws SOSHibernateException {
+    private void addSubmittedOrderIdsFromDailyplanDate(ModifyOrders modifyOrders) throws Exception {
         if (modifyOrders.getDailyPlanDate() != null) {
             SOSHibernateSession sosHibernateSession = null;
             if (modifyOrders.getOrderIds() == null) {
-                modifyOrders.setOrderIds(new TreeSet<String>());
+                modifyOrders.setOrderIds(new LinkedHashSet<String>());
             }
 
             try {
                 sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
                 sosHibernateSession.setAutoCommit(false);
+                GlobalSettingsReader reader = new GlobalSettingsReader();
+                OrderInitiatorSettings settings = reader.getSettings(sosHibernateSession);
                 DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
 
                 FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
@@ -291,17 +291,6 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         initLogging(API_CALL + "/" + action.name().toLowerCase(), filterBytes, accessToken);
         JsonValidator.validate(filterBytes, ModifyOrders.class);
         return Globals.objectMapper.readValue(filterBytes, ModifyOrders.class);
-    }
-
-    private void setSettings() throws Exception {
-        SOSHibernateSession session = null;
-        try {
-            session = Globals.createSosHibernateStatelessConnection(API_CALL);
-            GlobalSettingsReader reader = new GlobalSettingsReader();
-            this.settings = reader.getSettings(session);
-        } finally {
-            Globals.disconnect(session);
-        }
     }
 
 }
