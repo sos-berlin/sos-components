@@ -5,12 +5,17 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.cluster.IJocClusterService;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
@@ -20,37 +25,19 @@ import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
 
 public class HistoryServiceTest {
 
-    public static void exitAfter(HistoryService history, int seconds) {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HistoryServiceTest.class);
 
-        boolean run = true;
-        int counter = 0;
-        while (run) {
-            if (counter >= seconds) {
-                run = false;
-            } else {
-                try {
-                    Thread.sleep(1 * 1_000);
-                    counter = counter + 1;
-                } catch (InterruptedException e) {
+    private static void stopAfter(IJocClusterService service, StartupMode mode, int seconds) {
+        LOGGER.info(String.format("[start][stopAfter][%ss]...", seconds));
 
-                }
-            }
+        try {
+            TimeUnit.SECONDS.sleep(seconds);
+        } catch (InterruptedException e) {
+
+        } finally {
+            service.stop(mode);
         }
-        history.stop(StartupMode.manual);
-
-        counter = 0;
-        while (run) {
-            if (counter >= 2) {
-                run = false;
-            } else {
-                try {
-                    Thread.sleep(seconds * 1_000);
-                    counter = counter + 1;
-                } catch (InterruptedException e) {
-
-                }
-            }
-        }
+        LOGGER.info(String.format("[end][stopAfter][%ss]", seconds));
     }
 
     private List<ControllerConfiguration> getControllers() {
@@ -72,16 +59,20 @@ public class HistoryServiceTest {
     @Ignore
     @Test
     public void test() throws Exception {
-        Globals.sosCockpitProperties = new JocCockpitProperties();
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
         Path resDir = Paths.get("src/test/resources");
+
+        Globals.sosCockpitProperties = new JocCockpitProperties();
+        Globals.sosCockpitProperties.getProperties().setProperty("history_log_dir", resDir.resolve("logs").toString());
+
         JocConfiguration jocConfig = new JocConfiguration(resDir.toString(), "UTC", resDir.resolve("hibernate.cfg.xml"), resDir, JocSecurityLevel.LOW,
                 "", 0);
 
-        HistoryService hm = new HistoryService(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
+        HistoryService service = new HistoryService(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
         GlobalSettingsSection settings = null;
-        hm.start(getControllers(), settings, StartupMode.manual);
-        HistoryServiceTest.exitAfter(hm, 2 * 60);
+        service.start(getControllers(), settings, StartupMode.manual);
+        HistoryServiceTest.stopAfter(service, StartupMode.manual, 60);
 
     }
 

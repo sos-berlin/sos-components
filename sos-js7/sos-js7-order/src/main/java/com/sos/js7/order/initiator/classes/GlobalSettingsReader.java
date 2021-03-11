@@ -4,6 +4,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.configuration.JocClusterGlobalSettings;
+import com.sos.joc.cluster.configuration.JocClusterGlobalSettings.DefaultSections;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSectionEntry;
@@ -50,7 +51,7 @@ public class GlobalSettingsReader {
     }
 
     private void setDefaults(OrderInitiatorSettings settings) {
-        GlobalSettingsSection defaultSettings = JocClusterGlobalSettings.getDefaultSettings(ClusterServices.dailyplan);
+        GlobalSettingsSection defaultSettings = JocClusterGlobalSettings.getDefaultSettings(DefaultSections.dailyplan);
         GlobalSettingsSectionEntry timezone = JocClusterGlobalSettings.getSectionEntry(defaultSettings, "time_zone");
         settings.setTimeZone(timezone.getDefault());
 

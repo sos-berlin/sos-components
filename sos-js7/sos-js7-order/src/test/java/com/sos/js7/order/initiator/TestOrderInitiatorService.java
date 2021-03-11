@@ -6,53 +6,40 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
+import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.cluster.IJocClusterService;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocClusterGlobalSettings;
+import com.sos.joc.cluster.configuration.JocClusterGlobalSettings.DefaultSections;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
-import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
 
 public class TestOrderInitiatorService {
 
-    public static void exitAfter(OrderInitiatorService history, int seconds) {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestOrderInitiatorService.class);
 
-        boolean run = true;
-        int counter = 0;
-        while (run) {
-            if (counter >= seconds) {
-                run = false;
-            } else {
-                try {
-                    Thread.sleep(1 * 1000);
-                    counter = counter + 1;
-                } catch (InterruptedException e) {
+    private static void stopAfter(IJocClusterService service, StartupMode mode, int seconds) {
+        LOGGER.info(String.format("[start][stopAfter][%ss]...", seconds));
 
-                }
-            }
+        try {
+            TimeUnit.SECONDS.sleep(seconds);
+        } catch (InterruptedException e) {
+
+        } finally {
+            service.stop(mode);
         }
-        history.stop(StartupMode.manual);
-
-        counter = 0;
-        while (run) {
-            if (counter >= 2) {
-                run = false;
-            } else {
-                try {
-                    Thread.sleep(seconds * 1000);
-                    counter = counter + 1;
-                } catch (InterruptedException e) {
-
-                }
-            }
-        }
+        LOGGER.info(String.format("[end][stopAfter][%ss]", seconds));
     }
 
     private List<ControllerConfiguration> getControllers() {
@@ -71,6 +58,7 @@ public class TestOrderInitiatorService {
         return list;
     }
 
+    @Ignore
     @Test
     public void test() throws Exception {
         Globals.sosCockpitProperties = new JocCockpitProperties();
@@ -80,11 +68,11 @@ public class TestOrderInitiatorService {
         JocConfiguration jocConfig = new JocConfiguration(resDir.toString(), "UTC", resDir.resolve("hibernate.cfg.xml"), resDir, JocSecurityLevel.LOW,
                 "", 0);
 
-        OrderInitiatorService hm = new OrderInitiatorService(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
-        GlobalSettingsSection settings = JocClusterGlobalSettings.getDefaultSettings(ClusterServices.dailyplan);
+        OrderInitiatorService service = new OrderInitiatorService(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
+        GlobalSettingsSection settings = JocClusterGlobalSettings.getDefaultSettings(DefaultSections.dailyplan);
 
-        hm.start(getControllers(), settings, StartupMode.manual);
-        TestOrderInitiatorService.exitAfter(hm, 13 * 60);
+        service.start(getControllers(), settings, StartupMode.manual);
+        TestOrderInitiatorService.stopAfter(service, StartupMode.manual, 13 * 60);
 
     }
 

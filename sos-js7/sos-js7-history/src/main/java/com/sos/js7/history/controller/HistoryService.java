@@ -156,7 +156,7 @@ public class HistoryService extends AJocClusterService {
         AJocClusterService.setLogger(IDENTIFIER);
         config = new Configuration();
         try {
-            Properties conf = Globals.sosCockpitProperties.getProperties();
+            Properties conf = Globals.sosCockpitProperties == null ? new Properties() : Globals.sosCockpitProperties.getProperties();
             config.getMailer().load(conf);
             config.getHandler().load(conf);
 

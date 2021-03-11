@@ -131,7 +131,9 @@ public class HistoryControllerHandler {
             lastActivityStart.set(new Date().getTime());
             executeGetEventId();
             lastActivityEnd.set(new Date().getTime());
-            start(new AtomicLong(model.getStoredEventId()));
+            if (model.getStoredEventId() != null) {
+                start(new AtomicLong(model.getStoredEventId()));
+            }
         } catch (Throwable e) {
             LOGGER.error(String.format("[%s][%s]%s", identifier, method, e.toString()), e);
             notifier.notifyOnError(method, e);
@@ -588,6 +590,9 @@ public class HistoryControllerHandler {
         int count = 0;
         boolean run = true;
         while (run) {
+            if (closed.get()) {
+                return;
+            }
             count++;
             try {
                 model.setStoredEventId(model.getEventId());

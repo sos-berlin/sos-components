@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.configuration.JocClusterGlobalSettings;
-import com.sos.joc.model.cluster.common.ClusterServices;
+import com.sos.joc.cluster.configuration.JocClusterGlobalSettings.DefaultSections;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSectionEntry;
 
@@ -120,7 +120,7 @@ public class CleanupServiceConfiguration {
 
     private void setDefaults() {
         try {
-            GlobalSettingsSection defaultSettings = JocClusterGlobalSettings.getDefaultSettings(ClusterServices.cleanup);
+            GlobalSettingsSection defaultSettings = JocClusterGlobalSettings.getDefaultSettings(DefaultSections.cleanup);
 
             GlobalSettingsSectionEntry timezone = JocClusterGlobalSettings.getSectionEntry(defaultSettings, "time_zone");
             this.zoneId = ZoneId.of(timezone.getDefault());

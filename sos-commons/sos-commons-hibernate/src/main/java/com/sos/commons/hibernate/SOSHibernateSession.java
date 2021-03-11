@@ -153,10 +153,18 @@ public class SOSHibernateSession implements Serializable {
         try {
             if (isStatelessSession) {
                 StatelessSession session = ((StatelessSession) currentSession);
-                session.beginTransaction();
+                try {
+                    session.beginTransaction();
+                } catch (NullPointerException e) {
+                    throw new SOSHibernateOpenSessionException("session/connection can't be acquired", e.getCause());
+                }
             } else {
                 Session session = ((Session) currentSession);
-                session.beginTransaction();
+                try {
+                    session.beginTransaction();
+                } catch (NullPointerException e) {
+                    throw new SOSHibernateOpenSessionException("session/connection can't be acquired", e.getCause());
+                }
             }
             isTransactionOpened = true;
         } catch (IllegalStateException e) {

@@ -1,6 +1,5 @@
 package com.sos.joc.cluster.configuration;
 
-import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.configuration.ConfigurationObjectType;
 import com.sos.joc.model.configuration.globals.GlobalSettings;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
@@ -8,6 +7,10 @@ import com.sos.joc.model.configuration.globals.GlobalSettingsSectionEntry;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSectionValueType;
 
 public class JocClusterGlobalSettings {
+
+    public enum DefaultSections {
+        dailyplan, cleanup, joc
+    }
 
     public static final String CONTROLLER_ID = ".";
     public static final Long INSTANCE_ID = 0L;
@@ -18,6 +21,17 @@ public class JocClusterGlobalSettings {
 
     private final static String INITIAL_CLEANUP_PERIOD = "1,2,3,4,5,6,7";
     private static GlobalSettings defaultSettings = null;
+
+    private static void setDefaultSettings() {
+        defaultSettings = new GlobalSettings();
+        defaultSettings.setAdditionalProperty(DefaultSections.dailyplan.name(), createDefaultDailyPlanSettings());
+        defaultSettings.setAdditionalProperty(DefaultSections.cleanup.name(), createDefaultCleanupSettings());
+    }
+
+    public static GlobalSettings getDefaultSettings() {
+        setDefaultSettings();
+        return defaultSettings;
+    }
 
     private static GlobalSettingsSection createDefaultDailyPlanSettings() {
         GlobalSettingsSection s = new GlobalSettingsSection();
@@ -45,6 +59,11 @@ public class JocClusterGlobalSettings {
         addDefaultEntry(s, 8, "audit_log_age", "90d", GlobalSettingsSectionValueType.DURATION);
         addDefaultEntry(s, 9, "deployment_history_versions", "10", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
         return s;
+    }
+
+    public static GlobalSettingsSection getDefaultSettings(DefaultSections section) {
+        setDefaultSettings();
+        return defaultSettings == null ? null : defaultSettings.getAdditionalProperties().get(section.name());
     }
 
     public static GlobalSettings addDefaultInfos(GlobalSettings settings) {
@@ -91,7 +110,7 @@ public class JocClusterGlobalSettings {
 
     public static void setCleanupInitialPeriod(GlobalSettings settings) {
         try {
-            settings.getAdditionalProperties().get(ClusterServices.cleanup.name()).getAdditionalProperties().get("period").setValue(
+            settings.getAdditionalProperties().get(DefaultSections.cleanup.name()).getAdditionalProperties().get("period").setValue(
                     INITIAL_CLEANUP_PERIOD);
         } catch (Throwable e) {
         }
@@ -99,14 +118,14 @@ public class JocClusterGlobalSettings {
 
     public static void setCleanupInitialTimeZone(GlobalSettings settings, String timeZone) {
         try {
-            settings.getAdditionalProperties().get(ClusterServices.cleanup.name()).getAdditionalProperties().get("time_zone").setValue(timeZone);
+            settings.getAdditionalProperties().get(DefaultSections.cleanup.name()).getAdditionalProperties().get("time_zone").setValue(timeZone);
         } catch (Throwable e) {
         }
     }
 
     public static void setDailyPlanInitialTimeZone(GlobalSettings settings, String timeZone) {
         try {
-            settings.getAdditionalProperties().get(ClusterServices.dailyplan.name()).getAdditionalProperties().get("time_zone").setValue(timeZone);
+            settings.getAdditionalProperties().get(DefaultSections.dailyplan.name()).getAdditionalProperties().get("time_zone").setValue(timeZone);
         } catch (Throwable e) {
         }
     }
@@ -118,22 +137,6 @@ public class JocClusterGlobalSettings {
         e.setDefault(defaultValue);
         e.setType(valueType);
         s.setAdditionalProperty(entryName, e);
-    }
-
-    private static void setDefaultSettings() {
-        defaultSettings = new GlobalSettings();
-        defaultSettings.setAdditionalProperty(ClusterServices.dailyplan.name(), createDefaultDailyPlanSettings());
-        defaultSettings.setAdditionalProperty(ClusterServices.cleanup.name(), createDefaultCleanupSettings());
-    }
-
-    public static GlobalSettings getDefaultSettings() {
-        setDefaultSettings();
-        return defaultSettings;
-    }
-
-    public static GlobalSettingsSection getDefaultSettings(ClusterServices service) {
-        setDefaultSettings();
-        return defaultSettings == null ? null : defaultSettings.getAdditionalProperties().get(service.name());
     }
 
     public static GlobalSettingsSectionEntry getSectionEntry(GlobalSettingsSection section, String entryName) {
