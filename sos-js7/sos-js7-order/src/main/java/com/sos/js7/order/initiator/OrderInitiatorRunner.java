@@ -38,13 +38,12 @@ import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.Period;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.calendar.FrequencyResolver;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
-import com.sos.joc.db.orders.DBItemDailyPlanHistory;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.db.orders.DBItemDailyPlanSubmissions;
 import com.sos.joc.db.orders.DBItemDailyPlanVariables;
@@ -61,7 +60,6 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.js7.order.initiator.classes.DailyPlanHelper;
 import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 import com.sos.js7.order.initiator.classes.PlannedOrder;
-import com.sos.js7.order.initiator.db.DBLayerDailyPlanHistory;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlanSubmissions;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.DBLayerInventoryConfigurations;
@@ -333,6 +331,7 @@ public class OrderInitiatorRunner extends TimerTask {
         if (createdPlans == null) {
             createdPlans = new HashSet<String>();
         }
+        AJocClusterService.setLogger("dailyplan");
         LOGGER.debug("firstStart:" + firstStart);
 
         boolean generateFromManuelStart = false;
@@ -377,6 +376,7 @@ public class OrderInitiatorRunner extends TimerTask {
                 LOGGER.error(e.getMessage(), e);
             }
         }
+        AJocClusterService.clearLogger();
     }
 
     public void exit() {

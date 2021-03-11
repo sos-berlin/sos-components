@@ -72,7 +72,7 @@ public class SOSServicePermissionShiro {
     private static final String ACCESS_TOKEN_EXPECTED = "Access token header expected";
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSPermissionsCreator.class);
     private static final String SHIRO_SESSION = "SHIRO_SESSION";
-    private static final String ThreadCtx = "shiro";
+    private static final String ThreadCtx = "authentication";
 
     private SOSShiroCurrentUser currentUser;
     private SOSlogin sosLogin;
