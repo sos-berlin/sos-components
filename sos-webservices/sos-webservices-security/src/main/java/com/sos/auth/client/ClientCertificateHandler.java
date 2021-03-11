@@ -1,38 +1,28 @@
-package com.sos.joc.servlet;
+package com.sos.auth.client;
 
 import java.io.IOException;
 import java.security.cert.X509Certificate;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
-public class ReadClientCertificateServlet extends HttpServlet {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-    private static final long serialVersionUID = -6942752272134678128L;
+
+public class ClientCertificateHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClientCertificateHandler.class);
     private X509Certificate clientCertificate;
     private X509Certificate[] clientCertificateChain;
     private String subjectDN;
     private String clientCN;
     private String sslSessionIdHex;
-    private String jsonResponse200;
-    private String jsonResponse420;
     
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        readClientCertificateInfo(req, resp);
-        super.doPost(req, resp);
+    public ClientCertificateHandler(HttpServletRequest req) throws IOException {
+        readClientCertificateInfo(req);
     }
-
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        readClientCertificateInfo(req, resp);
-        super.doGet(req, resp);
-    }
-
-
-    private void readClientCertificateInfo (HttpServletRequest request, HttpServletResponse response) throws IOException {
+    
+    private void readClientCertificateInfo (HttpServletRequest request) throws IOException {
         /*
          * With the SecureRequestCustomizer in place you can access various pieces about the SSL connection from 
          *     HttpServletRequest.getAttribute(String) calls using the following attribute names. 
@@ -43,23 +33,19 @@ public class ReadClientCertificateServlet extends HttpServlet {
          *   javax.servlet.request.ssl_session_id  - String representation (hexified) of the active SSL Session ID
          *      
          */
-        clientCertificateChain = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
+        this.clientCertificateChain = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
         String cipherSuiteName = (String) request.getAttribute("javax.servlet.request.cipher_suite");
         Integer keySize = (Integer) request.getAttribute("javax.servlet.request.key_size");
-        sslSessionIdHex = (String) request.getAttribute("javax.servlet.request.ssl_session_id");
-//        response.setContentType("application/json");
-//        response.setStatus(HttpServletResponse.SC_OK);
+        this.sslSessionIdHex = (String) request.getAttribute("javax.servlet.request.ssl_session_id");
         if ((clientCertificateChain == null || clientCertificateChain.length == 0) && sslSessionIdHex == null) {
-            StringBuilder jsonStrb = new StringBuilder();
-            jsonStrb.append("{\n");
-            jsonStrb.append("  \"message\" : \"no SSL information received from request.\"\n");
-            jsonStrb.append("}\n");
-            jsonResponse420 = jsonStrb.toString();
+            LOGGER.debug("No certificate information received from request.");
         } else {
-            clientCertificate = clientCertificateChain[0];
-            subjectDN = clientCertificate.getSubjectDN().getName();
-            clientCN = ((sun.security.x509.X500Name)clientCertificate.getSubjectDN()).getCommonName();
-            jsonResponse200 = createResponse200(cipherSuiteName, keySize);
+            this.clientCertificate = clientCertificateChain[0];
+            this.subjectDN = clientCertificate.getSubjectDN().getName();
+            this.clientCN = ((sun.security.x509.X500Name)clientCertificate.getSubjectDN()).getCommonName();
+            LOGGER.debug("Client SubjectDN read from request: " + subjectDN);
+            LOGGER.debug("Client CN read from request for comparison with shiro account: " + clientCN);
+            LOGGER.debug("Certificate infos as JSON: \n" + createResponse200(cipherSuiteName, keySize));
         }
     }
     
@@ -117,12 +103,4 @@ public class ReadClientCertificateServlet extends HttpServlet {
         return clientCN;
     }
     
-    public String getJsonResponse200() {
-        return jsonResponse200;
-    }
-    
-    public String getJsonResponse420() {
-        return jsonResponse420;
-    }
-
 }

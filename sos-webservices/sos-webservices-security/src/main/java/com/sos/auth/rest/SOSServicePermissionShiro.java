@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import com.sos.auth.client.ClientCertificateHandler;
 //import com.sos.auth.rest.permission.model.SOSPermissionCommandsControllers;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitControllers;
 import com.sos.auth.rest.permission.model.SOSPermissionRoles;
@@ -216,6 +217,15 @@ public class SOSServicePermissionShiro {
             @HeaderParam("X-CLIENT-ID") String loginClientId, @QueryParam("user") String user, @QueryParam("pwd") String pwd) throws JocException,
             SOSHibernateException {
         Globals.loginClientId = loginClientId;
+        String clientCertCN = null;
+        try {
+            ClientCertificateHandler clientCertHandler = new ClientCertificateHandler(request);
+            clientCertCN = clientCertHandler.getClientCN();
+            LOGGER.info("Client Certificate CN read from Login: " + clientCertCN);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
         MDC.put("context", ThreadCtx);
         try {

@@ -9,7 +9,6 @@ import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
-import com.sos.joc.servlet.ReadClientCertificateServlet;
 import com.sos.joc2.poc.jetty.servlets.BlockingServletExample;
 
 
@@ -67,7 +66,6 @@ public class JettyServer {
         server.addConnector(sslConnector);
 
         ServletHandler servletHandler = new ServletHandler();
-        servletHandler.addServletWithMapping(ReadClientCertificateServlet.class, "/status");
         servletHandler.addServletWithMapping(BlockingServletExample.class, "/status80");
         server.setHandler(servletHandler);
     }
