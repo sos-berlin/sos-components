@@ -223,8 +223,7 @@ public class SOSServicePermissionShiro {
             clientCertCN = clientCertHandler.getClientCN();
             LOGGER.info("Client Certificate CN read from Login: " + clientCertCN);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            LOGGER.debug("No Client certificate read from HttpServletRequest.");
         }
 
         MDC.put("context", ThreadCtx);
