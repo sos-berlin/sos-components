@@ -2,6 +2,7 @@ package com.sos.commons.hibernate;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -16,6 +17,7 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateLockAcquisitionException;
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 
 public class SOSHibernate {
@@ -101,7 +103,11 @@ public class SOSHibernate {
                     if (i > 0) {
                         sb.append(",");
                     }
-                    sb.append(parameter.getName() + "=" + query.getParameterValue(parameter.getName()));
+                    Object val = query.getParameterValue(parameter.getName());
+                    if (val != null && val instanceof Date) {
+                        val = SOSDate.getDateTimeAsString((Date) val, SOSDate.dateTimeFormat);
+                    }
+                    sb.append(parameter.getName() + "=" + val);
                     i++;
                 }
                 return sb.toString();

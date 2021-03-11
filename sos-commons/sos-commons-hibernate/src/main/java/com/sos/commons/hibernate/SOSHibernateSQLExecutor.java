@@ -35,7 +35,6 @@ public class SOSHibernateSQLExecutor implements Serializable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateSQLExecutor.class);
     private static final long serialVersionUID = 1L;
-    private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     private final SOSHibernateSession session;
     private String logIdentifier;
@@ -62,6 +61,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateConnectionException, SOSHibernateSQLExecutorException */
     public boolean execute(String... sqls) throws SOSHibernateException {
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
         String method = isDebugEnabled ? SOSHibernate.getMethodName(logIdentifier, "execute") : "";
         boolean result = false;
         Statement stmt = null;
@@ -100,6 +100,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
     }
 
     public int[] executeBatch(String... sqls) throws SOSHibernateException {
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
         String method = isDebugEnabled ? SOSHibernate.getMethodName(logIdentifier, "executeBatch") : "";
         int[] result = null;
         Statement stmt = null;
@@ -131,7 +132,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateConnectionException, SOSHibernateSQLExecutorException */
     public void executeQuery(String sql) throws SOSHibernateException {
-        if (isDebugEnabled) {
+        if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("%s[%s]", SOSHibernate.getMethodName(logIdentifier, "executeQuery"), sql));
         }
         Statement stmt = null;
@@ -172,6 +173,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateConnectionException, SOSHibernateSQLExecutorException,
      *             SOSHibernateSQLCommandExtractorException */
     public void executeStatements(String content) throws SOSHibernateException {
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
         String method = isDebugEnabled ? SOSHibernate.getMethodName(logIdentifier, "executeStatements") : "";
         Statement stmt = null;
         String command = null;
@@ -215,6 +217,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateConnectionException, SOSHibernateSQLExecutorException */
     public int executeUpdate(String... sqls) throws SOSHibernateException {
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
         String method = isDebugEnabled ? SOSHibernate.getMethodName(logIdentifier, "executeUpdate") : "";
         int result = 0;
         Statement stmt = null;
@@ -245,7 +248,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateConnectionException, SOSHibernateSQLExecutorException */
     public int executeUpdateCallableStatement(String sql) throws SOSHibernateException {
-        if (isDebugEnabled) {
+        if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("%s[%s]", SOSHibernate.getMethodName(logIdentifier, "executeUpdateCallableStatement"), sql));
         }
         int result = -1;
@@ -268,7 +271,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateConnectionException, SOSHibernateSQLExecutorException */
     public byte[] getBlob(String sql) throws SOSHibernateException {
-        if (isDebugEnabled) {
+        if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("%s[%s]", SOSHibernate.getMethodName(logIdentifier, "getBlob"), sql));
         }
         Statement stmt = null;
@@ -310,7 +313,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateConnectionException, SOSHibernateSQLExecutorException */
     public long getBlob(String sql, Path path) throws SOSHibernateException {
-        if (isDebugEnabled) {
+        if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("%s[%s]path=%s", SOSHibernate.getMethodName(logIdentifier, "getBlob"), sql, path));
         }
         Statement stmt = null;
@@ -385,7 +388,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateConnectionException, SOSHibernateSQLExecutorException */
     public String getClob(String sql) throws SOSHibernateException {
-        if (isDebugEnabled) {
+        if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("%s[%s]", SOSHibernate.getMethodName(logIdentifier, "getClob"), sql));
         }
         Statement stmt = null;
@@ -450,7 +453,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateConnectionException, SOSHibernateSQLExecutorException */
     public long getClob(String sql, Path path) throws SOSHibernateException {
-        if (isDebugEnabled) {
+        if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("%s[%s]path=%s", SOSHibernate.getMethodName(logIdentifier, "getClob"), sql, path));
         }
         Statement stmt = null;
@@ -545,7 +548,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
      * 
      * @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateConnectionException, SOSHibernateSQLExecutorException */
     public ResultSet getResultSet(String sql) throws SOSHibernateException {
-        if (isDebugEnabled) {
+        if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("%s[%s]", SOSHibernate.getMethodName(logIdentifier, "getResultSet"), sql));
         }
         try {
@@ -613,7 +616,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateConnectionException, SOSHibernateSQLExecutorException */
     public void setDefaults() throws SOSHibernateException {
         Enum<SOSHibernateFactory.Dbms> dbms = session.getFactory().getDbms();
-        if (isDebugEnabled) {
+        if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("%s dbms=%s", SOSHibernate.getMethodName(logIdentifier, "setDefaults"), dbms));
         }
         if (dbms.equals(SOSHibernateFactory.Dbms.MSSQL)) {
@@ -650,7 +653,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateConnectionException, SOSHibernateSQLExecutorException */
     public int updateBlob(byte[] data, String tableName, String columnName, String condition) throws SOSHibernateException {
-        if (isDebugEnabled) {
+        if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("%s tableName=%s, columnName=%s, condition=%s", SOSHibernate.getMethodName(logIdentifier, "updateBlob"),
                     tableName, columnName, condition));
         }
@@ -665,7 +668,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateConnectionException, SOSHibernateSQLExecutorException */
     public void updateBlob(InputStream inputStream, int dataLength, String tableName, String columnName, String condition)
             throws SOSHibernateException {
-        if (isDebugEnabled) {
+        if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("%s tableName=%s, columnName=%s, condition=%s", SOSHibernate.getMethodName(logIdentifier, "updateBlob"),
                     tableName, columnName, condition));
         }
@@ -720,7 +723,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateConnectionException, SOSHibernateSQLExecutorException */
     public int updateBlob(Path path, String tableName, String columnName, String condition) throws SOSHibernateException {
-        if (isDebugEnabled) {
+        if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("%s path=%s, tableName=%s, columnName=%s, condition=%s", SOSHibernate.getMethodName(logIdentifier,
                     "updateBlob"), path, tableName, columnName, condition));
         }
@@ -745,7 +748,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateConnectionException, SOSHibernateSQLExecutorException */
     public int updateClob(Path path, String tableName, String columnName, String condition) throws SOSHibernateException {
-        if (isDebugEnabled) {
+        if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("%s path=%s, tableName=%s, columnName=%s, condition=%s", SOSHibernate.getMethodName(logIdentifier,
                     "updateClob"), path, tableName, columnName, condition));
         }
@@ -769,7 +772,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateConnectionException, SOSHibernateSQLExecutorException */
     public void updateClob(Reader reader, int dataLength, String tableName, String columnName, String condition) throws SOSHibernateException {
-        if (isDebugEnabled) {
+        if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("%s tableName=%s, columnName=%s, condition=%s", SOSHibernate.getMethodName(logIdentifier, "updateClob"),
                     tableName, columnName, condition));
         }

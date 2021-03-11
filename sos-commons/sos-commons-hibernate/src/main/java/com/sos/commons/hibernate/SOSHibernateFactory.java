@@ -50,8 +50,6 @@ public class SOSHibernateFactory implements Serializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateFactory.class);
     private static final Logger CONNECTION_POOL_LOGGER = LoggerFactory.getLogger("ConnectionPool");
     private static final long serialVersionUID = 1L;
-    private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
-    private static final boolean isTraceEnabled = LOGGER.isTraceEnabled();
     private SOSClassList classMapping;
     private Optional<Path> configFile = Optional.empty();
     private Configuration configuration;
@@ -115,7 +113,7 @@ public class SOSHibernateFactory implements Serializable {
             showConfigurationProperties();
             adjustAnnotations(dbms);
             initSessionFactory();
-            if (isDebugEnabled) {
+            if (LOGGER.isDebugEnabled()) {
                 String method = SOSHibernate.getMethodName(logIdentifier, "build");
                 int isolationLevel = getTransactionIsolation();
                 LOGGER.debug(String.format("%s autoCommit=%s, transactionIsolation=%s", method, getAutoCommit(), getTransactionIsolationName(
@@ -133,7 +131,7 @@ public class SOSHibernateFactory implements Serializable {
     }
 
     public void close() {
-        if (isDebugEnabled) {
+        if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(SOSHibernate.getMethodName(logIdentifier, "close"));
         }
         try {
@@ -395,7 +393,7 @@ public class SOSHibernateFactory implements Serializable {
             } else {
                 configuration.configure();
             }
-            if (isDebugEnabled) {
+            if (LOGGER.isDebugEnabled()) {
                 String method = SOSHibernate.getMethodName(logIdentifier, "configure");
                 if (configFile.isPresent()) {
                     LOGGER.debug(String.format("%s %s", method, configFile.get().toAbsolutePath().toString()));
@@ -450,7 +448,7 @@ public class SOSHibernateFactory implements Serializable {
     }
 
     private void initConfiguration() throws SOSHibernateConfigurationException {
-        if (isDebugEnabled) {
+        if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(SOSHibernate.getMethodName(logIdentifier, "initConfiguration"));
         }
         configuration = new Configuration();
@@ -474,7 +472,7 @@ public class SOSHibernateFactory implements Serializable {
     }
 
     private void initSessionFactory() {
-        if (isDebugEnabled) {
+        if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(SOSHibernate.getMethodName(logIdentifier, "initSessionFactory"));
         }
         ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
@@ -504,10 +502,11 @@ public class SOSHibernateFactory implements Serializable {
 
     private void setConfigurationClassMapping() {
         if (classMapping != null) {
-            String method = isDebugEnabled ? SOSHibernate.getMethodName(logIdentifier, "setConfigurationClassMapping") : "";
+            boolean isTraceEnabled = LOGGER.isTraceEnabled();
+            String method = isTraceEnabled ? SOSHibernate.getMethodName(logIdentifier, "setConfigurationClassMapping") : "";
             for (Class<?> c : classMapping.getClasses()) {
-                if (isDebugEnabled) {
-                    LOGGER.debug(String.format("%s %s", method, c.getCanonicalName()));
+                if (isTraceEnabled) {
+                    LOGGER.trace(String.format("%s %s", method, c.getCanonicalName()));
                 }
                 configuration.addAnnotatedClass(c);
             }
@@ -516,13 +515,14 @@ public class SOSHibernateFactory implements Serializable {
 
     private void setConfigurationProperties() {
         if (configurationProperties != null) {
-            String method = isDebugEnabled ? SOSHibernate.getMethodName(logIdentifier, "setConfigurationProperties") : "";
+            boolean isTraceEnabled = LOGGER.isTraceEnabled();
+            String method = isTraceEnabled ? SOSHibernate.getMethodName(logIdentifier, "setConfigurationProperties") : "";
             for (Map.Entry<?, ?> entry : configurationProperties.entrySet()) {
                 String key = (String) entry.getKey();
                 String value = (String) entry.getValue();
                 configuration.setProperty(key, value);
-                if (isDebugEnabled) {
-                    LOGGER.debug(String.format("%s %s=%s", method, key, value));
+                if (isTraceEnabled) {
+                    LOGGER.trace(String.format("%s %s=%s", method, key, value));
                 }
             }
             if (configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_JDBC_FETCH_SIZE) != null) {
@@ -541,6 +541,7 @@ public class SOSHibernateFactory implements Serializable {
 
     private void setDefaultConfigurationProperties() {
         if (useDefaultConfigurationProperties && defaultConfigurationProperties != null) {
+            boolean isTraceEnabled = LOGGER.isTraceEnabled();
             String method = isTraceEnabled ? SOSHibernate.getMethodName(logIdentifier, "setDefaultConfigurationProperties") : "";
             for (Map.Entry<?, ?> entry : defaultConfigurationProperties.entrySet()) {
                 String key = (String) entry.getKey();
@@ -575,7 +576,7 @@ public class SOSHibernateFactory implements Serializable {
                         } catch (Throwable e) {
                             LOGGER.warn(String.format("[%s.%s]%s", c.getSimpleName(), field.getName(), e.toString()), e);
                         }
-                        if (isDebugEnabled) {
+                        if (LOGGER.isDebugEnabled()) {
                             LOGGER.debug(String.format("[ColumnTransformer][%s.%s]%s", c.getSimpleName(), field.getName(), ct.write()));
                         }
                     }
