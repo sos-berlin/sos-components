@@ -28,7 +28,6 @@ public class GlobalSettingsSectionEntry {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("value")
@@ -37,7 +36,6 @@ public class GlobalSettingsSectionEntry {
      * JobScheduler object type
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("type")
@@ -46,7 +44,6 @@ public class GlobalSettingsSectionEntry {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("default")
@@ -64,7 +61,6 @@ public class GlobalSettingsSectionEntry {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("value")
@@ -76,7 +72,6 @@ public class GlobalSettingsSectionEntry {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("value")
@@ -88,7 +83,6 @@ public class GlobalSettingsSectionEntry {
      * JobScheduler object type
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("type")
@@ -100,7 +94,6 @@ public class GlobalSettingsSectionEntry {
      * JobScheduler object type
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("type")
