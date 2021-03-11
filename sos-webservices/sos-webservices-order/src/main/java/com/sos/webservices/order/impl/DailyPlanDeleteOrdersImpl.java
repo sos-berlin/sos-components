@@ -133,7 +133,6 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
             DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
-
             FilterDailyPlannedOrders filter = getFilter(sosHibernateSession, dailyPlanOrderFilter);
             filter.addState(OrderStateText.PLANNED);
             dbLayerDailyPlannedOrders.deleteCascading(filter);
@@ -142,7 +141,6 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
             DailyPlanAudit orderAudit = new DailyPlanAudit(filter.getControllerId(), dailyPlanOrderFilter.getAuditLog());
             logAuditMessage(orderAudit);
             storeAuditLogEntry(orderAudit);
-
         } finally {
             Globals.disconnect(sosHibernateSession);
         }

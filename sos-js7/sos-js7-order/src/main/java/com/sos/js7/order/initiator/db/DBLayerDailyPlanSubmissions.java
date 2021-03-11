@@ -1,7 +1,8 @@
 package com.sos.js7.order.initiator.db;
 
-import java.util.Date;
 import java.util.List;
+
+import javax.persistence.LockModeType;
 
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
@@ -9,13 +10,13 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.joc.Globals;
 import com.sos.joc.db.orders.DBItemDailyPlanSubmissions;
 import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 
 public class DBLayerDailyPlanSubmissions {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerDailyPlanSubmissions.class);
+    private static final int LOCK_TIMEOUT = 3000;
     private static final String DBItemDailyPlanSubmissions = DBItemDailyPlanSubmissions.class.getSimpleName();
     private final SOSHibernateSession sosHibernateSession;
 
@@ -30,8 +31,17 @@ public class DBLayerDailyPlanSubmissions {
     }
 
     public int delete(FilterDailyPlanSubmissions filter) throws SOSHibernateException {
-        String hql = "delete from " + DBItemDailyPlanSubmissions + getWhere(filter);
+
+        String hql = " from " + DBItemDailyPlanSubmissions + getWhere(filter);
+
         Query<DBItemDailyPlanSubmissions> query = sosHibernateSession.createQuery(hql);
+        query = bindParameters(filter, query);
+        query.setLockMode(LockModeType.PESSIMISTIC_WRITE);
+        query.setHint("javax.persistence.lock.timeout", LOCK_TIMEOUT);
+        sosHibernateSession.getResultList(query);
+
+        hql = "delete " + hql;
+        query = sosHibernateSession.createQuery(hql);
         bindParameters(filter, query);
         int row = sosHibernateSession.executeUpdate(query);
         return row;
@@ -56,7 +66,7 @@ public class DBLayerDailyPlanSubmissions {
         }
 
         if (filter.getDateTo() != null) {
-            where += and + " submissionForDate < :dateTo";
+            where += and + " submissionForDate <= :dateTo";
             and = " and ";
         }
 
@@ -94,8 +104,7 @@ public class DBLayerDailyPlanSubmissions {
 
     }
 
-    public List<DBItemDailyPlanSubmissions> getDailyPlanSubmissions(FilterDailyPlanSubmissions filter, final int limit)
-            throws SOSHibernateException {
+    public List<DBItemDailyPlanSubmissions> getDailyPlanSubmissions(FilterDailyPlanSubmissions filter, final int limit) throws SOSHibernateException {
         String q = "from " + DBItemDailyPlanSubmissions + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
         Query<DBItemDailyPlanSubmissions> query = sosHibernateSession.createQuery(q);
         query = bindParameters(filter, query);

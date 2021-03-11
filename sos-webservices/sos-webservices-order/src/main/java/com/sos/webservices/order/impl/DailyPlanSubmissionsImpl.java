@@ -134,6 +134,17 @@ public class DailyPlanSubmissionsImpl extends JOCResourceImpl implements IDailyP
                 Date date = JobSchedulerDate.getDateFrom(dailyPlanSubmissionHistoryFilter.getFilter().getDateFor(), dailyPlanSubmissionHistoryFilter
                         .getTimeZone());
                 filter.setDateFor(date);
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(filter.getDateFor());
+                calendar.add(java.util.Calendar.DATE, 1);
+                calendar.set(java.util.Calendar.HOUR_OF_DAY, 0);
+                calendar.set(java.util.Calendar.MINUTE, 0);
+                calendar.set(java.util.Calendar.SECOND, 0);
+                calendar.set(java.util.Calendar.MILLISECOND, 0);
+                calendar.set(java.util.Calendar.MINUTE, 0);
+                
+                filter.setDateFor(calendar.getTime());
+                
 
             } else {
 
@@ -141,8 +152,6 @@ public class DailyPlanSubmissionsImpl extends JOCResourceImpl implements IDailyP
                     Date fromDate = JobSchedulerDate.getDateFrom(dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom(),
                             dailyPlanSubmissionHistoryFilter.getTimeZone());
                     filter.setDateFrom(fromDate);
-                    filter.setDateFor(fromDate);
-
                 }
                 if (dailyPlanSubmissionHistoryFilter.getFilter().getDateTo() != null) {
                     Date toDate = JobSchedulerDate.getDateTo(dailyPlanSubmissionHistoryFilter.getFilter().getDateTo(),
@@ -151,17 +160,7 @@ public class DailyPlanSubmissionsImpl extends JOCResourceImpl implements IDailyP
                 }
             }
 
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(filter.getDateFor());
-            calendar.add(java.util.Calendar.DATE, 1);
-            calendar.set(java.util.Calendar.HOUR_OF_DAY, 0);
-            calendar.set(java.util.Calendar.MINUTE, 0);
-            calendar.set(java.util.Calendar.SECOND, 0);
-            calendar.set(java.util.Calendar.MILLISECOND, 0);
-            calendar.set(java.util.Calendar.MINUTE, 0);
-            
-            filter.setDateFor(calendar.getTime());
-            
+          
             dbLayerDailyPlan.delete(filter);
             Globals.commit(sosHibernateSession);
 
