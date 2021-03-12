@@ -41,7 +41,6 @@ import com.sos.js7.joc.poc.jetty.server.JettyTestServer;
 public class TestEmbeddedJetty {
 
     private JettyTestServer testServer;
-    private JettyServer server;
     private static final Logger LOGGER = LoggerFactory.getLogger(TestEmbeddedJetty.class);
     private static final String SERVER_KEYSTORE_PATH = "src/test/resources/https-keystore.p12";
     private static final String SERVER_KEYSTORE_TYPE = "PKCS12";
@@ -60,15 +59,10 @@ public class TestEmbeddedJetty {
 
     @Before
     public void setup() throws Exception {
-        // start testServer for src/test/java tests only (01, 02)
-        // start server for src/main/java tests (03)
-
-        // testServer = new JettyTestServer();
-        // testServer.start();
-
-        server = new JettyServer();
-        server.init(SERVER_KEYSTORE_PATH, SERVER_KEYSTORE_TYPE, SERVER_KEYSTORE_PW, SERVER_KEYSTORE_KEYMAN_PW, SERVER_TRUSTSTORE_PATH, SERVER_TRUSTSTORE_TYPE, SERVER_TRUSTORE_PW);
-        server.start();
+        testServer = new JettyTestServer();
+        testServer.init(SERVER_KEYSTORE_PATH, SERVER_KEYSTORE_TYPE, SERVER_KEYSTORE_PW, SERVER_KEYSTORE_KEYMAN_PW, SERVER_TRUSTSTORE_PATH,
+                SERVER_TRUSTSTORE_TYPE, SERVER_TRUSTORE_PW);
+        testServer.start();
     }
 
     @After
@@ -76,49 +70,15 @@ public class TestEmbeddedJetty {
         if (testServer != null) {
             testServer.stop();
         }
-        if (server != null) {
-            server.stop();
-        }
-    }
-
-    // @Test
-    public void test01JettyBlockingServlet() throws ClientProtocolException, IOException {
-        // single threaded Servlet
-        // will wait until request is finished
-        // takes next request after previous is finished
-        String url = "http://localhost:8010/status";
-        HttpClient client = HttpClientBuilder.create().build();
-        HttpGet request = new HttpGet(url);
-
-        HttpResponse response = client.execute(request);
-        LOGGER.debug(String.format("Response Status Code: %1$s", response.getStatusLine().getStatusCode()));
-        LOGGER.debug(String.format("Response Content: %1$s", IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8.toString())));
-        assertEquals(response.getStatusLine().getStatusCode(), 200);
-    }
-
-    // @Test
-    public void test02JettyAsnycServlet() throws ClientProtocolException, IOException {
-        // multi threaded Servlet
-        // will respond after request is finished
-        // takes requests parallel
-        String url = "http://localhost:8010/heavy/async";
-        HttpClient client = HttpClientBuilder.create().build();
-        HttpGet request = new HttpGet(url);
-
-        HttpResponse response = client.execute(request);
-        assertEquals(response.getStatusLine().getStatusCode(), 200);
-
-        String responseContent = IOUtils.toString(response.getEntity().getContent(), StandardCharsets.ISO_8859_1.toString());
-        assertEquals(responseContent, "This is some heavy resource that will be served in an async way");
     }
 
     @Test
-    public void test03JettyServerHTTPTest() {
+    public void test01JettyServerHTTPTest() {
         try {
             HttpClient client = HttpClientBuilder.create().build();
-            HttpGet request = new HttpGet("http://sp.sos:8900/status80");
+            HttpGet request = new HttpGet("http://localhost:8900/status80");
             HttpResponse response = client.execute(request);
-            assertEquals(response.getStatusLine().getStatusCode(),200);
+            assertEquals(response.getStatusLine().getStatusCode(), 200);
             String responseContent = IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8.toString());
             LOGGER.info(responseContent);
             assertNotNull(responseContent);
@@ -129,13 +89,13 @@ public class TestEmbeddedJetty {
 
     @Test
     @Ignore
-    public void test04JettyServerWithSSLTest() {
+    public void test03JettyServerWithSSLTest() {
         try {
             // use null as second param if you don't have a separate key password
-            SSLContext sslContext = SSLContexts.custom()
-                    .loadKeyMaterial(readKeyStore(), "sp".toCharArray())
-                    .setKeyStoreType("PKCS12").loadTrustMaterial(readTrustStore(), null).build();
-            HttpClient httpClient = HttpClients.custom().setSSLContext(sslContext).setRetryHandler(new DefaultHttpRequestRetryHandler(0, false)).build();
+            SSLContext sslContext = SSLContexts.custom().loadKeyMaterial(readKeyStore(), "sp".toCharArray()).setKeyStoreType("PKCS12")
+                    .loadTrustMaterial(readTrustStore(), null).build();
+            HttpClient httpClient = HttpClients.custom().setSSLContext(sslContext).setRetryHandler(new DefaultHttpRequestRetryHandler(0, false))
+                    .build();
             HttpResponse response = httpClient.execute(new HttpGet("https://sp.sos:8910/status"));
             assertEquals(200, response.getStatusLine().getStatusCode());
             HttpEntity entity = response.getEntity();

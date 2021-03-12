@@ -61,15 +61,11 @@ public class ReadCertificateTestServlet extends HttpServlet {
                 this.sslSessionIdHex = (String) request.getAttribute("javax.servlet.request.ssl_session_id");
             }
         }
-//        clientCertificateChain = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
-//        String cipherSuiteName = (String) request.getAttribute("javax.servlet.request.cipher_suite");
-//        Integer keySize = (Integer) request.getAttribute("javax.servlet.request.key_size");
-//        sslSessionIdHex = (String) request.getAttribute("javax.servlet.request.ssl_session_id");
         response.setContentType("application/json");
         response.setStatus(HttpServletResponse.SC_OK);
         StringBuilder strb = new StringBuilder();
         
-        if ((clientCertificateChain == null || clientCertificateChain.length == 0) && cipherSuiteName == null && keySize == null && sslSessionIdHex == null) {
+        if ((clientCertificateChain == null || clientCertificateChain.length == 0) && sslSessionIdHex == null) {
             strb.append("{\n");
             strb.append("  \"message\" : \"no information received from request.\"\n");
             strb.append("}\n");
