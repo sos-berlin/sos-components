@@ -32,6 +32,27 @@ public class ConfigurationGlobals {
         addDefaultSection(DefaultSections.joc, 2);
     }
 
+    public void setConfigurationValues(GlobalSettings values) {
+        sections = new HashMap<>();
+        defaults.getAdditionalProperties().entrySet().stream().forEach(s -> {
+            DefaultSections ds = DefaultSections.valueOf(s.getKey());
+            AConfigurationSection inst = getClassInstance(ds);
+            if (values != null && values.getAdditionalProperties().containsKey(s.getKey())) {
+                inst.setValues(values.getAdditionalProperties().get(s.getKey()));
+            } else {
+                inst.setValues(null);
+            }
+            sections.put(ds, inst);
+        });
+    }
+
+    public AConfigurationSection getConfigurationSection(DefaultSections section) {
+        if (sections == null) {
+            setConfigurationValues(null);
+        }
+        return sections.get(section);
+    }
+
     public GlobalSettings getInitialSettings(String timeZone) {
         GlobalSettings settings = clone(defaults);
 
@@ -52,6 +73,30 @@ public class ConfigurationGlobals {
         });
 
         return settings;
+    }
+
+    public GlobalSettings getDefaults() {
+        return defaults;
+    }
+
+    private void addDefaultSection(DefaultSections section, int ordering) {
+        defaults.setAdditionalProperty(section.name(), getClassInstance(section).toDefaults(ordering));
+    }
+
+    private AConfigurationSection getClassInstance(DefaultSections section) {
+        if (section == null) {
+            return null;
+        }
+        switch (section) {
+        case dailyplan:
+            return new ConfigurationGlobalsDailyPlan();
+        case cleanup:
+            return new ConfigurationGlobalsCleanup();
+        case joc:
+            return new ConfigurationGlobalsJoc();
+        default:
+            return null;
+        }
     }
 
     private GlobalSettings clone(GlobalSettings settings) {
@@ -79,51 +124,6 @@ public class ConfigurationGlobals {
         });
 
         return s;
-    }
-
-    public void setConfigurationValues(GlobalSettings values) {
-        sections = new HashMap<>();
-        defaults.getAdditionalProperties().entrySet().stream().forEach(s -> {
-            DefaultSections ds = DefaultSections.valueOf(s.getKey());
-            AConfigurationSection inst = getClassInstance(ds);
-            if (values != null && values.getAdditionalProperties().containsKey(s.getKey())) {
-                inst.setValues(values.getAdditionalProperties().get(s.getKey()));
-            } else {
-                inst.setValues(null);
-            }
-            sections.put(ds, inst);
-        });
-    }
-
-    public AConfigurationSection getConfigurationSection(DefaultSections section) {
-        if (sections == null) {
-            setConfigurationValues(null);
-        }
-        return sections.get(section);
-    }
-
-    private void addDefaultSection(DefaultSections section, int ordering) {
-        defaults.setAdditionalProperty(section.name(), getClassInstance(section).toDefaults(ordering));
-    }
-
-    public GlobalSettings getDefaults() {
-        return defaults;
-    }
-
-    private AConfigurationSection getClassInstance(DefaultSections section) {
-        if (section == null) {
-            return null;
-        }
-        switch (section) {
-        case dailyplan:
-            return new ConfigurationGlobalsDailyPlan();
-        case cleanup:
-            return new ConfigurationGlobalsCleanup();
-        case joc:
-            return new ConfigurationGlobalsJoc();
-        default:
-            return null;
-        }
     }
 
 }
