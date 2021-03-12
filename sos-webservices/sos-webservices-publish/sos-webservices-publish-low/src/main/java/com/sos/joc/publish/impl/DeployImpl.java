@@ -131,7 +131,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             final String commitId = UUID.randomUUID().toString();
 
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
-            JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.MEDIUM);
+            JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.LOW);
             if (keyPair == null) {
                 throw new JocMissingKeyException(
                         "No private key found for signing! - Please check your private key from the key management section in your profile.");
@@ -173,7 +173,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     .forEach(item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(item, controllerId, dbLayer)));
                     verifiedReDeployables.putAll(
                             PublishUtils.getDeploymentsWithSignature(commitId, account, unsignedReDeployables, hibernateSession, 
-                                    JocSecurityLevel.MEDIUM));
+                                    JocSecurityLevel.LOW));
                 }
                 // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename 
                 List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkPathRenamingForUpdate(
