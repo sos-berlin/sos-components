@@ -71,7 +71,7 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
             final java.nio.file.Path pWithoutFix = Paths.get(config.getPath());
             
             final List<String> replace = JocInventory.getSearchReplace(JocInventory.getSuffixPrefix(in.getSuffix(), in.getPrefix(),
-                    Globals.restoreSuffixPrefix, JocInventory.DEFAULT_RESTORE_SUFFIX, true, config.getName(), type, dbLayer));
+                    Globals.restoreSuffixPrefix, JocInventory.DEFAULT_RESTORE_SUFFIX, config.getName(), type, dbLayer));
 
             Set<String> events = new HashSet<>();
             

@@ -789,28 +789,22 @@ public class JocInventory {
         return events;
     }
     
-    public static SuffixPrefix getSuffixPrefix(String _suffix, String _prefix, SuffixPrefix setting, String defaultValue, boolean fixMustUsed, String _name,
+    public static SuffixPrefix getSuffixPrefix(String _suffix, String _prefix, SuffixPrefix setting, String defaultValue, String _name,
             ConfigurationType type, InventoryDBLayer dbLayer) throws SOSHibernateException {
         String prefix = _prefix == null ? "" : _prefix.trim().replaceFirst("-+$", "");
         String suffix = _suffix == null ? "" : _suffix.trim().replaceFirst("^-+", "");
         String name = isFolder(type) ? null : _name;
         
-        if (fixMustUsed) {
-            if (!suffix.isEmpty()) { // suffix beats prefix
-                prefix = "";
-            } else if (prefix.isEmpty()) {
-                suffix = setting.getSuffix();
-                if (suffix.isEmpty()) {
-                    prefix = setting.getPrefix();
-                }
+        if (!suffix.isEmpty()) { // suffix beats prefix
+            prefix = "";
+        } else if (prefix.isEmpty()) {
+            suffix = setting.getSuffix();
+            if (suffix.isEmpty()) {
+                prefix = setting.getPrefix();
             }
-            if (suffix.isEmpty() && prefix.isEmpty()) {
-                suffix = defaultValue;
-            }
-        } else {
-            if (!suffix.isEmpty()) { // suffix beats prefix
-                prefix = "";
-            }
+        }
+        if (suffix.isEmpty() && prefix.isEmpty()) {
+            suffix = defaultValue;
         }
 
         if (!suffix.isEmpty()) {

@@ -79,8 +79,14 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
             boolean fixMustUsed = JocInventory.isFolder(type) || (!JocInventory.isFolder(type) && oldPath.getFileName().toString().equals(pWithoutFix
                     .getFileName().toString()));
             
-            final SuffixPrefix suffixPrefix = JocInventory.getSuffixPrefix(in.getSuffix(), in.getPrefix(), Globals.copySuffixPrefix,
-                    JocInventory.DEFAULT_COPY_SUFFIX, fixMustUsed, pWithoutFix.getFileName().toString(), type, dbLayer);
+            SuffixPrefix suffixPrefix = new SuffixPrefix(); 
+            if (fixMustUsed) {
+                suffixPrefix = JocInventory.getSuffixPrefix(in.getSuffix(), in.getPrefix(), Globals.copySuffixPrefix,
+                        JocInventory.DEFAULT_COPY_SUFFIX, pWithoutFix.getFileName().toString(), type, dbLayer);
+            } else {
+                suffixPrefix.setPrefix("");
+                suffixPrefix.setSuffix("");
+            }
             
             final List<String> replace = JocInventory.getSearchReplace(suffixPrefix);
             Set<String> events = new HashSet<>();
