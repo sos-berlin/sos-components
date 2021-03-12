@@ -82,7 +82,7 @@ public class RenameResourceImpl extends JOCResourceImpl implements IRenameResour
 
     private DBItemXmlEditorConfiguration create(SOSHibernateSession session, RenameConfiguration in, String name) throws Exception {
         DBItemXmlEditorConfiguration item = new DBItemXmlEditorConfiguration();
-        item.setSchedulerId(in.getControllerId());
+        item.setControllerId(in.getControllerId());
         item.setObjectType(in.getObjectType().name());
         item.setName(name);
         item.setConfigurationDraft(null);
@@ -108,7 +108,7 @@ public class RenameResourceImpl extends JOCResourceImpl implements IRenameResour
     }
 
     private void checkRequiredParameters(final RenameConfiguration in) throws Exception {
-        checkRequiredParameter("jobschedulerId", in.getControllerId());
+        checkRequiredParameter("controllerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         if (in.getObjectType().equals(ObjectType.OTHER)) {
             checkRequiredParameter("id", in.getId());

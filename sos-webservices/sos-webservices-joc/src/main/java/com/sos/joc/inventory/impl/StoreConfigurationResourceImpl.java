@@ -24,6 +24,7 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.inventory.resource.IStoreConfigurationResource;
+import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.ICalendarObject;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -96,7 +97,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 item.setType(in.getObjectType());
                 item = setProperties(in, item, dbLayer, true);
                 item.setCreated(Date.from(Instant.now()));
-                createAuditLog(item, in.getObjectType());
+                createAuditLog(item, in.getObjectType(), in.getAuditLog());
                 JocInventory.insertConfiguration(dbLayer, item, in.getConfiguration());
                 JocInventory.postEvent(item.getFolder());
             }
@@ -123,8 +124,8 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
         }
     }
 
-    private void createAuditLog(DBItemInventoryConfiguration config, ConfigurationType objectType) throws Exception {
-        InventoryAudit audit = new InventoryAudit(objectType, config.getPath(), config.getFolder());
+    private void createAuditLog(DBItemInventoryConfiguration config, ConfigurationType objectType, AuditParams auditParams) throws Exception {
+        InventoryAudit audit = new InventoryAudit(objectType, config.getPath(), config.getFolder(), auditParams);
         logAuditMessage(audit);
         DBItemJocAuditLog auditItem = storeAuditLogEntry(audit);
         if (auditItem != null) {

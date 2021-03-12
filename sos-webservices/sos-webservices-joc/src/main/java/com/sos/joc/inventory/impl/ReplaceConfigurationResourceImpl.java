@@ -25,6 +25,7 @@ import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.inventory.resource.IReplaceConfigurationResource;
+import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
 import com.sos.joc.model.inventory.replace.RequestFolder;
@@ -77,6 +78,8 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
     private JOCDefaultResponse replaceFolder(RequestFolder in) throws Exception {
         SOSHibernateSession session = null;
         try {
+            checkRequiredComment(in.getAuditLog());
+            
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             session.setAutoCommit(false);
             final InventoryDBLayer dbLayer = new InventoryDBLayer(session);
@@ -108,7 +111,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 isUpdated = true;
             }
             if (isUpdated) {
-                createAuditLog(config);
+                createAuditLog(config, in.getAuditLog());
             }
             
             session.commit();
@@ -129,6 +132,8 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
     private JOCDefaultResponse replace(RequestFilters in) throws Exception {
         SOSHibernateSession session = null;
         try {
+            checkRequiredComment(in.getAuditLog());
+            
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             session.setAutoCommit(false);
             final InventoryDBLayer dbLayer = new InventoryDBLayer(session);
@@ -175,7 +180,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 events.addAll(JocInventory.deepCopy(config, p.getFileName().toString(), dbLayer));
 
                 setItem(config, p);
-                createAuditLog(config);
+                createAuditLog(config, in.getAuditLog());
                 JocInventory.updateConfiguration(dbLayer, config);
                 events.add(config.getFolder());
             }
@@ -194,8 +199,8 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
         }
     }
 
-    private void createAuditLog(DBItemInventoryConfiguration config) throws Exception {
-        InventoryAudit audit = new InventoryAudit(config.getTypeAsEnum(), config.getPath(), config.getFolder());
+    private void createAuditLog(DBItemInventoryConfiguration config, AuditParams auditParams) throws Exception {
+        InventoryAudit audit = new InventoryAudit(config.getTypeAsEnum(), config.getPath(), config.getFolder(), auditParams);
         logAuditMessage(audit);
         DBItemJocAuditLog auditItem = storeAuditLogEntry(audit);
         if (auditItem != null) {

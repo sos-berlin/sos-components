@@ -27,6 +27,7 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IRestoreConfigurationResource;
+import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.restore.RequestFilter;
 import com.sos.schema.JsonValidator;
@@ -57,6 +58,8 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
     private JOCDefaultResponse restore(RequestFilter in) throws Exception {
         SOSHibernateSession session = null;
         try {
+            checkRequiredComment(in.getAuditLog());
+            
             session = Globals.createSosHibernateStatelessConnection(TRASH_IMPL_PATH);
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
@@ -83,7 +86,7 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
                 List<DBItemInventoryConfiguration> curDBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null);
                 Set<String> folderPaths = curDBFolderContent.stream().filter(i -> ConfigurationType.FOLDER.intValue() == i.getType()).map(
                         DBItemInventoryConfiguration::getPath).collect(Collectors.toSet());
-                Long auditLogId = createAuditLog(config);
+                Long auditLogId = createAuditLog(config, in.getAuditLog());
                 
                 for (ConfigurationType objType : restoreOrder) {
                     for (DBItemInventoryConfigurationTrash trashItem : trashMap.getOrDefault(objType, Collections.emptyList())) {
@@ -121,7 +124,7 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
                 
             } else {
                 
-                Long auditLogId = createAuditLog(config);
+                Long auditLogId = createAuditLog(config, in.getAuditLog());
                 if (dbLayer.getConfigurationByName(config.getName(), config.getType()).isEmpty()) {
                     JocInventory.insertConfiguration(dbLayer, createItem(config, pWithoutFix, auditLogId, dbLayer));
                 } else {
@@ -160,8 +163,8 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
         }
     }
     
-    private Long createAuditLog(DBItemInventoryConfigurationTrash config) throws Exception {
-        InventoryAudit audit = new InventoryAudit(config.getTypeAsEnum(), config.getPath(), config.getFolder());
+    private Long createAuditLog(DBItemInventoryConfigurationTrash config, AuditParams auditParams) throws Exception {
+        InventoryAudit audit = new InventoryAudit(config.getTypeAsEnum(), config.getPath(), config.getFolder(), auditParams);
         logAuditMessage(audit);
         DBItemJocAuditLog auditItem = storeAuditLogEntry(audit);
         if (auditItem != null) {

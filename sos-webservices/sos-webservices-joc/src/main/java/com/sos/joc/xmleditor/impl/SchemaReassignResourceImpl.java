@@ -46,7 +46,7 @@ public class SchemaReassignResourceImpl extends JOCResourceImpl implements ISche
     }
 
     private void checkRequiredParameters(final SchemaReassignConfiguration in) throws Exception {
-        checkRequiredParameter("jobschedulerId", in.getControllerId());
+        checkRequiredParameter("controllerId", in.getControllerId());
         checkRequiredParameter("configuration", in.getConfiguration());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         if (in.getUri() == null) {

@@ -1,14 +1,13 @@
 
 package com.sos.joc.model.inventory.common;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
@@ -89,7 +88,7 @@ public class ResponseFolderItem {
     private Boolean hasDeployments;
     @JsonProperty("hasReleases")
     private Boolean hasReleases;
-    
+
     /**
      * non negative long
      * <p>
@@ -273,7 +272,7 @@ public class ResponseFolderItem {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(hasDeployments).append(deployed).append(title).append(objectType).append(valid).append(path).append(deleted).append(name).append(id).append(released).append(hasReleases).toHashCode();
+        return new HashCodeBuilder().append(valid).append(path).append(deleted).append(hasDeployments).append(name).append(deployed).append(id).append(title).append(released).append(hasReleases).append(objectType).toHashCode();
     }
 
     @Override
@@ -285,7 +284,7 @@ public class ResponseFolderItem {
             return false;
         }
         ResponseFolderItem rhs = ((ResponseFolderItem) other);
-        return new EqualsBuilder().append(hasDeployments, rhs.hasDeployments).append(deployed, rhs.deployed).append(title, rhs.title).append(objectType, rhs.objectType).append(valid, rhs.valid).append(path, rhs.path).append(deleted, rhs.deleted).append(name, rhs.name).append(id, rhs.id).append(released, rhs.released).append(hasReleases, rhs.hasReleases).isEquals();
+        return new EqualsBuilder().append(valid, rhs.valid).append(path, rhs.path).append(deleted, rhs.deleted).append(hasDeployments, rhs.hasDeployments).append(name, rhs.name).append(deployed, rhs.deployed).append(id, rhs.id).append(title, rhs.title).append(released, rhs.released).append(hasReleases, rhs.hasReleases).append(objectType, rhs.objectType).isEquals();
     }
 
 }

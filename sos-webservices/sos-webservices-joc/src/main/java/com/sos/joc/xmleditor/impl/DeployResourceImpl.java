@@ -105,7 +105,7 @@ public class DeployResourceImpl extends JOCResourceImpl implements IDeployResour
     }
 
     private void checkRequiredParameters(final DeployConfiguration in) throws Exception {
-        checkRequiredParameter("jobschedulerId", in.getControllerId());
+        checkRequiredParameter("controllerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         checkRequiredParameter("configuration", in.getConfiguration());
         checkRequiredParameter("configurationJson", in.getConfigurationJson());
@@ -123,7 +123,7 @@ public class DeployResourceImpl extends JOCResourceImpl implements IDeployResour
                 .getObjectType()));
         if (item == null) {
             item = new DBItemXmlEditorConfiguration();
-            item.setSchedulerId(in.getControllerId());
+            item.setControllerId(in.getControllerId());
             item.setObjectType(in.getObjectType().name());
             item.setName(JocXmlEditor.getConfigurationName(in.getObjectType()));
             item.setConfigurationDraft(in.getConfiguration());

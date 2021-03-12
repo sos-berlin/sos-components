@@ -176,7 +176,7 @@ public class ApplyResourceImpl extends JOCResourceImpl implements IApplyResource
     }
 
     private void checkRequiredParameters(final ApplyConfiguration in) throws Exception {
-        checkRequiredParameter("jobschedulerId", in.getControllerId());
+        checkRequiredParameter("controllerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         if (in.getObjectType().equals(ObjectType.OTHER)) {
             checkRequiredParameter("id", in.getId());
@@ -213,7 +213,7 @@ public class ApplyResourceImpl extends JOCResourceImpl implements IApplyResource
 
     private DBItemXmlEditorConfiguration create(SOSHibernateSession session, ApplyConfiguration in, String name) throws Exception {
         DBItemXmlEditorConfiguration item = new DBItemXmlEditorConfiguration();
-        item.setSchedulerId(in.getControllerId());
+        item.setControllerId(in.getControllerId());
         item.setObjectType(in.getObjectType().name());
         item.setName(name.trim());
         item.setConfigurationDraft(in.getConfiguration());

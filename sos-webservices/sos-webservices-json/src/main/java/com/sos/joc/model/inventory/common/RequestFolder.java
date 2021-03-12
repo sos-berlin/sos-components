@@ -7,13 +7,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * Filter Delete Draft
+ * Filter of a folder
  * <p>
  * 
  * 
@@ -23,7 +24,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "path",
     "recursive",
     "objectTypes",
-    "onlyValidObjects"
+    "onlyValidObjects",
+    "auditLog"
 })
 public class RequestFolder {
 
@@ -43,6 +45,14 @@ public class RequestFolder {
     private List<ConfigurationType> objectTypes = new ArrayList<ConfigurationType>();
     @JsonProperty("onlyValidObjects")
     private Boolean onlyValidObjects = false;
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    private AuditParams auditLog;
 
     /**
      * path
@@ -98,14 +108,36 @@ public class RequestFolder {
         this.onlyValidObjects = onlyValidObjects;
     }
 
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public AuditParams getAuditLog() {
+        return auditLog;
+    }
+
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public void setAuditLog(AuditParams auditLog) {
+        this.auditLog = auditLog;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("recursive", recursive).append("objectTypes", objectTypes).append("onlyValidObjects", onlyValidObjects).toString();
+        return new ToStringBuilder(this).append("path", path).append("recursive", recursive).append("objectTypes", objectTypes).append("onlyValidObjects", onlyValidObjects).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(objectTypes).append(recursive).append(onlyValidObjects).toHashCode();
+        return new HashCodeBuilder().append(path).append(objectTypes).append(auditLog).append(recursive).append(onlyValidObjects).toHashCode();
     }
 
     @Override
@@ -117,7 +149,7 @@ public class RequestFolder {
             return false;
         }
         RequestFolder rhs = ((RequestFolder) other);
-        return new EqualsBuilder().append(path, rhs.path).append(objectTypes, rhs.objectTypes).append(recursive, rhs.recursive).append(onlyValidObjects, rhs.onlyValidObjects).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(objectTypes, rhs.objectTypes).append(auditLog, rhs.auditLog).append(recursive, rhs.recursive).append(onlyValidObjects, rhs.onlyValidObjects).isEquals();
     }
 
 }

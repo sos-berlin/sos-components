@@ -4,6 +4,7 @@ import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class InventoryAudit implements IAuditLog {
@@ -41,7 +42,7 @@ public class InventoryAudit implements IAuditLog {
     @JsonIgnore
     private Date startTime;
 
-    public InventoryAudit(ConfigurationType type, String path, String folder) {
+    public InventoryAudit(ConfigurationType type, String path, String folder, AuditParams auditParams) {
         this.objectType = type;
         this.path = path;
         this.folder = folder;
@@ -64,6 +65,15 @@ public class InventoryAudit implements IAuditLog {
             break;
         default:
             break;
+        }
+        setAuditParams(auditParams);
+    }
+    
+    private void setAuditParams(AuditParams auditParams) {
+        if (auditParams != null) {
+            this.comment = auditParams.getComment();
+            this.timeSpent = auditParams.getTimeSpent();
+            this.ticketLink = auditParams.getTicketLink();
         }
     }
 

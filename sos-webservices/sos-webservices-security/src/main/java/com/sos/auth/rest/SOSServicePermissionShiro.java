@@ -217,15 +217,16 @@ public class SOSServicePermissionShiro {
             @HeaderParam("X-CLIENT-ID") String loginClientId, @QueryParam("user") String user, @QueryParam("pwd") String pwd) throws JocException,
             SOSHibernateException {
         Globals.loginClientId = loginClientId;
-        String clientCertCN = null;
-        try {
-            ClientCertificateHandler clientCertHandler = new ClientCertificateHandler(request);
-            clientCertCN = clientCertHandler.getClientCN();
-            LOGGER.info("Client Certificate CN read from Login: " + clientCertCN);
-        } catch (IOException e) {
-            LOGGER.debug("No Client certificate read from HttpServletRequest.");
+        if (request != null) {
+            String clientCertCN = null;
+            try {
+                ClientCertificateHandler clientCertHandler = new ClientCertificateHandler(request);
+                clientCertCN = clientCertHandler.getClientCN();
+                LOGGER.info("Client Certificate CN read from Login: " + clientCertCN);
+            } catch (IOException e) {
+                LOGGER.debug("No Client certificate read from HttpServletRequest.");
+            } 
         }
-
         MDC.put("context", ThreadCtx);
         try {
             return login(request, basicAuthorization, user, pwd);

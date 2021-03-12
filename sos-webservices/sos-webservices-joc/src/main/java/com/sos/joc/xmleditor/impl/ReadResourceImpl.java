@@ -72,7 +72,7 @@ public class ReadResourceImpl extends JOCResourceImpl implements IReadResource {
     }
 
     private void checkRequiredParameters(final ReadConfiguration in) throws Exception {
-        checkRequiredParameter("jobschedulerId", in.getControllerId());
+        checkRequiredParameter("controllerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
     }
 
@@ -194,17 +194,17 @@ public class ReadResourceImpl extends JOCResourceImpl implements IReadResource {
         }
     }
 
-    private DBItemXmlEditorConfiguration getItem(String schedulerId, String objectType, String name) throws Exception {
+    private DBItemXmlEditorConfiguration getItem(String controllerId, String objectType, String name) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
 
             session.beginTransaction();
-            DBItemXmlEditorConfiguration item = dbLayer.getObject(schedulerId, objectType, name);
+            DBItemXmlEditorConfiguration item = dbLayer.getObject(controllerId, objectType, name);
             session.commit();
             if (isTraceEnabled) {
-                LOGGER.trace(String.format("[%s][%s][%s]%s", schedulerId, objectType, name, SOSString.toString(item, Arrays.asList(
+                LOGGER.trace(String.format("[%s][%s][%s]%s", controllerId, objectType, name, SOSString.toString(item, Arrays.asList(
                         "configuration"))));
             }
             return item;

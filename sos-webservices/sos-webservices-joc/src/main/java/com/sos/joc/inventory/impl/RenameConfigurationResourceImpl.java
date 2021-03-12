@@ -26,6 +26,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.inventory.resource.IRenameConfigurationResource;
+import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.rename.RequestFilter;
 import com.sos.schema.JsonValidator;
@@ -56,6 +57,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
     private JOCDefaultResponse rename(RequestFilter in) throws Exception {
         SOSHibernateSession session = null;
         try {
+            checkRequiredComment(in.getAuditLog());
             
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             session.setAutoCommit(false);
@@ -129,7 +131,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 }
                 
                 setItem(config, p);
-                createAuditLog(config);
+                createAuditLog(config, in.getAuditLog());
                 JocInventory.updateConfiguration(dbLayer, config);
                 JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId());
                 for (DBItemInventoryConfiguration item : oldDBFolderContent) {
@@ -160,7 +162,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 events.addAll(JocInventory.deepCopy(config, p.getFileName().toString(), dbLayer));
                 
                 setItem(config, p);
-                createAuditLog(config);
+                createAuditLog(config, in.getAuditLog());
                 JocInventory.updateConfiguration(dbLayer, config);
                 JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId());
                 events.add(config.getFolder());
@@ -180,8 +182,8 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
         }
     }
     
-    private void createAuditLog(DBItemInventoryConfiguration config) throws Exception {
-        InventoryAudit audit = new InventoryAudit(config.getTypeAsEnum(), config.getPath(), config.getFolder());
+    private void createAuditLog(DBItemInventoryConfiguration config, AuditParams auditParams) throws Exception {
+        InventoryAudit audit = new InventoryAudit(config.getTypeAsEnum(), config.getPath(), config.getFolder(), auditParams);
         logAuditMessage(audit);
         DBItemJocAuditLog auditItem = storeAuditLogEntry(audit);
         if (auditItem != null) {

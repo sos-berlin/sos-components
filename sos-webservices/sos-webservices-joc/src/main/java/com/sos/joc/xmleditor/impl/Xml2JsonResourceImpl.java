@@ -51,7 +51,7 @@ public class Xml2JsonResourceImpl extends JOCResourceImpl implements IXml2JsonRe
     }
 
     private void checkRequiredParameters(final Xml2JsonConfiguration in) throws Exception {
-        checkRequiredParameter("jobschedulerId", in.getControllerId());
+        checkRequiredParameter("controllerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         checkRequiredParameter("configuration", in.getConfiguration());
         if (in.getObjectType().equals(ObjectType.OTHER)) {
