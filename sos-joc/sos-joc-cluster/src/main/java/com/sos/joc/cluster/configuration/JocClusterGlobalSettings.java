@@ -1,5 +1,8 @@
 package com.sos.joc.cluster.configuration;
 
+import java.util.Arrays;
+import java.util.List;
+
 import com.sos.joc.model.configuration.ConfigurationObjectType;
 import com.sos.joc.model.configuration.globals.GlobalSettings;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
@@ -26,6 +29,7 @@ public class JocClusterGlobalSettings {
         defaultSettings = new GlobalSettings();
         defaultSettings.setAdditionalProperty(DefaultSections.dailyplan.name(), createDefaultDailyPlanSettings());
         defaultSettings.setAdditionalProperty(DefaultSections.cleanup.name(), createDefaultCleanupSettings());
+        defaultSettings.setAdditionalProperty(DefaultSections.joc.name(), createDefaultJocSettings());
     }
 
     public static GlobalSettings getDefaultSettings() {
@@ -58,6 +62,32 @@ public class JocClusterGlobalSettings {
         addDefaultEntry(s, 7, "daily_plan_history_age", "30d", GlobalSettingsSectionValueType.DURATION);
         addDefaultEntry(s, 8, "audit_log_age", "90d", GlobalSettingsSectionValueType.DURATION);
         addDefaultEntry(s, 9, "deployment_history_versions", "10", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
+        return s;
+    }
+    
+    private static GlobalSettingsSection createDefaultJocSettings() {
+        List<String> auditLogComments = Arrays.asList("System maintenance", "Repeat execution", "Business requirement", "Restart failed execution",
+                "Re-instantiate stopped object", "Temporary stop", "Change of JobScheduler object", "Rerun with parameter changes",
+                "Change of external dependency", "Application deployment and upgrade");
+        List<String> showViews = Arrays.asList("dashboard", "dailyplan", "workflows", "resources", "history", "auditlog", "configuration"); //, "jobstreams", "filetransfer"};
+        
+        GlobalSettingsSection s = new GlobalSettingsSection();
+        s.setOrdering(2);
+        int index = 0;
+        addDefaultEntry(s, ++index, "force_comments_for_audit_log", "false", GlobalSettingsSectionValueType.BOOLEAN);
+        addDefaultEntry(s, ++index, "comments_for_audit_log", String.join(";", auditLogComments), GlobalSettingsSectionValueType.ARRAY);
+        
+        addDefaultEntry(s, ++index, "default_profile_account", "root", GlobalSettingsSectionValueType.STRING);
+        addDefaultEntry(s, ++index, "enable_remember_me", "true", GlobalSettingsSectionValueType.BOOLEAN);
+        
+        addDefaultEntry(s, ++index, "copy_paste_suffix", null, GlobalSettingsSectionValueType.STRING);
+        addDefaultEntry(s, ++index, "copy_paste_prefix", null, GlobalSettingsSectionValueType.STRING);
+        addDefaultEntry(s, ++index, "restore_suffix", null, GlobalSettingsSectionValueType.STRING);
+        addDefaultEntry(s, ++index, "restore_prefix", null, GlobalSettingsSectionValueType.STRING);
+        
+        for (String key : showViews) {
+            addDefaultEntry(s, ++index, "show_view_" + key, null, GlobalSettingsSectionValueType.BOOLEAN); 
+        }
         return s;
     }
 
