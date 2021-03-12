@@ -55,10 +55,12 @@ public class ClientCertificateHandler {
             LOGGER.debug("No certificate information received from request.");
         } else {
             this.clientCertificate = clientCertificateChain[0];
-            this.subjectDN = clientCertificate.getSubjectDN().getName();
-            this.clientCN = ((sun.security.x509.X500Name)clientCertificate.getSubjectDN()).getCommonName();
-            LOGGER.debug("Client SubjectDN read from request: " + subjectDN);
-            LOGGER.debug("Client CN read from request for comparison with shiro account: " + clientCN);
+            if (clientCertificate != null) {
+                this.subjectDN = clientCertificate.getSubjectDN().getName();
+                this.clientCN = ((sun.security.x509.X500Name)clientCertificate.getSubjectDN()).getCommonName();
+                LOGGER.debug("Client SubjectDN read from request: " + subjectDN);
+                LOGGER.debug("Client CN read from request for comparison with shiro account: " + clientCN);
+            }
             LOGGER.debug("Certificate infos as JSON: \n" + createResponse200(cipherSuiteName, keySize));
         }
     }
