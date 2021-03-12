@@ -211,7 +211,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                     throw new JocFolderPermissionsException("Access denied for folder: " + newFolder);
                 }
                 
-                java.nio.file.Path p = pWithoutFix.getParent().resolve(pWithoutFix.getFileName().toString());
+                java.nio.file.Path p = pWithoutFix;
                 if (!suffixPrefix.getSuffix().isEmpty() || !suffixPrefix.getPrefix().isEmpty()) {
                     p = pWithoutFix.getParent().resolve(pWithoutFix.getFileName().toString().replaceFirst(replace.get(0), replace.get(1)));
                 }

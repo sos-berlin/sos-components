@@ -16,6 +16,7 @@ import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.InventoryAudit;
@@ -26,6 +27,7 @@ import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.inventory.resource.IRestoreConfigurationResource;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -68,7 +70,16 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
             DBItemInventoryConfigurationTrash config = JocInventory.getTrashConfiguration(dbLayer, in, folderPermissions);
             ConfigurationType type = config.getTypeAsEnum();
             
-            final java.nio.file.Path pWithoutFix = Paths.get(config.getPath());
+            final java.nio.file.Path oldPath = Paths.get(config.getPath());
+            java.nio.file.Path pWithoutFix = oldPath;
+            String newFolder = config.getFolder();
+            String newPathWithoutFix = config.getPath();
+            // without any prefix/suffix
+            if (in.getNewPath() != null && !in.getNewPath().isEmpty()) {
+                pWithoutFix = Paths.get(config.getFolder()).resolve(in.getNewPath()).normalize();
+                newFolder = pWithoutFix.getParent().toString().replace('\\', '/');
+                newPathWithoutFix = pWithoutFix.toString().replace('\\', '/');
+            }
             
             final List<String> replace = JocInventory.getSearchReplace(JocInventory.getSuffixPrefix(in.getSuffix(), in.getPrefix(),
                     Globals.restoreSuffixPrefix, JocInventory.DEFAULT_RESTORE_SUFFIX, config.getName(), type, dbLayer));
@@ -77,39 +88,47 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
             
             if (JocInventory.isFolder(type)) {
                 
+                if (!folderPermissions.isPermittedForFolder(newPathWithoutFix)) {
+                    throw new JocFolderPermissionsException("Access denied for folder: " + newPathWithoutFix);
+                }
+                
                 List<ConfigurationType> restoreOrder = Arrays.asList(ConfigurationType.LOCK, ConfigurationType.NONWORKINGDAYSCALENDAR,
                         ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.WORKFLOW, ConfigurationType.SCHEDULE);
 
                 List<DBItemInventoryConfigurationTrash> trashDBFolderContent = dbLayer.getTrashFolderContent(config.getPath(), true, null);
                 Map<ConfigurationType, List<DBItemInventoryConfigurationTrash>> trashMap = trashDBFolderContent.stream().collect(Collectors
                         .groupingBy(DBItemInventoryConfigurationTrash::getTypeAsEnum));
-                List<DBItemInventoryConfiguration> curDBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null);
+                
+                List<DBItemInventoryConfiguration> curDBFolderContent = dbLayer.getFolderContent(newPathWithoutFix, true, null);
                 Set<String> folderPaths = curDBFolderContent.stream().filter(i -> ConfigurationType.FOLDER.intValue() == i.getType()).map(
                         DBItemInventoryConfiguration::getPath).collect(Collectors.toSet());
                 Long auditLogId = createAuditLog(config, in.getAuditLog());
                 
                 for (ConfigurationType objType : restoreOrder) {
                     for (DBItemInventoryConfigurationTrash trashItem : trashMap.getOrDefault(objType, Collections.emptyList())) {
-                        java.nio.file.Path invItemPath = Paths.get(trashItem.getPath());
+                        java.nio.file.Path oldItemPath = Paths.get(trashItem.getPath());
                         if (ConfigurationType.FOLDER.intValue() == trashItem.getType()) {
                             if (!folderPaths.contains(trashItem.getPath())) {
-                                DBItemInventoryConfiguration item = createItem(trashItem, invItemPath, auditLogId, dbLayer);
+                                DBItemInventoryConfiguration item = createItem(trashItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath)),
+                                        auditLogId, dbLayer);
                                 JocInventory.insertConfiguration(dbLayer, item);
                             }
                         } else {
                             List<DBItemInventoryConfiguration> targetItems = dbLayer.getConfigurationByName(trashItem.getName(), trashItem.getType());
                             if (targetItems.isEmpty()) {
-                                JocInventory.insertConfiguration(dbLayer, createItem(trashItem, invItemPath, auditLogId, dbLayer));
+                                JocInventory.insertConfiguration(dbLayer, createItem(trashItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath)),
+                                        auditLogId, dbLayer));
                             } else {
-                                JocInventory.insertConfiguration(dbLayer, createItem(trashItem, invItemPath.getParent().resolve(trashItem.getName()
-                                        .replaceFirst(replace.get(0), replace.get(1))), auditLogId, dbLayer));
+                                JocInventory.insertConfiguration(dbLayer, createItem(trashItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath
+                                        .getParent().resolve(trashItem.getName().replaceFirst(replace.get(0), replace.get(1))))), auditLogId,
+                                        dbLayer));
                             }
                         }
                     }
                 }
 
                 if (!JocInventory.ROOT_FOLDER.equals(config.getPath())) {
-                    DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(config.getPath(), ConfigurationType.FOLDER.intValue());
+                    DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(newPathWithoutFix, ConfigurationType.FOLDER.intValue());
 
                     if (newItem == null) {
                         DBItemInventoryConfiguration newDbItem = createItem(config, pWithoutFix, auditLogId, dbLayer);
@@ -124,8 +143,21 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
                 
             } else {
                 
+                if (!folderPermissions.isPermittedForFolder(newFolder)) {
+                    throw new JocFolderPermissionsException("Access denied for folder: " + newFolder);
+                }
+                
+                // Check Java variable name rules
+                for (int i = 0; i < pWithoutFix.getNameCount(); i++) {
+                    if (i == pWithoutFix.getNameCount() - 1) {
+                        CheckJavaVariableName.test("name", pWithoutFix.getName(i).toString());
+                    } else {
+                        CheckJavaVariableName.test("folder", pWithoutFix.getName(i).toString());
+                    }
+                }
+                
                 Long auditLogId = createAuditLog(config, in.getAuditLog());
-                if (dbLayer.getConfigurationByName(config.getName(), config.getType()).isEmpty()) {
+                if (dbLayer.getConfigurationByName(pWithoutFix.getFileName().toString(), config.getType()).isEmpty()) {
                     JocInventory.insertConfiguration(dbLayer, createItem(config, pWithoutFix, auditLogId, dbLayer));
                 } else {
                     JocInventory.insertConfiguration(dbLayer, createItem(config, pWithoutFix.getParent().resolve(pWithoutFix.getFileName().toString()
@@ -173,7 +205,8 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
         return 0L;
     }
 
-    private static DBItemInventoryConfiguration createItem(DBItemInventoryConfigurationTrash oldItem, java.nio.file.Path newItem, Long auditLogId, InventoryDBLayer dbLayer) {
+    private static DBItemInventoryConfiguration createItem(DBItemInventoryConfigurationTrash oldItem, java.nio.file.Path newItem, Long auditLogId,
+            InventoryDBLayer dbLayer) {
         DBItemInventoryConfiguration item = new DBItemInventoryConfiguration();
         item.setId(null);
         item.setPath(newItem.toString().replace('\\', '/'));
