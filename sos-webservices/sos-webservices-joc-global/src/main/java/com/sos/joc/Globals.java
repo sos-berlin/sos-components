@@ -34,6 +34,8 @@ import com.sos.joc.classes.JocWebserviceDataContainer;
 import com.sos.joc.classes.SSLContext;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.DBOpenSessionException;
@@ -511,6 +513,11 @@ public class Globals {
             defaultProfileAccount = "root";
         }
         return defaultProfileAccount;
+    }
+
+    public static ConfigurationGlobalsJoc getConfigurationGlobalsJoc() {
+        return Globals.configurationGlobals == null ? null : (ConfigurationGlobalsJoc) Globals.configurationGlobals.getConfigurationSection(
+                DefaultSections.joc);
     }
 
 }
