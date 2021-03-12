@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -20,7 +21,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "path",
     "search",
-    "replace"
+    "replace",
+    "auditLog"
 })
 public class RequestFolder {
 
@@ -48,6 +50,14 @@ public class RequestFolder {
      */
     @JsonProperty("replace")
     private String replace;
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    private AuditParams auditLog;
 
     /**
      * path
@@ -113,14 +123,36 @@ public class RequestFolder {
         this.replace = replace;
     }
 
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public AuditParams getAuditLog() {
+        return auditLog;
+    }
+
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public void setAuditLog(AuditParams auditLog) {
+        this.auditLog = auditLog;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("search", search).append("replace", replace).toString();
+        return new ToStringBuilder(this).append("path", path).append("search", search).append("replace", replace).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(replace).append(path).append(search).toHashCode();
+        return new HashCodeBuilder().append(replace).append(path).append(search).append(auditLog).toHashCode();
     }
 
     @Override
@@ -132,7 +164,7 @@ public class RequestFolder {
             return false;
         }
         RequestFolder rhs = ((RequestFolder) other);
-        return new EqualsBuilder().append(replace, rhs.replace).append(path, rhs.path).append(search, rhs.search).isEquals();
+        return new EqualsBuilder().append(replace, rhs.replace).append(path, rhs.path).append(search, rhs.search).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

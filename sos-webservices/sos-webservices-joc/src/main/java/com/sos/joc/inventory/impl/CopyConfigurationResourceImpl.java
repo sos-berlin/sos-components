@@ -28,6 +28,7 @@ import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.inventory.resource.ICopyConfigurationResource;
 import com.sos.joc.model.SuffixPrefix;
+import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.copy.RequestFilter;
 import com.sos.schema.JsonValidator;
@@ -58,6 +59,8 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
     private JOCDefaultResponse copy(RequestFilter in) throws Exception {
         SOSHibernateSession session = null;
         try {
+            checkRequiredComment(in.getAuditLog());
+            
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
@@ -148,11 +151,11 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                     DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(newPathWithoutFix, ConfigurationType.FOLDER.intValue());
                     if (newItem == null) {
                         DBItemInventoryConfiguration newDbItem = createItem(config, pWithoutFix);
-                        auditLogId = createAuditLog(newDbItem);
+                        auditLogId = createAuditLog(newDbItem, in.getAuditLog());
                         JocInventory.insertConfiguration(dbLayer, newDbItem);
                         JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), newDbItem.getAuditLogId());
                     } else if (!oldDBFolderContent.isEmpty()) {
-                        auditLogId = createAuditLog(newItem);
+                        auditLogId = createAuditLog(newItem, in.getAuditLog());
                     }
                 }
                 if (in.getShallowCopy()) {
@@ -233,7 +236,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                 }
                 
                 DBItemInventoryConfiguration newDbItem = createItem(config, p);
-                createAuditLog(newDbItem);
+                createAuditLog(newDbItem, in.getAuditLog());
                 JocInventory.insertConfiguration(dbLayer, newDbItem);
                 JocInventory.makeParentDirs(dbLayer, p.getParent(), newDbItem.getAuditLogId());
                 events.add(newDbItem.getFolder());
@@ -253,8 +256,8 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
         }
     }
     
-    private Long createAuditLog(DBItemInventoryConfiguration config) throws Exception {
-        InventoryAudit audit = new InventoryAudit(config.getTypeAsEnum(), config.getPath(), config.getFolder());
+    private Long createAuditLog(DBItemInventoryConfiguration config, AuditParams auditParams) throws Exception {
+        InventoryAudit audit = new InventoryAudit(config.getTypeAsEnum(), config.getPath(), config.getFolder(), auditParams);
         logAuditMessage(audit);
         DBItemJocAuditLog auditItem = storeAuditLogEntry(audit);
         if (auditItem != null) {

@@ -17,6 +17,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "newPath",
     "suffix",
     "prefix"
 })
@@ -24,6 +25,14 @@ public class RequestFilter
     extends com.sos.joc.model.inventory.common.RequestFilter
 {
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("newPath")
+    private String newPath;
     /**
      * string without < and >
      * <p>
@@ -40,6 +49,28 @@ public class RequestFilter
      */
     @JsonProperty("prefix")
     private String prefix;
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("newPath")
+    public String getNewPath() {
+        return newPath;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("newPath")
+    public void setNewPath(String newPath) {
+        this.newPath = newPath;
+    }
 
     /**
      * string without < and >
@@ -87,12 +118,12 @@ public class RequestFilter
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("suffix", suffix).append("prefix", prefix).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("newPath", newPath).append("suffix", suffix).append("prefix", prefix).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(suffix).append(prefix).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(newPath).append(suffix).append(prefix).toHashCode();
     }
 
     @Override
@@ -104,7 +135,7 @@ public class RequestFilter
             return false;
         }
         RequestFilter rhs = ((RequestFilter) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(suffix, rhs.suffix).append(prefix, rhs.prefix).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(newPath, rhs.newPath).append(suffix, rhs.suffix).append(prefix, rhs.prefix).isEquals();
     }
 
 }

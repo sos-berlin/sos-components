@@ -20,7 +20,6 @@ import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitController;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitControllers;
 import com.sos.joc.classes.JOCJsonCommand;
-import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 
 public class SOSShiroCurrentUser {
 

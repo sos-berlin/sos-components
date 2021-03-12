@@ -17,7 +17,8 @@ public enum GlobalSettingsSectionValueType {
     NONNEGATIVENUMBER("NONNEGATIVENUMBER"),
     POSITIVEINTEGER("POSITIVEINTEGER"),
     NONNEGATIVEINTEGER("NONNEGATIVEINTEGER"),
-    STRING("STRING");
+    STRING("STRING"),
+    BOOLEAN("BOOLEAN");
     private final String value;
     private final static Map<String, GlobalSettingsSectionValueType> CONSTANTS = new HashMap<String, GlobalSettingsSectionValueType>();
 

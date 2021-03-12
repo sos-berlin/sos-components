@@ -4,6 +4,7 @@ package com.sos.joc.model.inventory.common;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -19,7 +20,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "id",
     "path",
-    "objectType"
+    "objectType",
+    "auditLog"
 })
 public class RequestFilter {
 
@@ -47,6 +49,14 @@ public class RequestFilter {
      */
     @JsonProperty("objectType")
     private ConfigurationType objectType;
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    private AuditParams auditLog;
 
     /**
      * non negative long
@@ -114,14 +124,36 @@ public class RequestFilter {
         this.objectType = objectType;
     }
 
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public AuditParams getAuditLog() {
+        return auditLog;
+    }
+
+    /**
+     * auditParams
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("auditLog")
+    public void setAuditLog(AuditParams auditLog) {
+        this.auditLog = auditLog;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("objectType", objectType).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("objectType", objectType).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(id).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(path).append(id).append(auditLog).append(objectType).toHashCode();
     }
 
     @Override
@@ -133,7 +165,7 @@ public class RequestFilter {
             return false;
         }
         RequestFilter rhs = ((RequestFilter) other);
-        return new EqualsBuilder().append(path, rhs.path).append(id, rhs.id).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(id, rhs.id).append(auditLog, rhs.auditLog).append(objectType, rhs.objectType).isEquals();
     }
 
 }

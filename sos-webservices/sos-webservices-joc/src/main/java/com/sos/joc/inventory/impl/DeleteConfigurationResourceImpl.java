@@ -124,6 +124,8 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
     private JOCDefaultResponse remove(String accessToken, RequestFilters in) throws Exception {
         SOSHibernateSession session = null;
         try {
+            checkRequiredComment(in.getAuditLog());
+            
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_DELETE);
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
@@ -141,7 +143,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
                 final ConfigurationType type = config.getTypeAsEnum();
 
                 if (JocInventory.isReleasable(type)) {
-                    ReleaseResourceImpl.delete(config, dbLayer, getJocAuditLog(), false, false);
+                    ReleaseResourceImpl.delete(config, dbLayer, getJocAuditLog(), in.getAuditLog(), false, false);
                     foldersForEvent.add(config.getFolder());
 
                 } else if (JocInventory.isDeployable(type)) {
@@ -163,7 +165,8 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             }
             if (allDeployments != null && !allDeployments.isEmpty()) {
                 String account = JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel()) ? Globals.getDefaultProfileUserAccount() : getAccount();
-                DeleteDeployments.delete(allDeployments, deployDbLayer, account, accessToken, getJocError(), true);
+                DeleteDeployments.delete(allDeployments, deployDbLayer, account, accessToken, getJocError(), getJocAuditLog(), in.getAuditLog(),
+                        true);
             }
             Globals.commit(session);
             // post events
@@ -184,6 +187,8 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
     private JOCDefaultResponse removeFolder(String accessToken, RequestFolder in) throws Exception {
         SOSHibernateSession session = null;
         try {
+            checkRequiredComment(in.getAuditLog());
+            
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_FOLDER_DELETE);
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
@@ -191,13 +196,13 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
 
             DBItemInventoryConfiguration folder = JocInventory.getConfiguration(dbLayer, null, in.getPath(), ConfigurationType.FOLDER,
                     folderPermissions);
-            ReleaseResourceImpl.delete(folder, dbLayer, getJocAuditLog(), false, false);
+            ReleaseResourceImpl.delete(folder, dbLayer, getJocAuditLog(), in.getAuditLog(), false, false);
 
             List<DBItemInventoryConfiguration> deployables = dbLayer.getFolderContent(folder.getPath(), true, JocInventory.getDeployableTypes());
             if (deployables != null && !deployables.isEmpty()) {
                 String account = JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel()) ? Globals.getDefaultProfileUserAccount() : getAccount();
                 DeleteDeployments.deleteFolder(folder.getPath(), true, Proxies.getControllerDbInstances().keySet(), new DBLayerDeploy(session),
-                        account, accessToken, getJocError(), true, false);
+                        account, accessToken, getJocError(), getJocAuditLog(), in.getAuditLog(), true, false);
             }
             
             JocInventory.deleteEmptyFolders(dbLayer, folder.getPath());
@@ -216,6 +221,8 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
     private JOCDefaultResponse delete(String accessToken, RequestFilters in) throws Exception {
         SOSHibernateSession session = null;
         try {
+            checkRequiredComment(in.getAuditLog());
+            
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_TRASH_DELETE);
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
@@ -252,6 +259,8 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
     private JOCDefaultResponse deleteFolder(String accessToken, RequestFolder in) throws Exception {
         SOSHibernateSession session = null;
         try {
+            checkRequiredComment(in.getAuditLog());
+            
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_TRASH_FOLDER_DELETE);
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);

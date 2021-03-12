@@ -65,6 +65,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            checkRequiredComment(deployFilter.getAuditLog());
+            
             String account = Globals.defaultProfileAccount;
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             dbLayer = new DBLayerDeploy(hibernateSession);
@@ -231,7 +233,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 folders = foldersToDelete.stream().map(item -> item.getConfiguration()).collect(Collectors.toList());
             }
             DeleteDeployments.deleteConfigurations(dbLayer, folders, invConfigurationsToDelete, commitIdForDeleteFromFolder, getAccessToken(), 
-                    getJocError(), withoutFolderDeletion);
+                    getJocError(), getJocAuditLog(), deployFilter.getAuditLog(),  withoutFolderDeletion);
 
             // loop 2: send commands to controllers
             for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
