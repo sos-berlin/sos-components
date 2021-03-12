@@ -61,7 +61,7 @@ public class DeleteAllResourceImpl extends JOCResourceImpl implements IDeleteAll
     }
 
     private void checkRequiredParameters(final DeleteAll in) throws Exception {
-        checkRequiredParameter("jobschedulerId", in.getControllerId());
+        checkRequiredParameter("controllerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectTypes", in.getObjectTypes());
     }
 
@@ -77,14 +77,14 @@ public class DeleteAllResourceImpl extends JOCResourceImpl implements IDeleteAll
         return answer;
     }
 
-    private boolean deleteOtherItems(String jobschedulerId) throws Exception {
+    private boolean deleteOtherItems(String controllerId) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
 
             session.beginTransaction();
-            int deleted = dbLayer.deleteOtherObjects(jobschedulerId);
+            int deleted = dbLayer.deleteOtherObjects(controllerId);
             session.commit();
             if (isTraceEnabled) {
                 LOGGER.trace(String.format("deleted=%s", deleted));

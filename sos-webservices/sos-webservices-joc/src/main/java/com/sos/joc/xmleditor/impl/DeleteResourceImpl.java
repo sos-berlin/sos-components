@@ -63,7 +63,7 @@ public class DeleteResourceImpl extends JOCResourceImpl implements IDeleteResour
     }
 
     private void checkRequiredParameters(final DeleteDraft in) throws Exception {
-        checkRequiredParameter("jobschedulerId", in.getControllerId());
+        checkRequiredParameter("controllerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
     }
 
@@ -116,17 +116,17 @@ public class DeleteResourceImpl extends JOCResourceImpl implements IDeleteResour
         }
     }
 
-    private DBItemXmlEditorConfiguration updateItem(String schedulerId, String objectType, String name) throws Exception {
+    private DBItemXmlEditorConfiguration updateItem(String controllerId, String objectType, String name) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
 
             session.beginTransaction();
-            DBItemXmlEditorConfiguration item = dbLayer.getObject(schedulerId, objectType, name);
+            DBItemXmlEditorConfiguration item = dbLayer.getObject(controllerId, objectType, name);
             if (item == null) {
                 if (isTraceEnabled) {
-                    LOGGER.trace(String.format("[%s][%s][%s]not found", schedulerId, objectType, name));
+                    LOGGER.trace(String.format("[%s][%s][%s]not found", controllerId, objectType, name));
                 }
             } else {
                 item.setConfigurationDraft(null);
@@ -135,7 +135,7 @@ public class DeleteResourceImpl extends JOCResourceImpl implements IDeleteResour
                 session.update(item);
 
                 if (isTraceEnabled) {
-                    LOGGER.trace(String.format("[%s][%s][%s]%s", schedulerId, objectType, name, SOSString.toString(item, Arrays.asList(
+                    LOGGER.trace(String.format("[%s][%s][%s]%s", controllerId, objectType, name, SOSString.toString(item, Arrays.asList(
                             "configuration"))));
                 }
             }

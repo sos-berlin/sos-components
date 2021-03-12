@@ -27,8 +27,8 @@ public class DBItemJocAuditLog extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    @Column(name = "[JOBSCHEDULER_ID]", nullable = false)
-    private String schedulerId;
+    @Column(name = "[CONTROLLER_ID]", nullable = false)
+    private String controllerId;
 
     @Column(name = "[ACCOUNT]", nullable = false)
     private String account;
@@ -71,19 +71,19 @@ public class DBItemJocAuditLog extends DBItem {
     private Long depHistoryId;
 
     public Long getId() {
-        return this.id;
+        return id;
     }
 
     public void setId(Long val) {
-        this.id = val;
+        id = val;
     }
 
-    public void setSchedulerId(String val) {
-        this.schedulerId = val;
+    public void setControllerId(String val) {
+        controllerId = val;
     }
 
-    public String getSchedulerId() {
-        return this.schedulerId;
+    public String getControllerId() {
+        return controllerId;
     }
 
     public String getAccount() {
@@ -99,7 +99,7 @@ public class DBItemJocAuditLog extends DBItem {
     }
 
     public void setRequest(String val) {
-        this.request = val;
+        request = val;
     }
 
     public String getParameters() {
@@ -107,7 +107,7 @@ public class DBItemJocAuditLog extends DBItem {
     }
 
     public void setParameters(String val) {
-        this.parameters = val;
+        parameters = val;
     }
 
     public String getJob() {
@@ -115,7 +115,7 @@ public class DBItemJocAuditLog extends DBItem {
     }
 
     public void setJob(String val) {
-        this.job = val;
+        job = val;
     }
 
     public String getWorkflow() {
@@ -123,7 +123,7 @@ public class DBItemJocAuditLog extends DBItem {
     }
 
     public void setWorkflow(String val) {
-        this.workflow = val;
+        workflow = val;
     }
 
     public String getOrderId() {
@@ -131,7 +131,7 @@ public class DBItemJocAuditLog extends DBItem {
     }
 
     public void setOrderId(String val) {
-        this.orderId = val;
+        orderId = val;
     }
 
     public String getCalendar() {
@@ -139,7 +139,7 @@ public class DBItemJocAuditLog extends DBItem {
     }
 
     public void setCalendar(String val) {
-        this.calendar = val;
+        calendar = val;
     }
 
     public String getFolder() {
@@ -147,7 +147,7 @@ public class DBItemJocAuditLog extends DBItem {
     }
 
     public void setFolder(String val) {
-        this.folder = val;
+        folder = val;
     }
 
     public String getComment() {
@@ -155,7 +155,7 @@ public class DBItemJocAuditLog extends DBItem {
     }
 
     public void setComment(String val) {
-        this.comment = val;
+        comment = val;
     }
 
     public Date getCreated() {
@@ -163,7 +163,7 @@ public class DBItemJocAuditLog extends DBItem {
     }
 
     public void setCreated(Date val) {
-        this.created = val;
+        created = val;
     }
 
     public String getTicketLink() {
@@ -171,7 +171,7 @@ public class DBItemJocAuditLog extends DBItem {
     }
 
     public void setTicketLink(String val) {
-        this.ticketLink = val;
+        ticketLink = val;
     }
 
     public Integer getTimeSpent() {
@@ -179,15 +179,15 @@ public class DBItemJocAuditLog extends DBItem {
     }
 
     public void setTimeSpent(Integer val) {
-        this.timeSpent = val;
+        timeSpent = val;
     }
 
     public Long getDepHistoryId() {
         return depHistoryId;
     }
-    
-    public void setDepHistoryId(Long depHistoryId) {
-        this.depHistoryId = depHistoryId;
+
+    public void setDepHistoryId(Long val) {
+        depHistoryId = val;
     }
 
 }

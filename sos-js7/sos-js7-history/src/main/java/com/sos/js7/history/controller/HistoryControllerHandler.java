@@ -160,8 +160,10 @@ public class HistoryControllerHandler {
                     LOGGER.info(String.format("%s[closed][exception ignored]%s", method, ex.toString()));
                 } else {
                     if (isTornException(ex)) {
-                        LOGGER.error(String.format("%s[TORN]%s", method, ex.toString()));
+                        LOGGER.warn(String.format("%s[TORN]%s", method, ex.toString()));
                         tornAfterEventId = new AtomicLong(getTornEventId());
+                    } else if (isReactorException(ex)) {
+                        LOGGER.warn(String.format("%s[exception]%s", method, ex.toString()), ex);
                     } else {
                         LOGGER.error(String.format("%s[exception]%s", method, ex.toString()), ex);
                     }
@@ -506,6 +508,16 @@ public class HistoryControllerHandler {
                         return true;
                     }
                 }
+            }
+        } catch (Throwable e) {
+        }
+        return false;
+    }
+
+    private boolean isReactorException(Throwable t) {
+        try {
+            if (t.toString().contains("reactor.core.Exceptions")) {
+                return true;
             }
         } catch (Throwable e) {
         }

@@ -45,7 +45,7 @@ public class SchemaAssignResourceImpl extends JOCResourceImpl implements ISchema
     }
 
     private void checkRequiredParameters(final SchemaAssignConfiguration in) throws Exception {
-        checkRequiredParameter("jobschedulerId", in.getControllerId());
+        checkRequiredParameter("controllerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         if (in.getUri() == null) {
             if (in.getFileName() == null || in.getFileContent() == null) {

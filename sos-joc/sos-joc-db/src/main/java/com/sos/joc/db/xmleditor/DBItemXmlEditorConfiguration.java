@@ -27,8 +27,8 @@ public class DBItemXmlEditorConfiguration extends DBItem {
     private Long id;
 
     /** Others */
-    @Column(name = "[SCHEDULER_ID]", nullable = false)
-    private String schedulerId;
+    @Column(name = "[CONTROLLER_ID]", nullable = false)
+    private String controllerId;
 
     @Column(name = "[OBJECT_TYPE]", nullable = false)
     private String objectType;
@@ -74,12 +74,12 @@ public class DBItemXmlEditorConfiguration extends DBItem {
         id = val;
     }
 
-    public String getSchedulerId() {
-        return schedulerId;
+    public String getControllerId() {
+        return controllerId;
     }
 
-    public void setSchedulerId(String val) {
-        schedulerId = val;
+    public void setControllerId(String val) {
+        controllerId = val;
     }
 
     public String getObjectType() {

@@ -38,15 +38,15 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             AuditLogDBFilter auditLogDBFilter = new AuditLogDBFilter(auditLogFilter);
-             
+
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             AuditLogDBLayer dbLayer = new AuditLogDBLayer(connection);
             String filterRegex = auditLogFilter.getRegex();
             if (SearchStringHelper.isDBWildcardSearch(filterRegex)) {
-            	auditLogDBFilter.setReason(filterRegex);
-            	filterRegex = "";
+                auditLogDBFilter.setReason(filterRegex);
+                filterRegex = "";
             }
             List<DBItemJocAuditLog> auditLogs = dbLayer.getAuditLogs(auditLogDBFilter, auditLogFilter.getLimit());
 
@@ -81,35 +81,33 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
         return filteredAuditLogs;
     }
 
-	private List<AuditLogItem> fillAuditLogItems(List<DBItemJocAuditLog> auditLogsFromDb, String jobschedulerId)
-			throws JocException {
-		List<AuditLogItem> audits = new ArrayList<AuditLogItem>();
-		if (auditLogsFromDb != null) {
-			for (DBItemJocAuditLog auditLogFromDb : auditLogsFromDb) {
-				AuditLogItem auditLogItem = new AuditLogItem();
-				if (jobschedulerId.isEmpty()) {
-					if (!getPermissonsJocCockpit(auditLogFromDb.getSchedulerId(), getAccessToken()).getAuditLog()
-							.getView().isStatus()) {
-						continue;
-					}
-					auditLogItem.setControllerId(auditLogFromDb.getSchedulerId());
-				}
-				auditLogItem.setAccount(auditLogFromDb.getAccount());
-				auditLogItem.setRequest(auditLogFromDb.getRequest());
-				auditLogItem.setParameters(auditLogFromDb.getParameters());
-				auditLogItem.setJob(auditLogFromDb.getJob());
-				auditLogItem.setWorkflow(auditLogFromDb.getWorkflow());
-				auditLogItem.setOrderId(auditLogFromDb.getOrderId());
-				auditLogItem.setComment(auditLogFromDb.getComment());
-				auditLogItem.setCreated(auditLogFromDb.getCreated());
-				auditLogItem.setTicketLink(auditLogFromDb.getTicketLink());
-				auditLogItem.setTimeSpent(auditLogFromDb.getTimeSpent());
-				auditLogItem.setCalendar(auditLogFromDb.getCalendar());
-				audits.add(auditLogItem);
-			}
-		}
-		return audits;
-	}
+    private List<AuditLogItem> fillAuditLogItems(List<DBItemJocAuditLog> auditLogsFromDb, String controllerId) throws JocException {
+        List<AuditLogItem> audits = new ArrayList<AuditLogItem>();
+        if (auditLogsFromDb != null) {
+            for (DBItemJocAuditLog auditLogFromDb : auditLogsFromDb) {
+                AuditLogItem auditLogItem = new AuditLogItem();
+                if (controllerId.isEmpty()) {
+                    if (!getPermissonsJocCockpit(auditLogFromDb.getControllerId(), getAccessToken()).getAuditLog().getView().isStatus()) {
+                        continue;
+                    }
+                    auditLogItem.setControllerId(auditLogFromDb.getControllerId());
+                }
+                auditLogItem.setAccount(auditLogFromDb.getAccount());
+                auditLogItem.setRequest(auditLogFromDb.getRequest());
+                auditLogItem.setParameters(auditLogFromDb.getParameters());
+                auditLogItem.setJob(auditLogFromDb.getJob());
+                auditLogItem.setWorkflow(auditLogFromDb.getWorkflow());
+                auditLogItem.setOrderId(auditLogFromDb.getOrderId());
+                auditLogItem.setComment(auditLogFromDb.getComment());
+                auditLogItem.setCreated(auditLogFromDb.getCreated());
+                auditLogItem.setTicketLink(auditLogFromDb.getTicketLink());
+                auditLogItem.setTimeSpent(auditLogFromDb.getTimeSpent());
+                auditLogItem.setCalendar(auditLogFromDb.getCalendar());
+                audits.add(auditLogItem);
+            }
+        }
+        return audits;
+    }
 
     @Override
     public JOCDefaultResponse postAuditLog(String xAccessToken, String accessToken, AuditLogFilter auditLogFilter) throws Exception {

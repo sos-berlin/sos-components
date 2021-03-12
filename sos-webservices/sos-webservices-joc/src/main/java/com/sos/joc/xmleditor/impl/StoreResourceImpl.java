@@ -93,7 +93,7 @@ public class StoreResourceImpl extends JOCResourceImpl implements IStoreResource
 
     private DBItemXmlEditorConfiguration create(SOSHibernateSession session, StoreConfiguration in, String name) throws Exception {
         DBItemXmlEditorConfiguration item = new DBItemXmlEditorConfiguration();
-        item.setSchedulerId(in.getControllerId());
+        item.setControllerId(in.getControllerId());
         item.setObjectType(in.getObjectType().name());
         item.setName(name.trim());
         item.setConfigurationDraft(in.getConfiguration());
@@ -129,7 +129,7 @@ public class StoreResourceImpl extends JOCResourceImpl implements IStoreResource
     }
 
     private void checkRequiredParameters(final StoreConfiguration in) throws Exception {
-        checkRequiredParameter("jobschedulerId", in.getControllerId());
+        checkRequiredParameter("controllerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         checkRequiredParameter("configuration", in.getConfiguration());
         checkRequiredParameter("configurationJson", in.getConfigurationJson());

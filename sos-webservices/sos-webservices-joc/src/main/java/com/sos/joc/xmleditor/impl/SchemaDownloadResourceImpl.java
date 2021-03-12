@@ -26,14 +26,14 @@ import com.sos.schema.JsonValidator;
 public class SchemaDownloadResourceImpl extends JOCResourceImpl implements ISchemaDownloadResource {
 
     @Override
-    public JOCDefaultResponse process(final String xAccessToken, String accessToken, String jobschedulerId, String objectType, String show,
+    public JOCDefaultResponse process(final String xAccessToken, String accessToken, String controllerId, String objectType, String show,
             String schemaIdentifier) {
         try {
             accessToken = getAccessToken(xAccessToken, accessToken);
 
             JsonObjectBuilder builder = Json.createObjectBuilder();
-            if (jobschedulerId != null) {
-                builder.add("jobschedulerId", jobschedulerId);
+            if (controllerId != null) {
+                builder.add("controllerId", controllerId);
             }
             if (objectType != null) {
                 builder.add("objectType", objectType);
@@ -66,7 +66,7 @@ public class SchemaDownloadResourceImpl extends JOCResourceImpl implements ISche
     }
 
     private void checkRequiredParameters(final SchemaDownloadConfiguration in) throws Exception {
-        checkRequiredParameter("jobschedulerId", in.getControllerId());
+        checkRequiredParameter("controllerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         if (in.getObjectType().equals(ObjectType.OTHER)) {
             checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
