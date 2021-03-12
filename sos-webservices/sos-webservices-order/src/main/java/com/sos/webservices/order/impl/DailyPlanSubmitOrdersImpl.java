@@ -25,6 +25,8 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.DailyPlanAudit;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
+import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -192,13 +194,8 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
     }
 
     private void setSettings() throws Exception {
-        SOSHibernateSession session = null;
-        try {
-            session = Globals.createSosHibernateStatelessConnection(API_CALL);
-            GlobalSettingsReader reader = new GlobalSettingsReader();
-            this.settings = reader.getSettings(session);
-        } finally {
-            Globals.disconnect(session);
-        }
+        GlobalSettingsReader reader = new GlobalSettingsReader();
+        AConfigurationSection section = Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
+        this.settings = reader.getSettings(section);
     }
 }

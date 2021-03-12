@@ -20,8 +20,8 @@ import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
+import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.model.common.JocSecurityLevel;
-import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
 
 public class HistoryServiceTest {
 
@@ -70,8 +70,8 @@ public class HistoryServiceTest {
                 "", 0);
 
         HistoryService service = new HistoryService(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
-        GlobalSettingsSection settings = null;
-        service.start(getControllers(), settings, StartupMode.manual);
+        AConfigurationSection configuration = null;
+        service.start(getControllers(), configuration, StartupMode.manual);
         HistoryServiceTest.stopAfter(service, StartupMode.manual, 60);
 
     }

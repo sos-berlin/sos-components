@@ -21,6 +21,9 @@ import com.sos.joc.cluster.bean.answer.JocServiceAnswer.JocServiceAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
+import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 
 public class JocClusterHandler {
 
@@ -38,7 +41,7 @@ public class JocClusterHandler {
         cluster = jocCluster;
     }
 
-    protected JocClusterAnswer perform(StartupMode mode, PerformType type) {
+    protected JocClusterAnswer perform(StartupMode mode, PerformType type, ConfigurationGlobals configurations) {
         LOGGER.info(String.format("[%s][perform][active=%s]%s", mode, active, type.name()));
 
         if (cluster.getConfig().getServices() == null || cluster.getConfig().getServices().size() == 0) {
@@ -83,14 +86,19 @@ public class JocClusterHandler {
                     AJocClusterService.clearLogger();
                     JocClusterAnswer answer = null;
                     if (isStart) {
+                        AConfigurationSection configuration = null;
+                        try {
+                            configuration = configurations.getConfigurationSection(DefaultSections.valueOf(s.getIdentifier()));
+                        } catch (Throwable e) {
+                        }
                         if (!SOSString.isEmpty(s.getControllerApiUser())) {
                             List<ControllerConfiguration> newControllers = new ArrayList<ControllerConfiguration>();
                             for (ControllerConfiguration m : controllers) {
                                 newControllers.add(m.copy(s.getControllerApiUser(), s.getControllerApiUserPassword()));
                             }
-                            answer = s.start(newControllers, cluster.getSettings().getAdditionalProperties().get(s.getIdentifier()), mode);
+                            answer = s.start(newControllers, configuration, mode);
                         } else {
-                            answer = s.start(controllers, cluster.getSettings().getAdditionalProperties().get(s.getIdentifier()), mode);
+                            answer = s.start(controllers, configuration, mode);
                         }
                     } else {
                         answer = s.stop(mode);
@@ -166,7 +174,7 @@ public class JocClusterHandler {
         }
     }
 
-    public JocClusterAnswer restartService(String identifier, StartupMode mode) {
+    public JocClusterAnswer restartService(String identifier, StartupMode mode, AConfigurationSection configuration) {
         Optional<IJocClusterService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
         if (!os.isPresent()) {
             return JocCluster.getErrorAnswer(new Exception(String.format("handler not found for %s", identifier)));
@@ -201,7 +209,7 @@ public class JocClusterHandler {
         AJocClusterService.clearLogger();
 
         try {
-            s.start(cluster.getControllers(), cluster.getStoredSettings(s.getIdentifier()), mode);
+            s.start(cluster.getControllers(), configuration, mode);
         } catch (Exception e) {
             AJocClusterService.setLogger();
             LOGGER.error(String.format("[%s][restart][%s]%s", mode, identifier, e.toString()), e);

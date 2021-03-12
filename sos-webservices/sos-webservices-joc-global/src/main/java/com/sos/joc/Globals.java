@@ -33,6 +33,7 @@ import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.JocWebserviceDataContainer;
 import com.sos.joc.classes.SSLContext;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.DBOpenSessionException;
@@ -58,13 +59,14 @@ public class Globals {
     public static Map<String, DBItemInventoryJSInstance> urlFromJobSchedulerId = new HashMap<String, DBItemInventoryJSInstance>();
     public static Map<String, Boolean> jobSchedulerIsRunning = new HashMap<String, Boolean>();
     public static Map<String, String> schedulerVariables = null;
+    public static ConfigurationGlobals configurationGlobals = null;
     public static String servletContextContextPath = null; // /joc
     public static String defaultProfileAccount = null;
     public static String loginClientId = "";
     public static String loginUserName = "";
     public static String apiVersion = "";
     public static String inventoryVersion = "";
-    
+
     public static long maxSizeOfLogsToDisplay = 1024 * 1024 * 10L; // 10MB
     public static long timeoutToDeleteTempFiles = 1000 * 60 * 3L;
     public static int httpConnectionTimeout = 2000;
@@ -239,17 +241,17 @@ public class Globals {
         }
         return p;
     }
-    
+
     public static SuffixPrefix readCopySuffixPrefix() {
         copySuffixPrefix = readSuffixPrefix("copy_paste", JocInventory.DEFAULT_COPY_SUFFIX);
         return copySuffixPrefix;
     }
-    
+
     public static SuffixPrefix readRestoreSuffixPrefix() {
         restoreSuffixPrefix = readSuffixPrefix("restore", JocInventory.DEFAULT_RESTORE_SUFFIX);
         return restoreSuffixPrefix;
     }
-    
+
     private static SuffixPrefix readSuffixPrefix(String key, String defaultValue) {
         SuffixPrefix sp = new SuffixPrefix();
         sp.setSuffix("");
@@ -292,7 +294,7 @@ public class Globals {
                 version = Json.createReader(stream).readObject().getString("version", "unknown");
                 LOGGER.info("JOC Cockpit version = " + version);
             } else {
-                // fallback: search in root folder of the web app 
+                // fallback: search in root folder of the web app
                 stream = Globals.class.getResourceAsStream(versionFile);
                 if (stream != null) {
                     version = Json.createReader(stream).readObject().getString("version", "unknown");
@@ -324,7 +326,7 @@ public class Globals {
                 version = Json.createReader(stream).readObject().getString("version", "unknown");
                 LOGGER.info("API schema version = " + version);
             } else {
-                // fallback: search in root folder of the web app 
+                // fallback: search in root folder of the web app
                 stream = Globals.class.getResourceAsStream(versionFile);
                 if (stream != null) {
                     version = Json.createReader(stream).readObject().getString("version", "unknown");
@@ -351,7 +353,7 @@ public class Globals {
         String versionFile = "/inventory-schema-version.json";
         String version = "";
         try {
-            // fallback: search in root folder of the web app 
+            // fallback: search in root folder of the web app
             stream = Globals.class.getClassLoader().getResourceAsStream(versionFile);
             if (stream != null) {
                 version = Json.createReader(stream).readObject().getString("version", "unknown");
@@ -469,7 +471,7 @@ public class Globals {
         }
         return Globals.jocSecurityLevel;
     }
-    
+
     public static void setJocSecurityLevel(JocSecurityLevel level) {
         Globals.jocSecurityLevel = level;
     }
@@ -510,4 +512,5 @@ public class Globals {
         }
         return defaultProfileAccount;
     }
+
 }

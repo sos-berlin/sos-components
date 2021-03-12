@@ -15,7 +15,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.cluster.configuration.JocClusterGlobalSettings;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.configuration.resource.IJocConfigurationResource;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
@@ -113,25 +113,26 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                     throw new DBMissingDataException(String.format("no entry found for configuration id: %d", configuration.getId()));
                 }
             }
+            String oldConfiguration = null;
             switch (configuration.getConfigurationType()) {
             case GLOBALS:
                 if (dbItem.getId() == null || dbItem.getId().longValue() == 0) {
                     List<DBItemJocConfiguration> result = jocConfigurationDBLayer.getJocConfigurations(ConfigurationType.GLOBALS);
                     if (result == null || result.size() == 0) {
-                        configuration.setConfigurationItem(JocClusterGlobalSettings.DEFAULT_CONFIGURATION_ITEM);
+                        configuration.setConfigurationItem(ConfigurationGlobals.DEFAULT_CONFIGURATION_ITEM);
                     } else {
                         dbItem = result.get(0);
                         configuration.setId(dbItem.getId());
                     }
                 }
                 if (dbItem.getId() != null && dbItem.getId().longValue() > 0) {
-                    postGlobalsChangedEvent(configuration.getControllerId(), dbItem.getConfigurationItem(), configuration.getConfigurationItem());
+                    oldConfiguration = dbItem.getConfigurationItem();
                 }
-                dbItem.setControllerId(JocClusterGlobalSettings.CONTROLLER_ID);
-                dbItem.setInstanceId(JocClusterGlobalSettings.INSTANCE_ID);
-                dbItem.setAccount(JocClusterGlobalSettings.ACCOUNT);
-                dbItem.setShared(JocClusterGlobalSettings.SHARED);
-                dbItem.setObjectType(JocClusterGlobalSettings.OBJECT_TYPE == null ? null : JocClusterGlobalSettings.OBJECT_TYPE.name());
+                dbItem.setControllerId(ConfigurationGlobals.CONTROLLER_ID);
+                dbItem.setInstanceId(ConfigurationGlobals.INSTANCE_ID);
+                dbItem.setAccount(ConfigurationGlobals.ACCOUNT);
+                dbItem.setShared(ConfigurationGlobals.SHARED);
+                dbItem.setObjectType(ConfigurationGlobals.OBJECT_TYPE == null ? null : ConfigurationGlobals.OBJECT_TYPE.name());
 
                 break;
             default:
@@ -182,6 +183,9 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             if (dbItem.getId() == null) {
                 dbItem.setId(id);
             }
+            if (oldConfiguration != null && configuration.getConfigurationType().equals(ConfigurationType.GLOBALS)) {
+                postGlobalsChangedEvent(configuration.getControllerId(), oldConfiguration, configuration.getConfigurationItem());
+            }
             ConfigurationOk ok = new ConfigurationOk();
             ok.setId(dbItem.getId());
             ok.setDeliveryDate(Date.from(Instant.now()));
@@ -197,26 +201,23 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 
     }
 
-    private void postGlobalsChangedEvent(String controllerId, String storedSettings, String currentSettings) {
+    private void postGlobalsChangedEvent(String controllerId, String oldSettings, String currentSettings) {
         try {
-            GlobalSettings stored = Globals.objectMapper.readValue(storedSettings, GlobalSettings.class);
-            GlobalSettings current = Globals.objectMapper.readValue(currentSettings, GlobalSettings.class);
-            if (stored == null && current == null) {
-                return;
-            }
-            if (stored == null || current == null) {
-                return;// TODO all services
-            }
+            GlobalSettings old = getSettings(oldSettings);
+            GlobalSettings current = getSettings(currentSettings);
             List<String> sections = new ArrayList<String>();
-            stored.getAdditionalProperties().entrySet().stream().forEach(section -> {
-                GlobalSettingsSection storedSection = section.getValue();
-                GlobalSettingsSection currentSection = current.getAdditionalProperties().get(section.getKey());
-                if (currentSection == null) {
-                    sections.add(section.getKey());
+
+            ConfigurationGlobals c = new ConfigurationGlobals();
+            c.getDefaults().getAdditionalProperties().entrySet().stream().forEach(defaultSection -> {
+                GlobalSettingsSection oldSection = old.getAdditionalProperties().get(defaultSection.getKey());
+                GlobalSettingsSection currentSection = current.getAdditionalProperties().get(defaultSection.getKey());
+                if (oldSection == null && currentSection == null) {
+                } else if (oldSection == null || currentSection == null) {
+                    sections.add(defaultSection.getKey());
                 } else {
                     try {
-                        if (!Globals.objectMapper.writeValueAsString(storedSection).equals(Globals.objectMapper.writeValueAsString(currentSection))) {
-                            sections.add(section.getKey());
+                        if (!Globals.objectMapper.writeValueAsString(oldSection).equals(Globals.objectMapper.writeValueAsString(currentSection))) {
+                            sections.add(defaultSection.getKey());
                         }
                     } catch (JsonProcessingException e) {
                         LOGGER.error(e.toString(), e);
@@ -224,6 +225,10 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 }
             });
             if (sections.size() > 0) {
+                ConfigurationGlobals configurations = new ConfigurationGlobals();
+                configurations.setConfigurationValues(current);
+                Globals.configurationGlobals = configurations;
+
                 EventBus.getInstance().post(new ConfigurationGlobalsChanged(controllerId, ConfigurationType.GLOBALS.name(), sections));
             }
         } catch (
@@ -231,6 +236,11 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
         Throwable e) {
             LOGGER.error(e.toString(), e);
         }
+    }
+
+    private GlobalSettings getSettings(String val) throws Exception {
+        return val == null || val.equals(ConfigurationGlobals.DEFAULT_CONFIGURATION_ITEM) ? new GlobalSettings() : Globals.objectMapper.readValue(val,
+                GlobalSettings.class);
     }
 
     public JOCDefaultResponse postReadConfiguration(String accessToken, Configuration configuration) throws Exception {

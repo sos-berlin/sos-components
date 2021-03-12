@@ -17,6 +17,7 @@ import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
+import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
 import com.sos.js7.order.initiator.classes.DailyPlanHelper;
@@ -43,7 +44,7 @@ public class OrderInitiatorService extends AJocClusterService {
     }
 
     @Override
-    public JocClusterAnswer start(List<ControllerConfiguration> controllers, GlobalSettingsSection globalSettings, StartupMode mode) {
+    public JocClusterAnswer start(List<ControllerConfiguration> controllers, AConfigurationSection globalSettings, StartupMode mode) {
         try {
             lastActivityStart = Instant.now();
 
@@ -123,7 +124,7 @@ public class OrderInitiatorService extends AJocClusterService {
         return val;
     }
 
-    private void setSettings(StartupMode mode, GlobalSettingsSection globalSettings) throws Exception {
+    private void setSettings(StartupMode mode, AConfigurationSection globalSettings) throws Exception {
         settings = new OrderInitiatorSettings();
         settings.setHibernateConfigurationFile(getJocConfig().getHibernateConfiguration());
         settings.setStartMode(mode);

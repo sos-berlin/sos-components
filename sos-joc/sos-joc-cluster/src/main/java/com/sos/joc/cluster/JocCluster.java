@@ -6,12 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
@@ -22,7 +18,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
-import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationStaleStateException;
@@ -34,9 +29,9 @@ import com.sos.joc.cluster.bean.answer.JocClusterAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
-import com.sos.joc.cluster.configuration.JocClusterGlobalSettings;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.db.DBLayerJocCluster;
 import com.sos.joc.cluster.instances.JocInstance;
 import com.sos.joc.db.DBLayer;
@@ -45,19 +40,14 @@ import com.sos.joc.db.joc.DBItemJocCluster;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.event.EventBus;
-import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
-import com.sos.joc.event.bean.configuration.ConfigurationGlobalsChanged;
-import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.configuration.globals.GlobalSettings;
-import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
 
 public class JocCluster {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JocCluster.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
-    private final static long SUBMIT_SETTING_CHANGES = TimeUnit.MINUTES.toMillis(1);
 
     public static final int MAX_AWAIT_TERMINATION_TIMEOUT = 30;
 
@@ -73,11 +63,7 @@ public class JocCluster {
     private volatile boolean closed;
 
     private List<ControllerConfiguration> controllers;
-    private GlobalSettings settings;
     private static String jocTimeZone = null;
-    private Timer settingsChangedTimer;
-    private AtomicReference<List<String>> settingsChanged = new AtomicReference<List<String>>();
-    private final Object lockSettings = new Object();
     private String activeMemberId;
     private String lastActiveMemberId;
     private boolean skipPerform;
@@ -91,18 +77,18 @@ public class JocCluster {
         this.handler = new JocClusterHandler(this);
         this.currentMemberId = jocConfig.getMemberId();
         this.jocStartTime = jocStartTime;
-
-        EventBus.getInstance().register(this);
     }
 
-    public void doProcessing(StartupMode mode) {
-        LOGGER.info(String.format("[inactive][current memberId]%s", currentMemberId));
+    public ConfigurationGlobals getConfigurationGlobals() {
+        return getInstance();
+    }
 
-        getInstance();
+    public void doProcessing(StartupMode mode, ConfigurationGlobals configurations) {
+        LOGGER.info(String.format("[inactive][current memberId]%s", currentMemberId));
 
         while (!closed) {
             try {
-                process(mode);
+                process(mode, configurations);
 
                 waitFor(config.getPollingInterval());
             } catch (Throwable e) {
@@ -112,18 +98,20 @@ public class JocCluster {
         }
     }
 
-    private void getInstance() {
+    private ConfigurationGlobals getInstance() {
         JocInstance instance = new JocInstance(dbFactory, jocConfig);
 
         instanceProcessed = false;
+        ConfigurationGlobals configurations = null;
         while (!instanceProcessed) {
             try {
                 if (closed) {
                     LOGGER.info("[getInstance][skip]because closed");
-                    return;
+                    return configurations;
                 }
                 instance.getInstance(jocStartTime);
                 jocTimeZone = jocConfig.getTimeZone();
+                configurations = getStoredSettings();
                 instanceProcessed = true;
             } catch (Throwable e) {
                 LOGGER.error(e.toString());
@@ -131,12 +119,12 @@ public class JocCluster {
                 waitFor(30);
             }
         }
+        return configurations;
     }
 
     public void readCurrentDbInfos() {
         boolean run = true;
         controllers = null;
-        settings = null;
         while (run) {
             DBLayerJocCluster dbLayer = null;
             try {
@@ -145,7 +133,6 @@ public class JocCluster {
                 }
                 dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession("currentDbInfos"));
                 readCurrentDbInfoControllers(dbLayer);
-                readCurrentDbInfoStoredSettings(dbLayer);
                 if (controllers != null && controllers.size() > 0) {
                     run = false;
                     dbLayer.close();
@@ -219,77 +206,50 @@ public class JocCluster {
         }
     }
 
-    private void readCurrentDbInfoStoredSettings(DBLayerJocCluster dbLayer) throws Exception {
-        settings = getStoredSettings(dbLayer, null);
-    }
-
-    @SuppressWarnings("unused")
-    private static GlobalSettings getStoredSettings(SOSHibernateSession session) throws Exception {
-        return getStoredSettings(null, session);
-    }
-
-    public static GlobalSettingsSection getStoredSettings(SOSHibernateSession session, ClusterServices service) throws Exception {
-        GlobalSettings settings = getStoredSettings(null, session);
-        return settings == null ? null : settings.getAdditionalProperties().get(service.name());
-    }
-
-    @SuppressWarnings("unused")
-    private GlobalSettingsSection getStoredSettings(ClusterServices service) throws Exception {
-        return getStoredSettings(service.name());
-    }
-
-    protected GlobalSettingsSection getStoredSettings(String serviceIdentifier) throws Exception {
-        DBLayerJocCluster dbLayer = null;
-        try {
-            dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession("stored_settings_" + serviceIdentifier));
-            GlobalSettings settings = getStoredSettings(dbLayer, null);
-            dbLayer.close();
-            dbLayer = null;
-            return settings == null ? null : settings.getAdditionalProperties().get(serviceIdentifier);
-        } catch (Throwable e) {
-            throw e;
-        } finally {
-            if (dbLayer != null) {
-                dbLayer.close();
-            }
-        }
-    }
-
-    private static GlobalSettings getStoredSettings(DBLayerJocCluster dbLayer, SOSHibernateSession session) throws Exception {
+    private ConfigurationGlobals getStoredSettings() throws Exception {
         ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
                 SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
+        ConfigurationGlobals configurations = new ConfigurationGlobals();
         GlobalSettings settings = null;
-        if (dbLayer == null) {
-            dbLayer = new DBLayerJocCluster(session);
-        }
 
+        DBLayerJocCluster dbLayer = null;
         try {
+            dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession("stored_settings"));
             dbLayer.beginTransaction();
             DBItemJocConfiguration item = dbLayer.getGlobalsSettings();
             if (item == null) {
-                settings = getInitialSettings();
+                settings = configurations.getInitialSettings(jocTimeZone);
+                try {
+                    item = new DBItemJocConfiguration();
+                    item.setControllerId(ConfigurationGlobals.CONTROLLER_ID);
+                    item.setInstanceId(ConfigurationGlobals.INSTANCE_ID);
+                    item.setAccount(ConfigurationGlobals.ACCOUNT);
+                    item.setShared(ConfigurationGlobals.SHARED);
+                    item.setObjectType(ConfigurationGlobals.OBJECT_TYPE == null ? null : ConfigurationGlobals.OBJECT_TYPE.name());
+                    item.setConfigurationType(ConfigurationType.GLOBALS.name());
+                    item.setConfigurationItem(mapper.writeValueAsString(settings));
+                    item.setModified(new Date());
 
-                item = new DBItemJocConfiguration();
-                item.setControllerId(JocClusterGlobalSettings.CONTROLLER_ID);
-                item.setInstanceId(JocClusterGlobalSettings.INSTANCE_ID);
-                item.setAccount(JocClusterGlobalSettings.ACCOUNT);
-                item.setShared(JocClusterGlobalSettings.SHARED);
-                item.setObjectType(JocClusterGlobalSettings.OBJECT_TYPE == null ? null : JocClusterGlobalSettings.OBJECT_TYPE.name());
-                item.setConfigurationType(ConfigurationType.GLOBALS.name());
-                item.setConfigurationItem(mapper.writeValueAsString(settings));
-                item.setModified(new Date());
+                    dbLayer.getSession().save(item);
+                } catch (Throwable e) {
+                    dbLayer.rollback();
+                    waitFor(5);
 
-                dbLayer.getSession().save(item);
-            } else {
+                    dbLayer.beginTransaction();
+                    item = dbLayer.getGlobalsSettings();
+                }
+            }
+            if (item != null) {
                 if (!SOSString.isEmpty(item.getConfigurationItem())) {
-                    if (!item.getConfigurationItem().equals(JocClusterGlobalSettings.DEFAULT_CONFIGURATION_ITEM)) {
+                    if (!item.getConfigurationItem().equals(ConfigurationGlobals.DEFAULT_CONFIGURATION_ITEM)) {
                         try {
                             settings = mapper.readValue(item.getConfigurationItem(), GlobalSettings.class);
                         } catch (Throwable e) {
                             LOGGER.error(String.format("[can't map stored settings][%s]%s", item.getConfigurationItem(), e.toString()), e);
                             LOGGER.info("store and use default settings ...");
-                            settings = getInitialSettings();
+                            settings = configurations.getInitialSettings(jocTimeZone);
+
                             item.setConfigurationItem(mapper.writeValueAsString(settings));
                             item.setModified(new Date());
                             dbLayer.getSession().update(item);
@@ -298,25 +258,23 @@ public class JocCluster {
                 }
             }
             dbLayer.commit();
+
+            if (settings == null) {
+                settings = configurations.getInitialSettings(jocTimeZone);
+            }
+
         } catch (SOSHibernateException e) {
             dbLayer.rollback();
+        } finally {
+            if (dbLayer != null) {
+                dbLayer.close();
+            }
         }
-        return settings == null ? new GlobalSettings() : JocClusterGlobalSettings.addDefaultInfos(settings);
+        configurations.setConfigurationValues(settings);
+        return configurations;
     }
 
-    private static GlobalSettings getInitialSettings() {
-        GlobalSettings settings = JocClusterGlobalSettings.getDefaultSettings();
-        JocClusterGlobalSettings.useAndRemoveDefaultInfos(settings);
-        JocClusterGlobalSettings.setCleanupInitialPeriod(settings);
-
-        if (!SOSString.isEmpty(jocTimeZone)) {
-            JocClusterGlobalSettings.setCleanupInitialTimeZone(settings, jocTimeZone);
-            JocClusterGlobalSettings.setDailyPlanInitialTimeZone(settings, jocTimeZone);
-        }
-        return settings;
-    }
-
-    private synchronized void process(StartupMode mode) throws Exception {
+    private synchronized void process(StartupMode mode, ConfigurationGlobals configurations) throws Exception {
         DBLayerJocCluster dbLayer = null;
         DBItemJocCluster item = null;
         try {
@@ -337,7 +295,7 @@ public class JocCluster {
 
             skipPerform = false;
             synchronized (lockMember) {
-                item = handleCurrentMemberOnProcess(mode, dbLayer, item);
+                item = handleCurrentMemberOnProcess(mode, dbLayer, item, configurations);
                 if (item != null) {
                     activeMemberId = item.getMemberId();
                     if (isDebugEnabled) {
@@ -383,7 +341,7 @@ public class JocCluster {
             }
             if (!skipPerform) {
                 if (item != null) {
-                    JocClusterAnswer answer = performServices(mode, item.getMemberId());
+                    JocClusterAnswer answer = performServices(mode, configurations, item.getMemberId());
                     if (answer.getError() != null) {
                         LOGGER.error(SOSString.toString(answer));
                     }
@@ -411,7 +369,8 @@ public class JocCluster {
         }
     }
 
-    private DBItemJocCluster handleCurrentMemberOnProcess(StartupMode mode, DBLayerJocCluster dbLayer, DBItemJocCluster item) throws Exception {
+    private DBItemJocCluster handleCurrentMemberOnProcess(StartupMode mode, DBLayerJocCluster dbLayer, DBItemJocCluster item,
+            ConfigurationGlobals configurations) throws Exception {
         if (item == null) {
             item = new DBItemJocCluster();
             item.setId(JocClusterConfiguration.IDENTIFIER);
@@ -427,7 +386,7 @@ public class JocCluster {
             }
         } else {
             if (item.getMemberId().equals(currentMemberId)) {
-                item = trySwitchCurrentMemberOnProcess(mode, dbLayer, item);
+                item = trySwitchCurrentMemberOnProcess(mode, dbLayer, item, configurations);
             } else {
                 if (isHeartBeatExceeded(item.getHeartBeat())) {
                     LOGGER.info(String.format("[%s][heartBeat exceeded][%s]%s", mode, item.getHeartBeat(), item.getMemberId()));
@@ -467,7 +426,7 @@ public class JocCluster {
         return item;
     }
 
-    public JocClusterAnswer switchMember(StartupMode mode, String newMemberId) {
+    public JocClusterAnswer switchMember(StartupMode mode, ConfigurationGlobals configurations, String newMemberId) {
         LOGGER.info(String.format("[%s][switch][start][new]%s", mode, newMemberId));
 
         JocClusterAnswer answer = checkSwitchMember(newMemberId);
@@ -489,7 +448,7 @@ public class JocCluster {
                     DBLayerJocCluster dbLayer = null;
                     try {
                         dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());
-                        answer = setSwitchMember(mode, dbLayer, newMemberId);
+                        answer = setSwitchMember(mode, dbLayer, configurations, newMemberId);
                         run = false;
 
                         dbLayer.close();
@@ -549,7 +508,8 @@ public class JocCluster {
         return null;
     }
 
-    private JocClusterAnswer setSwitchMember(StartupMode mode, DBLayerJocCluster dbLayer, String newMemberId) throws Exception {
+    private JocClusterAnswer setSwitchMember(StartupMode mode, DBLayerJocCluster dbLayer, ConfigurationGlobals configurations, String newMemberId)
+            throws Exception {
         mode = StartupMode.manual_switchover;
 
         JocClusterAnswer answer = getOKAnswer(JocClusterAnswerState.SWITCH);
@@ -570,7 +530,7 @@ public class JocCluster {
                 } else {
                     if (handler.isActive()) {
                         LOGGER.info("[" + mode + "][switch][start][stop current]" + currentMemberId);
-                        handler.perform(mode, PerformType.STOP);
+                        handler.perform(mode, PerformType.STOP, configurations);
                     }
                     item.setMemberId(newMemberId);
                     // item.setSwitchMemberId(null);
@@ -617,7 +577,8 @@ public class JocCluster {
         return answer;
     }
 
-    private DBItemJocCluster trySwitchCurrentMemberOnProcess(StartupMode mode, DBLayerJocCluster dbLayer, DBItemJocCluster item) throws Exception {
+    private DBItemJocCluster trySwitchCurrentMemberOnProcess(StartupMode mode, DBLayerJocCluster dbLayer, DBItemJocCluster item,
+            ConfigurationGlobals configurations) throws Exception {
         skipPerform = false;
         item.setMemberId(currentMemberId);
 
@@ -647,7 +608,7 @@ public class JocCluster {
                         } else {
                             LOGGER.info("[" + mode + "][switch][stop current]newMemberId=" + item.getSwitchMemberId());
                             if (handler.isActive()) {
-                                handler.perform(mode, PerformType.STOP);
+                                handler.perform(mode, PerformType.STOP, configurations);
                             }
                             item.setMemberId(item.getSwitchMemberId());
                             skipPerform = true;
@@ -713,23 +674,23 @@ public class JocCluster {
         return false;
     }
 
-    private JocClusterAnswer performServices(StartupMode mode, String memberId) {
+    private JocClusterAnswer performServices(StartupMode mode, ConfigurationGlobals configurations, String memberId) {
         if (memberId.equals(currentMemberId)) {
             if (handler.isActive()) {
                 return getOKAnswer(JocClusterAnswerState.ALREADY_STARTED);
             } else {
-                return handler.perform(mode, PerformType.START);
+                return handler.perform(mode, PerformType.START, configurations);
             }
         } else {
             if (handler.isActive()) {
-                return handler.perform(mode, PerformType.STOP);
+                return handler.perform(mode, PerformType.STOP, configurations);
             } else {
                 return getOKAnswer(JocClusterAnswerState.ALREADY_STOPPED);
             }
         }
     }
 
-    public void close(StartupMode mode, boolean deleteActiveCurrentMember) {
+    public void close(StartupMode mode, ConfigurationGlobals configurations, boolean deleteActiveCurrentMember) {
         LOGGER.info("[" + mode + "][cluster][close]start ...----------------------------------------------");
         closed = true;
         synchronized (lock) {
@@ -738,19 +699,18 @@ public class JocCluster {
         synchronized (lockMember) {
             lockMember.notifyAll();
         }
-        stopSettingsChangedTimer();
-        closeServices(mode);
+        closeServices(mode, configurations);
         if (deleteActiveCurrentMember) {
             tryDeleteActiveCurrentMember();
         }
         LOGGER.info("[" + mode + "][cluster][close]closed----------------------------------------------");
     }
 
-    private JocClusterAnswer closeServices(StartupMode mode) {
+    private JocClusterAnswer closeServices(StartupMode mode, ConfigurationGlobals configurations) {
         LOGGER.info("[" + mode + "][cluster][closeServices][isActive=" + handler.isActive() + "]start ...");
         JocClusterAnswer answer = null;
         if (handler.isActive()) {
-            answer = handler.perform(mode, PerformType.STOP);
+            answer = handler.perform(mode, PerformType.STOP, configurations);
         } else {
             answer = getOKAnswer(JocClusterAnswerState.ALREADY_STOPPED);
         }
@@ -787,45 +747,6 @@ public class JocCluster {
             }
         }
         return result;
-    }
-
-    @Subscribe({ ConfigurationGlobalsChanged.class })
-    public void respondConfigurationChanges(ConfigurationGlobalsChanged evt) {
-        if (!handler.isActive()) {
-            return;
-        }
-
-        stopSettingsChangedTimer();
-        settingsChanged.compareAndSet(settingsChanged.get(), evt.getSections());
-
-        synchronized (lockSettings) {
-            settingsChangedTimer = new Timer();
-            settingsChangedTimer.scheduleAtFixedRate(new TimerTask() {
-
-                @Override
-                public void run() {
-                    AJocClusterService.setLogger(JocClusterConfiguration.IDENTIFIER);
-                    List<String> sections = settingsChanged.get();
-                    settingsChanged = new AtomicReference<List<String>>();
-
-                    sections = sections.stream().distinct().collect(Collectors.toList());
-                    LOGGER.info(String.format("[%s]restart %s services", StartupMode.settings_changed.name(), sections.size()));
-                    // TODO restart asynchronous
-                    for (String identifier : sections) {
-                        LOGGER.info(String.format("[%s][%s]restart ...", StartupMode.settings_changed.name(), identifier));
-                        handler.restartService(identifier, StartupMode.settings_changed);
-                    }
-                }
-
-            }, SUBMIT_SETTING_CHANGES, SUBMIT_SETTING_CHANGES);
-        }
-    }
-
-    private void stopSettingsChangedTimer() {
-        if (settingsChangedTimer != null) {
-            settingsChangedTimer.cancel();
-            settingsChangedTimer.purge();
-        }
     }
 
     public static JocClusterAnswer getOKAnswer(JocClusterAnswerState state) {
@@ -920,9 +841,5 @@ public class JocCluster {
 
     public List<ControllerConfiguration> getControllers() {
         return controllers;
-    }
-
-    public GlobalSettings getSettings() {
-        return settings;
     }
 }

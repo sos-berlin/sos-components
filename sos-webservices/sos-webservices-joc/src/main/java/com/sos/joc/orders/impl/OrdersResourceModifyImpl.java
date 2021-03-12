@@ -26,6 +26,8 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
+import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.order.ModifyOrders;
@@ -110,7 +112,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
                 sosHibernateSession.setAutoCommit(false);
                 GlobalSettingsReader reader = new GlobalSettingsReader();
-                OrderInitiatorSettings settings = reader.getSettings(sosHibernateSession);
+                AConfigurationSection configuration = Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
+                OrderInitiatorSettings settings = reader.getSettings(configuration);
                 DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
 
                 FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();

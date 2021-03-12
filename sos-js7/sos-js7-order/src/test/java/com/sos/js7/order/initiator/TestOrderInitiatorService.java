@@ -18,12 +18,12 @@ import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.cluster.IJocClusterService;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
-import com.sos.joc.cluster.configuration.JocClusterGlobalSettings;
-import com.sos.joc.cluster.configuration.JocClusterGlobalSettings.DefaultSections;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
+import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.model.common.JocSecurityLevel;
-import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
 
 public class TestOrderInitiatorService {
 
@@ -69,9 +69,10 @@ public class TestOrderInitiatorService {
                 "", 0);
 
         OrderInitiatorService service = new OrderInitiatorService(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
-        GlobalSettingsSection settings = JocClusterGlobalSettings.getDefaultSettings(DefaultSections.dailyplan);
+        ConfigurationGlobals configurations = new ConfigurationGlobals();
+        AConfigurationSection configuration = configurations.getConfigurationSection(DefaultSections.dailyplan);
 
-        service.start(getControllers(), settings, StartupMode.manual);
+        service.start(getControllers(), configuration, StartupMode.manual);
         TestOrderInitiatorService.stopAfter(service, StartupMode.manual, 13 * 60);
 
     }

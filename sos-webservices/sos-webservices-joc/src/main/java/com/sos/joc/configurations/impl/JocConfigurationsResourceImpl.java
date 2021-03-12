@@ -14,7 +14,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JocCockpitProperties;
-import com.sos.joc.cluster.configuration.JocClusterGlobalSettings;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.configurations.resource.IJocConfigurationsResource;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
@@ -79,11 +79,11 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                     }
                     break;
                 case GLOBALS:
-                    configurationsFilter.setControllerId(JocClusterGlobalSettings.CONTROLLER_ID);
-                    configurationsFilter.setAccount(JocClusterGlobalSettings.ACCOUNT);
-                    configurationsFilter.setObjectType(JocClusterGlobalSettings.OBJECT_TYPE);
+                    configurationsFilter.setControllerId(ConfigurationGlobals.CONTROLLER_ID);
+                    configurationsFilter.setAccount(ConfigurationGlobals.ACCOUNT);
+                    configurationsFilter.setObjectType(ConfigurationGlobals.OBJECT_TYPE);
 
-                    defaultGlobalSettings = JocClusterGlobalSettings.getDefaultSettings();
+                    defaultGlobalSettings = new ConfigurationGlobals().getDefaults();
                     break;
                 default:
                     break;
