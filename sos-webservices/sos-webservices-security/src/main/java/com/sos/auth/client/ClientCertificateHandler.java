@@ -2,6 +2,9 @@ package com.sos.auth.client;
 
 import java.io.IOException;
 import java.security.cert.X509Certificate;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -33,10 +36,21 @@ public class ClientCertificateHandler {
          *   javax.servlet.request.ssl_session_id  - String representation (hexified) of the active SSL Session ID
          *      
          */
-        this.clientCertificateChain = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
-        String cipherSuiteName = (String) request.getAttribute("javax.servlet.request.cipher_suite");
-        Integer keySize = (Integer) request.getAttribute("javax.servlet.request.key_size");
-        this.sslSessionIdHex = (String) request.getAttribute("javax.servlet.request.ssl_session_id");
+        String cipherSuiteName = "";
+        Integer keySize = 0;
+        Enumeration<String> attributes = request.getAttributeNames();
+        if(attributes.hasMoreElements()) {
+            String attributeName = attributes.nextElement();
+            if("javax.servlet.request.X509Certificate".equals(attributeName)) {
+                this.clientCertificateChain = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
+            } else if("javax.servlet.request.cipher_suite".equals(attributeName)) {
+                cipherSuiteName = (String) request.getAttribute("javax.servlet.request.cipher_suite");
+            } else if("javax.servlet.request.key_size".equals(attributeName)) {
+                keySize = (Integer) request.getAttribute("javax.servlet.request.key_size");
+            } else if("javax.servlet.request.ssl_session_id".equals(attributeName)) {
+                this.sslSessionIdHex = (String) request.getAttribute("javax.servlet.request.ssl_session_id");
+            }
+        }
         if ((clientCertificateChain == null || clientCertificateChain.length == 0) && sslSessionIdHex == null) {
             LOGGER.debug("No certificate information received from request.");
         } else {

@@ -216,18 +216,22 @@ public class SOSServicePermissionShiro {
     public JOCDefaultResponse loginPost(@Context HttpServletRequest request, @HeaderParam("Authorization") String basicAuthorization,
             @HeaderParam("X-CLIENT-ID") String loginClientId, @QueryParam("user") String user, @QueryParam("pwd") String pwd) throws JocException,
             SOSHibernateException {
+        MDC.put("context", ThreadCtx);
         Globals.loginClientId = loginClientId;
         if (request != null) {
             String clientCertCN = null;
             try {
                 ClientCertificateHandler clientCertHandler = new ClientCertificateHandler(request);
                 clientCertCN = clientCertHandler.getClientCN();
-                LOGGER.info("Client Certificate CN read from Login: " + clientCertCN);
+                if(clientCertCN == null) {
+                    LOGGER.info("Client Certificate CN read from Login: n/a");
+                } else {
+                    LOGGER.info("Client Certificate CN read from Login: " + clientCertCN);
+                }
             } catch (IOException e) {
                 LOGGER.debug("No Client certificate read from HttpServletRequest.");
             } 
         }
-        MDC.put("context", ThreadCtx);
         try {
             return login(request, basicAuthorization, user, pwd);
         } finally {
