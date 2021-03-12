@@ -20,7 +20,7 @@ public class ConfigurationGlobalsTest {
     public void testCleanup2() throws Exception {
 
         ConfigurationGlobals c = new ConfigurationGlobals();
-
+        c.setConfigurationValues(null);
         AConfigurationSection s = c.getConfigurationSection(DefaultSections.cleanup);
         ConfigurationGlobalsCleanup cleanup = (ConfigurationGlobalsCleanup) s;
 
