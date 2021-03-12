@@ -11,9 +11,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ReadCertificateTestServlet extends HttpServlet {
 
     private static final long serialVersionUID = -6942752272134678128L;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReadCertificateTestServlet.class);
     private X509Certificate clientCertificate;
     private X509Certificate[] clientCertificateChain;
     private String subjectDN;
@@ -36,15 +40,31 @@ public class ReadCertificateTestServlet extends HttpServlet {
          *      String representation (hexified) of the active SSL Session ID
          *      
          */
-        Enumeration<String> reqAttributeNames = request.getAttributeNames();
-        Set<String> attributeNames = new HashSet<String>();
-        while(reqAttributeNames.hasMoreElements()) {
-            attributeNames.add(reqAttributeNames.nextElement());
+//        Enumeration<String> reqAttributeNames = request.getAttributeNames();
+//        Set<String> attributeNames = new HashSet<String>();
+//        while(reqAttributeNames.hasMoreElements()) {
+//            attributeNames.add(reqAttributeNames.nextElement());
+//        }
+//        attributeNames.stream().forEach(item -> LOGGER.info("Attribute Name: " + item));
+        String cipherSuiteName = "";
+        Integer keySize = 0;
+        Enumeration<String> attributes = request.getAttributeNames();
+        while(attributes.hasMoreElements()) {
+            String attributeName = attributes.nextElement();
+            if("javax.servlet.request.X509Certificate".equals(attributeName)) {
+                this.clientCertificateChain = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
+            } else if("javax.servlet.request.cipher_suite".equals(attributeName)) {
+                cipherSuiteName = (String) request.getAttribute("javax.servlet.request.cipher_suite");
+            } else if("javax.servlet.request.key_size".equals(attributeName)) {
+                keySize = (Integer) request.getAttribute("javax.servlet.request.key_size");
+            } else if("javax.servlet.request.ssl_session_id".equals(attributeName)) {
+                this.sslSessionIdHex = (String) request.getAttribute("javax.servlet.request.ssl_session_id");
+            }
         }
-        clientCertificateChain = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
-        String cipherSuiteName = (String) request.getAttribute("javax.servlet.request.cipher_suite");
-        Integer keySize = (Integer) request.getAttribute("javax.servlet.request.key_size");
-        sslSessionIdHex = (String) request.getAttribute("javax.servlet.request.ssl_session_id");
+//        clientCertificateChain = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
+//        String cipherSuiteName = (String) request.getAttribute("javax.servlet.request.cipher_suite");
+//        Integer keySize = (Integer) request.getAttribute("javax.servlet.request.key_size");
+//        sslSessionIdHex = (String) request.getAttribute("javax.servlet.request.ssl_session_id");
         response.setContentType("application/json");
         response.setStatus(HttpServletResponse.SC_OK);
         StringBuilder strb = new StringBuilder();
@@ -55,40 +75,42 @@ public class ReadCertificateTestServlet extends HttpServlet {
             strb.append("}\n");
         } else {
             clientCertificate = clientCertificateChain[0];
-            subjectDN = clientCertificate.getSubjectDN().getName();
-            clientCN = ((sun.security.x509.X500Name)clientCertificate.getSubjectDN()).getCommonName();
-            strb.append("{\n");
-            strb.append(String.format("  \"IssuerDN\" : \"%1$s\",\n", clientCertificate.getIssuerDN().getName()));
-            strb.append(String.format("  \"SubjectDN\" : \"%1$s\",\n", subjectDN));
-            boolean[] keyUsages = clientCertificate.getKeyUsage();
-    /*        
-            KeyUsage ::= BIT STRING {
-                digitalSignature        (0),
-                nonRepudiation          (1),
-                keyEncipherment         (2),
-                dataEncipherment        (3),
-                keyAgreement            (4),
-                keyCertSign             (5),
-                cRLSign                 (6),
-                encipherOnly            (7),
-                decipherOnly            (8)
-                }
-    */
-            strb.append("  \"keyUsages\" : [\n");
-            strb.append(String.format("      {\"digitalSignature\" : \"%1$s\"},\n", keyUsages[0]));
-            strb.append(String.format("      {\"nonRepudiation\" : \"%1$s\"},\n", keyUsages[1]));
-            strb.append(String.format("      {\"keyEncipherment\" : \"%1$s\"},\n", keyUsages[2]));
-            strb.append(String.format("      {\"dataEncipherment\" : \"%1$s\"},\n", keyUsages[3]));
-            strb.append(String.format("      {\"keyAgreement\" : \"%1$s\"},\n", keyUsages[4]));
-            strb.append(String.format("      {\"keyCertSign\" : \"%1$s\"},\n", keyUsages[5]));
-            strb.append(String.format("      {\"cRLSign\" : \"%1$s\"},\n", keyUsages[6]));
-            strb.append(String.format("      {\"encipherOnly\" : \"%1$s\"},\n", keyUsages[7]));
-            strb.append(String.format("      {\"decipherOnly\" : \"%1$s\"}\n", keyUsages[8]));
-            strb.append("  ],\n");
-            strb.append(String.format("  \"cipherSuiteName\" : \"%1$s\",\n", cipherSuiteName));
-            strb.append(String.format("  \"keySize\" : \"%1$d\",\n", keySize));
-            strb.append(String.format("  \"sslSessionId\" : \"%1$s\"\n", sslSessionIdHex));
-            strb.append("}");
+            if (clientCertificate != null) {
+                subjectDN = clientCertificate.getSubjectDN().getName();
+                clientCN = ((sun.security.x509.X500Name)clientCertificate.getSubjectDN()).getCommonName();
+                strb.append("{\n");
+                strb.append(String.format("  \"IssuerDN\" : \"%1$s\",\n", clientCertificate.getIssuerDN().getName()));
+                strb.append(String.format("  \"SubjectDN\" : \"%1$s\",\n", subjectDN));
+                boolean[] keyUsages = clientCertificate.getKeyUsage();
+        /*        
+                KeyUsage ::= BIT STRING {
+                    digitalSignature        (0),
+                    nonRepudiation          (1),
+                    keyEncipherment         (2),
+                    dataEncipherment        (3),
+                    keyAgreement            (4),
+                    keyCertSign             (5),
+                    cRLSign                 (6),
+                    encipherOnly            (7),
+                    decipherOnly            (8)
+                    }
+        */
+                strb.append("  \"keyUsages\" : [\n");
+                strb.append(String.format("      {\"digitalSignature\" : \"%1$s\"},\n", keyUsages[0]));
+                strb.append(String.format("      {\"nonRepudiation\" : \"%1$s\"},\n", keyUsages[1]));
+                strb.append(String.format("      {\"keyEncipherment\" : \"%1$s\"},\n", keyUsages[2]));
+                strb.append(String.format("      {\"dataEncipherment\" : \"%1$s\"},\n", keyUsages[3]));
+                strb.append(String.format("      {\"keyAgreement\" : \"%1$s\"},\n", keyUsages[4]));
+                strb.append(String.format("      {\"keyCertSign\" : \"%1$s\"},\n", keyUsages[5]));
+                strb.append(String.format("      {\"cRLSign\" : \"%1$s\"},\n", keyUsages[6]));
+                strb.append(String.format("      {\"encipherOnly\" : \"%1$s\"},\n", keyUsages[7]));
+                strb.append(String.format("      {\"decipherOnly\" : \"%1$s\"}\n", keyUsages[8]));
+                strb.append("  ],\n");
+                strb.append(String.format("  \"cipherSuiteName\" : \"%1$s\",\n", cipherSuiteName));
+                strb.append(String.format("  \"keySize\" : \"%1$d\",\n", keySize));
+                strb.append(String.format("  \"sslSessionId\" : \"%1$s\"\n", sslSessionIdHex));
+                strb.append("}");
+            }
         }
         response.getWriter().println(strb.toString());
 

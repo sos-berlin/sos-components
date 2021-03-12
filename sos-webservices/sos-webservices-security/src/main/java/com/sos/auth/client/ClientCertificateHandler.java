@@ -3,8 +3,6 @@ package com.sos.auth.client;
 import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -39,7 +37,7 @@ public class ClientCertificateHandler {
         String cipherSuiteName = "";
         Integer keySize = 0;
         Enumeration<String> attributes = request.getAttributeNames();
-        if(attributes.hasMoreElements()) {
+        while(attributes.hasMoreElements()) {
             String attributeName = attributes.nextElement();
             if("javax.servlet.request.X509Certificate".equals(attributeName)) {
                 this.clientCertificateChain = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
