@@ -31,6 +31,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.Schedule;
 import com.sos.inventory.model.calendar.Calendar;
+import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.jobclass.JobClass;
@@ -77,6 +78,7 @@ public class JocInventory {
             put(ConfigurationType.JOBCLASS, "classpath:/raml/inventory/schemas/jobClass/jobClass-schema.json");
             put(ConfigurationType.JUNCTION, "classpath:/raml/inventory/schemas/junction/junction-schema.json");
             put(ConfigurationType.LOCK, "classpath:/raml/inventory/schemas/lock/lock-schema.json");
+            put(ConfigurationType.FILEORDERSOURCE, "classpath:/raml/inventory/schemas/fileordersource/fileOrderSource-schema.json");
             put(ConfigurationType.SCHEDULE, "classpath:/raml/inventory/schemas/schedule/schedule-schema.json");
             put(ConfigurationType.WORKFLOW, "classpath:/raml/inventory/schemas/workflow/workflow-schema.json");
             put(ConfigurationType.FOLDER, "classpath:/raml/api/schemas/inventory/folder-schema.json");
@@ -111,6 +113,7 @@ public class JocInventory {
             put(ConfigurationType.JOBCLASS, JobClass.class);
             put(ConfigurationType.JUNCTION, Junction.class);
             put(ConfigurationType.LOCK, Lock.class);
+            put(ConfigurationType.FILEORDERSOURCE, FileOrderSource.class);
             put(ConfigurationType.WORKINGDAYSCALENDAR, Calendar.class);
             put(ConfigurationType.NONWORKINGDAYSCALENDAR, Calendar.class);
             put(ConfigurationType.SCHEDULE, Schedule.class);
@@ -120,7 +123,8 @@ public class JocInventory {
     });
 
     public static final Set<ConfigurationType> DEPLOYABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(ConfigurationType.JOB,
-            ConfigurationType.JOBCLASS, ConfigurationType.JUNCTION, ConfigurationType.LOCK, ConfigurationType.WORKFLOW)));
+            ConfigurationType.JOBCLASS, ConfigurationType.FILEORDERSOURCE, ConfigurationType.JUNCTION, ConfigurationType.LOCK,
+            ConfigurationType.WORKFLOW)));
 
     public static final Set<ConfigurationType> RELEASABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
             ConfigurationType.SCHEDULE, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR)));
@@ -160,11 +164,12 @@ public class JocInventory {
     }
     
     public static List<Integer> getTypesFromObjectsWithReferences() {
-        return Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.SCHEDULE.intValue());
+        return Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.FILEORDERSOURCE.intValue(), ConfigurationType.SCHEDULE.intValue());
     }
     
     public static List<Integer> getTypesFromObjectsWithReferencesAndFolders() {
-        return Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.SCHEDULE.intValue(), ConfigurationType.FOLDER.intValue());
+        return Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.FILEORDERSOURCE.intValue(), ConfigurationType.SCHEDULE
+                .intValue(), ConfigurationType.FOLDER.intValue());
     }
 
     public static List<Integer> getCalendarTypes() {
@@ -218,10 +223,6 @@ public class JocInventory {
         ConfigurationType type = getType(typeNum);
         if (SOSString.isEmpty(content) || ConfigurationType.FOLDER.equals(type)) {
             return null;
-        }
-        // temp. compatibility for whenHolidays enum
-        if (ConfigurationType.SCHEDULE.equals(type)) {
-            content = content.replaceAll("\"suppress\"", "\"SUPPRESS\"");
         }
         return (IConfigurationObject) Globals.objectMapper.readValue(content, CLASS_MAPPING.get(type));
     }
@@ -746,7 +747,7 @@ public class JocInventory {
                 }
             }
             break;
-        case WORKFLOW: // determine Schedules with Workflow reference
+        case WORKFLOW: // determine Schedules and FileOrderSources with Workflow reference
             List<DBItemInventoryConfiguration> schedules = dbLayer.getUsedSchedulesByWorkflowName(config.getName());
             if (schedules != null && !schedules.isEmpty()) {
                 for (DBItemInventoryConfiguration schedule : schedules) {
@@ -760,6 +761,22 @@ public class JocInventory {
                     } else{
                         JocInventory.updateConfiguration(dbLayer, schedule);
                         events.add(schedule.getFolder());
+                    }
+                }
+            }
+            List<DBItemInventoryConfiguration> fileOrderSources = dbLayer.getUsedFileOrderSourcesByWorkflowName(config.getName());
+            if (fileOrderSources != null && !fileOrderSources.isEmpty()) {
+                for (DBItemInventoryConfiguration fileOrderSource : fileOrderSources) {
+                    fileOrderSource.setContent(fileOrderSource.getContent().replaceAll("(\"workflowPath\"\\s*:\\s*\")" + config.getName() + "\"", "$1"
+                            + newName + "\""));
+                    fileOrderSource.setDeployed(false);
+                    int i = items.indexOf(fileOrderSource);
+                    if (i != -1) {
+                        items.get(i).setContent(fileOrderSource.getContent());
+                        items.get(i).setReleased(false);
+                    } else {
+                        JocInventory.updateConfiguration(dbLayer, fileOrderSource);
+                        events.add(fileOrderSource.getFolder());
                     }
                 }
             }

@@ -18,7 +18,6 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.inventory.resource.IValidateNameResource;
-import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
 import com.sos.schema.JsonValidator;
 

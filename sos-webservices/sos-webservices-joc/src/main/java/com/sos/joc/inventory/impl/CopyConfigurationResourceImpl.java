@@ -180,6 +180,13 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                                 json = json.replaceAll("(\"lockId\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue() + "\"");
                             }
                             break;
+                        case FILEORDERSOURCE:
+                            for (Map.Entry<String, String> oldNewName : oldToNewName.getOrDefault(ConfigurationType.WORKFLOW, Collections.emptyMap())
+                                    .entrySet()) {
+                                json = json.replaceAll("(\"workflowPath\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue()
+                                        + "\"");
+                            }
+                            break;
                         case SCHEDULE:
                             for (Map.Entry<String, String> oldNewName : oldToNewName.getOrDefault(ConfigurationType.WORKFLOW, Collections.emptyMap())
                                     .entrySet()) {

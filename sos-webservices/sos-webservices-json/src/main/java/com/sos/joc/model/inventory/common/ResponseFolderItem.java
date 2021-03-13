@@ -13,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * folder item
  * <p>
- * the field 'orders' is only relevant for Workflows
+ * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)

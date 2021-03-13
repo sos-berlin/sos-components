@@ -22,6 +22,7 @@ import com.sos.controller.model.common.Variables;
 import com.sos.inventory.model.Schedule;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
+import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.Instruction;
@@ -105,7 +106,7 @@ public class Validator {
     private static void validate(ConfigurationType type, byte[] configBytes, IConfigurationObject config, InventoryDBLayer dbLayer,
             Set<String> enabledAgentNames) throws SOSJsonSchemaException, IOException, SOSHibernateException, JocConfigurationException {
         JsonValidator.validate(configBytes, URI.create(JocInventory.SCHEMA_LOCATION.get(type)));
-        if (ConfigurationType.WORKFLOW.equals(type) || ConfigurationType.SCHEDULE.equals(type)) {
+        if (ConfigurationType.WORKFLOW.equals(type) || ConfigurationType.SCHEDULE.equals(type) || ConfigurationType.FILEORDERSOURCE.equals(type)) {
             SOSHibernateSession session = null;
             try {
                 if (dbLayer == null) {
@@ -134,6 +135,9 @@ public class Validator {
                     // Workflow workflowOfSchedule = (Workflow) Globals.objectMapper.readValue(json, Workflow.class);
                     // validateArguments(schedule.getVariables(), workflowOfSchedule.getOrderRequirements(), "$.variables");
                     // }
+                } else if (ConfigurationType.FILEORDERSOURCE.equals(type)) {
+                    FileOrderSource fileOrderSource = (FileOrderSource) config;
+                    validateWorkflowRef(fileOrderSource.getWorkflowPath(), dbLayer);
                 }
             } finally {
                 Globals.disconnect(session);

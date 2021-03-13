@@ -1129,6 +1129,18 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("workflowName", workflowName);
         return getSession().getResultList(query);
     }
+    
+    public List<DBItemInventoryConfiguration> getUsedFileOrderSourcesByWorkflowName(String workflowName) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+        hql.append("where type=:type ");
+        hql.append("and ");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "content", "$.workflowPath")).append("=:workflowName");
+
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.FILEORDERSOURCE.intValue());
+        query.setParameter("workflowName", workflowName);
+        return getSession().getResultList(query);
+    }
 
     public List<DBItemInventoryConfiguration> getUsedSchedulesByCalendarPath(String calendarPath) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");

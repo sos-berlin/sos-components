@@ -46,7 +46,7 @@ public class StatisticsResourceImpl extends JOCResourceImpl implements IStatisti
             entity.setNumOfJobs(dbLayer.getNumOfDeployedJobs(controller.getControllerId()));
             entity.setNumOfLocks(numOfDeployed.getOrDefault(ConfigurationType.LOCK, 0L));
             entity.setNumOfJunctions(numOfDeployed.getOrDefault(ConfigurationType.JUNCTION, 0L));
-            entity.setNumOfFileWatches(0L);  // TODO add to ConfigurationType
+            entity.setNumOfFileOrderSources(numOfDeployed.getOrDefault(ConfigurationType.FILEORDERSOURCE, 0L));
             entity.setNumOfSchedules(numOfReleased.getOrDefault(ConfigurationType.SCHEDULE, 0L));
             entity.setNumOfCalendars(numOfReleased.getOrDefault(ConfigurationType.WORKINGDAYSCALENDAR, 0L) + numOfReleased.getOrDefault(
                     ConfigurationType.NONWORKINGDAYSCALENDAR, 0L));

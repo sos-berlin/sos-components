@@ -11,7 +11,8 @@ public enum DeployType {
     WORKFLOW("Workflow", 1),
     JOBCLASS("JobClass", 2),
     LOCK("Lock", 4),
-    JUNCTION("Junction", 5);
+    JUNCTION("Junction", 5),
+    FILEORDERSOURCE("FileOrderSource", 9);
     private final String value;
     private final Integer intValue;
     private final static Map<String, DeployType> CONSTANTS = new HashMap<String, DeployType>();

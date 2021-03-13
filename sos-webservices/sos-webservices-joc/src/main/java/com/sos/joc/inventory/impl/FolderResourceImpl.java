@@ -3,11 +3,8 @@ package com.sos.joc.inventory.impl;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -113,6 +110,8 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                         case JUNCTION:
                             folder.getJunctions().add(config);
                             break;
+                        case FILEORDERSOURCE:
+                            folder.getFileOrderSources().add(config);
                         case SCHEDULE:
                             folder.getSchedules().add(config);
                             break;
@@ -133,6 +132,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                 folder.setJobClasses(sort(folder.getJobClasses()));
                 folder.setLocks(sort(folder.getLocks()));
                 folder.setJunctions(sort(folder.getJunctions()));
+                folder.setFileOrderSources(sort(folder.getFileOrderSources()));
                 folder.setSchedules(sort(folder.getSchedules()));
                 folder.setCalendars(sort(folder.getCalendars()));
                 folder.setFolders(sort(folder.getFolders()));

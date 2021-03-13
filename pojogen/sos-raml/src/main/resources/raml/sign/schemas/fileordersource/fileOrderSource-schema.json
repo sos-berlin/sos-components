@@ -1,0 +1,46 @@
+{
+  "title": "FileOrderSource",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.fileordersource.FileOrderSource",
+  "type": "object",
+  "javaInterfaces" : [
+    "com.sos.joc.model.common.IDeployObject"
+  ],
+  "required": [
+    "TYPE",
+    "id",
+    "workflowPath",
+    "agentId"
+  ],
+  "propertyOrder": [
+    "TYPE",
+    "id",
+    "workflowPath",
+    "agentId",
+    "pattern"
+  ],
+  
+  "description": "deploy object with fixed property 'TYPE':'FileOrderSource'",
+  "properties": {
+    "TYPE": {
+      "$ref": "../../../inventory/schemas/deploy/deployType-schema.json",
+      "default": "FileOrderSource" 
+    },
+    "id": {
+      "$ref": "../../../inventory/schemas/common/string255-schema.json"
+    },
+    "workflowPath": {
+      "$ref": "../../../inventory/schemas/common/string255-schema.json"
+    },
+    "agentId": {
+    	"$ref": "../../../inventory/schemas/common/string255-schema.json"
+    },
+    "directory": {
+    	"$ref": "../../../inventory/schemas/common/string255-schema.json"
+    },
+    "pattern": {
+    	"$ref": "../../../inventory/schemas/common/string255-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

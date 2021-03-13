@@ -93,7 +93,8 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
                 }
                 
                 List<ConfigurationType> restoreOrder = Arrays.asList(ConfigurationType.LOCK, ConfigurationType.NONWORKINGDAYSCALENDAR,
-                        ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.WORKFLOW, ConfigurationType.SCHEDULE);
+                        ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.WORKFLOW, ConfigurationType.FILEORDERSOURCE,
+                        ConfigurationType.SCHEDULE);
 
                 List<DBItemInventoryConfigurationTrash> trashDBFolderContent = dbLayer.getTrashFolderContent(config.getPath(), true, null);
                 Map<ConfigurationType, List<DBItemInventoryConfigurationTrash>> trashMap = trashDBFolderContent.stream().collect(Collectors

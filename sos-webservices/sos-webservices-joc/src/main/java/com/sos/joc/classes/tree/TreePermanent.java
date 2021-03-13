@@ -56,6 +56,7 @@ public class TreePermanent {
                     types.add(TreeType.JOBCLASS);
                     types.add(TreeType.LOCK);
                     types.add(TreeType.JUNCTION);
+                    types.add(TreeType.FILEORDERSOURCE);
                     types.add(TreeType.SCHEDULE);
                     types.add(TreeType.WORKINGDAYSCALENDAR);
                     types.add(TreeType.NONWORKINGDAYSCALENDAR);
@@ -106,6 +107,17 @@ public class TreePermanent {
                 }
                 break;
             case JUNCTION:
+                if (treeForInventory || treeForInventoryTrash) {
+                    if (sosPermission.getInventory().getConfigurations().isView()) {
+                        types.add(type);
+                    }
+                } else {
+                    // TODO if (sosPermission.getJunction().getView().isStatus()) {
+                    types.add(type);
+                    // }
+                }
+                break;
+            case FILEORDERSOURCE:
                 if (treeForInventory || treeForInventoryTrash) {
                     if (sosPermission.getInventory().getConfigurations().isView()) {
                         types.add(type);

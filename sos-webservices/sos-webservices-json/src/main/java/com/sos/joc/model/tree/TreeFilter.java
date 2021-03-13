@@ -127,7 +127,7 @@ public class TreeFilter {
     public void setForInventory(Boolean forInventory) {
         this.forInventory = forInventory;
     }
-    
+
     @JsonProperty("forInventoryTrash")
     public Boolean getForInventoryTrash() {
         return forInventoryTrash;
@@ -145,7 +145,7 @@ public class TreeFilter {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(types).append(folders).append(controllerId).append(forInventory).append(forInventoryTrash).append(onlyValidObjects).toHashCode();
+        return new HashCodeBuilder().append(forInventoryTrash).append(types).append(folders).append(controllerId).append(forInventory).append(onlyValidObjects).toHashCode();
     }
 
     @Override
@@ -157,7 +157,7 @@ public class TreeFilter {
             return false;
         }
         TreeFilter rhs = ((TreeFilter) other);
-        return new EqualsBuilder().append(types, rhs.types).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(forInventory, rhs.forInventory).append(forInventoryTrash, rhs.forInventoryTrash).append(onlyValidObjects, rhs.onlyValidObjects).isEquals();
+        return new EqualsBuilder().append(forInventoryTrash, rhs.forInventoryTrash).append(types, rhs.types).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(forInventory, rhs.forInventory).append(onlyValidObjects, rhs.onlyValidObjects).isEquals();
     }
 
 }

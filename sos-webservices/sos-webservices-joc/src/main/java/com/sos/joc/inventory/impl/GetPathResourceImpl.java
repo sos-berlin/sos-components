@@ -55,6 +55,7 @@ public class GetPathResourceImpl extends JOCResourceImpl implements IGetPathReso
                         case WORKFLOW:
                         case JOBCLASS:
                         case JUNCTION:
+                        case FILEORDERSOURCE:
                         case LOCK:
                             path = dbLayer.getPathByNameFromLatestActiveDepHistoryItem(filter.getName(), ConfigurationType.fromValue(filter.getObjectType()));
                             break;
