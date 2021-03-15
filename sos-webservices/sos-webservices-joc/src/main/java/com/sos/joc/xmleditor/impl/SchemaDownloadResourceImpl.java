@@ -47,7 +47,7 @@ public class SchemaDownloadResourceImpl extends JOCResourceImpl implements ISche
 
             initLogging(IMPL_PATH, json.getBytes(), accessToken);
             JsonValidator.validateFailFast(json.getBytes(), SchemaDownloadConfiguration.class);
-            SchemaDownloadConfiguration in = Globals.objectMapper.readValue(json, SchemaDownloadConfiguration.class);
+            SchemaDownloadConfiguration in = Globals.objectMapper.readValue(json.getBytes(), SchemaDownloadConfiguration.class);
 
             checkRequiredParameters(in);
 
