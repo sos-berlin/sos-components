@@ -142,14 +142,17 @@ public class ThreadHelper {
     }
 
     public static void print(final StartupMode mode, String header) {
+        if (!LOGGER.isDebugEnabled()) {
+            return;
+        }
         try {
-            LOGGER.info(String.format("[%s][threads][%s]%s", mode, SOSClassUtil.getMethodName(2), header));
+            LOGGER.debug(String.format("[%s][threads][%s]%s", mode, SOSClassUtil.getMethodName(2), header));
             Thread[] threads = ThreadHelper.getThreads(ThreadHelper.getThreadGroup());
             if (threads != null) {
                 for (Thread t : threads) {
                     if (t != null) {
                         String tg = t.getThreadGroup() == null ? "unknown" : t.getThreadGroup().getName();
-                        LOGGER.info(String.format("  [group=%s]%s daemon=%s", tg, t, t.isDaemon()));
+                        LOGGER.debug(String.format("  [group=%s]%s daemon=%s", tg, t, t.isDaemon()));
                     }
                 }
             }
