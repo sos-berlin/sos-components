@@ -195,9 +195,9 @@ public class PeriodResolver {
         Date dailyPlanEndPeriod = calendar.getTime();
         
           
-        SimpleDateFormat sdfUtc = new SimpleDateFormat("yyyyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat sdfUtc = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         sdfUtc.setTimeZone(TimeZone.getTimeZone("UTC"));
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         sdf.setTimeZone(TimeZone.getTimeZone(timeZone));
         start = sdf.parse(sdfUtc.format(start ));
  
