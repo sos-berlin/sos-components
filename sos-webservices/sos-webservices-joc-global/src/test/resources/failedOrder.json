@@ -1,0 +1,340 @@
+{
+	"id": "#2021-03-13#T5641705569-o1",
+	"workflowPosition": {
+		"workflowId": {
+			"path": "pdwTrycCatch",
+			"versionId": "34b48bd9-8fb6-4061-bd97-f8b2325ab0a5"
+		},
+		"position": [3,
+		"try+9",
+		1]
+	},
+	"state": {
+		"TYPE": "Failed"
+	},
+	"historicOutcomes": [{
+		"position": [0],
+		"outcome": {
+			"TYPE": "Succeeded",
+			"namedValues": {
+				"returnCode": 0
+			}
+		}
+	},
+	{
+		"position": [1,
+		"try+0",
+		0],
+		"outcome": {
+			"TYPE": "Succeeded",
+			"namedValues": {
+				"booking_code": "CZDY",
+				"booking_number": "42",
+				"returnCode": 0
+			}
+		}
+	},
+	{
+		"position": [1,
+		"try+0",
+		1],
+		"outcome": {
+			"TYPE": "Failed",
+			"namedValues": {
+				"returnCode": 127
+			}
+		}
+	},
+	{
+		"position": [1,
+		"catch+0",
+		0],
+		"outcome": {
+			"TYPE": "Succeeded",
+			"namedValues": {
+				"returnCode": 0
+			}
+		}
+	},
+	{
+		"position": [1,
+		"catch+0",
+		1],
+		"outcome": {
+			"TYPE": "Succeeded",
+			"namedValues": {
+				"returnCode": 0
+			}
+		}
+	},
+	{
+		"position": [2],
+		"outcome": {
+			"TYPE": "Succeeded",
+			"namedValues": {
+				"returnCode": 0
+			}
+		}
+	},
+	{
+		"position": [3,
+		"try+0",
+		0],
+		"outcome": {
+			"TYPE": "Succeeded",
+			"namedValues": {
+				"booking_code": "CZDD",
+				"booking_number": "44",
+				"returnCode": 0
+			}
+		}
+	},
+	{
+		"position": [3,
+		"try+0",
+		1],
+		"outcome": {
+			"TYPE": "Failed",
+			"namedValues": {
+				"booking_code": "CZDE",
+				"booking_number": "45",
+				"returnCode": 127
+			}
+		}
+	},
+	{
+		"position": [3,
+		"try+1",
+		0],
+		"outcome": {
+			"TYPE": "Succeeded",
+			"namedValues": {
+				"booking_code": "CZDD",
+				"booking_number": "44",
+				"returnCode": 0
+			}
+		}
+	},
+	{
+		"position": [3,
+		"try+1",
+		1],
+		"outcome": {
+			"TYPE": "Failed",
+			"namedValues": {
+				"booking_code": "CZDE",
+				"booking_number": "45",
+				"returnCode": 127
+			}
+		}
+	},
+	{
+		"position": [3,
+		"try+2",
+		0],
+		"outcome": {
+			"TYPE": "Succeeded",
+			"namedValues": {
+				"booking_code": "CZDD",
+				"booking_number": "44",
+				"returnCode": 0
+			}
+		}
+	},
+	{
+		"position": [3,
+		"try+2",
+		1],
+		"outcome": {
+			"TYPE": "Failed",
+			"namedValues": {
+				"booking_code": "CZDE",
+				"booking_number": "45",
+				"returnCode": 127
+			}
+		}
+	},
+	{
+		"position": [3,
+		"try+3",
+		0],
+		"outcome": {
+			"TYPE": "Succeeded",
+			"namedValues": {
+				"booking_code": "CZDD",
+				"booking_number": "44",
+				"returnCode": 0
+			}
+		}
+	},
+	{
+		"position": [3,
+		"try+3",
+		1],
+		"outcome": {
+			"TYPE": "Failed",
+			"namedValues": {
+				"booking_code": "CZDE",
+				"booking_number": "45",
+				"returnCode": 127
+			}
+		}
+	},
+	{
+		"position": [3,
+		"try+4",
+		0],
+		"outcome": {
+			"TYPE": "Succeeded",
+			"namedValues": {
+				"booking_code": "CZDD",
+				"booking_number": "44",
+				"returnCode": 0
+			}
+		}
+	},
+	{
+		"position": [3,
+		"try+4",
+		1],
+		"outcome": {
+			"TYPE": "Failed",
+			"namedValues": {
+				"booking_code": "CZDE",
+				"booking_number": "45",
+				"returnCode": 127
+			}
+		}
+	},
+	{
+		"position": [3,
+		"try+5",
+		0],
+		"outcome": {
+			"TYPE": "Succeeded",
+			"namedValues": {
+				"booking_code": "CZDD",
+				"booking_number": "44",
+				"returnCode": 0
+			}
+		}
+	},
+	{
+		"position": [3,
+		"try+5",
+		1],
+		"outcome": {
+			"TYPE": "Failed",
+			"namedValues": {
+				"booking_code": "CZDE",
+				"booking_number": "45",
+				"returnCode": 127
+			}
+		}
+	},
+	{
+		"position": [3,
+		"try+6",
+		0],
+		"outcome": {
+			"TYPE": "Succeeded",
+			"namedValues": {
+				"booking_code": "CZDD",
+				"booking_number": "44",
+				"returnCode": 0
+			}
+		}
+	},
+	{
+		"position": [3,
+		"try+6",
+		1],
+		"outcome": {
+			"TYPE": "Failed",
+			"namedValues": {
+				"booking_code": "CZDE",
+				"booking_number": "45",
+				"returnCode": 127
+			}
+		}
+	},
+	{
+		"position": [3,
+		"try+7",
+		0],
+		"outcome": {
+			"TYPE": "Succeeded",
+			"namedValues": {
+				"booking_code": "CZDD",
+				"booking_number": "44",
+				"returnCode": 0
+			}
+		}
+	},
+	{
+		"position": [3,
+		"try+7",
+		1],
+		"outcome": {
+			"TYPE": "Failed",
+			"namedValues": {
+				"booking_code": "CZDE",
+				"booking_number": "45",
+				"returnCode": 127
+			}
+		}
+	},
+	{
+		"position": [3,
+		"try+8",
+		0],
+		"outcome": {
+			"TYPE": "Succeeded",
+			"namedValues": {
+				"booking_code": "CZDD",
+				"booking_number": "44",
+				"returnCode": 0
+			}
+		}
+	},
+	{
+		"position": [3,
+		"try+8",
+		1],
+		"outcome": {
+			"TYPE": "Failed",
+			"namedValues": {
+				"booking_code": "CZDE",
+				"booking_number": "45",
+				"returnCode": 127
+			}
+		}
+	},
+	{
+		"position": [3,
+		"try+9",
+		0],
+		"outcome": {
+			"TYPE": "Succeeded",
+			"namedValues": {
+				"booking_code": "CZDD",
+				"booking_number": "44",
+				"returnCode": 0
+			}
+		}
+	},
+	{
+		"position": [3,
+		"try+9",
+		1],
+		"outcome": {
+			"TYPE": "Failed",
+			"namedValues": {
+				"booking_code": "CZDE",
+				"booking_number": "45",
+				"returnCode": 127
+			}
+		}
+	}],
+	"removeWhenTerminated": true
+}

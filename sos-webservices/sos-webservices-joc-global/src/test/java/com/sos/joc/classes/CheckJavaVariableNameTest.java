@@ -19,6 +19,14 @@ public class CheckJavaVariableNameTest {
             return false;
         }
     }
+    
+    @Test
+    public void testMakeStringRuleConform() {
+        String s = "u'\\--j fg4$-";
+        s = CheckJavaVariableName.makeStringRuleConform(s);
+        System.out.println(s);
+        assertTrue(test(s));
+    }
 
     @Test
     public void test1() {

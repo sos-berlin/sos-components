@@ -58,7 +58,7 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
                 session = Globals.createSosHibernateStatelessConnection(API_CALL);
                 DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
                 final Map<String, String> namePathMap = dbLayer.getNamePathMapping(orderFilter.getControllerId(), Arrays.asList(jOrder.workflowId()
-                        .path().toString()), DeployType.WORKFLOW.intValue());
+                        .path().string()), DeployType.WORKFLOW.intValue());
                 OrderV o = OrdersHelper.mapJOrderToOrderV(jOrder, orderFilter.getCompact(), namePathMap, surveyDateMillis);
                 checkFolderPermissions(o.getWorkflowId().getPath());
                 if (orderStateWithRequirements.contains(o.getState().get_text())) {
@@ -66,7 +66,7 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
                 }
                 o.setSurveyDate(Date.from(Instant.ofEpochMilli(surveyDateMillis)));
                 o.setDeliveryDate(Date.from(Instant.now()));
-                return JOCDefaultResponse.responseStatus200(o);
+                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(o));
             } else {
                 throw new JobSchedulerObjectNotExistException(String.format("unknown Order '%s'", orderFilter.getOrderId()));
             }

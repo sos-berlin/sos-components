@@ -110,6 +110,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 }).collect(Collectors.toList());
                 DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(newPath, ConfigurationType.FOLDER.intValue());
                 List<DBItemInventoryConfiguration> newDBFolderContent = dbLayer.getFolderContent(newPath, true, null);
+                Set<Long> deletedIds = new HashSet<>();
 
                 if (newDBFolderContent != null && !newDBFolderContent.isEmpty()) {
                     newDBFolderContent.retainAll(oldDBFolderContent);
@@ -122,20 +123,33 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                         }
                         // delete all folder items
                         for (DBItemInventoryConfiguration targetItem : map.getOrDefault(true, Collections.emptyList())) {
+                            deletedIds.add(targetItem.getId());
                             JocInventory.deleteConfiguration(dbLayer, targetItem);
                         }
                     }
                 }
+                
                 if (newItem != null) {
+                    deletedIds.add(newItem.getId());
                     JocInventory.deleteConfiguration(dbLayer, newItem);
                 }
                 
                 setItem(config, p);
                 createAuditLog(config, in.getAuditLog());
-                JocInventory.updateConfiguration(dbLayer, config);
+                if (!deletedIds.contains(config.getId())) {
+                    JocInventory.updateConfiguration(dbLayer, config);
+                } else {
+                    config.setId(null);
+                    JocInventory.insertConfiguration(dbLayer, config);
+                }
                 JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId());
                 for (DBItemInventoryConfiguration item : oldDBFolderContent) {
-                    JocInventory.updateConfiguration(dbLayer, item);
+                    if (!deletedIds.contains(item.getId())) {
+                        JocInventory.updateConfiguration(dbLayer, item);
+                    } else {
+                        item.setId(null);
+                        JocInventory.insertConfiguration(dbLayer, item);
+                    }
                 }
                 events.add(config.getFolder());
                 

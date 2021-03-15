@@ -171,7 +171,7 @@ public class OrdersHelper {
         return groupedState;
     }
 
-    private static OrderState getState(String state, Boolean isSuspended) {
+    public static OrderState getState(String state, Boolean isSuspended) {
         OrderState oState = new OrderState();
         if (isSuspended == Boolean.TRUE) {
             state = "Suspended";
@@ -219,7 +219,7 @@ public class OrdersHelper {
             o.setState(getState(oItem.getState().getTYPE(), oItem.getIsSuspended()));
         }
         o.setScheduledFor(scheduledFor);
-        if (scheduledFor == null && surveyDateMillis != null) {
+        if (scheduledFor == null && surveyDateMillis != null && OrderStateText.PENDING.equals(o.getState().get_text())) {
             o.setScheduledFor(surveyDateMillis);
         }
         if (namePathMap != null) {

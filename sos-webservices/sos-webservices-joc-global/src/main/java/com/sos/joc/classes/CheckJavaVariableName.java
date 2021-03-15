@@ -17,15 +17,21 @@ public class CheckJavaVariableName {
             "else", "import", "public", "throws", "case", "enum", "instanceof", "return", "transient", "catch", "extends", "int", "short", "try",
             "char", "final", "interface", "static", "void", "class", "finally", "long", "strictfp", "volatile", "const", "float", "native", "super",
             "while");
-    private static final Predicate<String> controlChars = Pattern.compile("[\\x00-\\x1F\\x7F\\x80-\\x9F]").asPredicate();
-    private static final Predicate<String> spaceChars = Pattern.compile("\\s").asPredicate();
+    private static final Pattern controlCharsPattern = Pattern.compile("[\\x00-\\x1F\\x7F\\x80-\\x9F]");
+    private static final Predicate<String> controlChars = controlCharsPattern.asPredicate();
+    private static final Pattern spaceCharsPattern = Pattern.compile("\\s");
+    private static final Predicate<String> spaceChars = spaceCharsPattern.asPredicate();
     // punction and symbol chars without ._-
-    private static final Predicate<String> punctuationAndSymbolChars = Pattern.compile(
-            "[\\x21-\\x2C\\x2F\\x3A-\\x40\\x5B-\\x5E\\x60\\x7B-\\x7E\\xA0-\\xBF\\xD7\\xF7]").asPredicate();
+    private static final Pattern punctuationAndSymbolCharsPattern = Pattern.compile(
+            "[\\x21-\\x2C\\x2F\\x3A-\\x40\\x5B-\\x5E\\x60\\x7B-\\x7E\\xA0-\\xBF\\xD7\\xF7]");
+    private static final Predicate<String> punctuationAndSymbolChars = punctuationAndSymbolCharsPattern.asPredicate();
 //    private static final Predicate<String> digits = Pattern.compile("\\d").asPredicate();
-    private static final Predicate<String> leadingHyphensAndDots = Pattern.compile("^[.-]").asPredicate();
-    private static final Predicate<String> trailingHyphensAndDots = Pattern.compile("[.-]$").asPredicate();
-    private static final Predicate<String> consecutiveHyphensAndDots = Pattern.compile("\\.\\.+|--+").asPredicate();
+    private static final Pattern leadingHyphensAndDotsPattern = Pattern.compile("^[.-]");
+    private static final Predicate<String> leadingHyphensAndDots = leadingHyphensAndDotsPattern.asPredicate();
+    private static final Pattern trailingHyphensAndDotsPattern = Pattern.compile("[.-]$");
+    private static final Predicate<String> trailingHyphensAndDots = trailingHyphensAndDotsPattern.asPredicate();
+    private static final Pattern consecutiveHyphensAndDotsPattern = Pattern.compile("\\.\\.+|--+");
+    private static final Predicate<String> consecutiveHyphensAndDots = consecutiveHyphensAndDotsPattern.asPredicate();
 
     private enum Result {
         CONTROL, PUNCTUATION, DIGIT, SPACE, LEADING_OR_TRAILING, IN_A_ROW, RESERVED, EMPTY, OK
@@ -92,6 +98,23 @@ public class CheckJavaVariableName {
             return Either.left(errorMessages.get(Result.RESERVED));
         }
         return Either.right(null);
+    }
+    
+    public static String makeStringRuleConform(String value) {
+        if (value == null || value.isEmpty()) {
+            return "";
+        }
+        if (javaReservedWords.contains(value)) {
+            return value.substring(0, 1).toUpperCase() + value.substring(1);
+        }
+        value = leadingHyphensAndDotsPattern.matcher(value).replaceAll("");
+        value = trailingHyphensAndDotsPattern.matcher(value).replaceAll("");
+        value = controlCharsPattern.matcher(value).replaceAll("");
+        value = punctuationAndSymbolCharsPattern.matcher(value).replaceAll("");
+        value = value.replaceAll("\\s+", "-");
+        value = value.replaceAll("--+", "-");
+        value = value.replaceAll("\\.\\.+", ".");
+        return value;
     }
     
     /**
