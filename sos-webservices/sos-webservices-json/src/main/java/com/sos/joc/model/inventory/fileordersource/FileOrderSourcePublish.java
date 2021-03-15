@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.joc.model.publish.ControllerObject;
+import com.sos.sign.model.fileordersource.FileOrderSource;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -27,7 +27,7 @@ public class FileOrderSourcePublish
 {
 
     /**
-     * fileOrderSource
+     * FileOrderSource
      * <p>
      * deploy object with fixed property 'TYPE':'FileOrderSource'
      * 
@@ -37,7 +37,7 @@ public class FileOrderSourcePublish
     private FileOrderSource content;
 
     /**
-     * fileOrderSource
+     * FileOrderSource
      * <p>
      * deploy object with fixed property 'TYPE':'FileOrderSource'
      * 
@@ -48,7 +48,7 @@ public class FileOrderSourcePublish
     }
 
     /**
-     * fileOrderSource
+     * FileOrderSource
      * <p>
      * deploy object with fixed property 'TYPE':'FileOrderSource'
      * 

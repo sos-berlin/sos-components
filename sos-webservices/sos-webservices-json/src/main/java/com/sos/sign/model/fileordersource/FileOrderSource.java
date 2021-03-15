@@ -1,12 +1,10 @@
 
-package com.sos.inventory.model.fileordersource;
+package com.sos.sign.model.fileordersource;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.deploy.DeployType;
-import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.common.IDeployObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -14,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * fileOrderSource
+ * FileOrderSource
  * <p>
  * deploy object with fixed property 'TYPE':'FileOrderSource'
  * 
@@ -22,24 +20,33 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
+    "id",
     "workflowPath",
     "agentId",
     "directory",
-    "pattern",
-    "title",
-    "documentationPath"
+    "pattern"
 })
-public class FileOrderSource implements IConfigurationObject, IDeployObject
+public class FileOrderSource implements IDeployObject
 {
 
     /**
      * deployType
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("TYPE")
     private DeployType tYPE = DeployType.fromValue("Workflow");
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("id")
+    private String id;
     /**
      * string without < and >
      * <p>
@@ -74,23 +81,6 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
      */
     @JsonProperty("pattern")
     private String pattern;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("title")
-    private String title;
-    /**
-     * path
-     * <p>
-     * absolute path of an object.
-     * 
-     */
-    @JsonProperty("documentationPath")
-    @JsonPropertyDescription("absolute path of an object.")
-    private String documentationPath;
 
     /**
      * No args constructor for use in serialization
@@ -101,29 +91,28 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
 
     /**
      * 
-     * @param documentationPath
      * @param agentId
      * @param workflowPath
      * @param pattern
+     * @param id
      * @param tYPE
-     * @param title
      * @param directory
      */
-    public FileOrderSource(DeployType tYPE, String workflowPath, String agentId, String directory, String pattern, String title, String documentationPath) {
+    public FileOrderSource(DeployType tYPE, String id, String workflowPath, String agentId, String directory, String pattern) {
         super();
         this.tYPE = tYPE;
+        this.id = id;
         this.workflowPath = workflowPath;
         this.agentId = agentId;
         this.directory = directory;
         this.pattern = pattern;
-        this.title = title;
-        this.documentationPath = documentationPath;
     }
 
     /**
      * deployType
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("TYPE")
@@ -135,11 +124,36 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
      * deployType
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("TYPE")
     public void setTYPE(DeployType tYPE) {
         this.tYPE = tYPE;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("id")
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("id")
+    public void setId(String id) {
+        this.id = id;
     }
 
     /**
@@ -234,58 +248,14 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
         this.pattern = pattern;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("title")
-    public String getTitle() {
-        return title;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("title")
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    /**
-     * path
-     * <p>
-     * absolute path of an object.
-     * 
-     */
-    @JsonProperty("documentationPath")
-    public String getDocumentationPath() {
-        return documentationPath;
-    }
-
-    /**
-     * path
-     * <p>
-     * absolute path of an object.
-     * 
-     */
-    @JsonProperty("documentationPath")
-    public void setDocumentationPath(String documentationPath) {
-        this.documentationPath = documentationPath;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("workflowPath", workflowPath).append("agentId", agentId).append("directory", directory).append("pattern", pattern).append("title", title).append("documentationPath", documentationPath).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("id", id).append("workflowPath", workflowPath).append("agentId", agentId).append("directory", directory).append("pattern", pattern).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(documentationPath).append(agentId).append(workflowPath).append(pattern).append(tYPE).append(title).append(directory).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(workflowPath).append(pattern).append(id).append(tYPE).append(directory).toHashCode();
     }
 
     @Override
@@ -297,7 +267,7 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
             return false;
         }
         FileOrderSource rhs = ((FileOrderSource) other);
-        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(agentId, rhs.agentId).append(workflowPath, rhs.workflowPath).append(pattern, rhs.pattern).append(tYPE, rhs.tYPE).append(title, rhs.title).append(directory, rhs.directory).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(workflowPath, rhs.workflowPath).append(pattern, rhs.pattern).append(id, rhs.id).append(tYPE, rhs.tYPE).append(directory, rhs.directory).isEquals();
     }
 
 }

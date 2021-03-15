@@ -66,11 +66,11 @@ import com.sos.inventory.model.Schedule;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.CalendarType;
 import com.sos.inventory.model.deploy.DeployType;
-import com.sos.inventory.model.job.Job;
-import com.sos.inventory.model.jobclass.JobClass;
-import com.sos.inventory.model.junction.Junction;
-import com.sos.inventory.model.lock.Lock;
-import com.sos.inventory.model.workflow.Workflow;
+import com.sos.sign.model.job.Job;
+import com.sos.sign.model.jobclass.JobClass;
+import com.sos.sign.model.junction.Junction;
+import com.sos.sign.model.lock.Lock;
+import com.sos.sign.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
@@ -178,49 +178,29 @@ public abstract class PublishUtils {
         DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
         if (keyPair != null) {
             if (keyPair.getPrivateKey() != null) {
-                dbLayerKeys.saveOrUpdateKey(
-                        JocKeyType.PRIVATE.value(), 
-                        keyPair.getPrivateKey(), 
-                        keyPair.getCertificate(), 
-                        account, 
-                        secLvl, 
-                        keyPair.getKeyAlgorithm());
+                dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.value(), keyPair.getPrivateKey(), keyPair.getCertificate(), account, secLvl, keyPair
+                        .getKeyAlgorithm());
             } else if (keyPair.getPrivateKey() == null && keyPair.getPublicKey() != null) {
-                dbLayerKeys.saveOrUpdateKey(
-                        JocKeyType.PUBLIC.value(), 
-                        keyPair.getPublicKey(), 
-                        keyPair.getCertificate(), 
-                        account, 
-                        secLvl, 
-                        keyPair.getKeyAlgorithm());
+                dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getPublicKey(), keyPair.getCertificate(), account, secLvl, keyPair
+                        .getKeyAlgorithm());
             } else if (keyPair.getPrivateKey() == null && keyPair.getPublicKey() == null && keyPair.getCertificate() != null) {
-                switch(secLvl) {
+                switch (secLvl) {
                 case LOW:
                 case MEDIUM:
-                    dbLayerKeys.saveOrUpdateKey(
-                            JocKeyType.PRIVATE.value(), 
-                            keyPair.getCertificate(), 
-                            account, 
-                            secLvl, 
-                            keyPair.getKeyAlgorithm());
+                    dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.value(), keyPair.getCertificate(), account, secLvl, keyPair.getKeyAlgorithm());
                     break;
                 case HIGH:
-                    dbLayerKeys.saveOrUpdateKey(
-                            JocKeyType.PUBLIC.value(), 
-                            keyPair.getCertificate(), 
-                            account, 
-                            secLvl, 
-                            keyPair.getKeyAlgorithm());
+                    dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getCertificate(), account, secLvl, keyPair.getKeyAlgorithm());
                 }
-            } 
+            }
         }
     }
 
     public static Map<DBItemInventoryConfiguration, DBItemDepSignatures> getDraftsWithSignature(String commitId, String account,
-            Set<DBItemInventoryConfiguration> unsignedDrafts, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String controllerId, 
-            SOSHibernateSession session, JocSecurityLevel secLvl) 
-                throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException, 
-                NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, CertificateException {
+            Set<DBItemInventoryConfiguration> unsignedDrafts, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String controllerId,
+            SOSHibernateSession session, JocSecurityLevel secLvl) throws JocMissingKeyException, JsonParseException, JsonMappingException,
+            SOSHibernateException, IOException, PGPException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException,
+            SignatureException, CertificateException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
         if (keyPair != null) {
@@ -232,9 +212,9 @@ public abstract class PublishUtils {
 
     public static Map<DBItemInventoryConfiguration, DBItemDepSignatures> getDraftWithSignature(String versionId, String account,
             DBItemInventoryConfiguration unsignedDraft, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String controllerId,
-            SOSHibernateSession session, JocSecurityLevel secLvl) 
-                throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException, 
-                NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, CertificateException {
+            SOSHibernateSession session, JocSecurityLevel secLvl) throws JocMissingKeyException, JsonParseException, JsonMappingException,
+            SOSHibernateException, IOException, PGPException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException,
+            SignatureException, CertificateException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
         if (keyPair != null) {
@@ -245,18 +225,18 @@ public abstract class PublishUtils {
     }
 
     public static Map<DBItemInventoryConfiguration, DBItemDepSignatures> getDraftsWithSignature(String commitId, String account,
-            Set<DBItemInventoryConfiguration> unsignedDrafts, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, JocKeyPair keyPair, 
-            String controllerId, SOSHibernateSession session) 
-                    throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException,
-                    PGPException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, CertificateException {
+            Set<DBItemInventoryConfiguration> unsignedDrafts, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, JocKeyPair keyPair,
+            String controllerId, SOSHibernateSession session) throws JocMissingKeyException, JsonParseException, JsonMappingException,
+            SOSHibernateException, IOException, PGPException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException,
+            SignatureException, CertificateException {
         Map<DBItemInventoryConfiguration, DBItemDepSignatures> signedDrafts = new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
         if (keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
             throw new JocMissingKeyException(
                     "No private key found for signing! - Please check your private key from the key management section in your profile.");
         } else {
             DBItemDepSignatures sig = null;
-            Set<DBItemInventoryConfiguration> unsignedDraftsUpdated = unsignedDrafts.stream()
-                    .map(item -> cloneDraftToUpdate(item)).collect(Collectors.toSet());
+            Set<DBItemInventoryConfiguration> unsignedDraftsUpdated = unsignedDrafts.stream().map(item -> cloneDraftToUpdate(item)).collect(Collectors
+                    .toSet());
             for (DBItemInventoryConfiguration draft : unsignedDraftsUpdated) {
                 updateVersionIdOnDraftObject(draft, commitId);
                 // update agentName in Workflow jobs before signing agentName -> agentId
@@ -268,7 +248,7 @@ public abstract class PublishUtils {
                     sig.setAccount(account);
                     sig.setInvConfigurationId(draft.getId());
                     sig.setModified(Date.from(Instant.now()));
-                    if(draft.getType() == ConfigurationType.WORKFLOW.intValue()) {
+                    if (draft.getType() == ConfigurationType.WORKFLOW.intValue()) {
                         Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
                         if (workflow.getPath() == null || workflow.getPath().startsWith("/")) {
                             workflow.setPath(draft.getName());
@@ -288,7 +268,7 @@ public abstract class PublishUtils {
                     sig.setAccount(account);
                     sig.setInvConfigurationId(draft.getId());
                     sig.setModified(Date.from(Instant.now()));
-                    if(draft.getType() == ConfigurationType.WORKFLOW.intValue()) {
+                    if (draft.getType() == ConfigurationType.WORKFLOW.intValue()) {
                         Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
                         if (workflow.getPath() == null || workflow.getPath().startsWith("/")) {
                             workflow.setPath(draft.getName());
@@ -303,8 +283,8 @@ public abstract class PublishUtils {
                     sig.setAccount(account);
                     sig.setInvConfigurationId(draft.getId());
                     sig.setModified(Date.from(Instant.now()));
-//                    X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                    if(draft.getType() == ConfigurationType.WORKFLOW.intValue()) {
+                    // X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+                    if (draft.getType() == ConfigurationType.WORKFLOW.intValue()) {
                         Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
                         if (workflow.getPath() == null || workflow.getPath().startsWith("/")) {
                             workflow.setPath(draft.getName());
@@ -324,9 +304,9 @@ public abstract class PublishUtils {
 
     public static Map<DBItemInventoryConfiguration, DBItemDepSignatures> getDraftWithSignature(String commitId, String account,
             DBItemInventoryConfiguration unsignedDraft, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, JocKeyPair keyPair,
-            String controllerId, SOSHibernateSession session) 
-                    throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException,
-                    PGPException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException, CertificateException {
+            String controllerId, SOSHibernateSession session) throws JocMissingKeyException, JsonParseException, JsonMappingException,
+            SOSHibernateException, IOException, PGPException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException,
+            SignatureException, CertificateException {
         Map<DBItemInventoryConfiguration, DBItemDepSignatures> signedDrafts = new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
         if (keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
             throw new JocMissingKeyException(
@@ -344,7 +324,7 @@ public abstract class PublishUtils {
                 sig.setAccount(account);
                 sig.setInvConfigurationId(unsignedDraftUpdated.getId());
                 sig.setModified(Date.from(Instant.now()));
-                if(unsignedDraft.getType() == ConfigurationType.WORKFLOW.intValue()) {
+                if (unsignedDraft.getType() == ConfigurationType.WORKFLOW.intValue()) {
                     Workflow workflow = om.readValue(unsignedDraft.getContent(), Workflow.class);
                     if (workflow.getPath() == null || workflow.getPath().startsWith("/")) {
                         workflow.setPath(unsignedDraft.getName());
@@ -364,7 +344,7 @@ public abstract class PublishUtils {
                 sig.setAccount(account);
                 sig.setInvConfigurationId(unsignedDraftUpdated.getId());
                 sig.setModified(Date.from(Instant.now()));
-                if(unsignedDraft.getType() == ConfigurationType.WORKFLOW.intValue()) {
+                if (unsignedDraft.getType() == ConfigurationType.WORKFLOW.intValue()) {
                     Workflow workflow = om.readValue(unsignedDraft.getContent(), Workflow.class);
                     if (workflow.getPath() == null || workflow.getPath().startsWith("/")) {
                         workflow.setPath(unsignedDraft.getName());
@@ -379,8 +359,8 @@ public abstract class PublishUtils {
                 sig.setAccount(account);
                 sig.setInvConfigurationId(unsignedDraftUpdated.getId());
                 sig.setModified(Date.from(Instant.now()));
-//                X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                if(unsignedDraft.getType() == ConfigurationType.WORKFLOW.intValue()) {
+                // X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+                if (unsignedDraft.getType() == ConfigurationType.WORKFLOW.intValue()) {
                     Workflow workflow = om.readValue(unsignedDraft.getContent(), Workflow.class);
                     if (workflow.getPath() == null || workflow.getPath().startsWith("/")) {
                         workflow.setPath(unsignedDraft.getName());
@@ -398,9 +378,9 @@ public abstract class PublishUtils {
     }
 
     public static Map<DBItemDeploymentHistory, DBItemDepSignatures> getDeploymentsWithSignature(String commitId, String account,
-            Set<DBItemDeploymentHistory> depHistoryToRedeploy, SOSHibernateSession session, JocSecurityLevel secLvl)
-                    throws JocMissingKeyException, JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException,
-                    NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
+            Set<DBItemDeploymentHistory> depHistoryToRedeploy, SOSHibernateSession session, JocSecurityLevel secLvl) throws JocMissingKeyException,
+            JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException, NoSuchAlgorithmException,
+            InvalidKeySpecException, InvalidKeyException, SignatureException {
         DBLayerKeys dbLayer = new DBLayerKeys(session);
         JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
         if (keyPair != null) {
@@ -428,10 +408,10 @@ public abstract class PublishUtils {
                     sig.setDepHistoryId(deployed.getId());
                     sig.setInvConfigurationId(deployed.getInventoryConfigurationId());
                     sig.setModified(Date.from(Instant.now()));
-                    if(deployed.getType() == DeployType.WORKFLOW.intValue()) {
+                    if (deployed.getType() == DeployType.WORKFLOW.intValue()) {
                         Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
                         workflow.setPath(Paths.get(deployed.getPath()).getFileName().toString());
-//                        workflow.setPath(deployed.getPath());
+                        // workflow.setPath(deployed.getPath());
                         deployed.setContent(om.writeValueAsString(workflow));
                     }
                     sig.setSignature(SignObject.signPGP(keyPair.getPrivateKey(), deployed.getContent(), null));
@@ -447,10 +427,10 @@ public abstract class PublishUtils {
                     sig.setAccount(account);
                     sig.setInvConfigurationId(deployed.getInventoryConfigurationId());
                     sig.setModified(Date.from(Instant.now()));
-                    if(deployed.getType() == DeployType.WORKFLOW.intValue()) {
+                    if (deployed.getType() == DeployType.WORKFLOW.intValue()) {
                         Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
-                      workflow.setPath(Paths.get(deployed.getPath()).getFileName().toString());
-//                        workflow.setPath(deployed.getPath());
+                        workflow.setPath(Paths.get(deployed.getPath()).getFileName().toString());
+                        // workflow.setPath(deployed.getPath());
                         deployed.setContent(om.writeValueAsString(workflow));
                     }
                     sig.setSignature(SignObject.signX509(kp.getPrivate(), deployed.getContent()));
@@ -461,39 +441,39 @@ public abstract class PublishUtils {
                     sig.setAccount(account);
                     sig.setInvConfigurationId(deployed.getInventoryConfigurationId());
                     sig.setModified(Date.from(Instant.now()));
-//                    X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                    if(deployed.getType() == ConfigurationType.WORKFLOW.intValue()) {
+                    // X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+                    if (deployed.getType() == ConfigurationType.WORKFLOW.intValue()) {
                         Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
                         workflow.setPath(Paths.get(deployed.getPath()).getFileName().toString());
-//                        workflow.setPath(deployed.getPath());
+                        // workflow.setPath(deployed.getPath());
                         deployed.setContent(om.writeValueAsString(workflow));
                     }
                     sig.setSignature(SignObject.signX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, kp.getPrivate(), deployed.getContent()));
                     signedReDeployable.put(deployed, sig);
                 }
-//                else {
-//                    KeyPair kp = null;
-//                    String signerAlgorithm = null;
-//                    if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
-//                        kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(keyPair.getPrivateKey());
-//                        signerAlgorithm = SOSKeyConstants.RSA_SIGNER_ALGORITHM;
-//                    } else {
-//                        kp = KeyUtil.getKeyPairFromECDSAPrivatKeyString(keyPair.getPrivateKey());
-//                        signerAlgorithm = SOSKeyConstants.ECDSA_SIGNER_ALGORITHM;
-//                    }
-//                    sig = new DBItemDepSignatures();
-//                    sig.setAccount(account);
-//                    sig.setDepHistoryId(deployed.getId());
-//                    sig.setInvConfigurationId(deployed.getInventoryConfigurationId());
-//                    sig.setModified(Date.from(Instant.now()));
-//                    if(deployed.getType() == DeployType.WORKFLOW.intValue()) {
-//                        Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
-//                        workflow.setPath(deployed.getPath());
-//                        deployed.setContent(om.writeValueAsString(workflow));
-//                    }
-//                    sig.setSignature(SignObject.signX509(signerAlgorithm, kp.getPrivate(), deployed.getContent()));
-//                    signedReDeployable.put(deployed, sig);
-//                }
+                // else {
+                // KeyPair kp = null;
+                // String signerAlgorithm = null;
+                // if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
+                // kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(keyPair.getPrivateKey());
+                // signerAlgorithm = SOSKeyConstants.RSA_SIGNER_ALGORITHM;
+                // } else {
+                // kp = KeyUtil.getKeyPairFromECDSAPrivatKeyString(keyPair.getPrivateKey());
+                // signerAlgorithm = SOSKeyConstants.ECDSA_SIGNER_ALGORITHM;
+                // }
+                // sig = new DBItemDepSignatures();
+                // sig.setAccount(account);
+                // sig.setDepHistoryId(deployed.getId());
+                // sig.setInvConfigurationId(deployed.getInventoryConfigurationId());
+                // sig.setModified(Date.from(Instant.now()));
+                // if(deployed.getType() == DeployType.WORKFLOW.intValue()) {
+                // Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
+                // workflow.setPath(deployed.getPath());
+                // deployed.setContent(om.writeValueAsString(workflow));
+                // }
+                // sig.setSignature(SignObject.signX509(signerAlgorithm, kp.getPrivate(), deployed.getContent()));
+                // signedReDeployable.put(deployed, sig);
+                // }
                 if (sig != null) {
                     session.save(sig);
                 }
@@ -572,7 +552,8 @@ public abstract class PublishUtils {
         Boolean verified = false;
         verified = VerifySignature.verifyPGP(publicKey, signedDraft.getContent(), draftSignature.getSignature());
         if (!verified) {
-            LOGGER.trace(String.format("Signature of object with name %1$s could not be verified! Object will not be deployed.", signedDraft.getName()));
+            LOGGER.trace(String.format("Signature of object with name %1$s could not be verified! Object will not be deployed.", signedDraft
+                    .getName()));
         } else {
             verifiedDraft = signedDraft;
         }
@@ -591,8 +572,8 @@ public abstract class PublishUtils {
         Boolean verified = false;
         verified = VerifySignature.verifyPGP(publicKey, signedDeployment.getContent(), deployedSignature.getSignature());
         if (!verified) {
-            LOGGER.trace(
-                    String.format("Signature of object with name %1$s could not be verified! Object will not be deployed.", signedDeployment.getName()));
+            LOGGER.trace(String.format("Signature of object with name %1$s could not be verified! Object will not be deployed.", signedDeployment
+                    .getName()));
         } else {
             verifiedDeployment = signedDeployment;
         }
@@ -623,16 +604,16 @@ public abstract class PublishUtils {
         if (cert != null) {
             verified = VerifySignature.verifyX509(cert, signedDraft.getContent(), draftSignature.getSignature());
             if (!verified) {
-                LOGGER.trace(
-                        String.format("Signature of object with name %1$s could not be verified! Object will not be deployed.", signedDraft.getName()));
+                LOGGER.trace(String.format("Signature of object with name %1$s could not be verified! Object will not be deployed.", signedDraft
+                        .getName()));
             } else {
                 verifiedDraft = signedDraft;
             }
         } else if (publicKey != null) {
             verified = VerifySignature.verifyX509(publicKey, signedDraft.getContent(), draftSignature.getSignature());
             if (!verified) {
-                LOGGER.trace(
-                        String.format("Signature of object with name %1$s could not be verified! Object will not be deployed.", signedDraft.getName()));
+                LOGGER.trace(String.format("Signature of object with name %1$s could not be verified! Object will not be deployed.", signedDraft
+                        .getName()));
             } else {
                 verifiedDraft = signedDraft;
             }
@@ -666,16 +647,16 @@ public abstract class PublishUtils {
         if (cert != null) {
             verified = VerifySignature.verifyX509(cert, signedDeployment.getContent(), deployedSignature.getSignature());
             if (!verified) {
-                LOGGER.trace(String.format(
-                        "Signature of object with name %1$s could not be verified! Object will not be deployed.", signedDeployment.getName()));
+                LOGGER.trace(String.format("Signature of object with name %1$s could not be verified! Object will not be deployed.", signedDeployment
+                        .getName()));
             } else {
                 verifiedDeployment = signedDeployment;
             }
         } else if (publicKey != null) {
             verified = VerifySignature.verifyX509(publicKey, signedDeployment.getContent(), deployedSignature.getSignature());
             if (!verified) {
-                LOGGER.trace(String.format(
-                        "Signature of object with name %1$s could not be verified! Object will not be deployed.", signedDeployment.getName()));
+                LOGGER.trace(String.format("Signature of object with name %1$s could not be verified! Object will not be deployed.", signedDeployment
+                        .getName()));
             } else {
                 verifiedDeployment = signedDeployment;
             }
@@ -685,23 +666,22 @@ public abstract class PublishUtils {
         return verifiedDeployment;
     }
 
-    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdatePGP(
-            String commitId,  Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts,
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer)
-                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdatePGP(String commitId,
+            Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed,
+            String controllerId, DBLayerDeploy dbLayer) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         Set<JUpdateItemOperation> updateItemOperationsSimple = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemOperationsVersioned = new HashSet<JUpdateItemOperation>();
         if (drafts != null) {
-            updateItemOperationsSimple.addAll(
-                    drafts.keySet().stream().filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(item -> {
-                        switch(item.getTypeAsEnum()) {
+            updateItemOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(
+                    item -> {
+                        switch (item.getTypeAsEnum()) {
                         case LOCK:
                             try {
                                 Lock lock = om.readValue(item.getContent(), Lock.class);
                                 if (lock.getId() == null) {
                                     lock.setId(item.getName());
                                 }
-                                return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                                return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
@@ -714,17 +694,10 @@ public abstract class PublishUtils {
                         default:
                             return null;
                         }
-                    })
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toSet()));
-            updateItemOperationsVersioned.addAll(
-                    drafts.keySet().stream().filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(
-                            item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.of(
-                                    item.getContent(),
-                                    SOSKeyConstants.PGP_ALGORITHM_NAME,
-                                    drafts.get(item).getSignature()))
-                            ).collect(Collectors.toSet())
-                    );
+                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
+            updateItemOperationsVersioned.addAll(drafts.keySet().stream().filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(
+                    item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.of(item.getContent(), SOSKeyConstants.PGP_ALGORITHM_NAME, drafts
+                            .get(item).getSignature()))).collect(Collectors.toSet()));
         }
         if (alreadyDeployed != null) {
             updateItemOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() != ConfigurationType.WORKFLOW
@@ -754,612 +727,494 @@ public abstract class PublishUtils {
                     .map(item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.of(item.getContent(), SOSKeyConstants.PGP_ALGORITHM_NAME,
                             alreadyDeployed.get(item).getSignature()))).collect(Collectors.toSet()));
         }
-        return ControllerApi.of(controllerId).updateItems(
-                    Flux.concat(
-                        Flux.fromIterable(updateItemOperationsSimple),
-                        Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId))),
-                        Flux.fromIterable(updateItemOperationsVersioned)
-                    )
-                );
+        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemOperationsSimple), Flux.just(JUpdateItemOperation
+                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemOperationsVersioned)));
     }
 
-    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdatePGP2(
-            String commitId,  Map<ControllerObject, DBItemDepSignatures> drafts,
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer)
-                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdatePGP2(String commitId,
+            Map<ControllerObject, DBItemDepSignatures> drafts, Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId,
+            DBLayerDeploy dbLayer) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         Set<JUpdateItemOperation> updateItemsOperationsVersioned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
-        updateItemsOperationsVersioned.addAll(drafts.keySet().stream()
-                .filter(item -> item.getObjectType().equals(DeployType.WORKFLOW))
-                .map(item -> {
+        updateItemsOperationsVersioned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.WORKFLOW)).map(item -> {
+            try {
+                return JUpdateItemOperation.addOrChangeVersioned(SignedString.of(om.writeValueAsString(item.getContent()),
+                        SOSKeyConstants.PGP_ALGORITHM_NAME, drafts.get(item).getSignature()));
+            } catch (JsonProcessingException e1) {
+                throw new JocDeployException(e1);
+            }
+        }).collect(Collectors.toSet()));
+        updateItemsOperationsSimple.addAll(drafts.keySet().stream().map(item -> {
+            switch (item.getObjectType()) {
+            case LOCK:
+                try {
+                    Lock lock = (Lock) item.getContent();
+                    if (lock.getId() == null) {
+                        lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                    }
+                    return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                } catch (Exception e) {
+                    throw new JocDeployException(e);
+                }
+            case JUNCTION:
+                // TODO: When implemented in controller
+                return null;
+            case JOBCLASS:
+                // TODO: When implemented in controller
+                return null;
+            default:
+                return null;
+            }
+        }).filter(Objects::nonNull).collect(Collectors.toSet()));
+        updateItemsOperationsVersioned.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
+                item -> {
                     try {
-                        return JUpdateItemOperation.addOrChangeVersioned(SignedString.of(
-                                om.writeValueAsString(item.getContent()),
-                                SOSKeyConstants.PGP_ALGORITHM_NAME,
-                                drafts.get(item).getSignature()));
+                        return JUpdateItemOperation.addOrChangeVersioned(SignedString.of(om.writeValueAsString(item.getContent()),
+                                SOSKeyConstants.PGP_ALGORITHM_NAME, drafts.get(item).getSignature()));
                     } catch (JsonProcessingException e1) {
                         throw new JocDeployException(e1);
                     }
                 }).collect(Collectors.toSet()));
-        updateItemsOperationsSimple.addAll(
-                drafts.keySet().stream().map(
-                        item -> {
-                            switch(item.getObjectType()) {
-                                case LOCK:
-                                    try {
-                                        Lock lock = (Lock)item.getContent();
-                                        if (lock.getId() == null) {
-                                            lock.setId(Paths.get(item.getPath()).getFileName().toString());
-                                        }
-                                        return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
-                                    } catch (Exception e) {
-                                        throw new JocDeployException(e);
-                                    }
-                                case JUNCTION:
-                                    // TODO: When implemented in controller
-                                    return null;
-                                case JOBCLASS:
-                                    // TODO: When implemented in controller
-                                    return null;
-                                default:
-                                    return null;
-                            }
-                        }).filter(Objects::nonNull).collect(Collectors.toSet()));
-        updateItemsOperationsVersioned.addAll(alreadyDeployed.keySet().stream()
-                .filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
-                .map(item -> {
-                    try {
-                        return JUpdateItemOperation.addOrChangeVersioned(SignedString.of(
-                                om.writeValueAsString(item.getContent()),
-                                SOSKeyConstants.PGP_ALGORITHM_NAME,
-                                drafts.get(item).getSignature()));
-                    } catch (JsonProcessingException e1) {
-                        throw new JocDeployException(e1);
+        updateItemsOperationsSimple.addAll(alreadyDeployed.keySet().stream().map(item -> {
+            switch (DeployType.fromValue(item.getType())) {
+            case LOCK:
+                try {
+                    Lock lock = om.readValue(item.getContent(), Lock.class);
+                    if (lock.getId() == null) {
+                        lock.setId(Paths.get(item.getPath()).getFileName().toString());
                     }
-                }).collect(Collectors.toSet()));
-        updateItemsOperationsSimple.addAll(
-                alreadyDeployed.keySet().stream().map(
-                        item -> {
-                            switch(DeployType.fromValue(item.getType())) {
-                                case LOCK:
-                                    try {
-                                        Lock lock = om.readValue(item.getContent(), Lock.class);
-                                        if (lock.getId() == null) {
-                                            lock.setId(Paths.get(item.getPath()).getFileName().toString());
-                                        }
-                                        return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
-                                    } catch (Exception e) {
-                                        throw new JocDeployException(e);
-                                    }
-                                case JUNCTION:
-                                    // TODO: When implemented in controller
-                                    return null;
-                                case JOBCLASS:
-                                    // TODO: When implemented in controller
-                                    return null;
-                                default:
-                                    return null;
-                            }
-                        }).filter(Objects::nonNull).collect(Collectors.toSet()));
-        return ControllerApi.of(controllerId).updateItems(
-                Flux.concat(
-                        Flux.fromIterable(updateItemsOperationsSimple),
-                        Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId))),
-                        Flux.fromIterable(updateItemsOperationsVersioned)));
+                    return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                } catch (Exception e) {
+                    throw new JocDeployException(e);
+                }
+            case JUNCTION:
+                // TODO: When implemented in controller
+                return null;
+            case JOBCLASS:
+                // TODO: When implemented in controller
+                return null;
+            default:
+                return null;
+            }
+        }).filter(Objects::nonNull).collect(Collectors.toSet()));
+        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemsOperationsSimple), Flux.just(JUpdateItemOperation
+                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemsOperationsVersioned)));
     }
 
-    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdatePGP(
-            String commitId,  List<DBItemDeploymentHistory> alreadyDeployed, String controllerId)
-                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdatePGP(String commitId, List<DBItemDeploymentHistory> alreadyDeployed,
+            String controllerId) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         Set<JUpdateItemOperation> updateItemsOperationsVersioned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
         ;
-        updateItemsOperationsVersioned.addAll(
-                alreadyDeployed.stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
-                    item -> {
-                        try {
-                            return JUpdateItemOperation.addOrChangeVersioned(SignedString.of(
-                                    item.getContent(),
-                                    SOSKeyConstants.PGP_ALGORITHM_NAME,
-                                    item.getSignedContent()));
-                        } catch (Exception e1) {
-                            throw new JocDeployException(e1);
-                        }
-                    }).collect(Collectors.toSet()));
-        updateItemsOperationsSimple.addAll(
-                alreadyDeployed.stream().map(
-                        item -> {
-                            switch(DeployType.fromValue(item.getType())) {
-                                case LOCK:
-                                    try {
-                                        Lock lock = om.readValue(item.getContent(), Lock.class);
-                                        if (lock.getId() == null) {
-                                            lock.setId(Paths.get(item.getPath()).getFileName().toString());
-                                        }
-                                        return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
-                                    } catch (Exception e) {
-                                        throw new JocDeployException(e);
-                                    }
-                                case JUNCTION:
-                                    // TODO: When implemented in controller
-                                    return null;
-                                case JOBCLASS:
-                                    // TODO: When implemented in controller
-                                    return null;
-                                default:
-                                    return null;
-                            }
-                        }).filter(Objects::nonNull).collect(Collectors.toSet()));
-        return ControllerApi.of(controllerId).updateItems(
-                Flux.concat(
-                        Flux.fromIterable(updateItemsOperationsSimple),
-                        Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId))),
-                        Flux.fromIterable(updateItemsOperationsVersioned)));
+        updateItemsOperationsVersioned.addAll(alreadyDeployed.stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(item -> {
+            try {
+                return JUpdateItemOperation.addOrChangeVersioned(SignedString.of(item.getContent(), SOSKeyConstants.PGP_ALGORITHM_NAME, item
+                        .getSignedContent()));
+            } catch (Exception e1) {
+                throw new JocDeployException(e1);
+            }
+        }).collect(Collectors.toSet()));
+        updateItemsOperationsSimple.addAll(alreadyDeployed.stream().map(item -> {
+            switch (DeployType.fromValue(item.getType())) {
+            case LOCK:
+                try {
+                    Lock lock = om.readValue(item.getContent(), Lock.class);
+                    if (lock.getId() == null) {
+                        lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                    }
+                    return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                } catch (Exception e) {
+                    throw new JocDeployException(e);
+                }
+            case JUNCTION:
+                // TODO: When implemented in controller
+                return null;
+            case JOBCLASS:
+                // TODO: When implemented in controller
+                return null;
+            default:
+                return null;
+            }
+        }).filter(Objects::nonNull).collect(Collectors.toSet()));
+        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemsOperationsSimple), Flux.just(JUpdateItemOperation
+                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemsOperationsVersioned)));
     }
-    
-    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509Certificate(
-            String commitId,  Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts,
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer,
-            String signatureAlgorithm, String certificate)
-                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509Certificate(String commitId,
+            Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed,
+            String controllerId, DBLayerDeploy dbLayer, String signatureAlgorithm, String certificate) throws SOSException, IOException,
+            InterruptedException, ExecutionException, TimeoutException {
         Set<JUpdateItemOperation> updateRepoOperationsVersioned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateRepoOperationsSimple = new HashSet<JUpdateItemOperation>();
         if (drafts != null) {
-            updateRepoOperationsVersioned.addAll(
-                    drafts.keySet().stream().filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(
-                            item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(
-                                    item.getContent(),
-                                    drafts.get(item).getSignature(),
-                                    signatureAlgorithm,
-                                    certificate))
-                            ).collect(Collectors.toSet())
-                    );
-            updateRepoOperationsSimple.addAll(
-                    drafts.keySet().stream().filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(
-                            item -> {
-                                switch(item.getTypeAsEnum()) {
-                                    case LOCK:
-                                        try {
-                                            Lock lock = om.readValue(item.getContent(), Lock.class);
-                                            if (lock.getId() == null) {
-                                                lock.setId(item.getName());
-                                            }
-//                                            JLock jLock = JLock.of(LockId.of(lock.getId()), lock.getLimit());
-                                            return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
-                                        } catch (Exception e) {
-                                            throw new JocDeployException(e);
-                                        }
-                                    case JUNCTION:
-                                        // TODO: When implemented in controller
-                                        return null;
-                                    case JOBCLASS:
-                                        // TODO: When implemented in controller
-                                        return null;
-                                    default:
-                                        return null;
+            updateRepoOperationsVersioned.addAll(drafts.keySet().stream().filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(
+                    item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(item.getContent(), drafts.get(item)
+                            .getSignature(), signatureAlgorithm, certificate))).collect(Collectors.toSet()));
+            updateRepoOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(
+                    item -> {
+                        switch (item.getTypeAsEnum()) {
+                        case LOCK:
+                            try {
+                                Lock lock = om.readValue(item.getContent(), Lock.class);
+                                if (lock.getId() == null) {
+                                    lock.setId(item.getName());
                                 }
-                            }).collect(Collectors.toSet())
-                    );
+                                // JLock jLock = JLock.of(LockId.of(lock.getId()), lock.getLimit());
+                                return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                            } catch (Exception e) {
+                                throw new JocDeployException(e);
+                            }
+                        case JUNCTION:
+                            // TODO: When implemented in controller
+                            return null;
+                        case JOBCLASS:
+                            // TODO: When implemented in controller
+                            return null;
+                        default:
+                            return null;
+                        }
+                    }).collect(Collectors.toSet()));
         }
         if (alreadyDeployed != null) {
-//            updateRepoOperationsVersioned.addAll(
-//                    alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
-//                            item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(
-//                                    item.getContent(),
-//                                    alreadyDeployed.get(item).getSignature(),
-//                                    signatureAlgorithm,
-//                                    certificate))
-//                            ).collect(Collectors.toSet())
-//                    );
-            updateRepoOperationsVersioned.addAll(
-                alreadyDeployed.entrySet().stream()
-                    .filter(item -> item.getKey().getType() == DeployType.WORKFLOW.intValue())
-                    .map(item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(
-                        item.getKey().getContent(),
-                        item.getValue().getSignature(),
-                        signatureAlgorithm,
-                        certificate))
-                ).collect(Collectors.toSet())
-            );
-            updateRepoOperationsSimple.addAll(
-                alreadyDeployed.keySet().stream()
-                    .filter(item -> item.getType() != DeployType.WORKFLOW.intValue())
+            // updateRepoOperationsVersioned.addAll(
+            // alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
+            // item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(
+            // item.getContent(),
+            // alreadyDeployed.get(item).getSignature(),
+            // signatureAlgorithm,
+            // certificate))
+            // ).collect(Collectors.toSet())
+            // );
+            updateRepoOperationsVersioned.addAll(alreadyDeployed.entrySet().stream().filter(item -> item.getKey().getType() == DeployType.WORKFLOW
+                    .intValue()).map(item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(item.getKey().getContent(),
+                            item.getValue().getSignature(), signatureAlgorithm, certificate))).collect(Collectors.toSet()));
+            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
+                    item -> {
+                        switch (DeployType.fromValue(item.getType())) {
+                        case LOCK:
+                            try {
+                                Lock lock = om.readValue(item.getContent(), Lock.class);
+                                if (lock.getId() == null) {
+                                    lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                                }
+                                return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                            } catch (Exception e) {
+                                throw new JocDeployException(e);
+                            }
+                        case JUNCTION:
+                            // TODO: When implemented in controller
+                            return null;
+                        case JOBCLASS:
+                            // TODO: When implemented in controller
+                            return null;
+                        default:
+                            return null;
+                        }
+                    }).collect(Collectors.toSet()));
+        }
+        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateRepoOperationsSimple), Flux.just(JUpdateItemOperation
+                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateRepoOperationsVersioned)));
+    }
+
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509SignerDN(String commitId,
+            Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed,
+            String controllerId, DBLayerDeploy dbLayer, String signatureAlgorithm, String signerDN) throws SOSException, IOException,
+            InterruptedException, ExecutionException, TimeoutException {
+        Set<JUpdateItemOperation> updateRepoOperationsVersioned = new HashSet<JUpdateItemOperation>();
+        Set<JUpdateItemOperation> updateRepoOperationsSimple = new HashSet<JUpdateItemOperation>();
+        if (drafts != null) {
+            updateRepoOperationsVersioned.addAll(drafts.keySet().stream().filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(
+                    item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithSignedId(item.getContent(), drafts.get(item)
+                            .getSignature(), signatureAlgorithm, SignerId.of(signerDN)))).collect(Collectors.toSet()));
+            updateRepoOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(
+                    item -> {
+                        switch (item.getTypeAsEnum()) {
+                        case LOCK:
+                            try {
+                                Lock lock = om.readValue(item.getContent(), Lock.class);
+                                if (lock.getId() == null) {
+                                    lock.setId(item.getName());
+                                }
+                                // JLock jLock = JLock.of(LockId.of(lock.getId()), lock.getLimit());
+                                return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                            } catch (Exception e) {
+                                throw new JocDeployException(e);
+                            }
+                        case JUNCTION:
+                            // TODO: When implemented in controller
+                            return null;
+                        case JOBCLASS:
+                            // TODO: When implemented in controller
+                            return null;
+                        default:
+                            return null;
+                        }
+                    }).collect(Collectors.toSet()));
+        }
+        if (alreadyDeployed != null) {
+            updateRepoOperationsVersioned.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
+                    .map(item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithSignedId(item.getContent(), alreadyDeployed.get(item)
+                            .getSignature(), signatureAlgorithm, SignerId.of(signerDN)))).collect(Collectors.toSet()));
+            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
+                    item -> {
+                        switch (DeployType.fromValue(item.getType())) {
+                        case LOCK:
+                            try {
+                                Lock lock = om.readValue(item.getContent(), Lock.class);
+                                if (lock.getId() == null) {
+                                    lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                                }
+                                return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                            } catch (Exception e) {
+                                throw new JocDeployException(e);
+                            }
+                        case JUNCTION:
+                            // TODO: When implemented in controller
+                            return null;
+                        case JOBCLASS:
+                            // TODO: When implemented in controller
+                            return null;
+                        default:
+                            return null;
+                        }
+                    }).collect(Collectors.toSet()));
+        }
+        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateRepoOperationsSimple), Flux.just(JUpdateItemOperation
+                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateRepoOperationsVersioned)));
+    }
+
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509CertificateFromImport(String commitId,
+            Map<ControllerObject, DBItemDepSignatures> drafts, Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId,
+            DBLayerDeploy dbLayer, String signatureAlgorithm, String certificate) throws SOSException, IOException, InterruptedException,
+            ExecutionException, TimeoutException {
+        Set<JUpdateItemOperation> updateItemsOperationsVersioned = new HashSet<JUpdateItemOperation>();
+        Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
+        if (drafts != null) {
+            updateItemsOperationsVersioned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.WORKFLOW)).map(
+                    item -> {
+                        try {
+                            return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(om.writeValueAsString(
+                                    ((WorkflowPublish) item).getContent()), drafts.get(item).getSignature(), signatureAlgorithm, certificate));
+                        } catch (JsonProcessingException e1) {
+                            throw new JocDeployException(e1);
+                        }
+                    }).collect(Collectors.toSet()));
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getObjectType().equals(DeployType.WORKFLOW)).map(
+                    item -> {
+                        switch (item.getObjectType()) {
+                        case LOCK:
+                            try {
+                                Lock lock = (Lock) item.getContent();
+                                if (lock.getId() == null) {
+                                    lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                                }
+                                return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                            } catch (Exception e) {
+                                throw new JocDeployException(e);
+                            }
+                        case JUNCTION:
+                            // TODO: When implemented in controller
+                            return null;
+                        case JOBCLASS:
+                            // TODO: When implemented in controller
+                            return null;
+                        default:
+                            return null;
+                        }
+                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
+        }
+        if (alreadyDeployed != null) {
+            updateItemsOperationsVersioned.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
                     .map(item -> {
-                        switch(DeployType.fromValue(item.getType())) {
-                            case LOCK:
-                                try {
-                                    Lock lock = om.readValue(item.getContent(), Lock.class);
-                                    if (lock.getId() == null) {
-                                        lock.setId(Paths.get(item.getPath()).getFileName().toString());
-                                    }
-                                    return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
-                                } catch (Exception e) {
-                                    throw new JocDeployException(e);
+                        return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(item.getContent(), alreadyDeployed.get(item)
+                                .getSignature(), signatureAlgorithm, certificate));
+                    }).collect(Collectors.toSet()));
+            updateItemsOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
+                    item -> {
+                        switch (DeployType.fromValue(item.getType())) {
+                        case LOCK:
+                            try {
+                                Lock lock = om.readValue(item.getContent(), Lock.class);
+                                if (lock.getId() == null) {
+                                    lock.setId(Paths.get(item.getPath()).getFileName().toString());
                                 }
-                            case JUNCTION:
-                                // TODO: When implemented in controller
-                                return null;
-                            case JOBCLASS:
-                                // TODO: When implemented in controller
-                                return null;
-                            default:
-                                return null;
+                                return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                            } catch (Exception e) {
+                                throw new JocDeployException(e);
+                            }
+                        case JUNCTION:
+                            // TODO: When implemented in controller
+                            return null;
+                        case JOBCLASS:
+                            // TODO: When implemented in controller
+                            return null;
+                        default:
+                            return null;
                         }
-                    }).collect(Collectors.toSet())
-            );
+                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
         }
-        return ControllerApi.of(controllerId).updateItems(
-                Flux.concat(
-                        Flux.fromIterable(updateRepoOperationsSimple),
-                        Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId))),
-                        Flux.fromIterable(updateRepoOperationsVersioned)));
+        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemsOperationsSimple), Flux.just(JUpdateItemOperation
+                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemsOperationsVersioned)));
     }
 
-    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509SignerDN(
-            String commitId,  Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts,
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer,
-            String signatureAlgorithm, String signerDN)
-                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
-        Set<JUpdateItemOperation> updateRepoOperationsVersioned = new HashSet<JUpdateItemOperation>();
-        Set<JUpdateItemOperation> updateRepoOperationsSimple = new HashSet<JUpdateItemOperation>();
-        if (drafts != null) {
-            updateRepoOperationsVersioned.addAll(
-                    drafts.keySet().stream().filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(
-                            item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithSignedId(
-                                    item.getContent(),
-                                    drafts.get(item).getSignature(),
-                                    signatureAlgorithm,
-                                    SignerId.of(signerDN)))
-                            ).collect(Collectors.toSet())
-                    );
-            updateRepoOperationsSimple.addAll(
-                    drafts.keySet().stream().filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(
-                            item -> {
-                                switch(item.getTypeAsEnum()) {
-                                    case LOCK:
-                                        try {
-                                            Lock lock = om.readValue(item.getContent(), Lock.class);
-                                            if (lock.getId() == null) {
-                                                lock.setId(item.getName());
-                                            }
-//                                            JLock jLock = JLock.of(LockId.of(lock.getId()), lock.getLimit());
-                                            return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
-                                        } catch (Exception e) {
-                                            throw new JocDeployException(e);
-                                        }
-                                    case JUNCTION:
-                                        // TODO: When implemented in controller
-                                        return null;
-                                    case JOBCLASS:
-                                        // TODO: When implemented in controller
-                                        return null;
-                                    default:
-                                        return null;
-                                }
-                            }).collect(Collectors.toSet())
-                    );
-        }
-        if (alreadyDeployed != null) {
-            updateRepoOperationsVersioned.addAll(
-                    alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
-                            item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithSignedId(
-                                    item.getContent(),
-                                    alreadyDeployed.get(item).getSignature(),
-                                    signatureAlgorithm,
-                                    SignerId.of(signerDN)))
-                            ).collect(Collectors.toSet())
-                    );
-            updateRepoOperationsSimple.addAll(
-                    alreadyDeployed.keySet().stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
-                            item -> {
-                                switch(DeployType.fromValue(item.getType())) {
-                                    case LOCK:
-                                        try {
-                                            Lock lock = om.readValue(item.getContent(), Lock.class);
-                                            if (lock.getId() == null) {
-                                                lock.setId(Paths.get(item.getPath()).getFileName().toString());
-                                            }
-                                            return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
-                                        } catch (Exception e) {
-                                            throw new JocDeployException(e);
-                                        }
-                                    case JUNCTION:
-                                        // TODO: When implemented in controller
-                                        return null;
-                                    case JOBCLASS:
-                                        // TODO: When implemented in controller
-                                        return null;
-                                    default:
-                                        return null;
-                                }
-                            }).collect(Collectors.toSet())
-                    );
-        }
-        return ControllerApi.of(controllerId).updateItems(
-                Flux.concat(
-                        Flux.fromIterable(updateRepoOperationsSimple),
-                        Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId))),
-                        Flux.fromIterable(updateRepoOperationsVersioned)));
-    }
-
-    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509CertificateFromImport(
-            String commitId,  Map<ControllerObject, DBItemDepSignatures> drafts,
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer,
-            String signatureAlgorithm, String certificate)
-                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509SignerDNFromImport(String commitId,
+            Map<ControllerObject, DBItemDepSignatures> drafts, Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId,
+            DBLayerDeploy dbLayer, String signatureAlgorithm, String signerDN) throws SOSException, IOException, InterruptedException,
+            ExecutionException, TimeoutException {
         Set<JUpdateItemOperation> updateItemsOperationsVersioned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
         if (drafts != null) {
-            updateItemsOperationsVersioned.addAll(drafts.keySet().stream()
-                .filter(item -> item.getObjectType().equals(DeployType.WORKFLOW)).map(
+            updateItemsOperationsVersioned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.WORKFLOW)).map(
                     item -> {
                         try {
-                            return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(
-                                    om.writeValueAsString(((WorkflowPublish)item).getContent()),
-                                    drafts.get(item).getSignature(),
-                                    signatureAlgorithm,
-                                    certificate));
+                            return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithSignedId(om.writeValueAsString(
+                                    ((WorkflowPublish) item).getContent()), drafts.get(item).getSignature(), signatureAlgorithm, SignerId.of(
+                                            signerDN)));
                         } catch (JsonProcessingException e1) {
                             throw new JocDeployException(e1);
                         }
                     }).collect(Collectors.toSet()));
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream()
-                    .filter(item -> !item.getObjectType().equals(DeployType.WORKFLOW)).map(
-                            item -> {
-                                switch(item.getObjectType()) {
-                                    case LOCK:
-                                        try {
-                                            Lock lock = (Lock)item.getContent();
-                                            if (lock.getId() == null) {
-                                                lock.setId(Paths.get(item.getPath()).getFileName().toString());
-                                            }
-                                            return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
-                                        } catch (Exception e) {
-                                            throw new JocDeployException(e);
-                                        }
-                                    case JUNCTION:
-                                        // TODO: When implemented in controller
-                                        return null;
-                                    case JOBCLASS:
-                                        // TODO: When implemented in controller
-                                        return null;
-                                    default:
-                                        return null;
-                                }
-                            }).filter(Objects::nonNull).collect(Collectors.toSet()));
-        }
-        if (alreadyDeployed != null) {
-            updateItemsOperationsVersioned.addAll(alreadyDeployed.keySet().stream()
-                .filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getObjectType().equals(DeployType.WORKFLOW)).map(
                     item -> {
-                        return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(
-                                item.getContent(),
-                                alreadyDeployed.get(item).getSignature(),
-                                signatureAlgorithm,
-                                certificate));
-                    }).collect(Collectors.toSet()));
-            updateItemsOperationsSimple.addAll(alreadyDeployed.keySet().stream()
-                    .filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
-                            item -> {
-                                switch(DeployType.fromValue(item.getType())) {
-                                    case LOCK:
-                                        try {
-                                            Lock lock = om.readValue(item.getContent(), Lock.class);
-                                            if (lock.getId() == null) {
-                                                lock.setId(Paths.get(item.getPath()).getFileName().toString());
-                                            }
-                                            return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
-                                        } catch (Exception e) {
-                                            throw new JocDeployException(e);
-                                        }
-                                    case JUNCTION:
-                                        // TODO: When implemented in controller
-                                        return null;
-                                    case JOBCLASS:
-                                        // TODO: When implemented in controller
-                                        return null;
-                                    default:
-                                        return null;
+                        switch (item.getObjectType()) {
+                        case LOCK:
+                            try {
+                                Lock lock = (Lock) item.getContent();
+                                if (lock.getId() == null) {
+                                    lock.setId(Paths.get(item.getPath()).getFileName().toString());
                                 }
-                            }).filter(Objects::nonNull).collect(Collectors.toSet()));
-        }
-        return ControllerApi.of(controllerId).updateItems(
-                Flux.concat(
-                        Flux.fromIterable(updateItemsOperationsSimple),
-                        Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId))),
-                        Flux.fromIterable(updateItemsOperationsVersioned)));
-    }
-
-    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509SignerDNFromImport(
-            String commitId,  Map<ControllerObject, DBItemDepSignatures> drafts,
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer,
-            String signatureAlgorithm, String signerDN)
-                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
-        Set<JUpdateItemOperation> updateItemsOperationsVersioned = new HashSet<JUpdateItemOperation>();
-        Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
-        if (drafts != null) {
-            updateItemsOperationsVersioned.addAll(drafts.keySet().stream()
-                .filter(item -> item.getObjectType().equals(DeployType.WORKFLOW)).map(
-                    item -> {
-                        try {
-                            return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithSignedId(
-                                    om.writeValueAsString(((WorkflowPublish)item).getContent()),
-                                    drafts.get(item).getSignature(),
-                                    signatureAlgorithm,
-                                    SignerId.of(signerDN)));
-                        } catch (JsonProcessingException e1) {
-                            throw new JocDeployException(e1);
+                                return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                            } catch (Exception e) {
+                                throw new JocDeployException(e);
+                            }
+                        case JUNCTION:
+                            // TODO: When implemented in controller
+                            return null;
+                        case JOBCLASS:
+                            // TODO: When implemented in controller
+                            return null;
+                        default:
+                            return null;
                         }
-                    }).collect(Collectors.toSet()));
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream()
-                    .filter(item -> !item.getObjectType().equals(DeployType.WORKFLOW)).map(
-                            item -> {
-                                switch(item.getObjectType()) {
-                                    case LOCK:
-                                        try {
-                                            Lock lock = (Lock)item.getContent();
-                                            if (lock.getId() == null) {
-                                                lock.setId(Paths.get(item.getPath()).getFileName().toString());
-                                            }
-                                            return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
-                                        } catch (Exception e) {
-                                            throw new JocDeployException(e);
-                                        }
-                                    case JUNCTION:
-                                        // TODO: When implemented in controller
-                                        return null;
-                                    case JOBCLASS:
-                                        // TODO: When implemented in controller
-                                        return null;
-                                    default:
-                                        return null;
-                                }
-                            }).filter(Objects::nonNull).collect(Collectors.toSet()));
+                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
         }
         if (alreadyDeployed != null) {
-            updateItemsOperationsVersioned.addAll(alreadyDeployed.keySet().stream()
-                .filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
-                    item -> {
-                        return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithSignedId(
-                                item.getContent(),
-                                alreadyDeployed.get(item).getSignature(),
-                                signatureAlgorithm,
-                                SignerId.of(signerDN)));
+            updateItemsOperationsVersioned.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
+                    .map(item -> {
+                        return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithSignedId(item.getContent(), alreadyDeployed.get(item)
+                                .getSignature(), signatureAlgorithm, SignerId.of(signerDN)));
                     }).collect(Collectors.toSet()));
-            updateItemsOperationsSimple.addAll(alreadyDeployed.keySet().stream()
-                    .filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
-                            item -> {
-                                switch(DeployType.fromValue(item.getType())) {
-                                    case LOCK:
-                                        try {
-                                            Lock lock = om.readValue(item.getContent(), Lock.class);
-                                            if (lock.getId() == null) {
-                                                lock.setId(Paths.get(item.getPath()).getFileName().toString());
-                                            }
-                                            return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
-                                        } catch (Exception e) {
-                                            throw new JocDeployException(e);
-                                        }
-                                    case JUNCTION:
-                                        // TODO: When implemented in controller
-                                        return null;
-                                    case JOBCLASS:
-                                        // TODO: When implemented in controller
-                                        return null;
-                                    default:
-                                        return null;
+            updateItemsOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
+                    item -> {
+                        switch (DeployType.fromValue(item.getType())) {
+                        case LOCK:
+                            try {
+                                Lock lock = om.readValue(item.getContent(), Lock.class);
+                                if (lock.getId() == null) {
+                                    lock.setId(Paths.get(item.getPath()).getFileName().toString());
                                 }
-                            }).filter(Objects::nonNull).collect(Collectors.toSet()));
+                                return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                            } catch (Exception e) {
+                                throw new JocDeployException(e);
+                            }
+                        case JUNCTION:
+                            // TODO: When implemented in controller
+                            return null;
+                        case JOBCLASS:
+                            // TODO: When implemented in controller
+                            return null;
+                        default:
+                            return null;
+                        }
+                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
         }
-        return ControllerApi.of(controllerId).updateItems(
-                Flux.concat(
-                        Flux.fromIterable(updateItemsOperationsSimple),
-                        Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId))),
-                        Flux.fromIterable(updateItemsOperationsVersioned)));
+        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemsOperationsSimple), Flux.just(JUpdateItemOperation
+                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemsOperationsVersioned)));
     }
 
-    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509Certificate(
-            String commitId,  List<DBItemDeploymentHistory> alreadyDeployed, String controllerId, String signatureAlgorithm, String certificate)
-                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509Certificate(String commitId,
+            List<DBItemDeploymentHistory> alreadyDeployed, String controllerId, String signatureAlgorithm, String certificate) throws SOSException,
+            IOException, InterruptedException, ExecutionException, TimeoutException {
         Set<JUpdateItemOperation> updateItemsOperationsVersioned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
-        updateItemsOperationsVersioned.addAll(alreadyDeployed.stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
-                item -> {
-                    return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(
-                            item.getContent(),
-                            item.getSignedContent(),
-                            signatureAlgorithm,
-                            certificate));
-                }).collect(Collectors.toSet()));
-        updateItemsOperationsSimple.addAll(alreadyDeployed.stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
-                        item -> {
-                            switch(DeployType.fromValue(item.getType())) {
-                                case LOCK:
-                                    try {
-                                        Lock lock = om.readValue(item.getContent(), Lock.class);
-                                        if (lock.getId() == null) {
-                                            lock.setId(Paths.get(item.getPath()).getFileName().toString());
-                                        }
-                                        return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
-                                    } catch (Exception e) {
-                                        throw new JocDeployException(e);
-                                    }
-                                case JUNCTION:
-                                    // TODO: When implemented in controller
-                                    return null;
-                                case JOBCLASS:
-                                    // TODO: When implemented in controller
-                                    return null;
-                                default:
-                                    return null;
-                            }
-                        }).filter(Objects::nonNull).collect(Collectors.toSet()));
-        return ControllerApi.of(controllerId).updateItems(
-                Flux.concat(
-                        Flux.fromIterable(updateItemsOperationsSimple),
-                        Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId))),
-                        Flux.fromIterable(updateItemsOperationsVersioned)));
+        updateItemsOperationsVersioned.addAll(alreadyDeployed.stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(item -> {
+            return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(item.getContent(), item.getSignedContent(),
+                    signatureAlgorithm, certificate));
+        }).collect(Collectors.toSet()));
+        updateItemsOperationsSimple.addAll(alreadyDeployed.stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(item -> {
+            switch (DeployType.fromValue(item.getType())) {
+            case LOCK:
+                try {
+                    Lock lock = om.readValue(item.getContent(), Lock.class);
+                    if (lock.getId() == null) {
+                        lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                    }
+                    return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                } catch (Exception e) {
+                    throw new JocDeployException(e);
+                }
+            case JUNCTION:
+                // TODO: When implemented in controller
+                return null;
+            case JOBCLASS:
+                // TODO: When implemented in controller
+                return null;
+            default:
+                return null;
+            }
+        }).filter(Objects::nonNull).collect(Collectors.toSet()));
+        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemsOperationsSimple), Flux.just(JUpdateItemOperation
+                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemsOperationsVersioned)));
     }
 
-    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509SignerDN(
-            String commitId,  List<DBItemDeploymentHistory> alreadyDeployed, String controllerId, String signatureAlgorithm, String signerDN)
-                    throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509SignerDN(String commitId,
+            List<DBItemDeploymentHistory> alreadyDeployed, String controllerId, String signatureAlgorithm, String signerDN) throws SOSException,
+            IOException, InterruptedException, ExecutionException, TimeoutException {
         Set<JUpdateItemOperation> updateItemsOperationsVersioned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
-        updateItemsOperationsVersioned.addAll(alreadyDeployed.stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
-                item -> {
-                    return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithSignedId(
-                            item.getContent(),
-                            item.getSignedContent(),
-                            signatureAlgorithm,
-                            SignerId.of(signerDN)));
-                }).collect(Collectors.toSet()));
-        updateItemsOperationsSimple.addAll(alreadyDeployed.stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
-                        item -> {
-                            switch(DeployType.fromValue(item.getType())) {
-                                case LOCK:
-                                    try {
-                                        Lock lock = om.readValue(item.getContent(), Lock.class);
-                                        if (lock.getId() == null) {
-                                            lock.setId(Paths.get(item.getPath()).getFileName().toString());
-                                        }
-                                        return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
-                                    } catch (Exception e) {
-                                        throw new JocDeployException(e);
-                                    }
-                                case JUNCTION:
-                                    // TODO: When implemented in controller
-                                    return null;
-                                case JOBCLASS:
-                                    // TODO: When implemented in controller
-                                    return null;
-                                default:
-                                    return null;
-                            }
-                        }).filter(Objects::nonNull).collect(Collectors.toSet()));
-        return ControllerApi.of(controllerId).updateItems(
-                Flux.concat(
-                        Flux.fromIterable(updateItemsOperationsSimple),
-                        Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId))),
-                        Flux.fromIterable(updateItemsOperationsVersioned)));
+        updateItemsOperationsVersioned.addAll(alreadyDeployed.stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(item -> {
+            return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithSignedId(item.getContent(), item.getSignedContent(),
+                    signatureAlgorithm, SignerId.of(signerDN)));
+        }).collect(Collectors.toSet()));
+        updateItemsOperationsSimple.addAll(alreadyDeployed.stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(item -> {
+            switch (DeployType.fromValue(item.getType())) {
+            case LOCK:
+                try {
+                    Lock lock = om.readValue(item.getContent(), Lock.class);
+                    if (lock.getId() == null) {
+                        lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                    }
+                    return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                } catch (Exception e) {
+                    throw new JocDeployException(e);
+                }
+            case JUNCTION:
+                // TODO: When implemented in controller
+                return null;
+            case JOBCLASS:
+                // TODO: When implemented in controller
+                return null;
+            default:
+                return null;
+            }
+        }).filter(Objects::nonNull).collect(Collectors.toSet()));
+        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemsOperationsSimple), Flux.just(JUpdateItemOperation
+                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemsOperationsVersioned)));
     }
-    
+
     public static CompletableFuture<Either<Problem, Void>> updateItemsDelete(String commitId, List<DBItemDeploymentHistory> alreadyDeployedtoDelete,
             String controllerId) {
         // keyAlgorithm obsolete
         Set<JUpdateItemOperation> updateItemOperationsVersioned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemOperationsSimple = new HashSet<JUpdateItemOperation>();
         if (alreadyDeployedtoDelete != null) {
-            updateItemOperationsVersioned.addAll(alreadyDeployedtoDelete.stream()
-                .filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
-                    item -> JUpdateItemOperation.deleteVersioned(WorkflowPath.of(item.getName()))
-                    ).filter(Objects::nonNull).collect(Collectors.toSet())
-                );
-            updateItemOperationsSimple.addAll(alreadyDeployedtoDelete.stream()
-                .filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
+            updateItemOperationsVersioned.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
+                    .map(item -> JUpdateItemOperation.deleteVersioned(WorkflowPath.of(item.getName()))).filter(Objects::nonNull).collect(Collectors
+                            .toSet()));
+            updateItemOperationsSimple.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
                     item -> {
                         switch (DeployType.fromValue(item.getType())) {
-                            case LOCK:
+                        case LOCK:
                             Lock lock;
                             try {
                                 lock = om.readValue(item.getContent(), Lock.class);
@@ -1370,35 +1225,31 @@ public abstract class PublishUtils {
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
-                            case JOBCLASS:
-                                // TODO: When implemented in controller
-                                return null;
-                            case JUNCTION:
-                                // TODO: When implemented in controller
-                                return null;
-                            default:
-                                return null;
+                        case JOBCLASS:
+                            // TODO: When implemented in controller
+                            return null;
+                        case JUNCTION:
+                            // TODO: When implemented in controller
+                            return null;
+                        default:
+                            return null;
                         }
-                    }).collect(Collectors.toSet())
-                );
+                    }).collect(Collectors.toSet()));
         }
-        return ControllerApi.of(controllerId).updateItems(
-                Flux.concat(
-                        Flux.fromIterable(updateItemOperationsSimple),
-                        Flux.just(JUpdateItemOperation.addVersion(VersionId.of(commitId))),
-                        Flux.fromIterable(updateItemOperationsVersioned)));
+        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemOperationsSimple), Flux.just(JUpdateItemOperation
+                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemOperationsVersioned)));
     }
 
     @SuppressWarnings("incomplete-switch")
-    private static void updateVersionIdOnDraftObject(DBItemInventoryConfiguration draft, String commitId)
-            throws JsonParseException, JsonMappingException, IOException, JocNotImplementedException {
+    private static void updateVersionIdOnDraftObject(DBItemInventoryConfiguration draft, String commitId) throws JsonParseException,
+            JsonMappingException, IOException, JocNotImplementedException {
         switch (ConfigurationType.fromValue(draft.getType())) {
         case WORKFLOW:
             Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
             workflow.setVersionId(commitId);
             draft.setContent(om.writeValueAsString(workflow));
             break;
-            // TODO: locks and other objects
+        // TODO: locks and other objects
         case LOCK:
         case WORKINGDAYSCALENDAR:
         case NONWORKINGDAYSCALENDAR:
@@ -1428,17 +1279,17 @@ public abstract class PublishUtils {
             throw new JocNotImplementedException();
         }
     }
-    
-    public static Set<UpdateableWorkflowJobAgentName> getUpdateableAgentRefInWorkflowJobs(DBItemInventoryConfiguration item, 
-            String controllerId, DBLayerDeploy dbLayer) {
-        return getUpdateableAgentRefInWorkflowJobs(item.getPath(), item.getContent(), 
-                ConfigurationType.fromValue(item.getType()), controllerId, dbLayer);
+
+    public static Set<UpdateableWorkflowJobAgentName> getUpdateableAgentRefInWorkflowJobs(DBItemInventoryConfiguration item, String controllerId,
+            DBLayerDeploy dbLayer) {
+        return getUpdateableAgentRefInWorkflowJobs(item.getPath(), item.getContent(), ConfigurationType.fromValue(item.getType()), controllerId,
+                dbLayer);
     }
 
-    public static Set<UpdateableWorkflowJobAgentName> getUpdateableAgentRefInWorkflowJobs(DBItemDeploymentHistory item,
-            String controllerId, DBLayerDeploy dbLayer) {
-        return getUpdateableAgentRefInWorkflowJobs(item.getPath(), item.getInvContent(), 
-                ConfigurationType.fromValue(item.getType()), controllerId, dbLayer);
+    public static Set<UpdateableWorkflowJobAgentName> getUpdateableAgentRefInWorkflowJobs(DBItemDeploymentHistory item, String controllerId,
+            DBLayerDeploy dbLayer) {
+        return getUpdateableAgentRefInWorkflowJobs(item.getPath(), item.getInvContent(), ConfigurationType.fromValue(item.getType()), controllerId,
+                dbLayer);
     }
 
     public static Set<UpdateableWorkflowJobAgentName> getUpdateableAgentRefInWorkflowJobs(String path, String json, ConfigurationType type,
@@ -1451,8 +1302,7 @@ public abstract class PublishUtils {
                     Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
                     String agentName = job.getAgentId();
                     String agentId = dbLayer.getAgentIdFromAgentName(agentName, controllerId, path, jobname);
-                    update.add(
-                            new UpdateableWorkflowJobAgentName(path, jobname, job.getAgentId(), agentId, controllerId));
+                    update.add(new UpdateableWorkflowJobAgentName(path, jobname, job.getAgentId(), agentId, controllerId));
                 });
             }
         } catch (IOException e) {
@@ -1462,9 +1312,9 @@ public abstract class PublishUtils {
     }
 
     public static Set<DBItemDeploymentHistory> cloneInvConfigurationsToDepHistoryItems(
-            Map<DBItemInventoryConfiguration, DBItemDepSignatures> draftsWithSignature, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, 
-            String account, DBLayerDeploy dbLayerDeploy, String commitId, String controllerId, Date deploymentDate)
-                    throws JsonParseException, JsonMappingException, IOException {
+            Map<DBItemInventoryConfiguration, DBItemDepSignatures> draftsWithSignature, Set<UpdateableWorkflowJobAgentName> updateableAgentNames,
+            String account, DBLayerDeploy dbLayerDeploy, String commitId, String controllerId, Date deploymentDate) throws JsonParseException,
+            JsonMappingException, IOException {
         Set<DBItemDeploymentHistory> deployedObjects;
         try {
             DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
@@ -1481,8 +1331,7 @@ public abstract class PublishUtils {
                     newDeployedObject.setName(Paths.get(draft.getPath()).getFileName().toString());
                 }
                 newDeployedObject.setFolder(draft.getFolder());
-                newDeployedObject.setType(
-                        PublishUtils.mapConfigurationType(ConfigurationType.fromValue(draft.getType())).intValue());
+                newDeployedObject.setType(PublishUtils.mapConfigurationType(ConfigurationType.fromValue(draft.getType())).intValue());
                 newDeployedObject.setCommitId(commitId);
                 newDeployedObject.setContent(draft.getContent());
                 newDeployedObject.setSignedContent(draftsWithSignature.get(draft).getSignature());
@@ -1500,7 +1349,7 @@ public abstract class PublishUtils {
                 newDeployedObject.setState(DeploymentState.DEPLOYED.value());
                 dbLayerDeploy.getSession().save(newDeployedObject);
                 DBItemDepSignatures signature = draftsWithSignature.get(draft);
-                if(signature != null) {
+                if (signature != null) {
                     signature.setDepHistoryId(newDeployedObject.getId());
                     dbLayerDeploy.getSession().update(signature);
                 }
@@ -1512,9 +1361,9 @@ public abstract class PublishUtils {
         return deployedObjects;
     }
 
-    public static Set<DBItemDeploymentHistory> cloneInvConfigurationsToDepHistoryItems(
-            Map<ControllerObject, DBItemDepSignatures> draftsWithSignature, String account, DBLayerDeploy dbLayerDeploy, String commitId,
-            String controllerId, Date deploymentDate) throws JsonParseException, JsonMappingException, IOException {
+    public static Set<DBItemDeploymentHistory> cloneInvConfigurationsToDepHistoryItems(Map<ControllerObject, DBItemDepSignatures> draftsWithSignature,
+            String account, DBLayerDeploy dbLayerDeploy, String commitId, String controllerId, Date deploymentDate) throws JsonParseException,
+            JsonMappingException, IOException {
         Set<DBItemDeploymentHistory> deployedObjects;
         try {
             DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
@@ -1529,12 +1378,13 @@ public abstract class PublishUtils {
                 DBItemInventoryConfiguration original = null;
                 switch (draft.getObjectType()) {
                 case WORKFLOW:
-                    String workflow = Globals.objectMapper.writeValueAsString(((WorkflowPublish)draft).getContent());
+                    String workflow = Globals.objectMapper.writeValueAsString(((WorkflowPublish) draft).getContent());
                     newDeployedObject.setContent(workflow);
-                    if (draft.getPath() != null ) {
+                    if (draft.getPath() != null) {
                         original = dbLayerDeploy.getConfigurationByPath(draft.getPath(), ConfigurationType.WORKFLOW.intValue());
                     } else {
-                        original = dbLayerDeploy.getConfigurationByPath(((WorkflowPublish)draft).getContent().getPath(), ConfigurationType.WORKFLOW.intValue());
+                        original = dbLayerDeploy.getConfigurationByPath(((WorkflowPublish) draft).getContent().getPath(), ConfigurationType.WORKFLOW
+                                .intValue());
                     }
                     if (original.getPath() != null && !original.getPath().isEmpty()) {
                         newDeployedObject.setPath(original.getPath());
@@ -1549,13 +1399,13 @@ public abstract class PublishUtils {
                     newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
                 case LOCK:
-                    String lock = Globals.objectMapper.writeValueAsString(((LockPublish)draft).getContent());
+                    String lock = Globals.objectMapper.writeValueAsString(((LockPublish) draft).getContent());
                     newDeployedObject.setContent(lock);
-                    if(draft.getPath() != null) {
+                    if (draft.getPath() != null) {
                         original = dbLayerDeploy.getConfigurationByPath(draft.getPath(), ConfigurationType.LOCK.intValue());
                     }
                     newDeployedObject.setPath(original.getPath());
-                    if(original.getName() != null && !original.getName().isEmpty()) {
+                    if (original.getName() != null && !original.getName().isEmpty()) {
                         newDeployedObject.setName(original.getName());
                     } else {
                         newDeployedObject.setName(Paths.get(original.getPath()).getFileName().toString());
@@ -1565,15 +1415,16 @@ public abstract class PublishUtils {
                     newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
                 case JUNCTION:
-                    String junction = Globals.objectMapper.writeValueAsString(((JunctionPublish)draft).getContent());
+                    String junction = Globals.objectMapper.writeValueAsString(((JunctionPublish) draft).getContent());
                     newDeployedObject.setContent(junction);
-                    if (draft.getPath() != null ) {
+                    if (draft.getPath() != null) {
                         original = dbLayerDeploy.getConfigurationByPath(draft.getPath(), ConfigurationType.JUNCTION.intValue());
                     } else {
-                        original = dbLayerDeploy.getConfigurationByPath(((JunctionPublish)draft).getContent().getPath(), ConfigurationType.JUNCTION.intValue());
+                        original = dbLayerDeploy.getConfigurationByPath(((JunctionPublish) draft).getContent().getPath(), ConfigurationType.JUNCTION
+                                .intValue());
                     }
                     newDeployedObject.setPath(original.getPath());
-                    if(original.getName() != null && !original.getName().isEmpty()) {
+                    if (original.getName() != null && !original.getName().isEmpty()) {
                         newDeployedObject.setName(original.getName());
                     } else {
                         newDeployedObject.setName(Paths.get(original.getPath()).getFileName().toString());
@@ -1583,15 +1434,16 @@ public abstract class PublishUtils {
                     newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
                 case JOBCLASS:
-                    String jobclass = Globals.objectMapper.writeValueAsString(((JobClassPublish)draft).getContent());
+                    String jobclass = Globals.objectMapper.writeValueAsString(((JobClassPublish) draft).getContent());
                     newDeployedObject.setContent(jobclass);
-                    if (draft.getPath() != null ) {
+                    if (draft.getPath() != null) {
                         original = dbLayerDeploy.getConfigurationByPath(draft.getPath(), ConfigurationType.JOBCLASS.intValue());
                     } else {
-                        original = dbLayerDeploy.getConfigurationByPath(((JobClassPublish)draft).getContent().getPath(), ConfigurationType.JOBCLASS.intValue());
+                        original = dbLayerDeploy.getConfigurationByPath(((JobClassPublish) draft).getContent().getPath(), ConfigurationType.JOBCLASS
+                                .intValue());
                     }
                     newDeployedObject.setPath(original.getPath());
-                    if(original.getName() != null && !original.getName().isEmpty()) {
+                    if (original.getName() != null && !original.getName().isEmpty()) {
                         newDeployedObject.setName(original.getName());
                     } else {
                         newDeployedObject.setName(Paths.get(original.getPath()).getFileName().toString());
@@ -1609,7 +1461,7 @@ public abstract class PublishUtils {
                 newDeployedObject.setState(DeploymentState.DEPLOYED.value());
                 dbLayerDeploy.getSession().save(newDeployedObject);
                 DBItemDepSignatures signature = draftsWithSignature.get(draft);
-                if(signature != null) {
+                if (signature != null) {
                     signature.setDepHistoryId(newDeployedObject.getId());
                     dbLayerDeploy.getSession().update(signature);
                 }
@@ -1622,8 +1474,8 @@ public abstract class PublishUtils {
     }
 
     public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToNewEntries(
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> deployedWithSignature, String account, DBLayerDeploy dbLayerDeploy,
-            String commitId, String controllerId, Date deploymentDate) {
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> deployedWithSignature, String account, DBLayerDeploy dbLayerDeploy, String commitId,
+            String controllerId, Date deploymentDate) {
         Set<DBItemDeploymentHistory> deployedObjects = null;
         try {
             DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
@@ -1648,7 +1500,7 @@ public abstract class PublishUtils {
                 deployed.setOperation(OperationType.UPDATE.value());
                 deployed.setState(DeploymentState.DEPLOYED.value());
                 dbLayerDeploy.getSession().save(deployed);
-                if(signature != null) {
+                if (signature != null) {
                     signature.setDepHistoryId(deployed.getId());
                     dbLayerDeploy.getSession().update(signature);
                 }
@@ -1660,8 +1512,8 @@ public abstract class PublishUtils {
         return deployedObjects;
     }
 
-    public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToRedeployed(
-            List<DBItemDeploymentHistory> redeployedItems, String account, DBLayerDeploy dbLayerDeploy, String controllerId, Date deploymentDate) {
+    public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToRedeployed(List<DBItemDeploymentHistory> redeployedItems, String account,
+            DBLayerDeploy dbLayerDeploy, String controllerId, Date deploymentDate) {
         Set<DBItemDeploymentHistory> deployedObjects;
         try {
             DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
@@ -1683,7 +1535,8 @@ public abstract class PublishUtils {
         return deployedObjects;
     }
 
-    public static Set<DBItemDeploymentHistory> updateDeletedDepHistory(List<DBItemDeploymentHistory> toDelete, DBLayerDeploy dbLayer, String commitId, boolean withTrash) {
+    public static Set<DBItemDeploymentHistory> updateDeletedDepHistory(List<DBItemDeploymentHistory> toDelete, DBLayerDeploy dbLayer, String commitId,
+            boolean withTrash) {
         Set<DBItemDeploymentHistory> deletedObjects = new HashSet<DBItemDeploymentHistory>();
         InventoryDBLayer invDBLayer = new InventoryDBLayer(dbLayer.getSession());
         try {
@@ -1705,14 +1558,15 @@ public abstract class PublishUtils {
                     }
                 }
             }
-            
+
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }
         return deletedObjects;
     }
 
-    public static Set<DBItemDeploymentHistory> updateDeletedDepHistoryAndPutToTrash(List<DBItemDeploymentHistory> toDelete, DBLayerDeploy dbLayer, String commitId) {
+    public static Set<DBItemDeploymentHistory> updateDeletedDepHistoryAndPutToTrash(List<DBItemDeploymentHistory> toDelete, DBLayerDeploy dbLayer,
+            String commitId) {
         return updateDeletedDepHistory(toDelete, dbLayer, commitId, true);
     }
 
@@ -1734,8 +1588,8 @@ public abstract class PublishUtils {
     public static void prepareNextInvConfigGeneration(Set<ControllerObject> drafts, String controllerId, DBLayerDeploy dbLayer) {
         try {
             for (ControllerObject draft : drafts) {
-                DBItemInventoryConfiguration configuration = dbLayer.getConfigurationByPath(draft.getPath(), 
-                        ConfigurationType.fromValue(draft.getObjectType().intValue()));
+                DBItemInventoryConfiguration configuration = dbLayer.getConfigurationByPath(draft.getPath(), ConfigurationType.fromValue(draft
+                        .getObjectType().intValue()));
                 configuration.setDeployed(true);
                 configuration.setModified(Date.from(Instant.now()));
                 dbLayer.getSession().update(configuration);
@@ -1776,9 +1630,8 @@ public abstract class PublishUtils {
         }
     }
 
-    public static <T extends DBItem> List<DBItemDeploymentHistory> checkPathRenamingForUpdate(
-            Set<T> verifiedObjects, String controllerId, DBLayerDeploy dbLayer, String keyAlgorithm)
-            throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+    public static <T extends DBItem> List<DBItemDeploymentHistory> checkPathRenamingForUpdate(Set<T> verifiedObjects, String controllerId,
+            DBLayerDeploy dbLayer, String keyAlgorithm) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         DBItemDeploymentHistory depHistory = null;
         DBItemInventoryConfiguration invConf = null;
         final String versionId = UUID.randomUUID().toString();
@@ -1788,7 +1641,7 @@ public abstract class PublishUtils {
             if (DBItemInventoryConfiguration.class.isInstance(object)) {
                 invConf = (DBItemInventoryConfiguration) object;
                 depHistory = dbLayer.getLatestDepHistoryItem(invConf, controllerId);
-                // if operation of latest history item was 'delete', no need to delete again 
+                // if operation of latest history item was 'delete', no need to delete again
                 if (depHistory != null && OperationType.DELETE.equals(OperationType.fromValue(depHistory.getOperation()))) {
                     depHistory = null;
                 }
@@ -1801,13 +1654,13 @@ public abstract class PublishUtils {
                 // if not, delete the old deployed item via updateRepo before deploy of the new configuration
                 depHistory.setCommitId(versionId);
                 alreadyDeployedToDelete.add(depHistory);
-            } 
+            }
         }
         return alreadyDeployedToDelete;
     }
 
     public static Map<ControllerObject, SignaturePath> readZipFileContentWithSignatures(InputStream inputStream, JocMetaInfo jocMetaInfo)
-            throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException, 
+            throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException,
             JocConfigurationException, DBOpenSessionException {
         Set<ControllerObject> objects = new HashSet<ControllerObject>();
         Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
@@ -1830,7 +1683,7 @@ public abstract class PublishUtils {
                 // process JOC meta info file
                 if (entryName.equals(JOC_META_INFO_FILENAME)) {
                     JocMetaInfo fromFile = om.readValue(outBuffer.toString(), JocMetaInfo.class);
-                    if(!isJocMetaInfoNullOrEmpty(fromFile)) {
+                    if (!isJocMetaInfoNullOrEmpty(fromFile)) {
                         jocMetaInfo.setJocVersion(fromFile.getJocVersion());
                         jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
                         jocMetaInfo.setApiVersion(fromFile.getApiVersion());
@@ -1841,81 +1694,91 @@ public abstract class PublishUtils {
                 Signature signature = new Signature();
                 if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
                     WorkflowPublish workflowPublish = new WorkflowPublish();
-                    Workflow workflow = om.readValue(outBuffer.toString(), Workflow.class);
+                    com.sos.inventory.model.workflow.Workflow workflow = om.readValue(outBuffer.toString(),
+                            com.sos.inventory.model.workflow.Workflow.class);
                     if (checkObjectNotEmpty(workflow)) {
                         workflowPublish.setContent(workflow);
                     } else {
-                        throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", 
-                                Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""))));
+                        throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", Globals
+                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""))));
                     }
-                    workflowPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
+                    workflowPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION
+                            .value(), "")));
                     workflowPublish.setObjectType(DeployType.WORKFLOW);
                     objects.add(workflowPublish);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-                    signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value(), "")));
+                    signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
+                            ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value(), "")));
                     signature.setSignatureString(outBuffer.toString());
                     signaturePath.setSignature(signature);
                     signaturePaths.add(signaturePath);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value())) {
-                    signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value(), "")));
+                    signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
+                            ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value(), "")));
                     signature.setSignatureString(outBuffer.toString());
                     signaturePath.setSignature(signature);
                     signaturePaths.add(signaturePath);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
                     LockPublish lockPublish = new LockPublish();
-                    Lock lock = om.readValue(outBuffer.toString(), Lock.class);
+                    com.sos.inventory.model.lock.Lock lock = om.readValue(outBuffer.toString(), com.sos.inventory.model.lock.Lock.class);
                     if (checkObjectNotEmpty(lock)) {
                         lockPublish.setContent(lock);
                     } else {
-                        throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", 
-                                Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""))));
+                        throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", Globals
+                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""))));
                     }
-                    lockPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
+                    lockPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
+                            "")));
                     lockPublish.setObjectType(DeployType.LOCK);
                     objects.add(lockPublish);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
                     JunctionPublish junctionPublish = new JunctionPublish();
-                    Junction junction = om.readValue(outBuffer.toString(), Junction.class);
+                    com.sos.inventory.model.junction.Junction junction = om.readValue(outBuffer.toString(),
+                            com.sos.inventory.model.junction.Junction.class);
                     if (checkObjectNotEmpty(junction)) {
                         junctionPublish.setContent(junction);
                     } else {
-                        throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", 
-                                Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), ""))));
+                        throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", Globals
+                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), ""))));
                     }
-                    junctionPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
+                    junctionPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION
+                            .value(), "")));
                     junctionPublish.setObjectType(DeployType.JUNCTION);
                     objects.add(junctionPublish);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
                     JobClassPublish jobClassPublish = new JobClassPublish();
-                    JobClass jobClass = om.readValue(outBuffer.toString(), JobClass.class);
+                    com.sos.inventory.model.jobclass.JobClass jobClass = om.readValue(outBuffer.toString(),
+                            com.sos.inventory.model.jobclass.JobClass.class);
                     if (checkObjectNotEmpty(jobClass)) {
                         jobClassPublish.setContent(jobClass);
                     } else {
-                        throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", 
-                                Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), ""))));
+                        throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", Globals
+                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), ""))));
                     }
-                    jobClassPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
+                    jobClassPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION
+                            .value(), "")));
                     jobClassPublish.setObjectType(DeployType.JOBCLASS);
                     objects.add(jobClassPublish);
-                } 
+                }
             }
             objects.stream().forEach(item -> {
-                objectsWithSignature.put(item, signaturePaths.stream()
-                        .filter(item2 -> item2.getObjectPath().equals(item.getPath())).findFirst().get());
-            });            
+                objectsWithSignature.put(item, signaturePaths.stream().filter(item2 -> item2.getObjectPath().equals(item.getPath())).findFirst()
+                        .get());
+            });
         } finally {
             if (zipStream != null) {
                 try {
                     zipStream.close();
-                } catch (IOException e) {}
+                } catch (IOException e) {
+                }
             }
         }
         return objectsWithSignature;
     }
 
-    public static Set<ConfigurationObject> readZipFileContent(InputStream inputStream, JocMetaInfo jocMetaInfo)
-            throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException, 
-            JocConfigurationException, DBOpenSessionException {
+    public static Set<ConfigurationObject> readZipFileContent(InputStream inputStream, JocMetaInfo jocMetaInfo) throws DBConnectionRefusedException,
+            DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException, JocConfigurationException,
+            DBOpenSessionException {
         Set<ConfigurationObject> objects = new HashSet<ConfigurationObject>();
         ZipInputStream zipStream = null;
         try {
@@ -1935,7 +1798,7 @@ public abstract class PublishUtils {
                 // process JOC meta info file
                 if (entryName.equals(JOC_META_INFO_FILENAME)) {
                     JocMetaInfo fromFile = om.readValue(outBuffer.toString(), JocMetaInfo.class);
-                    if(!isJocMetaInfoNullOrEmpty(fromFile)) {
+                    if (!isJocMetaInfoNullOrEmpty(fromFile)) {
                         jocMetaInfo.setJocVersion(fromFile.getJocVersion());
                         jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
                         jocMetaInfo.setApiVersion(fromFile.getApiVersion());
@@ -1944,50 +1807,56 @@ public abstract class PublishUtils {
                 // process deployables and releaseables
                 if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
                     WorkflowEdit workflowEdit = new WorkflowEdit();
-                    Workflow workflow = om.readValue(outBuffer.toString(), Workflow.class);
+                    com.sos.inventory.model.workflow.Workflow workflow = om.readValue(outBuffer.toString(),
+                            com.sos.inventory.model.workflow.Workflow.class);
                     if (checkObjectNotEmpty(workflow)) {
                         workflowEdit.setConfiguration(workflow);
                     } else {
-                        throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", 
-                                Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""))));
+                        throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", Globals
+                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""))));
                     }
-                    workflowEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
+                    workflowEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(),
+                            "")));
                     workflowEdit.setObjectType(ConfigurationType.WORKFLOW);
                     objects.add(workflowEdit);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
                     LockEdit lockEdit = new LockEdit();
-                    Lock lock = om.readValue(outBuffer.toString(), Lock.class);
+                    com.sos.inventory.model.lock.Lock lock = om.readValue(outBuffer.toString(), com.sos.inventory.model.lock.Lock.class);
                     if (checkObjectNotEmpty(lock)) {
                         lockEdit.setConfiguration(lock);
                     } else {
-                        throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
+                        throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", ("/"
+                                + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
                     }
                     lockEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
                     lockEdit.setObjectType(ConfigurationType.LOCK);
                     objects.add(lockEdit);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
                     JunctionEdit junctionEdit = new JunctionEdit();
-                    Junction junction = om.readValue(outBuffer.toString(), Junction.class);
+                    com.sos.inventory.model.junction.Junction junction = om.readValue(outBuffer.toString(),
+                            com.sos.inventory.model.junction.Junction.class);
                     if (checkObjectNotEmpty(junction)) {
                         junctionEdit.setConfiguration(junction);
                     } else {
-                        throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
+                        throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", ("/"
+                                + entryName).replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
                     }
-                    junctionEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
+                    junctionEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(),
+                            "")));
                     junctionEdit.setObjectType(ConfigurationType.JUNCTION);
                     objects.add(junctionEdit);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
                     JobClassEdit jobClassEdit = new JobClassEdit();
-                    JobClass jobClass = om.readValue(outBuffer.toString(), JobClass.class);
+                    com.sos.inventory.model.jobclass.JobClass jobClass = om.readValue(outBuffer.toString(),
+                            com.sos.inventory.model.jobclass.JobClass.class);
                     if (checkObjectNotEmpty(jobClass)) {
                         jobClassEdit.setConfiguration(jobClass);
                     } else {
-                        throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
+                        throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", ("/"
+                                + entryName).replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
                     }
-                    jobClassEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
+                    jobClassEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(),
+                            "")));
                     jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
                     objects.add(jobClassEdit);
                 } else if (entryName.endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value())) {
@@ -1996,10 +1865,11 @@ public abstract class PublishUtils {
                     if (checkObjectNotEmpty(schedule)) {
                         scheduleEdit.setConfiguration(schedule);
                     } else {
-                        throw new JocImportException(String.format("Schedule with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(), "")));
+                        throw new JocImportException(String.format("Schedule with path %1$s not imported. Object values could not be mapped.", ("/"
+                                + entryName).replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(), "")));
                     }
-                    scheduleEdit.setPath(Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(), "")));
+                    scheduleEdit.setPath(Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION
+                            .value(), "")));
                     scheduleEdit.setObjectType(ConfigurationType.SCHEDULE);
                     objects.add(scheduleEdit);
                 } else if (entryName.endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
@@ -2008,19 +1878,21 @@ public abstract class PublishUtils {
                         if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
                             WorkingDaysCalendarEdit wdcEdit = new WorkingDaysCalendarEdit();
                             wdcEdit.setConfiguration(cal);
-                            wdcEdit.setPath(Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), "")));
+                            wdcEdit.setPath(Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION
+                                    .value(), "")));
                             wdcEdit.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
                             objects.add(wdcEdit);
                         } else if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
                             NonWorkingDaysCalendarEdit nwdcEdit = new NonWorkingDaysCalendarEdit();
                             nwdcEdit.setConfiguration(cal);
-                            nwdcEdit.setPath(Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), "")));
+                            nwdcEdit.setPath(Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION
+                                    .value(), "")));
                             nwdcEdit.setObjectType(ConfigurationType.NONWORKINGDAYSCALENDAR);
                             objects.add(nwdcEdit);
                         }
                     } else {
-                        throw new JocImportException(String.format("Calendar with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), "")));
+                        throw new JocImportException(String.format("Calendar with path %1$s not imported. Object values could not be mapped.", ("/"
+                                + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), "")));
                     }
                 }
             }
@@ -2028,14 +1900,15 @@ public abstract class PublishUtils {
             if (zipStream != null) {
                 try {
                     zipStream.close();
-                } catch (IOException e) {}
+                } catch (IOException e) {
+                }
             }
         }
         return objects;
     }
 
-    public static Map<ControllerObject, SignaturePath> readTarGzipFileContentWithSignatures(InputStream inputStream, JocMetaInfo jocMetaInfo) 
-            throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException, 
+    public static Map<ControllerObject, SignaturePath> readTarGzipFileContentWithSignatures(InputStream inputStream, JocMetaInfo jocMetaInfo)
+            throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException,
             JocConfigurationException, DBOpenSessionException {
         Set<ControllerObject> objects = new HashSet<ControllerObject>();
         Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
@@ -2060,7 +1933,7 @@ public abstract class PublishUtils {
                 // process JOC meta info file
                 if (entryName.equals(JOC_META_INFO_FILENAME)) {
                     JocMetaInfo fromFile = om.readValue(outBuffer.toString(), JocMetaInfo.class);
-                    if(!isJocMetaInfoNullOrEmpty(fromFile)) {
+                    if (!isJocMetaInfoNullOrEmpty(fromFile)) {
                         jocMetaInfo.setJocVersion(fromFile.getJocVersion());
                         jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
                         jocMetaInfo.setApiVersion(fromFile.getApiVersion());
@@ -2071,68 +1944,77 @@ public abstract class PublishUtils {
                 Signature signature = new Signature();
                 if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
                     WorkflowPublish workflowPublish = new WorkflowPublish();
-                    Workflow workflow = om.readValue(outBuffer.toString(), Workflow.class);
+                    com.sos.inventory.model.workflow.Workflow workflow = om.readValue(outBuffer.toString(),
+                            com.sos.inventory.model.workflow.Workflow.class);
                     if (checkObjectNotEmpty(workflow)) {
                         workflowPublish.setContent(workflow);
                     } else {
-                        throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", 
-                                Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""))));
+                        throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", Globals
+                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""))));
                     }
-                    workflowPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
+                    workflowPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION
+                            .value(), "")));
                     workflowPublish.setObjectType(DeployType.WORKFLOW);
                     objects.add(workflowPublish);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-                    signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value(), "")));
+                    signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
+                            ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value(), "")));
                     signature.setSignatureString(outBuffer.toString());
                     signaturePath.setSignature(signature);
                     signaturePaths.add(signaturePath);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value())) {
-                    signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value(), "")));
+                    signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
+                            ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value(), "")));
                     signature.setSignatureString(outBuffer.toString());
                     signaturePath.setSignature(signature);
                     signaturePaths.add(signaturePath);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
                     LockPublish lockPublish = new LockPublish();
-                    Lock lock = om.readValue(outBuffer.toString(), Lock.class);
+                    com.sos.inventory.model.lock.Lock lock = om.readValue(outBuffer.toString(), com.sos.inventory.model.lock.Lock.class);
                     if (checkObjectNotEmpty(lock)) {
                         lockPublish.setContent(lock);
                     } else {
-                        throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", 
-                                Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""))));
+                        throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", Globals
+                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""))));
                     }
-                    lockPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
+                    lockPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
+                            "")));
                     lockPublish.setObjectType(DeployType.LOCK);
                     objects.add(lockPublish);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
                     JunctionPublish junctionPublish = new JunctionPublish();
-                    Junction junction = om.readValue(outBuffer.toString(), Junction.class);
+                    com.sos.inventory.model.junction.Junction junction = om.readValue(outBuffer.toString(),
+                            com.sos.inventory.model.junction.Junction.class);
                     if (checkObjectNotEmpty(junction)) {
                         junctionPublish.setContent(junction);
                     } else {
-                        throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", 
-                                Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), ""))));
+                        throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", Globals
+                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), ""))));
                     }
-                    junctionPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
+                    junctionPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
+                            "")));
                     junctionPublish.setObjectType(DeployType.JUNCTION);
                     objects.add(junctionPublish);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
                     JobClassPublish jobClassPublish = new JobClassPublish();
-                    JobClass jobClass = om.readValue(outBuffer.toString(), JobClass.class);
+                    com.sos.inventory.model.jobclass.JobClass jobClass = om.readValue(outBuffer.toString(),
+                            com.sos.inventory.model.jobclass.JobClass.class);
                     if (checkObjectNotEmpty(jobClass)) {
                         jobClassPublish.setContent(jobClass);
                     } else {
-                        throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", 
-                                Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), ""))));
+                        throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", Globals
+                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), ""))));
                     }
-                    jobClassPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
+                    jobClassPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
+                            "")));
                     jobClassPublish.setObjectType(DeployType.JOBCLASS);
                     objects.add(jobClassPublish);
                 }
             }
             objects.stream().forEach(item -> {
-                objectsWithSignature.put(item, signaturePaths.stream()
-                        .filter(item2 -> item2.getObjectPath().equals(item.getPath())).findFirst().get());
-            });            
+                objectsWithSignature.put(item, signaturePaths.stream().filter(item2 -> item2.getObjectPath().equals(item.getPath())).findFirst()
+                        .get());
+            });
         } finally {
             try {
                 if (tarArchiveInputStream != null) {
@@ -2141,13 +2023,14 @@ public abstract class PublishUtils {
                 if (gzipInputStream != null) {
                     gzipInputStream.close();
                 }
-            } catch (Exception e) {}
+            } catch (Exception e) {
+            }
         }
         return objectsWithSignature;
     }
 
-    public static Set<ConfigurationObject> readTarGzipFileContent(InputStream inputStream, JocMetaInfo jocMetaInfo) 
-            throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException, 
+    public static Set<ConfigurationObject> readTarGzipFileContent(InputStream inputStream, JocMetaInfo jocMetaInfo)
+            throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException,
             JocConfigurationException, DBOpenSessionException {
         Set<ConfigurationObject> objects = new HashSet<ConfigurationObject>();
         GZIPInputStream gzipInputStream = null;
@@ -2170,7 +2053,7 @@ public abstract class PublishUtils {
                 // process JOC meta info file
                 if (entryName.equals(JOC_META_INFO_FILENAME)) {
                     JocMetaInfo fromFile = om.readValue(outBuffer.toString(), JocMetaInfo.class);
-                    if(!isJocMetaInfoNullOrEmpty(fromFile)) {
+                    if (!isJocMetaInfoNullOrEmpty(fromFile)) {
                         jocMetaInfo.setJocVersion(fromFile.getJocVersion());
                         jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
                         jocMetaInfo.setApiVersion(fromFile.getApiVersion());
@@ -2179,50 +2062,56 @@ public abstract class PublishUtils {
                 // process deployables and releaseables
                 if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
                     WorkflowEdit workflowEdit = new WorkflowEdit();
-                    Workflow workflow = om.readValue(outBuffer.toString(), Workflow.class);
+                    com.sos.inventory.model.workflow.Workflow workflow = om.readValue(outBuffer.toString(),
+                            com.sos.inventory.model.workflow.Workflow.class);
                     if (checkObjectNotEmpty(workflow)) {
                         workflowEdit.setConfiguration(workflow);
                     } else {
-                        throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
+                        throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", ("/"
+                                + entryName).replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
                     }
-                    workflowEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
+                    workflowEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(),
+                            "")));
                     workflowEdit.setObjectType(ConfigurationType.WORKFLOW);
                     objects.add(workflowEdit);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
                     LockEdit lockEdit = new LockEdit();
-                    Lock lock = om.readValue(outBuffer.toString(), Lock.class);
+                    com.sos.inventory.model.lock.Lock lock = om.readValue(outBuffer.toString(), com.sos.inventory.model.lock.Lock.class);
                     if (checkObjectNotEmpty(lock)) {
                         lockEdit.setConfiguration(lock);
                     } else {
-                        throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
+                        throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", ("/"
+                                + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
                     }
                     lockEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
                     lockEdit.setObjectType(ConfigurationType.LOCK);
                     objects.add(lockEdit);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
                     JunctionEdit junctionEdit = new JunctionEdit();
-                    Junction junction = om.readValue(outBuffer.toString(), Junction.class);
+                    com.sos.inventory.model.junction.Junction junction = om.readValue(outBuffer.toString(),
+                            com.sos.inventory.model.junction.Junction.class);
                     if (checkObjectNotEmpty(junction)) {
                         junctionEdit.setConfiguration(junction);
                     } else {
-                        throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
+                        throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", ("/"
+                                + entryName).replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
                     }
-                    junctionEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
+                    junctionEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
+                            "")));
                     junctionEdit.setObjectType(ConfigurationType.JUNCTION);
                     objects.add(junctionEdit);
                 } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
                     JobClassEdit jobClassEdit = new JobClassEdit();
-                    JobClass jobClass = om.readValue(outBuffer.toString(), JobClass.class);
+                    com.sos.inventory.model.jobclass.JobClass jobClass = om.readValue(outBuffer.toString(),
+                            com.sos.inventory.model.jobclass.JobClass.class);
                     if (checkObjectNotEmpty(jobClass)) {
                         jobClassEdit.setConfiguration(jobClass);
                     } else {
-                        throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
+                        throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", ("/"
+                                + entryName).replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
                     }
-                    jobClassEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
+                    jobClassEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
+                            "")));
                     jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
                     objects.add(jobClassEdit);
                 } else if (entryName.endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value())) {
@@ -2231,10 +2120,11 @@ public abstract class PublishUtils {
                     if (checkObjectNotEmpty(schedule)) {
                         scheduleEdit.setConfiguration(schedule);
                     } else {
-                        throw new JocImportException(String.format("Schedule with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(), "")));
+                        throw new JocImportException(String.format("Schedule with path %1$s not imported. Object values could not be mapped.", ("/"
+                                + entryName).replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(), "")));
                     }
-                    scheduleEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
+                    scheduleEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
+                            "")));
                     scheduleEdit.setObjectType(ConfigurationType.SCHEDULE);
                     objects.add(scheduleEdit);
                 } else if (entryName.endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
@@ -2243,19 +2133,21 @@ public abstract class PublishUtils {
                         if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
                             WorkingDaysCalendarEdit wdcEdit = new WorkingDaysCalendarEdit();
                             wdcEdit.setConfiguration(cal);
-                            wdcEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
+                            wdcEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
+                                    "")));
                             wdcEdit.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
                             objects.add(wdcEdit);
                         } else if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
                             NonWorkingDaysCalendarEdit nwdcEdit = new NonWorkingDaysCalendarEdit();
                             nwdcEdit.setConfiguration(cal);
-                            nwdcEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
+                            nwdcEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
+                                    "")));
                             nwdcEdit.setObjectType(ConfigurationType.NONWORKINGDAYSCALENDAR);
                             objects.add(nwdcEdit);
                         }
                     } else {
-                        throw new JocImportException(String.format("Calendar with path %1$s not imported. Object values could not be mapped.", 
-                                ("/" + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), "")));
+                        throw new JocImportException(String.format("Calendar with path %1$s not imported. Object values could not be mapped.", ("/"
+                                + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), "")));
                     }
                 }
             }
@@ -2267,15 +2159,17 @@ public abstract class PublishUtils {
                 if (gzipInputStream != null) {
                     gzipInputStream.close();
                 }
-            } catch (Exception e) {}
+            } catch (Exception e) {
+            }
         }
         return objects;
     }
 
-    public static StreamingOutput writeZipFile (Set<ControllerObject> deployables, Set<ConfigurationObject> releasables, 
-            Set<UpdateableWorkflowJobAgentName> updateableAgentNames,String commitId, String controllerId, DBLayerDeploy dbLayer,
-            Version jocVersion, Version apiVersion, Version inventoryVersion) {
+    public static StreamingOutput writeZipFile(Set<ControllerObject> deployables, Set<ConfigurationObject> releasables,
+            Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String commitId, String controllerId, DBLayerDeploy dbLayer, Version jocVersion,
+            Version apiVersion, Version inventoryVersion) {
         StreamingOutput streamingOutput = new StreamingOutput() {
+
             @Override
             public void write(OutputStream output) throws IOException {
                 ZipOutputStream zipOut = null;
@@ -2300,7 +2194,7 @@ public abstract class PublishUtils {
                             case LOCK:
                                 extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
                                 Lock lock = (Lock) deployable.getContent();
-                                if(lock.getId() == null) {
+                                if (lock.getId() == null) {
                                     lock.setId(Paths.get(deployable.getPath()).getFileName().toString());
                                 }
                                 content = om.writeValueAsString(lock);
@@ -2322,7 +2216,7 @@ public abstract class PublishUtils {
                             zipOut.putNextEntry(entry);
                             zipOut.write(content.getBytes());
                             zipOut.closeEntry();
-                        } 
+                        }
                     }
                     if (releasables != null && !releasables.isEmpty()) {
                         for (ConfigurationObject releasable : releasables) {
@@ -2347,7 +2241,7 @@ public abstract class PublishUtils {
                                 zipOut.write(content.getBytes());
                                 zipOut.closeEntry();
                             }
-                        } 
+                        }
                     }
                     JocMetaInfo jocMetaInfo = getJocMetaInfoFromVersionFiles(jocVersion, apiVersion, inventoryVersion);
                     if (!isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
@@ -2362,18 +2256,20 @@ public abstract class PublishUtils {
                     if (zipOut != null) {
                         try {
                             zipOut.close();
-                        } catch (Exception e) {}
+                        } catch (Exception e) {
+                        }
                     }
                 }
             }
         };
         return streamingOutput;
     }
-    
-    public static StreamingOutput writeTarGzipFile (Set<ControllerObject> deployables, Set<ConfigurationObject> releasables,
-            Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String commitId,  String controllerId, DBLayerDeploy dbLayer,
-            Version jocVersion, Version apiVersion, Version inventoryVersion) {
+
+    public static StreamingOutput writeTarGzipFile(Set<ControllerObject> deployables, Set<ConfigurationObject> releasables,
+            Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String commitId, String controllerId, DBLayerDeploy dbLayer, Version jocVersion,
+            Version apiVersion, Version inventoryVersion) {
         StreamingOutput streamingOutput = new StreamingOutput() {
+
             @Override
             public void write(OutputStream output) throws IOException {
                 GZIPOutputStream gzipOut = null;
@@ -2396,7 +2292,7 @@ public abstract class PublishUtils {
                                     replaceAgentNameWithAgentId(workflow, updateableAgentNames, controllerId);
                                 }
                                 workflow.setPath(Paths.get(deployable.getPath()).getFileName().toString());
-//                                workflow.setPath(deployable.getPath());
+                                // workflow.setPath(deployable.getPath());
                                 content = om.writeValueAsString(workflow);
                                 break;
                             case LOCK:
@@ -2424,7 +2320,7 @@ public abstract class PublishUtils {
                             tarOut.putArchiveEntry(entry);
                             tarOut.write(contentBytes);
                             tarOut.closeArchiveEntry();
-                        } 
+                        }
                     }
                     if (releasables != null && !releasables.isEmpty()) {
                         for (ConfigurationObject releasable : releasables) {
@@ -2451,7 +2347,7 @@ public abstract class PublishUtils {
                                 tarOut.write(contentBytes);
                                 tarOut.closeArchiveEntry();
                             }
-                        } 
+                        }
                     }
                     JocMetaInfo jocMetaInfo = getJocMetaInfoFromVersionFiles(jocVersion, apiVersion, inventoryVersion);
                     if (!isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
@@ -2469,28 +2365,31 @@ public abstract class PublishUtils {
                         try {
                             tarOut.finish();
                             tarOut.close();
-                        } catch (Exception e) {}
+                        } catch (Exception e) {
+                        }
                     }
                     if (gzipOut != null) {
                         try {
                             gzipOut.flush();
                             gzipOut.close();
-                        } catch (Exception e) {}
+                        } catch (Exception e) {
+                        }
                     }
                     if (bOut != null) {
                         try {
                             bOut.flush();
                             bOut.close();
-                        } catch (Exception e) {}
+                        } catch (Exception e) {
+                        }
                     }
 
                 }
-                
+
             }
         };
         return streamingOutput;
     }
-    
+
     public static boolean verifyDeployable(SOSHibernateSession hibernateSession, SignaturePath signaturePath, ConfigurationObject deployable,
             String account) throws JocSignatureVerificationException, SOSHibernateException {
         DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
@@ -2501,29 +2400,29 @@ public abstract class PublishUtils {
                 String publicKey = keyPair.getPublicKey();
                 if (keyPair.getCertificate() != null && !keyPair.getCertificate().isEmpty()) {
                     Certificate certificate = KeyUtil.getCertificate(keyPair.getCertificate());
-                    verified = VerifySignature.verifyX509(certificate, 
-                            om.writeValueAsString(deployable), signaturePath.getSignature().getSignatureString());                    
+                    verified = VerifySignature.verifyX509(certificate, om.writeValueAsString(deployable), signaturePath.getSignature()
+                            .getSignatureString());
                 } else if (publicKey != null && !publicKey.isEmpty()) {
                     if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
-                        verified = VerifySignature.verifyPGP(publicKey, 
-                                om.writeValueAsString(deployable), signaturePath.getSignature().getSignatureString());
+                        verified = VerifySignature.verifyPGP(publicKey, om.writeValueAsString(deployable), signaturePath.getSignature()
+                                .getSignatureString());
                     } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
-                        PublicKey pubKey = KeyUtil.getPublicKeyFromString(KeyUtil.decodePublicKeyString(publicKey)); 
-                        verified = VerifySignature.verifyX509(pubKey, 
-                                om.writeValueAsString(deployable), signaturePath.getSignature().getSignatureString());
+                        PublicKey pubKey = KeyUtil.getPublicKeyFromString(KeyUtil.decodePublicKeyString(publicKey));
+                        verified = VerifySignature.verifyX509(pubKey, om.writeValueAsString(deployable), signaturePath.getSignature()
+                                .getSignatureString());
                     } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
-                        PublicKey pubKey = KeyUtil.getECDSAPublicKeyFromString(publicKey); 
-                        verified = VerifySignature.verifyX509(pubKey, 
-                                om.writeValueAsString(deployable), signaturePath.getSignature().getSignatureString());
+                        PublicKey pubKey = KeyUtil.getECDSAPublicKeyFromString(publicKey);
+                        verified = VerifySignature.verifyX509(pubKey, om.writeValueAsString(deployable), signaturePath.getSignature()
+                                .getSignatureString());
                     }
                 }
                 if (!verified) {
                     LOGGER.debug(String.format("signature verification for deployable %1$s was not successful!", deployable.getPath()));
                     return verified;
-                } 
+                }
             }
-        } catch (IOException | PGPException | NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException 
-                | SignatureException | CertificateException | NoSuchProviderException  e) {
+        } catch (IOException | PGPException | NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException | SignatureException
+                | CertificateException | NoSuchProviderException e) {
             throw new JocSignatureVerificationException(e);
         }
         return verified;
@@ -2531,8 +2430,8 @@ public abstract class PublishUtils {
 
     public static Signature verifyWorkflows(SOSHibernateSession hibernateSession, Set<SignaturePath> signaturePaths, Workflow workflow,
             String account) throws JocSignatureVerificationException, SOSHibernateException {
-        SignaturePath signaturePath = signaturePaths.stream().filter(signaturePathFromStream -> signaturePathFromStream.getObjectPath()
-                .equals(workflow.getPath())).map(signaturePathFromStream -> signaturePathFromStream).findFirst().get();
+        SignaturePath signaturePath = signaturePaths.stream().filter(signaturePathFromStream -> signaturePathFromStream.getObjectPath().equals(
+                workflow.getPath())).map(signaturePathFromStream -> signaturePathFromStream).findFirst().get();
         DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
         Boolean verified = null;
         try {
@@ -2541,44 +2440,44 @@ public abstract class PublishUtils {
                 String publicKey = keyPair.getPublicKey();
                 if (keyPair.getCertificate() != null && !keyPair.getCertificate().isEmpty()) {
                     Certificate certificate = KeyUtil.getCertificate(keyPair.getCertificate());
-                    verified = VerifySignature.verifyX509(certificate, 
-                            om.writeValueAsString(workflow), signaturePath.getSignature().getSignatureString());                    
+                    verified = VerifySignature.verifyX509(certificate, om.writeValueAsString(workflow), signaturePath.getSignature()
+                            .getSignatureString());
                 } else if (publicKey != null && !publicKey.isEmpty()) {
                     if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
-                        verified = VerifySignature.verifyPGP(publicKey, 
-                                om.writeValueAsString(workflow), signaturePath.getSignature().getSignatureString());
+                        verified = VerifySignature.verifyPGP(publicKey, om.writeValueAsString(workflow), signaturePath.getSignature()
+                                .getSignatureString());
                     } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
-                        PublicKey pubKey = KeyUtil.getPublicKeyFromString(KeyUtil.decodePublicKeyString(publicKey)); 
-                        verified = VerifySignature.verifyX509(pubKey, 
-                                om.writeValueAsString(workflow), signaturePath.getSignature().getSignatureString());
+                        PublicKey pubKey = KeyUtil.getPublicKeyFromString(KeyUtil.decodePublicKeyString(publicKey));
+                        verified = VerifySignature.verifyX509(pubKey, om.writeValueAsString(workflow), signaturePath.getSignature()
+                                .getSignatureString());
                     } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
-                        PublicKey pubKey = KeyUtil.getECDSAPublicKeyFromString(publicKey); 
-                        verified = VerifySignature.verifyX509(pubKey, 
-                                om.writeValueAsString(workflow), signaturePath.getSignature().getSignatureString());
+                        PublicKey pubKey = KeyUtil.getECDSAPublicKeyFromString(publicKey);
+                        verified = VerifySignature.verifyX509(pubKey, om.writeValueAsString(workflow), signaturePath.getSignature()
+                                .getSignatureString());
                     }
                 }
                 if (!verified) {
                     LOGGER.debug(String.format("signature verification for workflow %1$s was not successful!", workflow.getPath()));
                     return null;
-                } 
+                }
             }
-        } catch (IOException | PGPException | NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException 
-                | SignatureException | CertificateException | NoSuchProviderException  e) {
+        } catch (IOException | PGPException | NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException | SignatureException
+                | CertificateException | NoSuchProviderException e) {
             throw new JocSignatureVerificationException(e);
         }
         return signaturePath.getSignature();
     }
 
-    public static boolean jocKeyPairNotEmpty (JocKeyPair keyPair) {
+    public static boolean jocKeyPairNotEmpty(JocKeyPair keyPair) {
         boolean checkNotEmpty = false;
-        if(keyPair != null) {
-            if(keyPair.getPrivateKey() != null && !keyPair.getPrivateKey().isEmpty()) {
+        if (keyPair != null) {
+            if (keyPair.getPrivateKey() != null && !keyPair.getPrivateKey().isEmpty()) {
                 checkNotEmpty = true;
             } else if (keyPair.getPrivateKey() != null && keyPair.getPrivateKey().isEmpty()) {
                 checkNotEmpty = false;
             } else if (keyPair.getPrivateKey() == null) {
                 checkNotEmpty = false;
-            } 
+            }
             if (checkNotEmpty) {
                 return checkNotEmpty;
             } else {
@@ -2588,8 +2487,8 @@ public abstract class PublishUtils {
                     checkNotEmpty = true;
                 } else if (keyPair.getPublicKey() == null && keyPair.getCertificate() == null) {
                     checkNotEmpty = false;
-                } else if ((keyPair.getPublicKey() != null && keyPair.getPublicKey().isEmpty()) 
-                        && (keyPair.getCertificate() != null && keyPair.getCertificate().isEmpty())) {
+                } else if ((keyPair.getPublicKey() != null && keyPair.getPublicKey().isEmpty()) && (keyPair.getCertificate() != null && keyPair
+                        .getCertificate().isEmpty())) {
                     checkNotEmpty = false;
                 }
                 return checkNotEmpty;
@@ -2599,14 +2498,14 @@ public abstract class PublishUtils {
         }
         return checkNotEmpty;
     }
-    
+
     public static Set<Path> updateSetOfPathsWithParents(Set<Path> paths) {
         final Set<Path> pathWithParents = new HashSet<Path>();
         pathWithParents.addAll(paths.stream().flatMap(path -> getPathWithParents(path).stream()).collect(Collectors.toSet()));
         return pathWithParents;
     }
-    
-    private static Set<Path> getPathWithParents (Path path) {
+
+    private static Set<Path> getPathWithParents(Path path) {
         Set<Path> pathsWithParents = new HashSet<Path>();
         pathsWithParents.add(path);
         Iterator<Path> pathsIter = path.iterator();
@@ -2619,62 +2518,57 @@ public abstract class PublishUtils {
             }
             pathsWithParents.add(Paths.get(folder));
         }
-        return pathsWithParents; 
+        return pathsWithParents;
     }
-    
+
     private static void replaceAgentNameWithAgentId(DBItemInventoryConfiguration draft, Set<UpdateableWorkflowJobAgentName> updateableAgentNames,
             String controllerId) throws JsonParseException, JsonMappingException, IOException {
         Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
-        Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream()
-                .filter(item -> item.getWorkflowPath().equals(draft.getPath())).collect(Collectors.toSet());
+        Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream().filter(item -> item.getWorkflowPath().equals(draft
+                .getPath())).collect(Collectors.toSet());
         workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
             Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-            job.setAgentId(filteredUpdateables.stream()
-                    .filter(item -> item.getJobName().equals(jobname) && controllerId.equals(item.getControllerId()))
-                    .findFirst().get().getAgentId());
+            job.setAgentId(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname) && controllerId.equals(item
+                    .getControllerId())).findFirst().get().getAgentId());
         });
         draft.setContent(om.writeValueAsString(workflow));
     }
 
-    private static void replaceAgentNameWithAgentId(Workflow workflow, Set<UpdateableWorkflowJobAgentName> updateableAgentNames,
-            String controllerId) throws JsonParseException, JsonMappingException, IOException {
-        Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream()
-                .filter(item -> item.getWorkflowPath().equals(workflow.getPath())).collect(Collectors.toSet());
+    private static void replaceAgentNameWithAgentId(Workflow workflow, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String controllerId)
+            throws JsonParseException, JsonMappingException, IOException {
+        Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream().filter(item -> item.getWorkflowPath().equals(workflow
+                .getPath())).collect(Collectors.toSet());
         workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
             Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-            job.setAgentId(filteredUpdateables.stream()
-                    .filter(item -> item.getJobName().equals(jobname) && controllerId.equals(item.getControllerId()))
-                    .findFirst().get().getAgentId());
+            job.setAgentId(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname) && controllerId.equals(item
+                    .getControllerId())).findFirst().get().getAgentId());
         });
     }
 
-    private static void replaceAgentIdWithOrigAgentName(DBItemInventoryConfiguration draft, 
-            Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String controllerId)
-            throws JsonParseException, JsonMappingException, IOException {
+    private static void replaceAgentIdWithOrigAgentName(DBItemInventoryConfiguration draft, Set<UpdateableWorkflowJobAgentName> updateableAgentNames,
+            String controllerId) throws JsonParseException, JsonMappingException, IOException {
         draft.setContent(getContentWithOrigAgentName(draft, updateableAgentNames, controllerId));
     }
-    
-    private static String getContentWithOrigAgentName(DBItemInventoryConfiguration draft, 
-            Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String controllerId)
-            throws JsonParseException, JsonMappingException, IOException {
+
+    private static String getContentWithOrigAgentName(DBItemInventoryConfiguration draft, Set<UpdateableWorkflowJobAgentName> updateableAgentNames,
+            String controllerId) throws JsonParseException, JsonMappingException, IOException {
         Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
-        Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream()
-                .filter(item -> item.getWorkflowPath().equals(draft.getPath()) && controllerId.equals(item.getControllerId()))
-                .collect(Collectors.toSet());
+        Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream().filter(item -> item.getWorkflowPath().equals(draft
+                .getPath()) && controllerId.equals(item.getControllerId())).collect(Collectors.toSet());
         workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
             Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
             job.setAgentId(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname)).findFirst().get().getAgentName());
         });
         return om.writeValueAsString(workflow);
     }
-    
+
     public static String getValueAsStringWithleadingZeros(Integer i, int length) {
         if (i.toString().length() >= length) {
             return i.toString();
         } else {
-            return String.format("%0" + (length-i.toString().length()) + "d%s", 0, i.toString());
+            return String.format("%0" + (length - i.toString().length()) + "d%s", 0, i.toString());
         }
-   }
+    }
 
     private static DBItemInventoryConfiguration cloneDraftToUpdate(DBItemInventoryConfiguration unsignedDraft) {
         DBItemInventoryConfiguration unsignedDraftUpdated = new DBItemInventoryConfiguration();
@@ -2698,83 +2592,83 @@ public abstract class PublishUtils {
 
     public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolder(Config folder, DBLayerDeploy dbLayer) {
         List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
-        entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(
-                folder.getConfiguration().getPath()));
-        return entries.stream()
-                .filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
+        entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(folder.getConfiguration().getPath()));
+        return entries.stream().filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
     }
-    
+
     public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolder(Configuration folder, DBLayerDeploy dbLayer) {
         List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
-        entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(
-                folder.getPath()));
-        return entries.stream()
-                .filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
+        entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(folder.getPath()));
+        return entries.stream().filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
     }
-    
-    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolder(Config folder, String controllerId,
-            DBLayerDeploy dbLayer) {
+
+    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolder(Config folder, String controllerId, DBLayerDeploy dbLayer) {
         List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
-        entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(
-                folder.getConfiguration().getPath(), controllerId));
-        return entries.stream()
-                .filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
+        entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(folder.getConfiguration().getPath(), controllerId));
+        return entries.stream().filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
     }
-    
+
     public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolders(List<Config> foldersToDelete, DBLayerDeploy dbLayer) {
         List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
-        foldersToDelete.stream()
-            .map(item -> item.getConfiguration().getPath())
-            .forEach(item -> entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(item)));
-        return entries.stream()
-                .filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
+        foldersToDelete.stream().map(item -> item.getConfiguration().getPath()).forEach(item -> entries.addAll(dbLayer
+                .getLatestDepHistoryItemsFromFolder(item)));
+        return entries.stream().filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
     }
-    
+
     public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesActiveForFolders(List<Config> foldersToDelete, String controllerId,
             DBLayerDeploy dbLayer) {
         List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
-        foldersToDelete.stream()
-            .map(item -> item.getConfiguration().getPath())
-            .forEach(item -> entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(item, controllerId)));
-        return entries.stream()
-                .filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
+        foldersToDelete.stream().map(item -> item.getConfiguration().getPath()).forEach(item -> entries.addAll(dbLayer
+                .getLatestDepHistoryItemsFromFolder(item, controllerId)));
+        return entries.stream().filter(item -> item.getOperation().equals(OperationType.UPDATE.value())).collect(Collectors.toSet());
     }
- 
-    public static Set<DBItemInventoryConfiguration> getDeployableInventoryConfigurationsfromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
+
+    public static Set<DBItemInventoryConfiguration> getDeployableInventoryConfigurationsfromFolders(List<Configuration> folders,
+            DBLayerDeploy dbLayer) {
         List<DBItemInventoryConfiguration> entries = new ArrayList<DBItemInventoryConfiguration>();
-        folders.stream().forEach(item -> entries.addAll(dbLayer.getDeployableInventoryConfigurationsByFolderWithoutDeployed(item.getPath(), item.getRecursive())));
+        folders.stream().forEach(item -> entries.addAll(dbLayer.getDeployableInventoryConfigurationsByFolderWithoutDeployed(item.getPath(), item
+                .getRecursive())));
         return entries.stream().collect(Collectors.toSet());
     }
-    
-    public static Set<DBItemInventoryConfiguration> getValidDeployableInventoryConfigurationsfromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
+
+    public static Set<DBItemInventoryConfiguration> getValidDeployableInventoryConfigurationsfromFolders(List<Configuration> folders,
+            DBLayerDeploy dbLayer) {
         List<DBItemInventoryConfiguration> entries = new ArrayList<DBItemInventoryConfiguration>();
-        folders.stream().forEach(item -> entries.addAll(dbLayer.getValidDeployableInventoryConfigurationsByFolder(item.getPath(), item.getRecursive())));
+        folders.stream().forEach(item -> entries.addAll(dbLayer.getValidDeployableInventoryConfigurationsByFolder(item.getPath(), item
+                .getRecursive())));
         return entries.stream().collect(Collectors.toSet());
     }
-    
-    public static Set<DBItemInventoryConfiguration> getValidDeployableDraftInventoryConfigurationsfromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
+
+    public static Set<DBItemInventoryConfiguration> getValidDeployableDraftInventoryConfigurationsfromFolders(List<Configuration> folders,
+            DBLayerDeploy dbLayer) {
         List<DBItemInventoryConfiguration> entries = new ArrayList<DBItemInventoryConfiguration>();
-        folders.stream().forEach(item -> entries.addAll(dbLayer.getValidDeployableDraftInventoryConfigurationsByFolder(item.getPath(), item.getRecursive())));
+        folders.stream().forEach(item -> entries.addAll(dbLayer.getValidDeployableDraftInventoryConfigurationsByFolder(item.getPath(), item
+                .getRecursive())));
         return entries.stream().collect(Collectors.toSet());
     }
-    
-    public static Set<DBItemInventoryConfiguration> getReleasableInventoryConfigurationsWithoutReleasedfromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
+
+    public static Set<DBItemInventoryConfiguration> getReleasableInventoryConfigurationsWithoutReleasedfromFolders(List<Configuration> folders,
+            DBLayerDeploy dbLayer) {
         List<DBItemInventoryConfiguration> entries = new ArrayList<DBItemInventoryConfiguration>();
-        folders.stream().forEach(item -> entries.addAll(dbLayer.getReleasableInventoryConfigurationsByFolderWithoutReleased(item.getPath(), item.getRecursive())));
+        folders.stream().forEach(item -> entries.addAll(dbLayer.getReleasableInventoryConfigurationsByFolderWithoutReleased(item.getPath(), item
+                .getRecursive())));
         return entries.stream().collect(Collectors.toSet());
     }
-    
-    public static Set<DBItemInventoryConfiguration> getValidReleasableInventoryConfigurationsfromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
+
+    public static Set<DBItemInventoryConfiguration> getValidReleasableInventoryConfigurationsfromFolders(List<Configuration> folders,
+            DBLayerDeploy dbLayer) {
         List<DBItemInventoryConfiguration> entries = new ArrayList<DBItemInventoryConfiguration>();
-        folders.stream().forEach(item -> entries.addAll(dbLayer.getValidReleasableInventoryConfigurationsByFolderWithoutReleased(item.getPath(), item.getRecursive())));
+        folders.stream().forEach(item -> entries.addAll(dbLayer.getValidReleasableInventoryConfigurationsByFolderWithoutReleased(item.getPath(), item
+                .getRecursive())));
         return entries.stream().collect(Collectors.toSet());
     }
-    
-    public static Set<DBItemInventoryReleasedConfiguration> getReleasedInventoryConfigurationsfromFoldersWithoutDrafts(List<Configuration> folders, 
+
+    public static Set<DBItemInventoryReleasedConfiguration> getReleasedInventoryConfigurationsfromFoldersWithoutDrafts(List<Configuration> folders,
             DBLayerDeploy dbLayer) {
         List<DBItemInventoryReleasedConfiguration> entries = new ArrayList<DBItemInventoryReleasedConfiguration>();
         folders.stream().forEach(item -> entries.addAll(dbLayer.getReleasedInventoryConfigurationsByFolder(item.getPath(), item.getRecursive())));
-        Set<DBItemInventoryReleasedConfiguration> allReleased = entries.stream().collect(Collectors.toSet());;
+        Set<DBItemInventoryReleasedConfiguration> allReleased = entries.stream().collect(Collectors.toSet());
+        ;
         allReleased = allReleased.stream().filter(item -> {
             DBItemInventoryConfiguration dbItem = dbLayer.getConfigurationByName(item.getName(), item.getType());
             if (dbItem != null && item.getPath().equals(dbItem.getPath())) {
@@ -2783,9 +2677,8 @@ public abstract class PublishUtils {
                 return false;
             }
         }).filter(Objects::nonNull).collect(Collectors.toSet());
-        allReleased.stream()
-        .filter(item -> {
-            if(item.getName() == null || item.getName().isEmpty()) {
+        allReleased.stream().filter(item -> {
+            if (item.getName() == null || item.getName().isEmpty()) {
                 LOGGER.debug(String.format("No name found for item with path: %1$s ", item.getPath()));
                 String name = Paths.get(item.getPath()).getFileName().toString();
                 item.setName(name);
@@ -2802,14 +2695,15 @@ public abstract class PublishUtils {
         }).filter(Objects::nonNull).collect(Collectors.toSet());
         return allReleased;
     }
-    
+
     public static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesFromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
         List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
         folders.stream().forEach(item -> entries.addAll(dbLayer.getLatestActiveDepHistoryItemsFromFolder(item.getPath(), item.getRecursive())));
         return entries.stream().collect(Collectors.toSet());
     }
-    
-    public static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesWithoutDraftsFromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
+
+    public static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesWithoutDraftsFromFolders(List<Configuration> folders,
+            DBLayerDeploy dbLayer) {
         Set<DBItemDeploymentHistory> allLatest = getLatestActiveDepHistoryEntriesFromFolders(folders, dbLayer);
         // filter duplicates, if history item with same name but different folder exists
         allLatest = allLatest.stream().filter(item -> {
@@ -2820,57 +2714,52 @@ public abstract class PublishUtils {
                 return false;
             }
         }).filter(Objects::nonNull).collect(Collectors.toSet());
-        return allLatest.stream()
-                .filter(item -> {
-                    if(item.getName() == null || item.getName().isEmpty()) {
-                        LOGGER.debug(String.format("No name found for item with path: %1$s ", item.getPath()));
-                        String name = Paths.get(item.getPath()).getFileName().toString();
-                        item.setName(name);
-                        LOGGER.debug(String.format("Item name set to: %1$s ", item.getName()));
-                    }
-                    Boolean deployed = dbLayer.getInventoryConfigurationDeployedByNameAndType(item.getName(), item.getType());
-                    if (deployed == null) {
-                        // history item does not exist in current configuration
-                        // decision: ignore item as only objects from history with existing current configuration are relevant
-                        return false;
-                    } else {
-                        return deployed;
-                    }
-                }).filter(Objects::nonNull).collect(Collectors.toSet());
+        return allLatest.stream().filter(item -> {
+            if (item.getName() == null || item.getName().isEmpty()) {
+                LOGGER.debug(String.format("No name found for item with path: %1$s ", item.getPath()));
+                String name = Paths.get(item.getPath()).getFileName().toString();
+                item.setName(name);
+                LOGGER.debug(String.format("Item name set to: %1$s ", item.getName()));
+            }
+            Boolean deployed = dbLayer.getInventoryConfigurationDeployedByNameAndType(item.getName(), item.getType());
+            if (deployed == null) {
+                // history item does not exist in current configuration
+                // decision: ignore item as only objects from history with existing current configuration are relevant
+                return false;
+            } else {
+                return deployed;
+            }
+        }).filter(Objects::nonNull).collect(Collectors.toSet());
     }
-    
-    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesDeleteForFolder(Config folder, String controllerId,
-            DBLayerDeploy dbLayer) {
+
+    public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesDeleteForFolder(Config folder, String controllerId, DBLayerDeploy dbLayer) {
         List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
         entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(folder.getConfiguration().getPath(), controllerId));
         return entries.stream().filter(item -> item.getOperation().equals(OperationType.DELETE.value())).collect(Collectors.toSet());
     }
-    
+
     public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesDeleteForFolders(List<Config> foldersToDelete, String controllerId,
             DBLayerDeploy dbLayer) {
         List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
-        foldersToDelete.stream()
-            .map(item -> item.getConfiguration().getPath())
-            .forEach(item -> entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(item, controllerId)));
+        foldersToDelete.stream().map(item -> item.getConfiguration().getPath()).forEach(item -> entries.addAll(dbLayer
+                .getLatestDepHistoryItemsFromFolder(item, controllerId)));
         return entries.stream().filter(item -> item.getOperation().equals(OperationType.DELETE.value())).collect(Collectors.toSet());
     }
-    
-    public static Set<ControllerObject> getDeployableObjectsFromDB(DeployablesFilter filter, DBLayerDeploy dbLayer) 
-            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
-            IOException, SOSHibernateException {
+
+    public static Set<ControllerObject> getDeployableObjectsFromDB(DeployablesFilter filter, DBLayerDeploy dbLayer)
+            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException,
+            SOSHibernateException {
         return getDeployableObjectsFromDB(filter, dbLayer, null);
     }
 
-    public static Set<ControllerObject> getDeployableObjectsFromDB(DeployablesFilter filter, DBLayerDeploy dbLayer, String commitId) 
-            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
-            IOException, SOSHibernateException {
+    public static Set<ControllerObject> getDeployableObjectsFromDB(DeployablesFilter filter, DBLayerDeploy dbLayer, String commitId)
+            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException,
+            SOSHibernateException {
         Set<ControllerObject> allObjects = new HashSet<ControllerObject>();
         if (filter != null) {
             if (filter.getDeployConfigurations() != null && !filter.getDeployConfigurations().isEmpty()) {
-                List<Configuration> depFolders = filter.getDeployConfigurations().stream()
-                        .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                        .map(item -> item.getConfiguration())
-                        .collect(Collectors.toList());
+                List<Configuration> depFolders = filter.getDeployConfigurations().stream().filter(item -> item.getConfiguration().getObjectType()
+                        .equals(ConfigurationType.FOLDER)).map(item -> item.getConfiguration()).collect(Collectors.toList());
                 Set<DBItemDeploymentHistory> allItems = new HashSet<DBItemDeploymentHistory>();
                 if (depFolders != null && !depFolders.isEmpty()) {
                     allItems.addAll(getLatestActiveDepHistoryEntriesWithoutDraftsFromFolders(depFolders, dbLayer));
@@ -2880,22 +2769,18 @@ public abstract class PublishUtils {
                     allItems.addAll(deploymentDbItems);
                 }
                 if (!allItems.isEmpty()) {
-                    allItems.stream()
-                        .filter(Objects::nonNull)
-                        .filter(item -> !item.getType().equals(ConfigurationType.FOLDER.intValue()))
-                        .forEach(item -> {
-                            if (commitId != null) {
-                                dbLayer.storeCommitIdForLaterUsage(item, commitId);
-                            }
-                            allObjects.add(getJSObjectFromDBItem(item, commitId));
-                        });
+                    allItems.stream().filter(Objects::nonNull).filter(item -> !item.getType().equals(ConfigurationType.FOLDER.intValue())).forEach(
+                            item -> {
+                                if (commitId != null) {
+                                    dbLayer.storeCommitIdForLaterUsage(item, commitId);
+                                }
+                                allObjects.add(getJSObjectFromDBItem(item, commitId));
+                            });
                 }
             }
             if (filter.getDraftConfigurations() != null && !filter.getDraftConfigurations().isEmpty()) {
-                List<Configuration> draftFolders = filter.getDraftConfigurations().stream()
-                        .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                        .map(item -> item.getConfiguration())
-                        .collect(Collectors.toList());
+                List<Configuration> draftFolders = filter.getDraftConfigurations().stream().filter(item -> item.getConfiguration().getObjectType()
+                        .equals(ConfigurationType.FOLDER)).map(item -> item.getConfiguration()).collect(Collectors.toList());
                 Set<DBItemInventoryConfiguration> allItems = new HashSet<DBItemInventoryConfiguration>();
                 if (draftFolders != null && !draftFolders.isEmpty()) {
                     allItems.addAll(getDeployableInventoryConfigurationsfromFolders(draftFolders, dbLayer));
@@ -2905,31 +2790,27 @@ public abstract class PublishUtils {
                     allItems.addAll(configurationDbItems);
                 }
                 if (!allItems.isEmpty()) {
-                    allItems.stream()
-                        .filter(Objects::nonNull)
-                        .filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
-                        .forEach(item -> {
-                            if (commitId != null) {
-                                dbLayer.storeCommitIdForLaterUsage(item, commitId);
-                            }
-                            allObjects.add(mapInvConfigToJSObject(item));
-                        });
+                    allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER)).forEach(
+                            item -> {
+                                if (commitId != null) {
+                                    dbLayer.storeCommitIdForLaterUsage(item, commitId);
+                                }
+                                allObjects.add(mapInvConfigToJSObject(item));
+                            });
                 }
-            } 
+            }
         }
         return allObjects;
     }
-    
-    public static Set<ControllerObject> getDeployableObjectsFromDB(DeployablesValidFilter filter, DBLayerDeploy dbLayer, String commitId) 
-            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
-            IOException, SOSHibernateException {
+
+    public static Set<ControllerObject> getDeployableObjectsFromDB(DeployablesValidFilter filter, DBLayerDeploy dbLayer, String commitId)
+            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException,
+            SOSHibernateException {
         Set<ControllerObject> allObjects = new HashSet<ControllerObject>();
         if (filter != null) {
             if (filter.getDeployConfigurations() != null && !filter.getDeployConfigurations().isEmpty()) {
-                List<Configuration> depFolders = filter.getDeployConfigurations().stream()
-                        .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                        .map(item -> item.getConfiguration())
-                        .collect(Collectors.toList());
+                List<Configuration> depFolders = filter.getDeployConfigurations().stream().filter(item -> item.getConfiguration().getObjectType()
+                        .equals(ConfigurationType.FOLDER)).map(item -> item.getConfiguration()).collect(Collectors.toList());
                 Set<DBItemDeploymentHistory> allItems = new HashSet<DBItemDeploymentHistory>();
                 if (depFolders != null && !depFolders.isEmpty()) {
                     allItems.addAll(getLatestActiveDepHistoryEntriesFromFolders(depFolders, dbLayer));
@@ -2939,22 +2820,18 @@ public abstract class PublishUtils {
                     allItems.addAll(deploymentDbItems);
                 }
                 if (!allItems.isEmpty()) {
-                    allItems.stream()
-                        .filter(Objects::nonNull)
-                        .filter(item -> !item.getType().equals(ConfigurationType.FOLDER.intValue()))
-                        .forEach(item -> {
-                            if (commitId != null) {
-                                dbLayer.storeCommitIdForLaterUsage(item, commitId);
-                            }
-                            allObjects.add(getJSObjectFromDBItem(item, commitId));
-                        });
+                    allItems.stream().filter(Objects::nonNull).filter(item -> !item.getType().equals(ConfigurationType.FOLDER.intValue())).forEach(
+                            item -> {
+                                if (commitId != null) {
+                                    dbLayer.storeCommitIdForLaterUsage(item, commitId);
+                                }
+                                allObjects.add(getJSObjectFromDBItem(item, commitId));
+                            });
                 }
             }
             if (filter.getDraftConfigurations() != null && !filter.getDraftConfigurations().isEmpty()) {
-                List<Configuration> draftFolders = filter.getDraftConfigurations().stream()
-                        .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                        .map(item -> item.getConfiguration())
-                        .collect(Collectors.toList());
+                List<Configuration> draftFolders = filter.getDraftConfigurations().stream().filter(item -> item.getConfiguration().getObjectType()
+                        .equals(ConfigurationType.FOLDER)).map(item -> item.getConfiguration()).collect(Collectors.toList());
                 Set<DBItemInventoryConfiguration> allItems = new HashSet<DBItemInventoryConfiguration>();
                 if (draftFolders != null && !draftFolders.isEmpty()) {
                     allItems.addAll(getDeployableInventoryConfigurationsfromFolders(draftFolders, dbLayer));
@@ -2964,31 +2841,27 @@ public abstract class PublishUtils {
                     allItems.addAll(configurationDbItems);
                 }
                 if (!allItems.isEmpty()) {
-                    allItems.stream()
-                        .filter(Objects::nonNull)
-                        .filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
-                        .forEach(item -> {
-                            if (commitId != null) {
-                                dbLayer.storeCommitIdForLaterUsage(item, commitId);
-                            }
-                            allObjects.add(mapInvConfigToJSObject(item));
-                        });
+                    allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER)).forEach(
+                            item -> {
+                                if (commitId != null) {
+                                    dbLayer.storeCommitIdForLaterUsage(item, commitId);
+                                }
+                                allObjects.add(mapInvConfigToJSObject(item));
+                            });
                 }
-            } 
+            }
         }
         return allObjects;
     }
-    
-    public static Set<ConfigurationObject> getReleasableObjectsFromDB(ReleasablesFilter filter, DBLayerDeploy dbLayer) 
-            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, 
-            IOException, SOSHibernateException {
+
+    public static Set<ConfigurationObject> getReleasableObjectsFromDB(ReleasablesFilter filter, DBLayerDeploy dbLayer)
+            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException,
+            SOSHibernateException {
         Set<ConfigurationObject> allObjects = new HashSet<ConfigurationObject>();
         if (filter != null) {
             if (filter.getReleasedConfigurations() != null && !filter.getReleasedConfigurations().isEmpty()) {
-                List<Configuration> releasedFolders = filter.getReleasedConfigurations().stream()
-                        .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                        .map(item -> item.getConfiguration())
-                        .collect(Collectors.toList());
+                List<Configuration> releasedFolders = filter.getReleasedConfigurations().stream().filter(item -> item.getConfiguration()
+                        .getObjectType().equals(ConfigurationType.FOLDER)).map(item -> item.getConfiguration()).collect(Collectors.toList());
                 Set<DBItemInventoryReleasedConfiguration> allItems = new HashSet<DBItemInventoryReleasedConfiguration>();
                 if (releasedFolders != null && !releasedFolders.isEmpty()) {
                     allItems.addAll(getReleasedInventoryConfigurationsfromFoldersWithoutDrafts(releasedFolders, dbLayer));
@@ -2998,17 +2871,13 @@ public abstract class PublishUtils {
                     allItems.addAll(configurationDbItems);
                 }
                 if (!allItems.isEmpty()) {
-                    allItems.stream()
-                        .filter(Objects::nonNull)
-                        .filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
-                        .forEach(item -> allObjects.add(getConfigurationObjectFromDBItem(item)));
+                    allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER)).forEach(
+                            item -> allObjects.add(getConfigurationObjectFromDBItem(item)));
                 }
             }
             if (filter.getDraftConfigurations() != null && !filter.getDraftConfigurations().isEmpty()) {
-                List<Configuration> draftFolders = filter.getDraftConfigurations().stream()
-                        .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                        .map(item -> item.getConfiguration())
-                        .collect(Collectors.toList());
+                List<Configuration> draftFolders = filter.getDraftConfigurations().stream().filter(item -> item.getConfiguration().getObjectType()
+                        .equals(ConfigurationType.FOLDER)).map(item -> item.getConfiguration()).collect(Collectors.toList());
                 Set<DBItemInventoryConfiguration> allItems = new HashSet<DBItemInventoryConfiguration>();
                 if (draftFolders != null && !draftFolders.isEmpty()) {
                     allItems.addAll(getReleasableInventoryConfigurationsWithoutReleasedfromFolders(draftFolders, dbLayer));
@@ -3018,24 +2887,22 @@ public abstract class PublishUtils {
                     allItems.addAll(configurationDbItems);
                 }
                 if (!allItems.isEmpty()) {
-                    allItems.stream()
-                    .filter(Objects::nonNull)
-                    .filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
-                    .forEach(item -> allObjects.add(getConfigurationObjectFromDBItem(item)));
+                    allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER)).forEach(
+                            item -> allObjects.add(getConfigurationObjectFromDBItem(item)));
                 }
-            } 
+            }
         }
         return allObjects;
     }
-    
-    private static ControllerObject mapInvConfigToJSObject (DBItemInventoryConfiguration item) {
+
+    private static ControllerObject mapInvConfigToJSObject(DBItemInventoryConfiguration item) {
         return mapInvConfigToJSObject(item, null);
     }
-    
-    private static ControllerObject mapInvConfigToJSObject (DBItemInventoryConfiguration item, String commitId) {
+
+    private static ControllerObject mapInvConfigToJSObject(DBItemInventoryConfiguration item, String commitId) {
         try {
             ControllerObject jsObject = new ControllerObject();
-//            jsObject.setId(item.getId());
+            // jsObject.setId(item.getId());
             jsObject.setPath(item.getPath());
             jsObject.setObjectType(PublishUtils.mapConfigurationType(ConfigurationType.fromValue(item.getType())));
             switch (jsObject.getObjectType()) {
@@ -3064,7 +2931,7 @@ public abstract class PublishUtils {
             }
             jsObject.setAccount(Globals.defaultProfileAccount);
             // TODO: setVersion
-//        jsObject.setVersion(item.getVersion());
+            // jsObject.setVersion(item.getVersion());
             jsObject.setModified(item.getModified());
             return jsObject;
         } catch (IOException e) {
@@ -3072,10 +2939,10 @@ public abstract class PublishUtils {
         }
     }
 
-    private static ControllerObject getJSObjectFromDBItem (DBItemDeploymentHistory item, String commitId) {
+    private static ControllerObject getJSObjectFromDBItem(DBItemDeploymentHistory item, String commitId) {
         try {
             ControllerObject jsObject = new ControllerObject();
-//            jsObject.setId(item.getId());
+            // jsObject.setId(item.getId());
             jsObject.setPath(item.getPath());
             jsObject.setObjectType(DeployType.fromValue(item.getType()));
             switch (jsObject.getObjectType()) {
@@ -3109,11 +2976,11 @@ public abstract class PublishUtils {
             throw new JocException(e);
         }
     }
-    
+
     private static ConfigurationObject getConfigurationObjectFromDBItem(DBItemInventoryConfiguration item) {
         try {
             ConfigurationObject configuration = new ConfigurationObject();
-//            configuration.setId(item.getId());
+            // configuration.setId(item.getId());
             configuration.setPath(item.getPath());
             configuration.setObjectType(ConfigurationType.fromValue(item.getType()));
             switch (configuration.getObjectType()) {
@@ -3138,7 +3005,7 @@ public abstract class PublishUtils {
     private static ConfigurationObject getConfigurationObjectFromDBItem(DBItemInventoryReleasedConfiguration item) {
         try {
             ConfigurationObject configuration = new ConfigurationObject();
-//            configuration.setId(item.getId());
+            // configuration.setId(item.getId());
             configuration.setPath(item.getPath());
             configuration.setObjectType(ConfigurationType.fromValue(item.getType()));
             switch (configuration.getObjectType()) {
@@ -3160,83 +3027,60 @@ public abstract class PublishUtils {
         }
     }
 
-    private static boolean checkObjectNotEmpty (Workflow workflow) {
-        if (workflow.getDocumentationPath() == null 
-                && workflow.getInstructions() == null 
-                && workflow.getJobs() == null
-                && workflow.getPath() == null
-                && workflow.getTYPE() == null) {
+    private static boolean checkObjectNotEmpty(com.sos.inventory.model.workflow.Workflow workflow) {
+        if (workflow.getDocumentationPath() == null && workflow.getInstructions() == null && workflow.getJobs() == null && workflow
+                .getTYPE() == null) {
             return false;
         } else {
             return true;
         }
     }
-    
-    private static boolean checkObjectNotEmpty (Junction junction) {
-        if (junction.getDocumentationPath() == null
-                && junction.getLifetime() == null
-                && junction.getOrderId() == null
-                && junction.getPath() == null
+
+    private static boolean checkObjectNotEmpty(com.sos.inventory.model.junction.Junction junction) {
+        if (junction.getDocumentationPath() == null && junction.getLifetime() == null && junction.getOrderId() == null && junction.getPath() == null
                 && junction.getTYPE() == null) {
             return false;
         } else {
             return true;
         }
     }
-    
-    private static boolean checkObjectNotEmpty (JobClass jobClass) {
-        if (jobClass.getDocumentationPath() == null 
-                && jobClass.getMaxProcesses() == null
-                && jobClass.getPath() == null
-                && jobClass.getPriority() == null
-                && jobClass.getTYPE() == null) {
+
+    private static boolean checkObjectNotEmpty(com.sos.inventory.model.jobclass.JobClass jobClass) {
+        if (jobClass.getDocumentationPath() == null && jobClass.getMaxProcesses() == null && jobClass.getPath() == null && jobClass
+                .getPriority() == null && jobClass.getTYPE() == null) {
             return false;
         } else {
             return true;
         }
     }
-    
-    private static boolean checkObjectNotEmpty (Lock lock) {
-        if (lock.getDocumentationPath() == null 
-                && lock.getId() == null
-                && lock.getLimit() == null
-                && lock.getTYPE() == null) {
+
+    private static boolean checkObjectNotEmpty(com.sos.inventory.model.lock.Lock lock) {
+        if (lock.getDocumentationPath() == null && lock.getLimit() == null && lock.getTYPE() == null) {
             return false;
         } else {
             return true;
         }
     }
-    
-    private static boolean checkObjectNotEmpty (Schedule schedule) {
-        if (schedule.getDocumentationPath() == null 
-                && schedule.getPlanOrderAutomatically() == null
-                && schedule.getPath() == null
-                && schedule.getCalendars() == null
-                && schedule.getWorkflowPath() == null
-                && schedule.getSubmitOrderToControllerWhenPlanned() == null
-                && schedule.getNonWorkingCalendars() == null
-                && schedule.getVariables() == null) {
+
+    private static boolean checkObjectNotEmpty(Schedule schedule) {
+        if (schedule.getDocumentationPath() == null && schedule.getPlanOrderAutomatically() == null && schedule.getPath() == null && schedule
+                .getCalendars() == null && schedule.getWorkflowPath() == null && schedule.getSubmitOrderToControllerWhenPlanned() == null && schedule
+                        .getNonWorkingCalendars() == null && schedule.getVariables() == null) {
             return false;
         } else {
             return true;
         }
     }
-    
-    private static boolean checkObjectNotEmpty (Calendar calendar) {
-        if (calendar.getDocumentationPath() == null 
-                && calendar.getExcludes() == null
-                && calendar.getPath() == null
-                && calendar.getFrom() == null
-                && calendar.getIncludes() == null
-                && calendar.getName() == null 
-                && calendar.getTo() == null 
-                && calendar.getType() == null) {
+
+    private static boolean checkObjectNotEmpty(Calendar calendar) {
+        if (calendar.getDocumentationPath() == null && calendar.getExcludes() == null && calendar.getPath() == null && calendar.getFrom() == null
+                && calendar.getIncludes() == null && calendar.getName() == null && calendar.getTo() == null && calendar.getType() == null) {
             return false;
         } else {
             return true;
         }
     }
-    
+
     private static JocMetaInfo getJocMetaInfoFromJocProperties() {
         Properties jocProperties = Globals.sosCockpitProperties.getProperties();
         JocMetaInfo jocMetaInfo = new JocMetaInfo();
@@ -3246,7 +3090,7 @@ public abstract class PublishUtils {
         if (jocProperties.containsKey("inventory_schema_version")) {
             jocMetaInfo.setInventorySchemaVersion(jocProperties.getProperty("inventory_schema_version"));
         }
-        if(jocProperties.containsKey("api_version")) {
+        if (jocProperties.containsKey("api_version")) {
             jocMetaInfo.setApiVersion(jocProperties.getProperty("api_version"));
         }
         return jocMetaInfo;
@@ -3260,28 +3104,27 @@ public abstract class PublishUtils {
         if (inventoryVersion != null) {
             jocMetaInfo.setInventorySchemaVersion(inventoryVersion.getVersion());
         }
-        if(apiVersion != null) {
+        if (apiVersion != null) {
             jocMetaInfo.setApiVersion(apiVersion.getVersion());
         }
         return jocMetaInfo;
     }
 
-    public static boolean isJocMetaInfoNullOrEmpty (JocMetaInfo jocMetaInfo) {
-        if (jocMetaInfo == null ||
-                ((jocMetaInfo.getJocVersion() == null || jocMetaInfo.getJocVersion().isEmpty())
-                        && (jocMetaInfo.getInventorySchemaVersion() == null || jocMetaInfo.getInventorySchemaVersion().isEmpty())
-                        && (jocMetaInfo.getApiVersion() == null || jocMetaInfo.getApiVersion().isEmpty()))) {
+    public static boolean isJocMetaInfoNullOrEmpty(JocMetaInfo jocMetaInfo) {
+        if (jocMetaInfo == null || ((jocMetaInfo.getJocVersion() == null || jocMetaInfo.getJocVersion().isEmpty()) && (jocMetaInfo
+                .getInventorySchemaVersion() == null || jocMetaInfo.getInventorySchemaVersion().isEmpty()) && (jocMetaInfo.getApiVersion() == null
+                        || jocMetaInfo.getApiVersion().isEmpty()))) {
             return true;
         } else {
             return false;
         }
     }
-    
+
     public static void updatePathWithNameInContent(Set<? extends DBItem> configurations) {
         configurations.stream().forEach(item -> {
             if (item instanceof DBItemInventoryConfiguration) {
                 try {
-                    switch(((DBItemInventoryConfiguration) item).getTypeAsEnum()) {
+                    switch (((DBItemInventoryConfiguration) item).getTypeAsEnum()) {
                     case WORKFLOW:
                         Workflow workflow = Globals.objectMapper.readValue(((DBItemInventoryConfiguration) item).getContent(), Workflow.class);
                         if (workflow.getPath() != null && workflow.getPath().startsWith("/")) {
@@ -3328,7 +3171,7 @@ public abstract class PublishUtils {
                 }
             } else if (item instanceof DBItemDeploymentHistory) {
                 try {
-                    switch(DeployType.fromValue(((DBItemDeploymentHistory)item).getType())) {
+                    switch (DeployType.fromValue(((DBItemDeploymentHistory) item).getType())) {
                     case WORKFLOW:
                         Workflow workflow = Globals.objectMapper.readValue(((DBItemDeploymentHistory) item).getContent(), Workflow.class);
                         if (workflow.getPath().startsWith("/")) {
@@ -3385,7 +3228,7 @@ public abstract class PublishUtils {
             }
         }
     }
-    
+
     public static List<Configuration> handleFolders1(List<Configuration> foldersIn, DBLayerDeploy dbLayer) {
         return foldersIn.stream().flatMap(item -> {
             List<DBItemInventoryConfiguration> dbItems = dbLayer.getInvConfigurationFolders(item.getPath(), true);
@@ -3411,28 +3254,26 @@ public abstract class PublishUtils {
             }).filter(Objects::nonNull);
         }).collect(Collectors.toList());
     }
-    
-    public static boolean verifyCertificateAgainstCAs (X509Certificate cert, List<DBItemInventoryCertificate> caCertDBItems) {
-        Set<X509Certificate> caCerts = caCertDBItems.stream()
-                .map(item -> {
-                    try {
-                        return KeyUtil.getX509Certificate(item.getPem());
-                    } catch (CertificateException | UnsupportedEncodingException e) {
-                        throw new JocKeyNotParseableException(e);
-                    }
-                }).filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-        for(X509Certificate caCert : caCerts) {
+
+    public static boolean verifyCertificateAgainstCAs(X509Certificate cert, List<DBItemInventoryCertificate> caCertDBItems) {
+        Set<X509Certificate> caCerts = caCertDBItems.stream().map(item -> {
+            try {
+                return KeyUtil.getX509Certificate(item.getPem());
+            } catch (CertificateException | UnsupportedEncodingException e) {
+                throw new JocKeyNotParseableException(e);
+            }
+        }).filter(Objects::nonNull).collect(Collectors.toSet());
+        for (X509Certificate caCert : caCerts) {
             try {
                 cert.verify(caCert.getPublicKey());
                 return true;
             } catch (InvalidKeyException | CertificateException | NoSuchAlgorithmException | NoSuchProviderException | SignatureException e) {
-                // Do nothing if verification fails, 
+                // Do nothing if verification fails,
                 // as an exception here only indicates that
                 // the verification failed
             }
         }
         return false;
     }
-    
+
 }

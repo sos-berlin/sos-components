@@ -122,7 +122,6 @@ public class PojosTest {
 	    JsonValidator.validate(json.getBytes(StandardCharsets.UTF_8), ConfigurationObject.class);
 	    ConfigurationObject request = objectMapper.readValue(json, ConfigurationObject.class);
 	    Workflow workflow = (Workflow) request.getConfiguration();
-	    workflow.setPath(request.getPath());
 	    Job job = new Job();
 	    job.setAgentId("myAgent");
 	    job.setExecutable(new ExecutableScript("echo hallo", null, true));

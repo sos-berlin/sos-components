@@ -179,7 +179,6 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 case LOCK: // without Path
                     // TODO tmp solution - should be removed when validation works
                     Lock lock = (Lock) in.getConfiguration();
-                    lock.setId(item.getName());
                     if (lock.getLimit() == null) {
                         lock.setLimit(1);
                     }

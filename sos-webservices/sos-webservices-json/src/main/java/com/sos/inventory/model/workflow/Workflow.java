@@ -24,7 +24,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
-    "path",
     "versionId",
     "orderRequirements",
     "instructions",
@@ -43,14 +42,6 @@ public class Workflow implements IConfigurationObject, IDeployObject
      */
     @JsonProperty("TYPE")
     private DeployType tYPE = DeployType.WORKFLOW;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("path")
-    private String path;
     /**
      * string without < and >
      * <p>
@@ -111,7 +102,6 @@ public class Workflow implements IConfigurationObject, IDeployObject
     /**
      * 
      * @param documentationPath
-     * @param path
      * @param instructions
      * @param versionId
      * @param orderRequirements
@@ -119,9 +109,8 @@ public class Workflow implements IConfigurationObject, IDeployObject
      * 
      * @param title
      */
-    public Workflow(String path, String versionId, Requirements orderRequirements, List<Instruction> instructions, String title, String documentationPath, Jobs jobs) {
+    public Workflow(String versionId, Requirements orderRequirements, List<Instruction> instructions, String title, String documentationPath, Jobs jobs) {
         super();
-        this.path = path;
         this.versionId = versionId;
         this.orderRequirements = orderRequirements;
         this.instructions = instructions;
@@ -139,28 +128,6 @@ public class Workflow implements IConfigurationObject, IDeployObject
     @JsonProperty("TYPE")
     public DeployType getTYPE() {
         return tYPE;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("path")
-    public String getPath() {
-        return path;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("path")
-    public void setPath(String path) {
-        this.path = path;
     }
 
     /**
@@ -297,12 +264,12 @@ public class Workflow implements IConfigurationObject, IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("versionId", versionId).append("orderRequirements", orderRequirements).append("instructions", instructions).append("title", title).append("documentationPath", documentationPath).append("jobs", jobs).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("versionId", versionId).append("orderRequirements", orderRequirements).append("instructions", instructions).append("title", title).append("documentationPath", documentationPath).append("jobs", jobs).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(documentationPath).append(path).append(instructions).append(versionId).append(orderRequirements).append(jobs).append(tYPE).append(title).toHashCode();
+        return new HashCodeBuilder().append(documentationPath).append(instructions).append(versionId).append(orderRequirements).append(jobs).append(tYPE).append(title).toHashCode();
     }
 
     @Override
@@ -314,7 +281,7 @@ public class Workflow implements IConfigurationObject, IDeployObject
             return false;
         }
         Workflow rhs = ((Workflow) other);
-        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(path, rhs.path).append(instructions, rhs.instructions).append(versionId, rhs.versionId).append(orderRequirements, rhs.orderRequirements).append(jobs, rhs.jobs).append(tYPE, rhs.tYPE).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(instructions, rhs.instructions).append(versionId, rhs.versionId).append(orderRequirements, rhs.orderRequirements).append(jobs, rhs.jobs).append(tYPE, rhs.tYPE).append(title, rhs.title).isEquals();
     }
 
 }
