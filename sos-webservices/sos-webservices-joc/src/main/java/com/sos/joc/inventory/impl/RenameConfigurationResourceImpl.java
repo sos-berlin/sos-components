@@ -136,19 +136,20 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 
                 setItem(config, p);
                 createAuditLog(config, in.getAuditLog());
-                if (!deletedIds.contains(config.getId())) {
-                    JocInventory.updateConfiguration(dbLayer, config);
-                } else {
+                if (deletedIds.remove(config.getId())) {
                     config.setId(null);
                     JocInventory.insertConfiguration(dbLayer, config);
+                } else {
+                    JocInventory.updateConfiguration(dbLayer, config);
                 }
+                
                 JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId());
                 for (DBItemInventoryConfiguration item : oldDBFolderContent) {
-                    if (!deletedIds.contains(item.getId())) {
-                        JocInventory.updateConfiguration(dbLayer, item);
-                    } else {
-                        item.setId(null);
+                    if (deletedIds.remove(item.getId())) {
+                        config.setId(null);
                         JocInventory.insertConfiguration(dbLayer, item);
+                    } else {
+                        JocInventory.updateConfiguration(dbLayer, item);
                     }
                 }
                 events.add(config.getFolder());

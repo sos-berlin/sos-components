@@ -28,6 +28,7 @@ import js7.base.problem.Problem;
 import js7.base.web.Uri;
 import js7.data.agent.AgentId;
 import js7.data.agent.AgentRef;
+import js7.data.item.ItemRevision;
 import js7.data.item.VersionId;
 import js7.data.lock.LockId;
 import js7.proxy.javaapi.JControllerApi;
@@ -152,7 +153,8 @@ public class DeployTest {
     }
 
     private void addOrChangeAgent(JControllerApi api, String agentId, Uri agentUri) throws InterruptedException, ExecutionException {
-        JAgentRef agent = JAgentRef.apply(AgentRef.apply(AgentId.of(agentId), agentUri));
+        //JAgentRef agent = JAgentRef.apply(AgentRef.apply(AgentId.of(agentId), agentUri));
+        JAgentRef agent = JAgentRef.apply(AgentRef.apply(AgentId.of(agentId), agentUri, ItemRevision.apply(0)));
         List<JAgentRef> agents = Arrays.asList(agent);
 
         Either<Problem, Void> answer = api.updateItems(Flux.fromIterable(agents).map(JUpdateItemOperation::addOrChange)).get();
