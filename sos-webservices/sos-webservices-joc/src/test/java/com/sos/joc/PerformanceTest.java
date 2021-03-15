@@ -11,9 +11,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.junit.Ignore;
@@ -26,15 +26,15 @@ import com.sos.commons.exception.SOSException;
 import com.sos.controller.model.agent.AgentRef;
 import com.sos.controller.model.common.Variables;
 import com.sos.controller.model.order.FreshOrder;
-import com.sos.inventory.model.instruction.Instruction;
-import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.job.ExecutableScript;
-import com.sos.inventory.model.job.Job;
-import com.sos.inventory.model.workflow.Jobs;
-import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.model.job.OrderPath;
 import com.sos.joc.model.job.TaskIdOfOrder;
+import com.sos.sign.model.instruction.Instruction;
+import com.sos.sign.model.instruction.NamedJob;
+import com.sos.sign.model.job.Job;
+import com.sos.sign.model.workflow.Jobs;
+import com.sos.sign.model.workflow.Workflow;
 
 public class PerformanceTest {
 
@@ -188,7 +188,7 @@ public class PerformanceTest {
             instructions.add(createJobInstruction(jobName, workflowPath));
             jobs.getAdditionalProperties().put(jobName, createTestJob(agentRefPath, jobScript));
         }
-        return new Workflow(workflowPath, null, null, instructions, null, null, jobs);
+        return new Workflow(workflowPath, null, null, instructions, jobs);
     }
     
     private void deployWorkflow(Workflow workflow, Path deployPath) throws IOException, InterruptedException {

@@ -150,6 +150,9 @@ public class ProxyTest {
         } catch (JobSchedulerSSLCertificateException e) {
             LOGGER.error(e.toString());
             handshake = false;
+        } catch (JobSchedulerConnectionRefusedException e) {
+            handshake = false;
+            LOGGER.error(e.toString());
         } catch (Exception e) {
             LOGGER.error(e.toString());
         }

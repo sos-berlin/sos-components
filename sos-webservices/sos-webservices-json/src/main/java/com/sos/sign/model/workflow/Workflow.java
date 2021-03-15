@@ -98,11 +98,9 @@ public class Workflow implements IDeployObject
      * @param versionId
      * @param orderRequirements
      * @param jobs
-     * @param tYPE
      */
-    public Workflow(DeployType tYPE, String path, String versionId, Requirements orderRequirements, List<Instruction> instructions, Jobs jobs) {
+    public Workflow(String path, String versionId, Requirements orderRequirements, List<Instruction> instructions, Jobs jobs) {
         super();
-        this.tYPE = tYPE;
         this.path = path;
         this.versionId = versionId;
         this.orderRequirements = orderRequirements;

@@ -6,7 +6,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -32,8 +31,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedMap;
-import java.util.SortedSet;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -56,15 +53,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
-import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.sign.keys.sign.SignObject;
 import com.sos.commons.sign.keys.verify.VerifySignature;
 import com.sos.controller.model.agent.AgentRef;
-import com.sos.inventory.model.workflow.Workflow;
+import com.sos.sign.model.workflow.Workflow;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.keys.db.DBLayerKeys;
@@ -189,7 +183,7 @@ public class DeploymentTest {
         for (Workflow workflow : workflows) {
             ControllerObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow);
             SignaturePath signaturePath = signatures.stream().filter(signaturePathFromStream -> signaturePathFromStream.getObjectPath().equals(
-                    workflow.getPath())).map(signaturePathFromStream -> signaturePathFromStream).findFirst().get();
+                    jsObject.getPath())).map(signaturePathFromStream -> signaturePathFromStream).findFirst().get();
             jsObject.setSignedContent(signaturePath.getSignature().getSignatureString());
             jsObjects.add(jsObject);
         }
@@ -260,7 +254,7 @@ public class DeploymentTest {
         for (Workflow workflow : workflows) {
             ControllerObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow);
             SignaturePath signaturePath = signatures.stream().filter(signaturePathFromStream -> signaturePathFromStream.getObjectPath().equals(
-                    workflow.getPath())).map(signaturePathFromStream -> signaturePathFromStream).findFirst().get();
+                    jsObject.getPath())).map(signaturePathFromStream -> signaturePathFromStream).findFirst().get();
             jsObject.setSignedContent(signaturePath.getSignature().getSignatureString());
             jsObjects.add(jsObject);
         }
@@ -347,7 +341,7 @@ public class DeploymentTest {
         for (Workflow workflow : workflows) {
             ControllerObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow);
             SignaturePath signaturePath = signatures.stream().filter(signaturePathFromStream -> signaturePathFromStream.getObjectPath().equals(
-                    workflow.getPath())).map(signaturePathFromStream -> signaturePathFromStream).findFirst().get();
+                    jsObject.getPath())).map(signaturePathFromStream -> signaturePathFromStream).findFirst().get();
             jsObject.setSignedContent(signaturePath.getSignature().getSignatureString());
             jsObjects.add(jsObject);
         }
@@ -551,7 +545,7 @@ public class DeploymentTest {
         out = Files.newOutputStream(targetFolderPath.resolve(filename));
         zipOut = new ZipOutputStream(new BufferedOutputStream(out), StandardCharsets.UTF_8);
         for (ControllerObject jsObjectToExport : jsObjectsToExport) {
-            Workflow workflow = (Workflow) jsObjectToExport.getContent();
+            com.sos.sign.model.workflow.Workflow workflow = (com.sos.sign.model.workflow.Workflow) jsObjectToExport.getContent();
             String signature = jsObjectToExport.getSignedContent();
             String zipEntryNameWorkflow = workflow.getPath().substring(1) + ".workflow.json";
             String zipEntryNameWorkflowSignature = workflow.getPath().substring(1) + signatureFileExtension;
@@ -586,8 +580,8 @@ public class DeploymentTest {
         for (ControllerObject jsObjectToExport : jsObjectsToExport) {
             Workflow workflow = (Workflow) jsObjectToExport.getContent();
             String signature = jsObjectToExport.getSignedContent();
-            String zipEntryNameWorkflow = workflow.getPath().substring(1) + ".workflow.json";
-            String zipEntryNameWorkflowSignature = workflow.getPath().substring(1) + ".workflow.json.asc";
+            String zipEntryNameWorkflow = jsObjectToExport.getPath().substring(1) + ".workflow.json";
+            String zipEntryNameWorkflowSignature = jsObjectToExport.getPath().substring(1) + ".workflow.json.asc";
             ZipEntry entryWorkflow = new ZipEntry(zipEntryNameWorkflow);
             zipOut.putNextEntry(entryWorkflow);
             String workflowJson = om.writeValueAsString(workflow);

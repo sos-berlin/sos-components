@@ -78,12 +78,10 @@ public class JobClass implements IDeployObject
      * @param maxProcesses
      * @param path
      * @param versionId
-     * @param tYPE
      * @param priority
      */
-    public JobClass(DeployType tYPE, String path, String versionId, Integer maxProcesses, String priority) {
+    public JobClass(String path, String versionId, Integer maxProcesses, String priority) {
         super();
-        this.tYPE = tYPE;
         this.path = path;
         this.versionId = versionId;
         this.maxProcesses = maxProcesses;

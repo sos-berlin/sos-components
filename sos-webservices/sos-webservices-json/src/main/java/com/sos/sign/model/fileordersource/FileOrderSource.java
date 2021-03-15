@@ -95,12 +95,10 @@ public class FileOrderSource implements IDeployObject
      * @param workflowPath
      * @param pattern
      * @param id
-     * @param tYPE
      * @param directory
      */
-    public FileOrderSource(DeployType tYPE, String id, String workflowPath, String agentId, String directory, String pattern) {
+    public FileOrderSource(String id, String workflowPath, String agentId, String directory, String pattern) {
         super();
-        this.tYPE = tYPE;
         this.id = id;
         this.workflowPath = workflowPath;
         this.agentId = agentId;
