@@ -49,7 +49,7 @@ public class ClientCertificateHandler {
                 this.sslSessionIdHex = (String) request.getAttribute("javax.servlet.request.ssl_session_id");
             }
         }
-        if ((clientCertificateChain == null || clientCertificateChain.length == 0) && sslSessionIdHex == null) {
+        if (clientCertificateChain == null || clientCertificateChain.length == 0) {
             LOGGER.debug("No certificate information received from request.");
         } else {
             this.clientCertificate = clientCertificateChain[0];
@@ -95,7 +95,9 @@ public class ClientCertificateHandler {
         jsonStrb.append("  ],\n");
         jsonStrb.append(String.format("  \"cipherSuiteName\" : \"%1$s\",\n", cipherSuiteName));
         jsonStrb.append(String.format("  \"keySize\" : \"%1$d\",\n", keySize));
-        jsonStrb.append(String.format("  \"SSLSessionId\" : \"%1$s\"\n", sslSessionIdHex));
+        if (sslSessionIdHex != null) {
+            jsonStrb.append(String.format("  \"SSLSessionId\" : \"%1$s\"\n", sslSessionIdHex));
+        }
         jsonStrb.append(String.format("  \"CN\" : \"%1$s\"\n", clientCN));
         jsonStrb.append("}");
         return jsonStrb.toString();
