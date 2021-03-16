@@ -256,6 +256,7 @@ public class CleanupServiceSchedule {
                         period.getEnd().getMinutes(), period.getEnd().getSeconds(), 0, service.getConfig().getZoneId());
 
                 if (now.isAfter(nextBegin)) {
+                    newPeriodDaysDiff = -1;
                     nwd = now.getDayOfWeek().getValue();
                     for (Integer wd : weekDays) {
                         if (wd > nwd) {
@@ -263,16 +264,39 @@ public class CleanupServiceSchedule {
                             break;
                         }
                     }
+                    if (newPeriodDaysDiff == -1) {
+                        for (Integer wd : weekDays) {
+                            if (wd < nwd) {
+                                newPeriodDaysDiff = (7 - nwd) + wd;
+                                break;
+                            }
+                        }
+                    }
+                    if (newPeriodDaysDiff == -1) {
+                        newPeriodDaysDiff = 7;
+                    }
                 }
                 LOGGER.info(String.format("[weekdays][newPeriodDaysDiff=%s][nextBegin=%s][nextEnd=%s]", newPeriodDaysDiff, nextBegin, nextEnd));
             } else {
                 if (computeNewPeriod) {
+                    newPeriodDaysDiff = -1;
                     int nwd = now.getDayOfWeek().getValue();
                     for (Integer wd : weekDays) {
                         if (wd > nwd) {
                             newPeriodDaysDiff = wd - nwd;
                             break;
                         }
+                    }
+                    if (newPeriodDaysDiff == -1) {
+                        for (Integer wd : weekDays) {
+                            if (wd < nwd) {
+                                newPeriodDaysDiff = (7 - nwd) + wd;
+                                break;
+                            }
+                        }
+                    }
+                    if (newPeriodDaysDiff == -1) {
+                        newPeriodDaysDiff = 7;
                     }
                 }
             }

@@ -31,6 +31,7 @@ import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.db.DBLayer;
@@ -158,9 +159,18 @@ public class JocClusterService {
 
     @Subscribe({ ConfigurationGlobalsChanged.class })
     public void respondConfigurationChanges(ConfigurationGlobalsChanged evt) {
-        if (cluster == null || !cluster.getHandler().isActive()) {
+        if (cluster == null) {
             return;
         }
+        if (cluster.getHandler().isActive()) {
+            handleGlobalsOnActiveMember(evt);
+        } else {
+            handleGlobalsOnNonActiveMember(evt);
+        }
+
+    }
+
+    private void handleGlobalsOnActiveMember(ConfigurationGlobalsChanged evt) {
         AJocClusterService.setLogger(JocClusterConfiguration.IDENTIFIER);
         stopSettingsChangedTimer();
 
@@ -184,6 +194,9 @@ public class JocClusterService {
                     List<String> sections = settingsChanged.get();
                     if (sections != null && sections.size() > 0) {
                         sections = sections.stream().distinct().collect(Collectors.toList());
+
+                        cluster.setNotification(new AtomicReference<List<String>>(sections));
+
                         AJocClusterService.setLogger(JocClusterConfiguration.IDENTIFIER);
                         LOGGER.info(String.format("[%s]restart %s services", StartupMode.settings_changed.name(), sections.size()));
                         AJocClusterService.clearLogger();
@@ -211,6 +224,12 @@ public class JocClusterService {
 
             }, SUBMIT_SETTING_CHANGES, SUBMIT_SETTING_CHANGES);
         }
+    }
+
+    private void handleGlobalsOnNonActiveMember(ConfigurationGlobalsChanged evt) {
+        AJocClusterService.setLogger(JocClusterConfiguration.IDENTIFIER);
+        Globals.configurationGlobals = cluster.getConfigurationGlobals();
+        LOGGER.info(String.format("[%s]%s updated", StartupMode.settings_changed.name(), ConfigurationGlobals.class.getSimpleName()));
     }
 
     private void stopSettingsChangedTimer() {

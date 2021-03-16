@@ -32,6 +32,12 @@ public class DBItemJocCluster extends DBItem {
     @Column(name = "[SWITCH_HEART_BEAT]", nullable = true)
     private Date switchHeartBeat;
 
+    @Column(name = "[NOTIFICATION_MEMBER_ID]", nullable = true)
+    private String notificationMemberId;
+
+    @Column(name = "[NOTIFICATION]", nullable = true)
+    private String notification;
+
     @Version
     @Column(name = "[HEART_BEAT]", nullable = false)
     private Date heartBeat;
@@ -65,6 +71,22 @@ public class DBItemJocCluster extends DBItem {
 
     public void setSwitchHeartBeat(Date val) {
         switchHeartBeat = val;
+    }
+
+    public String getNotificationMemberId() {
+        return notificationMemberId;
+    }
+
+    public void setNotificationMemberId(String val) {
+        notificationMemberId = val;
+    }
+
+    public String getNotification() {
+        return notification;
+    }
+
+    public void setNotification(String val) {
+        notification = val;
     }
 
     public Date getSwitchHeartBeat() {

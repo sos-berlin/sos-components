@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
@@ -41,13 +42,13 @@ import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
+import com.sos.joc.event.bean.configuration.ConfigurationGlobalsChanged;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.configuration.globals.GlobalSettings;
 
 public class JocCluster {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JocCluster.class);
-    private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     public static final int MAX_AWAIT_TERMINATION_TIMEOUT = 30;
 
@@ -63,6 +64,7 @@ public class JocCluster {
     private volatile boolean closed;
 
     private List<ControllerConfiguration> controllers;
+    private AtomicReference<List<String>> notification;
     private static String jocTimeZone = null;
     private String activeMemberId;
     private String lastActiveMemberId;
@@ -277,6 +279,7 @@ public class JocCluster {
     private synchronized void process(StartupMode mode, ConfigurationGlobals configurations) throws Exception {
         DBLayerJocCluster dbLayer = null;
         DBItemJocCluster item = null;
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
         try {
             dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());
             dbLayer.beginTransaction();
@@ -386,7 +389,7 @@ public class JocCluster {
             }
         } else {
             if (item.getMemberId().equals(currentMemberId)) {
-                item = trySwitchCurrentMemberOnProcess(mode, dbLayer, item, configurations);
+                item = trySwitchActiveMemberOnProcess(mode, dbLayer, item, configurations);
             } else {
                 if (isHeartBeatExceeded(item.getHeartBeat())) {
                     LOGGER.info(String.format("[%s][heartBeat exceeded][%s]%s", mode, item.getHeartBeat(), item.getMemberId()));
@@ -409,7 +412,7 @@ public class JocCluster {
                         item.setSwitchHeartBeat(null);
 
                         dbLayer.beginTransaction();
-                        dbLayer.getSession().update(item);
+                        dbLayer.getSession().update(activeMemberHandleNotification(item));
                         dbLayer.commit();
 
                         mode = StartupMode.automatic_switchover;
@@ -417,9 +420,10 @@ public class JocCluster {
                         LOGGER.info(String.format("[%s][active changed]%s", mode, SOSHibernate.toString(item)));
                     }
                 } else {
-                    if (isDebugEnabled) {
+                    if (LOGGER.isDebugEnabled()) {
                         LOGGER.debug("[" + mode + "]not active");
                     }
+                    nonActiveMemberHandleNotification(item);
                 }
             }
         }
@@ -577,7 +581,7 @@ public class JocCluster {
         return answer;
     }
 
-    private DBItemJocCluster trySwitchCurrentMemberOnProcess(StartupMode mode, DBLayerJocCluster dbLayer, DBItemJocCluster item,
+    private DBItemJocCluster trySwitchActiveMemberOnProcess(StartupMode mode, DBLayerJocCluster dbLayer, DBItemJocCluster item,
             ConfigurationGlobals configurations) throws Exception {
         skipPerform = false;
         item.setMemberId(currentMemberId);
@@ -632,9 +636,37 @@ public class JocCluster {
             }
         } else {
             dbLayer.beginTransaction();
-            dbLayer.getSession().update(item);
+            dbLayer.getSession().update(activeMemberHandleNotification(item));
             dbLayer.commit();
         }
+        return item;
+    }
+
+    private void nonActiveMemberHandleNotification(DBItemJocCluster item) {
+        if (!SOSString.isEmpty(item.getNotification()) && !currentMemberId.equals(item.getNotificationMemberId())) {
+            JocClusterNotification n = new JocClusterNotification(config.getPollingInterval());
+            n.parse(item.getNotification());
+            if (!n.isExpired()) {
+                EventBus.getInstance().post(new ConfigurationGlobalsChanged("", ConfigurationType.GLOBALS.name(), n.getSections()));
+            }
+        }
+    }
+
+    private DBItemJocCluster activeMemberHandleNotification(DBItemJocCluster item) {
+        // current is an active handler, write/read notification if exists
+        JocClusterNotification n = new JocClusterNotification(config.getPollingInterval());
+        if (item.getNotification() != null) {
+            n.parse(item.getNotification());
+            if (n.isExpired()) {
+                item.setNotificationMemberId(null);
+                item.setNotification(null);
+            }
+        }
+        if (notification != null) {
+            item.setNotificationMemberId(item.getMemberId());
+            item.setNotification(n.toString(notification));
+        }
+        notification = null;
         return item;
     }
 
@@ -807,6 +839,7 @@ public class JocCluster {
 
     public void waitFor(int interval) {
         if (!closed && interval > 0) {
+            boolean isDebugEnabled = LOGGER.isDebugEnabled();
             String method = "wait";
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("%s(%s) %ss ...", method, SOSClassUtil.getMethodName(2), interval));
@@ -842,4 +875,9 @@ public class JocCluster {
     public List<ControllerConfiguration> getControllers() {
         return controllers;
     }
+
+    public void setNotification(AtomicReference<List<String>> val) {
+        notification = val;
+    }
+
 }
