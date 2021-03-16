@@ -14,6 +14,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.configurations.resource.IJocConfigurationsResource;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
@@ -36,17 +37,6 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
     private static final String API_CALL_DELETE = "./configurations/delete";
 
     @Override
-    public JOCDefaultResponse postConfigurations(String xAccessToken, String accessToken, ConfigurationsFilter configurationsFilter)
-            throws Exception {
-        return postConfigurations(getAccessToken(xAccessToken, accessToken), configurationsFilter);
-    }
-
-    @Override
-    public JOCDefaultResponse postConfigurationsDelete(String xAccessToken, String accessToken, ConfigurationsDeleteFilter configurationsFilter)
-            throws Exception {
-        return postConfigurationsDelete(getAccessToken(xAccessToken, accessToken), configurationsFilter);
-    }
-
     public JOCDefaultResponse postConfigurations(String accessToken, ConfigurationsFilter configurationsFilter) throws Exception {
         SOSHibernateSession connection = null;
         try {
@@ -111,10 +101,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             if (configurationsFilter.getConfigurationType() == ConfigurationType.PROFILE && (listOfJocConfigurationDbItem == null
                     || listOfJocConfigurationDbItem.isEmpty() || listOfJocConfigurationDbItem.get(0).getConfigurationItem() == null
                     || listOfJocConfigurationDbItem.get(0).getConfigurationItem().isEmpty())) {
-                if (Globals.sosCockpitProperties == null) {
-                    Globals.sosCockpitProperties = new JocCockpitProperties();
-                }
-                String defaultProfileAccount = Globals.sosCockpitProperties.getProperty("default_profile_account", "").trim();
+                String defaultProfileAccount = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
                 String currentAccount = configurationsFilter.getAccount();
                 if (!defaultProfileAccount.isEmpty() && !defaultProfileAccount.equals(currentAccount)) {
                     filter.setAccount(defaultProfileAccount);
@@ -166,6 +153,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
         }
     }
 
+    @Override
     public JOCDefaultResponse postConfigurationsDelete(String accessToken, ConfigurationsDeleteFilter configurationsFilter) throws Exception {
         SOSHibernateSession connection = null;
         try {

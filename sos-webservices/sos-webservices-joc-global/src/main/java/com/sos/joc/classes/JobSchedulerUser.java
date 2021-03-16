@@ -1,14 +1,8 @@
 package com.sos.joc.classes;
 
-import java.util.Set;
-
 import com.sos.auth.rest.SOSShiroCurrentUser;
 import com.sos.auth.rest.SOSShiroSession;
-import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.Globals;
-import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
-import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.SessionNotExistException;
 
 public class JobSchedulerUser {
@@ -52,10 +46,6 @@ public class JobSchedulerUser {
 		}
 
 		return (sosShiroCurrentUser != null);
-	}
-
-	public void setJocJsonCommands(Set<JOCJsonCommand> jocJsonCommands) {
-		sosShiroCurrentUser.setJocJsonCommands(jocJsonCommands);
 	}
 
 }

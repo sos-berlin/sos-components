@@ -11,6 +11,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.GenerateKeyAudit;
+import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.keys.resource.IGenerateKey;
@@ -45,10 +46,11 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
             if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
                 if (validUntil != null) {
                     Long secondsToExpire = validUntil.getTime() / 1000;
-                    keyPair = KeyUtil.createKeyPair(Globals.defaultProfileAccount, null, secondsToExpire);
+                    keyPair = KeyUtil.createKeyPair(ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc()), null,
+                            secondsToExpire);
                 } else {
-                    keyPair = KeyUtil.createKeyPair(Globals.defaultProfileAccount, null, null);
-                }                
+                    keyPair = KeyUtil.createKeyPair(ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc()), null, null);
+                }
             } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
                 keyPair = KeyUtil.createRSAJocKeyPair();
                 //default
@@ -63,7 +65,7 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
                     jobschedulerUser.getSosShiroCurrentUser().getUsername(),
                     JocSecurityLevel.LOW);
             GenerateKeyAudit audit = new GenerateKeyAudit(filter, 
-                    String.format("new Private Key generated for profile - %1$s -", Globals.defaultProfileAccount));
+                    String.format("new Private Key generated for profile - %1$s -", ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc())));
             logAuditMessage(audit);
             storeAuditLogEntry(audit);
             return JOCDefaultResponse.responseStatus200(keyPair);

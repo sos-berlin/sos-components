@@ -17,6 +17,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.ExportAudit;
+import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.Version;
 import com.sos.joc.model.inventory.ConfigurationObject;
@@ -57,7 +58,7 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            String account = Globals.getDefaultProfileUserAccount();
+            String account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
 

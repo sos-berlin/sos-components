@@ -1,9 +1,7 @@
 package com.sos.joc.audit.impl;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import javax.ws.rs.Path;
 
@@ -11,6 +9,8 @@ import com.sos.joc.Globals;
 import com.sos.joc.audit.resource.ICommentsResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.settings.ClusterSettings;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.Comments;
 
@@ -32,9 +32,10 @@ public class CommentsResourceImpl extends JOCResourceImpl implements ICommentsRe
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            ConfigurationGlobalsJoc clusterSettings = Globals.getConfigurationGlobalsJoc();
             Comments entity = new Comments();
-            entity.setForceCommentsForAuditLog(Globals.auditLogCommentsAreRequired);
-            entity.setComments(readCommentsFromJocProperties());
+            entity.setForceCommentsForAuditLog(ClusterSettings.getForceCommentsForAuditLog(clusterSettings));
+            entity.setComments(ClusterSettings.getCommentsForAuditLog(clusterSettings));
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(entity);
@@ -44,16 +45,5 @@ public class CommentsResourceImpl extends JOCResourceImpl implements ICommentsRe
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } 
-    }
-    
-    private List<String> readCommentsFromJocProperties() {
-        List<String> commentsList = new ArrayList<String>();
-        if (Globals.sosCockpitProperties != null) {
-            String[] comments = Globals.sosCockpitProperties.getProperty("comments", "").split(";");
-            for (int i=0; i < comments.length; i++) {
-                commentsList.add(comments[i].trim());
-            }
-        }
-        return commentsList;
     }
 }

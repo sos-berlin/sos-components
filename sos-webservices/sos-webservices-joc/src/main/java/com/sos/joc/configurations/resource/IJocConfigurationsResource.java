@@ -15,11 +15,11 @@ public interface IJocConfigurationsResource{
 
     @POST
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postConfigurations(@HeaderParam("X-Access-Token") String xAccessToken, @HeaderParam("access_token") String accessToken, ConfigurationsFilter configurationsFilter) throws Exception;
+    public JOCDefaultResponse postConfigurations(@HeaderParam("X-Access-Token") String xAccessToken, ConfigurationsFilter configurationsFilter) throws Exception;
     
     @POST
     @Path("delete")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postConfigurationsDelete(@HeaderParam("X-Access-Token") String xAccessToken, @HeaderParam("access_token") String accessToken, ConfigurationsDeleteFilter configurationsFilter) throws Exception;
+    public JOCDefaultResponse postConfigurationsDelete(@HeaderParam("X-Access-Token") String xAccessToken, ConfigurationsDeleteFilter configurationsFilter) throws Exception;
  
 }

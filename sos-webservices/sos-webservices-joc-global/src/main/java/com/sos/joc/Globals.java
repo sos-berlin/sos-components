@@ -5,7 +5,6 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -21,26 +20,20 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.sos.auth.rest.SOSShiroCurrentUser;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
 import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
-import com.sos.joc.classes.CheckJavaVariableName;
-import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.JocWebserviceDataContainer;
 import com.sos.joc.classes.SSLContext;
-import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
-import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.joc.model.SuffixPrefix;
 import com.sos.joc.model.common.JocSecurityLevel;
 
 public class Globals {
@@ -50,6 +43,7 @@ public class Globals {
 
     public static SOSHibernateFactory sosHibernateFactory;
     public static JocWebserviceDataContainer jocWebserviceDataContainer = JocWebserviceDataContainer.getInstance();
+    @SuppressWarnings("deprecation")
     public static IniSecurityManagerFactory factory = null;
     public static ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
             SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
@@ -58,12 +52,9 @@ public class Globals {
     public static Path servletContextRealPath = null;
     public static URI servletBaseUri = null;
     public static Map<String, SOSHibernateFactory> sosSchedulerHibernateFactories;
-    public static Map<String, DBItemInventoryJSInstance> urlFromJobSchedulerId = new HashMap<String, DBItemInventoryJSInstance>();
-    public static Map<String, Boolean> jobSchedulerIsRunning = new HashMap<String, Boolean>();
     public static Map<String, String> schedulerVariables = null;
     public static ConfigurationGlobals configurationGlobals = null;
     public static String servletContextContextPath = null; // /joc
-    public static String defaultProfileAccount = null;
     public static String loginClientId = "";
     public static String loginUserName = "";
     public static String apiVersion = "";
@@ -74,9 +65,6 @@ public class Globals {
     public static int httpConnectionTimeout = 2000;
     public static int httpSocketTimeout = 5000;
     public static boolean withHostnameVerification = false;
-    public static SuffixPrefix copySuffixPrefix = new SuffixPrefix();
-    public static SuffixPrefix restoreSuffixPrefix = new SuffixPrefix();
-    public static boolean auditLogCommentsAreRequired = false;
 
     private static final String SHIRO_INI_FILENAME = "shiro.ini";
     private static final String HIBERNATE_CONFIGURATION_FILE = "hibernate_configuration_file";
@@ -110,6 +98,7 @@ public class Globals {
         }
     }
 
+    @SuppressWarnings("deprecation")
     public static IniSecurityManagerFactory getShiroIniSecurityManagerFactory() {
         String iniFile = getShiroIniInClassPath();
         if (factory == null) {
@@ -126,6 +115,7 @@ public class Globals {
         return factory;
     }
 
+    @SuppressWarnings("deprecation")
     public static Ini getIniFromSecurityManagerFactory() {
         if (factory == null) {
             String iniFile = getShiroIniInClassPath();
@@ -165,11 +155,6 @@ public class Globals {
             setJobSchedulerConnectionTimeout();
             setJobSchedulerSocketTimeout();
             setHostnameVerification();
-            setForceCommentsForAuditLog();
-            setTimeoutForTempFiles();
-            getDefaultProfileUserAccount();
-            readCopySuffixPrefix();
-            readRestoreSuffixPrefix();
         }
         setSSLContext();
     }
@@ -205,17 +190,6 @@ public class Globals {
         }
     }
 
-    public static void forceClosingHttpClients(SOSShiroCurrentUser sosShiroCurrentUser, String accessToken) {
-        if (sosShiroCurrentUser != null) {
-            try {
-                for (JOCJsonCommand command : sosShiroCurrentUser.getJocJsonCommands()) {
-                    command.forcedClosingHttpClient();
-                }
-            } catch (Exception e) {
-            }
-        }
-    }
-
     public static Path getHibernateConfFile() throws JocConfigurationException {
         String confFile = null;
 
@@ -242,46 +216,6 @@ public class Globals {
             throw new JocConfigurationException(String.format("hibernate configuration (%1$s) is set but file not found.", confFile));
         }
         return p;
-    }
-
-    public static SuffixPrefix readCopySuffixPrefix() {
-        copySuffixPrefix = readSuffixPrefix("copy_paste", JocInventory.DEFAULT_COPY_SUFFIX);
-        return copySuffixPrefix;
-    }
-
-    public static SuffixPrefix readRestoreSuffixPrefix() {
-        restoreSuffixPrefix = readSuffixPrefix("restore", JocInventory.DEFAULT_RESTORE_SUFFIX);
-        return restoreSuffixPrefix;
-    }
-
-    private static SuffixPrefix readSuffixPrefix(String key, String defaultValue) {
-        SuffixPrefix sp = new SuffixPrefix();
-        sp.setSuffix("");
-        sp.setPrefix("");
-        if (sosCockpitProperties != null) {
-            sp.setSuffix(sosCockpitProperties.getProperty(key + "_suffix", defaultValue).trim().replaceFirst("^-+", ""));
-            if (defaultValue.equals(sp.getSuffix())) {
-                sp.setSuffix("");
-            }
-            sp.setPrefix(sosCockpitProperties.getProperty(key + "_prefix", "").trim().replaceFirst("-+$", ""));
-        }
-        if (!sp.getPrefix().isEmpty()) {
-            try {
-                CheckJavaVariableName.test(key + "_prefix in joc.properties", sp.getPrefix());
-            } catch (IllegalArgumentException e) {
-                sp.setPrefix("");
-                LOGGER.warn(e.toString());
-            }
-        }
-        if (!sp.getSuffix().isEmpty()) {
-            try {
-                CheckJavaVariableName.test(key + "_suffix in joc.properties", sp.getSuffix());
-            } catch (IllegalArgumentException e) {
-                sp.setSuffix("");
-                LOGGER.warn(e.toString());
-            }
-        }
-        return sp;
     }
 
     private static void readJocCockpitVersion() {
@@ -409,24 +343,6 @@ public class Globals {
         }
     }
 
-    private static void setForceCommentsForAuditLog() {
-        boolean defaultForceCommentsForAuditLog = false;
-        if (sosCockpitProperties != null) {
-            auditLogCommentsAreRequired = sosCockpitProperties.getProperty("force_comments_for_audit_log", defaultForceCommentsForAuditLog);
-            LOGGER.info("force comments for audit log = " + auditLogCommentsAreRequired);
-        }
-    }
-
-    private static void setTimeoutForTempFiles() {
-        long defaultTimeout = 1000 * 60 * 3L;
-        if (sosCockpitProperties != null) {
-            timeoutToDeleteTempFiles = sosCockpitProperties.getProperty("timeout_to_delete_temp_files", defaultTimeout);
-        }
-    }
-
-    public static void forceRollback(Object object) {
-    }
-
     public static void disconnect(SOSHibernateSession sosHibernateSession) {
         if (sosHibernateSession != null) {
             sosHibernateSession.close();
@@ -505,18 +421,8 @@ public class Globals {
         }
     }
 
-    public static String getDefaultProfileUserAccount() {
-        if (sosCockpitProperties != null) {
-            defaultProfileAccount = sosCockpitProperties.getProperty("default_profile_account", "root");
-        }
-        if (defaultProfileAccount == null || defaultProfileAccount.isEmpty()) {
-            defaultProfileAccount = "root";
-        }
-        return defaultProfileAccount;
-    }
-
     public static ConfigurationGlobalsJoc getConfigurationGlobalsJoc() {
-        return Globals.configurationGlobals == null ? null : (ConfigurationGlobalsJoc) Globals.configurationGlobals.getConfigurationSection(
+        return Globals.configurationGlobals == null ? new ConfigurationGlobalsJoc() : (ConfigurationGlobalsJoc) Globals.configurationGlobals.getConfigurationSection(
                 DefaultSections.joc);
     }
 

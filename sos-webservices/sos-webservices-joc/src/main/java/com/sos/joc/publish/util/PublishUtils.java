@@ -75,6 +75,7 @@ import com.sos.sign.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
+import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -3223,7 +3224,7 @@ public abstract class PublishUtils {
                 jsObject.setContent(jobClass);
                 break;
             }
-            jsObject.setAccount(Globals.defaultProfileAccount);
+            jsObject.setAccount(ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc()));
             // TODO: setVersion
             // jsObject.setVersion(item.getVersion());
             jsObject.setModified(item.getModified());
@@ -3264,7 +3265,7 @@ public abstract class PublishUtils {
                 break;
             }
             jsObject.setVersion(item.getVersion());
-            jsObject.setAccount(Globals.defaultProfileAccount);
+            jsObject.setAccount(ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc()));
             return jsObject;
         } catch (IOException e) {
             throw new JocException(e);
