@@ -2,20 +2,19 @@
 package com.sos.controller.model.lock;
 
 import java.util.Date;
-
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.controller.model.workflow.WorkflowState;
+import com.sos.controller.model.common.SyncState;
+import com.sos.inventory.model.deploy.DeployType;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * workflow
+ * lock
  * <p>
  * 
  * 
@@ -24,7 +23,6 @@ import com.sos.controller.model.workflow.WorkflowState;
 @JsonPropertyOrder({
     "TYPE",
     "path",
-    "isCurrentVersion",
     "versionDate",
     "state"
 })
@@ -41,8 +39,6 @@ public class Lock
     @JsonProperty("path")
     @JsonPropertyDescription("absolute path of an object.")
     private String path;
-    @JsonProperty("isCurrentVersion")
-    private Boolean isCurrentVersion = true;
     /**
      * timestamp
      * <p>
@@ -53,13 +49,13 @@ public class Lock
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date versionDate;
     /**
-     * workflow state
+     * sync state
      * <p>
      * 
      * 
      */
     @JsonProperty("state")
-    private WorkflowState state;
+    private SyncState state;
 
     /**
      * No args constructor for use in serialization
@@ -72,17 +68,14 @@ public class Lock
      * 
      * @param documentationPath
      * @param path
-     * @param isCurrentVersion
      * @param limit
      * @param state
-     * @param tYPE
      * @param title
      * @param versionDate
      */
-    public Lock(String path, Boolean isCurrentVersion, Date versionDate, WorkflowState state, Integer limit, String documentationPath, String title) {
+    public Lock(String path, Date versionDate, SyncState state, Integer limit, String documentationPath, String title) {
         super(limit, documentationPath, title);
         this.path = path;
-        this.isCurrentVersion = isCurrentVersion;
         this.versionDate = versionDate;
         this.state = state;
     }
@@ -109,16 +102,6 @@ public class Lock
         this.path = path;
     }
 
-    @JsonProperty("isCurrentVersion")
-    public Boolean getIsCurrentVersion() {
-        return isCurrentVersion;
-    }
-
-    @JsonProperty("isCurrentVersion")
-    public void setIsCurrentVersion(Boolean isCurrentVersion) {
-        this.isCurrentVersion = isCurrentVersion;
-    }
-
     /**
      * timestamp
      * <p>
@@ -142,35 +125,35 @@ public class Lock
     }
 
     /**
-     * workflow state
+     * sync state
      * <p>
      * 
      * 
      */
     @JsonProperty("state")
-    public WorkflowState getState() {
+    public SyncState getState() {
         return state;
     }
 
     /**
-     * workflow state
+     * sync state
      * <p>
      * 
      * 
      */
     @JsonProperty("state")
-    public void setState(WorkflowState state) {
+    public void setState(SyncState state) {
         this.state = state;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("isCurrentVersion", isCurrentVersion).append("versionDate", versionDate).append("state", state).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("versionDate", versionDate).append("state", state).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(path).append(state).append(isCurrentVersion).append(versionDate).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(path).append(state).append(versionDate).toHashCode();
     }
 
     @Override
@@ -182,7 +165,7 @@ public class Lock
             return false;
         }
         Lock rhs = ((Lock) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(path, rhs.path).append(state, rhs.state).append(isCurrentVersion, rhs.isCurrentVersion).append(versionDate, rhs.versionDate).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(path, rhs.path).append(state, rhs.state).append(versionDate, rhs.versionDate).isEquals();
     }
 
 }

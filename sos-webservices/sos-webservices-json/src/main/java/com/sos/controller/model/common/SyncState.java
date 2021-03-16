@@ -1,5 +1,5 @@
 
-package com.sos.controller.model.workflow;
+package com.sos.controller.model.common;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,7 +15,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * workflow state
+ * sync state
  * <p>
  * 
  * 
@@ -25,7 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "severity",
     "_text"
 })
-public class WorkflowState {
+public class SyncState {
 
     /**
      * 
@@ -35,14 +35,14 @@ public class WorkflowState {
     @JsonProperty("severity")
     private Integer severity;
     /**
-     * workflow state text
+     * sync state text
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("_text")
-    private WorkflowStateText _text;
+    private SyncStateText _text;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -50,7 +50,7 @@ public class WorkflowState {
      * No args constructor for use in serialization
      * 
      */
-    public WorkflowState() {
+    public SyncState() {
     }
 
     /**
@@ -58,7 +58,7 @@ public class WorkflowState {
      * @param severity
      * @param _text
      */
-    public WorkflowState(Integer severity, WorkflowStateText _text) {
+    public SyncState(Integer severity, SyncStateText _text) {
         super();
         this.severity = severity;
         this._text = _text;
@@ -85,26 +85,26 @@ public class WorkflowState {
     }
 
     /**
-     * workflow state text
+     * sync state text
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("_text")
-    public WorkflowStateText get_text() {
+    public SyncStateText get_text() {
         return _text;
     }
 
     /**
-     * workflow state text
+     * sync state text
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("_text")
-    public void set_text(WorkflowStateText _text) {
+    public void set_text(SyncStateText _text) {
         this._text = _text;
     }
 
@@ -133,10 +133,10 @@ public class WorkflowState {
         if (other == this) {
             return true;
         }
-        if ((other instanceof WorkflowState) == false) {
+        if ((other instanceof SyncState) == false) {
             return false;
         }
-        WorkflowState rhs = ((WorkflowState) other);
+        SyncState rhs = ((SyncState) other);
         return new EqualsBuilder().append(severity, rhs.severity).append(additionalProperties, rhs.additionalProperties).append(_text, rhs._text).isEquals();
     }
 

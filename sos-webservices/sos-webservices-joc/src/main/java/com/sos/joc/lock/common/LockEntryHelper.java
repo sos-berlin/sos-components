@@ -12,14 +12,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.inventory.model.deploy.DeployType;
+import com.sos.controller.model.common.SyncStateText;
 import com.sos.controller.model.lock.Lock;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.OrdersHelper;
+import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
-import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.model.lock.common.LockEntry;
 import com.sos.joc.model.lock.common.LockOrder;
 import com.sos.joc.model.lock.common.LockWorkflow;
@@ -52,18 +53,30 @@ public class LockEntryHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LockEntryHelper.class);
 
-    public LockEntry getLockEntry(JControllerState controllerState, DeployedContent dc, String lockPath) throws Exception {
-        if (dc == null || dc.getContent() == null || dc.getContent().isEmpty()) {
-            throw new DBMissingDataException(String.format("Lock '%s' doesn't exist", lockPath));
-        }
+    public LockEntry getLockEntry(JControllerState controllerState, DeployedContent dc) throws Exception {
         int acquiredLockCount = 0;
         int ordersHoldingLocksCount = 0;
         int ordersWaitingForLocksCount = 0;
+        SyncStateText stateText = SyncStateText.UNKNOWN;
         Map<String, LockWorkflow> workflows = new HashMap<String, LockWorkflow>();
 
         Lock item = Globals.objectMapper.readValue(dc.getContent(), Lock.class);
-        String lockId = JocInventory.pathToName(lockPath);
-        JLockState jLockState = getFromEither(controllerState.idToLockState(LockId.of(lockId)), "LockId=" + lockId);
+        item.setPath(dc.getPath());
+        item.setVersionDate(dc.getCreated());
+        String lockId = JocInventory.pathToName(dc.getPath());
+        
+        //JLockState jLockState = getFromEither(controllerState.idToLockState(LockId.of(lockId)), "LockId=" + lockId);
+        JLockState jLockState = null;
+        if (controllerState != null) {
+            stateText = SyncStateText.NOT_IN_SYNC;
+            Either<Problem, JLockState> lockV = controllerState.idToLockState(LockId.of(lockId));
+            if (lockV != null && lockV.isRight()) {
+                stateText = SyncStateText.IN_SYNC;
+                jLockState = lockV.get();
+            }
+        }
+        
+        item.setState(SyncStateHelper.getState(stateText));
 
         if (jLockState != null) {
             LockState ls = jLockState.asScala();
@@ -101,7 +114,7 @@ public class LockEntryHelper {
                 }
             }
 
-            Map<String, WorkflowLock> queuedWorkflowLocks = new HashMap<String, WorkflowLock>();
+            Map<String, WorkflowLock> queuedWorkflowLocks = new HashMap<>();
             for (OrderId orderId : jLockState.queuedOrderIds()) {
                 ordersWaitingForLocksCount++;
                 JOrder jo = getFromEither(controllerState.idToCheckedOrder(orderId), "OrderId=" + orderId.string());

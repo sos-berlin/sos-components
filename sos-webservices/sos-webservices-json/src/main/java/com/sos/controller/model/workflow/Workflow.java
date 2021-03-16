@@ -3,18 +3,18 @@ package com.sos.controller.model.workflow;
 
 import java.util.Date;
 import java.util.List;
-
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.controller.model.common.SyncState;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Requirements;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
@@ -56,13 +56,13 @@ public class Workflow
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date versionDate;
     /**
-     * workflow state
+     * sync state
      * <p>
      * 
      * 
      */
     @JsonProperty("state")
-    private WorkflowState state;
+    private SyncState state;
 
     /**
      * No args constructor for use in serialization
@@ -81,11 +81,10 @@ public class Workflow
      * @param orderRequirements
      * @param jobs
      * @param state
-     * @param tYPE
      * @param title
      * @param versionDate
      */
-    public Workflow(String path, Boolean isCurrentVersion, Date versionDate, WorkflowState state, String versionId, Requirements orderRequirements, List<Instruction> instructions, String title, String documentationPath, Jobs jobs) {
+    public Workflow(String path, Boolean isCurrentVersion, Date versionDate, SyncState state, String versionId, Requirements orderRequirements, List<Instruction> instructions, String title, String documentationPath, Jobs jobs) {
         super(versionId, orderRequirements, instructions, title, documentationPath, jobs);
         this.path = path;
         this.isCurrentVersion = isCurrentVersion;
@@ -148,24 +147,24 @@ public class Workflow
     }
 
     /**
-     * workflow state
+     * sync state
      * <p>
      * 
      * 
      */
     @JsonProperty("state")
-    public WorkflowState getState() {
+    public SyncState getState() {
         return state;
     }
 
     /**
-     * workflow state
+     * sync state
      * <p>
      * 
      * 
      */
     @JsonProperty("state")
-    public void setState(WorkflowState state) {
+    public void setState(SyncState state) {
         this.state = state;
     }
 

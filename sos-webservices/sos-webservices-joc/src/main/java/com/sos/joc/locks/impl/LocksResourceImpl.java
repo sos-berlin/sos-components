@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
@@ -24,13 +23,14 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.deploy.items.DeployedContent;
+import com.sos.joc.exceptions.DBMissingDataException;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.lock.common.LockEntryHelper;
 import com.sos.joc.locks.resource.ILocksResource;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.lock.Locks;
 import com.sos.joc.model.lock.LocksFilter;
-import com.sos.joc.model.lock.common.LockEntry;
 import com.sos.schema.JsonValidator;
 
 import js7.data_for_java.controller.JControllerState;
@@ -95,18 +95,29 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
             session = null;
 
             Locks answer = new Locks();
+            answer.setSurveyDate(Date.from(Instant.now()));
             LockEntryHelper helper = new LockEntryHelper(filter.getControllerId());
-            JControllerState controllerState = Proxy.of(filter.getControllerId()).currentState();
+            final JControllerState controllerState = getCurrentState(filter.getControllerId());
+            if (controllerState != null) {
+                answer.setSurveyDate(Date.from(Instant.ofEpochMilli(controllerState.eventId() / 1000)));
+            }
+            JocError jocError = getJocError();
             if (contents != null) {
-                Stream<LockEntry> stream = contents.stream().map(dc -> {
+                answer.setLocks(contents.stream().map(dc -> {
                     try {
-                        return helper.getLockEntry(controllerState, dc, dc.getPath());
+                        if (dc.getContent() != null && !dc.getContent().isEmpty()) {
+                            throw new DBMissingDataException("doesn't exist");
+                        }
+                        return helper.getLockEntry(controllerState, dc);
                     } catch (Throwable e) {
-                        LOGGER.error(String.format("[%s]%s", dc == null ? "unknown" : dc.getPath(), e.toString()), e);
+                        if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
+                            LOGGER.info(jocError.printMetaInfo());
+                            jocError.clearMetaInfo();
+                        }
+                        LOGGER.error(String.format("[%s] %s", dc.getPath(), e.toString()));
                         return null;
                     }
-                }).filter(Objects::nonNull);
-                answer.setLocks(stream.collect(Collectors.toList()));
+                }).filter(Objects::nonNull).collect(Collectors.toList()));
             }
             answer.setDeliveryDate(Date.from(Instant.now()));
             return answer;
@@ -116,6 +127,16 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
             Globals.disconnect(session);
         }
 
+    }
+    
+    private JControllerState getCurrentState(String controllerId) {
+        JControllerState currentstate = null;
+        try {
+            currentstate = Proxy.of(controllerId).currentState();
+        } catch (Exception e) {
+            LOGGER.warn(e.toString());
+        }
+        return currentstate;
     }
 
 }

@@ -74,7 +74,7 @@ public class ProblemHelper {
 
     public static void postProblemEventIfExist(Either<Problem, ?> either, String accessToken, JocError err, String controller) throws JocException {
         if (either == null || either.isLeft()) {
-            if (err != null && !err.printMetaInfo().isEmpty()) {
+            if (err != null && !err.getMetaInfo().isEmpty()) {
                 LOGGER.info(err.printMetaInfo());
             }
             if (either == null) {
@@ -94,7 +94,7 @@ public class ProblemHelper {
     public static void postExceptionEventIfExist(Either<Exception, ?> either, String accessToken, JocError err, String controller)
             throws JocException {
         if (either == null || either.isLeft()) {
-            if (err != null && !err.printMetaInfo().isEmpty()) {
+            if (err != null && !err.getMetaInfo().isEmpty()) {
                 LOGGER.info(err.printMetaInfo());
             }
             if (either == null) {

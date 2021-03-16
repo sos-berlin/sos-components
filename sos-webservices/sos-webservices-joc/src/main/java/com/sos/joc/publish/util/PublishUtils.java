@@ -3332,8 +3332,8 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(com.sos.inventory.model.junction.Junction junction) {
-        if (junction.getDocumentationPath() == null && junction.getLifetime() == null && junction.getOrderId() == null && junction.getPath() == null
-                && junction.getTYPE() == null) {
+        if (junction.getDocumentationPath() == null && junction.getLifetime() == null && junction.getOrderId() == null && junction
+                .getTYPE() == null) {
             return false;
         } else {
             return true;
@@ -3341,8 +3341,8 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(com.sos.inventory.model.jobclass.JobClass jobClass) {
-        if (jobClass.getDocumentationPath() == null && jobClass.getMaxProcesses() == null && jobClass.getPath() == null && jobClass
-                .getPriority() == null && jobClass.getTYPE() == null) {
+        if (jobClass.getDocumentationPath() == null && jobClass.getMaxProcesses() == null && jobClass.getPriority() == null && jobClass
+                .getTYPE() == null) {
             return false;
         } else {
             return true;

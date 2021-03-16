@@ -67,12 +67,13 @@ public class JocError extends Err{
     }
     
     @JsonIgnore
+    public void clearMetaInfo() {
+        metaInfo.clear();
+    }
+    
+    @JsonIgnore
     public String printMetaInfo() {
-        StringBuilder s = new StringBuilder();
-        for (String str : metaInfo) {
-            s.append(str).append("\n");
-        }
-        return s.toString().replaceFirst("\\s+$", "");
+        return String.join("\n", metaInfo);
     }
     
     @Override

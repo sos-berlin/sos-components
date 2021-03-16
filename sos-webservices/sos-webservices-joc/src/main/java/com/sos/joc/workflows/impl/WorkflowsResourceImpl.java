@@ -30,6 +30,8 @@ import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.deploy.items.DeployedContent;
+import com.sos.joc.exceptions.DBMissingDataException;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.workflow.WorkflowId;
@@ -80,8 +82,12 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                 Predicate<String> regex = Pattern.compile(workflowsFilter.getRegex().replaceAll("%", ".*")).asPredicate();
                 contentsStream = contentsStream.filter(w -> regex.test(w.getPath()));
             }
+            JocError jocError = getJocError();
             workflows.setWorkflows(contentsStream.map(w -> {
                 try {
+                    if (w.getContent() != null && !w.getContent().isEmpty()) {
+                        throw new DBMissingDataException("doesn't exist");
+                    }
                     Workflow workflow = Globals.objectMapper.readValue(w.getContent(), Workflow.class);
                     workflow.setPath(w.getPath());
                     workflow.setVersionId(w.getCommitId());
@@ -90,7 +96,11 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                     workflow.setState(WorkflowsHelper.getState(currentstate, workflow));
                     return WorkflowsHelper.addWorkflowPositions(workflow);
                 } catch (Exception e) {
-                    // TODO
+                    if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
+                        LOGGER.info(jocError.printMetaInfo());
+                        jocError.clearMetaInfo();
+                    }
+                    LOGGER.error(String.format("[%s] %s", w.getPath(), e.toString()));
                     return null;
                 }
             }).filter(Objects::nonNull).collect(Collectors.toList()));

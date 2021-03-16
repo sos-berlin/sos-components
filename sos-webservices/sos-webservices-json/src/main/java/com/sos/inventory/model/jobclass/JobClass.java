@@ -22,8 +22,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
-    "path",
-    "versionId",
     "maxProcesses",
     "priority",
     "documentationPath",
@@ -40,22 +38,6 @@ public class JobClass implements IConfigurationObject, IDeployObject
      */
     @JsonProperty("TYPE")
     private DeployType tYPE = DeployType.JOBCLASS;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("path")
-    private String path;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("versionId")
-    private String versionId;
     @JsonProperty("maxProcesses")
     private Integer maxProcesses = 30;
     /**
@@ -95,16 +77,12 @@ public class JobClass implements IConfigurationObject, IDeployObject
      * 
      * @param maxProcesses
      * @param documentationPath
-     * @param path
-     * @param versionId
      * 
      * @param priority
      * @param title
      */
-    public JobClass(String path, String versionId, Integer maxProcesses, String priority, String documentationPath, String title) {
+    public JobClass(Integer maxProcesses, String priority, String documentationPath, String title) {
         super();
-        this.path = path;
-        this.versionId = versionId;
         this.maxProcesses = maxProcesses;
         this.priority = priority;
         this.documentationPath = documentationPath;
@@ -120,50 +98,6 @@ public class JobClass implements IConfigurationObject, IDeployObject
     @JsonProperty("TYPE")
     public DeployType getTYPE() {
         return tYPE;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("path")
-    public String getPath() {
-        return path;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("path")
-    public void setPath(String path) {
-        this.path = path;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("versionId")
-    public String getVersionId() {
-        return versionId;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("versionId")
-    public void setVersionId(String versionId) {
-        this.versionId = versionId;
     }
 
     @JsonProperty("maxProcesses")
@@ -244,12 +178,12 @@ public class JobClass implements IConfigurationObject, IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("versionId", versionId).append("maxProcesses", maxProcesses).append("priority", priority).append("documentationPath", documentationPath).append("title", title).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("maxProcesses", maxProcesses).append("priority", priority).append("documentationPath", documentationPath).append("title", title).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(maxProcesses).append(documentationPath).append(path).append(versionId).append(tYPE).append(priority).append(title).toHashCode();
+        return new HashCodeBuilder().append(maxProcesses).append(documentationPath).append(tYPE).append(priority).append(title).toHashCode();
     }
 
     @Override
@@ -261,7 +195,7 @@ public class JobClass implements IConfigurationObject, IDeployObject
             return false;
         }
         JobClass rhs = ((JobClass) other);
-        return new EqualsBuilder().append(maxProcesses, rhs.maxProcesses).append(documentationPath, rhs.documentationPath).append(path, rhs.path).append(versionId, rhs.versionId).append(tYPE, rhs.tYPE).append(priority, rhs.priority).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(maxProcesses, rhs.maxProcesses).append(documentationPath, rhs.documentationPath).append(tYPE, rhs.tYPE).append(priority, rhs.priority).append(title, rhs.title).isEquals();
     }
 
 }

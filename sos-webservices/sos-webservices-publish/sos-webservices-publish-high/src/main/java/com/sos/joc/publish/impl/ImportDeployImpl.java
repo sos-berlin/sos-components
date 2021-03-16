@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -146,7 +145,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 case LOCK:
                     break;
                 case JUNCTION:
-                    commitId = ((Junction) config.getContent()).getVersionId();
+                    //commitId = ((Junction) config.getContent()).getVersionId();
                     break;
                 case JOBCLASS:
                     break;

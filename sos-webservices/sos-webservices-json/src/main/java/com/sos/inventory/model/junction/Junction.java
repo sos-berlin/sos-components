@@ -22,8 +22,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
-    "path",
-    "versionId",
     "lifetime",
     "orderId",
     "documentationPath",
@@ -40,22 +38,6 @@ public class Junction implements IConfigurationObject, IDeployObject
      */
     @JsonProperty("TYPE")
     private DeployType tYPE = DeployType.JUNCTION;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("path")
-    private String path;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("versionId")
-    private String versionId;
     /**
      * non negative integer
      * <p>
@@ -100,17 +82,13 @@ public class Junction implements IConfigurationObject, IDeployObject
     /**
      * 
      * @param documentationPath
-     * @param path
-     * @param versionId
      * @param orderId
      * @param lifetime
      * 
      * @param title
      */
-    public Junction(String path, String versionId, Integer lifetime, String orderId, String documentationPath, String title) {
+    public Junction(Integer lifetime, String orderId, String documentationPath, String title) {
         super();
-        this.path = path;
-        this.versionId = versionId;
         this.lifetime = lifetime;
         this.orderId = orderId;
         this.documentationPath = documentationPath;
@@ -126,50 +104,6 @@ public class Junction implements IConfigurationObject, IDeployObject
     @JsonProperty("TYPE")
     public DeployType getTYPE() {
         return tYPE;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("path")
-    public String getPath() {
-        return path;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("path")
-    public void setPath(String path) {
-        this.path = path;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("versionId")
-    public String getVersionId() {
-        return versionId;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("versionId")
-    public void setVersionId(String versionId) {
-        this.versionId = versionId;
     }
 
     /**
@@ -262,12 +196,12 @@ public class Junction implements IConfigurationObject, IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("versionId", versionId).append("lifetime", lifetime).append("orderId", orderId).append("documentationPath", documentationPath).append("title", title).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("lifetime", lifetime).append("orderId", orderId).append("documentationPath", documentationPath).append("title", title).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(documentationPath).append(path).append(versionId).append(orderId).append(lifetime).append(tYPE).append(title).toHashCode();
+        return new HashCodeBuilder().append(lifetime).append(documentationPath).append(tYPE).append(title).append(orderId).toHashCode();
     }
 
     @Override
@@ -279,7 +213,7 @@ public class Junction implements IConfigurationObject, IDeployObject
             return false;
         }
         Junction rhs = ((Junction) other);
-        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(path, rhs.path).append(versionId, rhs.versionId).append(orderId, rhs.orderId).append(lifetime, rhs.lifetime).append(tYPE, rhs.tYPE).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(lifetime, rhs.lifetime).append(documentationPath, rhs.documentationPath).append(tYPE, rhs.tYPE).append(title, rhs.title).append(orderId, rhs.orderId).isEquals();
     }
 
 }

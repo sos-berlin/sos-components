@@ -1,26 +1,26 @@
 
-package com.sos.controller.model.workflow;
+package com.sos.controller.model.common;
 
 import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum WorkflowStateText {
+public enum SyncStateText {
 
     IN_SYNC("IN_SYNC"),
     NOT_IN_SYNC("NOT_IN_SYNC"),
     UNKNOWN("UNKNOWN");
     private final String value;
-    private final static Map<String, WorkflowStateText> CONSTANTS = new HashMap<String, WorkflowStateText>();
+    private final static Map<String, SyncStateText> CONSTANTS = new HashMap<String, SyncStateText>();
 
     static {
-        for (WorkflowStateText c: values()) {
+        for (SyncStateText c: values()) {
             CONSTANTS.put(c.value, c);
         }
     }
 
-    private WorkflowStateText(String value) {
+    private SyncStateText(String value) {
         this.value = value;
     }
 
@@ -35,8 +35,8 @@ public enum WorkflowStateText {
     }
 
     @JsonCreator
-    public static WorkflowStateText fromValue(String value) {
-        WorkflowStateText constant = CONSTANTS.get(value);
+    public static SyncStateText fromValue(String value) {
+        SyncStateText constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {
