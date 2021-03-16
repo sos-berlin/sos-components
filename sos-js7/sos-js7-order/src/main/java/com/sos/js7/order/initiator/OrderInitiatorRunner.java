@@ -58,6 +58,7 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.js7.order.initiator.classes.DailyPlanHelper;
+import com.sos.js7.order.initiator.classes.OrderCounter;
 import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 import com.sos.js7.order.initiator.classes.PlannedOrder;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlanSubmissions;
@@ -121,6 +122,9 @@ public class OrderInitiatorRunner extends TimerTask {
         orderListSynchronizer = calculateStartTimes(DailyPlanHelper.stringAsDate(dailyPlanDate));
         orderListSynchronizer.setJocError(jocError);
         orderListSynchronizer.setAccessToken(accessToken);
+        OrderCounter o = DailyPlanHelper.getOrderCount(orderListSynchronizer.getListOfPlannedOrders());
+
+        LOGGER.info("Creating " + o.getCount() +  " orders " + o.cycledOrdersDesc() + " for controller " + OrderInitiatorGlobals.orderInitiatorSettings.getControllerId() + " day: " + dailyPlanDate);
 
         if (orderListSynchronizer.getListOfPlannedOrders().size() > 0) {
             orderListSynchronizer.addPlannedOrderToControllerAndDB(withSubmit);
@@ -268,7 +272,7 @@ public class OrderInitiatorRunner extends TimerTask {
                         }
                         generateDailyPlan(dailyPlanDate, false);
                     } else {
-                        LOGGER.debug("Will not create for " + dailyPlanDate + " --> Submission found");
+                        LOGGER.info("No orders will be created for " + dailyPlanDate + " as a submission has been found");
                     }
 
                     dailyPlanCalendar.add(java.util.Calendar.DATE, 1);
@@ -315,7 +319,9 @@ public class OrderInitiatorRunner extends TimerTask {
                 DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
                 List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
 
-                LOGGER.info("Submitting " + listOfPlannedOrders.size() + " orders for controller " + controllerId + " day: " + DailyPlanHelper
+                OrderCounter o = DailyPlanHelper.getOrderCount(listOfPlannedOrders);
+                
+                LOGGER.info("Submitting " + o.getCount() + " orders " + o.cycledOrdersDesc() + " for controller " + controllerId + " day: " + DailyPlanHelper
                         .getDayOfYear(calendar));
                 submitOrders(listOfPlannedOrders);
             }
@@ -361,7 +367,7 @@ public class OrderInitiatorRunner extends TimerTask {
         if (!createdPlans.contains(DailyPlanHelper.getDayOfYear(calendar)) && (generateFromManuelStart || OrderInitiatorGlobals.orderInitiatorSettings
                 .getDailyPlanDaysCreateOnStart() || (now.getTimeInMillis() - startCalendar.getTimeInMillis()) > 0)) {
 
-            LOGGER.info("Creating daily plan beginning with " + DailyPlanHelper.getDayOfYear(calendar));
+            LOGGER.info("Creating daily plan starting with " + DailyPlanHelper.getDayOfYear(calendar));
             createdPlans.add(DailyPlanHelper.getDayOfYear(calendar));
             try {
                 OrderInitiatorGlobals.submissionTime = new Date();

@@ -2,16 +2,23 @@ package com.sos.js7.order.initiator.classes;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
+import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.inventory.model.Schedule;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
+import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
+import com.sos.joc.model.dailyplan.PlannedOrderItem;
 
 public class DailyPlanHelper {
 
@@ -89,6 +96,71 @@ public class DailyPlanHelper {
         calendar.getTimeInMillis();
 
         return calendar;
+    }
+
+    public static OrderCounter getOrderCount(List<DBItemDailyPlanOrders> listOfPlannedOrders) {
+        OrderCounter o = new OrderCounter();
+        o.countSingle = 0L;
+        o.countCycled = 0L;
+        o.countCycledAll = 0L;
+
+        DateFormat periodFormat = new SimpleDateFormat("hh:mm:ss");
+        Map<CycleOrderKey, List<DBItemDailyPlanOrders>> mapOfCycledOrders = new TreeMap<CycleOrderKey, List<DBItemDailyPlanOrders>>();
+
+        for (DBItemDailyPlanOrders dbItemDailyPlanOrders : listOfPlannedOrders) {
+
+            if ((dbItemDailyPlanOrders.getStartMode() == 1)) {
+                CycleOrderKey cycleOrderKey = new CycleOrderKey();
+                cycleOrderKey.setPeriodBegin(periodFormat.format(dbItemDailyPlanOrders.getPeriodBegin()));
+                cycleOrderKey.setPeriodEnd(periodFormat.format(dbItemDailyPlanOrders.getPeriodEnd()));
+                cycleOrderKey.setRepeat(String.valueOf(dbItemDailyPlanOrders.getRepeatInterval()));
+                cycleOrderKey.setSchedulePath(dbItemDailyPlanOrders.getSchedulePath());
+                cycleOrderKey.setWorkflowPath(dbItemDailyPlanOrders.getWorkflowPath());
+                if (mapOfCycledOrders.get(cycleOrderKey) == null) {
+                    mapOfCycledOrders.put(cycleOrderKey, new ArrayList<DBItemDailyPlanOrders>());
+                    o.countCycled = o.countCycled + 1;
+                }
+
+                mapOfCycledOrders.get(cycleOrderKey).add(dbItemDailyPlanOrders);
+                o.countCycledAll = o.countCycledAll + 1;
+            } else {
+                o.countSingle = o.countSingle + 1;
+            }
+        }
+
+        return o;
+    }
+
+    public static OrderCounter getOrderCount(Map<PlannedOrderKey, PlannedOrder> listOfPlannedOrders) {
+        OrderCounter o = new OrderCounter();
+        o.countSingle = 0L;
+        o.countCycled = 0L;
+        o.countCycledAll = 0L;
+
+        Map<CycleOrderKey, List<PlannedOrder>> mapOfCycledOrders = new TreeMap<CycleOrderKey, List<PlannedOrder>>();
+        for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
+
+            if ((plannedOrder.getPeriod().getSingleStart() == null)) {
+                CycleOrderKey cycleOrderKey = new CycleOrderKey();
+                cycleOrderKey.setPeriodBegin(plannedOrder.getPeriod().getBegin());
+                cycleOrderKey.setPeriodEnd(plannedOrder.getPeriod().getEnd());
+                cycleOrderKey.setRepeat(String.valueOf(plannedOrder.getPeriod().getRepeat()));
+                cycleOrderKey.setSchedulePath(plannedOrder.getSchedule().getPath());
+                cycleOrderKey.setWorkflowPath(plannedOrder.getSchedule().getWorkflowPath());
+                if (mapOfCycledOrders.get(cycleOrderKey) == null) {
+                    mapOfCycledOrders.put(cycleOrderKey, new ArrayList<PlannedOrder>());
+                    o.countCycled = o.countCycled+1;
+                }
+
+                mapOfCycledOrders.get(cycleOrderKey).add(plannedOrder);
+                o.countCycledAll = o.countCycledAll + 1;
+            } else {
+                o.countSingle = o.countSingle + 1;
+            }
+        }
+
+        return o;
+
     }
 
     public static String getStartTimeAsString() {
