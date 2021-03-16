@@ -66,6 +66,7 @@ import com.sos.inventory.model.Schedule;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.CalendarType;
 import com.sos.inventory.model.deploy.DeployType;
+import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.jobclass.JobClass;
 import com.sos.inventory.model.junction.Junction;
@@ -130,6 +131,7 @@ import com.sos.joc.publish.common.ConfigurationObjectFileExtension;
 import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
+import com.sos.joc.publish.mapper.UpdatableFileOrderSourceAgentName;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.webservices.order.initiator.model.ScheduleEdit;
 
@@ -702,6 +704,16 @@ public abstract class PublishUtils {
                                     lock.setId(item.getName());
                                 }
                                 return  JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                            } catch (Exception e) {
+                                throw new JocDeployException(e);
+                            }
+                        case FILEORDERSOURCE:
+                            try {
+                                FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                                if (fileOrderSource.getId() == null) {
+                                    fileOrderSource.setId(item.getName());
+                                }
+                                return null;
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
@@ -1449,11 +1461,37 @@ public abstract class PublishUtils {
                 Workflow workflow = om.readValue(json, Workflow.class);
                 workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
                     Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-                    String agentName = job.getAgentId();
-                    String agentId = dbLayer.getAgentIdFromAgentName(agentName, controllerId, path, jobname);
+                    String agentNameOrAlias = job.getAgentId();
+                    String agentId = dbLayer.getAgentIdFromAgentName(agentNameOrAlias, controllerId, path, jobname);
                     update.add(
                             new UpdateableWorkflowJobAgentName(path, jobname, job.getAgentId(), agentId, controllerId));
                 });
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+        return update;
+    }
+
+    public static Set<UpdatableFileOrderSourceAgentName> getUpdateableAgentRefInFileOrderSource(DBItemInventoryConfiguration item, 
+            String controllerId, DBLayerDeploy dbLayer) {
+        return getUpdateableAgentRefInFileOrderSource(item.getName(), item.getContent(), ConfigurationType.fromValue(item.getType()), controllerId, dbLayer);
+    }
+
+    public static Set<UpdatableFileOrderSourceAgentName> getUpdateableAgentRefInFileOrderSource(DBItemDeploymentHistory item,
+            String controllerId, DBLayerDeploy dbLayer) {
+        return getUpdateableAgentRefInFileOrderSource(item.getName(), item.getInvContent(), ConfigurationType.fromValue(item.getType()), controllerId, dbLayer);
+    }
+
+    public static Set<UpdatableFileOrderSourceAgentName> getUpdateableAgentRefInFileOrderSource(String fileOrderSourceId, String json, ConfigurationType type,
+            String controllerId, DBLayerDeploy dbLayer) {
+        Set<UpdatableFileOrderSourceAgentName> update = new HashSet<UpdatableFileOrderSourceAgentName>();
+        try {
+            if (ConfigurationType.FILEORDERSOURCE.equals(type)) {
+                FileOrderSource fileOrderSource = om.readValue(json, FileOrderSource.class);
+                String agentNameOrAlias = fileOrderSource.getAgentId();
+                String agentId = dbLayer.getAgentIdFromAgentName(agentNameOrAlias, controllerId);
+                update.add(new UpdatableFileOrderSourceAgentName(fileOrderSourceId, agentNameOrAlias, agentId, controllerId));
             }
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage(), e);
