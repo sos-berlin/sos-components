@@ -3,6 +3,8 @@ package com.sos.joc.joc.impl;
 import java.time.Instant;
 import java.util.Date;
 
+import javax.ws.rs.Path;
+
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -13,7 +15,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.joc.resource.IPropertiesResource;
 import com.sos.joc.model.Properties;
 
-@javax.ws.rs.Path("joc")
+@Path("joc")
 public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResource {
 
     private static final String API_CALL = "./properties";

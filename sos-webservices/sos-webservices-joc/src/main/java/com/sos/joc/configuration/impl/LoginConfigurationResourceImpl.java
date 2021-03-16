@@ -12,6 +12,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.configuration.resource.ILoginConfigurationResource;
 import com.sos.joc.model.configuration.Login;
 import com.sos.joc.model.configuration.LoginLogo;
@@ -34,7 +35,7 @@ public class LoginConfigurationResourceImpl extends JOCResourceImpl implements I
         try {
             Globals.sosCockpitProperties = new JocCockpitProperties();
             login.setTitle(Globals.sosCockpitProperties.getProperty("title", ""));
-            login.setEnableRememberMe(Globals.sosCockpitProperties.getProperty("enable_remember_me", true));
+            login.setEnableRememberMe(ClusterSettings.getEnableRememberMe(Globals.getConfigurationGlobalsJoc()));
             String logoName = Globals.sosCockpitProperties.getProperty("custom_logo_name", "").trim();
             if (!logoName.isEmpty()) {
                 java.nio.file.Path p = Paths.get(LOGO_LOCATION + logoName);
@@ -65,11 +66,7 @@ public class LoginConfigurationResourceImpl extends JOCResourceImpl implements I
                 }
                 login.setCustomLogo(loginLogo);
             }
-            
-            String defaultProfileAccount = Globals.sosCockpitProperties.getProperty("default_profile_account", "").trim();
-            if (!defaultProfileAccount.isEmpty()) {
-                login.setDefaultProfileAccount(defaultProfileAccount);
-            }
+            login.setDefaultProfileAccount(ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc()));
             
             return JOCDefaultResponse.responseStatus200(login);
         } catch (Exception e) {

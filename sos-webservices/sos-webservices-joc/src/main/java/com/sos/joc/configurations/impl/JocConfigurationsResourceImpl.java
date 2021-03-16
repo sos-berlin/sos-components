@@ -14,6 +14,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.configurations.resource.IJocConfigurationsResource;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
@@ -100,10 +101,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             if (configurationsFilter.getConfigurationType() == ConfigurationType.PROFILE && (listOfJocConfigurationDbItem == null
                     || listOfJocConfigurationDbItem.isEmpty() || listOfJocConfigurationDbItem.get(0).getConfigurationItem() == null
                     || listOfJocConfigurationDbItem.get(0).getConfigurationItem().isEmpty())) {
-                if (Globals.sosCockpitProperties == null) {
-                    Globals.sosCockpitProperties = new JocCockpitProperties();
-                }
-                String defaultProfileAccount = Globals.sosCockpitProperties.getProperty("default_profile_account", "").trim();
+                String defaultProfileAccount = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
                 String currentAccount = configurationsFilter.getAccount();
                 if (!defaultProfileAccount.isEmpty() && !defaultProfileAccount.equals(currentAccount)) {
                     filter.setAccount(defaultProfileAccount);
