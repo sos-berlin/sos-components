@@ -13,16 +13,19 @@ public class SignedItemsSpec {
     JocKeyPair keyPair;
     Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations; 
     Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedDeployables;
-    Set<UpdateableWorkflowJobAgentName> updateableAgentNames;
+    Set<UpdateableWorkflowJobAgentName> updateableWorkflowJobAgentNames;
+    Set<UpdateableFileOrderSourceAgentName> updateableFileOrderSourceAgentNames;
     
     public SignedItemsSpec (JocKeyPair keyPair,
             Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations, 
             Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedDeployables,
-            Set<UpdateableWorkflowJobAgentName> updateableAgentNames) {
+            Set<UpdateableWorkflowJobAgentName> updateableWorkflowJobAgentNames, 
+            Set<UpdateableFileOrderSourceAgentName> updateableFileOrderSourceAgentNames) {
         this.keyPair = keyPair;
         this.verifiedConfigurations = verifiedConfigurations;
         this.verifiedDeployables = verifiedDeployables;
-        this.updateableAgentNames = updateableAgentNames;
+        this.updateableWorkflowJobAgentNames = updateableWorkflowJobAgentNames;
+        this.updateableFileOrderSourceAgentNames = updateableFileOrderSourceAgentNames;
     }
 
     
@@ -38,8 +41,12 @@ public class SignedItemsSpec {
         return verifiedDeployables;
     }
     
-    public Set<UpdateableWorkflowJobAgentName> getUpdateableAgentNames() {
-        return updateableAgentNames;
+    public Set<UpdateableWorkflowJobAgentName> getUpdateableWorkflowJobAgentNames() {
+        return updateableWorkflowJobAgentNames;
+    }
+
+    public Set<UpdateableFileOrderSourceAgentName> getUpdateableFileOrderSourceAgentNames() {
+        return updateableFileOrderSourceAgentNames;
     }
 
 }

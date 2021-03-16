@@ -66,6 +66,7 @@ public class JocInventory {
     public static final String ROOT_FOLDER = "/";
     public static final String DEFAULT_COPY_SUFFIX = "copy";
     public static final String DEFAULT_RESTORE_SUFFIX = "restored";
+    public static final String DEFAULT_IMPORT_SUFFIX = "imported";
 
     public static final Map<ConfigurationType, String> SCHEMA_LOCATION = Collections.unmodifiableMap(new HashMap<ConfigurationType, String>() {
 

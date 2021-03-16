@@ -66,7 +66,8 @@ import com.sos.inventory.model.Schedule;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.CalendarType;
 import com.sos.inventory.model.deploy.DeployType;
-import com.sos.inventory.model.fileordersource.FileOrderSource;
+import com.sos.sign.model.fileordersource.FileOrderSource;
+import com.sos.sign.model.job.Job;
 import com.sos.sign.model.jobclass.JobClass;
 import com.sos.sign.model.junction.Junction;
 import com.sos.sign.model.lock.Lock;
@@ -105,6 +106,7 @@ import com.sos.joc.model.calendar.WorkingDaysCalendarEdit;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.inventory.fileordersource.FileOrderSourcePublish;
 import com.sos.joc.model.inventory.jobclass.JobClassEdit;
 import com.sos.joc.model.inventory.jobclass.JobClassPublish;
 import com.sos.joc.model.inventory.junction.JunctionEdit;
@@ -129,8 +131,9 @@ import com.sos.joc.model.sign.SignaturePath;
 import com.sos.joc.publish.common.ConfigurationObjectFileExtension;
 import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
+import com.sos.joc.publish.mapper.SignedItemsSpec;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
-import com.sos.joc.publish.mapper.UpdatableFileOrderSourceAgentName;
+import com.sos.joc.publish.mapper.UpdateableFileOrderSourceAgentName;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.webservices.order.initiator.model.ScheduleEdit;
 
@@ -138,11 +141,14 @@ import io.vavr.control.Either;
 import js7.base.crypt.SignedString;
 import js7.base.crypt.SignerId;
 import js7.base.problem.Problem;
+import js7.data.agent.AgentId;
 import js7.data.item.VersionId;
 import js7.data.lock.LockId;
+import js7.data.ordersource.OrderSourceId;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.item.JUpdateItemOperation;
 import js7.data_for_java.lock.JLock;
+import js7.data_for_java.ordersource.JFileOrderSource;
 import reactor.core.publisher.Flux;
 
 public abstract class PublishUtils {
@@ -692,7 +698,12 @@ public abstract class PublishUtils {
                                 if (fileOrderSource.getId() == null) {
                                     fileOrderSource.setId(item.getName());
                                 }
-                                return null;
+                                return JUpdateItemOperation.addOrChangeSimple(
+                                        JFileOrderSource.of(
+                                                OrderSourceId.of(fileOrderSource.getId()), 
+                                                WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
+                                                AgentId.of(fileOrderSource.getAgentId()), 
+                                                Paths.get(fileOrderSource.getDirectory())));
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
@@ -721,6 +732,21 @@ public abstract class PublishUtils {
                                     lock.setId(Paths.get(item.getPath()).getFileName().toString());
                                 }
                                 return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                            } catch (Exception e) {
+                                throw new JocDeployException(e);
+                            }
+                        case FILEORDERSOURCE:
+                            try {
+                                FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                                if (fileOrderSource.getId() == null) {
+                                    fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
+                                }
+                                return JUpdateItemOperation.addOrChangeSimple(
+                                        JFileOrderSource.of(
+                                                OrderSourceId.of(fileOrderSource.getId()), 
+                                                WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
+                                                AgentId.of(fileOrderSource.getAgentId()), 
+                                                Paths.get(fileOrderSource.getDirectory())));
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
@@ -767,6 +793,21 @@ public abstract class PublishUtils {
                 } catch (Exception e) {
                     throw new JocDeployException(e);
                 }
+            case FILEORDERSOURCE:
+                try {
+                    FileOrderSource fileOrderSource = (FileOrderSource)item.getContent();
+                    if (fileOrderSource.getId() == null) {
+                        fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
+                    }
+                    return JUpdateItemOperation.addOrChangeSimple(
+                            JFileOrderSource.of(
+                                    OrderSourceId.of(fileOrderSource.getId()), 
+                                    WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
+                                    AgentId.of(fileOrderSource.getAgentId()), 
+                                    Paths.get(fileOrderSource.getDirectory())));
+                } catch (Exception e) {
+                    throw new JocDeployException(e);
+                }
             case JUNCTION:
                 // TODO: When implemented in controller
                 return null;
@@ -795,6 +836,21 @@ public abstract class PublishUtils {
                         lock.setId(Paths.get(item.getPath()).getFileName().toString());
                     }
                     return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                } catch (Exception e) {
+                    throw new JocDeployException(e);
+                }
+            case FILEORDERSOURCE:
+                try {
+                    FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                    if (fileOrderSource.getId() == null) {
+                        fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
+                    }
+                    return JUpdateItemOperation.addOrChangeSimple(
+                            JFileOrderSource.of(
+                                    OrderSourceId.of(fileOrderSource.getId()), 
+                                    WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
+                                    AgentId.of(fileOrderSource.getAgentId()), 
+                                    Paths.get(fileOrderSource.getDirectory())));
                 } catch (Exception e) {
                     throw new JocDeployException(e);
                 }
@@ -837,6 +893,21 @@ public abstract class PublishUtils {
                 } catch (Exception e) {
                     throw new JocDeployException(e);
                 }
+            case FILEORDERSOURCE:
+                try {
+                    FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                    if (fileOrderSource.getId() == null) {
+                        fileOrderSource.setId(item.getName());
+                    }
+                    return JUpdateItemOperation.addOrChangeSimple(
+                            JFileOrderSource.of(
+                                    OrderSourceId.of(fileOrderSource.getId()), 
+                                    WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
+                                    AgentId.of(fileOrderSource.getAgentId()), 
+                                    Paths.get(fileOrderSource.getDirectory())));
+                } catch (Exception e) {
+                    throw new JocDeployException(e);
+                }
             case JUNCTION:
                 // TODO: When implemented in controller
                 return null;
@@ -870,8 +941,21 @@ public abstract class PublishUtils {
                                 if (lock.getId() == null) {
                                     lock.setId(item.getName());
                                 }
-                                // JLock jLock = JLock.of(LockId.of(lock.getId()), lock.getLimit());
                                 return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                            } catch (Exception e) {
+                                throw new JocDeployException(e);
+                            }
+                        case FILEORDERSOURCE:
+                            try {
+                                FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                                if (fileOrderSource.getId() == null) {
+                                    fileOrderSource.setId(item.getName());
+                                }
+                                return JUpdateItemOperation.addOrChangeSimple(JFileOrderSource.of(
+                                        OrderSourceId.of(fileOrderSource.getId()), 
+                                        WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
+                                        AgentId.of(fileOrderSource.getAgentId()), 
+                                        Paths.get(fileOrderSource.getDirectory())));
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
@@ -887,15 +971,6 @@ public abstract class PublishUtils {
                     }).collect(Collectors.toSet()));
         }
         if (alreadyDeployed != null) {
-            // updateRepoOperationsVersioned.addAll(
-            // alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
-            // item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(
-            // item.getContent(),
-            // alreadyDeployed.get(item).getSignature(),
-            // signatureAlgorithm,
-            // certificate))
-            // ).collect(Collectors.toSet())
-            // );
             updateRepoOperationsVersioned.addAll(alreadyDeployed.entrySet().stream().filter(item -> item.getKey().getType() == DeployType.WORKFLOW
                     .intValue()).map(item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(item.getKey().getContent(),
                             item.getValue().getSignature(), signatureAlgorithm, certificate))).collect(Collectors.toSet()));
@@ -909,6 +984,21 @@ public abstract class PublishUtils {
                                     lock.setId(Paths.get(item.getPath()).getFileName().toString());
                                 }
                                 return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                            } catch (Exception e) {
+                                throw new JocDeployException(e);
+                            }
+                        case FILEORDERSOURCE:
+                            try {
+                                FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                                if (fileOrderSource.getId() == null) {
+                                    fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
+                                }
+                                return JUpdateItemOperation.addOrChangeSimple(
+                                        JFileOrderSource.of(
+                                                OrderSourceId.of(fileOrderSource.getId()), 
+                                                WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
+                                                AgentId.of(fileOrderSource.getAgentId()), 
+                                                Paths.get(fileOrderSource.getDirectory())));
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
@@ -951,6 +1041,21 @@ public abstract class PublishUtils {
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
+                        case FILEORDERSOURCE:
+                            try {
+                                FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                                if (fileOrderSource.getId() == null) {
+                                    fileOrderSource.setId(item.getName());
+                                }
+                                return JUpdateItemOperation.addOrChangeSimple(
+                                        JFileOrderSource.of(
+                                                OrderSourceId.of(fileOrderSource.getId()), 
+                                                WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
+                                                AgentId.of(fileOrderSource.getAgentId()), 
+                                                Paths.get(fileOrderSource.getDirectory())));
+                            } catch (Exception e) {
+                                throw new JocDeployException(e);
+                            }
                         case JUNCTION:
                             // TODO: When implemented in controller
                             return null;
@@ -976,6 +1081,21 @@ public abstract class PublishUtils {
                                     lock.setId(Paths.get(item.getPath()).getFileName().toString());
                                 }
                                 return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                            } catch (Exception e) {
+                                throw new JocDeployException(e);
+                            }
+                        case FILEORDERSOURCE:
+                            try {
+                                FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                                if (fileOrderSource.getId() == null) {
+                                    fileOrderSource.setId(item.getName());
+                                }
+                                return JUpdateItemOperation.addOrChangeSimple(
+                                        JFileOrderSource.of(
+                                                OrderSourceId.of(fileOrderSource.getId()), 
+                                                WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
+                                                AgentId.of(fileOrderSource.getAgentId()), 
+                                                Paths.get(item.getPath())));
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
@@ -1023,6 +1143,21 @@ public abstract class PublishUtils {
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
+                        case FILEORDERSOURCE:
+                            try {
+                                FileOrderSource fileOrderSource = (FileOrderSource)item.getContent();
+                                if (fileOrderSource.getId() == null) {
+                                    fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
+                                }
+                                return JUpdateItemOperation.addOrChangeSimple(
+                                        JFileOrderSource.of(
+                                                OrderSourceId.of(fileOrderSource.getId()), 
+                                                WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
+                                                AgentId.of(fileOrderSource.getAgentId()), 
+                                                Paths.get(fileOrderSource.getDirectory())));
+                            } catch (Exception e) {
+                                throw new JocDeployException(e);
+                            }
                         case JUNCTION:
                             // TODO: When implemented in controller
                             return null;
@@ -1050,6 +1185,21 @@ public abstract class PublishUtils {
                                     lock.setId(Paths.get(item.getPath()).getFileName().toString());
                                 }
                                 return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                            } catch (Exception e) {
+                                throw new JocDeployException(e);
+                            }
+                        case FILEORDERSOURCE:
+                            try {
+                                FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                                if (fileOrderSource.getId() == null) {
+                                    fileOrderSource.setId(item.getName());
+                                }
+                                return JUpdateItemOperation.addOrChangeSimple(
+                                        JFileOrderSource.of(
+                                                OrderSourceId.of(fileOrderSource.getId()), 
+                                                WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
+                                                AgentId.of(fileOrderSource.getAgentId()), 
+                                                Paths.get(fileOrderSource.getDirectory())));
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
@@ -1098,6 +1248,21 @@ public abstract class PublishUtils {
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
+                        case FILEORDERSOURCE:
+                            try {
+                                FileOrderSource fileOrderSource = (FileOrderSource) item.getContent();
+                                if (fileOrderSource.getId() == null) {
+                                    fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
+                                }
+                                return JUpdateItemOperation.addOrChangeSimple(
+                                        JFileOrderSource.of(
+                                                OrderSourceId.of(fileOrderSource.getId()), 
+                                                WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
+                                                AgentId.of(fileOrderSource.getAgentId()), 
+                                                Paths.get(fileOrderSource.getDirectory())));
+                            } catch (Exception e) {
+                                throw new JocDeployException(e);
+                            }
                         case JUNCTION:
                             // TODO: When implemented in controller
                             return null;
@@ -1125,6 +1290,21 @@ public abstract class PublishUtils {
                                     lock.setId(Paths.get(item.getPath()).getFileName().toString());
                                 }
                                 return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                            } catch (Exception e) {
+                                throw new JocDeployException(e);
+                            }
+                        case FILEORDERSOURCE:
+                            try {
+                                FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                                if (fileOrderSource.getId() == null) {
+                                    fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
+                                }
+                                return JUpdateItemOperation.addOrChangeSimple(
+                                        JFileOrderSource.of(
+                                                OrderSourceId.of(fileOrderSource.getId()), 
+                                                WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
+                                                AgentId.of(fileOrderSource.getAgentId()), 
+                                                Paths.get(fileOrderSource.getDirectory())));
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
@@ -1164,6 +1344,21 @@ public abstract class PublishUtils {
                 } catch (Exception e) {
                     throw new JocDeployException(e);
                 }
+            case FILEORDERSOURCE:
+                try {
+                    FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                    if (fileOrderSource.getId() == null) {
+                        fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
+                    }
+                    return JUpdateItemOperation.addOrChangeSimple(
+                            JFileOrderSource.of(
+                                    OrderSourceId.of(fileOrderSource.getId()), 
+                                    WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
+                                    AgentId.of(fileOrderSource.getAgentId()), 
+                                    Paths.get(fileOrderSource.getDirectory())));
+                } catch (Exception e) {
+                    throw new JocDeployException(e);
+                }
             case JUNCTION:
                 // TODO: When implemented in controller
                 return null;
@@ -1196,6 +1391,21 @@ public abstract class PublishUtils {
                         lock.setId(Paths.get(item.getPath()).getFileName().toString());
                     }
                     return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                } catch (Exception e) {
+                    throw new JocDeployException(e);
+                }
+            case FILEORDERSOURCE:
+                try {
+                    FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                    if (fileOrderSource.getId() == null) {
+                        fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
+                    }
+                    return JUpdateItemOperation.addOrChangeSimple(
+                            JFileOrderSource.of(
+                                    OrderSourceId.of(fileOrderSource.getId()), 
+                                    WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
+                                    AgentId.of(fileOrderSource.getAgentId()), 
+                                    Paths.get(fileOrderSource.getDirectory())));
                 } catch (Exception e) {
                     throw new JocDeployException(e);
                 }
@@ -1236,6 +1446,21 @@ public abstract class PublishUtils {
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
+                        case FILEORDERSOURCE:
+                            try {
+                                FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                                if (fileOrderSource.getId() == null) {
+                                    fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
+                                }
+                                return JUpdateItemOperation.addOrChangeSimple(
+                                        JFileOrderSource.of(
+                                                OrderSourceId.of(fileOrderSource.getId()), 
+                                                WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
+                                                AgentId.of(fileOrderSource.getAgentId()), 
+                                                Paths.get(fileOrderSource.getDirectory())));
+                            } catch (Exception e) {
+                                throw new JocDeployException(e);
+                            }
                         case JOBCLASS:
                             // TODO: When implemented in controller
                             return null;
@@ -1260,12 +1485,15 @@ public abstract class PublishUtils {
             workflow.setVersionId(commitId);
             draft.setContent(om.writeValueAsString(workflow));
             break;
-        // TODO: locks and other objects
         case LOCK:
+        case FILEORDERSOURCE:
+            // SimpleItem(s) - versionId not stored on object as object itself is not signed
+            break;
         case WORKINGDAYSCALENDAR:
         case NONWORKINGDAYSCALENDAR:
         case FOLDER:
         case SCHEDULE:
+            // not deployable
             break;
         case JOBCLASS:
         case JUNCTION:
@@ -1284,9 +1512,11 @@ public abstract class PublishUtils {
             deployed.setContent(om.writeValueAsString(workflow));
             break;
         case LOCK:
-            // TODO: locks and other objects
+        case FILEORDERSOURCE:
+            // SimpleItem(s) - versionId not stored on object as object itself is not signed
             break;
         case JUNCTION:
+        case JOBCLASS:
             throw new JocNotImplementedException();
         }
     }
@@ -1308,9 +1538,9 @@ public abstract class PublishUtils {
         Set<UpdateableWorkflowJobAgentName> update = new HashSet<UpdateableWorkflowJobAgentName>();
         try {
             if (ConfigurationType.WORKFLOW.equals(type)) {
-                Workflow workflow = om.readValue(json, Workflow.class);
+                com.sos.inventory.model.workflow.Workflow workflow = om.readValue(json, com.sos.inventory.model.workflow.Workflow.class);
                 workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
-                    Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
+                    com.sos.inventory.model.job.Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
                     String agentNameOrAlias = job.getAgentId();
                     String agentId = dbLayer.getAgentIdFromAgentName(agentNameOrAlias, controllerId, path, jobname);
                     update.add(new UpdateableWorkflowJobAgentName(path, jobname, job.getAgentId(), agentId, controllerId));
@@ -1322,25 +1552,26 @@ public abstract class PublishUtils {
         return update;
     }
 
-    public static Set<UpdatableFileOrderSourceAgentName> getUpdateableAgentRefInFileOrderSource(DBItemInventoryConfiguration item, 
+    public static UpdateableFileOrderSourceAgentName getUpdateableAgentRefInFileOrderSource(DBItemInventoryConfiguration item, 
             String controllerId, DBLayerDeploy dbLayer) {
         return getUpdateableAgentRefInFileOrderSource(item.getName(), item.getContent(), ConfigurationType.fromValue(item.getType()), controllerId, dbLayer);
     }
 
-    public static Set<UpdatableFileOrderSourceAgentName> getUpdateableAgentRefInFileOrderSource(DBItemDeploymentHistory item,
+    public static UpdateableFileOrderSourceAgentName getUpdateableAgentRefInFileOrderSource(DBItemDeploymentHistory item,
             String controllerId, DBLayerDeploy dbLayer) {
         return getUpdateableAgentRefInFileOrderSource(item.getName(), item.getInvContent(), ConfigurationType.fromValue(item.getType()), controllerId, dbLayer);
     }
 
-    public static Set<UpdatableFileOrderSourceAgentName> getUpdateableAgentRefInFileOrderSource(String fileOrderSourceId, String json, ConfigurationType type,
+    public static UpdateableFileOrderSourceAgentName getUpdateableAgentRefInFileOrderSource(String fileOrderSourceId, String json, ConfigurationType type,
             String controllerId, DBLayerDeploy dbLayer) {
-        Set<UpdatableFileOrderSourceAgentName> update = new HashSet<UpdatableFileOrderSourceAgentName>();
+        UpdateableFileOrderSourceAgentName update = null;
         try {
             if (ConfigurationType.FILEORDERSOURCE.equals(type)) {
-                FileOrderSource fileOrderSource = om.readValue(json, FileOrderSource.class);
+                com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = 
+                        om.readValue(json, com.sos.inventory.model.fileordersource.FileOrderSource.class);
                 String agentNameOrAlias = fileOrderSource.getAgentId();
                 String agentId = dbLayer.getAgentIdFromAgentName(agentNameOrAlias, controllerId);
-                update.add(new UpdatableFileOrderSourceAgentName(fileOrderSourceId, agentNameOrAlias, agentId, controllerId));
+                update = new UpdateableFileOrderSourceAgentName(fileOrderSourceId, agentNameOrAlias, agentId, controllerId);
             }
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage(), e);
@@ -1349,14 +1580,14 @@ public abstract class PublishUtils {
     }
 
     public static Set<DBItemDeploymentHistory> cloneInvConfigurationsToDepHistoryItems(
-            Map<DBItemInventoryConfiguration, DBItemDepSignatures> draftsWithSignature, Set<UpdateableWorkflowJobAgentName> updateableAgentNames,
+            SignedItemsSpec signedItemsSpec,
             String account, DBLayerDeploy dbLayerDeploy, String commitId, String controllerId, Date deploymentDate) throws JsonParseException,
             JsonMappingException, IOException {
         Set<DBItemDeploymentHistory> deployedObjects;
         try {
             DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
             deployedObjects = new HashSet<DBItemDeploymentHistory>();
-            for (DBItemInventoryConfiguration draft : draftsWithSignature.keySet()) {
+            for (DBItemInventoryConfiguration draft : signedItemsSpec.getVerifiedConfigurations().keySet()) {
                 DBItemDeploymentHistory newDeployedObject = new DBItemDeploymentHistory();
                 newDeployedObject.setAccount(account);
                 // TODO: get Version to set here
@@ -1371,9 +1602,14 @@ public abstract class PublishUtils {
                 newDeployedObject.setType(PublishUtils.mapConfigurationType(ConfigurationType.fromValue(draft.getType())).intValue());
                 newDeployedObject.setCommitId(commitId);
                 newDeployedObject.setContent(draft.getContent());
-                newDeployedObject.setSignedContent(draftsWithSignature.get(draft).getSignature());
-                if (updateableAgentNames != null && draft.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)) {
-                    newDeployedObject.setInvContent(getContentWithOrigAgentName(draft, updateableAgentNames, controllerId));
+                newDeployedObject.setSignedContent(signedItemsSpec.getVerifiedConfigurations().get(draft).getSignature());
+                if (signedItemsSpec.getUpdateableWorkflowJobAgentNames() != null && ConfigurationType.WORKFLOW.equals(draft.getTypeAsEnum())) {
+                    newDeployedObject.setInvContent(
+                            getContentWithOrigAgentNameForWorkflow(draft, signedItemsSpec.getUpdateableWorkflowJobAgentNames(), controllerId));
+                } else if (signedItemsSpec.getUpdateableFileOrderSourceAgentNames() != null 
+                        && ConfigurationType.FILEORDERSOURCE.equals(draft.getTypeAsEnum())) {
+                    newDeployedObject.setInvContent(
+                            getContentWithOrigAgentNameForFileOrderSource(draft, signedItemsSpec.getUpdateableFileOrderSourceAgentNames(), controllerId));
                 } else {
                     // nothing was replaced in the original
                     newDeployedObject.setInvContent(draft.getContent());
@@ -1385,7 +1621,7 @@ public abstract class PublishUtils {
                 newDeployedObject.setOperation(OperationType.UPDATE.value());
                 newDeployedObject.setState(DeploymentState.DEPLOYED.value());
                 dbLayerDeploy.getSession().save(newDeployedObject);
-                DBItemDepSignatures signature = draftsWithSignature.get(draft);
+                DBItemDepSignatures signature = signedItemsSpec.getVerifiedConfigurations().get(draft);
                 if (signature != null) {
                     signature.setDepHistoryId(newDeployedObject.getId());
                     dbLayerDeploy.getSession().update(signature);
@@ -1440,6 +1676,22 @@ public abstract class PublishUtils {
                     newDeployedObject.setContent(lock);
                     if (draft.getPath() != null) {
                         original = dbLayerDeploy.getConfigurationByPath(draft.getPath(), ConfigurationType.LOCK.intValue());
+                    }
+                    newDeployedObject.setPath(original.getPath());
+                    if (original.getName() != null && !original.getName().isEmpty()) {
+                        newDeployedObject.setName(original.getName());
+                    } else {
+                        newDeployedObject.setName(Paths.get(original.getPath()).getFileName().toString());
+                    }
+                    newDeployedObject.setFolder(original.getFolder());
+                    newDeployedObject.setInvContent(original.getContent());
+                    newDeployedObject.setInventoryConfigurationId(original.getId());
+                    break;
+                case FILEORDERSOURCE:
+                    String fileOrderSource = Globals.objectMapper.writeValueAsString(((FileOrderSourcePublish) draft).getContent());
+                    newDeployedObject.setContent(fileOrderSource);
+                    if (draft.getPath() != null) {
+                        original = dbLayerDeploy.getConfigurationByPath(draft.getPath(), ConfigurationType.FILEORDERSOURCE.intValue());
                     }
                     newDeployedObject.setPath(original.getPath());
                     if (original.getName() != null && !original.getName().isEmpty()) {
@@ -2582,12 +2834,7 @@ public abstract class PublishUtils {
         });
     }
 
-    private static void replaceAgentIdWithOrigAgentName(DBItemInventoryConfiguration draft, Set<UpdateableWorkflowJobAgentName> updateableAgentNames,
-            String controllerId) throws JsonParseException, JsonMappingException, IOException {
-        draft.setContent(getContentWithOrigAgentName(draft, updateableAgentNames, controllerId));
-    }
-
-    private static String getContentWithOrigAgentName(DBItemInventoryConfiguration draft, Set<UpdateableWorkflowJobAgentName> updateableAgentNames,
+    private static String getContentWithOrigAgentNameForWorkflow(DBItemInventoryConfiguration draft, Set<UpdateableWorkflowJobAgentName> updateableAgentNames,
             String controllerId) throws JsonParseException, JsonMappingException, IOException {
         Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
         Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream().filter(item -> item.getWorkflowPath().equals(draft
@@ -2597,6 +2844,16 @@ public abstract class PublishUtils {
             job.setAgentId(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname)).findFirst().get().getAgentName());
         });
         return om.writeValueAsString(workflow);
+    }
+
+    private static String getContentWithOrigAgentNameForFileOrderSource(DBItemInventoryConfiguration draft, Set<UpdateableFileOrderSourceAgentName> updateableFileOrderSourceAgentNames,
+            String controllerId) throws JsonParseException, JsonMappingException, IOException {
+        com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = 
+                om.readValue(draft.getContent(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
+        fileOrderSource.setAgentId(updateableFileOrderSourceAgentNames.stream()
+                .filter(item -> item.getFileOrderSourceId().equals(draft.getName()) && controllerId.equals(item.getControllerId()))
+                .findFirst().get().getAgentName());
+        return om.writeValueAsString(fileOrderSource);
     }
 
     public static String getValueAsStringWithleadingZeros(Integer i, int length) {

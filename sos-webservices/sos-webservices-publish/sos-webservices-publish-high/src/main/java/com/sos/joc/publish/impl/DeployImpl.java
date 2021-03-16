@@ -40,6 +40,7 @@ import com.sos.joc.model.publish.DeployFilter;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.publish.db.DBLayerDeploy;
+import com.sos.joc.publish.mapper.SignedItemsSpec;
 import com.sos.joc.publish.resource.IDeploy;
 import com.sos.joc.publish.util.DeleteDeployments;
 import com.sos.joc.publish.util.PublishUtils;
@@ -162,7 +163,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             // call ControllerApi for all provided Controllers
             for (String controllerId : controllerIds) {
                 // store new history entries and update inventory for update operation optimistically
-                StoreDeployments.storeNewDepHistoryEntries(verifiedConfigurations, null, verifiedReDeployables, account, commitId, controllerId,
+                SignedItemsSpec spec = new SignedItemsSpec(keyPair, verifiedConfigurations, verifiedReDeployables, null, null);
+                StoreDeployments.storeNewDepHistoryEntries(spec, account, commitId, controllerId,
                         getAccessToken(), getJocError(), dbLayer);
                 // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename
                 List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkPathRenamingForUpdate(verifiedConfigurations.keySet(),

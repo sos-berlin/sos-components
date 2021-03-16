@@ -7,7 +7,6 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -23,7 +22,6 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -32,7 +30,6 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.SignedItemsSpec;
-import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
@@ -41,36 +38,35 @@ public class StoreDeployments {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreDeployments.class);
     
-    public static void storeNewDepHistoryEntriesForRedeploy(Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedDeployables,
+    public static void storeNewDepHistoryEntriesForRedeploy(SignedItemsSpec signedItemsSpec,
             String account, String commitId, String controllerId, String accessToken, JocError jocError, DBLayerDeploy dbLayer) {
-        storeNewDepHistoryEntries(null, null, verifiedDeployables, account, commitId, controllerId, accessToken, jocError, dbLayer);
+        storeNewDepHistoryEntries(signedItemsSpec, account, commitId, controllerId, accessToken, jocError, dbLayer);
     }
     
-    public static void storeNewDepHistoryEntries(Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations,
-            Set<UpdateableWorkflowJobAgentName> updateableAgentNames, Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedDeployables,
+    public static void storeNewDepHistoryEntries(SignedItemsSpec signedItemsSpec,
             String account, String commitId, String controllerId, String accessToken, JocError jocError, DBLayerDeploy dbLayer) {
         try {
             final Date deploymentDate = Date.from(Instant.now());
             // no error occurred
             Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
-            if (verifiedConfigurations != null && !verifiedConfigurations.isEmpty()) {
-                deployedObjects.addAll(PublishUtils.cloneInvConfigurationsToDepHistoryItems(verifiedConfigurations,
-                    updateableAgentNames, account, dbLayer, commitId, controllerId, deploymentDate));
-                PublishUtils.prepareNextInvConfigGeneration(verifiedConfigurations.keySet().stream().collect(Collectors.toSet()), dbLayer.getSession());
+            if (signedItemsSpec.getVerifiedConfigurations() != null && !signedItemsSpec.getVerifiedConfigurations().isEmpty()) {
+                deployedObjects.addAll(PublishUtils.cloneInvConfigurationsToDepHistoryItems(signedItemsSpec, account, dbLayer, commitId, controllerId, 
+                        deploymentDate));
+                PublishUtils.prepareNextInvConfigGeneration(signedItemsSpec.getVerifiedConfigurations().keySet().stream().collect(Collectors.toSet()), 
+                        dbLayer.getSession());
             }
-            if (verifiedDeployables != null && !verifiedDeployables.isEmpty()) {
-                Set<DBItemDeploymentHistory> cloned = PublishUtils.cloneDepHistoryItemsToNewEntries(verifiedDeployables, account, dbLayer,
+            if (signedItemsSpec.getVerifiedDeployables() != null && !signedItemsSpec.getVerifiedDeployables().isEmpty()) {
+                Set<DBItemDeploymentHistory> cloned = PublishUtils.cloneDepHistoryItemsToNewEntries(signedItemsSpec.getVerifiedDeployables(), account, dbLayer,
                         commitId, controllerId, deploymentDate);
                 deployedObjects.addAll(cloned);
             }
             if (!deployedObjects.isEmpty()) {
                 long countWorkflows = deployedObjects.stream().filter(item -> ConfigurationType.WORKFLOW.intValue() == item.getType()).count();
                 long countLocks = deployedObjects.stream().filter(item -> ConfigurationType.LOCK.intValue() == item.getType()).count();
-                long countJunctions = deployedObjects.stream().filter(item -> ConfigurationType.JUNCTION.intValue() == item.getType()).count();
-                long countJobClasses = deployedObjects.stream().filter(item -> ConfigurationType.JOBCLASS.intValue() == item.getType()).count();
+                long countFileOrderSources = deployedObjects.stream().filter(item -> ConfigurationType.FILEORDERSOURCE.intValue() == item.getType()).count();
                 LOGGER.info(String.format(
-                        "Update command send to Controller \"%1$s\" containing %2$d Workflow(s), %3$d Lock(s), %4$d Junction(s) and %5$d Jobclass(es).", 
-                        controllerId, countWorkflows, countLocks, countJunctions, countJobClasses));
+                        "Update command send to Controller \"%1$s\" containing %2$d Workflow(s), %3$d Lock(s) and %4$d FileOrderSource(s).", 
+                        controllerId, countWorkflows, countLocks, countFileOrderSources));
                  JocInventory.handleWorkflowSearch(dbLayer.getSession(), deployedObjects, false);
             }
         } catch (Exception e) {
@@ -133,8 +129,7 @@ public class StoreDeployments {
                 || (signedItemsSpec.getVerifiedDeployables() != null && !signedItemsSpec.getVerifiedDeployables().isEmpty())) {
             
             // store new history entries and update inventory for update operation optimistically
-            storeNewDepHistoryEntries(signedItemsSpec.getVerifiedConfigurations(), signedItemsSpec.getUpdateableAgentNames(),
-                    signedItemsSpec.getVerifiedDeployables(), account, commitId, controllerId, accessToken, jocError, dbLayer);
+            storeNewDepHistoryEntries(signedItemsSpec, account, commitId, controllerId, accessToken, jocError, dbLayer);
 
             List<DBItemInventoryCertificate> caCertificates = dbLayer.getCaCertificates();
             boolean verified = false;
