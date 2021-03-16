@@ -23,6 +23,7 @@ import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.audit.IAuditLog;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
@@ -142,7 +143,7 @@ public class JOCResourceImpl {
     }
 
     public boolean checkRequiredComment(AuditParams auditParams) throws JocMissingCommentException {
-        if (Globals.auditLogCommentsAreRequired) {
+        if (ClusterSettings.getForceCommentsForAuditLog(Globals.getConfigurationGlobalsJoc())) {
             String comment = null;
             if (auditParams != null) {
                 comment = auditParams.getComment();
@@ -155,7 +156,7 @@ public class JOCResourceImpl {
     }
 
     public boolean checkRequiredComment(String comment) throws JocMissingCommentException {
-        if (Globals.auditLogCommentsAreRequired) {
+        if (ClusterSettings.getForceCommentsForAuditLog(Globals.getConfigurationGlobalsJoc())) {
             if (comment == null || comment.isEmpty()) {
                 throw new JocMissingCommentException();
             }

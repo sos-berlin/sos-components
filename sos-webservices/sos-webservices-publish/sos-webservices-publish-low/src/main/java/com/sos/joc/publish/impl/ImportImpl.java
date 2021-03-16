@@ -20,6 +20,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.ImportAudit;
+import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
@@ -82,7 +83,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             } else {
                 throw new JocMissingRequiredParameterException("undefined 'file'");
             }
-            String account = Globals.defaultProfileAccount;
+            String account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
             stream = body.getEntityAs(InputStream.class);
             Set<ConfigurationObject> configurations = new HashSet<ConfigurationObject>();
             JocMetaInfo jocMetaInfo = new JocMetaInfo();

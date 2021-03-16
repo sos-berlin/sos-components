@@ -20,6 +20,8 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.InventoryAudit;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.settings.ClusterSettings;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
@@ -79,10 +81,11 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
             boolean fixMustUsed = JocInventory.isFolder(type) || (!JocInventory.isFolder(type) && oldPath.getFileName().toString().equals(pWithoutFix
                     .getFileName().toString()));
             
+            ConfigurationGlobalsJoc clusterSettings = Globals.getConfigurationGlobalsJoc();
             SuffixPrefix suffixPrefix = new SuffixPrefix(); 
             if (fixMustUsed) {
-                suffixPrefix = JocInventory.getSuffixPrefix(in.getSuffix(), in.getPrefix(), Globals.copySuffixPrefix,
-                        JocInventory.DEFAULT_COPY_SUFFIX, pWithoutFix.getFileName().toString(), type, dbLayer);
+                suffixPrefix = JocInventory.getSuffixPrefix(in.getSuffix(), in.getPrefix(), ClusterSettings.getCopyPasteSuffixPrefix(clusterSettings),
+                        clusterSettings.getCopyPasteSuffix().getDefault(), pWithoutFix.getFileName().toString(), type, dbLayer);
             } else {
                 suffixPrefix.setPrefix("");
                 suffixPrefix.setSuffix("");

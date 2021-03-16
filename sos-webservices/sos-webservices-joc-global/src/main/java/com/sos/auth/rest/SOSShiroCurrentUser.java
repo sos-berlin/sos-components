@@ -304,14 +304,6 @@ public class SOSShiroCurrentUser {
         this.authorization = authorization;
     }
 
-    public Set<JOCJsonCommand> getJocJsonCommands() {
-        return jocJsonCommands;
-    }
-
-    public void setJocJsonCommands(Set<JOCJsonCommand> jocJsonCommands) {
-        this.jocJsonCommands = jocJsonCommands;
-    }
-
     public SOSShiroFolderPermissions getSosShiroFolderPermissions() {
         return sosShiroFolderPermissions;
     }

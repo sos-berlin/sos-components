@@ -322,7 +322,6 @@ public class SOSServicePermissionShiro {
         jocAuditLog.logAuditMessage(s);
         try {
             if (currentUser != null && currentUser.getCurrentSubject() != null) {
-                Globals.forceClosingHttpClients(currentUser, accessToken);
                 sosShiroSession.getTimeout();
                 sosShiroSession.stop();
             }

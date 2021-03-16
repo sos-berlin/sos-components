@@ -36,17 +36,6 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
     private static final String API_CALL_DELETE = "./configurations/delete";
 
     @Override
-    public JOCDefaultResponse postConfigurations(String xAccessToken, String accessToken, ConfigurationsFilter configurationsFilter)
-            throws Exception {
-        return postConfigurations(getAccessToken(xAccessToken, accessToken), configurationsFilter);
-    }
-
-    @Override
-    public JOCDefaultResponse postConfigurationsDelete(String xAccessToken, String accessToken, ConfigurationsDeleteFilter configurationsFilter)
-            throws Exception {
-        return postConfigurationsDelete(getAccessToken(xAccessToken, accessToken), configurationsFilter);
-    }
-
     public JOCDefaultResponse postConfigurations(String accessToken, ConfigurationsFilter configurationsFilter) throws Exception {
         SOSHibernateSession connection = null;
         try {
@@ -166,6 +155,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
         }
     }
 
+    @Override
     public JOCDefaultResponse postConfigurationsDelete(String accessToken, ConfigurationsDeleteFilter configurationsFilter) throws Exception {
         SOSHibernateSession connection = null;
         try {

@@ -22,6 +22,8 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.InventoryAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.Validator;
+import com.sos.joc.classes.settings.ClusterSettings;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -81,8 +83,9 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
                 newPathWithoutFix = pWithoutFix.toString().replace('\\', '/');
             }
             
-            final List<String> replace = JocInventory.getSearchReplace(JocInventory.getSuffixPrefix(in.getSuffix(), in.getPrefix(),
-                    Globals.restoreSuffixPrefix, JocInventory.DEFAULT_RESTORE_SUFFIX, config.getName(), type, dbLayer));
+            ConfigurationGlobalsJoc clusterSettings = Globals.getConfigurationGlobalsJoc();
+            final List<String> replace = JocInventory.getSearchReplace(JocInventory.getSuffixPrefix(in.getSuffix(), in.getPrefix(), ClusterSettings
+                    .getRestoreSuffixPrefix(clusterSettings), clusterSettings.getRestoreSuffix().getDefault(), config.getName(), type, dbLayer));
 
             Set<String> events = new HashSet<>();
             
