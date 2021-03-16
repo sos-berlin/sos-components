@@ -6,8 +6,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
 
-import javax.persistence.LockModeType;
-
 import org.hibernate.query.Query;
 import org.hibernate.transform.Transformers;
 import org.slf4j.Logger;
@@ -16,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.hibernate.exception.SOSHibernateLockAcquisitionException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.history.DBItemHistoryOrder;
@@ -37,7 +36,6 @@ import js7.data.order.OrderId;
 public class DBLayerDailyPlannedOrders {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerDailyPlannedOrders.class);
-    private static final int LOCK_TIMEOUT = 3000;
 
     private static final String DBItemDailyPlannedOrders = DBItemDailyPlanOrders.class.getSimpleName();
     private static final String DBItemDailyPlanVariables = DBItemDailyPlanVariables.class.getSimpleName();
@@ -63,18 +61,11 @@ public class DBLayerDailyPlannedOrders {
 
     public int deleteVariables(FilterDailyPlannedOrders filter) throws SOSHibernateException {
         int row = 0;
-        
-        String q = "select id from " + DBItemDailyPlannedOrders + " p " + getWhere(filter, "p.schedulePath");
-        String hql = " from " + DBItemDailyPlanVariables + " where plannedOrderId in (" + q +  ")";
-        
-        Query<DBItemDailyPlanVariables> query = sosHibernateSession.createQuery(hql);
-        query = bindParameters(filter, query);
-        query.setLockMode(LockModeType.PESSIMISTIC_WRITE);
-        query.setHint("javax.persistence.lock.timeout", LOCK_TIMEOUT);
-        sosHibernateSession.getResultList(query);
 
-        hql = "delete " + hql;
-        query = sosHibernateSession.createQuery(hql);
+        String q = "select id from " + DBItemDailyPlannedOrders + " p " + getWhere(filter, "p.schedulePath");
+        String hql = "delete from " + DBItemDailyPlanVariables + " where plannedOrderId in (" + q + ")";
+
+        Query<DBItemDailyPlanVariables> query = sosHibernateSession.createQuery(hql);
         query = bindParameters(filter, query);
 
         row = sosHibernateSession.executeUpdate(query);
@@ -82,24 +73,33 @@ public class DBLayerDailyPlannedOrders {
     }
 
     public int deleteCascading(FilterDailyPlannedOrders filter) throws SOSHibernateException {
-        deleteVariables(filter);
-        return delete(filter);
+        int row = 0;
+        int retryCount = 0;
+        do {
+            try {
+                deleteVariables(filter);
+                row = delete(filter);
+                retryCount = 10;
+            } catch (SOSHibernateLockAcquisitionException e) {
+                if (retryCount < 10) {
+                    try {
+                        java.lang.Thread.sleep(500);
+                    } catch (InterruptedException e1) {
+                    }
+                    retryCount = retryCount + 1;
+                    LOGGER.debug("Retry delete orders as SOSHibernateLockAcquisitionException was thrown. Retry-counter: " + retryCount );
+                }
+            }
+        } while (retryCount < 10);
+        return row;
     }
 
     public int delete(FilterDailyPlannedOrders filter) throws SOSHibernateException {
 
-        String hql = "  from " + DBItemDailyPlannedOrders + " p " + getWhere(filter, "p.schedulePath");
-
+        String hql = "delete " + DBItemDailyPlannedOrders + " p " + getWhere(filter, "p.schedulePath");
         Query<DBItemDailyPlanOrders> query = sosHibernateSession.createQuery(hql);
-        query = bindParameters(filter, query);
-        query.setLockMode(LockModeType.PESSIMISTIC_WRITE);
-        query.setHint("javax.persistence.lock.timeout", LOCK_TIMEOUT);
-        sosHibernateSession.getResultList(query);
- 
-        hql = "delete " +  DBItemDailyPlannedOrders + " p " + getWhere(filter, "p.schedulePath");
-        query = sosHibernateSession.createQuery(hql);
         bindParameters(filter, query);
-        
+
         int row = sosHibernateSession.executeUpdate(query);
         return row;
     }
@@ -107,7 +107,7 @@ public class DBLayerDailyPlannedOrders {
     public long deleteInterval(FilterDailyPlannedOrders filter) throws SOSHibernateException {
         String hql = "delete from " + DBItemDailyPlannedOrders + " p " + getWhere(filter, "p.schedulePath");
         int row = 0;
-        Query<DBItemDailyPlanSubmissions> query = sosHibernateSession.createQuery(hql);
+        Query<DBItemDailyPlanOrders> query = sosHibernateSession.createQuery(hql);
 
         row = sosHibernateSession.executeUpdate(query);
         return row;
@@ -142,7 +142,7 @@ public class DBLayerDailyPlannedOrders {
         }
 
         if (filter.getOrderPlannedStartFrom() != null && filter.getOrderPlannedStartTo() != null) {
-            where += and + " p.plannedStart >= :plannedStartFrom and p.plannedStart < :plannedStartTo";
+            where += and + " p.plannedStart >= :plannedStartFrom and p.plannedStart <= :plannedStartTo";
             and = " and ";
         }
         if (filter.getControllerId() != null && !"".equals(filter.getControllerId())) {

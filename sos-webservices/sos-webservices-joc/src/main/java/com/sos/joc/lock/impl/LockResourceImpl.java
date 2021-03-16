@@ -55,7 +55,7 @@ public class LockResourceImpl extends JOCResourceImpl implements ILockResource {
 
             Lock answer = new Lock();
             LockEntryHelper helper = new LockEntryHelper(filter.getControllerId());
-            answer.setLock(helper.getLockEntry(Proxy.of(filter.getControllerId()).currentState(), dc, filter.getLockPath()));
+            answer.setLock(helper.getLockEntry(Proxy.of(filter.getControllerId()).currentState(), dc, dc.getPath()));
             answer.setDeliveryDate(new Date());
             return answer;
         } catch (Throwable e) {

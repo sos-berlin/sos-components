@@ -1,8 +1,7 @@
 
-package com.sos.controller.model.workflow;
+package com.sos.controller.model.lock;
 
 import java.util.Date;
-import java.util.List;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -12,9 +11,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.instruction.Instruction;
-import com.sos.inventory.model.workflow.Jobs;
-import com.sos.inventory.model.workflow.Requirements;
+import com.sos.controller.model.workflow.WorkflowState;
 
 
 /**
@@ -31,8 +28,8 @@ import com.sos.inventory.model.workflow.Requirements;
     "versionDate",
     "state"
 })
-public class Workflow
-    extends com.sos.inventory.model.workflow.Workflow
+public class Lock
+    extends com.sos.inventory.model.lock.Lock
 {
 
     /**
@@ -68,25 +65,22 @@ public class Workflow
      * No args constructor for use in serialization
      * 
      */
-    public Workflow() {
+    public Lock() {
     }
 
     /**
      * 
      * @param documentationPath
      * @param path
-     * @param instructions
-     * @param versionId
      * @param isCurrentVersion
-     * @param orderRequirements
-     * @param jobs
+     * @param limit
      * @param state
      * @param tYPE
      * @param title
      * @param versionDate
      */
-    public Workflow(String path, Boolean isCurrentVersion, Date versionDate, WorkflowState state, String versionId, Requirements orderRequirements, List<Instruction> instructions, String title, String documentationPath, Jobs jobs) {
-        super(versionId, orderRequirements, instructions, title, documentationPath, jobs);
+    public Lock(String path, Boolean isCurrentVersion, Date versionDate, WorkflowState state, Integer limit, String documentationPath, String title) {
+        super(limit, documentationPath, title);
         this.path = path;
         this.isCurrentVersion = isCurrentVersion;
         this.versionDate = versionDate;
@@ -184,10 +178,10 @@ public class Workflow
         if (other == this) {
             return true;
         }
-        if ((other instanceof Workflow) == false) {
+        if ((other instanceof Lock) == false) {
             return false;
         }
-        Workflow rhs = ((Workflow) other);
+        Lock rhs = ((Lock) other);
         return new EqualsBuilder().appendSuper(super.equals(other)).append(path, rhs.path).append(state, rhs.state).append(isCurrentVersion, rhs.isCurrentVersion).append(versionDate, rhs.versionDate).isEquals();
     }
 

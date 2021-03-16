@@ -42,7 +42,7 @@ public class DailyPlanHelper {
     }
 
     public static java.util.Calendar getDailyplanCalendar(String time) {
-   
+
         String timeZoneName = OrderInitiatorGlobals.orderInitiatorSettings.getTimeZone();
         if (time == null) {
             time = "00:00";
@@ -55,6 +55,7 @@ public class DailyPlanHelper {
         String[] timeArray = time.split(":");
         int hours = 0;
         int minutes = 0;
+        int seconds = 0;
         if (timeArray.length == 1) {
             try {
                 hours = Integer.parseInt(timeArray[0]);
@@ -66,10 +67,13 @@ public class DailyPlanHelper {
                 time = "00:00";
             }
         }
-        if (timeArray.length == 2) {
+        if (timeArray.length > 1) {
             try {
                 hours = Integer.parseInt(timeArray[0]);
                 minutes = Integer.parseInt(timeArray[1]);
+                if (timeArray.length > 2) {
+                    seconds = Integer.parseInt(timeArray[2]);
+                }
             } catch (NumberFormatException e) {
                 LOGGER.warn("Wrong time format for: " + time);
                 hours = 0;
@@ -80,15 +84,19 @@ public class DailyPlanHelper {
 
         calendar.set(java.util.Calendar.HOUR_OF_DAY, hours);
         calendar.set(java.util.Calendar.MINUTE, minutes);
-        calendar.set(java.util.Calendar.SECOND, 0);
+        calendar.set(java.util.Calendar.SECOND, seconds);
         calendar.set(java.util.Calendar.MILLISECOND, 0);
         calendar.getTimeInMillis();
 
         return calendar;
     }
-    
-    public static String getStartTimeAsString(){
+
+    public static String getStartTimeAsString() {
         java.util.Calendar startCalendar;
+        String timeZoneName = OrderInitiatorGlobals.orderInitiatorSettings.getTimeZone();
+        TimeZone timeZone = TimeZone.getTimeZone(timeZoneName);
+        java.util.Calendar now = java.util.Calendar.getInstance(timeZone);
+
         if (!"".equals(OrderInitiatorGlobals.orderInitiatorSettings.getDailyPlanStartTime())) {
             startCalendar = DailyPlanHelper.getDailyplanCalendar(OrderInitiatorGlobals.orderInitiatorSettings.getDailyPlanStartTime());
         } else {
@@ -96,10 +104,10 @@ public class DailyPlanHelper {
             startCalendar.add(java.util.Calendar.DATE, 1);
             startCalendar.add(java.util.Calendar.MINUTE, -30);
         }
-        
-        String timeZoneName = OrderInitiatorGlobals.orderInitiatorSettings.getTimeZone();
-      
-        TimeZone timeZone = TimeZone.getTimeZone(timeZoneName);
+
+        if (startCalendar.before(now)) {
+            startCalendar.add(java.util.Calendar.DATE, 1);
+        }
 
         SimpleDateFormat startTimeFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         startTimeFormatter.setTimeZone(timeZone);
@@ -108,17 +116,10 @@ public class DailyPlanHelper {
 
     }
 
-
     public static String getDayOfYear(java.util.Calendar calendar) {
-
-        int month = calendar.get(java.util.Calendar.MONTH) + 1;
-        int dayOfMonth = calendar.get(java.util.Calendar.DAY_OF_MONTH);
-        int year = calendar.get(java.util.Calendar.YEAR);
-
-        String result = String.valueOf(year) + String.valueOf(month) + String.valueOf(dayOfMonth);
-        LOGGER.debug("period day of year is: " + result);
-
-        return result;
+        SimpleDateFormat startTimeFormatter = new SimpleDateFormat("yyyy-MM-dd");
+        String date = startTimeFormatter.format(calendar.getTime());
+        return date;
     }
 
     private static String buildOrderId(Path path, Long startTime, Integer startMode) {
@@ -160,15 +161,15 @@ public class DailyPlanHelper {
         String[] stringSplit = oldOrderId.split("-");
         String newOrderId = "";
         if (stringSplit.length >= 4) {
-            
+
             for (int i = 0; i < 3; i++) {
                 newOrderId = newOrderId + stringSplit[i] + "-";
             }
-            
+
             if (stringSplit.length <= 5) {
-                newOrderId = newOrderId +  add + "-" + stringSplit[stringSplit.length-1];
-            }else {
-                newOrderId = newOrderId +  stringSplit[3] + "-" + stringSplit[4] + "-" + add + "-" + stringSplit[stringSplit.length-1];
+                newOrderId = newOrderId + add + "-" + stringSplit[stringSplit.length - 1];
+            } else {
+                newOrderId = newOrderId + stringSplit[3] + "-" + stringSplit[4] + "-" + add + "-" + stringSplit[stringSplit.length - 1];
             }
         } else {
             newOrderId = oldOrderId;

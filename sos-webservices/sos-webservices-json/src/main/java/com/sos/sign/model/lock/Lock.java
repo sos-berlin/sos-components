@@ -63,11 +63,9 @@ public class Lock implements IDeployObject
      * 
      * @param limit
      * @param id
-     * @param tYPE
      */
-    public Lock(DeployType tYPE, String id, Integer limit) {
+    public Lock(String id, Integer limit) {
         super();
-        this.tYPE = tYPE;
         this.id = id;
         this.limit = limit;
     }

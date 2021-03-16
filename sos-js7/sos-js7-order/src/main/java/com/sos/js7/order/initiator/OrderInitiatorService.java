@@ -55,9 +55,9 @@ public class OrderInitiatorService extends AJocClusterService {
 
             OrderInitiatorGlobals.orderInitiatorSettings = settings;
 
-            LOGGER.info("will start at " + DailyPlanHelper.getStartTimeAsString() + " " + settings.getTimeZone() + " creating daily plan for "
+            LOGGER.info("will start with creating daily plan at " + DailyPlanHelper.getStartTimeAsString() + " " + settings.getTimeZone() + " for "
                     + settings.getDayAheadPlan() + " days ahead");
-            LOGGER.info("will start at " + DailyPlanHelper.getStartTimeAsString() + " " + settings.getTimeZone() + " submitting daily plan for "
+            LOGGER.info("will start with submitting daily plan at " + DailyPlanHelper.getStartTimeAsString() + " " + settings.getTimeZone() + " for "
                     + settings.getDayAheadSubmit() + " days ahead");
 
             if (settings.getDayAheadPlan() > 0) {
@@ -135,7 +135,10 @@ public class OrderInitiatorService extends AJocClusterService {
         settings.setTimeZone(readerSettings.getTimeZone());
         settings.setPeriodBegin(readerSettings.getPeriodBegin());
         settings.setDailyPlanStartTime(readerSettings.getDailyPlanStartTime());
+        settings.setDailyPlanStartTime("16:00:00");
+
         settings.setDayAheadPlan(readerSettings.getDayAheadPlan());
+        
         settings.setDayAheadSubmit(readerSettings.getDayAheadSubmit());
     }
 

@@ -13,9 +13,10 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
-import com.sos.inventory.model.lock.Lock;
+import com.sos.controller.model.lock.Lock;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.OrdersHelper;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -61,7 +62,8 @@ public class LockEntryHelper {
         Map<String, LockWorkflow> workflows = new HashMap<String, LockWorkflow>();
 
         Lock item = Globals.objectMapper.readValue(dc.getContent(), Lock.class);
-        JLockState jLockState = getFromEither(controllerState.idToLockState(LockId.of(item.getId())), "LockId=" + item.getId());
+        String lockId = JocInventory.pathToName(lockPath);
+        JLockState jLockState = getFromEither(controllerState.idToLockState(LockId.of(lockId)), "LockId=" + lockId);
 
         if (jLockState != null) {
             LockState ls = jLockState.asScala();
@@ -89,7 +91,7 @@ public class LockEntryHelper {
                 if (jo != null) {
                     LockOrder lo = new LockOrder();
                     lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, false, null, null));
-                    lo.setLock(getWorkflowLock(sharedAcquired, item.getId(), orderId.string()));
+                    lo.setLock(getWorkflowLock(sharedAcquired, lockId, orderId.string()));
 
                     LockWorkflow lw = getLockWorkflow(workflows, lo);
                     if (lw.getOrdersHoldingLocks() == null) {
@@ -106,7 +108,7 @@ public class LockEntryHelper {
                 if (jo != null) {
                     LockOrder lo = new LockOrder();
                     lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, false, null, null));
-                    lo.setLock(getWorkflowLock(controllerState, jo, lo, queuedWorkflowLocks, item.getId()));
+                    lo.setLock(getWorkflowLock(controllerState, jo, lo, queuedWorkflowLocks, lockId));
 
                     LockWorkflow lw = getLockWorkflow(workflows, lo);
                     if (lw.getOrdersWaitingForLocks() == null) {

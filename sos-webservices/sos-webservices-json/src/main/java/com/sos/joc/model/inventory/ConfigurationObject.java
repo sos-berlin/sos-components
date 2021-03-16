@@ -30,6 +30,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "id",
     "path",
     "objectType",
+    "name",
     "configuration",
     "state",
     "valid",
@@ -51,6 +52,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     @JsonSubTypes.Type(value = com.sos.joc.model.inventory.jobclass.JobClassEdit.class, name = "JOBCLASS"),
     @JsonSubTypes.Type(value = com.sos.joc.model.inventory.junction.JunctionEdit.class, name = "JUNCTION"),
     @JsonSubTypes.Type(value = com.sos.joc.model.inventory.lock.LockEdit.class, name = "LOCK"),
+    @JsonSubTypes.Type(value = com.sos.joc.model.inventory.fileordersource.FileOrderSourceEdit.class, name = "FILEORDERSOURCE"),
     @JsonSubTypes.Type(value = com.sos.joc.model.calendar.WorkingDaysCalendarEdit.class, name = "WORKINGDAYSCALENDAR"),
     @JsonSubTypes.Type(value = com.sos.joc.model.calendar.NonWorkingDaysCalendarEdit.class, name = "NONWORKINGDAYSCALENDAR"),
     @JsonSubTypes.Type(value = com.sos.webservices.order.initiator.model.ScheduleEdit.class, name = "SCHEDULE"),
@@ -82,6 +84,8 @@ public class ConfigurationObject {
      */
     @JsonProperty("objectType")
     private ConfigurationType objectType;
+    @JsonProperty("name")
+    private String name;
     /**
      * interface for different json representations of a configuration item
      * 
@@ -183,6 +187,16 @@ public class ConfigurationObject {
     @JsonProperty("path")
     public void setPath(String path) {
         this.path = path;
+    }
+    
+    @JsonProperty("name")
+    public String getName() {
+        return name;
+    }
+
+    @JsonProperty("name")
+    public void setName(String name) {
+        this.name = name;
     }
 
     /**

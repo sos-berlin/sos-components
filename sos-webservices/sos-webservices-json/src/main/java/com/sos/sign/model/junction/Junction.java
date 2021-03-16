@@ -85,11 +85,9 @@ public class Junction implements IDeployObject
      * @param versionId
      * @param orderId
      * @param lifetime
-     * @param tYPE
      */
-    public Junction(DeployType tYPE, String path, String versionId, Integer lifetime, String orderId) {
+    public Junction(String path, String versionId, Integer lifetime, String orderId) {
         super();
-        this.tYPE = tYPE;
         this.path = path;
         this.versionId = versionId;
         this.lifetime = lifetime;

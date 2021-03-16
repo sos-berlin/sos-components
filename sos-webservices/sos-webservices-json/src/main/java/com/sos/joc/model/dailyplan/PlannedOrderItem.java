@@ -169,7 +169,7 @@ public class PlannedOrderItem {
     @JsonProperty("submitted")
     private Boolean submitted;
     /**
-     * jobChain state
+     * order state
      * <p>
      * 
      * 
@@ -516,7 +516,7 @@ public class PlannedOrderItem {
     }
 
     /**
-     * jobChain state
+     * order state
      * <p>
      * 
      * 
@@ -527,7 +527,7 @@ public class PlannedOrderItem {
     }
 
     /**
-     * jobChain state
+     * order state
      * <p>
      * 
      * 
