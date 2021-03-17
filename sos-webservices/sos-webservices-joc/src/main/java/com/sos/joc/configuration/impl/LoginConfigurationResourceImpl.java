@@ -14,6 +14,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.configuration.resource.ILoginConfigurationResource;
+import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.configuration.Login;
 import com.sos.joc.model.configuration.LoginLogo;
 import com.sos.joc.model.configuration.LoginLogoPosition;
@@ -21,6 +22,7 @@ import com.sos.joc.model.configuration.LoginLogoPosition;
 @Path("configuration")
 public class LoginConfigurationResourceImpl extends JOCResourceImpl implements ILoginConfigurationResource {
 
+    private static final String API_CALL = "./configuration/login";
     private static final Logger LOGGER = LoggerFactory.getLogger(LoginConfigurationResourceImpl.class);
     private static final String LOGO_LOCATION = "webapps/root/ext/images/";
 
@@ -31,9 +33,12 @@ public class LoginConfigurationResourceImpl extends JOCResourceImpl implements I
 
     @Override
     public JOCDefaultResponse getLoginConfiguration() {
-        Login login = new Login();
         try {
-            Globals.sosCockpitProperties = new JocCockpitProperties();
+            initLogging(API_CALL, null);
+            if (Globals.sosCockpitProperties == null) {
+                Globals.sosCockpitProperties = new JocCockpitProperties();
+            }
+            Login login = new Login();
             login.setTitle(Globals.sosCockpitProperties.getProperty("title", ""));
             login.setEnableRememberMe(ClusterSettings.getEnableRememberMe(Globals.getConfigurationGlobalsJoc()));
             String logoName = Globals.sosCockpitProperties.getProperty("custom_logo_name", "").trim();
@@ -69,9 +74,11 @@ public class LoginConfigurationResourceImpl extends JOCResourceImpl implements I
             login.setDefaultProfileAccount(Globals.getConfigurationGlobalsJoc().getDefaultProfileAccount().getValue());
             
             return JOCDefaultResponse.responseStatus200(login);
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            LOGGER.error("", e);
-            return JOCDefaultResponse.responseStatus200(login);
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
     }
 

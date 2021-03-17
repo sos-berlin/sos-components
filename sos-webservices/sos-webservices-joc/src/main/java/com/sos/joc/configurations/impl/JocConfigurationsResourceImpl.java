@@ -27,6 +27,7 @@ import com.sos.joc.model.configuration.Configurations;
 import com.sos.joc.model.configuration.ConfigurationsDeleteFilter;
 import com.sos.joc.model.configuration.ConfigurationsFilter;
 import com.sos.joc.model.configuration.globals.GlobalSettings;
+import com.sos.schema.JsonValidator;
 
 @Path("configurations")
 public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJocConfigurationsResource {
@@ -35,28 +36,26 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
     private static final String API_CALL_DELETE = "./configurations/delete";
 
     @Override
-    public JOCDefaultResponse postConfigurations(String accessToken, ConfigurationsFilter configurationsFilter) throws Exception {
+    public JOCDefaultResponse postConfigurations(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-
-            if (configurationsFilter.getControllerId() == null) {
-                configurationsFilter.setControllerId("");
-            }
-
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, configurationsFilter, accessToken, configurationsFilter.getControllerId(), true);
+            initLogging(API_CALL, filterBytes, accessToken);
+            JsonValidator.validateFailFast(filterBytes, ConfigurationsFilter.class);
+            ConfigurationsFilter configurationsFilter = Globals.objectMapper.readValue(filterBytes, ConfigurationsFilter.class);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(configurationsFilter.getControllerId(), true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
             String objectType = null;
             if (configurationsFilter.getObjectType() != null) {
-                objectType = configurationsFilter.getObjectType().name();
+                objectType = configurationsFilter.getObjectType().value();
             }
 
             String configurationType = null;
             GlobalSettings defaultGlobalSettings = null;
             if (configurationsFilter.getConfigurationType() != null) {
-                configurationType = configurationsFilter.getConfigurationType().name();
+                configurationType = configurationsFilter.getConfigurationType().value();
                 switch (configurationsFilter.getConfigurationType()) {
                 case PROFILE:
                     String userName = getJobschedulerUser(accessToken).getSosShiroCurrentUser().getUsername();
@@ -91,7 +90,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
 
             List<DBItemJocConfiguration> listOfJocConfigurationDbItem = jocConfigurationDBLayer.getJocConfigurationList(filter, 0);
             Configurations configurations = new Configurations();
-            List<Configuration> listOfConfigurations = new ArrayList<Configuration>();
+            List<Configuration> listOfConfigurations = new ArrayList<>();
             // cleanup wrongfully duplicated Profile entries
             listOfJocConfigurationDbItem = cleanupProfileDuplicates(listOfJocConfigurationDbItem);
 
@@ -152,16 +151,18 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
     }
 
     @Override
-    public JOCDefaultResponse postConfigurationsDelete(String accessToken, ConfigurationsDeleteFilter configurationsFilter) throws Exception {
+    public JOCDefaultResponse postConfigurationsDelete(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL_DELETE, configurationsFilter, accessToken, "", getPermissonsJocCockpit("",
-                    accessToken).getJS7Controller().getAdministration().isEditPermissions());
+            initLogging(API_CALL_DELETE, filterBytes, accessToken);
+            JsonValidator.validateFailFast(filterBytes, ConfigurationsDeleteFilter.class);
+            ConfigurationsDeleteFilter configurationsFilter = Globals.objectMapper.readValue(filterBytes, ConfigurationsDeleteFilter.class);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getPermissonsJocCockpit("", accessToken).getJS7Controller()
+                    .getAdministration().isEditPermissions());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            checkRequiredParameter("accounts", configurationsFilter.getAccounts());
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(connection);
             connection.setAutoCommit(false);

@@ -132,7 +132,6 @@ public class LockEntryHelper {
             }
 
         }
-        item.setPath(dc.getPath());
 
         LockEntry entry = new LockEntry();
         entry.setAcquiredLockCount(acquiredLockCount);

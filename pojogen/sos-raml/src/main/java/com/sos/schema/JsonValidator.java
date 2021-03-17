@@ -46,6 +46,10 @@ public class JsonValidator {
         private static final long serialVersionUID = 1L;
 
         {   
+            put("ConfigurationsFilter", "configuration/configurationsFilter-schema.json");
+            put("ConfigurationsDeleteFilter", "configuration/configurationsDeleteFilter-schema.json");
+            put("Configuration", "configuration/configuration-schema.json");
+            
             put("CalendarDatesFilter", "calendar/calendarDatesFilter-schema.json");
             put("CalendarsFilter", "calendar/calendarsFilter-schema.json");
             

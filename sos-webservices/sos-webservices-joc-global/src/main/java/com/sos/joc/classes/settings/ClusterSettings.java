@@ -23,51 +23,11 @@ public class ClusterSettings {
     private static Logger LOGGER = LoggerFactory.getLogger(ClusterSettings.class);
     
     public static SuffixPrefix getCopyPasteSuffixPrefix(ConfigurationGlobalsJoc settings) {
-        String suffix = "";
-        String prefix = "";
-        if (!suffixPrefixIsDefault(settings.getCopyPasteSuffix())) {
-            suffix = settings.getCopyPasteSuffix().getValue();
-        }
-        if (suffix.isEmpty()) {
-            if (!suffixPrefixIsDefault(settings.getCopyPastePrefix())) {
-                prefix = settings.getCopyPastePrefix().getValue();
-            }
-            if (prefix.isEmpty()) {
-                suffix = settings.getCopyPasteSuffix().getDefault();
-            } else {
-                prefix = trimPrefix(prefix);
-            }
-        } else {
-            suffix = trimSuffix(suffix);
-        }
-        SuffixPrefix sp = new SuffixPrefix();
-        sp.setPrefix(prefix);
-        sp.setSuffix(suffix);
-        return sp;
+        return getSuffixPrefix(settings.getCopyPasteSuffix(), settings.getCopyPastePrefix());
     }
     
     public static SuffixPrefix getRestoreSuffixPrefix(ConfigurationGlobalsJoc settings) {
-        String suffix = "";
-        String prefix = "";
-        if (!suffixPrefixIsDefault(settings.getRestoreSuffix())) {
-            suffix = settings.getRestoreSuffix().getValue();
-        }
-        if (suffix.isEmpty()) {
-            if (!suffixPrefixIsDefault(settings.getRestorePrefix())) {
-                prefix = settings.getRestorePrefix().getValue();
-            }
-            if (prefix.isEmpty()) {
-                suffix = settings.getRestoreSuffix().getDefault();
-            } else {
-                prefix = trimPrefix(prefix);
-            }
-        } else {
-            suffix = trimSuffix(suffix);
-        }
-        SuffixPrefix sp = new SuffixPrefix();
-        sp.setPrefix(prefix);
-        sp.setSuffix(suffix);
-        return sp;
+        return getSuffixPrefix(settings.getRestoreSuffix(), settings.getRestorePrefix());
     }
     
     public static String getDefaultProfileAccount(ConfigurationGlobalsJoc settings) {
@@ -119,6 +79,30 @@ public class ClusterSettings {
         return svProp;
     }
     
+    private static SuffixPrefix getSuffixPrefix(ConfigurationEntry suf, ConfigurationEntry pref) {
+        String suffix = "";
+        String prefix = "";
+        if (!suffixPrefixIsDefault(suf)) {
+            suffix = suf.getValue();
+        }
+        if (suffix.isEmpty()) {
+            if (!suffixPrefixIsDefault(pref)) {
+                prefix = pref.getValue();
+            }
+            if (prefix.isEmpty()) {
+                suffix = suf.getDefault();
+            } else {
+                prefix = trimPrefix(prefix);
+            }
+        } else {
+            suffix = trimSuffix(suffix);
+        }
+        SuffixPrefix sp = new SuffixPrefix();
+        sp.setPrefix(prefix);
+        sp.setSuffix(suffix);
+        return sp;
+    }
+    
     private static String trimSuffix(String suffix) {
         return suffix.trim().replaceFirst("^-+", "");
     }
@@ -146,19 +130,20 @@ public class ClusterSettings {
                 Map.Entry::getValue, Collectors.mapping(Map.Entry::getKey, Collectors.toSet())));
         m.putIfAbsent(Boolean.TRUE, Collections.emptySet());
         m.putIfAbsent(Boolean.FALSE, Collections.emptySet());
-        StringBuilder msg = new StringBuilder();
-        msg.append("Views ");
-        if (!m.get(Boolean.FALSE).isEmpty()) {
-            msg.append(m.get(Boolean.FALSE).toString()).append(" are hidden");
-        }
-        if (!m.get(Boolean.FALSE).isEmpty() && !m.get(Boolean.TRUE).isEmpty()) {
-            msg.append(" and ");
-        }
-        if (!m.get(Boolean.TRUE).isEmpty()) {
-            msg.append(m.get(Boolean.TRUE).toString()).append(" are shown");
-        }
-        if (!m.get(Boolean.FALSE).isEmpty() || !m.get(Boolean.TRUE).isEmpty()) {
-            msg.append(" because of JOC settings");
+        boolean hiddenViewsNotEmpty = !m.get(Boolean.FALSE).isEmpty();
+        boolean shownViewsNotEmpty = !m.get(Boolean.TRUE).isEmpty();
+        if (hiddenViewsNotEmpty || shownViewsNotEmpty) {
+            StringBuilder msg = new StringBuilder("Views ");
+            if (hiddenViewsNotEmpty) {
+                msg.append(m.get(Boolean.FALSE).toString()).append(" are hidden");
+            }
+            if (hiddenViewsNotEmpty && shownViewsNotEmpty) {
+                msg.append(" and ");
+            }
+            if (shownViewsNotEmpty) {
+                msg.append(m.get(Boolean.TRUE).toString()).append(" are shown");
+            }
+            msg.append(" because of JOC settings that ignore permissions.");
             return Optional.of(msg.toString());
         }
         return Optional.empty();
