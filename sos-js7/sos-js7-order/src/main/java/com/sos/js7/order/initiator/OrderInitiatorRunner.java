@@ -87,12 +87,13 @@ public class OrderInitiatorRunner extends TimerTask {
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderInitiatorRunner.class);
     private List<Schedule> listOfSchedules;
     private boolean fromService = true;
-    private boolean firstStart = false;
+    private boolean firstStart = true;
     private Set<String> createdPlans;
     private List<ControllerConfiguration> controllers;
     private AtomicLong lastActivityStart = new AtomicLong(0);
     private AtomicLong lastActivityEnd = new AtomicLong(0);
     private JControllerState currentstate;
+    private java.util.Calendar startCalendar;
 
     public List<Schedule> getListOfSchedules() {
         return listOfSchedules;
@@ -124,7 +125,8 @@ public class OrderInitiatorRunner extends TimerTask {
         orderListSynchronizer.setAccessToken(accessToken);
         OrderCounter o = DailyPlanHelper.getOrderCount(orderListSynchronizer.getListOfPlannedOrders());
 
-        LOGGER.info("Creating " + o.getCount() +  " orders " + o.cycledOrdersDesc() + " for controller " + OrderInitiatorGlobals.orderInitiatorSettings.getControllerId() + " day: " + dailyPlanDate);
+        LOGGER.info("Creating " + o.getCount() + " orders " + o.cycledOrdersDesc() + " for controller " + OrderInitiatorGlobals.orderInitiatorSettings
+                .getControllerId() + " day: " + dailyPlanDate);
 
         if (orderListSynchronizer.getListOfPlannedOrders().size() > 0) {
             orderListSynchronizer.addPlannedOrderToControllerAndDB(withSubmit);
@@ -283,8 +285,8 @@ public class OrderInitiatorRunner extends TimerTask {
                 OrderInitiatorGlobals.dailyPlanDate = dailyPlanCalendar.getTime();
                 logDailyPlan = true;
 
-                LOGGER.info("Submitting orders for controller " + controllerConfiguration.getCurrent().getId() + " for " + OrderInitiatorGlobals.orderInitiatorSettings
-                        .getDayAheadSubmit() + " days ahead");
+                LOGGER.info("Submitting orders for controller " + controllerConfiguration.getCurrent().getId() + " for "
+                        + OrderInitiatorGlobals.orderInitiatorSettings.getDayAheadSubmit() + " days ahead");
 
                 for (int day = 0; day < OrderInitiatorGlobals.orderInitiatorSettings.getDayAheadSubmit(); day++) {
 
@@ -320,9 +322,9 @@ public class OrderInitiatorRunner extends TimerTask {
                 List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
 
                 OrderCounter o = DailyPlanHelper.getOrderCount(listOfPlannedOrders);
-                
-                LOGGER.info("Submitting " + o.getCount() + " orders " + o.cycledOrdersDesc() + " for controller " + controllerId + " day: " + DailyPlanHelper
-                        .getDayOfYear(calendar));
+
+                LOGGER.info("Submitting " + o.getCount() + " orders " + o.cycledOrdersDesc() + " for controller " + controllerId + " day: "
+                        + DailyPlanHelper.getDayOfYear(calendar));
                 submitOrders(listOfPlannedOrders);
             }
         } finally {
@@ -335,11 +337,9 @@ public class OrderInitiatorRunner extends TimerTask {
             createdPlans = new HashSet<String>();
         }
         AJocClusterService.setLogger("dailyplan");
-        LOGGER.debug("firstStart:" + firstStart);
-
         boolean generateFromManuelStart = false;
-        if (!firstStart && StartupMode.manual.equals(OrderInitiatorGlobals.orderInitiatorSettings.getStartMode())) {
-            firstStart = true;
+        if (firstStart && StartupMode.manual.equals(OrderInitiatorGlobals.orderInitiatorSettings.getStartMode())) {
+            firstStart = false;
             LOGGER.debug("generateFromManuelStart: true");
             generateFromManuelStart = true;
         }
@@ -348,25 +348,28 @@ public class OrderInitiatorRunner extends TimerTask {
         calendar.add(java.util.Calendar.DATE, 1);
 
         java.util.Calendar now = java.util.Calendar.getInstance(TimeZone.getTimeZone(OrderInitiatorGlobals.orderInitiatorSettings.getTimeZone()));
-        java.util.Calendar startCalendar;
-        if (!"".equals(OrderInitiatorGlobals.orderInitiatorSettings.getDailyPlanStartTime())) {
-            startCalendar = DailyPlanHelper.getDailyplanCalendar(OrderInitiatorGlobals.orderInitiatorSettings.getDailyPlanStartTime());
-        } else {
-            startCalendar = DailyPlanHelper.getDailyplanCalendar(OrderInitiatorGlobals.orderInitiatorSettings.getPeriodBegin());
-            startCalendar.add(java.util.Calendar.DATE, 1);
-            startCalendar.add(java.util.Calendar.MINUTE, -30);
-        }
 
-        if (startCalendar.before(now)) {
-            startCalendar.add(java.util.Calendar.DATE, 1);
-        }
+        if (startCalendar == null) {
 
+            if (!"".equals(OrderInitiatorGlobals.orderInitiatorSettings.getDailyPlanStartTime())) {
+                startCalendar = DailyPlanHelper.getDailyplanCalendar(OrderInitiatorGlobals.orderInitiatorSettings.getDailyPlanStartTime());
+            } else {
+                startCalendar = DailyPlanHelper.getDailyplanCalendar(OrderInitiatorGlobals.orderInitiatorSettings.getPeriodBegin());
+                startCalendar.add(java.util.Calendar.DATE, 1);
+                startCalendar.add(java.util.Calendar.MINUTE, -30);
+            }
+            if (startCalendar.before(now)) {
+                startCalendar.add(java.util.Calendar.DATE, 1);
+            }
+        }
+       
         TimeZone timeZone = TimeZone.getTimeZone("UTC");
         java.util.Calendar dailyPlanCalendar = java.util.Calendar.getInstance(timeZone);
 
         if (!createdPlans.contains(DailyPlanHelper.getDayOfYear(calendar)) && (generateFromManuelStart || OrderInitiatorGlobals.orderInitiatorSettings
                 .getDailyPlanDaysCreateOnStart() || (now.getTimeInMillis() - startCalendar.getTimeInMillis()) > 0)) {
 
+            startCalendar = null;
             LOGGER.info("Creating daily plan starting with " + DailyPlanHelper.getDayOfYear(calendar));
             createdPlans.add(DailyPlanHelper.getDayOfYear(calendar));
             try {
