@@ -337,4 +337,9 @@ public class SOSShiroCurrentUser {
         }
     }
 
+    
+    public HttpServletRequest getHttpServletRequest() {
+        return httpServletRequest;
+    }
+
 }
