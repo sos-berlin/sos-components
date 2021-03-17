@@ -66,16 +66,9 @@ import com.sos.inventory.model.Schedule;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.CalendarType;
 import com.sos.inventory.model.deploy.DeployType;
-import com.sos.sign.model.fileordersource.FileOrderSource;
-import com.sos.sign.model.job.Job;
-import com.sos.sign.model.jobclass.JobClass;
-import com.sos.sign.model.junction.Junction;
-import com.sos.sign.model.lock.Lock;
-import com.sos.sign.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
-import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -136,6 +129,12 @@ import com.sos.joc.publish.mapper.SignedItemsSpec;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.mapper.UpdateableFileOrderSourceAgentName;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
+import com.sos.sign.model.fileordersource.FileOrderSource;
+import com.sos.sign.model.job.Job;
+import com.sos.sign.model.jobclass.JobClass;
+import com.sos.sign.model.junction.Junction;
+import com.sos.sign.model.lock.Lock;
+import com.sos.sign.model.workflow.Workflow;
 import com.sos.webservices.order.initiator.model.ScheduleEdit;
 
 import io.vavr.control.Either;
@@ -3224,7 +3223,7 @@ public abstract class PublishUtils {
                 jsObject.setContent(jobClass);
                 break;
             }
-            jsObject.setAccount(ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc()));
+            jsObject.setAccount(Globals.getConfigurationGlobalsJoc().getDefaultProfileAccount().getValue());
             // TODO: setVersion
             // jsObject.setVersion(item.getVersion());
             jsObject.setModified(item.getModified());
@@ -3265,7 +3264,7 @@ public abstract class PublishUtils {
                 break;
             }
             jsObject.setVersion(item.getVersion());
-            jsObject.setAccount(ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc()));
+            jsObject.setAccount(Globals.getConfigurationGlobalsJoc().getDefaultProfileAccount().getValue());
             return jsObject;
         } catch (IOException e) {
             throw new JocException(e);

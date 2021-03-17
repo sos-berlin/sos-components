@@ -13,7 +13,6 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.configurations.resource.IJocConfigurationsResource;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
@@ -100,7 +99,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             if (configurationsFilter.getConfigurationType() == ConfigurationType.PROFILE && (listOfJocConfigurationDbItem == null
                     || listOfJocConfigurationDbItem.isEmpty() || listOfJocConfigurationDbItem.get(0).getConfigurationItem() == null
                     || listOfJocConfigurationDbItem.get(0).getConfigurationItem().isEmpty())) {
-                String defaultProfileAccount = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
+                String defaultProfileAccount = Globals.getConfigurationGlobalsJoc().getDefaultProfileAccount().getValue();
                 String currentAccount = configurationsFilter.getAccount();
                 if (!defaultProfileAccount.isEmpty() && !defaultProfileAccount.equals(currentAccount)) {
                     filter.setAccount(defaultProfileAccount);

@@ -15,7 +15,6 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.exceptions.JocException;
@@ -52,7 +51,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            String account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
+            String account = Globals.getConfigurationGlobalsJoc().getDefaultProfileAccount().getValue();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             dbLayer = new DBLayerDeploy(hibernateSession);
             String controllerId = redeployFilter.getControllerId();
