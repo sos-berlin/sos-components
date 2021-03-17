@@ -11,15 +11,14 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.SetKeyAudit;
-import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocKeyNotValidException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.resource.ISetKey;
 import com.sos.joc.model.common.JocSecurityLevel;
-import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.publish.SetKeyFilter;
+import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
 
@@ -43,7 +42,7 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
                 return jocDefaultResponse;
             }
             JocKeyPair keyPair = setKeyFilter.getKeys();
-            String account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
+            String account = Globals.getConfigurationGlobalsJoc().getDefaultProfileAccount().getValue();
             String reason = null;
             if (PublishUtils.jocKeyPairNotEmpty(keyPair)) {
                 if (KeyUtil.isKeyPairValid(keyPair)) {

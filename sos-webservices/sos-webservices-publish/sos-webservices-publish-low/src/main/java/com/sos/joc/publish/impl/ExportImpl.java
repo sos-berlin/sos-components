@@ -58,7 +58,7 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            String account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
+            String account = Globals.getConfigurationGlobalsJoc().getDefaultProfileAccount().getValue();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
 

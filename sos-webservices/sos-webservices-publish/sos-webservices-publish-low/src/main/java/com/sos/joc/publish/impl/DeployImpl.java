@@ -19,7 +19,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.proxy.Proxies;
-import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -69,7 +68,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             }
             checkRequiredComment(deployFilter.getAuditLog());
             
-            String account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
+            String account = Globals.getConfigurationGlobalsJoc().getDefaultProfileAccount().getValue();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             dbLayer = new DBLayerDeploy(hibernateSession);
             // process filter
