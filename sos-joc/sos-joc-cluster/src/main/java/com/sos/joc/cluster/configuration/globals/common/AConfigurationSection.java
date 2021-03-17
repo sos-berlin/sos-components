@@ -57,7 +57,8 @@ public abstract class AConfigurationSection {
                         continue;
                     }
                     GlobalSettingsSectionEntry entry = section.getAdditionalProperties().get(ce.getName());
-                    ce.setValue(SOSString.isEmpty(entry.getValue()) ? ce.getDefault() : entry.getValue().trim());
+                    String val = entry.getValue() == null ? null : entry.getValue().trim();
+                    ce.setValue(SOSString.isEmpty(val) ? ce.getDefault() : val);
                     field.set(this, ce);
                 }
             } catch (Throwable e) {
