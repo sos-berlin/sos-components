@@ -101,35 +101,6 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         }
     }
 
-    private void addSubmittedOrderIdsFromDailyplanDate(ModifyOrders modifyOrders) throws Exception {
-        if (modifyOrders.getDailyPlanDate() != null) {
-            SOSHibernateSession sosHibernateSession = null;
-            if (modifyOrders.getOrderIds() == null) {
-                modifyOrders.setOrderIds(new LinkedHashSet<String>());
-            }
-
-            try {
-                sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-                sosHibernateSession.setAutoCommit(false);
-                GlobalSettingsReader reader = new GlobalSettingsReader();
-                AConfigurationSection configuration = Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
-                OrderInitiatorSettings settings = reader.getSettings(configuration);
-                DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
-
-                FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-                filter.setControllerId(modifyOrders.getControllerId());
-                filter.setDailyPlanDate(modifyOrders.getDailyPlanDate(), settings.getTimeZone(), settings.getPeriodBegin());
-                filter.setSubmitted(true);
-                List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
-                for (DBItemDailyPlanOrders dbItemDailyPlanOrders : listOfPlannedOrders) {
-                    modifyOrders.getOrderIds().add(dbItemDailyPlanOrders.getOrderId());
-                }
-            } finally {
-                Globals.disconnect(sosHibernateSession);
-            }
-        }
-    }
-
     @Override
     public JOCDefaultResponse postOrdersCancel(String accessToken, byte[] filterBytes) {
         try {
@@ -231,39 +202,24 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         return cyclicOrderStream;
     }
 
-    private static void updateDailyPlan(List<String> orderIds) throws SOSHibernateException {
-        SOSHibernateSession sosHibernateSession = null;
-
-        try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL + "/cancel");
-            sosHibernateSession.setAutoCommit(false);
-            DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
-            Globals.beginTransaction(sosHibernateSession);
-            FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-            filter.setListOfOrders(orderIds);
-            filter.setSubmitted(false);
-            dbLayerDailyPlannedOrders.setSubmitted(filter);
-
-            Globals.commit(sosHibernateSession);
-        } catch (Exception e) {
-            Globals.rollback(sosHibernateSession);
-            throw e;
-        } finally {
-            Globals.disconnect(sosHibernateSession);
-        }
-    }
-
-    private static CompletableFuture<Either<Problem, Void>> command(Action action, ModifyOrders modifyOrders, Set<OrderId> oIds)
+    private CompletableFuture<Either<Problem, Void>> command(Action action, ModifyOrders modifyOrders, Set<OrderId> oIds)
             throws SOSHibernateException {
 
         switch (action) {
         case CANCEL:
 
-            // TODO This update must be removed when dailyplan service receives events for order state changes
-            // this is the wrong place anyway -> must be in thenAccept if "Either" right
-            updateDailyPlan(oIds.stream().map(OrderId::string).filter(s -> !s.matches(".*#T[0-9]+-.*")).collect(Collectors.toList()));
-
-            return OrdersHelper.cancelOrders(modifyOrders, oIds);
+            return OrdersHelper.cancelOrders(modifyOrders, oIds).thenApply(either -> {
+                // TODO This update must be removed when dailyplan service receives events for order state changes
+                if (either.isRight()) {
+                    try {
+                        // only for non-temporary orders
+                        updateDailyPlan(oIds.stream().map(OrderId::string).filter(s -> !s.matches(".*#T[0-9]+-.*")).collect(Collectors.toList()));
+                    } catch (Exception e) {
+                        ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), modifyOrders.getControllerId());
+                    }
+                }
+                return either;
+            });
 
         case RESUME:
             if (oIds.size() == 1) { // position and historicOutcome only for one Order!
@@ -290,10 +246,63 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         }
     }
 
+    private static void updateDailyPlan(List<String> orderIds) throws SOSHibernateException {
+        SOSHibernateSession sosHibernateSession = null;
+        if (!orderIds.isEmpty()) {
+            try {
+                sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL + "/cancel");
+                sosHibernateSession.setAutoCommit(false);
+                DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
+                Globals.beginTransaction(sosHibernateSession);
+                FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+                filter.setListOfOrders(orderIds);
+                filter.setSubmitted(false);
+                dbLayerDailyPlannedOrders.setSubmitted(filter);
+
+                Globals.commit(sosHibernateSession);
+            } catch (Exception e) {
+                Globals.rollback(sosHibernateSession);
+                throw e;
+            } finally {
+                Globals.disconnect(sosHibernateSession);
+            }
+        }
+    }
+
     private ModifyOrders initRequest(Action action, String accessToken, byte[] filterBytes) throws SOSJsonSchemaException, IOException {
         initLogging(API_CALL + "/" + action.name().toLowerCase(), filterBytes, accessToken);
         JsonValidator.validate(filterBytes, ModifyOrders.class);
         return Globals.objectMapper.readValue(filterBytes, ModifyOrders.class);
+    }
+    
+    private void addSubmittedOrderIdsFromDailyplanDate(ModifyOrders modifyOrders) throws Exception {
+        if (modifyOrders.getDailyPlanDate() != null) {
+            SOSHibernateSession sosHibernateSession = null;
+            if (modifyOrders.getOrderIds() == null) {
+                modifyOrders.setOrderIds(new LinkedHashSet<String>());
+            }
+
+            try {
+                sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+                sosHibernateSession.setAutoCommit(false);
+                GlobalSettingsReader reader = new GlobalSettingsReader();
+                AConfigurationSection configuration = Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
+                OrderInitiatorSettings settings = reader.getSettings(configuration);
+                DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
+
+                FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+                filter.setControllerId(modifyOrders.getControllerId());
+                filter.setDailyPlanDate(modifyOrders.getDailyPlanDate(), settings.getTimeZone(), settings.getPeriodBegin());
+                filter.setSubmitted(true);
+                // Why not a select which returns only a set of orderIds?
+                List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
+                if (listOfPlannedOrders != null) {
+                    modifyOrders.getOrderIds().addAll(listOfPlannedOrders.stream().map(DBItemDailyPlanOrders::getOrderId).collect(Collectors.toSet()));
+                }
+            } finally {
+                Globals.disconnect(sosHibernateSession);
+            }
+        }
     }
 
 }

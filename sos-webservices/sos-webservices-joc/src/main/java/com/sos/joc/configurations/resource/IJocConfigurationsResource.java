@@ -7,19 +7,17 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.model.configuration.ConfigurationsDeleteFilter;
-import com.sos.joc.model.configuration.ConfigurationsFilter;
 
  
 public interface IJocConfigurationsResource{
 
     @POST
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postConfigurations(@HeaderParam("X-Access-Token") String xAccessToken, ConfigurationsFilter configurationsFilter) throws Exception;
+    public JOCDefaultResponse postConfigurations(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
     
     @POST
     @Path("delete")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postConfigurationsDelete(@HeaderParam("X-Access-Token") String xAccessToken, ConfigurationsDeleteFilter configurationsFilter) throws Exception;
+    public JOCDefaultResponse postConfigurationsDelete(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
  
 }
