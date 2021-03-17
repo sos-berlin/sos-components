@@ -2,6 +2,9 @@ package com.sos.joc.db.inventory.items;
 
 import java.util.Date;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 public class InventoryDeploymentItem {
 
     private Long id;
@@ -99,6 +102,23 @@ public class InventoryDeploymentItem {
 
     public void setControllerId(String val) {
         controllerId = val;
+    }
+    
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder().append(deploymentDate).toHashCode();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if ((other instanceof InventoryDeploymentItem) == false) {
+            return false;
+        }
+        InventoryDeploymentItem rhs = ((InventoryDeploymentItem) other);
+        return new EqualsBuilder().append(deploymentDate, rhs.deploymentDate).isEquals();
     }
 
 }

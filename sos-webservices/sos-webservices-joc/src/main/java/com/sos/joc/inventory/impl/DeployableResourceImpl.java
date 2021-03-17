@@ -141,14 +141,11 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
                     ResponseItemDeployment id = new ResponseItemDeployment();
                     id.setVersion(deployment.getVersion());
                     id.setControllerId(deployment.getControllerId());
-            return id;
-        }, Collectors.toSet())));
-        
-        Map<Date, InventoryDeploymentItem> mapDateGrouped = deployments.stream().filter(Objects::nonNull)
-                .collect(Collectors.toMap(InventoryDeploymentItem::getDeploymentDate, Function.identity()));
-        
-        Stream<ResponseDeployableVersion> versionsStream = mapDateGrouped.values().stream().sorted(Comparator.comparing(InventoryDeploymentItem::getDeploymentDate).reversed()).map(
-                deployment -> {
+                    return id;
+                }, Collectors.toSet())));
+
+        Stream<ResponseDeployableVersion> versionsStream = deployments.stream().filter(Objects::nonNull).distinct().sorted(Comparator.comparing(
+                InventoryDeploymentItem::getDeploymentDate).reversed()).map(deployment -> {
                     ResponseDeployableVersion dv = new ResponseDeployableVersion();
                     dv.setId(confId);
                     dv.setCommitId(deployment.getCommitId());
