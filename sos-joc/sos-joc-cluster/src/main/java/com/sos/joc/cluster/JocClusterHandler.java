@@ -188,7 +188,7 @@ public class JocClusterHandler {
         JocServiceAnswer answer = s.getInfo();
         if (!answer.getState().equals(JocServiceAnswerState.RELAX)) {
             AJocClusterService.setLogger();
-            LOGGER.info(String.format("[%s][restart][%s][wait 60s]service status %s", mode, identifier, answer.getState()));
+            LOGGER.info(String.format("[%s][restart][%s][service status %s]wait 60s and ask again...", mode, identifier, answer.getState()));
             cluster.waitFor(60);
             answer = s.getInfo();
             if (answer.getState().equals(JocServiceAnswerState.RELAX)) {
