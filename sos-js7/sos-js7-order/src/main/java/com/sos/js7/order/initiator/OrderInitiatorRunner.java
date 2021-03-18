@@ -370,7 +370,6 @@ public class OrderInitiatorRunner extends TimerTask {
                 .getDailyPlanDaysCreateOnStart() || (now.getTimeInMillis() - startCalendar.getTimeInMillis()) > 0)) {
 
             startCalendar = null;
-            LOGGER.info("Creating daily plan starting with " + DailyPlanHelper.getDayOfYear(calendar));
             createdPlans.add(DailyPlanHelper.getDayOfYear(calendar));
             try {
                 OrderInitiatorGlobals.submissionTime = new Date();
@@ -380,6 +379,7 @@ public class OrderInitiatorRunner extends TimerTask {
                 dailyPlanCalendar.set(java.util.Calendar.SECOND, 0);
                 dailyPlanCalendar.set(java.util.Calendar.MILLISECOND, 0);
                 dailyPlanCalendar.set(java.util.Calendar.MINUTE, 0);
+                LOGGER.info("Creating daily plan starting with " + DailyPlanHelper.getDayOfYear(calendar));
                 createPlan(dailyPlanCalendar);
             } catch (JobSchedulerConnectionResetException | JobSchedulerConnectionRefusedException | ParseException | SOSException
                     | URISyntaxException | InterruptedException | ExecutionException | TimeoutException e) {
