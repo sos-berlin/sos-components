@@ -131,7 +131,6 @@ public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasab
         if (release == null || withoutReleased) {
             return Collections.emptySet();
         }
-
         ResponseReleasableVersion rv = new ResponseReleasableVersion();
         rv.setId(confId);
         rv.setVersionDate(release.getModified());

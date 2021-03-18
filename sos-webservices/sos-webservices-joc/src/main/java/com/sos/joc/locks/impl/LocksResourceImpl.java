@@ -105,7 +105,7 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
             if (contents != null) {
                 answer.setLocks(contents.stream().map(dc -> {
                     try {
-                        if (dc.getContent() != null && !dc.getContent().isEmpty()) {
+                        if (dc.getContent() == null || dc.getContent().isEmpty()) {
                             throw new DBMissingDataException("doesn't exist");
                         }
                         return helper.getLockEntry(controllerState, dc);

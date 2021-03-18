@@ -128,7 +128,7 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
-    public Map<Long, DBItemInventoryReleasedConfiguration> getReleasedItemsByConfigurationIds(Collection<Long> configIds)
+    public Map<Long, List<DBItemInventoryReleasedConfiguration>> getReleasedItemsByConfigurationIds(Collection<Long> configIds)
             throws SOSHibernateException {
         if (configIds != null && !configIds.isEmpty()) {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
@@ -138,7 +138,7 @@ public class InventoryDBLayer extends DBLayer {
             query.setParameterList("configIds", configIds);
             List<DBItemInventoryReleasedConfiguration> result = getSession().getResultList(query);
             if (result != null) {
-                return result.stream().collect(Collectors.toMap(DBItemInventoryReleasedConfiguration::getCid, Function.identity()));
+                return result.stream().collect(Collectors.groupingBy(DBItemInventoryReleasedConfiguration::getCid));
             }
             return Collections.emptyMap();
         } else {

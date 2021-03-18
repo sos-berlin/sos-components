@@ -97,7 +97,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
                 }
                 
                 //if (!in.getWithoutDrafts() || !in.getWithoutReleased()) {
-                    Map<Long, DBItemInventoryReleasedConfiguration> releasedItems = Collections.emptyMap();
+                    Map<Long, List<DBItemInventoryReleasedConfiguration>> releasedItems = Collections.emptyMap();
                     if (!in.getWithoutReleased()) {
                         releasedItems = dbLayer.getReleasedItemsByConfigurationIds(notDeletedIds);
                     }
@@ -154,7 +154,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
     }
     
     private Set<ResponseReleasableTreeItem> getResponseStreamOfNotDeletedItem(List<DBItemInventoryConfiguration> list,
-            Map<Long, DBItemInventoryReleasedConfiguration> releasedItems, Boolean onlyValidObjects, Set<Folder> permittedFolders,
+            Map<Long, List<DBItemInventoryReleasedConfiguration>> releasedItems, Boolean onlyValidObjects, Set<Folder> permittedFolders,
             Boolean withoutDrafts, Boolean withoutReleased) {
         if (list != null) {
             Stream<DBItemInventoryConfiguration> stream = list.stream();
@@ -192,7 +192,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
                                 draft.setVersionDate(item.getModified());
                                 versions.add(draft);
                             }
-                            versions.addAll(ReleasableResourceImpl.getVersion(item.getId(), releasedItems.get(item.getId()), withoutReleased));
+                            versions.addAll(ReleasableResourceImpl.getVersion(item.getId(), releasedItems.get(item.getId()).get(0), withoutReleased));
                             // if (versions.isEmpty()) {
                             // versions = null;
                             // }

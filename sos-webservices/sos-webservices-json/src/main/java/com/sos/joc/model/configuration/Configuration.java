@@ -63,13 +63,13 @@ public class Configuration {
     @JsonProperty("configurationType")
     private ConfigurationType configurationType;
     /**
-     * configuration object type
+     * string without < and >
      * <p>
      * 
      * 
      */
     @JsonProperty("objectType")
-    private ConfigurationObjectType objectType;
+    private String objectType;
     /**
      * string without < and >
      * <p>
@@ -179,24 +179,24 @@ public class Configuration {
     }
 
     /**
-     * configuration object type
+     * string without < and >
      * <p>
      * 
      * 
      */
     @JsonProperty("objectType")
-    public ConfigurationObjectType getObjectType() {
+    public String getObjectType() {
         return objectType;
     }
 
     /**
-     * configuration object type
+     * string without < and >
      * <p>
      * 
      * 
      */
     @JsonProperty("objectType")
-    public void setObjectType(ConfigurationObjectType objectType) {
+    public void setObjectType(String objectType) {
         this.objectType = objectType;
     }
 

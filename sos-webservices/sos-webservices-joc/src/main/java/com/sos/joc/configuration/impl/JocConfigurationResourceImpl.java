@@ -67,7 +67,8 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             checkRequiredParameter("configurationItem", configuration.getConfigurationItem());
             if (configuration.getConfigurationType() == ConfigurationType.CUSTOMIZATION) {
                 /** check save customization specific required parameters */
-                checkRequiredParameter("objectType", configuration.getObjectType().name());
+                //checkRequiredParameter("objectType", configuration.getObjectType().name());
+                checkRequiredParameter("objectType", configuration.getObjectType());
                 checkRequiredParameter("name", configuration.getName());
             }
 
@@ -117,9 +118,11 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                     dbItem.setShared(configuration.getShared());
                 }
                 if (configuration.getConfigurationType() == ConfigurationType.CUSTOMIZATION) {
-                    dbItem.setObjectType(configuration.getObjectType().name());
+                    //dbItem.setObjectType(configuration.getObjectType().name());
+                    dbItem.setObjectType(configuration.getObjectType());
                 } else if (configuration.getObjectType() != null) {
-                    dbItem.setObjectType(configuration.getObjectType().name());
+                    //dbItem.setObjectType(configuration.getObjectType().name());
+                    dbItem.setObjectType(configuration.getObjectType());
                 }
 
                 /** check permissions */
@@ -398,7 +401,8 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
         }
         config.setConfigurationItem(dbItem.getConfigurationItem());
         if (dbItem.getObjectType() != null) {
-            config.setObjectType(ConfigurationObjectType.fromValue(dbItem.getObjectType()));
+            //config.setObjectType(ConfigurationObjectType.fromValue(dbItem.getObjectType()));
+            config.setObjectType(dbItem.getObjectType());
         }
         config.setShared(dbItem.getShared());
         config.setName(dbItem.getName());

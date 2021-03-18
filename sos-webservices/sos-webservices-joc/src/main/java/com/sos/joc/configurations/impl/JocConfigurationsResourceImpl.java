@@ -47,10 +47,11 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                 return jocDefaultResponse;
             }
 
-            String objectType = null;
-            if (configurationsFilter.getObjectType() != null) {
-                objectType = configurationsFilter.getObjectType().value();
-            }
+//            String objectType = null;
+//            if (configurationsFilter.getObjectType() != null) {
+//                objectType = configurationsFilter.getObjectType().value();
+//            }
+            String objectType = configurationsFilter.getObjectType();
 
             String configurationType = null;
             GlobalSettings defaultGlobalSettings = null;
@@ -68,7 +69,8 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                 case GLOBALS:
                     configurationsFilter.setControllerId(ConfigurationGlobals.CONTROLLER_ID);
                     configurationsFilter.setAccount(ConfigurationGlobals.ACCOUNT);
-                    configurationsFilter.setObjectType(ConfigurationGlobals.OBJECT_TYPE);
+                    //configurationsFilter.setObjectType(ConfigurationGlobals.OBJECT_TYPE);
+                    configurationsFilter.setObjectType(null);
 
                     defaultGlobalSettings = new ConfigurationGlobals().getDefaults();
                     break;
@@ -122,7 +124,8 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                     configuration.setControllerId(configurationsFilter.getControllerId());
                     configuration.setName(jocConfigurationDbItem.getName());
                     if (jocConfigurationDbItem.getObjectType() != null) {
-                        configuration.setObjectType(ConfigurationObjectType.fromValue(jocConfigurationDbItem.getObjectType()));
+                        //configuration.setObjectType(ConfigurationObjectType.fromValue(jocConfigurationDbItem.getObjectType()));
+                        configuration.setObjectType(jocConfigurationDbItem.getObjectType());
                     }
                     configuration.setShared(jocConfigurationDbItem.getShared());
                     configuration.setId(jocConfigurationDbItem.getId());

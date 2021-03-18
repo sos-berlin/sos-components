@@ -85,7 +85,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             JocError jocError = getJocError();
             workflows.setWorkflows(contentsStream.map(w -> {
                 try {
-                    if (w.getContent() != null && !w.getContent().isEmpty()) {
+                    if (w.getContent() == null || w.getContent().isEmpty()) {
                         throw new DBMissingDataException("doesn't exist");
                     }
                     Workflow workflow = Globals.objectMapper.readValue(w.getContent(), Workflow.class);

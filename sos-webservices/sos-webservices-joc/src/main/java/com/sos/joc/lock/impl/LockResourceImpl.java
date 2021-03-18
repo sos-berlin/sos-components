@@ -68,7 +68,7 @@ public class LockResourceImpl extends JOCResourceImpl implements ILockResource {
             Globals.disconnect(session);
             session = null;
             
-            if (dc != null && dc.getContent() != null && !dc.getContent().isEmpty()) {
+            if (dc == null || dc.getContent() == null || dc.getContent().isEmpty()) {
                 throw new DBMissingDataException(String.format("Lock '%s' doesn't exist", filter.getLockPath()));
             }
             

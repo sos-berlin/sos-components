@@ -443,8 +443,11 @@ public class EventService {
 
     private void setOrders() {
         try {
-            orders = Proxy.of(controllerId).currentState().ordersBy(JOrderPredicates.any())
-                .collect(Collectors.toMap(o -> o.id().string().substring(0,24), o -> mapWorkflowId(o.workflowId())));
+            // possibly IllegalStateException
+            // orders = Proxy.of(controllerId).currentState().ordersBy(JOrderPredicates.any())
+            // .collect(Collectors.toMap(o -> o.id().string().substring(0,24), o -> mapWorkflowId(o.workflowId())));
+            Proxy.of(controllerId).currentState().ordersBy(JOrderPredicates.any()).forEach(o -> orders.put(o.id().string().substring(0, 24),
+                    mapWorkflowId(o.workflowId())));
         } catch (Exception e) {
             //
         }
