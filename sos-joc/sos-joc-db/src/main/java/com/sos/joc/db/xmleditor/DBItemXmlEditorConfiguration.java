@@ -30,8 +30,8 @@ public class DBItemXmlEditorConfiguration extends DBItem {
     @Column(name = "[CONTROLLER_ID]", nullable = false)
     private String controllerId;
 
-    @Column(name = "[OBJECT_TYPE]", nullable = false)
-    private String objectType;
+    @Column(name = "[TYPE]", nullable = false)
+    private String type;
 
     @Column(name = "[NAME]", nullable = false)
     private String name;
@@ -82,12 +82,12 @@ public class DBItemXmlEditorConfiguration extends DBItem {
         controllerId = val;
     }
 
-    public String getObjectType() {
-        return objectType;
+    public String getType() {
+        return type;
     }
 
-    public void setObjectType(String val) {
-        objectType = val;
+    public void setType(String val) {
+        type = val;
     }
 
     public String getName() {

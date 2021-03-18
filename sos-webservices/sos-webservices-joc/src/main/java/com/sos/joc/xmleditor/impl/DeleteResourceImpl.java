@@ -38,19 +38,21 @@ public class DeleteResourceImpl extends JOCResourceImpl implements IDeleteResour
             initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DeleteDraft.class);
             DeleteDraft in = Globals.objectMapper.readValue(filterBytes, DeleteDraft.class);
-            
+
             checkRequiredParameters(in);
 
             JOCDefaultResponse response = checkPermissions(accessToken, in);
             if (response == null) {
-                if (in.getObjectType().equals(ObjectType.OTHER)) {
+                switch (in.getObjectType()) {
+                case YADE:
+                case OTHER:
                     checkRequiredParameter("id", in.getId());
 
-                    DeleteOtherDraftAnswer answer = handleOtherConfigurations(in);
-                    response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
-                } else {
-                    ReadStandardConfigurationAnswer answer = handleStandardConfiguration(in);
-                    response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
+                    response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(handleMultipleConfigurations(in)));
+                    break;
+                default:
+                    response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(handleStandardConfiguration(in)));
+                    break;
                 }
             }
             return response;
@@ -74,7 +76,7 @@ public class DeleteResourceImpl extends JOCResourceImpl implements IDeleteResour
     }
 
     private ReadStandardConfigurationAnswer handleStandardConfiguration(DeleteDraft in) throws Exception {
-        DBItemXmlEditorConfiguration item = updateItem(in.getControllerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in
+        DBItemXmlEditorConfiguration item = updateStandardItem(in.getControllerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in
                 .getObjectType()));
 
         ReadConfigurationHandler handler = new ReadConfigurationHandler(this, in.getObjectType());
@@ -82,10 +84,8 @@ public class DeleteResourceImpl extends JOCResourceImpl implements IDeleteResour
         return handler.getAnswer();
     }
 
-    private DeleteOtherDraftAnswer handleOtherConfigurations(DeleteDraft in) throws Exception {
-
-        boolean deleted = deleteOtherItem(in.getId());
-
+    private DeleteOtherDraftAnswer handleMultipleConfigurations(DeleteDraft in) throws Exception {
+        boolean deleted = delete(in.getObjectType(), in.getId());
         DeleteOtherDraftAnswer answer = new DeleteOtherDraftAnswer();
         if (deleted) {
             answer.setDeleted(new Date());
@@ -95,14 +95,14 @@ public class DeleteResourceImpl extends JOCResourceImpl implements IDeleteResour
         return answer;
     }
 
-    private boolean deleteOtherItem(Integer id) throws Exception {
+    private boolean delete(ObjectType type, Integer id) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
 
             session.beginTransaction();
-            int deleted = dbLayer.deleteOtherObject(id.longValue());
+            int deleted = dbLayer.delete(type, id.longValue());
             session.commit();
             if (isTraceEnabled) {
                 LOGGER.trace(String.format("[id=%s]deleted=%s", id, deleted));
@@ -116,7 +116,7 @@ public class DeleteResourceImpl extends JOCResourceImpl implements IDeleteResour
         }
     }
 
-    private DBItemXmlEditorConfiguration updateItem(String controllerId, String objectType, String name) throws Exception {
+    private DBItemXmlEditorConfiguration updateStandardItem(String controllerId, String objectType, String name) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);

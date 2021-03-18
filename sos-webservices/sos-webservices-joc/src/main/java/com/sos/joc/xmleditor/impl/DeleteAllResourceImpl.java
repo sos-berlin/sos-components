@@ -42,14 +42,16 @@ public class DeleteAllResourceImpl extends JOCResourceImpl implements IDeleteAll
             JOCDefaultResponse response = checkPermissions(accessToken, in);
             if (response == null) {
                 ObjectType type = in.getObjectTypes().get(0);
-                if (type.equals(ObjectType.OTHER)) {
-                    deleteOtherItems(in.getControllerId());
+                switch (type) {
+                case YADE:
+                case OTHER:
+                    delete(type, in.getControllerId());
                     response = JOCDefaultResponse.responseStatus200(getSuccess());
-                } else {
+                    break;
+                default:
                     throw new JocException(new JocError(JocXmlEditor.ERROR_CODE_UNSUPPORTED_OBJECT_TYPE, String.format(
                             "[%s][%s]unsupported object type(s) for delete all", in.getControllerId(), Joiner.on(",").join(in.getObjectTypes()))));
                 }
-
             }
             return response;
         } catch (JocException e) {
@@ -77,14 +79,14 @@ public class DeleteAllResourceImpl extends JOCResourceImpl implements IDeleteAll
         return answer;
     }
 
-    private boolean deleteOtherItems(String controllerId) throws Exception {
+    private boolean delete(ObjectType type, String controllerId) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
 
             session.beginTransaction();
-            int deleted = dbLayer.deleteOtherObjects(controllerId);
+            int deleted = dbLayer.deleteAll(type, controllerId);
             session.commit();
             if (isTraceEnabled) {
                 LOGGER.trace(String.format("deleted=%s", deleted));

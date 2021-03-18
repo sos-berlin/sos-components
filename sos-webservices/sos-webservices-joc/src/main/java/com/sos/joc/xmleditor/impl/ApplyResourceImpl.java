@@ -61,14 +61,17 @@ public class ApplyResourceImpl extends JOCResourceImpl implements IApplyResource
 
                 DBItemXmlEditorConfiguration item = null;
                 String name = null;
-                if (in.getObjectType().equals(ObjectType.OTHER)) {
+                switch (in.getObjectType()) {
+                case YADE:
+                case OTHER:
                     name = in.getName();
-                    item = getOthersObject(dbLayer, in, name);
-                } else {
+                    item = getObject(dbLayer, in, name);
+                    break;
+                default:
                     name = JocXmlEditor.getConfigurationName(in.getObjectType());
                     item = getStandardObject(dbLayer, in);
+                    break;
                 }
-
                 if (item == null) {
                     item = create(session, in, name);
 
@@ -95,10 +98,14 @@ public class ApplyResourceImpl extends JOCResourceImpl implements IApplyResource
     private JOCDefaultResponse check(ApplyConfiguration in, boolean validate) throws Exception {
         if (validate) {
             java.nio.file.Path schema = null;
-            if (in.getObjectType().equals(ObjectType.OTHER)) {
-                schema = JocXmlEditor.getOthersSchema(in.getSchemaIdentifier(), false);
-            } else {
+            switch (in.getObjectType()) {
+            case YADE:
+            case OTHER:
+                schema = JocXmlEditor.getSchema(in.getObjectType(), in.getSchemaIdentifier(), false);
+                break;
+            default:
                 schema = JocXmlEditor.getStandardAbsoluteSchemaLocation(in.getObjectType());
+                break;
             }
             // check for vulnerabilities and validate
             XsdValidator validator = new XsdValidator(schema);
@@ -119,16 +126,20 @@ public class ApplyResourceImpl extends JOCResourceImpl implements IApplyResource
         ApplyConfigurationAnswer answer = new ApplyConfigurationAnswer();
         answer.setId(item.getId().intValue());
         answer.setName(item.getName());
-        if (in.getObjectType().equals(ObjectType.OTHER)) {
-            answer.setSchemaIdentifier(JocXmlEditor.getOthersSchemaIdentifier(item.getSchemaLocation()));
-        } else {
+        switch (in.getObjectType()) {
+        case YADE:
+        case OTHER:
+            answer.setSchemaIdentifier(JocXmlEditor.getHttpOrFileSchemaIdentifier(item.getSchemaLocation()));
+            break;
+        default:
             answer.setSchemaIdentifier(JocXmlEditor.getStandardSchemaIdentifier(in.getObjectType()));
+            break;
         }
         answer.setConfiguration(item.getConfigurationDraft());
         answer.setConfigurationJson(json);
         answer.setRecreateJson(true);
         answer.setModified(item.getModified());
-        if (!in.getObjectType().equals(ObjectType.OTHER)) {
+        if (in.getObjectType().equals(ObjectType.NOTIFICATION)) {
             answer.setMessage(new AnswerMessage());
             if (item.getDeployed() == null) {
                 answer.getMessage().setCode(JocXmlEditor.MESSAGE_CODE_LIVE_NOT_EXIST);
@@ -143,12 +154,15 @@ public class ApplyResourceImpl extends JOCResourceImpl implements IApplyResource
 
     private String convertXml2Json(ApplyConfiguration in) throws Exception {
         java.nio.file.Path schema = null;
-        if (in.getObjectType().equals(ObjectType.OTHER)) {
-            schema = JocXmlEditor.getOthersSchema(in.getSchemaIdentifier(), false);
-        } else {
+        switch (in.getObjectType()) {
+        case YADE:
+        case OTHER:
+            schema = JocXmlEditor.getSchema(in.getObjectType(), in.getSchemaIdentifier(), false);
+            break;
+        default:
             schema = JocXmlEditor.getStandardAbsoluteSchemaLocation(in.getObjectType());
+            break;
         }
-
         Xml2JsonConverter converter = new Xml2JsonConverter();
         return converter.convert(in.getObjectType(), schema, in.getConfiguration());
     }
@@ -178,14 +192,17 @@ public class ApplyResourceImpl extends JOCResourceImpl implements IApplyResource
     private void checkRequiredParameters(final ApplyConfiguration in) throws Exception {
         checkRequiredParameter("controllerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
-        if (in.getObjectType().equals(ObjectType.OTHER)) {
+        switch (in.getObjectType()) {
+        case YADE:
+        case OTHER:
             checkRequiredParameter("id", in.getId());
             checkRequiredParameter("name", in.getName());
             checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
-        } else {
+            break;
+        default:
             checkRequiredParameter("configuration", in.getConfiguration());
+            break;
         }
-
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final ApplyConfiguration in) throws Exception {
@@ -194,14 +211,10 @@ public class ApplyResourceImpl extends JOCResourceImpl implements IApplyResource
         return initPermissions(in.getControllerId(), permission);
     }
 
-    private DBItemXmlEditorConfiguration getOthersObject(DbLayerXmlEditor dbLayer, ApplyConfiguration in, String name) throws Exception {
-        // TODO currently the same code as in store
+    private DBItemXmlEditorConfiguration getObject(DbLayerXmlEditor dbLayer, ApplyConfiguration in, String name) throws Exception {
         DBItemXmlEditorConfiguration item = null;
         if (in.getId() != null && in.getId() > 0) {
             item = dbLayer.getObject(in.getId().longValue());
-            if (item != null && !item.getObjectType().equals(ObjectType.OTHER.name())) {
-                item = null;// dbLayer.getObject(in.getJobschedulerId(), ObjectType.OTHER.name(), name);
-            }
         }
         return item;
     }
@@ -214,15 +227,11 @@ public class ApplyResourceImpl extends JOCResourceImpl implements IApplyResource
     private DBItemXmlEditorConfiguration create(SOSHibernateSession session, ApplyConfiguration in, String name) throws Exception {
         DBItemXmlEditorConfiguration item = new DBItemXmlEditorConfiguration();
         item.setControllerId(in.getControllerId());
-        item.setObjectType(in.getObjectType().name());
+        item.setType(in.getObjectType().name());
         item.setName(name.trim());
         item.setConfigurationDraft(in.getConfiguration());
         item.setConfigurationDraftJson(null);
-        if (in.getObjectType().equals(ObjectType.OTHER)) {
-            item.setSchemaLocation(in.getSchemaIdentifier());
-        } else {
-            item.setSchemaLocation(JocXmlEditor.getStandardRelativeSchemaLocation(in.getObjectType()));
-        }
+        item.setSchemaLocation(getSchemaLocation(in.getObjectType(), in.getSchemaIdentifier()));
         item.setAuditLogId(new Long(0));// TODO
         item.setAccount(getAccount());
         item.setCreated(new Date());
@@ -236,16 +245,23 @@ public class ApplyResourceImpl extends JOCResourceImpl implements IApplyResource
         item.setName(name.trim());
         item.setConfigurationDraft(SOSString.isEmpty(in.getConfiguration()) ? null : in.getConfiguration());
         item.setConfigurationDraftJson(null);
-        if (in.getObjectType().equals(ObjectType.OTHER)) {
-            item.setSchemaLocation(in.getSchemaIdentifier());
-        } else {
-            item.setSchemaLocation(JocXmlEditor.getStandardRelativeSchemaLocation(in.getObjectType()));
-        }
+        item.setSchemaLocation(getSchemaLocation(in.getObjectType(), in.getSchemaIdentifier()));
         // item.setAuditLogId(new Long(0));// TODO
         item.setAccount(getAccount());
         item.setModified(new Date());
         session.update(item);
         return item;
+    }
+
+    private String getSchemaLocation(ObjectType type, String schemaIdentifier) {
+        switch (type) {
+        case YADE:
+            return JocXmlEditor.getYadeSchemaLocation4Db(schemaIdentifier);
+        case OTHER:
+            return schemaIdentifier;
+        default:
+            return JocXmlEditor.getStandardRelativeSchemaLocation(type);
+        }
     }
 
 }

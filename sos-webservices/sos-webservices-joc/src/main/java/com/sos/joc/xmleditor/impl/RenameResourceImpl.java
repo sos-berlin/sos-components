@@ -31,7 +31,7 @@ public class RenameResourceImpl extends JOCResourceImpl implements IRenameResour
             JsonValidator.validateFailFast(filterBytes, RenameConfiguration.class);
             RenameConfiguration in = Globals.objectMapper.readValue(filterBytes, RenameConfiguration.class);
 
-            if (in.getObjectType() != null && !in.getObjectType().equals(ObjectType.OTHER)) {
+            if (in.getObjectType() != null && in.getObjectType().equals(ObjectType.NOTIFICATION)) {
                 throw new JocException(new JocError(JocXmlEditor.ERROR_CODE_UNSUPPORTED_OBJECT_TYPE, String.format(
                         "[%s][%s]unsupported object type for rename", in.getControllerId(), in.getObjectType().name())));
             }
@@ -44,7 +44,7 @@ public class RenameResourceImpl extends JOCResourceImpl implements IRenameResour
                 DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
 
                 String name = in.getName().replaceAll("<br>", "");
-                DBItemXmlEditorConfiguration item = getOthersObject(dbLayer, in, name);
+                DBItemXmlEditorConfiguration item = getObject(dbLayer, in, name);
 
                 if (item == null) {
                     item = create(session, in, name);
@@ -69,13 +69,10 @@ public class RenameResourceImpl extends JOCResourceImpl implements IRenameResour
         }
     }
 
-    private DBItemXmlEditorConfiguration getOthersObject(DbLayerXmlEditor dbLayer, RenameConfiguration in, String name) throws Exception {
+    private DBItemXmlEditorConfiguration getObject(DbLayerXmlEditor dbLayer, RenameConfiguration in, String name) throws Exception {
         DBItemXmlEditorConfiguration item = null;
         if (in.getId() != null && in.getId() > 0) {
             item = dbLayer.getObject(in.getId().longValue());
-            if (item != null && !item.getObjectType().equals(ObjectType.OTHER.name())) {
-                item = null; // dbLayer.getObject(in.getJobschedulerId(), ObjectType.OTHER.name(), name);
-            }
         }
         return item;
     }
@@ -83,7 +80,7 @@ public class RenameResourceImpl extends JOCResourceImpl implements IRenameResour
     private DBItemXmlEditorConfiguration create(SOSHibernateSession session, RenameConfiguration in, String name) throws Exception {
         DBItemXmlEditorConfiguration item = new DBItemXmlEditorConfiguration();
         item.setControllerId(in.getControllerId());
-        item.setObjectType(in.getObjectType().name());
+        item.setType(in.getObjectType().name());
         item.setName(name);
         item.setConfigurationDraft(null);
         item.setConfigurationDraftJson(null);
@@ -110,11 +107,9 @@ public class RenameResourceImpl extends JOCResourceImpl implements IRenameResour
     private void checkRequiredParameters(final RenameConfiguration in) throws Exception {
         checkRequiredParameter("controllerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
-        if (in.getObjectType().equals(ObjectType.OTHER)) {
-            checkRequiredParameter("id", in.getId());
-            checkRequiredParameter("name", in.getName());
-            checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
-        }
+        checkRequiredParameter("id", in.getId());
+        checkRequiredParameter("name", in.getName());
+        checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final RenameConfiguration in) throws Exception {

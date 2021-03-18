@@ -44,12 +44,16 @@ public class StoreResourceImpl extends JOCResourceImpl implements IStoreResource
 
                 DBItemXmlEditorConfiguration item = null;
                 String name = null;
-                if (in.getObjectType().equals(ObjectType.OTHER)) {
+                switch (in.getObjectType()) {
+                case YADE:
+                case OTHER:
                     name = in.getName();
-                    item = getOthersObject(dbLayer, in, name);
-                } else {
+                    item = getObject(dbLayer, in, name);
+                    break;
+                default:
                     name = JocXmlEditor.getConfigurationName(in.getObjectType());
                     item = getStandardObject(dbLayer, in);
+                    break;
                 }
 
                 if (item == null) {
@@ -75,13 +79,10 @@ public class StoreResourceImpl extends JOCResourceImpl implements IStoreResource
         }
     }
 
-    private DBItemXmlEditorConfiguration getOthersObject(DbLayerXmlEditor dbLayer, StoreConfiguration in, String name) throws Exception {
+    private DBItemXmlEditorConfiguration getObject(DbLayerXmlEditor dbLayer, StoreConfiguration in, String name) throws Exception {
         DBItemXmlEditorConfiguration item = null;
         if (in.getId() != null && in.getId() > 0) {
             item = dbLayer.getObject(in.getId().longValue());
-            if (item != null && !item.getObjectType().equals(ObjectType.OTHER.name())) {
-                item = null;// dbLayer.getObject(in.getJobschedulerId(), ObjectType.OTHER.name(), name);
-            }
         }
         return item;
     }
@@ -94,14 +95,14 @@ public class StoreResourceImpl extends JOCResourceImpl implements IStoreResource
     private DBItemXmlEditorConfiguration create(SOSHibernateSession session, StoreConfiguration in, String name) throws Exception {
         DBItemXmlEditorConfiguration item = new DBItemXmlEditorConfiguration();
         item.setControllerId(in.getControllerId());
-        item.setObjectType(in.getObjectType().name());
+        item.setType(in.getObjectType().name());
         item.setName(name.trim());
         item.setConfigurationDraft(in.getConfiguration());
         item.setConfigurationDraftJson(in.getConfigurationJson());
-        if (in.getObjectType().equals(ObjectType.OTHER)) {
-            item.setSchemaLocation(in.getSchemaIdentifier());
-        } else {
+        if (in.getObjectType().equals(ObjectType.NOTIFICATION)) {
             item.setSchemaLocation(JocXmlEditor.getStandardRelativeSchemaLocation(in.getObjectType()));
+        } else {
+            item.setSchemaLocation(in.getSchemaIdentifier());
         }
         item.setAuditLogId(new Long(0));// TODO
         item.setAccount(getAccount());
@@ -116,10 +117,10 @@ public class StoreResourceImpl extends JOCResourceImpl implements IStoreResource
         item.setName(name.trim());
         item.setConfigurationDraft(SOSString.isEmpty(in.getConfiguration()) ? null : in.getConfiguration());
         item.setConfigurationDraftJson(in.getConfigurationJson());
-        if (in.getObjectType().equals(ObjectType.OTHER)) {
-            item.setSchemaLocation(in.getSchemaIdentifier());
-        } else {
+        if (in.getObjectType().equals(ObjectType.NOTIFICATION)) {
             item.setSchemaLocation(JocXmlEditor.getStandardRelativeSchemaLocation(in.getObjectType()));
+        } else {
+            item.setSchemaLocation(in.getSchemaIdentifier());
         }
         // item.setAuditLogId(new Long(0));// TODO
         item.setAccount(getAccount());
@@ -133,7 +134,7 @@ public class StoreResourceImpl extends JOCResourceImpl implements IStoreResource
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         checkRequiredParameter("configuration", in.getConfiguration());
         checkRequiredParameter("configurationJson", in.getConfigurationJson());
-        if (in.getObjectType().equals(ObjectType.OTHER)) {
+        if (!in.getObjectType().equals(ObjectType.NOTIFICATION)) {
             checkRequiredParameter("id", in.getId());
             checkRequiredParameter("name", in.getName());
             checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
@@ -150,7 +151,7 @@ public class StoreResourceImpl extends JOCResourceImpl implements IStoreResource
         StoreConfigurationAnswer answer = new StoreConfigurationAnswer();
         answer.setId(id.intValue());
         answer.setModified(modified);
-        if (!type.equals(ObjectType.OTHER)) {
+        if (type.equals(ObjectType.NOTIFICATION)) {
             answer.setMessage(new AnswerMessage());
             if (deployed == null) {
                 answer.getMessage().setCode(JocXmlEditor.MESSAGE_CODE_LIVE_NOT_EXIST);

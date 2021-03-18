@@ -53,7 +53,6 @@ public class SchemaDownloadResourceImpl extends JOCResourceImpl implements ISche
 
             JOCDefaultResponse response = checkPermissions(accessToken, in);
             if (response == null) {
-
                 return download(in);
             }
             return response;
@@ -68,7 +67,7 @@ public class SchemaDownloadResourceImpl extends JOCResourceImpl implements ISche
     private void checkRequiredParameters(final SchemaDownloadConfiguration in) throws Exception {
         checkRequiredParameter("controllerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
-        if (in.getObjectType().equals(ObjectType.OTHER)) {
+        if (!in.getObjectType().equals(ObjectType.NOTIFICATION)) {
             checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
         }
     }
@@ -82,12 +81,16 @@ public class SchemaDownloadResourceImpl extends JOCResourceImpl implements ISche
     private JOCDefaultResponse download(SchemaDownloadConfiguration in) throws Exception {
 
         java.nio.file.Path path = null;
-        if (in.getObjectType().equals(ObjectType.OTHER)) {
-            path = JocXmlEditor.getOthersSchema(in.getSchemaIdentifier(), true);
-        } else {
+        switch (in.getObjectType()) {
+        case YADE:
+        case OTHER:
+            path = JocXmlEditor.getSchema(in.getObjectType(), in.getSchemaIdentifier(), true);
+            break;
+        default:
             path = JocXmlEditor.getStandardAbsoluteSchemaLocation(in.getObjectType());
-        }
+            break;
 
+        }
         if (!Files.exists(path)) {
             throw new Exception(String.format("[%s][%s]schema file not found", in.getSchemaIdentifier(), path.toString()));
         }

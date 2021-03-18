@@ -22,12 +22,8 @@ import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.xmleditor.common.AnswerMessage;
-import com.sos.joc.model.xmleditor.common.ObjectType;
-import com.sos.joc.model.xmleditor.common.ObjectVersionState;
 import com.sos.joc.model.xmleditor.read.ReadConfiguration;
 import com.sos.joc.model.xmleditor.read.other.AnswerConfiguration;
-import com.sos.joc.model.xmleditor.read.other.AnswerConfigurationState;
 import com.sos.joc.model.xmleditor.read.other.ReadOtherConfigurationAnswer;
 import com.sos.joc.model.xmleditor.read.standard.ReadStandardConfigurationAnswer;
 import com.sos.joc.xmleditor.common.Xml2JsonConverter;
@@ -53,13 +49,14 @@ public class ReadResourceImpl extends JOCResourceImpl implements IReadResource {
             JOCDefaultResponse response = checkPermissions(accessToken, in);
             if (response == null) {
                 JocXmlEditor.setRealPath();
-
-                if (in.getObjectType().equals(ObjectType.OTHER)) {
-                    ReadOtherConfigurationAnswer answer = handleOtherConfigurations(in);
-                    response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
-                } else {
-                    ReadStandardConfigurationAnswer answer = handleStandardConfiguration(in);
-                    response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
+                switch (in.getObjectType()) {
+                case YADE:
+                case OTHER:
+                    response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(handleConfigurations(in)));
+                    break;
+                default:
+                    response = JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(handleStandardConfiguration(in)));
+                    break;
                 }
             }
             return response;
@@ -91,13 +88,13 @@ public class ReadResourceImpl extends JOCResourceImpl implements IReadResource {
         return handler.getAnswer();
     }
 
-    private ReadOtherConfigurationAnswer handleOtherConfigurations(ReadConfiguration in) throws Exception {
+    private ReadOtherConfigurationAnswer handleConfigurations(ReadConfiguration in) throws Exception {
 
         ReadOtherConfigurationAnswer answer = new ReadOtherConfigurationAnswer();
 
         if (in.getId() == null || in.getId() <= 0) {
             ArrayList<String> schemas = new ArrayList<String>();
-            List<Map<String, Object>> items = getOtherProperties(in, "id,name,schemaLocation", "order by created");
+            List<Map<String, Object>> items = getConfigurationProperties(in, "id,name,schemaLocation", "order by created");
             if (items != null && items.size() > 0) {
                 ArrayList<AnswerConfiguration> configurations = new ArrayList<AnswerConfiguration>();
                 for (int i = 0; i < items.size(); i++) {
@@ -116,18 +113,16 @@ public class ReadResourceImpl extends JOCResourceImpl implements IReadResource {
                 }
                 answer.setConfigurations(configurations);
             }
-
-            List<java.nio.file.Path> files = JocXmlEditor.getOthersSchemaFiles();
+            List<java.nio.file.Path> files = JocXmlEditor.getSchemaFiles(in.getObjectType());
             if (files != null && files.size() > 0) {
                 for (int i = 0; i < files.size(); i++) {
                     // fileName
-                    String schema = JocXmlEditor.getOthersSchemaIdentifier(files.get(i));
+                    String schema = JocXmlEditor.getSchemaIdentifier(files.get(i));
                     if (!schemas.contains(schema)) {
                         schemas.add(schema);
                     }
                 }
             }
-
             if (schemas.size() > 0) {
                 Collections.sort(schemas);
                 answer.setSchemas(schemas);
@@ -142,8 +137,8 @@ public class ReadResourceImpl extends JOCResourceImpl implements IReadResource {
             }
             answer.getConfiguration().setId(item.getId().intValue());
             answer.getConfiguration().setName(item.getName());
-            answer.getConfiguration().setSchema(JocXmlEditor.readOthersSchema(item.getSchemaLocation()));
-            answer.getConfiguration().setSchemaIdentifier(JocXmlEditor.getOthersSchemaIdentifier(item.getSchemaLocation()));
+            answer.getConfiguration().setSchema(JocXmlEditor.readSchema(in.getObjectType(), item.getSchemaLocation()));
+            answer.getConfiguration().setSchemaIdentifier(JocXmlEditor.getHttpOrFileSchemaIdentifier(item.getSchemaLocation()));
             answer.getConfiguration().setConfiguration(item.getConfigurationDraft());
             if (item.getConfigurationDraftJson() == null) {
                 if (item.getConfigurationDraft() == null) {
@@ -151,19 +146,19 @@ public class ReadResourceImpl extends JOCResourceImpl implements IReadResource {
                 } else {
                     answer.getConfiguration().setRecreateJson(true);
                     Xml2JsonConverter converter = new Xml2JsonConverter();
-                    answer.getConfiguration().setConfigurationJson(converter.convert(ObjectType.OTHER, JocXmlEditor.getOthersSchema(item
-                            .getSchemaLocation(), false), item.getConfigurationDraft()));
+                    answer.getConfiguration().setConfigurationJson(converter.convert(in.getObjectType(), JocXmlEditor.getSchema(in.getObjectType(),
+                            item.getSchemaLocation(), false), item.getConfigurationDraft()));
                 }
             } else {
                 answer.getConfiguration().setRecreateJson(false);
                 answer.getConfiguration().setConfigurationJson(item.getConfigurationDraftJson());
             }
-            answer.getConfiguration().setState(new AnswerConfigurationState());
-            answer.getConfiguration().getState().setMessage(new AnswerMessage());
-            answer.getConfiguration().getState().setDeployed(false);
-            answer.getConfiguration().getState().getMessage().setMessage(JocXmlEditor.MESSAGE_LIVE_NOT_EXIST);
-            answer.getConfiguration().getState().getMessage().setCode(JocXmlEditor.CODE_OBJECT_TYPE_OTHER);
-            answer.getConfiguration().getState().setVersionState(ObjectVersionState.LIVE_NOT_EXIST);
+            // answer.getConfiguration().setState(new AnswerConfigurationState());
+            // answer.getConfiguration().getState().setMessage(new AnswerMessage());
+            // answer.getConfiguration().getState().setDeployed(false);
+            // answer.getConfiguration().getState().getMessage().setMessage(JocXmlEditor.MESSAGE_LIVE_NOT_EXIST);
+            // answer.getConfiguration().getState().getMessage().setCode(JocXmlEditor.CODE_OBJECT_TYPE_OTHER);
+            // answer.getConfiguration().getState().setVersionState(ObjectVersionState.LIVE_NOT_EXIST);
 
             answer.getConfiguration().setModified(item.getModified());
 
@@ -216,14 +211,14 @@ public class ReadResourceImpl extends JOCResourceImpl implements IReadResource {
         }
     }
 
-    private List<Map<String, Object>> getOtherProperties(ReadConfiguration in, String properties, String orderBy) throws Exception {
+    private List<Map<String, Object>> getConfigurationProperties(ReadConfiguration in, String properties, String orderBy) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
 
             session.beginTransaction();
-            List<Map<String, Object>> items = dbLayer.getObjectProperties(in.getControllerId(), ObjectType.OTHER.name(), properties, orderBy);
+            List<Map<String, Object>> items = dbLayer.getObjectProperties(in.getControllerId(), in.getObjectType().name(), properties, orderBy);
             session.commit();
             return items;
         } catch (Throwable e) {

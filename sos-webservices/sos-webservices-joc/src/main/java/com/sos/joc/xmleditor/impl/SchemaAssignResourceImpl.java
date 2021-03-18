@@ -61,34 +61,33 @@ public class SchemaAssignResourceImpl extends JOCResourceImpl implements ISchema
     }
 
     private SchemaAssignConfigurationAnswer getSuccess(final SchemaAssignConfiguration in) throws Exception {
-        if (in.getObjectType().equals(ObjectType.OTHER)) {
-            SchemaHandler h = new SchemaHandler();
-            h.process(in.getUri(), in.getFileName(), in.getFileContent());
-            if (Files.exists(h.getTargetTemp())) {
-                boolean equals = h.getTargetTemp().equals(h.getTarget());
-                try {
-                    String schema = JocXmlEditor.getFileContent(h.getTargetTemp());
-                    JocXmlEditor.parseXml(schema);
-
-                    if (!equals) {
-                        Files.move(h.getTargetTemp(), h.getTarget(), StandardCopyOption.REPLACE_EXISTING);
-                    }
-
-                    SchemaAssignConfigurationAnswer answer = new SchemaAssignConfigurationAnswer();
-                    answer.setSchema(schema);
-                    answer.setSchemaIdentifier(JocXmlEditor.getOthersSchemaIdentifier(h.getSource()));
-                    return answer;
-                } catch (Exception e) {
-                    h.onError(!equals);
-                    throw e;
-                }
-            } else {
-                throw new Exception(String.format("[%s][targetTemp=%s][target=%s]target file not found", h.getSource(), h.getTargetTemp(), h
-                        .getTarget()));
-            }
-        } else {
+        if (in.getObjectType().equals(ObjectType.NOTIFICATION)) {
             throw new Exception(String.format("[%s]not supported", in.getObjectType().name()));
         }
-    }
 
+        SchemaHandler h = new SchemaHandler();
+        h.process(in.getObjectType(), in.getUri(), in.getFileName(), in.getFileContent());
+        if (Files.exists(h.getTargetTemp())) {
+            boolean equals = h.getTargetTemp().equals(h.getTarget());
+            try {
+                String schema = JocXmlEditor.getFileContent(h.getTargetTemp());
+                JocXmlEditor.parseXml(schema);
+
+                if (!equals) {
+                    Files.move(h.getTargetTemp(), h.getTarget(), StandardCopyOption.REPLACE_EXISTING);
+                }
+
+                SchemaAssignConfigurationAnswer answer = new SchemaAssignConfigurationAnswer();
+                answer.setSchema(schema);
+                answer.setSchemaIdentifier(JocXmlEditor.getHttpOrFileSchemaIdentifier(h.getSource()));
+                return answer;
+            } catch (Exception e) {
+                h.onError(!equals);
+                throw e;
+            }
+        } else {
+            throw new Exception(String.format("[%s][targetTemp=%s][target=%s]target file not found", h.getSource(), h.getTargetTemp(), h
+                    .getTarget()));
+        }
+    }
 }

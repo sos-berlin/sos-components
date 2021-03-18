@@ -31,9 +31,6 @@ public class JocXmlEditor {
     private static final Logger LOGGER = LoggerFactory.getLogger(JocXmlEditor.class);
 
     public static final String APPLICATION_PATH = "xmleditor";
-    public static final String AVAILABILITY_STARTING_WITH = "1.13.1";
-    public static final String MESSAGE_UNSUPPORTED_WEB_SERVICE = String.format("Unsupported web service: JobScheduler needs at least version %s",
-            AVAILABILITY_STARTING_WITH);
 
     public static final String XML_DECLARATION = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
     public static final String CHARSET = "UTF-8";
@@ -101,54 +98,56 @@ public class JocXmlEditor {
         return null;
     }
 
-    public static List<Path> getOthersSchemaFiles() throws Exception {
+    public static List<Path> getSchemaFiles(ObjectType type) throws Exception {
         setRealPath();
         Path path = realPath == null ? Paths.get(System.getProperty("user.dir")) : realPath;
-        return getFiles(path.resolve(getOthersRelativeSchemaLocation().toString()), false, "xsd");
+        StringBuilder sb = type.equals(ObjectType.YADE) ? getYadeRelativeSchemaLocation() : getOthersRelativeSchemaLocation();
+        return getFiles(path.resolve(sb.toString()), false, "xsd");
     }
 
-    public static Path getOthersSchema(String name) throws Exception {
+    public static Path getSchema(ObjectType type, String name) throws Exception {
         setRealPath();
         Path path = realPath;
         if (path != null) {
-            path = path.resolve(getOthersRelativeSchemaLocation(name));
+            path = path.resolve(getRelativeSchemaLocation(type, name));
         }
         return path;
     }
 
-    public static Path getOthersHttpSchema(String name) throws Exception {
+    public static Path getHttpSchema(ObjectType type, String name) throws Exception {
         setRealPath();
         Path path = realPath;
         if (path != null) {
-            path = path.resolve(getOthersRelativeHttpSchemaLocation(name));
+            path = path.resolve(getRelativeHttpSchemaLocation(type, name));
         }
         return path;
     }
 
-    public static Path getOthersSchema(String path, boolean downloadIfHttp) throws Exception {
+    public static Path getSchema(ObjectType type, String path, boolean downloadIfHttp) throws Exception {
         Path file = null;
         if (isHttp(path)) {
             if (downloadIfHttp) {
                 try {
                     URI uri = toURI(path);
-                    file = downloadOthersSchema(uri, getFileName(uri));
+                    file = downloadSchema(type, uri, getFileName(uri));
                 } catch (Throwable e) {
-                    LOGGER.error(String.format("[%s]can't download file, try to find in the %s location ..", path,
-                            getOthersRelativeHttpSchemaLocation()));
+                    StringBuilder httpLocation = type.equals(ObjectType.YADE) ? getYadeRelativeHttpSchemaLocation()
+                            : getOthersRelativeHttpSchemaLocation();
+                    LOGGER.error(String.format("[%s]can't download file, try to find in the %s location ..", path, httpLocation));
                 }
             }
             if (file == null) {
-                file = JocXmlEditor.getOthersHttpSchema(getFileName(toURI(path)));
+                file = JocXmlEditor.getHttpSchema(type, getFileName(toURI(path)));
             }
 
         } else {
-            file = JocXmlEditor.getOthersSchema(getFileName(Paths.get(path)));
+            file = JocXmlEditor.getSchema(type, getFileName(Paths.get(path)));
         }
         return file;
     }
 
-    public static String readOthersSchema(String path) throws Exception {
-        Path file = getOthersSchema(path, true);
+    public static String readSchema(ObjectType type, String path) throws Exception {
+        Path file = getSchema(type, path, true);
         if (Files.exists(file)) {
             return getFileContent(file);
         } else {
@@ -156,19 +155,8 @@ public class JocXmlEditor {
         }
     }
 
-    public static Path downloadOthersSchemaX(URI uri, String targetName) throws Exception {
-        Path target = getOthersHttpSchema(targetName);
-        try (InputStream inputStream = uri.toURL().openStream()) {
-            Files.copy(inputStream, target, StandardCopyOption.REPLACE_EXISTING);
-        } catch (Throwable ex) {
-            LOGGER.error(ex.toString(), ex);
-            throw ex;
-        }
-        return target;
-    }
-
-    public static Path downloadOthersSchema(URI uri, String targetName) throws Exception {
-        Path target = getOthersHttpSchema(targetName);
+    public static Path downloadSchema(ObjectType type, URI uri, String targetName) throws Exception {
+        Path target = getHttpSchema(type, targetName);
 
         HttpURLConnection conn = null;
         try {
@@ -190,6 +178,10 @@ public class JocXmlEditor {
                 throw new AssignSchemaException(msg);
             }
             try (InputStream inputStream = conn.getInputStream()) {
+                Path parent = target.getParent();
+                if (parent != null && !Files.exists(parent)) {
+                    Files.createDirectories(parent);
+                }
                 Files.copy(inputStream, target, StandardCopyOption.REPLACE_EXISTING);
             } catch (Throwable ex) {
                 LOGGER.error(ex.toString(), ex);
@@ -205,26 +197,26 @@ public class JocXmlEditor {
         return target;
     }
 
-    public static Path copyOthersSchema(Path source) throws Exception {
-        Path target = JocXmlEditor.getOthersSchema(source.getFileName().toString());
+    public static Path copySchema(ObjectType type, Path source) throws Exception {
+        Path target = JocXmlEditor.getSchema(type, source.getFileName().toString());
         Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
         return target;
     }
 
-    public static Path createOthersSchema(String fileName, String fileContent) throws Exception {
-        Path target = JocXmlEditor.getOthersSchema(fileName);
+    public static Path createSchema(ObjectType type, String fileName, String fileContent) throws Exception {
+        Path target = JocXmlEditor.getSchema(type, fileName);
         Files.write(target, fileContent.getBytes(JocXmlEditor.CHARSET), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         return target;
     }
 
-    public static String getOthersSchemaIdentifier(String path) {
+    public static String getHttpOrFileSchemaIdentifier(String path) {
         if (isHttp(path)) {
             return path;
         }
         return getFileName(Paths.get(path));
     }
 
-    public static String getOthersSchemaIdentifier(Path path) {
+    public static String getSchemaIdentifier(Path path) {
         return getFileName(path);
     }
 
@@ -264,8 +256,19 @@ public class JocXmlEditor {
         return null;
     }
 
+    public static String getYadeSchemaLocation4Db(String schemaIdentifier) {
+        if (SOSString.isEmpty(schemaIdentifier)) {
+            return JobSchedulerXmlEditor.SCHEMA_FILENAME_YADE;
+        }
+        return schemaIdentifier;
+    }
+
     public static StringBuilder getYadeRelativeSchemaLocation() {
         return new StringBuilder(JOC_SCHEMA_LOCATION).append("/yade");
+    }
+
+    public static StringBuilder getYadeRelativeHttpSchemaLocation() {
+        return getYadeRelativeSchemaLocation().append("/http");
     }
 
     public static StringBuilder getNotificationRelativeSchemaLocation() {
@@ -280,12 +283,22 @@ public class JocXmlEditor {
         return getOthersRelativeSchemaLocation().append("/http");
     }
 
-    public static String getOthersRelativeSchemaLocation(final String name) {
-        return getOthersRelativeSchemaLocation().append("/").append(name).toString();
+    public static String getRelativeSchemaLocation(ObjectType type, final String name) {
+        switch (type) {
+        case YADE:
+            return getYadeRelativeSchemaLocation().append("/").append(name).toString();
+        default:// OTHER
+            return getOthersRelativeSchemaLocation().append("/").append(name).toString();
+        }
     }
 
-    public static String getOthersRelativeHttpSchemaLocation(final String name) {
-        return getOthersRelativeHttpSchemaLocation().append("/").append(name).toString();
+    public static String getRelativeHttpSchemaLocation(ObjectType type, final String name) {
+        switch (type) {
+        case YADE:
+            return getYadeRelativeHttpSchemaLocation().append("/").append(name).toString();
+        default:// OTHER
+            return getOthersRelativeHttpSchemaLocation().append("/").append(name).toString();
+        }
     }
 
     public static String getConfigurationName(final ObjectType type) {

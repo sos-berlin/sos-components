@@ -24,7 +24,7 @@ public class Xml2JsonResourceImpl extends JOCResourceImpl implements IXml2JsonRe
             initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, Xml2JsonConfiguration.class);
             Xml2JsonConfiguration in = Globals.objectMapper.readValue(filterBytes, Xml2JsonConfiguration.class);
-            
+
             checkRequiredParameters(in);
 
             JOCDefaultResponse response = checkPermissions(accessToken, in);
@@ -32,12 +32,15 @@ public class Xml2JsonResourceImpl extends JOCResourceImpl implements IXml2JsonRe
                 JocXmlEditor.parseXml(in.getConfiguration());
 
                 java.nio.file.Path schema = null;
-                if (in.getObjectType().equals(ObjectType.OTHER)) {
-                    schema = JocXmlEditor.getOthersSchema(in.getSchemaIdentifier(), false);
-                } else {
+                switch (in.getObjectType()) {
+                case YADE:
+                case OTHER:
+                    schema = JocXmlEditor.getSchema(in.getObjectType(), in.getSchemaIdentifier(), false);
+                    break;
+                default:
                     schema = JocXmlEditor.getStandardAbsoluteSchemaLocation(in.getObjectType());
+                    break;
                 }
-
                 Xml2JsonConverter converter = new Xml2JsonConverter();
                 response = JOCDefaultResponse.responseStatus200(getSuccess(converter.convert(in.getObjectType(), schema, in.getConfiguration())));
             }
@@ -54,7 +57,7 @@ public class Xml2JsonResourceImpl extends JOCResourceImpl implements IXml2JsonRe
         checkRequiredParameter("controllerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
         checkRequiredParameter("configuration", in.getConfiguration());
-        if (in.getObjectType().equals(ObjectType.OTHER)) {
+        if (!in.getObjectType().equals(ObjectType.NOTIFICATION)) {
             checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
         }
     }

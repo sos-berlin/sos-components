@@ -34,17 +34,21 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
             initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ValidateConfiguration.class);
             ValidateConfiguration in = Globals.objectMapper.readValue(filterBytes, ValidateConfiguration.class);
-            
+
             checkRequiredParameters(in);
 
             JOCDefaultResponse response = checkPermissions(accessToken, in);
 
             if (response == null) {
                 java.nio.file.Path schema = null;
-                if (in.getObjectType().equals(ObjectType.OTHER)) {
-                    schema = JocXmlEditor.getOthersSchema(in.getSchemaIdentifier(), false);
-                } else {
+                switch (in.getObjectType()) {
+                case YADE:
+                case OTHER:
+                    schema = JocXmlEditor.getSchema(in.getObjectType(), in.getSchemaIdentifier(), false);
+                    break;
+                default:
                     schema = JocXmlEditor.getStandardAbsoluteSchemaLocation(in.getObjectType());
+                    break;
                 }
                 // check for vulnerabilities and validate
                 XsdValidator validator = new XsdValidator(schema);
@@ -72,10 +76,10 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
     private void checkRequiredParameters(final ValidateConfiguration in) throws Exception {
         checkRequiredParameter("controllerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
-        if (in.getObjectType().equals(ObjectType.OTHER)) {
-            checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
-        } else {
+        if (in.getObjectType().equals(ObjectType.NOTIFICATION)) {
             checkRequiredParameter("configuration", in.getConfiguration());
+        } else {
+            checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
         }
     }
 
