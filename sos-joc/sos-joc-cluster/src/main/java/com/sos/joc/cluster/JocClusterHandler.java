@@ -179,23 +179,27 @@ public class JocClusterHandler {
         if (!os.isPresent()) {
             return JocCluster.getErrorAnswer(new Exception(String.format("handler not found for %s", identifier)));
         }
-        IJocClusterService s = os.get();
 
+        AJocClusterService.setLogger();
+        LOGGER.info(String.format("[%s][restart][%s]start...", mode, identifier));
+        AJocClusterService.clearLogger();
+
+        IJocClusterService s = os.get();
         JocServiceAnswer answer = s.getInfo();
         if (!answer.getState().equals(JocServiceAnswerState.RELAX)) {
             AJocClusterService.setLogger();
             LOGGER.info(String.format("[%s][restart][%s][wait 60s]service status %s", mode, identifier, answer.getState()));
             cluster.waitFor(60);
             answer = s.getInfo();
-            String msg = String.format("[%s][restart][%s][skip]service status %s", mode, identifier, answer.getState());
-            LOGGER.error(msg);
-            AJocClusterService.clearLogger();
-            return JocCluster.getErrorAnswer(msg);
+            if (answer.getState().equals(JocServiceAnswerState.RELAX)) {
+                LOGGER.info(String.format("[%s][restart][%s]service status %s", mode, identifier, answer.getState()));
+            } else {
+                String msg = String.format("[%s][restart][%s][skip]service status %s", mode, identifier, answer.getState());
+                LOGGER.error(msg);
+                AJocClusterService.clearLogger();
+                return JocCluster.getErrorAnswer(msg);
+            }
         }
-
-        AJocClusterService.setLogger();
-        LOGGER.info(String.format("[%s][restart][%s]start...", mode, identifier));
-        AJocClusterService.clearLogger();
 
         AJocClusterService.setLogger(identifier);
         ThreadHelper.print(mode, "[" + identifier + "]before stop");
