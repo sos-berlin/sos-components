@@ -1107,11 +1107,7 @@ public class DBLayerDeploy {
     
     public DBItemInventoryConfiguration getConfiguration(Long id) {
         try {
-            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-            hql.append(" where id = :id");
-            Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-            query.setParameter("id", id);
-            return query.getSingleResult();
+            return getSession().get(DBItemInventoryConfiguration.class, id);
         } catch(NoResultException e) {
             return null;
         } catch (SOSHibernateException e) {
@@ -1120,19 +1116,7 @@ public class DBLayerDeploy {
     }
     
     public DBItemInventoryConfiguration getConfigurationByName(String name, ConfigurationType type) {
-        try {
-            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-            hql.append(" where name = :name");
-            hql.append(" and type = :type");
-            Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-            query.setParameter("name", name);
-            query.setParameter("type", type.intValue());
-            return query.getSingleResult();
-        } catch(NoResultException e) {
-            return null;
-        } catch (SOSHibernateException e) {
-            throw new JocSosHibernateException(e);
-        } 
+        return getConfigurationByName(name, type.intValue());
     }
     
     public DBItemInventoryConfiguration getConfigurationByName(String name, Integer type) {
@@ -2322,7 +2306,8 @@ public class DBLayerDeploy {
                     .append(" on instance.agentId = aliases.agentId")
                     .append(" where instance.controllerId = :controllerId and (")
                     .append(" instance.agentName = :agentName or ")
-                    .append(" aliases.agentName = :agentName)");
+                    .append(" aliases.agentName = :agentName)")
+                    .append(" group by instance.agentId)");
                 Query<String> query = getSession().createQuery(hql.toString());
                 query.setParameter("agentName", agentName);
                 query.setParameter("controllerId", controllerId);
@@ -2362,9 +2347,10 @@ public class DBLayerDeploy {
     public  DBItemInventoryConfiguration getInvConfigurationFolder(String path) {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-            hql.append(" where path = :path");
+            hql.append(" where path = :path").append(" and type = :type");
             Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
             query.setParameter("path", path);
+            query.setParameter("type", ConfigurationType.FOLDER.intValue());
             return query.getSingleResult();
         } catch(NoResultException e) {
             return null;
@@ -2432,7 +2418,7 @@ public class DBLayerDeploy {
         try {
             StringBuilder hql = new StringBuilder("select content from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             hql.append(" where path = :path");
-            hql.append(" and type == type");
+            hql.append(" and type = :type");
             Query<String> query = getSession().createQuery(hql.toString());
             query.setParameter("path", path);
             query.setParameter("type", type.intValue());
