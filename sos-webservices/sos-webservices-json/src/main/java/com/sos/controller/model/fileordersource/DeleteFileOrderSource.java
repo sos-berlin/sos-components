@@ -32,7 +32,7 @@ public class DeleteFileOrderSource implements IDeleteObject
      * 
      */
     @JsonProperty("TYPE")
-    private DeleteType tYPE = DeleteType.fromValue("WorkflowPath");
+    private DeleteType tYPE = DeleteType.FILE_ORDER_SOURCE_ID;
     /**
      * string without < and >
      * <p>
@@ -53,11 +53,9 @@ public class DeleteFileOrderSource implements IDeleteObject
     /**
      * 
      * @param id
-     * @param tYPE
      */
-    public DeleteFileOrderSource(DeleteType tYPE, String id) {
+    public DeleteFileOrderSource(String id) {
         super();
-        this.tYPE = tYPE;
         this.id = id;
     }
 

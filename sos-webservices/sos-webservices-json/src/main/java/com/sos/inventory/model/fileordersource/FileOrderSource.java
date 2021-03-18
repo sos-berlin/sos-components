@@ -39,7 +39,7 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
      * 
      */
     @JsonProperty("TYPE")
-    private DeployType tYPE = DeployType.fromValue("Workflow");
+    private DeployType tYPE = DeployType.FILEORDERSOURCE;
     /**
      * string without < and >
      * <p>
@@ -105,13 +105,11 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
      * @param agentId
      * @param workflowPath
      * @param pattern
-     * @param tYPE
      * @param title
      * @param directory
      */
-    public FileOrderSource(DeployType tYPE, String workflowPath, String agentId, String directory, String pattern, String title, String documentationPath) {
+    public FileOrderSource(String workflowPath, String agentId, String directory, String pattern, String title, String documentationPath) {
         super();
-        this.tYPE = tYPE;
         this.workflowPath = workflowPath;
         this.agentId = agentId;
         this.directory = directory;
