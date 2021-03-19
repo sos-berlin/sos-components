@@ -320,7 +320,7 @@ public class Globals {
     private static void setJobSchedulerConnectionTimeout() {
         int defaultSeconds = 2;
         if (sosCockpitProperties != null) {
-            int seconds = sosCockpitProperties.getProperty("jobscheduler_connection_timeout", defaultSeconds);
+            int seconds = sosCockpitProperties.getProperty("controller_connection_timeout", defaultSeconds);
             httpConnectionTimeout = seconds * 1000;
             LOGGER.info("HTTP(S) connection timeout = " + seconds + "s");
         }
@@ -329,7 +329,7 @@ public class Globals {
     private static void setJobSchedulerSocketTimeout() {
         int defaultSeconds = 5;
         if (sosCockpitProperties != null) {
-            int seconds = sosCockpitProperties.getProperty("jobscheduler_socket_timeout", defaultSeconds);
+            int seconds = sosCockpitProperties.getProperty("controller_socket_timeout", defaultSeconds);
             httpSocketTimeout = seconds * 1000;
             LOGGER.info("HTTP(S) socket timeout = " + seconds + "s");
         }
