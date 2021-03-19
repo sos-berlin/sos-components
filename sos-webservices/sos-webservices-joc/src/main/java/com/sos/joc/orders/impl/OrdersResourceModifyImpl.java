@@ -39,6 +39,7 @@ import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
+import akka.actor.FSM.CurrentState;
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.item.VersionedItemId;
@@ -207,10 +208,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
         switch (action) {
         case CANCEL:
-
+            
             return OrdersHelper.cancelOrders(modifyOrders, oIds).thenApply(either -> {
                 // TODO This update must be removed when dailyplan service receives events for order state changes
-                if (either.isRight()) {
+                // TODO update bei either.isRight oder der Auftrag ist nicht mehr im Controller vorhanden.
+                if (true || either.isRight()) {
                     try {
                         // only for non-temporary orders
                         updateDailyPlan(oIds.stream().map(OrderId::string).filter(s -> !s.matches(".*#T[0-9]+-.*")).collect(Collectors.toList()));

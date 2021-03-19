@@ -42,8 +42,11 @@ import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.order.JFreshOrder;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OrderApi {
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrderApi.class);
 
     private static JFreshOrder mapToFreshOrder(FreshOrder order) {
         OrderId orderId = OrderId.of(order.getId());
@@ -104,12 +107,13 @@ public class OrderApi {
                     SOSHibernateSession sosHibernateSession = null;
 
                     try {
+                        LOGGER.debug("update submit state for history and order on controller:" + controllerId);
                         sosHibernateSession = Globals.createSosHibernateStatelessConnection("submitOrdersToController");
                         sosHibernateSession.setAutoCommit(false);
                         Globals.beginTransaction(sosHibernateSession);
 
-                        OrderApi.updatePlannedOrders(sosHibernateSession, jocError, accessToken, orders);
-                        OrderApi.updateHistory(sosHibernateSession, jocError, accessToken, listOfInsertHistoryEntries);
+                        OrderApi.updatePlannedOrders(sosHibernateSession, orders);
+                        OrderApi.updateHistory(sosHibernateSession, listOfInsertHistoryEntries);
                         jControllerProxy.api().removeOrdersWhenTerminated(freshOrderMappedIds.keySet()).thenAccept(e -> ProblemHelper
                                 .postProblemEventIfExist(e, accessToken, jocError, controllerId));
                         Globals.commit(sosHibernateSession);
@@ -127,8 +131,7 @@ public class OrderApi {
         return orders;
     }
 
-    public static void updatePlannedOrders(SOSHibernateSession sosHibernateSession, JocError jocError, String accessToken,
-            Set<PlannedOrder> addedOrders) throws SOSHibernateException {
+    public static void updatePlannedOrders(SOSHibernateSession sosHibernateSession, Set<PlannedOrder> addedOrders) throws SOSHibernateException {
 
         DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
 
@@ -139,8 +142,7 @@ public class OrderApi {
         dbLayerDailyPlannedOrders.setSubmitted(filter);
     }
 
-    public static void updateHistory(SOSHibernateSession sosHibernateSession, JocError jocError, String accessToken,
-            List<DBItemDailyPlanHistory> listOfInsertHistoryEntries) throws SOSHibernateException {
+    public static void updateHistory(SOSHibernateSession sosHibernateSession, List<DBItemDailyPlanHistory> listOfInsertHistoryEntries) throws SOSHibernateException {
 
         DBLayerDailyPlanHistory dbLayerDailyPlanHistory = new DBLayerDailyPlanHistory(sosHibernateSession);
         for (DBItemDailyPlanHistory dbItemDailyPlanHistory : listOfInsertHistoryEntries) {
