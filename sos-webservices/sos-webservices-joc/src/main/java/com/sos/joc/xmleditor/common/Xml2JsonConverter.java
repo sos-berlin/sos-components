@@ -185,7 +185,7 @@ public class Xml2JsonConverter {
             }
         }
 
-        parentBuilder.add("nodes", nodesBuilder);
+        parentBuilder.add("children", nodesBuilder);
 
         boolean show = true;
         NamedNodeMap attributes = current.getAttributes();
