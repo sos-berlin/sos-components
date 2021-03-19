@@ -175,7 +175,7 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
             orderInitiatorSettings.setPeriodBegin(settings.getPeriodBegin());
             OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings, false);
 
-            orderInitiatorRunner.submitOrders(getJocError(), getAccessToken(), listOfPlannedOrders);
+            orderInitiatorRunner.submitOrders(listOfPlannedOrders.get(0).getControllerId(),getJocError(), getAccessToken(), listOfPlannedOrders);
         }
     }
 

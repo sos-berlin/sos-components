@@ -3,19 +3,26 @@ package com.sos.js7.order.initiator.classes;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.order.FreshOrder;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.orders.DBItemDailyPlanHistory;
 import com.sos.joc.exceptions.BulkError;
@@ -42,10 +49,9 @@ import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.order.JFreshOrder;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class OrderApi {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderApi.class);
 
     private static JFreshOrder mapToFreshOrder(FreshOrder order) {
@@ -77,7 +83,7 @@ public class OrderApi {
         return JFreshOrder.of(orderId, WorkflowPath.of(order.getWorkflowPath()), scheduledFor, arguments);
     }
 
-    public static Set<PlannedOrder> addOrderToController(JocError jocError, String accessToken, Set<PlannedOrder> orders,
+    public static Set<PlannedOrder> addOrderToController(String controllerId, JocError jocError, String accessToken, Set<PlannedOrder> orders,
             List<DBItemDailyPlanHistory> listOfInsertHistoryEntries) throws JobSchedulerConnectionResetException,
             JobSchedulerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, InterruptedException, ExecutionException {
@@ -92,7 +98,8 @@ public class OrderApi {
             return either;
         };
 
-        String controllerId = OrderInitiatorGlobals.orderInitiatorSettings.getControllerId();
+        LOGGER.debug("update submit state for history and order on controller::" + controllerId);
+
         Map<Boolean, Set<Either<Err419, JFreshOrder>>> freshOrders = orders.stream().map(mapper).collect(Collectors.groupingBy(Either::isRight,
                 Collectors.toSet()));
         final Map<OrderId, JFreshOrder> freshOrderMappedIds = freshOrders.get(true).stream().map(Either::get).collect(Collectors.toMap(
@@ -101,48 +108,88 @@ public class OrderApi {
         if (freshOrders.containsKey(true) && !freshOrders.get(true).isEmpty()) {
 
             JControllerProxy jControllerProxy = Proxy.of(controllerId);
+            if (Proxies.isCoupled(controllerId)) {
+                LOGGER.debug("Controller " + controllerId + " is coupled with proxy");
+            } else {
+                LOGGER.warn("Controller " + controllerId + " is NOT coupled with proxy");
+            }
 
-            jControllerProxy.addOrders(Flux.fromIterable(freshOrderMappedIds.values())).thenAccept(either -> {
-                if (either.isRight()) {
-                    SOSHibernateSession sosHibernateSession = null;
+            try {
+                jControllerProxy.addOrders(Flux.fromIterable(freshOrderMappedIds.values())).get(30,TimeUnit.SECONDS);
+                
+                SOSHibernateSession sosHibernateSession = null;
+                try {
+                    sosHibernateSession = Globals.createSosHibernateStatelessConnection("addOrderToController");
+                    sosHibernateSession.setAutoCommit(false);
+                    Globals.beginTransaction(sosHibernateSession);
 
-                    try {
-                        LOGGER.debug("update submit state for history and order on controller:" + controllerId);
-                        sosHibernateSession = Globals.createSosHibernateStatelessConnection("submitOrdersToController");
-                        sosHibernateSession.setAutoCommit(false);
-                        Globals.beginTransaction(sosHibernateSession);
+                    OrderApi.updatePlannedOrders(sosHibernateSession, freshOrderMappedIds.keySet(), controllerId);
+                    OrderApi.updateHistory(sosHibernateSession, listOfInsertHistoryEntries);
+                    jControllerProxy.api().removeOrdersWhenTerminated(freshOrderMappedIds.keySet()).thenAccept(e -> ProblemHelper
+                            .postProblemEventIfExist(e, accessToken, jocError, controllerId));
+                    Globals.commit(sosHibernateSession);
 
-                        OrderApi.updatePlannedOrders(sosHibernateSession, orders);
-                        OrderApi.updateHistory(sosHibernateSession, listOfInsertHistoryEntries);
-                        jControllerProxy.api().removeOrdersWhenTerminated(freshOrderMappedIds.keySet()).thenAccept(e -> ProblemHelper
-                                .postProblemEventIfExist(e, accessToken, jocError, controllerId));
-                        Globals.commit(sosHibernateSession);
-
-                    } catch (Exception e) {
-                        ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, controllerId);
-                    } finally {
-                        Globals.disconnect(sosHibernateSession);
-                    }
-                } else {
-                    ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
+                } catch (Exception e) {
+                    ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, controllerId);
+                } finally {
+                    Globals.disconnect(sosHibernateSession);
                 }
-            });
+                
+            } catch (TimeoutException e1) {
+                LOGGER.warn("TimeOut during order submit");
+            }
+            
+
+          /*  try {
+              
+                jControllerProxy.addOrders(Flux.fromIterable(freshOrderMappedIds.values())).thenAccept(either -> {
+                    if (either.isRight()) {
+
+                        SOSHibernateSession sosHibernateSession = null;
+                        try {
+                            sosHibernateSession = Globals.createSosHibernateStatelessConnection("addOrderToController");
+                            sosHibernateSession.setAutoCommit(false);
+                            Globals.beginTransaction(sosHibernateSession);
+
+                            OrderApi.updatePlannedOrders(sosHibernateSession, freshOrderMappedIds.keySet(), controllerId);
+                            OrderApi.updateHistory(sosHibernateSession, listOfInsertHistoryEntries);
+                            jControllerProxy.api().removeOrdersWhenTerminated(freshOrderMappedIds.keySet()).thenAccept(e -> ProblemHelper
+                                    .postProblemEventIfExist(e, accessToken, jocError, controllerId));
+                            Globals.commit(sosHibernateSession);
+
+                        } catch (Exception e) {
+                            ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, controllerId);
+                        } finally {
+                            Globals.disconnect(sosHibernateSession);
+                        }
+                    } else {
+                        ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
+                    }
+                }).get(30,TimeUnit.SECONDS);
+            } catch (TimeoutException e) {
+               LOGGER.warn("TimeOut during order submit");
+            }*/
+
         }
+
         return orders;
     }
 
-    public static void updatePlannedOrders(SOSHibernateSession sosHibernateSession, Set<PlannedOrder> addedOrders) throws SOSHibernateException {
+    public static void updatePlannedOrders(SOSHibernateSession sosHibernateSession, Set<OrderId> addedOrders, String controllerId)
+            throws SOSHibernateException {
 
         DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
 
         FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-        filter.setControllerId(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
-        filter.setSetOfPlannedOrder(addedOrders);
+        filter.setControllerId(controllerId);
         filter.setSubmitted(true);
+        filter.setSetOfOrders(addedOrders);
         dbLayerDailyPlannedOrders.setSubmitted(filter);
+         
     }
 
-    public static void updateHistory(SOSHibernateSession sosHibernateSession, List<DBItemDailyPlanHistory> listOfInsertHistoryEntries) throws SOSHibernateException {
+    public static void updateHistory(SOSHibernateSession sosHibernateSession, List<DBItemDailyPlanHistory> listOfInsertHistoryEntries)
+            throws SOSHibernateException {
 
         DBLayerDailyPlanHistory dbLayerDailyPlanHistory = new DBLayerDailyPlanHistory(sosHibernateSession);
         for (DBItemDailyPlanHistory dbItemDailyPlanHistory : listOfInsertHistoryEntries) {

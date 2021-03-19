@@ -228,7 +228,7 @@ public class DBLayerDailyPlannedOrders {
         if (filter.getSetOfOrders() != null && filter.getSetOfOrders().size() > 0) {
             where += and + "(";
             for (OrderId orderId : filter.getSetOfOrders()) {
-                where += " p.orderId = '" + orderId.toString() + "' or";
+                where += " p.orderId = '" + orderId.string() + "' or";
             }
             where += " 1=0)";
         }
@@ -471,6 +471,8 @@ public class DBLayerDailyPlannedOrders {
             filter.setSubmitted(null);
             hql = "update  " + DBItemDailyPlannedOrders + " p set submitted=0,submitTime=null  " + getWhere(filter);
         }
+        LOGGER.debug("Update submitting on controller:" + hql);
+
 
         Query<DBItemDailyPlanSubmissions> query = sosHibernateSession.createQuery(hql);
 

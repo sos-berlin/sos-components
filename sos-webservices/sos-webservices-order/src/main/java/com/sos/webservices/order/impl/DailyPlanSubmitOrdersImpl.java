@@ -155,7 +155,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
 
                     List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
                     Globals.commit(sosHibernateSession);
-                    orderInitiatorRunner.submitOrders(getJocError(), getAccessToken(), listOfPlannedOrders);
+                    orderInitiatorRunner.submitOrders(controllerId, getJocError(), getAccessToken(), listOfPlannedOrders);
                 }
             }
         } finally {

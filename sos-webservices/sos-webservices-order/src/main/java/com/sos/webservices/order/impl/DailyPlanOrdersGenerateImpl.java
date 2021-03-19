@@ -73,8 +73,13 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
             orderInitiatorSettings.setOverwrite(dailyPlanOrderSelector.getOverwrite());
             orderInitiatorSettings.setSubmit(dailyPlanOrderSelector.getWithSubmit());
 
+            if (settings != null) {
             orderInitiatorSettings.setTimeZone(settings.getTimeZone());
             orderInitiatorSettings.setPeriodBegin(settings.getPeriodBegin());
+            }else {
+                orderInitiatorSettings.setTimeZone("Europe/Berlin");
+                orderInitiatorSettings.setPeriodBegin("00:00");
+            }
 
             OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings, false);
             if (dailyPlanOrderSelector.getControllerIds() == null) {
@@ -97,8 +102,8 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
                 scheduleSource = new ScheduleSourceDB(dailyPlanOrderSelector);
 
                 orderInitiatorRunner.readSchedules(scheduleSource);
-                orderInitiatorRunner.generateDailyPlan(getJocError(), accessToken, dailyPlanOrderSelector.getDailyPlanDate(), dailyPlanOrderSelector
-                        .getWithSubmit());
+                orderInitiatorRunner.generateDailyPlan(controllerId, getJocError(), accessToken, dailyPlanOrderSelector.getDailyPlanDate(),
+                        dailyPlanOrderSelector.getWithSubmit());
 
                 DailyPlanAudit orderAudit = new DailyPlanAudit(controllerId, dailyPlanOrderSelector.getAuditLog());
                 logAuditMessage(orderAudit);
@@ -118,9 +123,11 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
     }
 
     private void setSettings() throws Exception {
-        GlobalSettingsReader reader = new GlobalSettingsReader();
-        AConfigurationSection section = Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
-        this.settings = reader.getSettings(section);
+        if (Globals.configurationGlobals != null) {
+            GlobalSettingsReader reader = new GlobalSettingsReader();
+            AConfigurationSection section = Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
+            this.settings = reader.getSettings(section);
+        }
     }
 
 }

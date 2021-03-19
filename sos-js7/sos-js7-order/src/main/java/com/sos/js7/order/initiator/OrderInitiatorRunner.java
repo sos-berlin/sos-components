@@ -115,7 +115,7 @@ public class OrderInitiatorRunner extends TimerTask {
         this.fromService = fromService;
     }
 
-    public void generateDailyPlan(JocError jocError, String accessToken, String dailyPlanDate, Boolean withSubmit) throws JsonParseException,
+    public void generateDailyPlan(String controllerId, JocError jocError, String accessToken, String dailyPlanDate, Boolean withSubmit) throws JsonParseException,
             JsonMappingException, DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, IOException, ParseException, SOSException, URISyntaxException, JobSchedulerConnectionResetException,
             JobSchedulerConnectionRefusedException, InterruptedException, ExecutionException, TimeoutException {
@@ -129,19 +129,19 @@ public class OrderInitiatorRunner extends TimerTask {
                 .getControllerId() + " day: " + dailyPlanDate);
 
         if (orderListSynchronizer.getListOfPlannedOrders().size() > 0) {
-            orderListSynchronizer.addPlannedOrderToControllerAndDB(withSubmit);
+            orderListSynchronizer.addPlannedOrderToControllerAndDB(controllerId, withSubmit);
         }
         orderListSynchronizer.resetListOfPlannedOrders();
     }
 
-    public void generateDailyPlan(String dailyPlanDate, Boolean withSubmit) throws JsonParseException, JsonMappingException,
+    public void generateDailyPlan(String controllerId, String dailyPlanDate, Boolean withSubmit) throws JsonParseException, JsonMappingException,
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
             JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, IOException, ParseException, SOSException,
             URISyntaxException, InterruptedException, ExecutionException, TimeoutException {
-        generateDailyPlan(null, "", dailyPlanDate, withSubmit);
+        generateDailyPlan(controllerId, null, "", dailyPlanDate, withSubmit);
     }
 
-    public void submitOrders(JocError jocError, String accessToken, List<DBItemDailyPlanOrders> listOfPlannedOrders) throws JsonParseException,
+    public void submitOrders(String controllerId, JocError jocError, String accessToken, List<DBItemDailyPlanOrders> listOfPlannedOrders) throws JsonParseException,
             JsonMappingException, DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, IOException, ParseException, SOSException, URISyntaxException, JobSchedulerConnectionResetException,
             JobSchedulerConnectionRefusedException, InterruptedException, ExecutionException, TimeoutException {
@@ -209,18 +209,18 @@ public class OrderInitiatorRunner extends TimerTask {
                 orderListSynchronizer.add(p);
             }
             if (orderListSynchronizer.getListOfPlannedOrders().size() > 0) {
-                orderListSynchronizer.submitOrdersToController();
+                orderListSynchronizer.submitOrdersToController(controllerId);
             }
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
     }
 
-    public void submitOrders(List<DBItemDailyPlanOrders> listOfPlannedOrders) throws JsonParseException, JsonMappingException,
+    public void submitOrders(String controllerId, List<DBItemDailyPlanOrders> listOfPlannedOrders) throws JsonParseException, JsonMappingException,
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
             JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, IOException, ParseException, SOSException,
             URISyntaxException, InterruptedException, ExecutionException, TimeoutException {
-        submitOrders(null, "", listOfPlannedOrders);
+        submitOrders(controllerId, null, "", listOfPlannedOrders);
     }
 
     private List<DBItemDailyPlanSubmissions> getSubmissionsForDate(java.util.Calendar calendar, String controllerId) throws SOSHibernateException {
@@ -272,7 +272,7 @@ public class OrderInitiatorRunner extends TimerTask {
 
                             logDailyPlan = false;
                         }
-                        generateDailyPlan(dailyPlanDate, false);
+                        generateDailyPlan(controllerConfiguration.getCurrent().getId(),dailyPlanDate, false);
                     } else {
                         LOGGER.info("No orders will be created for " + dailyPlanDate + " as a submission has been found");
                     }
@@ -325,7 +325,7 @@ public class OrderInitiatorRunner extends TimerTask {
 
                 LOGGER.info("Submitting " + o.getCount() + " orders " + o.cycledOrdersDesc() + " for controller " + controllerId + " day: "
                         + DailyPlanHelper.getDayOfYear(calendar));
-                submitOrders(listOfPlannedOrders);
+                submitOrders(controllerId,listOfPlannedOrders);
             }
         } finally {
             Globals.disconnect(sosHibernateSession);

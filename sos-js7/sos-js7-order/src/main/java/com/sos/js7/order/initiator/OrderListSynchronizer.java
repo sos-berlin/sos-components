@@ -200,7 +200,7 @@ public class OrderListSynchronizer {
         return listOfInsertHistoryEntries;
     }
 
-    public void submitOrdersToController() throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException,
+    public void submitOrdersToController(String controllerId) throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException,
             DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
             InterruptedException, ExecutionException, SOSHibernateException, TimeoutException, ParseException {
 
@@ -217,16 +217,18 @@ public class OrderListSynchronizer {
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("submitOrdersToController");
             sosHibernateSession.setAutoCommit(false);
-            Globals.beginTransaction(sosHibernateSession);
 
             List<DBItemDailyPlanHistory> listOfInsertHistoryEntries = new ArrayList<DBItemDailyPlanHistory>();
             try {
+                Globals.beginTransaction(sosHibernateSession);
                 listOfInsertHistoryEntries = insertHistory(sosHibernateSession, addedOrders);
-                OrderApi.addOrderToController(jocError, accessToken, addedOrders, listOfInsertHistoryEntries);
+                Globals.commit(sosHibernateSession);
+
+                OrderApi.addOrderToController(controllerId, jocError, accessToken, addedOrders, listOfInsertHistoryEntries);
+                
             } catch (Exception e) {
                 LOGGER.warn(e.getLocalizedMessage());
             }
-            Globals.commit(sosHibernateSession);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -329,7 +331,7 @@ public class OrderListSynchronizer {
 
     }
 
-    public void addPlannedOrderToControllerAndDB(Boolean withSubmit) throws JocConfigurationException, DBConnectionRefusedException,
+    public void addPlannedOrderToControllerAndDB(String controllerId, Boolean withSubmit) throws JocConfigurationException, DBConnectionRefusedException,
             JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, DBMissingDataException, DBOpenSessionException,
             DBInvalidDataException, SOSHibernateException, JsonProcessingException, ParseException, InterruptedException, ExecutionException,
             TimeoutException {
@@ -338,7 +340,7 @@ public class OrderListSynchronizer {
         addPlannedOrderToDB();
 
         if (withSubmit == null || withSubmit) {
-            submitOrdersToController();
+            submitOrdersToController(controllerId);
         } else {
             LOGGER.debug("Orders will not be submitted to the controller");
         }
