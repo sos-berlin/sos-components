@@ -477,7 +477,12 @@ public class DBItemHistoryOrder extends DBItem {
     }
 
     public void setErrorCode(String val) {
-        errorCode = normalizeValue(val, 50);
+        errorCode = normalizeErrorCode(val);
+    }
+
+    @Transient
+    public static String normalizeErrorCode(String val) {
+        return normalizeValue(val, 50);
     }
 
     public String getErrorCode() {
@@ -485,7 +490,12 @@ public class DBItemHistoryOrder extends DBItem {
     }
 
     public void setErrorText(String val) {
-        errorText = normalizeValue(val, 500);
+        errorText = normalizeErrorText(val);
+    }
+
+    @Transient
+    public static String normalizeErrorText(String val) {
+        return normalizeValue(val, 500);
     }
 
     public String getErrorText() {

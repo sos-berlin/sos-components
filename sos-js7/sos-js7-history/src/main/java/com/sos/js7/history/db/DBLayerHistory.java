@@ -255,8 +255,8 @@ public class DBLayerHistory {
         query.setParameter("error", error);
         query.setParameter("errorState", errorState);
         query.setParameter("errorReason", errorReason);
-        query.setParameter("errorCode", errorCode);
-        query.setParameter("errorText", errorText);
+        query.setParameter("errorCode", DBItemHistoryOrderStep.normalizeErrorCode(errorCode));
+        query.setParameter("errorText", DBItemHistoryOrderStep.normalizeErrorText(errorText));
         query.setParameter("modified", modified);
         query.setParameter("id", id);
         return session.executeUpdate(query);
@@ -305,8 +305,8 @@ public class DBLayerHistory {
         query.setParameter("errorState", errorState);
         query.setParameter("errorReason", errorReason);
         query.setParameter("errorReturnCode", errorReturnCode);
-        query.setParameter("errorCode", errorCode);
-        query.setParameter("errorText", errorText);
+        query.setParameter("errorCode", DBItemHistoryOrder.normalizeErrorCode(errorCode));
+        query.setParameter("errorText", DBItemHistoryOrder.normalizeErrorText(errorText));
         query.setParameter("id", id);
         return session.executeUpdate(query);
     }
