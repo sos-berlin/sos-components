@@ -2306,8 +2306,8 @@ public class DBLayerDeploy {
                     .append(" on instance.agentId = aliases.agentId")
                     .append(" where instance.controllerId = :controllerId and (")
                     .append(" instance.agentName = :agentName or ")
-                    .append(" aliases.agentName = :agentName")
-                    .append(" group by instance.agentId)");
+                    .append(" aliases.agentName = :agentName)")
+                    .append(" group by instance.agentId");
                 Query<String> query = getSession().createQuery(hql.toString());
                 query.setParameter("agentName", agentName);
                 query.setParameter("controllerId", controllerId);
