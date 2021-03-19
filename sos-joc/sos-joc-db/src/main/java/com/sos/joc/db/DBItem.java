@@ -66,7 +66,7 @@ public abstract class DBItem implements Serializable {
     }
 
     @Transient
-    public String normalizeValue(String val, int maxLen) {
+    public static String normalizeValue(String val, int maxLen) {
         if (val != null && val.length() > maxLen) {
             val = val.substring(0, maxLen);
         }
