@@ -199,7 +199,7 @@ public class HistoryControllerHandler {
         return null;
     }
 
-    private AtomicLong process(AtomicLong eventId) throws Exception {
+    private synchronized AtomicLong process(AtomicLong eventId) throws Exception {
 
         try (JStandardEventBus<ProxyEvent> eventBus = new JStandardEventBus<>(ProxyEvent.class)) {
             Flux<JEventAndControllerState<Event>> flux = api.eventFlux(eventBus, OptionalLong.of(eventId.get()));
