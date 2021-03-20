@@ -96,7 +96,6 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
             OrderInitiatorGlobals.submissionTime = new Date();
 
             for (String controllerId : dailyPlanOrderSelector.getControllerIds()) {
-                orderInitiatorSettings.setControllerId(controllerId);
 
                 ScheduleSource scheduleSource = null;
                 scheduleSource = new ScheduleSourceDB(dailyPlanOrderSelector);

@@ -114,61 +114,30 @@ public class OrderApi {
                 LOGGER.warn("Controller " + controllerId + " is NOT coupled with proxy");
             }
 
-            try {
-                jControllerProxy.addOrders(Flux.fromIterable(freshOrderMappedIds.values())).get(30,TimeUnit.SECONDS);
-                
-                SOSHibernateSession sosHibernateSession = null;
-                try {
-                    sosHibernateSession = Globals.createSosHibernateStatelessConnection("addOrderToController");
-                    sosHibernateSession.setAutoCommit(false);
-                    Globals.beginTransaction(sosHibernateSession);
+            jControllerProxy.addOrders(Flux.fromIterable(freshOrderMappedIds.values())).thenAccept(either -> {
+                if (either.isRight()) {
 
-                    OrderApi.updatePlannedOrders(sosHibernateSession, freshOrderMappedIds.keySet(), controllerId);
-                    OrderApi.updateHistory(sosHibernateSession, listOfInsertHistoryEntries);
-                    jControllerProxy.api().removeOrdersWhenTerminated(freshOrderMappedIds.keySet()).thenAccept(e -> ProblemHelper
-                            .postProblemEventIfExist(e, accessToken, jocError, controllerId));
-                    Globals.commit(sosHibernateSession);
+                    SOSHibernateSession sosHibernateSession = null;
+                    try {
+                        sosHibernateSession = Globals.createSosHibernateStatelessConnection("addOrderToController");
+                        sosHibernateSession.setAutoCommit(false);
+                        Globals.beginTransaction(sosHibernateSession);
 
-                } catch (Exception e) {
-                    ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, controllerId);
-                } finally {
-                    Globals.disconnect(sosHibernateSession);
-                }
-                
-            } catch (TimeoutException e1) {
-                LOGGER.warn("TimeOut during order submit");
-            }
-            
+                        OrderApi.updatePlannedOrders(sosHibernateSession, freshOrderMappedIds.keySet(), controllerId);
+                        OrderApi.updateHistory(sosHibernateSession, listOfInsertHistoryEntries);
+                        jControllerProxy.api().removeOrdersWhenTerminated(freshOrderMappedIds.keySet()).thenAccept(e -> ProblemHelper
+                                .postProblemEventIfExist(e, accessToken, jocError, controllerId));
+                        Globals.commit(sosHibernateSession);
 
-          /*  try {
-              
-                jControllerProxy.addOrders(Flux.fromIterable(freshOrderMappedIds.values())).thenAccept(either -> {
-                    if (either.isRight()) {
-
-                        SOSHibernateSession sosHibernateSession = null;
-                        try {
-                            sosHibernateSession = Globals.createSosHibernateStatelessConnection("addOrderToController");
-                            sosHibernateSession.setAutoCommit(false);
-                            Globals.beginTransaction(sosHibernateSession);
-
-                            OrderApi.updatePlannedOrders(sosHibernateSession, freshOrderMappedIds.keySet(), controllerId);
-                            OrderApi.updateHistory(sosHibernateSession, listOfInsertHistoryEntries);
-                            jControllerProxy.api().removeOrdersWhenTerminated(freshOrderMappedIds.keySet()).thenAccept(e -> ProblemHelper
-                                    .postProblemEventIfExist(e, accessToken, jocError, controllerId));
-                            Globals.commit(sosHibernateSession);
-
-                        } catch (Exception e) {
-                            ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, controllerId);
-                        } finally {
-                            Globals.disconnect(sosHibernateSession);
-                        }
-                    } else {
-                        ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
+                    } catch (Exception e) {
+                        ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, controllerId);
+                    } finally {
+                        Globals.disconnect(sosHibernateSession);
                     }
-                }).get(30,TimeUnit.SECONDS);
-            } catch (TimeoutException e) {
-               LOGGER.warn("TimeOut during order submit");
-            }*/
+                } else {
+                    ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
+                }
+            });
 
         }
 
@@ -185,7 +154,7 @@ public class OrderApi {
         filter.setSubmitted(true);
         filter.setSetOfOrders(addedOrders);
         dbLayerDailyPlannedOrders.setSubmitted(filter);
-         
+
     }
 
     public static void updateHistory(SOSHibernateSession sosHibernateSession, List<DBItemDailyPlanHistory> listOfInsertHistoryEntries)

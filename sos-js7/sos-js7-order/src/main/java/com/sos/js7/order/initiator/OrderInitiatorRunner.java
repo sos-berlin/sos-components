@@ -120,13 +120,12 @@ public class OrderInitiatorRunner extends TimerTask {
             DBOpenSessionException, IOException, ParseException, SOSException, URISyntaxException, JobSchedulerConnectionResetException,
             JobSchedulerConnectionRefusedException, InterruptedException, ExecutionException, TimeoutException {
 
-        orderListSynchronizer = calculateStartTimes(DailyPlanHelper.stringAsDate(dailyPlanDate));
+        orderListSynchronizer = calculateStartTimes(controllerId,DailyPlanHelper.stringAsDate(dailyPlanDate));
         orderListSynchronizer.setJocError(jocError);
         orderListSynchronizer.setAccessToken(accessToken);
         OrderCounter o = DailyPlanHelper.getOrderCount(orderListSynchronizer.getListOfPlannedOrders());
 
-        LOGGER.info("Creating " + o.getCount() + " orders " + o.cycledOrdersDesc() + " for controller " + OrderInitiatorGlobals.orderInitiatorSettings
-                .getControllerId() + " day: " + dailyPlanDate);
+        LOGGER.info("Creating " + o.getCount() + " orders " + o.cycledOrdersDesc() + " for controller " +controllerId + " day: " + dailyPlanDate);
 
         if (orderListSynchronizer.getListOfPlannedOrders().size() > 0) {
             orderListSynchronizer.addPlannedOrderToControllerAndDB(controllerId, withSubmit);
@@ -152,7 +151,7 @@ public class OrderInitiatorRunner extends TimerTask {
             DBLayerOrderVariables dbLayerOrderVariables = new DBLayerOrderVariables(sosHibernateSession);
 
             if (currentstate == null) {
-                currentstate = getCurrentState(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
+                currentstate = getCurrentState(controllerId);
             }
             OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer(currentstate);
 
@@ -206,7 +205,7 @@ public class OrderInitiatorRunner extends TimerTask {
                 p.setCalendarId(dbItemDailyPlanOrders.getCalendarId());
                 p.setStoredInDb(true);
 
-                orderListSynchronizer.add(p);
+                orderListSynchronizer.add(controllerId, p);
             }
             if (orderListSynchronizer.getListOfPlannedOrders().size() > 0) {
                 orderListSynchronizer.submitOrdersToController(controllerId);
@@ -254,7 +253,6 @@ public class OrderInitiatorRunner extends TimerTask {
                 java.util.Calendar dailyPlanCalendar = java.util.Calendar.getInstance();
                 dailyPlanCalendar.setTime(savCalendar.getTime());
 
-                OrderInitiatorGlobals.orderInitiatorSettings.setControllerId(controllerConfiguration.getCurrent().getId());
                 OrderInitiatorGlobals.dailyPlanDate = dailyPlanCalendar.getTime();
                 ScheduleSource scheduleSource = new ScheduleSourceDB(controllerConfiguration.getCurrent().getId());
                 readSchedules(scheduleSource);
@@ -487,7 +485,7 @@ public class OrderInitiatorRunner extends TimerTask {
         return currentstate;
     }
 
-    private OrderListSynchronizer calculateStartTimes(Date dailyPlanDate) throws JsonParseException, JsonMappingException,
+    private OrderListSynchronizer calculateStartTimes(String controllerId,Date dailyPlanDate) throws JsonParseException, JsonMappingException,
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, IOException, SOSMissingDataException,
             SOSInvalidDataException, ParseException, JocConfigurationException, SOSHibernateException, DBOpenSessionException {
 
@@ -505,7 +503,7 @@ public class OrderInitiatorRunner extends TimerTask {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("OrderInitiatorRunner");
             DBItemDailyPlanSubmissions dbItemDailyPlanSubmissionHistory = null;
             if (currentstate == null) {
-                currentstate = getCurrentState(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
+                currentstate = getCurrentState(controllerId);
             }
             OrderListSynchronizer orderListSynchronizer = new OrderListSynchronizer(currentstate);
 
@@ -513,8 +511,7 @@ public class OrderInitiatorRunner extends TimerTask {
                 if (fromService && !schedule.getPlanOrderAutomatically()) {
                     LOGGER.debug(String.format("... schedule %s  will not be planned automatically", schedule.getPath()));
                 } else {
-                    String controllerId = OrderInitiatorGlobals.orderInitiatorSettings.getControllerId();
-
+ 
                     if (dbItemDailyPlanSubmissionHistory == null) {
                         dbItemDailyPlanSubmissionHistory = addDailyPlanSubmission(controllerId, dailyPlanDate);
                     }
@@ -582,7 +579,7 @@ public class OrderInitiatorRunner extends TimerTask {
                                     FreshOrder freshOrder = buildFreshOrder(schedule, periodEntry.getKey(), startMode);
 
                                     PlannedOrder plannedOrder = new PlannedOrder();
-                                    plannedOrder.setControllerId(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
+                                    plannedOrder.setControllerId(controllerId);
 
                                     plannedOrder.setFreshOrder(freshOrder);
                                     plannedOrder.setCalendarId(calendarCacheItem.calendar.getId());
@@ -592,7 +589,7 @@ public class OrderInitiatorRunner extends TimerTask {
                                         schedule.setSubmitOrderToControllerWhenPlanned(OrderInitiatorGlobals.orderInitiatorSettings.isSubmit());
                                     }
                                     plannedOrder.setSchedule(schedule);
-                                    if (orderListSynchronizer.add(plannedOrder)) {
+                                    if (orderListSynchronizer.add(controllerId,plannedOrder)) {
                                         scheduleAdded.add(schedule.getPath());
                                     }
 

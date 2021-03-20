@@ -51,7 +51,6 @@ public class TestOrderInitiator {
 
         orderInitiatorSettings.setDayAheadPlan(conf.getProperty("daily_plan_days_ahead_plan"));
         orderInitiatorSettings.setDayAheadSubmit(conf.getProperty("daily_plan_days_ahead_submit"));
-        orderInitiatorSettings.setControllerId(conf.getProperty("controller_id"));
         String hibernateConfiguration = conf.getProperty("hibernate_configuration_file");
         if (hibernateConfiguration != null) {
             hibernateConfiguration = hibernateConfiguration.trim();
