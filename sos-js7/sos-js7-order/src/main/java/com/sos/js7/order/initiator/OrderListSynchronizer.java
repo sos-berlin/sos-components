@@ -109,14 +109,14 @@ public class OrderListSynchronizer {
 
 
 
-    public boolean add(PlannedOrder o) {
+    public boolean add(String controllerId,PlannedOrder o) {
         boolean added = false;
         if (listOfExistingWorkflows == null) {
             listOfExistingWorkflows = new HashMap<WorkflowAtController, Boolean>();
             LOGGER.debug("Create list of existing workflows");
         }
         WorkflowAtController w = new WorkflowAtController();
-        w.controllerId = OrderInitiatorGlobals.orderInitiatorSettings.getControllerId();
+        w.controllerId = controllerId;
         w.workflowName = o.getSchedule().getWorkflowName();
         if (listOfExistingWorkflows.get(w) == null) {
             listOfExistingWorkflows.put(w, WorkflowsHelper.workflowCurrentlyExists(currentState, o.getSchedule().getWorkflowName()));
@@ -235,7 +235,7 @@ public class OrderListSynchronizer {
 
     }
 
-    public void addPlannedOrderToDB() throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException, ParseException,
+    public void addPlannedOrderToDB(String controllerId) throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException, ParseException,
             JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, DBMissingDataException, DBOpenSessionException,
             DBInvalidDataException, JsonProcessingException, InterruptedException, ExecutionException {
         LOGGER.debug("... addPlannedOrderToDB");
@@ -257,7 +257,7 @@ public class OrderListSynchronizer {
                     filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
                     LOGGER.trace("----> Remove: " + plannedOrder.getFreshOrder().getScheduledFor() + ":" + new Date(plannedOrder.getFreshOrder()
                             .getScheduledFor()));
-                    filter.setControllerId(OrderInitiatorGlobals.orderInitiatorSettings.getControllerId());
+                    filter.setControllerId(controllerId);
                     filter.addWorkflowName(plannedOrder.getFreshOrder().getWorkflowPath());
                     List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
                     try {
@@ -337,7 +337,7 @@ public class OrderListSynchronizer {
             TimeoutException {
         LOGGER.debug("... addPlannedOrderToControllerAndDB");
 
-        addPlannedOrderToDB();
+        addPlannedOrderToDB(controllerId);
 
         if (withSubmit == null || withSubmit) {
             submitOrdersToController(controllerId);

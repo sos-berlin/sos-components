@@ -11,7 +11,6 @@ public class OrderInitiatorSettings {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderInitiatorSettings.class);
 
-    private String controllerId;
     private Path hibernateConfigurationFile;
     private String propertiesFile;
     private String orderTemplatesDirectory;
@@ -90,14 +89,7 @@ public class OrderInitiatorSettings {
         this.hibernateConfigurationFile = hibernateConfigurationFile;
     }
 
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
-
+ 
     public int getDayAheadPlan() {
         return dayAheadPlan;
     }

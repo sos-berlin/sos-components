@@ -166,7 +166,6 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
         if (listOfPlannedOrders.size() > 0) {
 
             OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
-            orderInitiatorSettings.setControllerId(listOfPlannedOrders.get(0).getControllerId());
             orderInitiatorSettings.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
             orderInitiatorSettings.setOverwrite(false);
             orderInitiatorSettings.setSubmit(true);

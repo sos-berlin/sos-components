@@ -151,7 +151,6 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
                 for (String controllerId : dailyPlanOrderFilter.getFilter().getControllerIds()) {
 
                     filter.setControllerId(controllerId);
-                    orderInitiatorSettings.setControllerId(controllerId);
 
                     List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
                     Globals.commit(sosHibernateSession);
