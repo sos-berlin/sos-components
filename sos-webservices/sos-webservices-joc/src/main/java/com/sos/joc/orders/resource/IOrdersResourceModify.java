@@ -16,6 +16,12 @@ public interface IOrdersResourceModify {
     public JOCDefaultResponse postOrdersCancel(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
     
     @POST
+    @Path("daily_plan/cancel")
+    @Produces({ "application/json" })
+    public JOCDefaultResponse postOrdersDailyPlanCancel(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+
+    
+    @POST
     @Path("suspend")
     @Produces({ "application/json" })
     public JOCDefaultResponse postOrdersSuspend(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
