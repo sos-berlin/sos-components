@@ -1,7 +1,9 @@
 package com.sos.joc.cluster.configuration.globals;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.configuration.globals.common.ConfigurationEntry;
@@ -9,6 +11,10 @@ import com.sos.joc.model.configuration.globals.GlobalSettingsSectionValueType;
 
 public class ConfigurationGlobalsJoc extends AConfigurationSection {
 
+    public static enum ShowViewName {
+        dashboard, dailyplan, workflows, resources, history, auditlog, configuration, filetransfer, jobstreams;
+    }
+    
     private static final List<String> AUDIT_LOG_COMMENTS = Arrays.asList("System maintenance", "Repeat execution", "Business requirement",
             "Restart failed execution", "Re-instantiate stopped object", "Temporary stop", "Change of JobScheduler object",
             "Rerun with parameter changes", "Change of external dependency", "Application deployment and upgrade");
@@ -27,8 +33,8 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
 
     private ConfigurationEntry restoreSuffix = new ConfigurationEntry("restore_suffix", "restored", GlobalSettingsSectionValueType.STRING);
     private ConfigurationEntry restorePrefix = new ConfigurationEntry("restore_prefix", "", GlobalSettingsSectionValueType.STRING);
-
-    // "jobstreams", "filetransfer"
+    
+    // "jobstreams"
     private ConfigurationEntry showViewDashboard = new ConfigurationEntry("show_view_dashboard", null, GlobalSettingsSectionValueType.BOOLEAN);
     private ConfigurationEntry showViewDailyplan = new ConfigurationEntry("show_view_dailyplan", null, GlobalSettingsSectionValueType.BOOLEAN);
     private ConfigurationEntry showViewWorkflows = new ConfigurationEntry("show_view_workflows", null, GlobalSettingsSectionValueType.BOOLEAN);
@@ -37,7 +43,12 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     private ConfigurationEntry showViewAuditlog = new ConfigurationEntry("show_view_auditlog", null, GlobalSettingsSectionValueType.BOOLEAN);
     private ConfigurationEntry showViewConfiguration = new ConfigurationEntry("show_view_configuration", null,
             GlobalSettingsSectionValueType.BOOLEAN);
+    private ConfigurationEntry showViewfiletransfer = new ConfigurationEntry("show_view_filetransfer", null, GlobalSettingsSectionValueType.BOOLEAN);
+    //private ConfigurationEntry showViewJobstreams = new ConfigurationEntry("show_view_jobstreams", null, GlobalSettingsSectionValueType.BOOLEAN);
 
+//    private Map<ShowViewName, ConfigurationEntry> showViews = EnumSet.allOf(ShowViewName.class).stream().collect(Collectors.toMap(s -> s,
+//            s -> new ConfigurationEntry("show_view_" + s.name(), null, GlobalSettingsSectionValueType.BOOLEAN)));
+    
     public ConfigurationGlobalsJoc() {
         int index = -1;
         forceCommentsForAuditLog.setOrdering(++index);
@@ -51,7 +62,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
 
         restoreSuffix.setOrdering(++index);
         restorePrefix.setOrdering(++index);
-
+        
         showViewDashboard.setOrdering(++index);
         showViewDailyplan.setOrdering(++index);
         showViewWorkflows.setOrdering(++index);
@@ -59,6 +70,8 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         showViewHistory.setOrdering(++index);
         showViewAuditlog.setOrdering(++index);
         showViewConfiguration.setOrdering(++index);
+        showViewfiletransfer.setOrdering(++index);
+        //showViewJobstreams.setOrdering(++index);
     }
 
     public static List<String> getAuditLogComments() {
@@ -96,33 +109,29 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     public ConfigurationEntry getRestorePrefix() {
         return restorePrefix;
     }
-
-    public ConfigurationEntry getShowViewDashboard() {
-        return showViewDashboard;
+    
+    public Map<ShowViewName, Boolean> getShowViews() {
+        Map<ShowViewName, Boolean> showViews = new HashMap<>();
+        showViews.put(ShowViewName.auditlog, getBoolean(showViewAuditlog));
+        showViews.put(ShowViewName.configuration, getBoolean(showViewConfiguration));
+        showViews.put(ShowViewName.dailyplan, getBoolean(showViewDailyplan));
+        showViews.put(ShowViewName.dashboard, getBoolean(showViewDashboard));
+        showViews.put(ShowViewName.filetransfer, getBoolean(showViewfiletransfer));
+        showViews.put(ShowViewName.history, getBoolean(showViewHistory));
+        //showViews.put(ShowViewName.jobstreams, getBoolean(showViewJobstreams));
+        showViews.put(ShowViewName.resources, getBoolean(showViewResources));
+        showViews.put(ShowViewName.workflows, getBoolean(showViewWorkflows));
+        return showViews;
     }
-
-    public ConfigurationEntry getShowViewDailyplan() {
-        return showViewDailyplan;
+    
+    private static Boolean getBoolean(ConfigurationEntry c) {
+        String s = c.getValue();
+        if (s == null || s.isEmpty()) {
+            return null;
+        } else if (s.equalsIgnoreCase("true")) {
+            return Boolean.TRUE;
+        } else {
+            return Boolean.FALSE;
+        }
     }
-
-    public ConfigurationEntry getShowViewWorkflows() {
-        return showViewWorkflows;
-    }
-
-    public ConfigurationEntry getShowViewResources() {
-        return showViewResources;
-    }
-
-    public ConfigurationEntry getShowViewHistory() {
-        return showViewHistory;
-    }
-
-    public ConfigurationEntry getShowViewAuditlog() {
-        return showViewAuditlog;
-    }
-
-    public ConfigurationEntry getShowViewConfiguration() {
-        return showViewConfiguration;
-    }
-
 }

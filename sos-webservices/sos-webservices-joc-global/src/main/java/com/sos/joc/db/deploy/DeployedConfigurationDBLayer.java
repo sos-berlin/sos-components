@@ -94,9 +94,17 @@ public class DeployedConfigurationDBLayer {
     }
 
     public Map<ConfigurationType, Long> getNumOfDeployedObjects(String controllerId) {
+        return getNumOfObjects(DBLayer.DBITEM_DEP_CONFIGURATIONS, controllerId);
+    }
+    
+    public Map<ConfigurationType, Long> getNumOfReleasedObjects() {
+        return getNumOfObjects(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS, null);
+    }
+    
+    private Map<ConfigurationType, Long> getNumOfObjects(String tableName, String controllerId) {
         try {
             StringBuilder hql = new StringBuilder("select new ").append(NumOfDeployment.class.getName());
-            hql.append("(type, count(id) as numof) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
+            hql.append("(type, count(id) as numof) from ").append(tableName);
             if (controllerId != null && !controllerId.isEmpty()) {
                 hql.append(" where controllerId = :controllerId");
             }
@@ -105,25 +113,6 @@ public class DeployedConfigurationDBLayer {
             if (controllerId != null && !controllerId.isEmpty()) {
                 query.setParameter("controllerId", controllerId);
             }
-            List<NumOfDeployment> result = session.getResultList(query);
-            if (result != null) {
-                return result.stream().filter(i -> i.getConfigurationType() != null).collect(Collectors.toMap(NumOfDeployment::getConfigurationType,
-                        NumOfDeployment::getNumOf));
-            }
-            return Collections.emptyMap();
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
-    }
-    
-    public Map<ConfigurationType, Long> getNumOfReleasedObjects() {
-        try {
-            StringBuilder hql = new StringBuilder("select new ").append(NumOfDeployment.class.getName());
-            hql.append("(type, count(id) as numof) from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
-            hql.append(" group by type");
-            Query<NumOfDeployment> query = session.createQuery(hql.toString());
             List<NumOfDeployment> result = session.getResultList(query);
             if (result != null) {
                 return result.stream().filter(i -> i.getConfigurationType() != null).collect(Collectors.toMap(NumOfDeployment::getConfigurationType,

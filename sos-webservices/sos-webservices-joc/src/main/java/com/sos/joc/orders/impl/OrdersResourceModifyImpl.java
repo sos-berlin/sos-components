@@ -39,7 +39,6 @@ import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
-import akka.actor.FSM.CurrentState;
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.item.VersionedItemId;

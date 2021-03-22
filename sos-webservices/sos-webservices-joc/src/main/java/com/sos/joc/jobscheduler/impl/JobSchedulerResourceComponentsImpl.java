@@ -68,8 +68,6 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
             JsonValidator.validateFailFast(filterBytes, ControllerId.class);
             ControllerId jobSchedulerFilter = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
 
-            checkRequiredParameter("controller", jobSchedulerFilter.getControllerId());
-
             JOCDefaultResponse jocDefaultResponse = initPermissions(jobSchedulerFilter.getControllerId(), getPermissonsJocCockpit(jobSchedulerFilter
                     .getControllerId(), accessToken).getJS7Controller().getView().isStatus());
             if (jocDefaultResponse != null) {
@@ -89,10 +87,16 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
                 s.setState(c.getConnectionState());
                 return s;
             }).collect(Collectors.toList());
+            List<ControllerConnectionState> unknownControllerConnections = controllers.stream().map(c -> {
+                ControllerConnectionState s = new ControllerConnectionState();
+                s.setRole(c.getRole());
+                s.setState(States.getConnectionState(ConnectionStateText.unknown));
+                return s;
+            }).collect(Collectors.toList());
             ClusterType clusterType = getClusterType(controllers);
             entity.setClusterState(States.getClusterState(clusterType));
             entity.setControllers(controllers.stream().map(Controller.class::cast).collect(Collectors.toList()));
-            entity.setJocs(setCockpits(connection, fakeControllerConnections));
+            entity.setJocs(setCockpits(connection, fakeControllerConnections, unknownControllerConnections));
             entity.setDatabase(getDB(connection));
             entity.setDeliveryDate(Date.from(Instant.now()));
 
@@ -125,7 +129,7 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
         return hostname;
     }
     
-    private List<Cockpit> setCockpits(SOSHibernateSession connection, List<ControllerConnectionState> fakeControllerConnections)
+    private List<Cockpit> setCockpits(SOSHibernateSession connection, List<ControllerConnectionState> fakeControllerConnections, List<ControllerConnectionState> unknownControllerConnections)
             throws DBConnectionRefusedException, DBInvalidDataException {
         JocInstancesDBLayer dbLayer = new JocInstancesDBLayer(connection);
         List<DBItemJocInstance> instances = dbLayer.getInstances();
@@ -180,10 +184,13 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
                 // determine ComponentState/ConnectionState depends on last heart beat
                 cockpit.setComponentState(States.getComponentState(ComponentStateText.operational));
                 cockpit.setConnectionState(States.getConnectionState(ConnectionStateText.established));
+                cockpit.setControllerConnectionStates(fakeControllerConnections);
+                
                 if (cockpit.getLastHeartbeat() == null) {
                     if (!cockpit.getCurrent()) {
                         cockpit.setConnectionState(States.getConnectionState(ConnectionStateText.unknown));
                         cockpit.setComponentState(States.getComponentState(ComponentStateText.unknown));
+                        cockpit.setControllerConnectionStates(unknownControllerConnections);
                     }
                 } else {
                     long heartBeatSeconds = cockpit.getLastHeartbeat().toInstant().getEpochSecond();
@@ -195,6 +202,7 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
                         if (!cockpit.getCurrent()) {
                             cockpit.setConnectionState(States.getConnectionState(ConnectionStateText.unknown));
                             cockpit.setComponentState(States.getComponentState(ComponentStateText.unknown));
+                            cockpit.setControllerConnectionStates(unknownControllerConnections);
                         } else {
                             cockpit.setConnectionState(States.getConnectionState(ConnectionStateText.unstable));
                         }
@@ -209,7 +217,6 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
                     }
                 }
                 cockpit.setUrl(instance.getUri());
-                cockpit.setControllerConnectionStates(fakeControllerConnections);
                 
                 cockpits.add(cockpit);
             }
@@ -279,7 +286,7 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
 
     private static ClusterType getClusterType(List<ControllerAnswer> masters) {
         ClusterType clusterType = null;
-        if (!masters.stream().filter(m -> m.getRole() == Role.STANDALONE).findAny().isPresent()) {
+        if (!masters.stream().anyMatch(m -> m.getRole() == Role.STANDALONE)) {
             int unreachables = masters.stream().filter(m -> m.getConnectionState().get_text() == ConnectionStateText.unreachable).mapToInt(m -> 1)
                     .sum();
             if (unreachables == masters.size()) {

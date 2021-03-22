@@ -18,13 +18,14 @@ import com.sos.joc.model.Properties;
 @Path("joc")
 public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResource {
 
-    private static final String API_CALL = "./properties";
+    private static final String API_CALL = "./joc/properties";
 
     @Override
     public JOCDefaultResponse postProperties(String accessToken) {
 
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, null, accessToken, "", true);
+            initLogging(API_CALL, null, accessToken);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

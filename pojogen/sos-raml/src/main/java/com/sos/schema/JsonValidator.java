@@ -46,6 +46,8 @@ public class JsonValidator {
         private static final long serialVersionUID = 1L;
 
         {   
+            put("AuditLogFilter", "audit/auditLogFilter-schema.json");
+            
             put("ConfigurationsFilter", "configuration/configurationsFilter-schema.json");
             put("ConfigurationsDeleteFilter", "configuration/configurationsDeleteFilter-schema.json");
             put("Configuration", "configuration/configuration-schema.json");

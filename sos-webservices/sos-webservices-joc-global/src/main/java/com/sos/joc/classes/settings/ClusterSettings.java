@@ -2,7 +2,6 @@ package com.sos.joc.classes.settings;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -13,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc.ShowViewName;
 import com.sos.joc.cluster.configuration.globals.common.ConfigurationEntry;
 import com.sos.joc.model.ShowViewProperties;
 import com.sos.joc.model.SuffixPrefix;
@@ -35,7 +35,11 @@ public class ClusterSettings {
     }
     
     public static List<String> getCommentsForAuditLog(ConfigurationGlobalsJoc settings) {
-        return Arrays.asList(settings.getCommentsForAuditLog().getValue().split(";"));
+        String comments = settings.getCommentsForAuditLog().getValue();
+        if (comments == null || comments.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return Arrays.asList(comments.split(";"));
     }
     
     public static boolean getForceCommentsForAuditLog(ConfigurationGlobalsJoc settings) {
@@ -53,29 +57,22 @@ public class ClusterSettings {
     }
     
     public static ShowViewProperties getShowViews(ConfigurationGlobalsJoc settings, boolean withLogging) {
-        Map<String, Boolean> showViews = new HashMap<>();
-        showViews.put(settings.getShowViewAuditlog().getName(), getBoolean(settings.getShowViewAuditlog().getValue()));
-        showViews.put(settings.getShowViewConfiguration().getName(), getBoolean(settings.getShowViewConfiguration().getValue()));
-        showViews.put(settings.getShowViewDailyplan().getName(), getBoolean(settings.getShowViewDailyplan().getValue()));
-        showViews.put(settings.getShowViewDashboard().getName(), getBoolean(settings.getShowViewDashboard().getValue()));
-        showViews.put(settings.getShowViewHistory().getName(), getBoolean(settings.getShowViewHistory().getValue()));
-        showViews.put(settings.getShowViewResources().getName(), getBoolean(settings.getShowViewResources().getValue()));
-        showViews.put(settings.getShowViewWorkflows().getName(), getBoolean(settings.getShowViewWorkflows().getValue()));
-        
+        Map<ShowViewName, Boolean> showViews = settings.getShowViews();
+
         if (withLogging) {
             logShowViewSettings(showViews).ifPresent(msg -> LOGGER.info(msg));
         }
-        
+
         ShowViewProperties svProp = new ShowViewProperties();
-        svProp.setAuditLog(showViews.get(settings.getShowViewAuditlog().getName()));
-        svProp.setConfiguration(showViews.get(settings.getShowViewConfiguration().getName()));
-        svProp.setDailyPlan(showViews.get(settings.getShowViewDailyplan().getName()));
-        svProp.setDashboard(showViews.get(settings.getShowViewDashboard().getName()));
-        svProp.setHistory(showViews.get(settings.getShowViewHistory().getName()));
-        svProp.setResources(showViews.get(settings.getShowViewResources().getName()));
-        svProp.setWorkflows(showViews.get(settings.getShowViewWorkflows().getName()));
-        //svProp.setFileTransfers(fileTransfers);
-        //svProp.setJobStreams(jobStreams);
+        svProp.setAuditLog(showViews.get(ShowViewName.auditlog));
+        svProp.setConfiguration(showViews.get(ShowViewName.configuration));
+        svProp.setDailyPlan(showViews.get(ShowViewName.dailyplan));
+        svProp.setDashboard(showViews.get(ShowViewName.dashboard));
+        svProp.setHistory(showViews.get(ShowViewName.history));
+        svProp.setResources(showViews.get(ShowViewName.resources));
+        svProp.setWorkflows(showViews.get(ShowViewName.workflows));
+        svProp.setFileTransfers(showViews.get(ShowViewName.filetransfer));
+        //svProp.setJobStreams(showViews.get(ShowViewName.jobstreams));
         return svProp;
     }
     
@@ -85,11 +82,11 @@ public class ClusterSettings {
         if (!suffixPrefixIsDefault(suf)) {
             suffix = suf.getValue();
         }
-        if (suffix.isEmpty()) {
+        if (suffix == null || suffix.isEmpty()) {
             if (!suffixPrefixIsDefault(pref)) {
                 prefix = pref.getValue();
             }
-            if (prefix.isEmpty()) {
+            if (prefix == null || prefix.isEmpty()) {
                 suffix = suf.getDefault();
             } else {
                 prefix = trimPrefix(prefix);
@@ -112,22 +109,12 @@ public class ClusterSettings {
     }
     
     private static boolean suffixPrefixIsDefault(ConfigurationEntry suffixPrefix) {
-        return suffixPrefix.getValue().equals(suffixPrefix.getDefault());
+        return suffixPrefix.getDefault().equals(suffixPrefix.getValue());
     }
     
-    private static Boolean getBoolean(String s) {
-        if (s == null || s.isEmpty()) {
-            return null;
-        } else if (s.equalsIgnoreCase("true")) {
-            return Boolean.TRUE;
-        } else {
-            return Boolean.FALSE;
-        }
-    }
-    
-    private static Optional<String> logShowViewSettings(Map<String, Boolean> showViews) {
+    private static Optional<String> logShowViewSettings(Map<ShowViewName, Boolean> showViews) {
         Map<Boolean, Set<String>> m = showViews.entrySet().stream().filter(e -> e.getValue() != null).collect(Collectors.groupingBy(
-                Map.Entry::getValue, Collectors.mapping(Map.Entry::getKey, Collectors.toSet())));
+                Map.Entry::getValue, Collectors.mapping(e -> e.getKey().name(), Collectors.toSet())));
         m.putIfAbsent(Boolean.TRUE, Collections.emptySet());
         m.putIfAbsent(Boolean.FALSE, Collections.emptySet());
         boolean hiddenViewsNotEmpty = !m.get(Boolean.FALSE).isEmpty();

@@ -53,6 +53,8 @@ public class JobSchedulerP {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date surveyDate;
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -150,6 +152,8 @@ public class JobSchedulerP {
     }
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 
@@ -160,6 +164,8 @@ public class JobSchedulerP {
     }
 
     /**
+     * filename
+     * <p>
      * 
      * (Required)
      * 

@@ -14,15 +14,11 @@ import javax.ws.rs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
-import com.sos.joc.cluster.JocCluster;
-import com.sos.joc.cluster.configuration.JocClusterConfiguration;
-import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.db.orders.DBItemDailyPlanSubmissions;
@@ -120,11 +116,9 @@ public class DailyPlanSubmissionsImpl extends JOCResourceImpl implements IDailyP
             JsonValidator.validateFailFast(filterBytes, DailyPlanSubmissionsFilter.class);
             DailyPlanSubmissionsFilter dailyPlanSubmissionHistoryFilter = Globals.objectMapper.readValue(filterBytes,
                     DailyPlanSubmissionsFilter.class);
-
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, dailyPlanSubmissionHistoryFilter, accessToken, getControllerId(accessToken,
-                    dailyPlanSubmissionHistoryFilter.getControllerId()), getPermissonsJocCockpit(dailyPlanSubmissionHistoryFilter.getControllerId(),
-                            accessToken).getDailyPlan().getView().isStatus());
-
+            
+            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanSubmissionHistoryFilter.getControllerId(), getPermissonsJocCockpit(
+                    dailyPlanSubmissionHistoryFilter.getControllerId(), accessToken).getDailyPlan().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

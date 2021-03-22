@@ -21,20 +21,22 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.AuditLog;
 import com.sos.joc.model.audit.AuditLogFilter;
 import com.sos.joc.model.audit.AuditLogItem;
+import com.sos.schema.JsonValidator;
 
 @Path("audit_log")
 public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogResource {
 
     private static final String API_CALL = "./audit_log";
 
-    public JOCDefaultResponse postAuditLog(String accessToken, AuditLogFilter auditLogFilter) throws Exception {
+    @Override
+    public JOCDefaultResponse postAuditLog(String accessToken, byte[] bytes) {
         SOSHibernateSession connection = null;
         try {
-            if (auditLogFilter.getControllerId() == null) {
-                auditLogFilter.setControllerId("");
-            }
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, auditLogFilter, accessToken, auditLogFilter.getControllerId(),
-                    getPermissonsJocCockpit(auditLogFilter.getControllerId(), accessToken).getAuditLog().getView().isStatus());
+            initLogging(API_CALL, bytes, accessToken);
+            JsonValidator.validateFailFast(bytes, AuditLogFilter.class);
+            AuditLogFilter auditLogFilter = Globals.objectMapper.readValue(bytes, AuditLogFilter.class);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(auditLogFilter.getControllerId(), getPermissonsJocCockpit(auditLogFilter
+                    .getControllerId(), accessToken).getAuditLog().getView().isStatus());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -107,11 +109,6 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
             }
         }
         return audits;
-    }
-
-    @Override
-    public JOCDefaultResponse postAuditLog(String xAccessToken, String accessToken, AuditLogFilter auditLogFilter) throws Exception {
-        return postAuditLog(getAccessToken(xAccessToken, accessToken), auditLogFilter);
     }
 
 }

@@ -16,9 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.auth.rest.SOSPermissionsCreator;
-import com.sos.auth.rest.SOSShiroCurrentUser;
 import com.sos.auth.rest.SOSShiroFolderPermissions;
-import com.sos.auth.rest.SOSShiroSession;
 import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.audit.IAuditLog;
@@ -36,7 +34,6 @@ import com.sos.joc.model.common.Folder;
 
 public class JOCResourceImpl {
 
-    private static final String SESSION_KEY = "selectedInstance";
     protected JobSchedulerUser jobschedulerUser;
     protected SOSShiroFolderPermissions folderPermissions;
     private static final Logger LOGGER = LoggerFactory.getLogger(JOCResourceImpl.class);
@@ -57,12 +54,16 @@ public class JOCResourceImpl {
     }
 
     private String getMasterId(String masterId) throws SessionNotExistException {
-        if (masterId == null || masterId.isEmpty()) {
-            SOSShiroSession sosShiroSession = new SOSShiroSession(jobschedulerUser.getSosShiroCurrentUser());
-            masterId = sosShiroSession.getStringAttribute(SESSION_KEY);
-            if (masterId == null) {
-                masterId = "";
-            }
+        // TODO why we need this?
+        // it should be part of the webservice if the controllerId is required or not
+        // Here, the last selected controllId is returnd in the case where not no controllerId is given.
+        // I think that's wrong
+//        if (masterId == null || masterId.isEmpty()) {
+//            SOSShiroSession sosShiroSession = new SOSShiroSession(jobschedulerUser.getSosShiroCurrentUser());
+//            masterId = sosShiroSession.getStringAttribute(SESSION_KEY);
+//        }
+        if (masterId == null) {
+            masterId = "";
         }
         return masterId;
     }
@@ -128,7 +129,7 @@ public class JOCResourceImpl {
         SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(null);
         sosPermissionsCreator.loginFromAccessToken(accessToken);
 
-        return initPermissions(getControllerId(accessToken, controllerId), permission);
+        return initPermissions(controllerId, permission);
     }
 
     public String normalizePath(String path) {
@@ -262,7 +263,7 @@ public class JOCResourceImpl {
         sosPermissionsCreator.loginFromAccessToken(accessToken);
     }
 
-    public void initLogging(String request, Object body) {
+    private void initLogging(String request, Object body) {
         String user;
         try {
             user = jobschedulerUser.getSosShiroCurrentUser().getUsername().trim();
@@ -359,24 +360,6 @@ public class JOCResourceImpl {
         } catch (Exception e) {
             return null;
         }
-    }
-
-    public String getControllerId(String accessToken, String controllerId) {
-        String resultControllerId;
-        if (!"".equals(controllerId) && controllerId != null) {
-            resultControllerId = controllerId;
-        } else {
-            this.accessToken = accessToken;
-            if (jobschedulerUser == null) {
-                jobschedulerUser = new JobSchedulerUser(accessToken);
-            }
-            SOSShiroCurrentUser shiroUser = jobschedulerUser.getSosShiroCurrentUser();
-
-            JOCPreferences jocPreferences = new JOCPreferences(shiroUser.getUsername());
-            resultControllerId = jocPreferences.get(WebserviceConstants.SELECTED_INSTANCE, "");
-        }
-        return resultControllerId;
-
     }
 
 }

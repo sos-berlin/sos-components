@@ -8,7 +8,6 @@ import java.util.Set;
 
 import javax.ws.rs.Path;
 
-import com.sos.auth.rest.SOSShiroCurrentUser;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -30,43 +29,43 @@ public class JobSchedulerResourceIdsImpl extends JOCResourceImpl implements IJob
         SOSHibernateSession connection = null;
 
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, null, accessToken, "", getPermissonsJocCockpit("", accessToken)
-                    .getJS7Controller().getView().isStatus());
+            initLogging(API_CALL, null, accessToken);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            SOSShiroCurrentUser shiroUser = jobschedulerUser.getSosShiroCurrentUser();
-            JOCPreferences jocPreferences = new JOCPreferences(shiroUser.getUsername());
+            JOCPreferences jocPreferences = new JOCPreferences(jobschedulerUser.getSosShiroCurrentUser().getUsername());
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryInstancesDBLayer dbLayer = new InventoryInstancesDBLayer(connection);
-            List<String> schedulerIds = dbLayer.getControllerIds();
-            Set<String> jobSchedulerIds = new HashSet<>();
+            List<String> dbControllerIds = dbLayer.getControllerIds();
+            Set<String> controllerIds = new HashSet<>();
             String first = null;
-            if (schedulerIds != null && !schedulerIds.isEmpty()) {
-                for (String schedulerId : schedulerIds) {
-                    if (schedulerId == null || schedulerId.isEmpty()) {
+            
+            if (dbControllerIds != null && !dbControllerIds.isEmpty()) {
+                for (String dbControllerId : dbControllerIds) {
+                    if (dbControllerId == null || dbControllerId.isEmpty()) {
                         continue;
                     }
-                    if (!getPermissonsJocCockpit(schedulerId, accessToken).getJS7ControllerCluster().getView().isStatus()
-                            && !getPermissonsJocCockpit(schedulerId, accessToken).getJS7Controller().getView().isStatus()) {
+                    if (!getPermissonsJocCockpit(dbControllerId, accessToken).getJS7ControllerCluster().getView().isStatus()
+                            && !getPermissonsJocCockpit(dbControllerId, accessToken).getJS7Controller().getView().isStatus()) {
                         continue;
                     }
-                    jobSchedulerIds.add(schedulerId);
+                    controllerIds.add(dbControllerId);
                     if (first == null) {
-                        first = schedulerId;
+                        first = dbControllerId;
                     }
                 }
-                if (jobSchedulerIds.isEmpty()) {
+                if (controllerIds.isEmpty()) {
                     return accessDeniedResponse();
                 }
             } else {
-                // throw new DBMissingDataException("No JobSchedulers found in DB!");
+                // throw new DBMissingDataException("No Controllers found!");
             }
             String selectedInstanceSchedulerId = jocPreferences.get(WebserviceConstants.SELECTED_INSTANCE, first);
 
-            if (!jobSchedulerIds.contains(selectedInstanceSchedulerId)) {
+            if (!controllerIds.contains(selectedInstanceSchedulerId)) {
                 if (first != null) {
                     selectedInstanceSchedulerId = first;
                     jocPreferences.put(WebserviceConstants.SELECTED_INSTANCE, first);
@@ -74,7 +73,7 @@ public class JobSchedulerResourceIdsImpl extends JOCResourceImpl implements IJob
             }
 
             ControllerIds entity = new ControllerIds();
-            entity.getControllerIds().addAll(jobSchedulerIds);
+            entity.setControllerIds(controllerIds);
             entity.setSelected(selectedInstanceSchedulerId);
             entity.setDeliveryDate(Date.from(Instant.now()));
 
