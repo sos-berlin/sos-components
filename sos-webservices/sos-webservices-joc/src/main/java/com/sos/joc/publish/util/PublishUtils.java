@@ -1599,7 +1599,7 @@ public abstract class PublishUtils {
                     newDeployedObject.setName(Paths.get(draft.getPath()).getFileName().toString());
                 }
                 newDeployedObject.setFolder(draft.getFolder());
-                newDeployedObject.setType(PublishUtils.mapConfigurationType(ConfigurationType.fromValue(draft.getType())).intValue());
+                newDeployedObject.setType(draft.getType());
                 newDeployedObject.setCommitId(commitId);
                 newDeployedObject.setContent(draft.getContent());
                 newDeployedObject.setSignedContent(signedItemsSpec.getVerifiedConfigurations().get(draft).getSignature());
@@ -1889,36 +1889,38 @@ public abstract class PublishUtils {
         }
     }
 
-    public static DeployType mapConfigurationType(ConfigurationType inventoryType) {
-        switch (inventoryType) {
-        case WORKFLOW:
-            return DeployType.WORKFLOW;
-        case LOCK:
-            return DeployType.LOCK;
-        case JUNCTION:
-            return DeployType.JUNCTION;
-        case JOBCLASS:
-            return DeployType.JOBCLASS;
-        default:
-            return DeployType.WORKFLOW;
-        }
-    }
-
-    public static ConfigurationType mapDeployType(DeployType deployType) {
-        switch (deployType) {
-        case WORKFLOW:
-            return ConfigurationType.WORKFLOW;
-        case LOCK:
-            return ConfigurationType.LOCK;
-        case JUNCTION:
-            return ConfigurationType.JUNCTION;
-        case JOBCLASS:
-            return ConfigurationType.JOBCLASS;
-        default:
-            return ConfigurationType.WORKFLOW;
-        }
-    }
-
+//    public static DeployType mapConfigurationType(ConfigurationType inventoryType) {
+//        switch (inventoryType) {
+//        case WORKFLOW:
+//            return DeployType.WORKFLOW;
+//        case LOCK:
+//            return DeployType.LOCK;
+//        case JUNCTION:
+//            return DeployType.JUNCTION;
+//        case JOBCLASS:
+//            return DeployType.JOBCLASS;
+//        case FILEORDERSOURCE:
+//            return DeployType.FILEORDERSOURCE;
+//        }
+//        return null;
+//    }
+//
+//    public static ConfigurationType mapDeployType(DeployType deployType) {
+//        switch (deployType) {
+//        case WORKFLOW:
+//            return ConfigurationType.WORKFLOW;
+//        case LOCK:
+//            return ConfigurationType.LOCK;
+//        case JUNCTION:
+//            return ConfigurationType.JUNCTION;
+//        case JOBCLASS:
+//            return ConfigurationType.JOBCLASS;
+//        case FILEORDERSOURCE:
+//            return ConfigurationType.FILEORDERSOURCE;
+//        }
+//        return null;
+//    }
+//
     public static <T extends DBItem> List<DBItemDeploymentHistory> checkPathRenamingForUpdate(Set<T> verifiedObjects, String controllerId,
             DBLayerDeploy dbLayer, String keyAlgorithm) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         DBItemDeploymentHistory depHistory = null;
@@ -3198,7 +3200,7 @@ public abstract class PublishUtils {
             ControllerObject jsObject = new ControllerObject();
             // jsObject.setId(item.getId());
             jsObject.setPath(item.getPath());
-            jsObject.setObjectType(PublishUtils.mapConfigurationType(ConfigurationType.fromValue(item.getType())));
+            jsObject.setObjectType(DeployType.fromValue(item.getType()));
             switch (jsObject.getObjectType()) {
             case WORKFLOW:
                 Workflow workflow = om.readValue(item.getContent().getBytes(), Workflow.class);
@@ -3221,6 +3223,10 @@ public abstract class PublishUtils {
             case JOBCLASS:
                 JobClass jobClass = om.readValue(item.getContent().getBytes(), JobClass.class);
                 jsObject.setContent(jobClass);
+                break;
+            case FILEORDERSOURCE:
+                FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                jsObject.setContent(fileOrderSource);
                 break;
             }
             jsObject.setAccount(Globals.getConfigurationGlobalsJoc().getDefaultProfileAccount().getValue());
@@ -3458,6 +3464,7 @@ public abstract class PublishUtils {
                         break;
                     case JOB:
                     case FOLDER:
+                    case FILEORDERSOURCE:
                         break;
                     }
                 } catch (Exception e) {
@@ -3493,6 +3500,9 @@ public abstract class PublishUtils {
                             jobClass.setPath(((DBItemDeploymentHistory) item).getName());
                             ((DBItemDeploymentHistory) item).setContent(Globals.objectMapper.writeValueAsString(jobClass));
                         }
+                        break;
+                    case FILEORDERSOURCE:
+                        // FileOrderSources have no path property
                         break;
                     }
                 } catch (Exception e) {

@@ -1641,7 +1641,7 @@ public class DBLayerDeploy {
                 newDepHistoryItem.setDeleteDate(null);
                 newDepHistoryItem.setDeploymentDate(Date.from(Instant.now()));
                 newDepHistoryItem.setInventoryConfigurationId(inventoryConfig.getId());
-                DeployType deployType = PublishUtils.mapConfigurationType(ConfigurationType.fromValue(inventoryConfig.getType()));
+                DeployType deployType = DeployType.fromValue(inventoryConfig.getType());
                 newDepHistoryItem.setType(deployType.intValue());
                 newDepHistoryItem.setOperation(OperationType.UPDATE.value());
                 newDepHistoryItem.setState(DeploymentState.NOT_DEPLOYED.value());
@@ -1860,8 +1860,7 @@ public class DBLayerDeploy {
                 newDepHistoryItem.setDeleteDate(null);
                 newDepHistoryItem.setDeploymentDate(Date.from(Instant.now()));
                 newDepHistoryItem.setInventoryConfigurationId(inventoryConfig.getId());
-                DeployType deployType = PublishUtils.mapConfigurationType(
-                        ConfigurationType.fromValue(inventoryConfig.getType()));
+                DeployType deployType = DeployType.fromValue(inventoryConfig.getType());
                 newDepHistoryItem.setType(deployType.intValue());
                 newDepHistoryItem.setOperation(OperationType.UPDATE.value());
                 newDepHistoryItem.setState(DeploymentState.NOT_DEPLOYED.value());
