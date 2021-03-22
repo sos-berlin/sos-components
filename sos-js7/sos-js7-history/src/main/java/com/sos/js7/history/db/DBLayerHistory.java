@@ -4,7 +4,10 @@ import java.util.Date;
 import java.util.List;
 
 import org.hibernate.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.DBLayer;
@@ -19,7 +22,11 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class DBLayerHistory {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerHistory.class);
     private final SOSHibernateSession session;
+    /** result rerun interval in seconds */
+    private static final long RERUN_INTERVAL = 2;
+    private static final int MAX_RERUNS = 3;
 
     public DBLayerHistory(SOSHibernateSession hibernateSession) {
         session = hibernateSession;
@@ -161,6 +168,31 @@ public class DBLayerHistory {
         return session.getSingleResult(query);
     }
 
+    public DBItemHistoryOrder getOrderByCurrentEventId(String controllerId, String orderId, Date currentEventDateTime) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER).append(" o1 ");
+        hql.append("where o1.controllerId=:controllerId ");
+        hql.append("and o1.orderId=:orderId ");
+        hql.append("and o1.startTime=");
+        hql.append("(select max(o2.startTime) from ");
+        hql.append(DBLayer.DBITEM_HISTORY_ORDER).append(" o2 ");
+        hql.append("where o2.controllerId=o1.controllerId ");
+        hql.append("and o2.orderId=o1.orderId ");
+        hql.append("and o2.startTime <= :currentEventDateTime");
+        hql.append(")");
+
+        Query<DBItemHistoryOrder> query = session.createQuery(hql.toString());
+        query.setParameter("controllerId", controllerId);
+        query.setParameter("orderId", orderId);
+        query.setParameter("currentEventDateTime", currentEventDateTime);
+        query.setReadOnly(true);
+
+        List<DBItemHistoryOrder> result = executeQueryList("getOrderByCurrentEventId", query);
+        if (!result.isEmpty()) {
+            return result.get(0);
+        }
+        return null;
+    }
+
     public DBItemHistoryOrderStep getOrderStep(Long id) throws SOSHibernateException {
         Query<DBItemHistoryOrderStep> query = session.createQuery(String.format("from %s where id=:id", DBLayer.DBITEM_HISTORY_ORDER_STEP));
         query.setParameter("id", id);
@@ -172,6 +204,26 @@ public class DBLayerHistory {
                 DBLayer.DBITEM_HISTORY_ORDER_STEP));
         query.setParameter("constraintHash", constraintHash);
         return session.getSingleResult(query);
+    }
+
+    public DBItemHistoryOrderStep getOrderStepByWorkflowPosition(String controllerId, Long historyOrderId, String workflowPosition)
+            throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(" ");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and historyOrderId=:historyOrderId ");
+        hql.append("and workflowPosition=:workflowPosition");
+
+        Query<DBItemHistoryOrderStep> query = session.createQuery(hql.toString());
+        query.setParameter("controllerId", controllerId);
+        query.setParameter("historyOrderId", historyOrderId);
+        query.setParameter("workflowPosition", workflowPosition);
+        query.setReadOnly(true);
+
+        List<DBItemHistoryOrderStep> result = executeQueryList("getOrderStepByWorkflowPosition", query);
+        if (!result.isEmpty()) {
+            return result.get(0);
+        }
+        return null;
     }
 
     public int setMainParentId(Long id, Long mainParentId) throws SOSHibernateException {
@@ -345,6 +397,36 @@ public class DBLayerHistory {
             return result.get(0);
         }
         return null;
+    }
+
+    private <T> List<T> executeQueryList(String callerMethodName, Query<T> query) throws SOSHibernateException {
+        List<T> result = null;
+        int count = 0;
+        boolean run = true;
+        while (run) {
+            count++;
+            try {
+                result = session.getResultList(query);
+                run = false;
+            } catch (Exception e) {
+                if (count >= MAX_RERUNS) {
+                    throw e;
+                } else {
+                    Throwable te = SOSHibernate.findLockException(e);
+                    if (te == null) {
+                        throw e;
+                    } else {
+                        LOGGER.warn(String.format("%s: %s occured, wait %ss and try again (%s of %s) ...", callerMethodName, te.getClass().getName(),
+                                RERUN_INTERVAL, count, MAX_RERUNS));
+                        try {
+                            Thread.sleep(RERUN_INTERVAL * 1000);
+                        } catch (InterruptedException e1) {
+                        }
+                    }
+                }
+            }
+        }
+        return result;
     }
 
 }
