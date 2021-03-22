@@ -167,13 +167,13 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 StoreDeployments.storeNewDepHistoryEntries(spec, account, commitId, controllerId,
                         getAccessToken(), getJocError(), dbLayer);
                 // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename
-                List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkPathRenamingForUpdate(verifiedConfigurations.keySet(),
+                List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkRenamingForUpdate(verifiedConfigurations.keySet(),
                         controllerId, dbLayer, keyPair.getKeyAlgorithm());
                 if (toDeleteForRename != null && !toDeleteForRename.isEmpty()) {
-                    toDeleteForRename.addAll(PublishUtils.checkPathRenamingForUpdate(verifiedReDeployables.keySet(), controllerId, dbLayer, 
+                    toDeleteForRename.addAll(PublishUtils.checkRenamingForUpdate(verifiedReDeployables.keySet(), controllerId, dbLayer, 
                             keyPair.getKeyAlgorithm()));
                 } else {
-                    toDeleteForRename = PublishUtils.checkPathRenamingForUpdate(verifiedReDeployables.keySet(), controllerId, dbLayer, 
+                    toDeleteForRename = PublishUtils.checkRenamingForUpdate(verifiedReDeployables.keySet(), controllerId, dbLayer, 
                             keyPair.getKeyAlgorithm());
                 }
                 // and subsequently call delete for the object with the previous path before committing the update
@@ -182,6 +182,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     final List<DBItemDeploymentHistory> toDelete = toDeleteForRename;
                     // set new versionId for second round (delete items)
                     final String versionIdForDeleteRenamed = UUID.randomUUID().toString();
+                    DeleteDeployments.storeNewDepHistoryEntries(dbLayer, toDelete, versionIdForDeleteRenamed);
                     // call updateRepo command via Proxy of given controllers
                     PublishUtils.updateItemsDelete(versionIdForDeleteRenamed, toDelete, controllerId).thenAccept(either -> {
                         DeleteDeployments.processAfterDelete(either, controllerId, account, versionIdForDeleteRenamed, getAccessToken(), getJocError());

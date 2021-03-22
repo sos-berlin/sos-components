@@ -59,6 +59,7 @@ import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.sign.SignaturePath;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.IImportDeploy;
+import com.sos.joc.publish.util.DeleteDeployments;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.joc.publish.util.StoreDeployments;
 import com.sos.schema.JsonValidator;
@@ -215,7 +216,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 throw new JocMissingKeyException("No public key or X.509 Certificate found for signature verification! - "
                         + "Please check your key from the key management section in your profile.");
             }
-            List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkPathRenamingForUpdate(objectsToCheckPathRenaming, controllerId,
+            List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkRenamingForUpdate(objectsToCheckPathRenaming, controllerId,
                     dbLayer, keyPair.getKeyAlgorithm());
             // and subsequently call delete for the object with the previous path before committing the update
             if (toDeleteForRename != null && !toDeleteForRename.isEmpty()) {
@@ -224,6 +225,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 // set new versionId for second round (delete items)
                 final String commitIdForDeleteRenamed = UUID.randomUUID().toString();
                 // call updateRepo command via Proxy of given controllers
+                DeleteDeployments.storeNewDepHistoryEntries(dbLayer, toDelete, commitIdForDeleteRenamed);
                 PublishUtils.updateItemsDelete(commitIdForDeleteRenamed, toDelete, controllerId).thenAccept(either -> {
                     processAfterDelete(either, toDelete, controllerId, account, commitIdForDeleteRenamed);
                 });

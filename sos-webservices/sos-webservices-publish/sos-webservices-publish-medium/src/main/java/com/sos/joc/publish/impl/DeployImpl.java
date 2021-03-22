@@ -204,13 +204,13 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                                     JocSecurityLevel.MEDIUM));
                 }
                 // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename 
-                List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkPathRenamingForUpdate(
+                List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkRenamingForUpdate(
                         verifiedConfigurations.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm());
                 if (toDeleteForRename != null && !toDeleteForRename.isEmpty()) {
-                    toDeleteForRename.addAll(PublishUtils.checkPathRenamingForUpdate(
+                    toDeleteForRename.addAll(PublishUtils.checkRenamingForUpdate(
                             verifiedReDeployables.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm()));
                 } else {
-                    toDeleteForRename = PublishUtils.checkPathRenamingForUpdate(
+                    toDeleteForRename = PublishUtils.checkRenamingForUpdate(
                             verifiedReDeployables.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm());
                 }
                 // and subsequently call delete for the object with the previous path before committing the update 
@@ -220,6 +220,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     // set new versionId for second round (delete items)
                     final String versionIdForDeleteRenamed = UUID.randomUUID().toString();
                         // call updateRepo command via Proxy of given controllers
+                    DeleteDeployments.storeNewDepHistoryEntries(dbLayer, toDelete, versionIdForDeleteRenamed);
                         PublishUtils.updateItemsDelete(versionIdForDeleteRenamed, toDelete, controllerId).thenAccept(either -> {
                             DeleteDeployments.processAfterDelete(either, controllerId, account, versionIdForDeleteRenamed, getAccessToken(), getJocError());
                         });

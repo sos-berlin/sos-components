@@ -1921,7 +1921,7 @@ public abstract class PublishUtils {
 //        return null;
 //    }
 //
-    public static <T extends DBItem> List<DBItemDeploymentHistory> checkPathRenamingForUpdate(Set<T> verifiedObjects, String controllerId,
+    public static <T extends DBItem> List<DBItemDeploymentHistory> checkRenamingForUpdate(Set<T> verifiedObjects, String controllerId,
             DBLayerDeploy dbLayer, String keyAlgorithm) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         DBItemDeploymentHistory depHistory = null;
         DBItemInventoryConfiguration invConf = null;
