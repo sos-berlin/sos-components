@@ -276,7 +276,7 @@ public class InventoryDBLayer extends DBLayer {
             Boolean onlyValidObjects) throws SOSHibernateException {
         return getConfigurationsByFolder(folder, recursive, configTypes, onlyValidObjects, false);
     }
-    
+
     public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive, Collection<Integer> configTypes,
             Boolean onlyValidObjects, boolean forTrash) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select new ").append(InventoryTreeFolderItem.class.getName());
@@ -416,7 +416,7 @@ public class InventoryDBLayer extends DBLayer {
     public DBItemInventoryConfiguration getConfiguration(Long id) throws SOSHibernateException {
         return getSession().get(DBItemInventoryConfiguration.class, id);
     }
-    
+
     public DBItemInventoryConfigurationTrash getTrashConfiguration(Long id) throws SOSHibernateException {
         return getSession().get(DBItemInventoryConfigurationTrash.class, id);
     }
@@ -446,7 +446,7 @@ public class InventoryDBLayer extends DBLayer {
     public DBItemInventoryConfigurationTrash getTrashConfiguration(String path, Integer type) throws SOSHibernateException {
         return getConfiguration(path, type, DBLayer.DBITEM_INV_CONFIGURATION_TRASH);
     }
-    
+
     public <T extends DBItem> T getConfiguration(String path, Integer type, String tableName) throws SOSHibernateException {
         boolean isCalendar = JocInventory.isCalendar(type);
         StringBuilder hql = new StringBuilder("from ").append(tableName);
@@ -465,7 +465,7 @@ public class InventoryDBLayer extends DBLayer {
         }
         return getSession().getSingleResult(query);
     }
-    
+
     public List<DBItemInventoryConfiguration> getConfigurationByName(String name, Integer type) throws DBConnectionRefusedException,
             DBInvalidDataException {
         return getConfigurationByName(name, type, DBLayer.DBITEM_INV_CONFIGURATIONS);
@@ -538,9 +538,9 @@ public class InventoryDBLayer extends DBLayer {
         StringBuilder hql = new StringBuilder("select name from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where lower(name) like :likename");
         if (type == null || type == ConfigurationType.FOLDER.intValue()) {
-            hql.append(" and type != :type"); 
+            hql.append(" and type != :type");
         } else {
-            hql.append(" and type = :type"); 
+            hql.append(" and type = :type");
         }
         Query<String> query = getSession().createQuery(hql.toString());
         query.setParameter("likename", name + "-" + suffix + "%");
@@ -569,14 +569,14 @@ public class InventoryDBLayer extends DBLayer {
         }
         return num;
     }
-    
+
     public Integer getPrefixNumber(String prefix, String name, Integer type) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select name from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where lower(name) like :likename");
         if (type == null || type == ConfigurationType.FOLDER.intValue()) {
-            hql.append(" and type != :type"); 
+            hql.append(" and type != :type");
         } else {
-            hql.append(" and type = :type"); 
+            hql.append(" and type = :type");
         }
         Query<String> query = getSession().createQuery(hql.toString());
         if (name == null || name.isEmpty() || type == ConfigurationType.FOLDER.intValue()) {
@@ -719,17 +719,17 @@ public class InventoryDBLayer extends DBLayer {
         }
         return getSession().getResultList(query);
     }
-    
+
     public List<DBItemInventoryConfiguration> getFolderContent(String folder, boolean recursive, Collection<Integer> types)
             throws SOSHibernateException {
         return getFolderContent(folder, recursive, types, DBLayer.DBITEM_INV_CONFIGURATIONS);
     }
-    
+
     public List<DBItemInventoryConfigurationTrash> getTrashFolderContent(String folder, boolean recursive, Collection<Integer> types)
             throws SOSHibernateException {
         return getFolderContent(folder, recursive, types, DBLayer.DBITEM_INV_CONFIGURATION_TRASH);
     }
-    
+
     public <T> List<T> getFolderContent(String folder, boolean recursive, Collection<Integer> types, String tableName) throws SOSHibernateException {
         if (folder == null) {
             folder = "/";
@@ -837,14 +837,15 @@ public class InventoryDBLayer extends DBLayer {
                 }
             }
             if (!delete) {
-                for (Long deploymentId : deploymentIds) {
-                    DBItemSearchWorkflow2DeploymentHistory item = new DBItemSearchWorkflow2DeploymentHistory();
-                    item.setSearchWorkflowId(searchWorkflowId);
-                    item.setInventoryConfigurationId(inventoryId);
-                    item.setControllerId(controllerId);
-                    item.setDeploymentHistoryId(deploymentId);
-                    getSession().save(item);
-                }
+                // for (Long deploymentId : deploymentIds) {
+                DBItemSearchWorkflow2DeploymentHistory item = new DBItemSearchWorkflow2DeploymentHistory();
+                item.setSearchWorkflowId(searchWorkflowId);
+                item.setInventoryConfigurationId(inventoryId);
+                item.setControllerId(controllerId);
+                // item.setDeploymentHistoryId(deploymentId);
+                item.setDeploymentHistoryId(deploymentIds.stream().max(Comparator.comparing(Long::valueOf)).get());
+                getSession().save(item);
+                // }
             }
 
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -1129,7 +1130,7 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("workflowName", workflowName);
         return getSession().getResultList(query);
     }
-    
+
     public List<DBItemInventoryConfiguration> getUsedFileOrderSourcesByWorkflowName(String workflowName) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
         hql.append("where type=:type ");
