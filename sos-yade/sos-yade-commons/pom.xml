@@ -9,21 +9,9 @@
 		<version>2.0.0-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>sos-yade-engine</artifactId>
+	<artifactId>sos-yade-commons</artifactId>
 
 	<dependencies>
-		<!-- SOS Dependencies -->
-		<dependency>
-			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-commons-exception</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-yade-commons</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-
 		<!-- 3rd Party Dependencies -->
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
