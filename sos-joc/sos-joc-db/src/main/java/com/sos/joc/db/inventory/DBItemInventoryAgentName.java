@@ -4,12 +4,13 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_INV_AGENT_NAMES)
+@Table(name = DBLayer.TABLE_INV_AGENT_NAMES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[AGENT_ID]", "[AGENT_NAME]" }) })
 public class DBItemInventoryAgentName extends DBItem {
 
     private static final long serialVersionUID = 1L;

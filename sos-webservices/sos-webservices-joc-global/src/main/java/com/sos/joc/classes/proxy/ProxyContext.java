@@ -17,7 +17,7 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.exceptions.JobSchedulerAuthorizationException;
-import com.sos.joc.exceptions.JobSchedulerBadRequestException;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
 import com.sos.joc.exceptions.JobSchedulerSSLCertificateException;
@@ -130,7 +130,7 @@ public class ProxyContext {
                         LOGGER.info("Cluster Nodes are not appointed");
                         List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(credentials.getControllerId());
                         if (controllerInstances == null || controllerInstances.size() < 2) { // is not cluster
-                            throw new JobSchedulerBadRequestException("There is no cluster configured with the Id: " + credentials.getControllerId());
+                            throw new JocBadRequestException("There is no cluster configured with the Id: " + credentials.getControllerId());
                         }
                         NodeId activeId = NodeId.of("Primary");
                         Map<NodeId, Uri> idToUri = new HashMap<>();

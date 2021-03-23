@@ -100,7 +100,7 @@ public class EventServiceFactory {
         EventServiceFactory.isClosed.set(true);
     }
     
-    public static Event getEvents(String controllerId, Long eventId, String accessToken, Session session) {
+    public static Event getEvents(String controllerId, Long eventId, String accessToken, Session session) throws SessionNotExistException {
         return EventServiceFactory.getInstance()._getEvents(controllerId, eventId, accessToken, session);
     }
     
@@ -129,7 +129,7 @@ public class EventServiceFactory {
         return new EventCondition(lock.newCondition());
     }
     
-    private Event _getEvents(String controllerId, Long eventId, String accessToken, Session session) {
+    private Event _getEvents(String controllerId, Long eventId, String accessToken, Session session) throws SessionNotExistException {
         Event events = new Event();
         events.setControllerId(controllerId);
         events.setEventId(eventId); //default
@@ -195,6 +195,8 @@ public class EventServiceFactory {
                 events.setEventSnapshots(evt.stream().map(e -> cloneEvent(e)).distinct().collect(Collectors.toList()));
                 //events.setEventSnapshots(evt.stream().collect(Collectors.toList()));
             }
+        } catch (SessionNotExistException e1) {
+            throw e1;
         } catch (Exception e1) {
             Err err = new Err();
             err.setCode("JOC-410");

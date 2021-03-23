@@ -23,12 +23,12 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 
-public class InventoryAgentInstancesDBLayer {
+public class InventoryAgentInstancesDBLayer extends DBLayer {
 
-    private SOSHibernateSession session;
+    private static final long serialVersionUID = 1L;
 
     public InventoryAgentInstancesDBLayer(SOSHibernateSession conn) {
-        this.session = conn;
+        super(conn);
     }
 
     public DBItemInventoryAgentInstance getAgentInstance(Long id) throws DBConnectionRefusedException, DBInvalidDataException {
@@ -36,7 +36,7 @@ public class InventoryAgentInstancesDBLayer {
             if (id == null) {
                 return null;
             }
-            return session.get(DBItemInventoryAgentInstance.class, id);
+            return getSession().get(DBItemInventoryAgentInstance.class, id);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -56,9 +56,9 @@ public class InventoryAgentInstancesDBLayer {
             hql.append(" and isWatcher = 1");
             hql.append(" and disabled = 0");
 
-            Query<String> query = session.createQuery(hql.toString());
+            Query<String> query = getSession().createQuery(hql.toString());
             query.setParameter("controllerId", controllerId);
-            return session.getResultList(query);
+            return getSession().getResultList(query);
         } catch (DBMissingDataException ex) {
             throw ex;
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -91,11 +91,11 @@ public class InventoryAgentInstancesDBLayer {
             if (!clauses.isEmpty()) {
                 hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
             }
-            Query<DBItemInventoryAgentInstance> query = session.createQuery(hql.toString());
+            Query<DBItemInventoryAgentInstance> query = getSession().createQuery(hql.toString());
             if (controllerIds != null && !controllerIds.isEmpty()) {
                 query.setParameterList("controllerIds", controllerIds);
             }
-            return session.getResultList(query);
+            return getSession().getResultList(query);
         } catch (DBMissingDataException ex) {
             throw ex;
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -133,7 +133,7 @@ public class InventoryAgentInstancesDBLayer {
             if (!clauses.isEmpty()) {
                 hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
             }
-            Query<DBItemInventoryAgentInstance> query = session.createQuery(hql.toString());
+            Query<DBItemInventoryAgentInstance> query = getSession().createQuery(hql.toString());
             if (controllerId != null && !controllerId.isEmpty()) {
                 query.setParameter("controllerId", controllerId);
             }
@@ -143,7 +143,7 @@ public class InventoryAgentInstancesDBLayer {
             if (agentUrls != null && !agentUrls.isEmpty()) {
                 query.setParameterList("agentUrls", agentUrls);
             }
-            return session.getResultList(query);
+            return getSession().getResultList(query);
         } catch (DBMissingDataException ex) {
             throw ex;
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -168,9 +168,9 @@ public class InventoryAgentInstancesDBLayer {
             StringBuilder hql = new StringBuilder();
             hql.append("select agentName from ").append(DBLayer.DBITEM_INV_AGENT_NAMES);
             hql.append(" where agentId in (:agentIds)");
-            Query<String> query = session.createQuery(hql.toString());
+            Query<String> query = getSession().createQuery(hql.toString());
             query.setParameterList("agentIds", agents.stream().map(DBItemInventoryAgentInstance::getAgentId).collect(Collectors.toSet()));
-            List<String> aliases = session.getResultList(query);
+            List<String> aliases = getSession().getResultList(query);
             if (aliases != null && !aliases.isEmpty()) {
                 agentNames.addAll(aliases);
             }
@@ -192,11 +192,11 @@ public class InventoryAgentInstancesDBLayer {
             if (agentIds != null && !agentIds.isEmpty()) {
                 hql.append(" where agentId in (:agentIds)");
             }
-            Query<DBItemInventoryAgentName> query = session.createQuery(hql.toString());
+            Query<DBItemInventoryAgentName> query = getSession().createQuery(hql.toString());
             if (agentIds != null && !agentIds.isEmpty()) {
                 query.setParameterList("agentIds", agentIds);
             }
-            List<DBItemInventoryAgentName> result = session.getResultList(query);
+            List<DBItemInventoryAgentName> result = getSession().getResultList(query);
             if (result != null && !result.isEmpty()) {
                 return result.stream().collect(Collectors.groupingBy(DBItemInventoryAgentName::getAgentId, Collectors.mapping(
                         DBItemInventoryAgentName::getAgentName, Collectors.toSet())));
@@ -219,9 +219,9 @@ public class InventoryAgentInstancesDBLayer {
             StringBuilder hql = new StringBuilder();
             hql.append("from ").append(DBLayer.DBITEM_INV_AGENT_NAMES);
             hql.append(" where agentId = :agentId)");
-            Query<DBItemInventoryAgentName> query = session.createQuery(hql.toString());
+            Query<DBItemInventoryAgentName> query = getSession().createQuery(hql.toString());
             query.setParameter("agentId", agentId);
-            List<DBItemInventoryAgentName> result = session.getResultList(query);
+            List<DBItemInventoryAgentName> result = getSession().getResultList(query);
             if (result != null && !result.isEmpty()) {
                 return result.stream().map(DBItemInventoryAgentName::getAgentName).collect(Collectors.toSet());
             }
@@ -243,11 +243,11 @@ public class InventoryAgentInstancesDBLayer {
             if (agentIds != null && !agentIds.isEmpty()) {
                 hql.append(" where agentId in (:agentIds)");
             }
-            Query<DBItemInventoryAgentName> query = session.createQuery(hql.toString());
+            Query<DBItemInventoryAgentName> query = getSession().createQuery(hql.toString());
             if (agentIds != null && !agentIds.isEmpty()) {
                 query.setParameterList("agentIds", agentIds);
             }
-            List<DBItemInventoryAgentName> result = session.getResultList(query);
+            List<DBItemInventoryAgentName> result = getSession().getResultList(query);
             if (result != null && !result.isEmpty()) {
                 return result.stream().collect(Collectors.groupingBy(DBItemInventoryAgentName::getAgentId, Collectors.toSet()));
             }
@@ -264,7 +264,7 @@ public class InventoryAgentInstancesDBLayer {
     public Long saveAgent(DBItemInventoryAgentInstance agent) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             agent.setModified(Date.from(Instant.now()));
-            session.save(agent);
+            getSession().save(agent);
             return agent.getId();
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -276,7 +276,7 @@ public class InventoryAgentInstancesDBLayer {
     public Long updateAgent(DBItemInventoryAgentInstance agent) throws DBInvalidDataException, DBConnectionRefusedException {
         try {
             agent.setModified(Date.from(Instant.now()));
-            session.update(agent);
+            getSession().update(agent);
             return agent.getId();
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -293,11 +293,11 @@ public class InventoryAgentInstancesDBLayer {
             sql.append(" where agentId in (:agentIds)");
             sql.append(" and controllerId != :controllerId");
 
-            Query<String> query = session.createQuery(sql.toString());
+            Query<String> query = getSession().createQuery(sql.toString());
             query.setParameterList("agentIds", agentIds);
             query.setParameter("controllerId", controllerId);
 
-            List<String> result = session.getResultList(query);
+            List<String> result = getSession().getResultList(query);
             if (result != null && !result.isEmpty()) {
                 throw new JocObjectAlreadyExistException("Agent Ids " + result.toString() + " already in use.");
             }
@@ -314,7 +314,7 @@ public class InventoryAgentInstancesDBLayer {
     public void deleteInstance(DBItemInventoryAgentInstance agent) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             if (agent != null) {
-                session.delete(agent);
+                getSession().delete(agent);
             }
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);

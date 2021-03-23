@@ -2310,6 +2310,7 @@ public class DBLayerDeploy {
                 Query<String> query = getSession().createQuery(hql.toString());
                 query.setParameter("agentName", agentName);
                 query.setParameter("controllerId", controllerId);
+                query.setMaxResults(1);
                 return query.getSingleResult();
             } catch (NoResultException e) {
                 if (workflowPath != null && jobname != null) {

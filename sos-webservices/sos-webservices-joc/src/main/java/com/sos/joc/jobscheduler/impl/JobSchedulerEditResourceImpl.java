@@ -42,7 +42,7 @@ import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
-import com.sos.joc.exceptions.JobSchedulerBadRequestException;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocException;
@@ -101,13 +101,13 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             for (RegisterParameter controller : body.getControllers()) {
                 
                 if (index == 1 && controller.getUrl().equals(body.getControllers().get(0).getUrl())) {
-                    throw new JobSchedulerBadRequestException("The cluster members must have the different URLs"); 
+                    throw new JocBadRequestException("The cluster members must have the different URLs"); 
                 }
                 if (index == 1 && controller.getRole().equals(body.getControllers().get(0).getRole())) {
-                    throw new JobSchedulerBadRequestException("The members of a Controller Cluster must have different roles."); 
+                    throw new JocBadRequestException("The members of a Controller Cluster must have different roles."); 
                 }
                 if (index == 1 && body.getControllers().stream().anyMatch(c -> Role.STANDALONE.equals(c.getRole()))) {
-                    throw new JobSchedulerBadRequestException("The members of a Controller Cluster must have roles PRIMARY and BACKUP."); 
+                    throw new JocBadRequestException("The members of a Controller Cluster must have roles PRIMARY and BACKUP."); 
                 }
 //                if (index == 1 && (body.getAgents().isEmpty() || !body.getAgents()
 //                        .stream().anyMatch(Agent::getIsClusterWatcher))) {
@@ -314,7 +314,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             if (clusterUriChanged || controllerUpdateRequired) {
                 try {
                     JobSchedulerResourceModifyJobSchedulerClusterImpl.appointNodes(controllerId, agentDBLayer, accessToken, getJocError());
-                } catch (JobSchedulerBadRequestException e) {
+                } catch (JocBadRequestException e) {
                 }
             }
             

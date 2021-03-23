@@ -39,8 +39,8 @@ public class BulkError extends Err419 {
     }
     
     private void setCodeAndMessage(JocException e) {
-        if (e instanceof JobSchedulerBadRequestException) {
-            setSurveyDate(((JobSchedulerBadRequestException) e).getSurveyDate());
+        if (e instanceof JocBadRequestException) {
+            setSurveyDate(((JocBadRequestException) e).getSurveyDate());
         }
         JocError err = e.getError();
         setCode(err.getCode());

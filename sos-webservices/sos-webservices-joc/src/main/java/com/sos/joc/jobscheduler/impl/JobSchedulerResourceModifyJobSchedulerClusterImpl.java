@@ -27,7 +27,7 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.JobSchedulerBadRequestException;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
@@ -68,7 +68,7 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
             // ask for cluster
             List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(controllerId);
             if (controllerInstances != null && controllerInstances.size() < 2) { // is not cluster
-                throw new JobSchedulerBadRequestException("There is no cluster with the Id: " + controllerId);
+                throw new JocBadRequestException("There is no cluster with the Id: " + controllerId);
             }
 
             ClusterState clusterState = Globals.objectMapper.readValue(Proxy.of(controllerId).currentState().clusterState().toJson(),
@@ -76,7 +76,7 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
 
             // ask for coupled
             if (clusterState == null || !ClusterType.COUPLED.equals(clusterState.getTYPE())) {
-                throw new JobSchedulerBadRequestException("Switchover is not available because the cluster is not coupled");
+                throw new JocBadRequestException("Switchover is not available because the cluster is not coupled");
             }
 
             // ask for active node is not necessary with ControllerApi
@@ -137,11 +137,11 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
     
     public static void appointNodes(String controllerId, InventoryAgentInstancesDBLayer dbLayer, String accessToken, JocError jocError)
             throws DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
-            JobSchedulerConnectionRefusedException, JsonProcessingException, JobSchedulerBadRequestException {
+            JobSchedulerConnectionRefusedException, JsonProcessingException, JocBadRequestException {
         // ask for cluster
         List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(controllerId);
         if (controllerInstances == null || controllerInstances.size() < 2) { // is not cluster
-            throw new JobSchedulerBadRequestException("There is no cluster configured with the Id: " + controllerId);
+            throw new JocBadRequestException("There is no cluster configured with the Id: " + controllerId);
         }
 //        ClusterAppointNodes command = new ClusterAppointNodes();
 //        command.setActiveId("Primary");

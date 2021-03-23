@@ -25,7 +25,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.ForcedClosingHttpClientException;
-import com.sos.joc.exceptions.JobSchedulerBadRequestException;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JobSchedulerConflictException;
 import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
 import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
@@ -253,7 +253,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
         } catch (JocException e) {
             throw e;
         } catch (Exception e) {
-            throw new JobSchedulerBadRequestException(e);
+            throw new JocBadRequestException(e);
         }
     }
     
@@ -291,7 +291,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
         } catch (JocException e) {
             throw e;
         } catch (Exception e) {
-            throw new JobSchedulerBadRequestException(jocError, e);
+            throw new JocBadRequestException(jocError, e);
         }
     }
     
@@ -326,7 +326,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
         } catch (JocException e) {
             throw e;
         } catch (Exception e) {
-            throw new JobSchedulerBadRequestException(jocError, e);
+            throw new JocBadRequestException(jocError, e);
         }
     }
     
@@ -367,7 +367,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
         } catch (JocException e) {
             throw e;
         } catch (Exception e) {
-            throw new JobSchedulerBadRequestException(jocError, e);
+            throw new JocBadRequestException(jocError, e);
         }
     }
 
@@ -385,7 +385,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
         } catch (JocException e) {
             throw e;
         } catch (Exception e) {
-            throw new JobSchedulerBadRequestException(e);
+            throw new JocBadRequestException(e);
         }
     }
 
@@ -420,7 +420,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
         } catch (JocException e) {
             throw e;
         } catch (Exception e) {
-            throw new JobSchedulerBadRequestException(jocError, e);
+            throw new JocBadRequestException(jocError, e);
         }
     }
     
@@ -498,14 +498,14 @@ public class JOCJsonCommand extends SOSRestApiClient {
 //              if (type.equals("Problem")) {  //TODO all are problems. Use code later, but yet not always inside the answer
 //                  throw new JobSchedulerObjectNotExistException(msg);
 //              }
-                throw new JobSchedulerBadRequestException(getJsonErrorMessage(contentType, response, uri));
+                throw new JocBadRequestException(getJsonErrorMessage(contentType, response, uri));
             case 409:
                 throw new JobSchedulerConflictException(getJsonErrorMessage(contentType, response, uri));
             case 503:
                 //TODO consider code=ControllerIsNotYetReady for passive cluster node
                 throw new JobSchedulerServiceUnavailableException(getJsonErrorMessage(contentType, response, uri));
             default:
-                throw new JobSchedulerBadRequestException(httpReplyCode + " " + getHttpResponse().getStatusLine().getReasonPhrase());
+                throw new JocBadRequestException(httpReplyCode + " " + getHttpResponse().getStatusLine().getReasonPhrase());
             }
         } catch (JocException e) {
             e.addErrorMetaInfo(jocError);
@@ -527,7 +527,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
                 }
                 return response;
             default:
-                throw new JobSchedulerBadRequestException(httpReplyCode + " " + getHttpResponse().getStatusLine().getReasonPhrase());
+                throw new JocBadRequestException(httpReplyCode + " " + getHttpResponse().getStatusLine().getReasonPhrase());
             }
         } catch (JocException e) {
             e.addErrorMetaInfo(jocError);
@@ -548,7 +548,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
                 }
                 return streamingOutPut;
             default:
-                throw new JobSchedulerBadRequestException(httpReplyCode + " " + getHttpResponse().getStatusLine().getReasonPhrase());
+                throw new JocBadRequestException(httpReplyCode + " " + getHttpResponse().getStatusLine().getReasonPhrase());
             }
         } catch (JocException e) {
             e.addErrorMetaInfo(jocError);

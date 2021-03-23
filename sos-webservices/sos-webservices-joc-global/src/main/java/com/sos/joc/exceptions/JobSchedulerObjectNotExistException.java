@@ -2,7 +2,7 @@ package com.sos.joc.exceptions;
 
 import java.util.Date;
 
-public class JobSchedulerObjectNotExistException extends JobSchedulerBadRequestException {
+public class JobSchedulerObjectNotExistException extends JocBadRequestException {
     
     private static final long serialVersionUID = 1L;
     private static final String ERROR_CODE = "JOC-161";

@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.joc.exceptions.JobSchedulerBadRequestException;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
 
 public class JobSchedulerDate {
@@ -112,7 +112,7 @@ public class JobSchedulerDate {
         }
     }
 
-    public static Optional<Instant> getScheduledForInUTC(String scheduledFor, String userTimezone) throws JobSchedulerBadRequestException {
+    public static Optional<Instant> getScheduledForInUTC(String scheduledFor, String userTimezone) throws JocBadRequestException {
         if (scheduledFor == null || scheduledFor.isEmpty() || "now".equals(scheduledFor.trim().toLowerCase())) {
             return Optional.empty();
         } else if ("never".equals(scheduledFor.trim().toLowerCase())) {
@@ -128,9 +128,9 @@ public class JobSchedulerDate {
         return getScheduledForWithoutNowInUTC(scheduledFor, userTimezone);
     }
 
-    private static Optional<Instant> getScheduledForWithNowInUTC(String scheduledFor, String userTimezone) throws JobSchedulerBadRequestException {
+    private static Optional<Instant> getScheduledForWithNowInUTC(String scheduledFor, String userTimezone) throws JocBadRequestException {
         if (!scheduledFor.matches("now|now\\s*\\+\\s*(\\d+|\\d{2}:\\d{2}(:\\d{2})?)")) {
-            throw new JobSchedulerBadRequestException(String.format(
+            throw new JocBadRequestException(String.format(
                     "formats 'now', 'now + HH:mm:[ss]', 'now + SECONDS' or 'YYYY-MM-DD[T]HH:mm:[ss]' expected for \"scheduledFor\": %1$s",
                     scheduledFor));
         }
@@ -155,12 +155,12 @@ public class JobSchedulerDate {
         return Optional.of(ZonedDateTime.of(now, ZoneId.of(userTimezone)).withZoneSameInstant(ZoneId.of("UTC")).toInstant());
     }
 
-    private static Optional<Instant> getScheduledForWithoutNowInUTC(String scheduledFor, String userTimezone) throws JobSchedulerBadRequestException {
+    private static Optional<Instant> getScheduledForWithoutNowInUTC(String scheduledFor, String userTimezone) throws JocBadRequestException {
         if (scheduledFor.matches("\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}")) {
             scheduledFor += ":00";
         }
         if (!scheduledFor.matches("\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}:\\d{2}")) {
-            throw new JobSchedulerBadRequestException(String.format(
+            throw new JocBadRequestException(String.format(
                     "formats 'now', 'now + HH:mm:[ss]', 'now + SECONDS' or 'YYYY-MM-DD[T]HH:mm:[ss]' expected for \"scheduledFor\": %1$s",
                     scheduledFor));
         }

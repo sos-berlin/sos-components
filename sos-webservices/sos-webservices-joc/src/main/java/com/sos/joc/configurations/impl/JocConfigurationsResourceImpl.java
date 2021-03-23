@@ -18,7 +18,7 @@ import com.sos.joc.configurations.resource.IJocConfigurationsResource;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
-import com.sos.joc.exceptions.JobSchedulerBadRequestException;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.configuration.Configuration;
 import com.sos.joc.model.configuration.ConfigurationObjectType;
@@ -63,7 +63,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                     if (configurationsFilter.getAccount() == null || configurationsFilter.getAccount().isEmpty()) {
                         configurationsFilter.setAccount(userName);
                     } else if (!configurationsFilter.getAccount().equals(userName)) {
-                        throw new JobSchedulerBadRequestException("You can only read your own profile.");
+                        throw new JocBadRequestException("You can only read your own profile.");
                     }
                     break;
                 case GLOBALS:

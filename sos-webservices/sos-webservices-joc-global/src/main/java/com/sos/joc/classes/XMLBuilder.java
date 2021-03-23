@@ -4,7 +4,7 @@ import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
-import com.sos.joc.exceptions.JobSchedulerBadRequestException;
+import com.sos.joc.exceptions.JocBadRequestException;
 
 public class XMLBuilder {
     
@@ -26,11 +26,11 @@ public class XMLBuilder {
         return DocumentHelper.parseText(xmlString).getRootElement();
     }
     
-    public static String getRootElementName(String xmlString) throws JobSchedulerBadRequestException {
+    public static String getRootElementName(String xmlString) throws JocBadRequestException {
         try {
             return DocumentHelper.parseText(xmlString).getRootElement().getName();
         } catch (Exception e) {
-            throw new JobSchedulerBadRequestException(e);
+            throw new JocBadRequestException(e);
         }
     }
     

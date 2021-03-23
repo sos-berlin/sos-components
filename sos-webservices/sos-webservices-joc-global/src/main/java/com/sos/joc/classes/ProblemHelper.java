@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.problem.ProblemEvent;
-import com.sos.joc.exceptions.JobSchedulerBadRequestException;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JobSchedulerConflictException;
 import com.sos.joc.exceptions.JobSchedulerObjectNotExistException;
 import com.sos.joc.exceptions.JobSchedulerServiceUnavailableException;
@@ -32,7 +32,7 @@ public class ProblemHelper {
             if (problem.codeOrNull() != null && UNKNOWN_KEY.equalsIgnoreCase(problem.codeOrNull().string())) {
                 return new JobSchedulerObjectNotExistException(problem.message());
             }
-            return new JobSchedulerBadRequestException(getErrorMessage(problem));
+            return new JocBadRequestException(getErrorMessage(problem));
         }
     }
 
@@ -66,7 +66,7 @@ public class ProblemHelper {
 
     public static void throwProblemIfExist(Either<Problem, ?> either) throws JocException {
         if (either == null) {
-            throw new JobSchedulerBadRequestException("Unknown problem");
+            throw new JocBadRequestException("Unknown problem");
         } else if (either.isLeft()) {
             throw getExceptionOfProblem(either.getLeft());
         }
