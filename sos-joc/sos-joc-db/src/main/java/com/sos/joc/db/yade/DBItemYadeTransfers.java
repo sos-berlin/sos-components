@@ -24,65 +24,65 @@ public class DBItemYadeTransfers implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_YADE_TRANSFERS_SEQUENCE)
-    @Column(name = "`ID`", nullable = false)
+    @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    @Column(name = "`CONTROLLER_ID`", nullable = false)
+    @Column(name = "[CONTROLLER_ID]", nullable = false)
     private String controllerId;
 
-    @Column(name = "`WORKFLOW`", nullable = false)
+    @Column(name = "[WORKFLOW]", nullable = false)
     private String workflow;
 
-    @Column(name = "`ORDER_ID`", nullable = false)
+    @Column(name = "[ORDER_ID]", nullable = false)
     private String orderId;
 
-    @Column(name = "`JOB`", nullable = false)
+    @Column(name = "[JOB]", nullable = false)
     private String job;
 
-    @Column(name = "`JOB_POSITION`", nullable = false)
+    @Column(name = "[JOB_POSITION]", nullable = false)
     private String jobPosition;
 
-    @Column(name = "`HOS_ID`", nullable = false)
+    @Column(name = "[HOS_ID]", nullable = false)
     private Long historyOrderStepId;
 
-    @Column(name = "`SOURCE_PROTOCOL_ID`", nullable = false)
+    @Column(name = "[SOURCE_PROTOCOL_ID]", nullable = false)
     private Long sourceProtocolId;
 
-    @Column(name = "`TARGET_PROTOCOL_ID`", nullable = true)
+    @Column(name = "[TARGET_PROTOCOL_ID]", nullable = true)
     private Long targetProtocolId;
 
-    @Column(name = "`JUMP_PROTOCOL_ID`", nullable = true)
+    @Column(name = "[JUMP_PROTOCOL_ID]", nullable = true)
     private Long jumpProtocolId;
 
-    @Column(name = "`OPERATION`", nullable = false)
+    @Column(name = "[OPERATION]", nullable = false)
     private Integer operation;
 
-    @Column(name = "`PROFILE_NAME`", nullable = true)
+    @Column(name = "[PROFILE_NAME]", nullable = true)
     private String profileName;
 
-    @Column(name = "`START`", nullable = false)
+    @Column(name = "[START]", nullable = false)
     private Date start;
 
-    @Column(name = "`END`", nullable = true)
+    @Column(name = "[END]", nullable = true)
     private Date end;
 
-    @Column(name = "`NUM_OF_FILES`", nullable = true)
+    @Column(name = "[NUM_OF_FILES]", nullable = true)
     private Long numOfFiles;
 
-    @Column(name = "`HAS_INTERVENTION`", nullable = true)
+    @Column(name = "[HAS_INTERVENTION]", nullable = true)
     @Type(type = "numeric_boolean")
     private Boolean hasIntervention;
 
-    @Column(name = "`PARENT_TRANSFER_ID`", nullable = true)
+    @Column(name = "[PARENT_TRANSFER_ID]", nullable = true)
     private Long parentTransferId;
 
-    @Column(name = "`STATE`", nullable = false)
+    @Column(name = "[STATE]", nullable = false)
     private Integer state;
 
-    @Column(name = "`ERROR_MESSAGE`", nullable = true)
+    @Column(name = "[ERROR_MESSAGE]", nullable = true)
     private String errorMessage;
 
-    @Column(name = "`CREATED`", nullable = false)
+    @Column(name = "[CREATED]", nullable = false)
     private Date created;
 
     public DBItemYadeTransfers() {
