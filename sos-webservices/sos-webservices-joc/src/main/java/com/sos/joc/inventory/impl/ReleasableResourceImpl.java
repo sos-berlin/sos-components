@@ -18,7 +18,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
+import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocNotImplementedException;
@@ -68,7 +68,7 @@ public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasab
                 throw new JocNotImplementedException("use ./inventory/releasables for folders!");
             }
             if (!JocInventory.isReleasable(type)) {
-                throw new JobSchedulerInvalidResponseDataException("Object is not a 'Scheduling Object': " + type.value());
+                throw new ControllerInvalidResponseDataException("Object is not a 'Scheduling Object': " + type.value());
             }
             
             // get deleted folders

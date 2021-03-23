@@ -22,7 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
+import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 
 public class JobSchedulerDate {
 
@@ -91,24 +91,24 @@ public class JobSchedulerDate {
         return Date.from(Instant.ofEpochMilli(eventId / 1000));
     }
 
-    public static Date getDateTo(String date, String timeZone) throws JobSchedulerInvalidResponseDataException {
+    public static Date getDateTo(String date, String timeZone) throws ControllerInvalidResponseDataException {
         return getDate(date, true, timeZone);
     }
 
-    public static Date getDateFrom(String date, String timeZone) throws JobSchedulerInvalidResponseDataException {
+    public static Date getDateFrom(String date, String timeZone) throws ControllerInvalidResponseDataException {
         return getDate(date, false, timeZone);
     }
 
-    public static Date getDate(String date, boolean dateTo, String timeZone) throws JobSchedulerInvalidResponseDataException {
+    public static Date getDate(String date, boolean dateTo, String timeZone) throws ControllerInvalidResponseDataException {
         if (date == null || date.isEmpty()) {
             return null;
         }
         try {
             return Date.from(getInstantFromDateStr(date, dateTo, timeZone));
-        } catch (JobSchedulerInvalidResponseDataException e) {
+        } catch (ControllerInvalidResponseDataException e) {
             throw e;
         } catch (Exception e) {
-            throw new JobSchedulerInvalidResponseDataException(e);
+            throw new ControllerInvalidResponseDataException(e);
         }
     }
 
@@ -169,7 +169,7 @@ public class JobSchedulerDate {
                 .withZoneSameInstant(ZoneId.of("UTC")).toInstant());
     }
 
-    public static Instant getInstantFromDateStr(String dateStr, boolean dateTo, String timeZone) throws JobSchedulerInvalidResponseDataException {
+    public static Instant getInstantFromDateStr(String dateStr, boolean dateTo, String timeZone) throws ControllerInvalidResponseDataException {
         Pattern offsetPattern = Pattern.compile(
                 "(\\d{2,4}-\\d{1,2}-\\d{1,2}T\\d{1,2}:\\d{1,2}:\\d{1,2}(?:\\.\\d+)?|(?:\\s*[+-]?\\d+\\s*[smhdwMy])+)([+-][0-9:]+|Z)?$");
         Pattern dateTimePattern = Pattern.compile("(?:([+-]?\\d+)\\s*([smhdwMy])\\s*)");
@@ -267,7 +267,7 @@ public class JobSchedulerDate {
                 return calendar.toInstant();
             }
         } catch (Exception e) {
-            throw new JobSchedulerInvalidResponseDataException(e);
+            throw new ControllerInvalidResponseDataException(e);
         }
     }
 

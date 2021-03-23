@@ -25,8 +25,8 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
-import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
@@ -70,7 +70,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             return JOCDefaultResponse.responseStatus200(getSnapshot(body, checkFolderPermission(body.getWorkflowIds(),
                     permittedFolders), permittedFolders, withWorkFlowFilter));
 
-        } catch (JobSchedulerConnectionResetException e) {
+        } catch (ControllerConnectionResetException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatus434JSError(e);
         } catch (JocException e) {
@@ -83,7 +83,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
     }
 
     private static OrdersSnapshot getSnapshot(OrdersFilterV body, Set<VersionedItemId<WorkflowPath>> workflowIds, Set<Folder> permittedFolders,
-            boolean withWorkFlowFilter) throws JobSchedulerConnectionResetException, DBMissingDataException, JocConfigurationException,
+            boolean withWorkFlowFilter) throws ControllerConnectionResetException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
 
         OrdersSummary summary = new OrdersSummary();
@@ -182,7 +182,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             entity.setSurveyDate(Date.from(now));
             entity.setDeliveryDate(Date.from(Instant.now()));
             
-        } catch (JobSchedulerConnectionRefusedException e) {
+        } catch (ControllerConnectionRefusedException e) {
             entity.setDeliveryDate(Date.from(Instant.now()));
             entity.setSurveyDate(entity.getDeliveryDate());
         }

@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.sos.joc.classes.JobSchedulerDate;
-import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
+import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.model.audit.AuditLogFilter;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.job.JobPath;
@@ -29,7 +29,7 @@ public class AuditLogDBFilter {
 		super();
 	}
 
-	public AuditLogDBFilter(AuditLogFilter auditLogFilter) throws JobSchedulerInvalidResponseDataException {
+	public AuditLogDBFilter(AuditLogFilter auditLogFilter) throws ControllerInvalidResponseDataException {
 	    controllerId = auditLogFilter.getControllerId();
 		listOfFolders = auditLogFilter.getFolders();
 		for (JobPath j: auditLogFilter.getJobs()) {

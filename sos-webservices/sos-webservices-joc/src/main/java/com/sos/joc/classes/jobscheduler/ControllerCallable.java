@@ -10,9 +10,9 @@ import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.controller.model.cluster.ClusterState;
 import com.sos.controller.model.command.Overview;
 import com.sos.joc.classes.JOCJsonCommand;
-import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
-import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
-import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionResetException;
+import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocException;
 
 public class ControllerCallable implements Callable<ControllerAnswer> {
@@ -37,7 +37,7 @@ public class ControllerCallable implements Callable<ControllerAnswer> {
     }
 
 	@Override
-	public ControllerAnswer call() throws JobSchedulerInvalidResponseDataException {
+	public ControllerAnswer call() throws ControllerInvalidResponseDataException {
 		Overview overview = null;
 		ClusterState clusterState = null;
         if (!onlyDb) {
@@ -49,9 +49,9 @@ public class ControllerCallable implements Callable<ControllerAnswer> {
                 jocJsonCommand.setUriBuilderForCluster();
                 clusterState = jocJsonCommand.getJsonObjectFromGet(ClusterState.class);
                 jocJsonCommand.closeHttpClient();
-            } catch (JobSchedulerInvalidResponseDataException e) {
+            } catch (ControllerInvalidResponseDataException e) {
                 throw e;
-            } catch (JobSchedulerConnectionRefusedException | JobSchedulerConnectionResetException e) {
+            } catch (ControllerConnectionRefusedException | ControllerConnectionResetException e) {
                 LOGGER.debug(e.toString());
             } catch (JocException e) {
                 LOGGER.info(e.toString());

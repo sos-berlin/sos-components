@@ -43,8 +43,8 @@ import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
-import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerEditResource;
@@ -121,7 +121,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 URI otherUri = index == 0 ? null : body.getControllers().get(0).getUrl();
                 Controller jobScheduler = testConnection(controller.getUrl(), controllerId, otherUri);
                 if (jobScheduler.getConnectionState().get_text() == ConnectionStateText.unreachable) {
-                    throw new JobSchedulerConnectionRefusedException(controller.getUrl().toString());
+                    throw new ControllerConnectionRefusedException(controller.getUrl().toString());
                 }
                 
                 controllerId = jobScheduler.getControllerId();
@@ -442,7 +442,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
         }
     }
     
-    private Controller testConnection(URI jobschedulerURI, String controllerId, URI otherJobschedulerURI) throws JobSchedulerInvalidResponseDataException {
+    private Controller testConnection(URI jobschedulerURI, String controllerId, URI otherJobschedulerURI) throws ControllerInvalidResponseDataException {
         Controller jobScheduler = new Controller();
         jobScheduler.setUrl(jobschedulerURI.toString());
         jobScheduler.setIsCoupled(null);
@@ -451,18 +451,18 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             JOCJsonCommand jocJsonCommand = new JOCJsonCommand(jobschedulerURI, getAccessToken());
             jocJsonCommand.setUriBuilderForOverview();
             answer = jocJsonCommand.getJsonObjectFromGet(Overview.class);
-        } catch (JobSchedulerInvalidResponseDataException e) {
+        } catch (ControllerInvalidResponseDataException e) {
             throw e;
         } catch (JocException e) {
         }
         if (answer != null) {
             if (!controllerId.isEmpty() && !controllerId.equals(answer.getId())) {
                 if (otherJobschedulerURI != null) {
-                    throw new JobSchedulerInvalidResponseDataException(String.format(
+                    throw new ControllerInvalidResponseDataException(String.format(
                             "The cluster members must have the same Controller Id: %1$s -> %2$s, %3$s -> %4$s", otherJobschedulerURI.toString(),
                             controllerId, jobschedulerURI, answer.getId()));
                 } else {
-                    throw new JobSchedulerInvalidResponseDataException(String.format(
+                    throw new ControllerInvalidResponseDataException(String.format(
                             "Connection was successful but controllerId '%s' of URL '%s' is not the expected controllerId '%s'", answer.getId(),
                             jobScheduler.getUrl(), controllerId));
                 }
@@ -477,7 +477,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
     
     private DBItemInventoryJSInstance storeNewInventoryInstance(InventoryInstancesDBLayer instanceDBLayer, InventoryOperatingSystemsDBLayer osDBLayer,
             RegisterParameter controller, String jobschedulerId) throws DBInvalidDataException, DBConnectionRefusedException,
-            JocObjectAlreadyExistException, JobSchedulerInvalidResponseDataException {
+            JocObjectAlreadyExistException, ControllerInvalidResponseDataException {
         DBItemInventoryJSInstance instance = setInventoryInstance(null, controller, jobschedulerId);
         Long newId = instanceDBLayer.saveInstance(instance);
         instance.setId(newId);

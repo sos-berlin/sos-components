@@ -22,8 +22,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.controller.model.command.Terminate;
 import com.sos.joc.Globals;
-import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
-import com.sos.joc.exceptions.JobSchedulerSSLCertificateException;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerSSLCertificateException;
 
 import io.vavr.control.Either;
 import js7.base.generic.SecretString;
@@ -147,10 +147,10 @@ public class ProxyTest {
         try {
             Proxy.of(ProxyCredentialsBuilder.withControllerIdAndUrl("standalone", uri).withAccount(ProxyUser.JOC).withHttpsConfig(keyStoreRef,
                     trustStoreRef).build());
-        } catch (JobSchedulerSSLCertificateException e) {
+        } catch (ControllerSSLCertificateException e) {
             LOGGER.error(e.toString());
             handshake = false;
-        } catch (JobSchedulerConnectionRefusedException e) {
+        } catch (ControllerConnectionRefusedException e) {
             handshake = false;
             LOGGER.error(e.toString());
         } catch (Exception e) {
@@ -232,7 +232,7 @@ public class ProxyTest {
             LOGGER.info("+++++++++++++++++++++++" + i + "++++++++++++++++++++++++++++");
 
             Assert.assertEquals("", map2.size(), map3.size());
-        } catch (JobSchedulerConnectionRefusedException e) {
+        } catch (ControllerConnectionRefusedException e) {
             LOGGER.warn(e.toString());
             Assert.assertTrue("Controller is unfortunately not available at the time of testing", true);
         } catch (Exception e) {
@@ -285,7 +285,7 @@ public class ProxyTest {
             LOGGER.info("---------------------" + c.toString());
             LOGGER.info(Instant.now().toString());
             Assert.assertTrue("Proxy is alive after restart", controllerReady);
-        } catch (JobSchedulerConnectionRefusedException e) {
+        } catch (ControllerConnectionRefusedException e) {
             LOGGER.warn(e.toString());
             Assert.assertTrue("Controller is unfortunately not available at the time of testing", true);
         } catch (Exception e) {
@@ -311,7 +311,7 @@ public class ProxyTest {
 //            System.out.println(metaState.timezone());
 
             Assert.assertTrue("", true);
-        } catch (JobSchedulerConnectionRefusedException e) {
+        } catch (ControllerConnectionRefusedException e) {
             LOGGER.warn(e.toString());
             Assert.assertTrue("Controller is unfortunately not available at the time of testing", true);
         } catch (Exception e) {

@@ -38,10 +38,10 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
-import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
-import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
-import com.sos.joc.exceptions.JobSchedulerObjectNotExistException;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionResetException;
+import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
+import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
@@ -147,20 +147,20 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
     }
 
     private void cancelOrdersFromController(FilterDailyPlannedOrders filter, List<DBItemDailyPlanWithHistory> listOfPlannedOrdersWithHistory)
-            throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
+            throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, JsonProcessingException, InterruptedException,
             ExecutionException {
 
         try {
             OrderHelper.removeFromJobSchedulerControllerWithHistory(filter.getControllerId(), listOfPlannedOrdersWithHistory);
-        } catch (JobSchedulerObjectNotExistException e) {
+        } catch (ControllerObjectNotExistException e) {
             LOGGER.warn("Order unknown in JS7 Controller");
         }
     }
 
     private void submitOrdersToController(List<DBItemDailyPlanOrders> listOfPlannedOrders) throws JsonParseException, JsonMappingException,
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
-            JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, IOException, ParseException, SOSException,
+            ControllerConnectionResetException, ControllerConnectionRefusedException, IOException, ParseException, SOSException,
             URISyntaxException, InterruptedException, ExecutionException, TimeoutException {
 
         if (listOfPlannedOrders.size() > 0) {
@@ -243,8 +243,8 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
     }
 
     private void modifyOrder(String orderId, DailyPlanModifyOrder dailyplanModifyOrder) throws JocConfigurationException,
-            DBConnectionRefusedException, JobSchedulerInvalidResponseDataException, DBOpenSessionException, JobSchedulerConnectionResetException,
-            JobSchedulerConnectionRefusedException, DBMissingDataException, DBInvalidDataException, SOSException, URISyntaxException,
+            DBConnectionRefusedException, ControllerInvalidResponseDataException, DBOpenSessionException, ControllerConnectionResetException,
+            ControllerConnectionRefusedException, DBMissingDataException, DBInvalidDataException, SOSException, URISyntaxException,
             InterruptedException, ExecutionException, IOException, ParseException, TimeoutException {
 
         SOSHibernateSession sosHibernateSession = null;

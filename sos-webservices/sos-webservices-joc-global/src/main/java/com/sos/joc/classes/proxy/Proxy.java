@@ -8,8 +8,8 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
-import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 
 import js7.proxy.javaapi.JControllerProxy;
@@ -26,14 +26,14 @@ public class Proxy {
      * @see start(String controllerId, ProxyUser user)
      * @param controllerId
      * @return ProxyContext
-     * @throws JobSchedulerConnectionRefusedException 
+     * @throws ControllerConnectionRefusedException 
      * @throws DBMissingDataException 
      * @throws DBConnectionRefusedException 
      * @throws DBInvalidDataException 
      * @throws DBOpenSessionException 
      * @throws JocConfigurationException 
      */
-    public static synchronized ProxyContext start(String controllerId) throws JobSchedulerConnectionRefusedException, DBMissingDataException,
+    public static synchronized ProxyContext start(String controllerId) throws ControllerConnectionRefusedException, DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException {
         return Proxies.getInstance().start(controllerId, ProxyUser.JOC);
     }
@@ -43,14 +43,14 @@ public class Proxy {
      * @param controllerId
      * @param user
      * @return ProxyContext
-     * @throws JobSchedulerConnectionRefusedException
+     * @throws ControllerConnectionRefusedException
      * @throws DBMissingDataException
      * @throws DBConnectionRefusedException 
      * @throws DBInvalidDataException 
      * @throws DBOpenSessionException 
      * @throws JocConfigurationException 
      */
-    public static synchronized ProxyContext start(String controllerId, ProxyUser user) throws JobSchedulerConnectionRefusedException,
+    public static synchronized ProxyContext start(String controllerId, ProxyUser user) throws ControllerConnectionRefusedException,
             DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException {
         return Proxies.getInstance().start(controllerId, user);
     }
@@ -60,8 +60,8 @@ public class Proxy {
      * @see of(String controllerId, ProxyUser user)
      * @param controllerId
      * @return JControllerProxy
-     * @throws JobSchedulerConnectionResetException
-     * @throws JobSchedulerConnectionRefusedException
+     * @throws ControllerConnectionResetException
+     * @throws ControllerConnectionRefusedException
      * @throws ExecutionException
      * @throws DBMissingDataException 
      * @throws DBConnectionRefusedException 
@@ -69,9 +69,9 @@ public class Proxy {
      * @throws DBOpenSessionException 
      * @throws JocConfigurationException 
      */
-    public static synchronized JControllerProxy of(String controllerId) throws JobSchedulerConnectionResetException,
-            JobSchedulerConnectionRefusedException, ExecutionException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
-            DBInvalidDataException, DBConnectionRefusedException, JobSchedulerConnectionRefusedException {
+    public static synchronized JControllerProxy of(String controllerId) throws ControllerConnectionResetException,
+            ControllerConnectionRefusedException, ExecutionException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
+            DBInvalidDataException, DBConnectionRefusedException, ControllerConnectionRefusedException {
         return Proxies.getInstance().of(controllerId, ProxyUser.JOC, Globals.httpConnectionTimeout);
     }
 
@@ -80,8 +80,8 @@ public class Proxy {
      * @param controllerId
      * @param user
      * @return JControllerProxy
-     * @throws JobSchedulerConnectionResetException
-     * @throws JobSchedulerConnectionRefusedException
+     * @throws ControllerConnectionResetException
+     * @throws ControllerConnectionRefusedException
      * @throws ExecutionException
      * @throws DBMissingDataException
      * @throws DBConnectionRefusedException 
@@ -89,9 +89,9 @@ public class Proxy {
      * @throws DBOpenSessionException 
      * @throws JocConfigurationException 
      */
-    public static synchronized JControllerProxy of(String controllerId, ProxyUser user) throws JobSchedulerConnectionResetException,
-            JobSchedulerConnectionRefusedException, ExecutionException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
-            DBInvalidDataException, DBConnectionRefusedException, JobSchedulerConnectionRefusedException {
+    public static synchronized JControllerProxy of(String controllerId, ProxyUser user) throws ControllerConnectionResetException,
+            ControllerConnectionRefusedException, ExecutionException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
+            DBInvalidDataException, DBConnectionRefusedException, ControllerConnectionRefusedException {
         return Proxies.getInstance().of(controllerId, user, Globals.httpConnectionTimeout);
     }
     
@@ -99,13 +99,13 @@ public class Proxy {
      * Only for Unit tests
      * @param credentials
      * @return JControllerProxy
-     * @throws JobSchedulerConnectionResetException
-     * @throws JobSchedulerConnectionRefusedException
+     * @throws ControllerConnectionResetException
+     * @throws ControllerConnectionRefusedException
      * @throws ExecutionException
      * @throws DBMissingDataException
      */
-    protected static synchronized JControllerProxy of(ProxyCredentials credentials) throws JobSchedulerConnectionResetException,
-            JobSchedulerConnectionRefusedException, JobSchedulerConnectionRefusedException, ExecutionException, DBMissingDataException {
+    protected static synchronized JControllerProxy of(ProxyCredentials credentials) throws ControllerConnectionResetException,
+            ControllerConnectionRefusedException, ControllerConnectionRefusedException, ExecutionException, DBMissingDataException {
         return Proxies.getInstance().of(credentials, Globals.httpConnectionTimeout);
     }
     
@@ -115,8 +115,8 @@ public class Proxy {
      * @param controllerId
      * @param connectionTimeout (in milliseconds)
      * @return JControllerProxy
-     * @throws JobSchedulerConnectionResetException
-     * @throws JobSchedulerConnectionRefusedException
+     * @throws ControllerConnectionResetException
+     * @throws ControllerConnectionRefusedException
      * @throws ExecutionException
      * @throws DBMissingDataException
      * @throws DBConnectionRefusedException 
@@ -124,9 +124,9 @@ public class Proxy {
      * @throws DBOpenSessionException 
      * @throws JocConfigurationException 
      */
-    public static synchronized JControllerProxy of(String controllerId, long connectionTimeout) throws JobSchedulerConnectionResetException,
-            JobSchedulerConnectionRefusedException, ExecutionException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
-            DBInvalidDataException, DBConnectionRefusedException, JobSchedulerConnectionRefusedException {
+    public static synchronized JControllerProxy of(String controllerId, long connectionTimeout) throws ControllerConnectionResetException,
+            ControllerConnectionRefusedException, ExecutionException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
+            DBInvalidDataException, DBConnectionRefusedException, ControllerConnectionRefusedException {
         return Proxies.getInstance().of(controllerId, ProxyUser.JOC, connectionTimeout);
     }
     
@@ -136,8 +136,8 @@ public class Proxy {
      * @param user
      * @param connectionTimeout (in milliseconds)
      * @return JControllerProxy
-     * @throws JobSchedulerConnectionResetException
-     * @throws JobSchedulerConnectionRefusedException
+     * @throws ControllerConnectionResetException
+     * @throws ControllerConnectionRefusedException
      * @throws ExecutionException
      * @throws DBMissingDataException
      * @throws DBConnectionRefusedException 
@@ -146,8 +146,8 @@ public class Proxy {
      * @throws JocConfigurationException 
      */
     public static synchronized JControllerProxy of(String controllerId, ProxyUser user, long connectionTimeout)
-            throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, ExecutionException, DBMissingDataException,
-            JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, JobSchedulerConnectionRefusedException {
+            throws ControllerConnectionResetException, ControllerConnectionRefusedException, ExecutionException, DBMissingDataException,
+            JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ControllerConnectionRefusedException {
         return Proxies.getInstance().of(controllerId, user, connectionTimeout);
     }
     

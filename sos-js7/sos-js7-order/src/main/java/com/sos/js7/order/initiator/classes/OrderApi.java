@@ -30,8 +30,8 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
-import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.common.Err419;
@@ -84,8 +84,8 @@ public class OrderApi {
     }
 
     public static Set<PlannedOrder> addOrderToController(String controllerId, JocError jocError, String accessToken, Set<PlannedOrder> orders,
-            List<DBItemDailyPlanHistory> listOfInsertHistoryEntries) throws JobSchedulerConnectionResetException,
-            JobSchedulerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
+            List<DBItemDailyPlanHistory> listOfInsertHistoryEntries) throws ControllerConnectionResetException,
+            ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, InterruptedException, ExecutionException {
 
         Function<PlannedOrder, Either<Err419, JFreshOrder>> mapper = order -> {

@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 
 
 public class ProxiesEdit {
@@ -26,10 +26,10 @@ public class ProxiesEdit {
      * @param controllerDbInstances
      * @param connection
      * @throws DBMissingDataException
-     * @throws JobSchedulerConnectionRefusedException
+     * @throws ControllerConnectionRefusedException
      */
     public static synchronized void update(List<DBItemInventoryJSInstance> controllerDbInstances)
-            throws DBMissingDataException, JobSchedulerConnectionRefusedException {
+            throws DBMissingDataException, ControllerConnectionRefusedException {
         Proxies.getInstance().updateProxies(controllerDbInstances);
     }
 

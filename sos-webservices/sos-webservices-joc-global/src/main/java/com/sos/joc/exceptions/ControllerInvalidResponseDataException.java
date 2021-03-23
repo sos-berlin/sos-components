@@ -1,40 +1,40 @@
 package com.sos.joc.exceptions;
 
 
-public class JobSchedulerInvalidResponseDataException extends JocException {
+public class ControllerInvalidResponseDataException extends JocException {
     
     private static final long serialVersionUID = 1L;
     private static final String ERROR_CODE = "JOC-405";
 
-    public JobSchedulerInvalidResponseDataException() {
+    public ControllerInvalidResponseDataException() {
     }
     
-    public JobSchedulerInvalidResponseDataException(Throwable cause) {
+    public ControllerInvalidResponseDataException(Throwable cause) {
         super(new JocError(ERROR_CODE, cause.getMessage()), cause);
     }
 
-    public JobSchedulerInvalidResponseDataException(String message) {
+    public ControllerInvalidResponseDataException(String message) {
         super(new JocError(ERROR_CODE, message));
     }
     
-    public JobSchedulerInvalidResponseDataException(JocError error) {
+    public ControllerInvalidResponseDataException(JocError error) {
         super(updateJocErrorCode(error, ERROR_CODE));
     }
 
-    public JobSchedulerInvalidResponseDataException(String message, Throwable cause) {
+    public ControllerInvalidResponseDataException(String message, Throwable cause) {
         super(new JocError(ERROR_CODE, message), cause);
     }
 
-    public JobSchedulerInvalidResponseDataException(JocError error, Throwable cause) {
+    public ControllerInvalidResponseDataException(JocError error, Throwable cause) {
         super(updateJocErrorCode(error, ERROR_CODE), cause);
     }
 
-    public JobSchedulerInvalidResponseDataException(String message, Throwable cause, boolean enableSuppression,
+    public ControllerInvalidResponseDataException(String message, Throwable cause, boolean enableSuppression,
             boolean writableStackTrace) {
         super(new JocError(ERROR_CODE, message), cause, enableSuppression, writableStackTrace);
     }
     
-    public JobSchedulerInvalidResponseDataException(JocError error, Throwable cause, boolean enableSuppression,
+    public ControllerInvalidResponseDataException(JocError error, Throwable cause, boolean enableSuppression,
             boolean writableStackTrace) {
         super(updateJocErrorCode(error, ERROR_CODE), cause, enableSuppression, writableStackTrace);
     }

@@ -11,7 +11,7 @@ import com.sos.controller.model.command.overview.SystemProperties;
 import com.sos.joc.Globals;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
-import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
+import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.model.controller.ComponentStateText;
 import com.sos.joc.model.controller.ConnectionStateText;
 import com.sos.joc.model.controller.Controller;
@@ -81,10 +81,10 @@ public class ControllerAnswer extends Controller {
         return clusterState != null && (clusterState == ClusterType.COUPLED || clusterState == ClusterType.PREPARED_TO_BE_COUPLED);
     }
 
-	public void setFields() throws JobSchedulerInvalidResponseDataException {
+	public void setFields() throws ControllerInvalidResponseDataException {
 		if (overviewJson != null) {
 			if (!dbInstance.getControllerId().equals(overviewJson.getId())) {
-				throw new JobSchedulerInvalidResponseDataException("unexpected JobSchedulerId " + overviewJson.getId());
+				throw new ControllerInvalidResponseDataException("unexpected JobSchedulerId " + overviewJson.getId());
 			}
 			setSurveyDate(Date.from(Instant.now()));
 			setStartedAt(Date.from(Instant.ofEpochMilli(overviewJson.getStartedAt() == null ? 0L : overviewJson.getStartedAt())));

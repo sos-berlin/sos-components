@@ -6,9 +6,9 @@ import org.slf4j.LoggerFactory;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.problem.ProblemEvent;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JobSchedulerConflictException;
-import com.sos.joc.exceptions.JobSchedulerObjectNotExistException;
-import com.sos.joc.exceptions.JobSchedulerServiceUnavailableException;
+import com.sos.joc.exceptions.ControllerConflictException;
+import com.sos.joc.exceptions.ControllerObjectNotExistException;
+import com.sos.joc.exceptions.ControllerServiceUnavailableException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 
@@ -24,13 +24,13 @@ public class ProblemHelper {
         switch (problem.httpStatusCode()) {
         case 409:
             // duplicate orders are ignored by controller -> 409 is no longer transmitted
-            return new JobSchedulerConflictException(getErrorMessage(problem));
+            return new ControllerConflictException(getErrorMessage(problem));
         case 503:
-            return new JobSchedulerServiceUnavailableException(getErrorMessage(problem));
+            return new ControllerServiceUnavailableException(getErrorMessage(problem));
         default:
             // UnknownKey
             if (problem.codeOrNull() != null && UNKNOWN_KEY.equalsIgnoreCase(problem.codeOrNull().string())) {
-                return new JobSchedulerObjectNotExistException(problem.message());
+                return new ControllerObjectNotExistException(problem.message());
             }
             return new JocBadRequestException(getErrorMessage(problem));
         }

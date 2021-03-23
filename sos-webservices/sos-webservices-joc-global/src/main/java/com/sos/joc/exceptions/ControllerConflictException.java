@@ -1,40 +1,40 @@
 package com.sos.joc.exceptions;
 
 
-public class JobSchedulerConflictException extends JocException {
+public class ControllerConflictException extends JocException {
     
     private static final long serialVersionUID = 1L;
     private static final String ERROR_CODE = "JOC-409";
 
-    public JobSchedulerConflictException() {
+    public ControllerConflictException() {
     }
 
-    public JobSchedulerConflictException(Throwable cause) {
+    public ControllerConflictException(Throwable cause) {
         super(new JocError(ERROR_CODE, cause.getMessage()), cause);
     }
 
-    public JobSchedulerConflictException(String message) {
+    public ControllerConflictException(String message) {
         super(new JocError(ERROR_CODE, message));
     }
     
-    public JobSchedulerConflictException(JocError error) {
+    public ControllerConflictException(JocError error) {
         super(updateJocErrorCode(error, ERROR_CODE));
     }
 
-    public JobSchedulerConflictException(String message, Throwable cause) {
+    public ControllerConflictException(String message, Throwable cause) {
         super(new JocError(ERROR_CODE, message), cause);
     }
 
-    public JobSchedulerConflictException(JocError error, Throwable cause) {
+    public ControllerConflictException(JocError error, Throwable cause) {
         super(updateJocErrorCode(error, ERROR_CODE), cause);
     }
 
-    public JobSchedulerConflictException(String message, Throwable cause, boolean enableSuppression,
+    public ControllerConflictException(String message, Throwable cause, boolean enableSuppression,
             boolean writableStackTrace) {
         super(new JocError(ERROR_CODE, message), cause, enableSuppression, writableStackTrace);
     }
     
-    public JobSchedulerConflictException(JocError error, Throwable cause, boolean enableSuppression,
+    public ControllerConflictException(JocError error, Throwable cause, boolean enableSuppression,
             boolean writableStackTrace) {
         super(updateJocErrorCode(error, ERROR_CODE), cause, enableSuppression, writableStackTrace);
     }

@@ -16,11 +16,11 @@ import org.slf4j.LoggerFactory;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.event.EventBus;
-import com.sos.joc.exceptions.JobSchedulerAuthorizationException;
+import com.sos.joc.exceptions.ControllerAuthorizationException;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
-import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
-import com.sos.joc.exceptions.JobSchedulerSSLCertificateException;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionResetException;
+import com.sos.joc.exceptions.ControllerSSLCertificateException;
 import com.sos.joc.exceptions.ProxyNotCoupledException;
 
 import io.vavr.control.Either;
@@ -49,12 +49,12 @@ public class ProxyContext {
     private Boolean coupled = null;
     private ProxyCredentials credentials;
 
-    protected ProxyContext(JProxyContext proxyContext, ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
+    protected ProxyContext(JProxyContext proxyContext, ProxyCredentials credentials) throws ControllerConnectionRefusedException {
         this.credentials = credentials;
         start(ControllerApiContext.newControllerApi(proxyContext, credentials));
     }
     
-    protected ProxyContext(JControllerApi controllerApi, ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
+    protected ProxyContext(JControllerApi controllerApi, ProxyCredentials credentials) throws ControllerConnectionRefusedException {
         this.credentials = credentials;
         start(controllerApi);
     }
@@ -67,34 +67,34 @@ public class ProxyContext {
         return coupled;
     }
 
-    protected JControllerProxy getProxy(long connectionTimeout) throws ExecutionException, JobSchedulerConnectionResetException,
-            JobSchedulerConnectionRefusedException {
+    protected JControllerProxy getProxy(long connectionTimeout) throws ExecutionException, ControllerConnectionResetException,
+            ControllerConnectionRefusedException {
         try {
             long timeout = Math.max(0L, connectionTimeout);
             coupledFuture.get(timeout, TimeUnit.MILLISECONDS);
             return proxyFuture.get(timeout, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             if (e.getCause() != null) {
-                throw new JobSchedulerConnectionResetException(e.getCause());
+                throw new ControllerConnectionResetException(e.getCause());
             }
-            throw new JobSchedulerConnectionResetException(e);
+            throw new ControllerConnectionResetException(e);
         } catch (ExecutionException e) {
             if (e.getCause() != null && ProxyNotCoupledException.class.isInstance(e.getCause())) {
                 throw (ProxyNotCoupledException) e.getCause();
             }
             throw e;
         } catch (TimeoutException e) {
-            throw new JobSchedulerConnectionRefusedException(getLastErrorMessage(toString()));
+            throw new ControllerConnectionRefusedException(getLastErrorMessage(toString()));
         }
     }
     
-    protected void restart(JControllerApi controllerApi, ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
+    protected void restart(JControllerApi controllerApi, ProxyCredentials credentials) throws ControllerConnectionRefusedException {
         stop();
         this.credentials = credentials;
         start(controllerApi);
     }
     
-    protected void start(JControllerApi controllerApi) throws JobSchedulerConnectionRefusedException {
+    protected void start(JControllerApi controllerApi) throws ControllerConnectionRefusedException {
         LOGGER.info(String.format("start Proxy of %s", toString()));
         this.proxyFuture = controllerApi.startProxy(getProxyEventBus());
         this.coupledFuture = startMonitorFuture(120);
@@ -220,12 +220,12 @@ public class ProxyContext {
                     if (coupledFuture.isDone()) {
                         coupledFuture = new CompletableFuture<>();
                     }
-                    coupledFuture.completeExceptionally(new JobSchedulerSSLCertificateException(toString() + ": " + msg));
+                    coupledFuture.completeExceptionally(new ControllerSSLCertificateException(toString() + ": " + msg));
                 } else if (msg.contains("HTTP 401")) {
                     if (coupledFuture.isDone()) {
                         coupledFuture = new CompletableFuture<>();
                     }
-                    coupledFuture.completeExceptionally(new JobSchedulerAuthorizationException(toString() + ": " + msg));
+                    coupledFuture.completeExceptionally(new ControllerAuthorizationException(toString() + ": " + msg));
                 }
             }
         }

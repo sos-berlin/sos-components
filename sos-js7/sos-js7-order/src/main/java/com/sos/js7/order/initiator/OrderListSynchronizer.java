@@ -32,9 +32,9 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
-import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
-import com.sos.joc.exceptions.JobSchedulerObjectNotExistException;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionResetException;
+import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.js7.order.initiator.classes.CycleOrderKey;
@@ -200,7 +200,7 @@ public class OrderListSynchronizer {
         return listOfInsertHistoryEntries;
     }
 
-    public void submitOrdersToController(String controllerId) throws JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException,
+    public void submitOrdersToController(String controllerId) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
             DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
             InterruptedException, ExecutionException, SOSHibernateException, TimeoutException, ParseException {
 
@@ -236,7 +236,7 @@ public class OrderListSynchronizer {
     }
 
     public void addPlannedOrderToDB(String controllerId) throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException, ParseException,
-            JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, DBMissingDataException, DBOpenSessionException,
+            ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, DBOpenSessionException,
             DBInvalidDataException, JsonProcessingException, InterruptedException, ExecutionException {
         LOGGER.debug("... addPlannedOrderToDB");
 
@@ -262,7 +262,7 @@ public class OrderListSynchronizer {
                     List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
                     try {
                         OrderHelper.removeFromJobSchedulerController(plannedOrder.getControllerId(), listOfPlannedOrders);
-                    } catch (JobSchedulerObjectNotExistException e) {
+                    } catch (ControllerObjectNotExistException e) {
                         LOGGER.warn("Order unknown in JS7 Controller");
                     }
                     dbLayerDailyPlannedOrders.deleteCascading(filter);
@@ -332,7 +332,7 @@ public class OrderListSynchronizer {
     }
 
     public void addPlannedOrderToControllerAndDB(String controllerId, Boolean withSubmit) throws JocConfigurationException, DBConnectionRefusedException,
-            JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, DBMissingDataException, DBOpenSessionException,
+            ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, DBOpenSessionException,
             DBInvalidDataException, SOSHibernateException, JsonProcessingException, ParseException, InterruptedException, ExecutionException,
             TimeoutException {
         LOGGER.debug("... addPlannedOrderToControllerAndDB");

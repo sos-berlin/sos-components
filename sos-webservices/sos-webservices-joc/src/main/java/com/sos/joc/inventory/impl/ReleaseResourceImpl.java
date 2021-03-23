@@ -29,7 +29,7 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
+import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IReleaseResource;
@@ -142,7 +142,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 JocInventory.postEvent(conf.getFolder());
             }
         } else if (!JocInventory.isReleasable(conf.getTypeAsEnum())) {
-            throw new JobSchedulerInvalidResponseDataException(String.format("%s is not a 'Scheduling Object': %s", conf.getPath(), conf
+            throw new ControllerInvalidResponseDataException(String.format("%s is not a 'Scheduling Object': %s", conf.getPath(), conf
                     .getTypeAsEnum()));
         } else {
             createAuditLog(conf, conf.getTypeAsEnum(), auditLogger, auditParams);
@@ -163,7 +163,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                     updateReleasedFolder(conf, dbLayer, auditLogger, auditParams);
                     JocInventory.postEvent(conf.getFolder());
                 } else if (!JocInventory.isReleasable(conf.getTypeAsEnum())) {
-                    throw new JobSchedulerInvalidResponseDataException(String.format("%s is not a 'Scheduling Object': %s", conf.getPath(), conf
+                    throw new ControllerInvalidResponseDataException(String.format("%s is not a 'Scheduling Object': %s", conf.getPath(), conf
                             .getTypeAsEnum()));
                 } else {
                     createAuditLog(conf, conf.getTypeAsEnum(), auditLogger, auditParams);

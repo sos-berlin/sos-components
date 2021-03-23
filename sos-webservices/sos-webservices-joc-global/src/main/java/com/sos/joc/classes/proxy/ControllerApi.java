@@ -7,8 +7,8 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
-import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 
 import js7.proxy.javaapi.JControllerApi;
@@ -27,7 +27,7 @@ public class ControllerApi {
      * @see of(String controllerId, ProxyUser user)
      * @param controllerId
      * @return JControllerApi
-     * @throws JobSchedulerConnectionRefusedException
+     * @throws ControllerConnectionRefusedException
      * @throws DBMissingDataException 
      * @throws DBConnectionRefusedException 
      * @throws DBInvalidDataException 
@@ -35,7 +35,7 @@ public class ControllerApi {
      * @throws JocConfigurationException 
      */
     public static synchronized JControllerApi of(String controllerId) throws DBMissingDataException, JocConfigurationException,
-            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, JobSchedulerConnectionRefusedException {
+            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ControllerConnectionRefusedException {
         return Proxies.getInstance().loadApi(controllerId, ProxyUser.JOC, Globals.httpConnectionTimeout);
     }
 
@@ -44,7 +44,7 @@ public class ControllerApi {
      * @param controllerId
      * @param user
      * @return JControllerApi
-     * @throws JobSchedulerConnectionRefusedException
+     * @throws ControllerConnectionRefusedException
      * @throws DBMissingDataException
      * @throws DBConnectionRefusedException 
      * @throws DBInvalidDataException 
@@ -52,7 +52,7 @@ public class ControllerApi {
      * @throws JocConfigurationException 
      */
     public static synchronized JControllerApi of(String controllerId, ProxyUser user) throws DBMissingDataException, JocConfigurationException,
-            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, JobSchedulerConnectionRefusedException {
+            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ControllerConnectionRefusedException {
         return Proxies.getInstance().loadApi(controllerId, user, Globals.httpConnectionTimeout);
     }
     
@@ -62,7 +62,7 @@ public class ControllerApi {
      * @param controllerId
      * @param connectionTimeout (in milliseconds)
      * @return JControllerApi
-     * @throws JobSchedulerConnectionRefusedException
+     * @throws ControllerConnectionRefusedException
      * @throws DBMissingDataException
      * @throws DBConnectionRefusedException 
      * @throws DBInvalidDataException 
@@ -71,7 +71,7 @@ public class ControllerApi {
      */
     public static synchronized JControllerApi of(String controllerId, long connectionTimeout) throws DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
-            JobSchedulerConnectionRefusedException {
+            ControllerConnectionRefusedException {
         return Proxies.getInstance().loadApi(controllerId, ProxyUser.JOC, connectionTimeout);
     }
     
@@ -81,7 +81,7 @@ public class ControllerApi {
      * @param user
      * @param connectionTimeout (in milliseconds)
      * @return JControllerApi
-     * @throws JobSchedulerConnectionRefusedException
+     * @throws ControllerConnectionRefusedException
      * @throws DBMissingDataException
      * @throws DBConnectionRefusedException 
      * @throws DBInvalidDataException 
@@ -90,13 +90,13 @@ public class ControllerApi {
      */
     public static synchronized JControllerApi of(String controllerId, ProxyUser user, long connectionTimeout) throws DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
-            JobSchedulerConnectionRefusedException {
+            ControllerConnectionRefusedException {
         return Proxies.getInstance().loadApi(controllerId, user, connectionTimeout);
     }
     
     // only for testing
-    protected static synchronized JControllerApi of(ProxyCredentials credentials) throws JobSchedulerConnectionResetException,
-            JobSchedulerConnectionRefusedException, ExecutionException, DBMissingDataException {
+    protected static synchronized JControllerApi of(ProxyCredentials credentials) throws ControllerConnectionResetException,
+            ControllerConnectionRefusedException, ExecutionException, DBMissingDataException {
         return Proxies.getInstance().loadApi(credentials);
     }
 

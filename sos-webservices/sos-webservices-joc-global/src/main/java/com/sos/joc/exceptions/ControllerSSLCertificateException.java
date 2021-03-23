@@ -1,40 +1,40 @@
 package com.sos.joc.exceptions;
 
 
-public class JobSchedulerSSLCertificateException extends JobSchedulerAuthorizationException {
+public class ControllerSSLCertificateException extends ControllerAuthorizationException {
     
     private static final long serialVersionUID = 1L;
     private static final String ERROR_CODE = "JOC-402";
 
-    public JobSchedulerSSLCertificateException() {
+    public ControllerSSLCertificateException() {
     }
 
-    public JobSchedulerSSLCertificateException(Throwable cause) {
+    public ControllerSSLCertificateException(Throwable cause) {
         super(new JocError(ERROR_CODE, cause.getMessage()), cause);
     }
 
-    public JobSchedulerSSLCertificateException(String message) {
+    public ControllerSSLCertificateException(String message) {
         super(new JocError(ERROR_CODE, message));
     }
     
-    public JobSchedulerSSLCertificateException(JocError error) {
+    public ControllerSSLCertificateException(JocError error) {
         super(updateJocErrorCode(error, ERROR_CODE));
     }
 
-    public JobSchedulerSSLCertificateException(String message, Throwable cause) {
+    public ControllerSSLCertificateException(String message, Throwable cause) {
         super(new JocError(ERROR_CODE, message), cause);
     }
 
-    public JobSchedulerSSLCertificateException(JocError error, Throwable cause) {
+    public ControllerSSLCertificateException(JocError error, Throwable cause) {
         super(updateJocErrorCode(error, ERROR_CODE), cause);
     }
 
-    public JobSchedulerSSLCertificateException(String message, Throwable cause, boolean enableSuppression,
+    public ControllerSSLCertificateException(String message, Throwable cause, boolean enableSuppression,
             boolean writableStackTrace) {
         super(new JocError(ERROR_CODE, message), cause, enableSuppression, writableStackTrace);
     }
     
-    public JobSchedulerSSLCertificateException(JocError error, Throwable cause, boolean enableSuppression,
+    public ControllerSSLCertificateException(JocError error, Throwable cause, boolean enableSuppression,
             boolean writableStackTrace) {
         super(updateJocErrorCode(error, ERROR_CODE), cause, enableSuppression, writableStackTrace);
     }

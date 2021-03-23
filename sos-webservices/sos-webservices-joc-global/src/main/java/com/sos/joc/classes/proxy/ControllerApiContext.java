@@ -6,7 +6,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 
 import js7.data_for_java.auth.JAdmission;
 import js7.data_for_java.auth.JHttpsConfig;
@@ -21,7 +21,7 @@ public class ControllerApiContext {
     }
 
     protected static JControllerApi newControllerApi(JProxyContext proxyContext, ProxyCredentials credentials)
-            throws JobSchedulerConnectionRefusedException {
+            throws ControllerConnectionRefusedException {
         LOGGER.info(String.format("connect ControllerApi of %s", toString(credentials)));
         checkCredentials(credentials);
         List<JAdmission> admissions = null;
@@ -42,16 +42,16 @@ public class ControllerApiContext {
         }
     }
 
-    private static void checkCredentials(ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
+    private static void checkCredentials(ProxyCredentials credentials) throws ControllerConnectionRefusedException {
         if (credentials.getUrl() == null) {
-            throw new JobSchedulerConnectionRefusedException("URL is undefined");
+            throw new ControllerConnectionRefusedException("URL is undefined");
         } else if (credentials.getUrl().startsWith("https://") || (credentials.getBackupUrl() != null && credentials.getBackupUrl().startsWith(
                 "https://"))) {
             JHttpsConfig httpsConfig = credentials.getHttpsConfig();
             if (httpsConfig.asScala().trustStoreRefs() == null || httpsConfig.asScala().trustStoreRefs().toIterable().isEmpty()) {
-                throw new JobSchedulerConnectionRefusedException("Required truststore not found");
+                throw new ControllerConnectionRefusedException("Required truststore not found");
             } else if (credentials.getAccount().toScala().isEmpty() && !httpsConfig.asScala().keyStoreRef().nonEmpty()) {
-                throw new JobSchedulerConnectionRefusedException("Neither account is specified nor client certificate was found");
+                throw new ControllerConnectionRefusedException("Neither account is specified nor client certificate was found");
             }
         }
     }

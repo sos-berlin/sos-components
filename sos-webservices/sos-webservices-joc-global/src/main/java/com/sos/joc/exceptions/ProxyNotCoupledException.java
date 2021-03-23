@@ -1,7 +1,7 @@
 package com.sos.joc.exceptions;
 
 
-public class ProxyNotCoupledException extends JobSchedulerConnectionRefusedException {
+public class ProxyNotCoupledException extends ControllerConnectionRefusedException {
     
     private static final long serialVersionUID = 1L;
     private static final String ERROR_CODE = "JOC-402";

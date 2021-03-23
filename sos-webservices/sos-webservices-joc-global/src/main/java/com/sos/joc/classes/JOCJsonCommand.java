@@ -26,12 +26,12 @@ import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.ForcedClosingHttpClientException;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JobSchedulerConflictException;
-import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
-import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
-import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
-import com.sos.joc.exceptions.JobSchedulerNoResponseException;
-import com.sos.joc.exceptions.JobSchedulerServiceUnavailableException;
+import com.sos.joc.exceptions.ControllerConflictException;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionResetException;
+import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
+import com.sos.joc.exceptions.ControllerNoResponseException;
+import com.sos.joc.exceptions.ControllerServiceUnavailableException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.UnknownJobSchedulerAgentException;
@@ -274,19 +274,19 @@ public class JOCJsonCommand extends SOSRestApiClient {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
             } else {
-                throw new JobSchedulerConnectionResetException(jocError, e);
+                throw new ControllerConnectionResetException(jocError, e);
             }
         } catch (SOSConnectionRefusedException e) {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
             } else {
-                throw new JobSchedulerConnectionRefusedException(jocError, e);
+                throw new ControllerConnectionRefusedException(jocError, e);
             }
         } catch (SOSNoResponseException e) {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
             } else {
-                throw new JobSchedulerNoResponseException(jocError, e);
+                throw new ControllerNoResponseException(jocError, e);
             }
         } catch (JocException e) {
             throw e;
@@ -309,19 +309,19 @@ public class JOCJsonCommand extends SOSRestApiClient {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
             } else {
-                throw new JobSchedulerConnectionRefusedException(jocError, e);
+                throw new ControllerConnectionRefusedException(jocError, e);
             }
         } catch (SOSConnectionResetException e) {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
             } else {
-                throw new JobSchedulerConnectionResetException(jocError, e);
+                throw new ControllerConnectionResetException(jocError, e);
             }
         } catch (SOSNoResponseException e) {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
             } else {
-                throw new JobSchedulerNoResponseException(jocError, e);
+                throw new ControllerNoResponseException(jocError, e);
             }
         } catch (JocException e) {
             throw e;
@@ -350,19 +350,19 @@ public class JOCJsonCommand extends SOSRestApiClient {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
             } else {
-                throw new JobSchedulerConnectionRefusedException(jocError, e);
+                throw new ControllerConnectionRefusedException(jocError, e);
             }
         } catch (SOSConnectionResetException e) {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
             } else {
-                throw new JobSchedulerConnectionResetException(jocError, e);
+                throw new ControllerConnectionResetException(jocError, e);
             }
         } catch (SOSNoResponseException e) {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
             } else {
-                throw new JobSchedulerNoResponseException(jocError, e);
+                throw new ControllerNoResponseException(jocError, e);
             }
         } catch (JocException e) {
             throw e;
@@ -403,19 +403,19 @@ public class JOCJsonCommand extends SOSRestApiClient {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
             } else {
-                throw new JobSchedulerConnectionRefusedException(jocError, e);
+                throw new ControllerConnectionRefusedException(jocError, e);
             }
         } catch (SOSConnectionResetException e) {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
             } else {
-                throw new JobSchedulerConnectionResetException(jocError, e);
+                throw new ControllerConnectionResetException(jocError, e);
             }
         } catch (SOSNoResponseException e) {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
             } else {
-                throw new JobSchedulerNoResponseException(jocError, e);
+                throw new ControllerNoResponseException(jocError, e);
             }
         } catch (JocException e) {
             throw e;
@@ -453,14 +453,14 @@ public class JOCJsonCommand extends SOSRestApiClient {
         }
     }
     
-	private <T> T getJsonObject(String jsonStr, Class<T> clazz) throws JobSchedulerInvalidResponseDataException {
+	private <T> T getJsonObject(String jsonStr, Class<T> clazz) throws ControllerInvalidResponseDataException {
 		try {
 			if (jsonStr == null) {
 				return null;
 			}
 			return Globals.objectMapper.readValue(jsonStr, clazz);
 		} catch (Exception e) {
-			throw new JobSchedulerInvalidResponseDataException(e);
+			throw new ControllerInvalidResponseDataException(e);
 		}
 	}
 
@@ -481,12 +481,12 @@ public class JOCJsonCommand extends SOSRestApiClient {
             case 200:
                 if (contentType.contains("application/json")) {
                     if (response.isEmpty()) {
-                        throw new JobSchedulerNoResponseException("Unexpected empty response");
+                        throw new ControllerNoResponseException("Unexpected empty response");
                     }
                     LOGGER.debug(response.toString());
                     return response;
                 } else {
-                    throw new JobSchedulerInvalidResponseDataException(String.format("Unexpected content type '%1$s'. Response: %2$s", contentType,
+                    throw new ControllerInvalidResponseDataException(String.format("Unexpected content type '%1$s'. Response: %2$s", contentType,
                             response));
                 }
             case 201:
@@ -500,10 +500,10 @@ public class JOCJsonCommand extends SOSRestApiClient {
 //              }
                 throw new JocBadRequestException(getJsonErrorMessage(contentType, response, uri));
             case 409:
-                throw new JobSchedulerConflictException(getJsonErrorMessage(contentType, response, uri));
+                throw new ControllerConflictException(getJsonErrorMessage(contentType, response, uri));
             case 503:
                 //TODO consider code=ControllerIsNotYetReady for passive cluster node
-                throw new JobSchedulerServiceUnavailableException(getJsonErrorMessage(contentType, response, uri));
+                throw new ControllerServiceUnavailableException(getJsonErrorMessage(contentType, response, uri));
             default:
                 throw new JocBadRequestException(httpReplyCode + " " + getHttpResponse().getStatusLine().getReasonPhrase());
             }
@@ -520,10 +520,10 @@ public class JOCJsonCommand extends SOSRestApiClient {
             case 200:
                 try {
                     if (response == null || Files.size(response) <= 0) {
-                        throw new JobSchedulerNoResponseException("Unexpected empty response");
+                        throw new ControllerNoResponseException("Unexpected empty response");
                     }
                 } catch (IOException e) {
-                    throw new JobSchedulerNoResponseException("Unexpected empty response");
+                    throw new ControllerNoResponseException("Unexpected empty response");
                 }
                 return response;
             default:
@@ -544,7 +544,7 @@ public class JOCJsonCommand extends SOSRestApiClient {
             switch (httpReplyCode) {
             case 200:
                 if (streamingOutPut == null ) {
-                    throw new JobSchedulerNoResponseException("Unexpected empty response");
+                    throw new ControllerNoResponseException("Unexpected empty response");
                 }
                 return streamingOutPut;
             default:

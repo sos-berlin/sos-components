@@ -9,7 +9,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.Validator;
-import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
+import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IValidateResource;
 import com.sos.joc.model.inventory.Validate;
@@ -33,11 +33,11 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
             try {
                 ConfigurationType type = ConfigurationType.fromValue(objectType.toUpperCase());
                 if (ConfigurationType.FOLDER.equals(type)) {
-                    throw new JobSchedulerInvalidResponseDataException("Unsupprted objectType:" + objectType);
+                    throw new ControllerInvalidResponseDataException("Unsupprted objectType:" + objectType);
                 }
                 entity = getValidate(type, inBytes);
             } catch (IllegalArgumentException e) {
-                throw new JobSchedulerInvalidResponseDataException("Unsupprted objectType:" + objectType);
+                throw new ControllerInvalidResponseDataException("Unsupprted objectType:" + objectType);
             }
             entity.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(entity);

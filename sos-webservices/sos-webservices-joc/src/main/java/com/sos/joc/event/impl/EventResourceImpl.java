@@ -26,7 +26,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.event.EventServiceFactory;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.event.resource.IEventResource;
-import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.event.Controller;
@@ -71,7 +71,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             
             entity = processAfter(EventServiceFactory.getEvents(controllerId, eventId, accessToken, session));
 
-        } catch (JobSchedulerConnectionRefusedException e) {
+        } catch (ControllerConnectionRefusedException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatus434JSError(e);
         } catch (JocException e) {

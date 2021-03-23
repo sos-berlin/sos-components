@@ -17,7 +17,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
-import com.sos.joc.exceptions.JobSchedulerObjectNotExistException;
+import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.order.OrderFilter;
 import com.sos.joc.model.order.OrderStateText;
@@ -68,7 +68,7 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
                 o.setDeliveryDate(Date.from(Instant.now()));
                 return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(o));
             } else {
-                throw new JobSchedulerObjectNotExistException(String.format("unknown Order '%s'", orderFilter.getOrderId()));
+                throw new ControllerObjectNotExistException(String.format("unknown Order '%s'", orderFilter.getOrderId()));
             }
 
         } catch (JocException e) {

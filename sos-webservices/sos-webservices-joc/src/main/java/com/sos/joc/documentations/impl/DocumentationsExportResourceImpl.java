@@ -41,7 +41,7 @@ import com.sos.joc.documentations.resource.IDocumentationsExportResource;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.JobSchedulerObjectNotExistException;
+import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Folder;
@@ -125,7 +125,7 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
 
             java.nio.file.Path path = Paths.get(System.getProperty("java.io.tmpdir"), filename);
             if (!Files.isReadable(path)) {
-                throw new JobSchedulerObjectNotExistException("Temp. file '" + filename + "' not found.");
+                throw new ControllerObjectNotExistException("Temp. file '" + filename + "' not found.");
             }
 
             final java.nio.file.Path downPath = Files.move(path, path.getParent().resolve(path.getFileName().toString() + ".zip"),

@@ -16,9 +16,9 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
-import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
-import com.sos.joc.exceptions.JobSchedulerNoResponseException;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionResetException;
+import com.sos.joc.exceptions.ControllerNoResponseException;
 import com.sos.joc.exceptions.JocConfigurationException;
 
 import io.vavr.control.Either;
@@ -35,7 +35,7 @@ public class OrderHelper {
     }
 
     public static void removeFromJobSchedulerController(String controllerId, List<DBItemDailyPlanOrders> listOfPlannedOrders)
-            throws JsonProcessingException, JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, DBMissingDataException,
+            throws JsonProcessingException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, InterruptedException,
             ExecutionException {
 
@@ -44,12 +44,12 @@ public class OrderHelper {
                     .getOrderId())).collect(Collectors.toSet()), JCancelMode.freshOnly()).get(99, TimeUnit.SECONDS);
             ProblemHelper.throwProblemIfExist(response);
         } catch (TimeoutException e1) {
-            throw new JobSchedulerNoResponseException(String.format("No response from controller '%s' after %ds", controllerId, 99));
+            throw new ControllerNoResponseException(String.format("No response from controller '%s' after %ds", controllerId, 99));
         }
     }
 
     public static void removeFromJobSchedulerControllerWithHistory(String controllerId, List<DBItemDailyPlanWithHistory> listOfPlannedOrders)
-            throws JsonProcessingException, JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, DBMissingDataException,
+            throws JsonProcessingException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, InterruptedException,
             ExecutionException {
 
@@ -58,12 +58,12 @@ public class OrderHelper {
                     .getOrderId())).collect(Collectors.toSet()), JCancelMode.freshOnly()).get(99, TimeUnit.SECONDS);
             ProblemHelper.throwProblemIfExist(response);
         } catch (TimeoutException e1) {
-            throw new JobSchedulerNoResponseException(String.format("No response from controller '%s' after %ds", controllerId, 99));
+            throw new ControllerNoResponseException(String.format("No response from controller '%s' after %ds", controllerId, 99));
         }
     }
 
-    public static Set<JOrder> getListOfJOrdersFromController(String controllerId) throws JobSchedulerConnectionResetException,
-            JobSchedulerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
+    public static Set<JOrder> getListOfJOrdersFromController(String controllerId) throws ControllerConnectionResetException,
+            ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, ExecutionException {
         // see com.sos.joc.orders.impl.OrdersResourceImpl
         return Proxy.of(controllerId).currentState().ordersBy(JOrderPredicates.any()).collect(Collectors.toSet());

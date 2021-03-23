@@ -28,7 +28,7 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
@@ -137,7 +137,7 @@ public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResour
     
     public static void appointNodes(String controllerId, InventoryAgentInstancesDBLayer dbLayer, String accessToken, JocError jocError)
             throws DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
-            JobSchedulerConnectionRefusedException, JsonProcessingException, JocBadRequestException {
+            ControllerConnectionRefusedException, JsonProcessingException, JocBadRequestException {
         // ask for cluster
         List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(controllerId);
         if (controllerInstances == null || controllerInstances.size() < 2) { // is not cluster

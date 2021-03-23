@@ -33,8 +33,8 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
-import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.ProxyNotCoupledException;
@@ -80,8 +80,8 @@ public class Proxies {
      * @param account
      * @param connectionTimeout
      * @return JControllerProxy
-     * @throws JobSchedulerConnectionResetException
-     * @throws JobSchedulerConnectionRefusedException 
+     * @throws ControllerConnectionResetException
+     * @throws ControllerConnectionRefusedException 
      *      if the asynchronous started Proxy not available within the specified connectionTimeout
      *      or a an SSL handshake error occurs 
      * @throws DBMissingDataException
@@ -91,8 +91,8 @@ public class Proxies {
      * @throws DBOpenSessionException 
      * @throws JocConfigurationException 
      */
-    protected JControllerProxy of(String controllerId, ProxyUser account, long connectionTimeout) throws JobSchedulerConnectionResetException,
-            JobSchedulerConnectionRefusedException, DBMissingDataException, ExecutionException, JocConfigurationException, DBOpenSessionException,
+    protected JControllerProxy of(String controllerId, ProxyUser account, long connectionTimeout) throws ControllerConnectionResetException,
+            ControllerConnectionRefusedException, DBMissingDataException, ExecutionException, JocConfigurationException, DBOpenSessionException,
             DBInvalidDataException, DBConnectionRefusedException {
         initControllerDbInstances(controllerId);
         return of(ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances.get(controllerId)).withAccount(account).build(),
@@ -110,11 +110,11 @@ public class Proxies {
      * @throws DBMissingDataException 
      * @throws DBOpenSessionException 
      * @throws JocConfigurationException 
-     * @throws JobSchedulerConnectionResetException 
+     * @throws ControllerConnectionResetException 
      */
     protected JControllerApi loadApi(String controllerId, ProxyUser account, long connectionTimeout) throws DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
-            JobSchedulerConnectionRefusedException {
+            ControllerConnectionRefusedException {
         initControllerDbInstances(controllerId);
         return loadApi(ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances.get(controllerId)).withAccount(account).build());
     }
@@ -141,14 +141,14 @@ public class Proxies {
      * @param controllerId
      * @param account
      * @return ProxyContext
-     * @throws JobSchedulerConnectionRefusedException
+     * @throws ControllerConnectionRefusedException
      * @throws DBMissingDataException
      * @throws DBOpenSessionException 
      * @throws JocConfigurationException 
      * @throws DBConnectionRefusedException 
      * @throws DBInvalidDataException 
      */
-    protected ProxyContext start(String controllerId, ProxyUser account) throws JobSchedulerConnectionRefusedException, DBMissingDataException,
+    protected ProxyContext start(String controllerId, ProxyUser account) throws ControllerConnectionRefusedException, DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException {
         initControllerDbInstances(controllerId);
         return start(ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances.get(controllerId)).withAccount(account).build());
@@ -174,10 +174,10 @@ public class Proxies {
      * Should only called from provisioning dialogue
      * @param controllerDbInstances
      * @throws DBMissingDataException 
-     * @throws JobSchedulerConnectionRefusedException 
+     * @throws ControllerConnectionRefusedException 
      */
     protected void updateProxies(final List<DBItemInventoryJSInstance> controllerDbInstances) throws DBMissingDataException,
-            JobSchedulerConnectionRefusedException {
+            ControllerConnectionRefusedException {
         if (controllerDbInstances != null && !controllerDbInstances.isEmpty()) {
             String controllerId = controllerDbInstances.get(0).getControllerId();
             boolean isNew = !this.controllerDbInstances.containsKey(controllerId);
@@ -281,7 +281,7 @@ public class Proxies {
             }).filter(credential -> credential != null && credential.getUrl() != null).forEach(credential -> {
                 try {
                     start(credential);
-                } catch (JobSchedulerConnectionRefusedException e) {
+                } catch (ControllerConnectionRefusedException e) {
                     LOGGER.error(e.toString());
                 }
             });
@@ -308,7 +308,7 @@ public class Proxies {
         Arrays.asList(credentials).stream().forEach(credential -> {
             try {
                 start(credential);
-            } catch (JobSchedulerConnectionRefusedException e) {
+            } catch (ControllerConnectionRefusedException e) {
                 LOGGER.error("", e);
             }
         });
@@ -341,7 +341,7 @@ public class Proxies {
             }).filter(credential -> credential != null && credential.getUrl() != null).forEach(credential -> {
                 try {
                     loadApi(credential);
-                } catch (JobSchedulerConnectionRefusedException e) {
+                } catch (ControllerConnectionRefusedException e) {
                     LOGGER.error(e.toString());
                 }
             });
@@ -475,12 +475,12 @@ public class Proxies {
      * @param credentials
      * @param connectionTimeout
      * @return
-     * @throws JobSchedulerConnectionResetException
+     * @throws ControllerConnectionResetException
      * @throws ExecutionException
-     * @throws JobSchedulerConnectionRefusedException
+     * @throws ControllerConnectionRefusedException
      */
-    protected JControllerProxy of(ProxyCredentials credentials, long connectionTimeout) throws JobSchedulerConnectionResetException,
-            ExecutionException, JobSchedulerConnectionRefusedException, JobSchedulerConnectionRefusedException {
+    protected JControllerProxy of(ProxyCredentials credentials, long connectionTimeout) throws ControllerConnectionResetException,
+            ExecutionException, ControllerConnectionRefusedException, ControllerConnectionRefusedException {
         ProxyContext context = start(credentials);
         try {
             return context.getProxy(connectionTimeout);
@@ -489,7 +489,7 @@ public class Proxies {
             throw e;
         } catch (CancellationException e) {
             close(credentials);
-            throw new JobSchedulerConnectionResetException(credentials.getControllerId());
+            throw new ControllerConnectionResetException(credentials.getControllerId());
         }
     }
     
@@ -510,14 +510,14 @@ public class Proxies {
         }
     }
 
-    private ProxyContext start(ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException, JobSchedulerConnectionRefusedException {
+    private ProxyContext start(ProxyCredentials credentials) throws ControllerConnectionRefusedException, ControllerConnectionRefusedException {
         if (!controllerFutures.containsKey(credentials)) {
             controllerFutures.put(credentials, new ProxyContext(loadApi(credentials), credentials));
         }
         return controllerFutures.get(credentials);
     }
     
-    private boolean restart(ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
+    private boolean restart(ProxyCredentials credentials) throws ControllerConnectionRefusedException {
         // contains if controller id and account is equal (see ProxyCredentials.equals)
         if (controllerFutures.containsKey(credentials)) {
             // "identical" checks equality inclusive the urls
@@ -532,14 +532,14 @@ public class Proxies {
         return false;
     }
     
-    protected JControllerApi loadApi(ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
+    protected JControllerApi loadApi(ProxyCredentials credentials) throws ControllerConnectionRefusedException {
         if (!controllerApis.containsKey(credentials)) {
             controllerApis.put(credentials, ControllerApiContext.newControllerApi(proxyContext, credentials));
         }
         return controllerApis.get(credentials);
     }
     
-    private boolean reloadApi(ProxyCredentials credentials) throws JobSchedulerConnectionRefusedException {
+    private boolean reloadApi(ProxyCredentials credentials) throws ControllerConnectionRefusedException {
         if (controllerApis.containsKey(credentials)) {
             // "identical" checks equality inclusive the urls
             // restart not necessary if a proxy with identically credentials already started

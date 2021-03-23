@@ -28,7 +28,7 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
-import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.AgentState;
 import com.sos.joc.model.agent.AgentStateText;
@@ -158,7 +158,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                         return agent;
                     }).filter(Objects::nonNull).sorted(Comparator.comparingInt(AgentV::getRunningTasks).reversed()).collect(Collectors.toList()));
                     
-                } catch (JobSchedulerConnectionRefusedException e1) {
+                } catch (ControllerConnectionRefusedException e1) {
                     agentsList.addAll(dbAgents.stream().map(dbAgent -> {
                         AgentV agent = mapDbAgentToAgentV(dbAgent);
                         if (withStateFilter && !agentsParam.getStates().contains(AgentStateText.UNKNOWN)) {

@@ -21,9 +21,9 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.ModifyJobSchedulerAudit;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
-import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
-import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
-import com.sos.joc.exceptions.JobSchedulerNoResponseException;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionResetException;
+import com.sos.joc.exceptions.ControllerNoResponseException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceModifyJobScheduler;
@@ -141,7 +141,7 @@ public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl 
         if (request.contains("abort")) {
             try {
                 jocJsonCommand.getJsonObjectFromPost(body);
-            } catch (JobSchedulerNoResponseException | JobSchedulerConnectionRefusedException | JobSchedulerConnectionResetException e) {
+            } catch (ControllerNoResponseException | ControllerConnectionRefusedException | ControllerConnectionResetException e) {
                 // JobScheduler sends always no response if "abort" is called
             }
         } else {

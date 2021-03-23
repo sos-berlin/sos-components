@@ -26,9 +26,9 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.JobSchedulerConnectionRefusedException;
-import com.sos.joc.exceptions.JobSchedulerConnectionResetException;
-import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionResetException;
+import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
@@ -125,8 +125,8 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
     }
 
     private void deleteOrdersFromPlan(DailyPlanOrderFilter dailyPlanOrderFilter) throws JocConfigurationException, DBConnectionRefusedException,
-            JobSchedulerInvalidResponseDataException, JsonProcessingException, SOSException, URISyntaxException, DBOpenSessionException,
-            JobSchedulerConnectionResetException, JobSchedulerConnectionRefusedException, DBMissingDataException, DBInvalidDataException,
+            ControllerInvalidResponseDataException, JsonProcessingException, SOSException, URISyntaxException, DBOpenSessionException,
+            ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, DBInvalidDataException,
             InterruptedException, ExecutionException {
         SOSHibernateSession sosHibernateSession = null;
 

@@ -30,7 +30,7 @@ import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.Globals;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.JobSchedulerInvalidResponseDataException;
+import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.job.TaskFilter;
@@ -85,7 +85,7 @@ public class LogTaskContent {
     }
 
     public StreamingOutput getStreamOutput() throws JocMissingRequiredParameterException, JocConfigurationException, DBOpenSessionException,
-            SOSHibernateException, DBMissingDataException, JobSchedulerInvalidResponseDataException {
+            SOSHibernateException, DBMissingDataException, ControllerInvalidResponseDataException {
         if (historyId == null) {
             throw new JocMissingRequiredParameterException("undefined 'taskId'");
         }
