@@ -11,31 +11,25 @@ public class CachedOrder {
     private final String orderId;
     private final Long mainParentId;
     private final Long parentId;
-    private final String startWorkflowPosition;
+    private final String workflowPath;
     private final String workflowPosition;
     private final Date endTime;
-    private final Date created;
 
     private Integer state;
-    private boolean hasChildren;
     private boolean hasStates;
     private Long currentHistoryOrderStepId;
-    private Date startTime;
 
     public CachedOrder(DBItemHistoryOrder item) {
         id = item.getId();
         orderId = item.getOrderId();
         mainParentId = item.getMainParentId();
         parentId = item.getParentId();
-        startWorkflowPosition = item.getStartWorkflowPosition();
+        workflowPath = item.getWorkflowPath();
         workflowPosition = item.getWorkflowPosition();
         state = item.getState();
-        hasChildren = item.getHasChildren();
         hasStates = item.getHasStates();
         currentHistoryOrderStepId = item.getCurrentHistoryOrderStepId();
-        startTime = item.getStartTime();
         endTime = item.getEndTime();
-        created = new Date();
     }
 
     public Long getId() {
@@ -54,8 +48,8 @@ public class CachedOrder {
         return parentId;
     }
 
-    public String getStartWorkflowPosition() {
-        return startWorkflowPosition;
+    public String getWorkflowPath() {
+        return workflowPath;
     }
 
     public String getWorkflowPosition() {
@@ -78,14 +72,6 @@ public class CachedOrder {
         }
     }
 
-    public boolean getHasChildren() {
-        return hasChildren;
-    }
-
-    public void setHasChildren(boolean val) {
-        hasChildren = val;
-    }
-
     public boolean getHasStates() {
         return hasStates;
     }
@@ -102,19 +88,8 @@ public class CachedOrder {
         currentHistoryOrderStepId = val;
     }
 
-    public void setStartTime(Date val) {
-        startTime = val;
-    }
-
-    public Date getStartTime() {
-        return startTime;
-    }
-
     public Date getEndTime() {
         return endTime;
     }
 
-    public Date getCreated() {
-        return created;
-    }
 }

@@ -40,9 +40,9 @@ import com.sos.joc.db.orders.DBItemDailyPlanVariables;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.db.search.DBItemSearchWorkflow2DeploymentHistory;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
-import com.sos.joc.db.yade.DBItemYadeFiles;
-import com.sos.joc.db.yade.DBItemYadeProtocols;
-import com.sos.joc.db.yade.DBItemYadeTransfers;
+import com.sos.joc.db.yade.DBItemYadeFile;
+import com.sos.joc.db.yade.DBItemYadeProtocol;
+import com.sos.joc.db.yade.DBItemYadeTransfer;
 
 public class DBLayer implements Serializable {
 
@@ -205,15 +205,15 @@ public class DBLayer implements Serializable {
     public static final String TABLE_XML_EDITOR_CONFIGURATIONS_SEQUENCE = "SEQ_XEC";
 
     /** YADE Tables */
-    public static final String DBITEM_YADE_TRANSFERS = DBItemYadeTransfers.class.getSimpleName();
+    public static final String DBITEM_YADE_TRANSFERS = DBItemYadeTransfer.class.getSimpleName();
     public static final String TABLE_YADE_TRANSFERS = "YADE_TRANSFERS";
     public static final String TABLE_YADE_TRANSFERS_SEQUENCE = "SEQ_YADE_TRA";
 
-    public static final String DBITEM_YADE_PROTOCOLS = DBItemYadeProtocols.class.getSimpleName();
+    public static final String DBITEM_YADE_PROTOCOLS = DBItemYadeProtocol.class.getSimpleName();
     public static final String TABLE_YADE_PROTOCOLS = "YADE_PROTOCOLS";
     public static final String TABLE_YADE_PROTOCOLS_SEQUENCE = "SEQ_YADE_PRO";
 
-    public static final String DBITEM_YADE_FILES = DBItemYadeFiles.class.getSimpleName();
+    public static final String DBITEM_YADE_FILES = DBItemYadeFile.class.getSimpleName();
     public static final String TABLE_YADE_FILES = "YADE_FILES";
     public static final String TABLE_YADE_FILES_SEQUENCE = "SEQ_YADE_FIL";
 
@@ -233,9 +233,9 @@ public class DBLayer implements Serializable {
 
     public static SOSClassList getYadeClassMapping() {
         SOSClassList cl = new SOSClassList();
-        cl.add(DBItemYadeTransfers.class);
-        cl.add(DBItemYadeProtocols.class);
-        cl.add(DBItemYadeFiles.class);
+        cl.add(DBItemYadeTransfer.class);
+        cl.add(DBItemYadeProtocol.class);
+        cl.add(DBItemYadeFile.class);
         return cl;
     }
 
@@ -262,8 +262,7 @@ public class DBLayer implements Serializable {
 
         cl.add(DBItemInventoryAgentInstance.class);
         cl.add(DBItemDeploymentHistory.class);
-        // TODO create table scripts
-        // cl.merge(getYadeClassMapping().getClasses());
+        cl.merge(getYadeClassMapping().getClasses());
         return cl;
     }
 

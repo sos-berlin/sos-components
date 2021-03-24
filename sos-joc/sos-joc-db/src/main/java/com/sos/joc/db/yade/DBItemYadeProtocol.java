@@ -1,5 +1,7 @@
 package com.sos.joc.db.yade;
 
+import java.util.Date;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -16,7 +18,7 @@ import com.sos.joc.db.DBLayer;
 @Table(name = DBLayer.TABLE_YADE_PROTOCOLS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[HOSTNAME]", "[PORT]", "[PROTOCOL]",
         "[ACCOUNT]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_YADE_PROTOCOLS_SEQUENCE, sequenceName = DBLayer.TABLE_YADE_PROTOCOLS_SEQUENCE, allocationSize = 1)
-public class DBItemYadeProtocols extends DBItem {
+public class DBItemYadeProtocol extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
@@ -37,7 +39,10 @@ public class DBItemYadeProtocols extends DBItem {
     @Column(name = "[ACCOUNT]", nullable = false)
     private String account;
 
-    public DBItemYadeProtocols() {
+    @Column(name = "[CREATED]", nullable = false)
+    private Date created;
+
+    public DBItemYadeProtocol() {
     }
 
     public Long getId() {
@@ -78,6 +83,14 @@ public class DBItemYadeProtocols extends DBItem {
 
     public void setAccount(String val) {
         account = val;
+    }
+
+    public Date getCreated() {
+        return created;
+    }
+
+    public void setCreated(Date val) {
+        created = val;
     }
 
 }

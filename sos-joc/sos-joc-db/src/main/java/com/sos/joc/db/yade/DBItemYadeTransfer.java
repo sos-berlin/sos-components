@@ -1,6 +1,5 @@
 package com.sos.joc.db.yade;
 
-import java.io.Serializable;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -10,15 +9,15 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
-import org.hibernate.annotations.Type;
-
+import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
 @Table(name = DBLayer.TABLE_YADE_TRANSFERS)
 @SequenceGenerator(name = DBLayer.TABLE_YADE_TRANSFERS_SEQUENCE, sequenceName = DBLayer.TABLE_YADE_TRANSFERS_SEQUENCE, allocationSize = 1)
-public class DBItemYadeTransfers implements Serializable {
+public class DBItemYadeTransfer extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
@@ -30,8 +29,11 @@ public class DBItemYadeTransfers implements Serializable {
     @Column(name = "[CONTROLLER_ID]", nullable = false)
     private String controllerId;
 
-    @Column(name = "[WORKFLOW]", nullable = false)
-    private String workflow;
+    @Column(name = "[WORKFLOW_PATH]", nullable = false)
+    private String workflowPath;
+
+    @Column(name = "[WORKFLOW_NAME]", nullable = false)
+    private String workflowName;
 
     @Column(name = "[ORDER_ID]", nullable = false)
     private String orderId;
@@ -69,13 +71,6 @@ public class DBItemYadeTransfers implements Serializable {
     @Column(name = "[NUM_OF_FILES]", nullable = true)
     private Long numOfFiles;
 
-    @Column(name = "[HAS_INTERVENTION]", nullable = true)
-    @Type(type = "numeric_boolean")
-    private Boolean hasIntervention;
-
-    @Column(name = "[PARENT_TRANSFER_ID]", nullable = true)
-    private Long parentTransferId;
-
     @Column(name = "[STATE]", nullable = false)
     private Integer state;
 
@@ -85,7 +80,7 @@ public class DBItemYadeTransfers implements Serializable {
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
 
-    public DBItemYadeTransfers() {
+    public DBItemYadeTransfer() {
     }
 
     public Long getId() {
@@ -104,12 +99,20 @@ public class DBItemYadeTransfers implements Serializable {
         controllerId = val;
     }
 
-    public String getWorkflow() {
-        return workflow;
+    public String getWorkflowPath() {
+        return workflowPath;
     }
 
-    public void setWorkflow(String val) {
-        workflow = val;
+    public void setWorkflowPath(String val) {
+        workflowPath = val;
+    }
+
+    public String getWorkflowName() {
+        return workflowName;
+    }
+
+    public void setWorkflowName(String val) {
+        workflowName = val;
     }
 
     public String getOrderId() {
@@ -208,22 +211,6 @@ public class DBItemYadeTransfers implements Serializable {
         numOfFiles = val;
     }
 
-    public Boolean getHasIntervention() {
-        return hasIntervention;
-    }
-
-    public void setHasIntervention(Boolean val) {
-        hasIntervention = val;
-    }
-
-    public Long getParentTransferId() {
-        return parentTransferId;
-    }
-
-    public void setParentTransferId(Long val) {
-        parentTransferId = val;
-    }
-
     public Integer getState() {
         return state;
     }
@@ -237,7 +224,12 @@ public class DBItemYadeTransfers implements Serializable {
     }
 
     public void setErrorMessage(String val) {
-        errorMessage = val;
+        errorMessage = normalizeErrorText(val);
+    }
+
+    @Transient
+    public static String normalizeErrorText(String val) {
+        return normalizeValue(val, 4000);
     }
 
     public Date getCreated() {

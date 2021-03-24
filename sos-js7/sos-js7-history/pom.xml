@@ -54,6 +54,11 @@
 			<artifactId>sos-webservices-joc-global</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-yade-commons</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
 		<!-- 3rd Party Dependencies -->
 		<dependency>

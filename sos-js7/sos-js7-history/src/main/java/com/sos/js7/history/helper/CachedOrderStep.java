@@ -23,7 +23,6 @@ public class CachedOrderStep {
     private CachedOrderStepError error;
     private Boolean lastStdEndsWithNewLine;
     private StringBuilder stdError;
-    private Date created;
 
     public CachedOrderStep(DBItemHistoryOrderStep item, String timezone) {
         id = item.getId();
@@ -38,7 +37,6 @@ public class CachedOrderStep {
         severity = item.getSeverity();
         returnCode = item.getReturnCode();
         endTime = item.getEndTime();
-        created = new Date();
     }
 
     public Long getId() {
@@ -128,10 +126,6 @@ public class CachedOrderStep {
 
     public String getStdErr() {
         return stdError == null ? null : stdError.toString().trim();
-    }
-
-    public Date getCreated() {
-        return created;
     }
 
     public CachedOrderStepError getError() {

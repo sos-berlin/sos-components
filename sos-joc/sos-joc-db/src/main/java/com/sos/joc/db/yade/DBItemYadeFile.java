@@ -9,6 +9,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
 import com.sos.joc.db.DBItem;
@@ -17,7 +18,7 @@ import com.sos.joc.db.DBLayer;
 @Entity
 @Table(name = DBLayer.TABLE_YADE_FILES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[TRANSFER_ID]", "[SOURCE_PATH]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_YADE_FILES_SEQUENCE, sequenceName = DBLayer.TABLE_YADE_FILES_SEQUENCE, allocationSize = 1)
-public class DBItemYadeFiles extends DBItem {
+public class DBItemYadeFile extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
@@ -54,7 +55,7 @@ public class DBItemYadeFiles extends DBItem {
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
 
-    public DBItemYadeFiles() {
+    public DBItemYadeFile() {
     }
 
     public Long getId() {
@@ -126,7 +127,12 @@ public class DBItemYadeFiles extends DBItem {
     }
 
     public void setErrorMessage(String val) {
-        errorMessage = val;
+        errorMessage = normalizeErrorText(val);
+    }
+
+    @Transient
+    public static String normalizeErrorText(String val) {
+        return normalizeValue(val, 4000);
     }
 
     public Date getCreated() {

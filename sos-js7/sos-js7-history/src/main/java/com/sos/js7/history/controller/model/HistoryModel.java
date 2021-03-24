@@ -71,6 +71,7 @@ import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStepStdWritten
 import com.sos.js7.history.controller.proxy.fatevent.FatEventWithProblem;
 import com.sos.js7.history.controller.proxy.fatevent.FatForkedChild;
 import com.sos.js7.history.controller.proxy.fatevent.FatOutcome;
+import com.sos.js7.history.controller.yade.YadeHandler;
 import com.sos.js7.history.db.DBLayerHistory;
 import com.sos.js7.history.helper.CachedAgent;
 import com.sos.js7.history.helper.CachedOrder;
@@ -84,6 +85,7 @@ import com.sos.webservices.json.jobscheduler.history.order.Error;
 import com.sos.webservices.json.jobscheduler.history.order.Lock;
 import com.sos.webservices.json.jobscheduler.history.order.LockState;
 import com.sos.webservices.json.jobscheduler.history.order.OrderLogEntry;
+import com.sos.yade.commons.Yade;
 
 public class HistoryModel {
 
@@ -96,6 +98,7 @@ public class HistoryModel {
     private final SOSHibernateFactory dbFactory;
     private HistoryConfiguration historyConfiguration;
     private ControllerConfiguration controllerConfiguration;
+    private YadeHandler yadeHandler;
     private String identifier;
     private final String variableName;
     private Long lockVersion;
@@ -129,6 +132,7 @@ public class HistoryModel {
         controllerConfiguration = controllerConf;
         variableName = "history_" + controllerConfiguration.getCurrent().getId();
         maxTransactions = historyConfiguration.getMaxTransactions();
+        yadeHandler = new YadeHandler(controllerConfiguration.getCurrent().getId());
         initCache();
     }
 
@@ -979,7 +983,6 @@ public class HistoryModel {
         checkControllerTimezone(dbLayer);
 
         CachedOrder co = getCachedOrderByCurrentEventId(dbLayer, entry.getOrderId(), entry.getEventId());
-        co.setHasChildren(true);
         co.setState(OrderStateText.RUNNING.intValue());
 
         dbLayer.updateOrderOnFork(co.getId(), co.getState(), entry.getEventDatetime());
@@ -1249,6 +1252,13 @@ public class HistoryModel {
             endedOrderSteps.put(entry.getOrderId(), cos);
 
             tryStoreCurrentState(dbLayer, entry.getEventId());
+
+            if (entry.getOutcome() != null && entry.getOutcome().getNamedValues() != null) {
+                if (entry.getOutcome().getNamedValues().get(Yade.JOB_ARGUMENT_NAME_RETURN_VALUES) != null) {
+                    yadeHandler.process(dbFactory, entry.getOutcome().getNamedValues(), co.getWorkflowPath(), co.getOrderId(), cos.getId(), cos
+                            .getJobName(), cos.getWorkflowPosition());
+                }
+            }
         } else {
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("[%s][%s][skip][%s]order step is already ended[%s]", identifier, entry.getType(), entry.getOrderId(),

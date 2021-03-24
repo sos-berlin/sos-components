@@ -9,13 +9,13 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.yade.DBItemYadeFile;
+import com.sos.joc.db.yade.DBItemYadeProtocol;
+import com.sos.joc.db.yade.DBItemYadeTransfer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.yade.FileTransferStateText;
-import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.yade.DBItemYadeFiles;
-import com.sos.joc.db.yade.DBItemYadeProtocols;
-import com.sos.joc.db.yade.DBItemYadeTransfers;
 
 public class JocDBLayerYade {
 
@@ -65,14 +65,14 @@ public class JocDBLayerYade {
     }
 
     // TODO: at the moment only state = 7 (TRANSFER_HAS_ERRORS) is checked
-    public List<DBItemYadeFiles> getFailedTransferredFiles(Long transferId) throws DBInvalidDataException, DBConnectionRefusedException {
+    public List<DBItemYadeFile> getFailedTransferredFiles(Long transferId) throws DBInvalidDataException, DBConnectionRefusedException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ");
             sql.append(DBLayer.DBITEM_YADE_FILES);
             sql.append(" where state = 7");
             sql.append(" and transferId = :transferId ");
-            Query<DBItemYadeFiles> query = session.createQuery(sql.toString());
+            Query<DBItemYadeFile> query = session.createQuery(sql.toString());
             query.setParameter("transferId", transferId);
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -82,7 +82,7 @@ public class JocDBLayerYade {
         }
     }
 
-    public List<DBItemYadeFiles> getFilesById(List<Long> fileIds) throws DBInvalidDataException, DBConnectionRefusedException {
+    public List<DBItemYadeFile> getFilesById(List<Long> fileIds) throws DBInvalidDataException, DBConnectionRefusedException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ");
@@ -94,7 +94,7 @@ public class JocDBLayerYade {
                     sql.append(" where id in (:id)");
                 }
             }
-            Query<DBItemYadeFiles> query = session.createQuery(sql.toString());
+            Query<DBItemYadeFile> query = session.createQuery(sql.toString());
             if (fileIds != null && !fileIds.isEmpty()) {
                 if (fileIds.size() == 1) {
                     query.setParameter("id", fileIds.get(0));
@@ -141,12 +141,12 @@ public class JocDBLayerYade {
         }
     }
 
-    public List<DBItemYadeTransfers> getAllTransfers() throws DBInvalidDataException, DBConnectionRefusedException {
+    public List<DBItemYadeTransfer> getAllTransfers() throws DBInvalidDataException, DBConnectionRefusedException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ");
             sql.append(DBLayer.DBITEM_YADE_TRANSFERS);
-            Query<DBItemYadeTransfers> query = session.createQuery(sql.toString());
+            Query<DBItemYadeTransfer> query = session.createQuery(sql.toString());
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -155,13 +155,13 @@ public class JocDBLayerYade {
         }
     }
 
-    public DBItemYadeFiles getTransferFile(Long fileId) throws DBInvalidDataException, DBConnectionRefusedException {
+    public DBItemYadeFile getTransferFile(Long fileId) throws DBInvalidDataException, DBConnectionRefusedException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ");
             sql.append(DBLayer.DBITEM_YADE_FILES);
             sql.append(" where id = :fileId");
-            Query<DBItemYadeFiles> query = session.createQuery(sql.toString());
+            Query<DBItemYadeFile> query = session.createQuery(sql.toString());
             query.setParameter("fileId", fileId);
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -171,7 +171,7 @@ public class JocDBLayerYade {
         }
     }
 
-    public List<DBItemYadeTransfers> getFilteredTransfers(JocYadeFilter filter) throws DBInvalidDataException, DBConnectionRefusedException {
+    public List<DBItemYadeTransfer> getFilteredTransfers(JocYadeFilter filter) throws DBInvalidDataException, DBConnectionRefusedException {
         try {
             boolean hasFilter = ((filter.getJobschedulerId() != null && !filter.getJobschedulerId().isEmpty()) || (filter.getTransferIds() != null
                     && !filter.getTransferIds().isEmpty()) || (filter.getOperations() != null && !filter.getOperations().isEmpty()) || (filter
@@ -253,7 +253,7 @@ public class JocDBLayerYade {
                     sql.append(" yt.start < :dateTo");
                 }
             }
-            Query<DBItemYadeTransfers> query = session.createQuery(sql.toString());
+            Query<DBItemYadeTransfer> query = session.createQuery(sql.toString());
             if (filter.getJobschedulerId() != null && !filter.getJobschedulerId().isEmpty()) {
                 query.setParameter("jobschedulerId", filter.getJobschedulerId());
             }
@@ -304,12 +304,12 @@ public class JocDBLayerYade {
         }
     }
 
-    public DBItemYadeProtocols getProtocolById(Long id) throws DBInvalidDataException, DBConnectionRefusedException {
+    public DBItemYadeProtocol getProtocolById(Long id) throws DBInvalidDataException, DBConnectionRefusedException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_YADE_PROTOCOLS);
             sql.append(" where id = :id");
-            Query<DBItemYadeProtocols> query = session.createQuery(sql.toString());
+            Query<DBItemYadeProtocol> query = session.createQuery(sql.toString());
             query.setParameter("id", id);
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -319,7 +319,7 @@ public class JocDBLayerYade {
         }
     }
 
-    public List<DBItemYadeFiles> getFilteredTransferFiles(List<Long> transferIds, List<FileTransferStateText> states, List<String> sources,
+    public List<DBItemYadeFile> getFilteredTransferFiles(List<Long> transferIds, List<FileTransferStateText> states, List<String> sources,
             List<String> targets, List<Long> interventionTransferIds, Integer limit) throws DBInvalidDataException, DBConnectionRefusedException {
         try {
             boolean anotherValueAlreadySet = false;
@@ -412,7 +412,7 @@ public class JocDBLayerYade {
                     anotherValueAlreadySet = true;
                 }
             }
-            Query<DBItemYadeFiles> query = session.createQuery(sql.toString());
+            Query<DBItemYadeFile> query = session.createQuery(sql.toString());
             if (limit != null) {
                 query.setMaxResults(limit);
             }
@@ -424,13 +424,13 @@ public class JocDBLayerYade {
         }
     }
 
-    public DBItemYadeTransfers getTransfer(Long id) throws DBInvalidDataException, DBConnectionRefusedException {
+    public DBItemYadeTransfer getTransfer(Long id) throws DBInvalidDataException, DBConnectionRefusedException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ");
             sql.append(DBLayer.DBITEM_YADE_TRANSFERS);
             sql.append(" where id = :id");
-            Query<DBItemYadeTransfers> query = session.createQuery(sql.toString());
+            Query<DBItemYadeTransfer> query = session.createQuery(sql.toString());
             query.setParameter("id", id);
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -513,7 +513,7 @@ public class JocDBLayerYade {
                 sql.append(" or");
                 sql.append(" targetPath in (:targetFiles))");
             }
-            Query<DBItemYadeFiles> query = session.createQuery(sql.toString());
+            Query<DBItemYadeFile> query = session.createQuery(sql.toString());
             query.setParameter("transferId", transferId);
             if (sourceFiles != null && !sourceFiles.isEmpty()) {
                 query.setParameterList("sourceFiles", sourceFiles);
@@ -521,7 +521,7 @@ public class JocDBLayerYade {
             if (targetFiles != null && !targetFiles.isEmpty()) {
                 query.setParameter("targetFiles", targetFiles);
             }
-            List<DBItemYadeFiles> foundFiles = session.getResultList(query);
+            List<DBItemYadeFile> foundFiles = session.getResultList(query);
             return (foundFiles != null && !foundFiles.isEmpty());
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
