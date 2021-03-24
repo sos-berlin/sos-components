@@ -2,6 +2,7 @@ package com.sos.commons.util;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Collection;
@@ -32,13 +33,21 @@ public class SOSString {
             return null;
         }
         try {
-            ReflectionToStringBuilder.setDefaultStyle(ToStringStyle.SHORT_PREFIX_STYLE);
+            ReflectionToStringBuilder builder = new ReflectionToStringBuilder(o, ToStringStyle.SHORT_PREFIX_STYLE) {
 
-            if (excludeFieldNames == null) {
-                return ReflectionToStringBuilder.toString(o);
-            } else {
-                return ReflectionToStringBuilder.toStringExclude(o, excludeFieldNames);
+                @Override
+                protected Object getValue(Field field) throws IllegalArgumentException, IllegalAccessException {
+                    Object val = field.get(this.getObject());
+                    if (val != null && val instanceof String && val.toString().length() > 255) {
+                        val = val.toString().substring(0, 255) + "<truncated>";
+                    }
+                    return val;
+                }
+            };
+            if (excludeFieldNames != null) {
+                builder.setExcludeFieldNames(excludeFieldNames.stream().toArray(String[]::new));
             }
+            return builder.toString();
         } catch (Throwable t) {
         }
         return o.toString();
@@ -47,8 +56,7 @@ public class SOSString {
     /** string to SHA-256
      * 
      * @param val
-     * @return 
-     */
+     * @return */
     public static String hash(String val) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -68,9 +76,8 @@ public class SOSString {
             throw new RuntimeException(ex);
         }
     }
-    
-    public static String convertStackTraceToString(Throwable throwable) 
-    {
+
+    public static String convertStackTraceToString(Throwable throwable) {
         try (StringWriter sw = new StringWriter(); PrintWriter pw = new PrintWriter(sw)) {
             throwable.printStackTrace(pw);
             return sw.toString();
