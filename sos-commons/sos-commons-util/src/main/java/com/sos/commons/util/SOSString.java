@@ -38,8 +38,11 @@ public class SOSString {
                 @Override
                 protected Object getValue(Field field) throws IllegalArgumentException, IllegalAccessException {
                     Object val = field.get(this.getObject());
-                    if (val != null && val instanceof String && val.toString().length() > 255) {
-                        val = val.toString().substring(0, 255) + "<truncated>";
+                    if (val != null && val instanceof String) {
+                        String v = val.toString();
+                        if (v.length() > 255) {
+                            val = v.substring(0, 255) + "<truncated>";
+                        }
                     }
                     return val;
                 }
