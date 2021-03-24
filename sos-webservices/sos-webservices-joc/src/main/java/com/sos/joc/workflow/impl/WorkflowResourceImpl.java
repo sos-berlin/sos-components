@@ -83,7 +83,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
 
             entity.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsString(entity));
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
 
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

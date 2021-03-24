@@ -36,7 +36,7 @@ public class Junction implements IDeployObject
      * 
      */
     @JsonProperty("TYPE")
-    private DeployType tYPE = DeployType.fromValue("Workflow");
+    private DeployType tYPE = DeployType.JUNCTION;
     /**
      * string without < and >
      * <p>

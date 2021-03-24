@@ -395,11 +395,19 @@
                   		</replaceregexp>
                   		<!-- Set DeployType and DeleteType property -->	
                   		<replaceregexp flags="i" byline="true" match="(private DeployType tYPE = ).*;" replace="\1\DeployType.AGENTREF;" file="${project.build.directory}/java-gen/com/sos/controller/model/agent/AgentRef.java" preserveLastModified="true" />
+                  		
                   		<replaceregexp flags="i" byline="true" match="(private DeployType tYPE = ).*;" replace="\1\DeployType.WORKFLOW;" file="${project.build.directory}/java-gen/com/sos/inventory/model/workflow/Workflow.java" preserveLastModified="true" />
                   		<replaceregexp flags="i" byline="true" match="(private DeployType tYPE = ).*;" replace="\1\DeployType.JOBCLASS;" file="${project.build.directory}/java-gen/com/sos/inventory/model/jobclass/JobClass.java" preserveLastModified="true" />
                   		<replaceregexp flags="i" byline="true" match="(private DeployType tYPE = ).*;" replace="\1\DeployType.JUNCTION;" file="${project.build.directory}/java-gen/com/sos/inventory/model/junction/Junction.java" preserveLastModified="true" />
                   		<replaceregexp flags="i" byline="true" match="(private DeployType tYPE = ).*;" replace="\1\DeployType.LOCK;"     file="${project.build.directory}/java-gen/com/sos/inventory/model/lock/Lock.java" preserveLastModified="true" />
                   		<replaceregexp flags="i" byline="true" match="(private DeployType tYPE = ).*;" replace="\1\DeployType.FILEORDERSOURCE;" file="${project.build.directory}/java-gen/com/sos/inventory/model/fileordersource/fileOrderSource.java" preserveLastModified="true" />
+                  		
+                  		<replaceregexp flags="i" byline="true" match="(private DeployType tYPE = ).*;" replace="\1\DeployType.WORKFLOW;" file="${project.build.directory}/java-gen/com/sos/sign/model/workflow/Workflow.java" preserveLastModified="true" />
+                  		<replaceregexp flags="i" byline="true" match="(private DeployType tYPE = ).*;" replace="\1\DeployType.JOBCLASS;" file="${project.build.directory}/java-gen/com/sos/sign/model/jobclass/JobClass.java" preserveLastModified="true" />
+                  		<replaceregexp flags="i" byline="true" match="(private DeployType tYPE = ).*;" replace="\1\DeployType.JUNCTION;" file="${project.build.directory}/java-gen/com/sos/sign/model/junction/Junction.java" preserveLastModified="true" />
+                  		<replaceregexp flags="i" byline="true" match="(private DeployType tYPE = ).*;" replace="\1\DeployType.LOCK;"     file="${project.build.directory}/java-gen/com/sos/sign/model/lock/Lock.java" preserveLastModified="true" />
+                  		<replaceregexp flags="i" byline="true" match="(private DeployType tYPE = ).*;" replace="\1\DeployType.FILEORDERSOURCE;" file="${project.build.directory}/java-gen/com/sos/sign/model/fileordersource/fileOrderSource.java" preserveLastModified="true" />
+                  		
                   		<replaceregexp flags="i" byline="true" match="(private DeleteType tYPE = ).*;" replace="\1\DeleteType.WORKFLOW_PATH;"   file="${project.build.directory}/java-gen/com/sos/controller/model/workflow/DeleteWorkflow.java" preserveLastModified="true" />
                   		<replaceregexp flags="i" byline="true" match="(private DeleteType tYPE = ).*;" replace="\1\DeleteType.JOB_CLASS_PATH;"  file="${project.build.directory}/java-gen/com/sos/controller/model/jobclass/DeleteJobClass.java" preserveLastModified="true" />
                   		<replaceregexp flags="i" byline="true" match="(private DeleteType tYPE = ).*;" replace="\1\DeleteType.JUNCTION_PATH;"   file="${project.build.directory}/java-gen/com/sos/controller/model/junction/DeleteJunction.java" preserveLastModified="true" />

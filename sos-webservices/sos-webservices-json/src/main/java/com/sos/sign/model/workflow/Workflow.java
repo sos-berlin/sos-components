@@ -40,7 +40,7 @@ public class Workflow implements IDeployObject
      * 
      */
     @JsonProperty("TYPE")
-    private DeployType tYPE = DeployType.fromValue("Workflow");
+    private DeployType tYPE = DeployType.WORKFLOW;
     /**
      * string without < and >
      * <p>

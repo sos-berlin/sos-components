@@ -34,7 +34,7 @@ public class Lock implements IDeployObject
      * 
      */
     @JsonProperty("TYPE")
-    private DeployType tYPE = DeployType.fromValue("Workflow");
+    private DeployType tYPE = DeployType.LOCK;
     /**
      * string without < and >
      * <p>

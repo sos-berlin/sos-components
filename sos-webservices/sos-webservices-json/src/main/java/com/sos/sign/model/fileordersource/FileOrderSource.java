@@ -37,7 +37,7 @@ public class FileOrderSource implements IDeployObject
      * 
      */
     @JsonProperty("TYPE")
-    private DeployType tYPE = DeployType.fromValue("Workflow");
+    private DeployType tYPE = DeployType.FILEORDERSOURCE;
     /**
      * string without < and >
      * <p>

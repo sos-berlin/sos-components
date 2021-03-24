@@ -36,7 +36,7 @@ public class JobClass implements IDeployObject
      * 
      */
     @JsonProperty("TYPE")
-    private DeployType tYPE = DeployType.fromValue("Workflow");
+    private DeployType tYPE = DeployType.JOBCLASS;
     /**
      * string without < and >
      * <p>

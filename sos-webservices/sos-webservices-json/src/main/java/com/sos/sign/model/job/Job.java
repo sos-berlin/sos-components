@@ -42,8 +42,6 @@ public class Job {
     @JsonProperty("agentId")
     private String agentId;
     /**
-     * abstract executable
-     * <p>
      * 
      * (Required)
      * 
@@ -155,8 +153,6 @@ public class Job {
     }
 
     /**
-     * abstract executable
-     * <p>
      * 
      * (Required)
      * 
@@ -167,8 +163,6 @@ public class Job {
     }
 
     /**
-     * abstract executable
-     * <p>
      * 
      * (Required)
      * 
