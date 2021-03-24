@@ -1552,27 +1552,25 @@ public abstract class PublishUtils {
         return update;
     }
 
-    public static UpdateableFileOrderSourceAgentName getUpdateableAgentRefInFileOrderSource(DBItemInventoryConfiguration item, 
-            String controllerId, DBLayerDeploy dbLayer) {
-        return getUpdateableAgentRefInFileOrderSource(item.getName(), item.getContent(), ConfigurationType.fromValue(item.getType()), controllerId, dbLayer);
+    public static UpdateableFileOrderSourceAgentName getUpdateableAgentRefInFileOrderSource(DBItemInventoryConfiguration item, String controllerId,
+            DBLayerDeploy dbLayer) {
+        return getUpdateableAgentRefInFileOrderSource(item.getName(), item.getContent(), controllerId, dbLayer);
     }
 
-    public static UpdateableFileOrderSourceAgentName getUpdateableAgentRefInFileOrderSource(DBItemDeploymentHistory item,
-            String controllerId, DBLayerDeploy dbLayer) {
-        return getUpdateableAgentRefInFileOrderSource(item.getName(), item.getInvContent(), ConfigurationType.fromValue(item.getType()), controllerId, dbLayer);
+    public static UpdateableFileOrderSourceAgentName getUpdateableAgentRefInFileOrderSource(DBItemDeploymentHistory item, String controllerId,
+            DBLayerDeploy dbLayer) {
+        return getUpdateableAgentRefInFileOrderSource(item.getName(), item.getInvContent(), controllerId, dbLayer);
     }
 
-    public static UpdateableFileOrderSourceAgentName getUpdateableAgentRefInFileOrderSource(String fileOrderSourceId, String json, ConfigurationType type,
-            String controllerId, DBLayerDeploy dbLayer) {
+    public static UpdateableFileOrderSourceAgentName getUpdateableAgentRefInFileOrderSource(String fileOrderSourceId, String json, String controllerId, 
+            DBLayerDeploy dbLayer) {
         UpdateableFileOrderSourceAgentName update = null;
         try {
-            if (ConfigurationType.FILEORDERSOURCE.equals(type)) {
-                com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = 
-                        om.readValue(json, com.sos.inventory.model.fileordersource.FileOrderSource.class);
-                String agentNameOrAlias = fileOrderSource.getAgentId();
-                String agentId = dbLayer.getAgentIdFromAgentName(agentNameOrAlias, controllerId);
-                update = new UpdateableFileOrderSourceAgentName(fileOrderSourceId, agentNameOrAlias, agentId, controllerId);
-            }
+            com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = 
+                    om.readValue(json, com.sos.inventory.model.fileordersource.FileOrderSource.class);
+            String agentNameOrAlias = fileOrderSource.getAgentId();
+            String agentId = dbLayer.getAgentIdFromAgentName(agentNameOrAlias, controllerId);
+            update = new UpdateableFileOrderSourceAgentName(fileOrderSourceId, agentNameOrAlias, agentId, controllerId);
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
@@ -1580,9 +1578,8 @@ public abstract class PublishUtils {
     }
 
     public static Set<DBItemDeploymentHistory> cloneInvConfigurationsToDepHistoryItems(
-            SignedItemsSpec signedItemsSpec,
-            String account, DBLayerDeploy dbLayerDeploy, String commitId, String controllerId, Date deploymentDate) throws JsonParseException,
-            JsonMappingException, IOException {
+            SignedItemsSpec signedItemsSpec, String account, DBLayerDeploy dbLayerDeploy, String commitId, String controllerId, Date deploymentDate)
+                    throws JsonParseException, JsonMappingException, IOException {
         Set<DBItemDeploymentHistory> deployedObjects;
         try {
             DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
@@ -2457,8 +2454,8 @@ public abstract class PublishUtils {
     }
 
     public static StreamingOutput writeZipFile(Set<ControllerObject> deployables, Set<ConfigurationObject> releasables,
-            Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String commitId, String controllerId, DBLayerDeploy dbLayer, Version jocVersion,
-            Version apiVersion, Version inventoryVersion) {
+            Set<UpdateableWorkflowJobAgentName> updateableAgentNames, Set<UpdateableFileOrderSourceAgentName> updateableFOSAgentNames, String commitId,
+            String controllerId, DBLayerDeploy dbLayer, Version jocVersion, Version apiVersion, Version inventoryVersion) {
         StreamingOutput streamingOutput = new StreamingOutput() {
 
             @Override
@@ -2474,8 +2471,8 @@ public abstract class PublishUtils {
                             case WORKFLOW:
                                 extension = ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
                                 Workflow workflow = (Workflow) deployable.getContent();
-                                // determine agent names to be replaced
                                 workflow.setVersionId(commitId);
+                                // determine agent names to be replaced
                                 if (controllerId != null && updateableAgentNames != null) {
                                     replaceAgentNameWithAgentId(workflow, updateableAgentNames, controllerId);
                                 }
@@ -2500,6 +2497,15 @@ public abstract class PublishUtils {
                                 extension = ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
                                 JobClass jobClass = (JobClass) deployable.getContent();
                                 content = om.writeValueAsString(jobClass);
+                                break;
+                            case FILEORDERSOURCE:
+                                extension = ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.toString();
+                                FileOrderSource fileOrderSource = (FileOrderSource) deployable.getContent();
+                                // determine agent names to be replaced
+                                if (controllerId != null && updateableAgentNames != null) {
+                                    replaceAgentNameWithAgentId(fileOrderSource, updateableFOSAgentNames, controllerId);
+                                }
+                                content = om.writeValueAsString(fileOrderSource);
                                 break;
                             }
                             String zipEntryName = deployable.getPath().substring(1).concat(extension);
@@ -2534,7 +2540,7 @@ public abstract class PublishUtils {
                             }
                         }
                     }
-                    JocMetaInfo jocMetaInfo = getJocMetaInfoFromVersionFiles(jocVersion, apiVersion, inventoryVersion);
+                    JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion);
                     if (!isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
                         String zipEntryName = JOC_META_INFO_FILENAME;
                         ZipEntry entry = new ZipEntry(zipEntryName);
@@ -2557,8 +2563,8 @@ public abstract class PublishUtils {
     }
 
     public static StreamingOutput writeTarGzipFile(Set<ControllerObject> deployables, Set<ConfigurationObject> releasables,
-            Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String commitId, String controllerId, DBLayerDeploy dbLayer, Version jocVersion,
-            Version apiVersion, Version inventoryVersion) {
+            Set<UpdateableWorkflowJobAgentName> updateableAgentNames, Set<UpdateableFileOrderSourceAgentName> updateableFOSAgentNames,
+            String commitId, String controllerId, DBLayerDeploy dbLayer, Version jocVersion, Version apiVersion, Version inventoryVersion) {
         StreamingOutput streamingOutput = new StreamingOutput() {
 
             @Override
@@ -2603,6 +2609,15 @@ public abstract class PublishUtils {
                                 JobClass jobClass = (JobClass) deployable.getContent();
                                 content = om.writeValueAsString(jobClass);
                                 break;
+                            case FILEORDERSOURCE:
+                                extension = ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.toString();
+                                FileOrderSource fileOrderSource = (FileOrderSource) deployable.getContent();
+                                // determine agent names to be replaced
+                                if (controllerId != null && updateableAgentNames != null) {
+                                    replaceAgentNameWithAgentId(fileOrderSource, updateableFOSAgentNames, controllerId);
+                                }
+                                content = om.writeValueAsString(fileOrderSource);
+                                break;
                             }
                             String zipEntryName = deployable.getPath().substring(1).concat(extension);
                             TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
@@ -2640,7 +2655,7 @@ public abstract class PublishUtils {
                             }
                         }
                     }
-                    JocMetaInfo jocMetaInfo = getJocMetaInfoFromVersionFiles(jocVersion, apiVersion, inventoryVersion);
+                    JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion);
                     if (!isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
                         String zipEntryName = JOC_META_INFO_FILENAME;
                         TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
@@ -2834,6 +2849,13 @@ public abstract class PublishUtils {
             job.setAgentId(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname) && controllerId.equals(item
                     .getControllerId())).findFirst().get().getAgentId());
         });
+    }
+
+    private static void replaceAgentNameWithAgentId(FileOrderSource fileOrderSource, Set<UpdateableFileOrderSourceAgentName> updateableFOSAgentNames,
+            String controllerId) throws JsonParseException, JsonMappingException, IOException {
+        Set<UpdateableFileOrderSourceAgentName> filteredUpdateables = updateableFOSAgentNames.stream()
+                .filter(item -> item.getFileOrderSourceId().equals(fileOrderSource.getId())).collect(Collectors.toSet());
+        fileOrderSource.setAgentId(filteredUpdateables.stream().filter(item -> controllerId.equals(item.getControllerId())).findFirst().get().getAgentId());
     }
 
     private static String getContentWithOrigAgentNameForWorkflow(DBItemInventoryConfiguration draft, Set<UpdateableWorkflowJobAgentName> updateableAgentNames,
@@ -3268,6 +3290,10 @@ public abstract class PublishUtils {
                 }
                 jsObject.setContent(junction);
                 break;
+            case FILEORDERSOURCE:
+                FileOrderSource fileOrderSource = om.readValue(item.getInvContent().getBytes(), FileOrderSource.class);
+                jsObject.setContent(fileOrderSource);
+                break;
             }
             jsObject.setVersion(item.getVersion());
             jsObject.setAccount(Globals.getConfigurationGlobalsJoc().getDefaultProfileAccount().getValue());
@@ -3381,22 +3407,7 @@ public abstract class PublishUtils {
         }
     }
 
-    private static JocMetaInfo getJocMetaInfoFromJocProperties() {
-        Properties jocProperties = Globals.sosCockpitProperties.getProperties();
-        JocMetaInfo jocMetaInfo = new JocMetaInfo();
-        if (jocProperties.containsKey("joc_version")) {
-            jocMetaInfo.setJocVersion(jocProperties.getProperty("joc_version"));
-        }
-        if (jocProperties.containsKey("inventory_schema_version")) {
-            jocMetaInfo.setInventorySchemaVersion(jocProperties.getProperty("inventory_schema_version"));
-        }
-        if (jocProperties.containsKey("api_version")) {
-            jocMetaInfo.setApiVersion(jocProperties.getProperty("api_version"));
-        }
-        return jocMetaInfo;
-    }
-
-    private static JocMetaInfo getJocMetaInfoFromVersionFiles(Version jocVersion, Version apiVersion, Version inventoryVersion) {
+    private static JocMetaInfo createJocMetaInfo(Version jocVersion, Version apiVersion, Version inventoryVersion) {
         JocMetaInfo jocMetaInfo = new JocMetaInfo();
         if (jocVersion != null) {
             jocMetaInfo.setJocVersion(jocVersion.getVersion());

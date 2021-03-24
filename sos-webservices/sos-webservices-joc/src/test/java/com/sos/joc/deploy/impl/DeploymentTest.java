@@ -221,7 +221,7 @@ public class DeploymentTest {
         int counterSigned = 0;
         for (Workflow workflow : workflows) {
             Signature signature = signWorkflowRSA(workflow);
-            LOGGER.info("Base64 MIME encoded: " + signature.getSignatureString());
+//            LOGGER.info("Base64 MIME encoded: " + signature.getSignatureString());
             ControllerObject jsObject = DeploymentTestUtils.createJsObjectForDeployment(workflow, signature);
             assertNotNull(jsObject.getSignedContent());
             counterSigned++;

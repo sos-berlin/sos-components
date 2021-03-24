@@ -28,10 +28,12 @@ import com.sos.joc.model.publish.ExportForSigning;
 import com.sos.joc.model.publish.ExportShallowCopy;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
+import com.sos.joc.publish.mapper.UpdateableFileOrderSourceAgentName;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.joc.publish.resource.IExportResource;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
+import com.sos.sign.model.fileordersource.FileOrderSource;
 
 @Path("inventory")
 public class ExportImpl extends JOCResourceImpl implements IExportResource {
@@ -66,7 +68,9 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             
             Set<ControllerObject> deployables = null;
             Set<ConfigurationObject> releasables = null;
-            final Set<UpdateableWorkflowJobAgentName> updateableAgentNames = new HashSet<UpdateableWorkflowJobAgentName>();
+            final Set<UpdateableWorkflowJobAgentName> updateableWorkflowJobsAgentNames = new HashSet<UpdateableWorkflowJobAgentName>();
+            final Set<UpdateableFileOrderSourceAgentName> updateableFileOrderSourceAgentNames = new HashSet<UpdateableFileOrderSourceAgentName>();
+            
             String commitId = null;
             String controllerId = null;
             if (forSigning != null) {
@@ -77,11 +81,17 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                 deployables.stream()
                 .forEach(deployable -> {
                     if (DeployType.WORKFLOW.equals(deployable.getObjectType())) {
-                        Workflow workflow = (Workflow)deployable.getContent();
                         try {
-                            updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(deployable.getPath(),
+                            Workflow workflow = (Workflow)deployable.getContent();
+                            updateableWorkflowJobsAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(deployable.getPath(),
                                     om.writeValueAsString(workflow), ConfigurationType.WORKFLOW, controllerIdUsed, dbLayer));
                         } catch (JsonProcessingException e) {}   
+                    } else if (DeployType.FILEORDERSOURCE.equals(deployable.getObjectType())) {
+                        try {
+                            FileOrderSource fileOrderSource = (FileOrderSource)deployable.getContent();
+                            updateableFileOrderSourceAgentNames.add(PublishUtils.getUpdateableAgentRefInFileOrderSource(fileOrderSource.getId(),
+                                    om.writeValueAsString(fileOrderSource), controllerIdUsed, dbLayer));
+                        } catch (JsonProcessingException e) {}
                     }
                 });
             } else {
@@ -113,7 +123,8 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             if (filter.getExportFile().getFormat().equals(ArchiveFormat.TAR_GZ)) {
                 stream = PublishUtils.writeTarGzipFile(deployables,
                         releasables, 
-                        updateableAgentNames, 
+                        updateableWorkflowJobsAgentNames,
+                        updateableFileOrderSourceAgentNames,
                         commitId, 
                         controllerId, 
                         dbLayer,
@@ -123,7 +134,8 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             } else {
                 stream = PublishUtils.writeZipFile(deployables,
                         releasables,
-                        updateableAgentNames,
+                        updateableWorkflowJobsAgentNames,
+                        updateableFileOrderSourceAgentNames,
                         commitId,
                         controllerId,
                         dbLayer,

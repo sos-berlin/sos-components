@@ -992,11 +992,11 @@ public class DBLayerDeploy {
             DBItemInventoryConfiguration existingConfiguration = null;
             StringBuilder hql = new StringBuilder(" from ");
             hql.append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-            hql.append(" where path = :path");
+            hql.append(" where name = :name");
             hql.append(" and type = :type");
             Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
             query.setParameter("type", configuration.getObjectType().intValue());
-            query.setParameter("path", configuration.getPath());
+            query.setParameter("name", configuration.getName());
             existingConfiguration = session.getSingleResult(query);
             boolean valid = false;
             try {
@@ -2310,7 +2310,6 @@ public class DBLayerDeploy {
                 Query<String> query = getSession().createQuery(hql.toString());
                 query.setParameter("agentName", agentName);
                 query.setParameter("controllerId", controllerId);
-                query.setMaxResults(1);
                 return query.getSingleResult();
             } catch (NoResultException e) {
                 if (workflowPath != null && jobname != null) {

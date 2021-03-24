@@ -12,7 +12,8 @@ public enum ControllerObjectFileExtension {
     WORKFLOW_X509_SIGNATURE_FILE_EXTENSION(".workflow.json.sig"),
     LOCK_FILE_EXTENSION(".lock.json"),
     JUNCTION_FILE_EXTENSION(".junction.json"),
-    JOBCLASS_FILE_EXTENSION(".jobclass.json");
+    JOBCLASS_FILE_EXTENSION(".jobclass.json"),
+    FILEORDERSOURCE_FILE_EXTENSION(".fileordersource.json");
 
     private final String value;
     private static final Map<String, ControllerObjectFileExtension> CONSTANTS = new HashMap<String, ControllerObjectFileExtension>();

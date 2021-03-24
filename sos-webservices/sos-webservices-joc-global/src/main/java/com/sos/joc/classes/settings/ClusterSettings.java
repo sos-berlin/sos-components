@@ -30,6 +30,10 @@ public class ClusterSettings {
         return getSuffixPrefix(settings.getRestoreSuffix(), settings.getRestorePrefix());
     }
     
+    public static SuffixPrefix getImportSuffixPrefix(ConfigurationGlobalsJoc settings) {
+        return getSuffixPrefix(settings.getImportSuffix(), settings.getImportPrefix());
+    }
+    
     public static String getDefaultProfileAccount(ConfigurationGlobalsJoc settings) {
         return settings.getDefaultProfileAccount().getValue();
     }

@@ -66,11 +66,11 @@ public class MappingTest {
             om.enable(SerializationFeature.INDENT_OUTPUT);
             workflowJson = om.writeValueAsString(ifElseWorkflow);
             assertNotNull(workflowJson);
-            LOGGER.info("IfElse Workflow JSON created successfully!");
+            LOGGER.trace("IfElse Workflow JSON created successfully!");
             LOGGER.trace(workflowJson);
             workflowJson = null;
             workflowJson = om.writeValueAsString(forkJoinWorkflow);
-            LOGGER.info("ForkJoin Workflow JSON created successfully!");
+            LOGGER.trace("ForkJoin Workflow JSON created successfully!");
             LOGGER.trace(workflowJson);
         } catch (JsonProcessingException e) {
             LOGGER.error(e.getMessage(), e);
@@ -133,7 +133,7 @@ public class MappingTest {
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         DateFormat df = new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:ss.SSS'Z'");
         om.setDateFormat(df);
-        LOGGER.info("ALL properties:\n" + om.writeValueAsString(filter));
+        LOGGER.trace("ALL properties:\n" + om.writeValueAsString(filter));
     }
 
   @Test
@@ -142,24 +142,24 @@ public class MappingTest {
       ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
       DateFormat df = new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:ss.SSS'Z'");
       om.setDateFormat(df);
-      LOGGER.info("ALL properties:\n" + om.writeValueAsString(filter));
+      LOGGER.trace("ALL properties:\n" + om.writeValueAsString(filter));
       filter = DeploymentTestUtils.createShowDepHistoryFilterByFromToAndPath();
-      LOGGER.info("EXAMPLE 1:\n" + om.writeValueAsString(filter));
+      LOGGER.trace("EXAMPLE 1:\n" + om.writeValueAsString(filter));
       filter = DeploymentTestUtils.createShowDepHistoryFilterByDeploymentDateAndPath();
-      LOGGER.info("EXAMPLE 2:\n" + om.writeValueAsString(filter));
+      LOGGER.trace("EXAMPLE 2:\n" + om.writeValueAsString(filter));
       filter = DeploymentTestUtils.createShowDepHistoryFilterByDeleteDateAndPath();
-      LOGGER.info("EXAMPLE 3:\n" + om.writeValueAsString(filter));
+      LOGGER.trace("EXAMPLE 3:\n" + om.writeValueAsString(filter));
       filter = DeploymentTestUtils.createShowDepHistoryFilterByDeleteOperationAndPath();
-      LOGGER.info("EXAMPLE 4:\n" + om.writeValueAsString(filter));
+      LOGGER.trace("EXAMPLE 4:\n" + om.writeValueAsString(filter));
       filter = DeploymentTestUtils.createShowDepHistoryFilterByCommitIdAndFolder();
-      LOGGER.info("EXAMPLE 5:\n" + om.writeValueAsString(filter));
+      LOGGER.trace("EXAMPLE 5:\n" + om.writeValueAsString(filter));
   }
 
 //  @Test
     public void test07MapRedeployFilter () throws JsonProcessingException {
         RedeployFilter filter = DeploymentTestUtils.createDefaultRedeployFilter();
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
-        LOGGER.info("\n" + om.writeValueAsString(filter));
+        LOGGER.trace("\n" + om.writeValueAsString(filter));
     }
   
     /*
@@ -185,23 +185,23 @@ public class MappingTest {
          Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
         presentFilterAttributes.stream().forEach(item -> query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item)));
 
-        LOGGER.info("Create hql via StringBuilder using streams");
-        LOGGER.info(hql.toString());
-        LOGGER.info("Get property and value from query.getParameters().stream(): ");
-        query.getParameters().stream().forEach(item -> LOGGER.info(item.getName() + ": " + query.getParameterValue(item.getName()).toString()));
-        LOGGER.info("Replace hql in StringBuilder with property and value from query.getParameters().stream(): ");
+        LOGGER.trace("Create hql via StringBuilder using streams");
+        LOGGER.trace(hql.toString());
+        LOGGER.trace("Get property and value from query.getParameters().stream(): ");
+        query.getParameters().stream().forEach(item -> LOGGER.trace(item.getName() + ": " + query.getParameterValue(item.getName()).toString()));
+        LOGGER.trace("Replace hql in StringBuilder with property and value from query.getParameters().stream(): ");
         query.getParameters().stream().forEach(item ->  
         hql.replace(hql.indexOf(":" + item.getName()), hql.indexOf(":" + item.getName()) + item.getName().length() + 1, 
                 query.getParameterValue(item.getName()).toString()));
-        LOGGER.info("Replaced hql:\n" + hql.toString());
+        LOGGER.trace("Replaced hql:\n" + hql.toString());
         StringBuilder hql2 = new StringBuilder("where controllerId = :controllerId and account = :account");
-        LOGGER.info("Original : " + hql2.toString());
-        LOGGER.info("hql2.indexOf(\":controllerId\") : " + hql2.indexOf(":controllerId"));
-        LOGGER.info("hql2.lastIndexOf(\":controllerId\") : " + hql2.lastIndexOf(":controllerId"));
+        LOGGER.trace("Original : " + hql2.toString());
+        LOGGER.trace("hql2.indexOf(\":controllerId\") : " + hql2.indexOf(":controllerId"));
+        LOGGER.trace("hql2.lastIndexOf(\":controllerId\") : " + hql2.lastIndexOf(":controllerId"));
         hql2.replace(hql2.indexOf(":controllerId"), hql2.indexOf(":controllerId") + ":controllerId".length(), "testsuite");
-        LOGGER.info("Replace 1: " + hql2.toString());
+        LOGGER.trace("Replace 1: " + hql2.toString());
         hql2 = hql2.replace(hql2.indexOf(":account"), hql2.lastIndexOf(":account") + ":account".length(), "ME!");
-        LOGGER.info("Replace 2: " + hql2.toString());
+        LOGGER.trace("Replace 2: " + hql2.toString());
         session.close();
     }
     
@@ -250,23 +250,23 @@ public class MappingTest {
             }
         });
 
-        LOGGER.info("Create hql via StringBuilder using streams");
-        LOGGER.info(hql.toString());
-        LOGGER.info("Get property and value from query.getParameters().stream(): ");
-        query.getParameters().stream().forEach(item -> LOGGER.info(item.getName() + ": " + query.getParameterValue(item.getName()).toString()));
-        LOGGER.info("Replace hql in StringBuilder with property and value from query.getParameters().stream(): ");
+        LOGGER.trace("Create hql via StringBuilder using streams");
+        LOGGER.trace(hql.toString());
+        LOGGER.trace("Get property and value from query.getParameters().stream(): ");
+        query.getParameters().stream().forEach(item -> LOGGER.trace(item.getName() + ": " + query.getParameterValue(item.getName()).toString()));
+        LOGGER.trace("Replace hql in StringBuilder with property and value from query.getParameters().stream(): ");
         query.getParameters().stream().forEach(item ->  
         hql.replace(hql.indexOf(":" + item.getName()), hql.indexOf(":" + item.getName()) + item.getName().length() + 1, 
                 "'" + query.getParameterValue(item.getName()).toString() + "'"));
-        LOGGER.info("Replaced hql:\n" + hql.toString());
+        LOGGER.trace("Replaced hql:\n" + hql.toString());
         StringBuilder hql2 = new StringBuilder("where controllerId = :controllerId and account = :account");
-        LOGGER.info("hql2.indexOf(\":controllerId\") : " + hql2.indexOf(":controllerId"));
-        LOGGER.info("hql2.lastIndexOf(\":controllerId\") : " + hql2.lastIndexOf(":controllerId"));
-        LOGGER.info("Original : " + hql2.toString());
+        LOGGER.trace("hql2.indexOf(\":controllerId\") : " + hql2.indexOf(":controllerId"));
+        LOGGER.trace("hql2.lastIndexOf(\":controllerId\") : " + hql2.lastIndexOf(":controllerId"));
+        LOGGER.trace("Original : " + hql2.toString());
         hql2.replace(hql2.indexOf(":controllerId"), hql2.indexOf(":controllerId") + ":controllerId".length(), "testsuite");
-        LOGGER.info("Replace 1: " + hql2.toString());
+        LOGGER.trace("Replace 1: " + hql2.toString());
         hql2 = hql2.replace(hql2.indexOf(":account"), hql2.lastIndexOf(":account") + ":account".length(), "ME!");
-        LOGGER.info("Replace 2: " + hql2.toString());
+        LOGGER.trace("Replace 2: " + hql2.toString());
         session.close();
     }
     
@@ -277,9 +277,9 @@ public class MappingTest {
 //        exclude.setPath("/myWorkflows/myIfElseWorkflow/workflow_12");
 //        exclude.setDeployType(DeployType.WORKFLOW);
 //        filter.getExcludes().add(exclude);
-        LOGGER.info("RedeployFilter Example");
+        LOGGER.trace("RedeployFilter Example");
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
-        LOGGER.info("\n" + om.writeValueAsString(filter));
+        LOGGER.trace("\n" + om.writeValueAsString(filter));
         
         Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter);
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
@@ -295,58 +295,58 @@ public class MappingTest {
                     }
                 }).filter(item -> item != null)
                 .collect(Collectors.joining(" and ", " where ", "")));
-        LOGGER.info(hql.toString());
+        LOGGER.trace(hql.toString());
     }
 
     @Test
     public void test11MapDeployFilter () throws JsonProcessingException {
-        LOGGER.info("DeployFilter Example");
+        LOGGER.trace("DeployFilter Example");
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
-        LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleDeployFilter()));
+        LOGGER.trace("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleDeployFilter()));
     }
 
     @Test
     public void test12MapExportFilterForSigning () throws JsonProcessingException {
-        LOGGER.info("ExportFilter forSigning=true Example");
+        LOGGER.trace("ExportFilter forSigning=true Example");
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
-        LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleExportFilter(true)));
+        LOGGER.trace("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleExportFilter(true)));
     }
 
     @Test
     public void test13MapExportForBackupFilter () throws JsonProcessingException {
-        LOGGER.info("ExportFilter forSigning=false Example");
+        LOGGER.trace("ExportFilter forSigning=false Example");
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
-        LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleExportFilter(false)));
+        LOGGER.trace("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleExportFilter(false)));
     }
 
     @Test
     public void test14MapSetVersionFilter () throws JsonProcessingException {
-        LOGGER.info("SetVersionFilter Example");
+        LOGGER.trace("SetVersionFilter Example");
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
-        LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleSetVersionFilter()));
+        LOGGER.trace("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleSetVersionFilter()));
     }
 
     @Test
     public void test15MapSetVersionsFilter () throws JsonProcessingException {
-        LOGGER.info("SetVersionsFilter Example");
+        LOGGER.trace("SetVersionsFilter Example");
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
-        LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleSetVersionsFilter()));
+        LOGGER.trace("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleSetVersionsFilter()));
     }
 
     @Test
     public void test16MapPathFilter () throws JsonProcessingException {
-        LOGGER.info("PathFilter Example");
+        LOGGER.trace("PathFilter Example");
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
-        LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExamplePathFilter()));
+        LOGGER.trace("\n" + om.writeValueAsString(DeploymentTestUtils.createExamplePathFilter()));
     }
 
     @Test
     public void test17MapPathResponse () throws JsonProcessingException {
-        LOGGER.info("PathResponse Example");
+        LOGGER.trace("PathResponse Example");
         ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         DateFormat df = new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:ss.SSS'Z'");
         om.setDateFormat(df);
-        LOGGER.info("\n" + om.writeValueAsString(DeploymentTestUtils.createExamplePathResponse()));
+        LOGGER.trace("\n" + om.writeValueAsString(DeploymentTestUtils.createExamplePathResponse()));
     }
 
 }
