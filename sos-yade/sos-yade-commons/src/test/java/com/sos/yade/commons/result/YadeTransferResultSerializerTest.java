@@ -1,4 +1,4 @@
-package com.sos.yade.engine.result;
+package com.sos.yade.commons.result;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -9,11 +9,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.sos.yade.commons.result.YadeTransferResult;
-import com.sos.yade.commons.result.YadeTransferResultEntry;
-import com.sos.yade.commons.result.YadeTransferResultProtocol;
-import com.sos.yade.commons.result.YadeTransferResultSerializer;
 
 public class YadeTransferResultSerializerTest {
 
@@ -29,16 +24,10 @@ public class YadeTransferResultSerializerTest {
         String serialized = serializer.serialize(tr);
 
         LOGGER.info("deserialize ...");
-        YadeEngineTransferResult r = new YadeEngineTransferResult(serializer.deserialize(serialized));
-        r.setMandator("sos");
-        r.setControllerId("js7");
-        r.setWorkflow("yadeWorkflow");
-        r.setJob("yadeJob");
-        r.setJobPosition("0");
+        YadeTransferResult r = serializer.deserialize(serialized);
 
-        LOGGER.info(r.getControllerId());
-        LOGGER.info(r.getTransfer().getSource().getHost());
-        LOGGER.info(r.getTransfer().getEntries().get(1).getTarget());
+        LOGGER.info(r.getSource().getHost());
+        LOGGER.info(r.getEntries().get(1).getTarget());
     }
 
     @Ignore
@@ -51,16 +40,10 @@ public class YadeTransferResultSerializerTest {
         String serialized = serializer.serializeBase64(tr);
 
         LOGGER.info("deserialize ...");
-        YadeEngineTransferResult r = new YadeEngineTransferResult(serializer.deserializeBase64(serialized));
-        r.setMandator("sos");
-        r.setControllerId("js7");
-        r.setWorkflow("yadeWorkflow");
-        r.setJob("yadeJob");
-        r.setJobPosition("0");
+        YadeTransferResult r = serializer.deserialize(serialized);
 
-        LOGGER.info(r.getControllerId());
-        LOGGER.info(r.getTransfer().getSource().getHost());
-        LOGGER.info(r.getTransfer().getEntries().get(1).getTarget());
+        LOGGER.info(r.getSource().getHost());
+        LOGGER.info(r.getEntries().get(1).getTarget());
     }
 
     private YadeTransferResult getTransfer() {
