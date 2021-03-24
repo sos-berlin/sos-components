@@ -33,6 +33,7 @@ import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.inventory.resource.IRestoreConfigurationResource;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.inventory.common.ResponseNewPath;
 import com.sos.joc.model.inventory.restore.RequestFilter;
 import com.sos.schema.JsonValidator;
 
@@ -88,6 +89,8 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
                     .getRestoreSuffixPrefix(clusterSettings), clusterSettings.getRestoreSuffix().getDefault(), config.getName(), type, dbLayer));
 
             Set<String> events = new HashSet<>();
+            ResponseNewPath response = new ResponseNewPath();
+            response.setObjectType(type);
             
             if (JocInventory.isFolder(type)) {
                 
@@ -138,7 +141,15 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
                         DBItemInventoryConfiguration newDbItem = createItem(config, pWithoutFix, auditLogId, dbLayer);
                         JocInventory.insertConfiguration(dbLayer, newDbItem);
                         JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), auditLogId);
+                        response.setId(newDbItem.getId());
+                        response.setPath(newDbItem.getPath());
+                    } else {
+                        response.setId(newItem.getId());
+                        response.setPath(newItem.getPath());
                     }
+                } else {
+                    response.setId(0L);
+                    response.setPath("/");
                 }
                 
                 dbLayer.deleteTrashFolder(config.getPath());
@@ -162,10 +173,16 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
                 
                 Long auditLogId = createAuditLog(config, in.getAuditLog());
                 if (dbLayer.getConfigurationByName(pWithoutFix.getFileName().toString(), config.getType()).isEmpty()) {
-                    JocInventory.insertConfiguration(dbLayer, createItem(config, pWithoutFix, auditLogId, dbLayer));
+                    DBItemInventoryConfiguration dbItem = createItem(config, pWithoutFix, auditLogId, dbLayer);
+                    JocInventory.insertConfiguration(dbLayer, dbItem);
+                    response.setId(dbItem.getId());
+                    response.setPath(dbItem.getPath());
                 } else {
-                    JocInventory.insertConfiguration(dbLayer, createItem(config, pWithoutFix.getParent().resolve(pWithoutFix.getFileName().toString()
-                            .replaceFirst(replace.get(0), replace.get(1))), auditLogId, dbLayer));
+                    DBItemInventoryConfiguration dbItem = createItem(config, pWithoutFix.getParent().resolve(pWithoutFix.getFileName().toString()
+                            .replaceFirst(replace.get(0), replace.get(1))), auditLogId, dbLayer);
+                    JocInventory.insertConfiguration(dbLayer, dbItem);
+                    response.setId(dbItem.getId());
+                    response.setPath(dbItem.getPath());
                 }
                 JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), auditLogId);
                 session.delete(config);
@@ -178,7 +195,8 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
                 JocInventory.postTrashEvent(event);
             }
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            response.setDeliveryDate(Date.from(Instant.now()));
+            return JOCDefaultResponse.responseStatus200(response);
         } catch (Throwable e) {
             Globals.rollback(session);
             throw e;

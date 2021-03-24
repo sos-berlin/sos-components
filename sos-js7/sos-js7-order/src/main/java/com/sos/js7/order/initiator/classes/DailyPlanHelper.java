@@ -17,8 +17,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.inventory.model.Schedule;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
-import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
-import com.sos.joc.model.dailyplan.PlannedOrderItem;
 
 public class DailyPlanHelper {
 

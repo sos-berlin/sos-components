@@ -32,6 +32,7 @@ import com.sos.joc.inventory.resource.ICopyConfigurationResource;
 import com.sos.joc.model.SuffixPrefix;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.inventory.common.ResponseNewPath;
 import com.sos.joc.model.inventory.copy.RequestFilter;
 import com.sos.schema.JsonValidator;
 
@@ -93,6 +94,8 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
             
             final List<String> replace = JocInventory.getSearchReplace(suffixPrefix);
             Set<String> events = new HashSet<>();
+            ResponseNewPath response = new ResponseNewPath();
+            response.setObjectType(type);
             
             // Check folder permissions
             if (JocInventory.isFolder(type)) {
@@ -163,9 +166,16 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                         auditLogId = createAuditLog(newDbItem, in.getAuditLog());
                         JocInventory.insertConfiguration(dbLayer, newDbItem);
                         JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), newDbItem.getAuditLogId());
+                        response.setId(newDbItem.getId());
+                        response.setPath(newDbItem.getPath());
                     } else if (!oldDBFolderContent.isEmpty()) {
                         auditLogId = createAuditLog(newItem, in.getAuditLog());
+                        response.setId(newItem.getId());
+                        response.setPath(newItem.getPath());
                     }
+                } else {
+                    response.setId(0L);
+                    response.setPath("/");
                 }
                 if (in.getShallowCopy()) {
                     for (DBItemInventoryConfiguration item : oldDBFolderContent) {
@@ -255,6 +265,8 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                 createAuditLog(newDbItem, in.getAuditLog());
                 JocInventory.insertConfiguration(dbLayer, newDbItem);
                 JocInventory.makeParentDirs(dbLayer, p.getParent(), newDbItem.getAuditLogId());
+                response.setId(newDbItem.getId());
+                response.setPath(newDbItem.getPath());
                 events.add(newDbItem.getFolder());
             }
 
@@ -263,7 +275,8 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                 JocInventory.postEvent(event);
             }
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            response.setDeliveryDate(Date.from(Instant.now()));
+            return JOCDefaultResponse.responseStatus200(response);
         } catch (Throwable e) {
             Globals.rollback(session);
             throw e;

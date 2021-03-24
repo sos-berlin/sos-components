@@ -28,6 +28,7 @@ import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.inventory.resource.IRenameConfigurationResource;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.inventory.common.ResponseNewPath;
 import com.sos.joc.model.inventory.rename.RequestFilter;
 import com.sos.schema.JsonValidator;
 
@@ -78,8 +79,14 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
             boolean isRename = !oldPath.getFileName().toString().equals(p.getFileName().toString());
             Set<String> events = new HashSet<>();
             
+            ResponseNewPath response = new ResponseNewPath();
+            response.setObjectType(type);
+            
             if (config.getPath().equals(newPath)) { // Nothing to do
-                return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+                response.setPath(newPath);
+                response.setId(config.getId());
+                response.setDeliveryDate(Date.from(Instant.now()));
+                return JOCDefaultResponse.responseStatus200(response);
             }
             
             // Check folder permissions
@@ -152,6 +159,8 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                         JocInventory.updateConfiguration(dbLayer, item);
                     }
                 }
+                response.setPath(config.getPath());
+                response.setId(config.getId());
                 events.add(config.getFolder());
                 
             } else {
@@ -180,6 +189,8 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 createAuditLog(config, in.getAuditLog());
                 JocInventory.updateConfiguration(dbLayer, config);
                 JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId());
+                response.setPath(config.getPath());
+                response.setId(config.getId());
                 events.add(config.getFolder());
             }
             
@@ -188,7 +199,8 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 JocInventory.postEvent(event);
             }
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            response.setDeliveryDate(Date.from(Instant.now()));
+            return JOCDefaultResponse.responseStatus200(response);
         } catch (Throwable e) {
             Globals.rollback(session);
             throw e;
