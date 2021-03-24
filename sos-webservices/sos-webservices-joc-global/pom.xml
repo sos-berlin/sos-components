@@ -62,11 +62,6 @@
 		
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-yade-db</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.sos-berlin</groupId>
 			<artifactId>sos-joc-db</artifactId>
 			<version>${project.version}</version>
 		</dependency>
