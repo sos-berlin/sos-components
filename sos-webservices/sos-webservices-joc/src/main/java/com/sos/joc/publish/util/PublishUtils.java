@@ -19,6 +19,7 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
@@ -28,7 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Properties;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -144,11 +145,11 @@ import js7.base.problem.Problem;
 import js7.data.agent.AgentId;
 import js7.data.item.VersionId;
 import js7.data.lock.LockId;
-import js7.data.ordersource.OrderSourceId;
+import js7.data.orderwatch.OrderWatchId;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.item.JUpdateItemOperation;
 import js7.data_for_java.lock.JLock;
-import js7.data_for_java.ordersource.JFileOrderSource;
+import js7.data_for_java.orderwatch.JFileWatch;
 import reactor.core.publisher.Flux;
 
 public abstract class PublishUtils {
@@ -698,12 +699,9 @@ public abstract class PublishUtils {
                                 if (fileOrderSource.getId() == null) {
                                     fileOrderSource.setId(item.getName());
                                 }
-                                return JUpdateItemOperation.addOrChangeSimple(
-                                        JFileOrderSource.of(
-                                                OrderSourceId.of(fileOrderSource.getId()), 
-                                                WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
-                                                AgentId.of(fileOrderSource.getAgentId()), 
-                                                Paths.get(fileOrderSource.getDirectory())));
+                                return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                            } catch (JocDeployException e) {
+                                throw e;
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
@@ -741,12 +739,9 @@ public abstract class PublishUtils {
                                 if (fileOrderSource.getId() == null) {
                                     fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
                                 }
-                                return JUpdateItemOperation.addOrChangeSimple(
-                                        JFileOrderSource.of(
-                                                OrderSourceId.of(fileOrderSource.getId()), 
-                                                WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
-                                                AgentId.of(fileOrderSource.getAgentId()), 
-                                                Paths.get(fileOrderSource.getDirectory())));
+                                return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                            } catch (JocDeployException e) {
+                                throw e;
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
@@ -799,12 +794,9 @@ public abstract class PublishUtils {
                     if (fileOrderSource.getId() == null) {
                         fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
                     }
-                    return JUpdateItemOperation.addOrChangeSimple(
-                            JFileOrderSource.of(
-                                    OrderSourceId.of(fileOrderSource.getId()), 
-                                    WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
-                                    AgentId.of(fileOrderSource.getAgentId()), 
-                                    Paths.get(fileOrderSource.getDirectory())));
+                    return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                } catch (JocDeployException e) {
+                    throw e;
                 } catch (Exception e) {
                     throw new JocDeployException(e);
                 }
@@ -845,12 +837,9 @@ public abstract class PublishUtils {
                     if (fileOrderSource.getId() == null) {
                         fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
                     }
-                    return JUpdateItemOperation.addOrChangeSimple(
-                            JFileOrderSource.of(
-                                    OrderSourceId.of(fileOrderSource.getId()), 
-                                    WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
-                                    AgentId.of(fileOrderSource.getAgentId()), 
-                                    Paths.get(fileOrderSource.getDirectory())));
+                    return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                } catch (JocDeployException e) {
+                    throw e;
                 } catch (Exception e) {
                     throw new JocDeployException(e);
                 }
@@ -899,12 +888,9 @@ public abstract class PublishUtils {
                     if (fileOrderSource.getId() == null) {
                         fileOrderSource.setId(item.getName());
                     }
-                    return JUpdateItemOperation.addOrChangeSimple(
-                            JFileOrderSource.of(
-                                    OrderSourceId.of(fileOrderSource.getId()), 
-                                    WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
-                                    AgentId.of(fileOrderSource.getAgentId()), 
-                                    Paths.get(fileOrderSource.getDirectory())));
+                    return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                } catch (JocDeployException e) {
+                    throw e;
                 } catch (Exception e) {
                     throw new JocDeployException(e);
                 }
@@ -951,11 +937,9 @@ public abstract class PublishUtils {
                                 if (fileOrderSource.getId() == null) {
                                     fileOrderSource.setId(item.getName());
                                 }
-                                return JUpdateItemOperation.addOrChangeSimple(JFileOrderSource.of(
-                                        OrderSourceId.of(fileOrderSource.getId()), 
-                                        WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
-                                        AgentId.of(fileOrderSource.getAgentId()), 
-                                        Paths.get(fileOrderSource.getDirectory())));
+                                return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                            } catch (JocDeployException e) {
+                                throw e;
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
@@ -993,12 +977,9 @@ public abstract class PublishUtils {
                                 if (fileOrderSource.getId() == null) {
                                     fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
                                 }
-                                return JUpdateItemOperation.addOrChangeSimple(
-                                        JFileOrderSource.of(
-                                                OrderSourceId.of(fileOrderSource.getId()), 
-                                                WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
-                                                AgentId.of(fileOrderSource.getAgentId()), 
-                                                Paths.get(fileOrderSource.getDirectory())));
+                                return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                            } catch (JocDeployException e) {
+                                throw e;
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
@@ -1047,12 +1028,9 @@ public abstract class PublishUtils {
                                 if (fileOrderSource.getId() == null) {
                                     fileOrderSource.setId(item.getName());
                                 }
-                                return JUpdateItemOperation.addOrChangeSimple(
-                                        JFileOrderSource.of(
-                                                OrderSourceId.of(fileOrderSource.getId()), 
-                                                WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
-                                                AgentId.of(fileOrderSource.getAgentId()), 
-                                                Paths.get(fileOrderSource.getDirectory())));
+                                return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                            } catch (JocDeployException e) {
+                                throw e;
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
@@ -1090,12 +1068,9 @@ public abstract class PublishUtils {
                                 if (fileOrderSource.getId() == null) {
                                     fileOrderSource.setId(item.getName());
                                 }
-                                return JUpdateItemOperation.addOrChangeSimple(
-                                        JFileOrderSource.of(
-                                                OrderSourceId.of(fileOrderSource.getId()), 
-                                                WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
-                                                AgentId.of(fileOrderSource.getAgentId()), 
-                                                Paths.get(item.getPath())));
+                                return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                            } catch (JocDeployException e) {
+                                throw e;
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
@@ -1149,12 +1124,9 @@ public abstract class PublishUtils {
                                 if (fileOrderSource.getId() == null) {
                                     fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
                                 }
-                                return JUpdateItemOperation.addOrChangeSimple(
-                                        JFileOrderSource.of(
-                                                OrderSourceId.of(fileOrderSource.getId()), 
-                                                WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
-                                                AgentId.of(fileOrderSource.getAgentId()), 
-                                                Paths.get(fileOrderSource.getDirectory())));
+                                return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                            } catch (JocDeployException e) {
+                                throw e;
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
@@ -1194,12 +1166,9 @@ public abstract class PublishUtils {
                                 if (fileOrderSource.getId() == null) {
                                     fileOrderSource.setId(item.getName());
                                 }
-                                return JUpdateItemOperation.addOrChangeSimple(
-                                        JFileOrderSource.of(
-                                                OrderSourceId.of(fileOrderSource.getId()), 
-                                                WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
-                                                AgentId.of(fileOrderSource.getAgentId()), 
-                                                Paths.get(fileOrderSource.getDirectory())));
+                                return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                            } catch (JocDeployException e) {
+                                throw e;
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
@@ -1254,12 +1223,9 @@ public abstract class PublishUtils {
                                 if (fileOrderSource.getId() == null) {
                                     fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
                                 }
-                                return JUpdateItemOperation.addOrChangeSimple(
-                                        JFileOrderSource.of(
-                                                OrderSourceId.of(fileOrderSource.getId()), 
-                                                WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
-                                                AgentId.of(fileOrderSource.getAgentId()), 
-                                                Paths.get(fileOrderSource.getDirectory())));
+                                return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                            } catch (JocDeployException e) {
+                                throw e;
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
@@ -1299,12 +1265,9 @@ public abstract class PublishUtils {
                                 if (fileOrderSource.getId() == null) {
                                     fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
                                 }
-                                return JUpdateItemOperation.addOrChangeSimple(
-                                        JFileOrderSource.of(
-                                                OrderSourceId.of(fileOrderSource.getId()), 
-                                                WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
-                                                AgentId.of(fileOrderSource.getAgentId()), 
-                                                Paths.get(fileOrderSource.getDirectory())));
+                                return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                            } catch (JocDeployException e) {
+                                throw e;
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
@@ -1350,12 +1313,9 @@ public abstract class PublishUtils {
                     if (fileOrderSource.getId() == null) {
                         fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
                     }
-                    return JUpdateItemOperation.addOrChangeSimple(
-                            JFileOrderSource.of(
-                                    OrderSourceId.of(fileOrderSource.getId()), 
-                                    WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
-                                    AgentId.of(fileOrderSource.getAgentId()), 
-                                    Paths.get(fileOrderSource.getDirectory())));
+                    return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                } catch (JocDeployException e) {
+                    throw e;
                 } catch (Exception e) {
                     throw new JocDeployException(e);
                 }
@@ -1400,12 +1360,9 @@ public abstract class PublishUtils {
                     if (fileOrderSource.getId() == null) {
                         fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
                     }
-                    return JUpdateItemOperation.addOrChangeSimple(
-                            JFileOrderSource.of(
-                                    OrderSourceId.of(fileOrderSource.getId()), 
-                                    WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
-                                    AgentId.of(fileOrderSource.getAgentId()), 
-                                    Paths.get(fileOrderSource.getDirectory())));
+                    return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                } catch (JocDeployException e) {
+                    throw e;
                 } catch (Exception e) {
                     throw new JocDeployException(e);
                 }
@@ -1452,12 +1409,9 @@ public abstract class PublishUtils {
                                 if (fileOrderSource.getId() == null) {
                                     fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
                                 }
-                                return JUpdateItemOperation.addOrChangeSimple(
-                                        JFileOrderSource.of(
-                                                OrderSourceId.of(fileOrderSource.getId()), 
-                                                WorkflowPath.of(fileOrderSource.getWorkflowPath()), 
-                                                AgentId.of(fileOrderSource.getAgentId()), 
-                                                Paths.get(fileOrderSource.getDirectory())));
+                                return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                            } catch (JocDeployException e) {
+                                throw e;
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
@@ -1501,7 +1455,6 @@ public abstract class PublishUtils {
         }
     }
 
-    @SuppressWarnings("incomplete-switch")
     private static void updateVersionIdOnDeployedObject(DBItemDeploymentHistory deployed, String commitId, SOSHibernateSession session)
             throws JsonParseException, JsonMappingException, IOException, SOSHibernateException, JocNotImplementedException {
 
@@ -3589,6 +3542,35 @@ public abstract class PublishUtils {
             }
         }
         return false;
+    }
+    
+    private static JFileWatch getJFileWatch(FileOrderSource fileOrderSource) throws JocDeployException {
+        // TODO AgentName -> AgentId??
+        Long delay = fileOrderSource.getDelay() == null ? 2L : fileOrderSource.getDelay();
+        Either<Problem, JFileWatch> fileWatch = JFileWatch.checked(OrderWatchId.of(fileOrderSource.getId()), WorkflowPath.of(fileOrderSource
+                .getWorkflowPath()), AgentId.of(fileOrderSource.getAgentId()), Paths.get(fileOrderSource.getDirectory()), getFileOrderSourcePattern(
+                        fileOrderSource), getFileOrderIdPattern(fileOrderSource), Duration.ofSeconds(delay));
+        if (fileWatch.isLeft()) {
+            throw new JocDeployException(fileWatch.getLeft().toString());
+        } else {
+            return fileWatch.get();
+        }
+    }
+
+    private static Optional<String> getFileOrderSourcePattern(FileOrderSource fileOrderSource) {
+        if (fileOrderSource.getPattern() == null || fileOrderSource.getPattern().isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(fileOrderSource.getPattern());
+    }
+
+    private static Optional<String> getFileOrderIdPattern(FileOrderSource fileOrderSource) {
+        String idPattern = "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ \"#F$epochSecond-$orderWatchId:$1\"";
+        String timeZone = fileOrderSource.getTimeZone();
+        if (timeZone == null || timeZone.isEmpty()) {
+            timeZone = "Etc/UTC";
+        }
+        return Optional.of(String.format(idPattern, timeZone));
     }
 
 }

@@ -29,21 +29,19 @@ import com.sos.joc.event.bean.proxy.ProxyCoupled;
 import com.sos.joc.event.bean.proxy.ProxyRemoved;
 import com.sos.joc.event.bean.proxy.ProxyRestarted;
 import com.sos.joc.event.bean.proxy.ProxyStarted;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.ControllerConnectionRefusedException;
-import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.ProxyNotCoupledException;
 
 import js7.base.web.Uri;
 import js7.data.agent.AgentId;
-import js7.data.agent.AgentRef;
 import js7.data.cluster.ClusterSetting.Watch;
-import js7.data.item.ItemRevision;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.auth.JHttpsConfig;
 import js7.proxy.javaapi.JControllerApi;
@@ -455,8 +453,7 @@ public class Proxies {
             }
             List<DBItemInventoryAgentInstance> dbAvailableAgents = dbLayer.getAgentsByControllerIds(Arrays.asList(controllerId), false, true);
             if (dbAvailableAgents != null) {
-                return dbAvailableAgents.stream().map(a -> JAgentRef.apply(AgentRef.apply(AgentId.of(a.getAgentId()), Uri.of(a.getUri()), ItemRevision
-                        .apply(0)))).collect(Collectors.toList());
+                return dbAvailableAgents.stream().map(a -> JAgentRef.of(AgentId.of(a.getAgentId()), Uri.of(a.getUri()))).collect(Collectors.toList());
 
             }
             return Collections.emptyList();

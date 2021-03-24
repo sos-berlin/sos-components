@@ -26,6 +26,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "agentId",
     "directory",
     "pattern",
+    "timeZone",
+    "delay",
     "title",
     "documentationPath"
 })
@@ -66,14 +68,24 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
      */
     @JsonProperty("directory")
     private String directory;
+    @JsonProperty("pattern")
+    private String pattern;
     /**
      * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("pattern")
-    private String pattern;
+    @JsonProperty("timeZone")
+    private String timeZone;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("delay")
+    private Long delay;
     /**
      * string without < and >
      * <p>
@@ -103,17 +115,22 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
      * 
      * @param documentationPath
      * @param agentId
+     * @param delay
      * @param workflowPath
      * @param pattern
+     * @param timeZone
+     * 
      * @param title
      * @param directory
      */
-    public FileOrderSource(String workflowPath, String agentId, String directory, String pattern, String title, String documentationPath) {
+    public FileOrderSource(String workflowPath, String agentId, String directory, String pattern, String timeZone, Long delay, String title, String documentationPath) {
         super();
         this.workflowPath = workflowPath;
         this.agentId = agentId;
         this.directory = directory;
         this.pattern = pattern;
+        this.timeZone = timeZone;
+        this.delay = delay;
         this.title = title;
         this.documentationPath = documentationPath;
     }
@@ -127,17 +144,6 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
     @JsonProperty("TYPE")
     public DeployType getTYPE() {
         return tYPE;
-    }
-
-    /**
-     * deployType
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("TYPE")
-    public void setTYPE(DeployType tYPE) {
-        this.tYPE = tYPE;
     }
 
     /**
@@ -210,15 +216,14 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
         this.directory = directory;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("pattern")
     public String getPattern() {
         return pattern;
+    }
+
+    @JsonProperty("pattern")
+    public void setPattern(String pattern) {
+        this.pattern = pattern;
     }
 
     /**
@@ -227,9 +232,42 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
      * 
      * 
      */
-    @JsonProperty("pattern")
-    public void setPattern(String pattern) {
-        this.pattern = pattern;
+    @JsonProperty("timeZone")
+    public String getTimeZone() {
+        return timeZone;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("timeZone")
+    public void setTimeZone(String timeZone) {
+        this.timeZone = timeZone;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("delay")
+    public Long getDelay() {
+        return delay;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("delay")
+    public void setDelay(Long delay) {
+        this.delay = delay;
     }
 
     /**
@@ -278,12 +316,12 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("workflowPath", workflowPath).append("agentId", agentId).append("directory", directory).append("pattern", pattern).append("title", title).append("documentationPath", documentationPath).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("workflowPath", workflowPath).append("agentId", agentId).append("directory", directory).append("pattern", pattern).append("timeZone", timeZone).append("delay", delay).append("title", title).append("documentationPath", documentationPath).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(documentationPath).append(agentId).append(workflowPath).append(pattern).append(tYPE).append(title).append(directory).toHashCode();
+        return new HashCodeBuilder().append(documentationPath).append(agentId).append(delay).append(workflowPath).append(pattern).append(timeZone).append(tYPE).append(title).append(directory).toHashCode();
     }
 
     @Override
@@ -295,7 +333,7 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
             return false;
         }
         FileOrderSource rhs = ((FileOrderSource) other);
-        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(agentId, rhs.agentId).append(workflowPath, rhs.workflowPath).append(pattern, rhs.pattern).append(tYPE, rhs.tYPE).append(title, rhs.title).append(directory, rhs.directory).isEquals();
+        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(agentId, rhs.agentId).append(delay, rhs.delay).append(workflowPath, rhs.workflowPath).append(pattern, rhs.pattern).append(timeZone, rhs.timeZone).append(tYPE, rhs.tYPE).append(title, rhs.title).append(directory, rhs.directory).isEquals();
     }
 
 }

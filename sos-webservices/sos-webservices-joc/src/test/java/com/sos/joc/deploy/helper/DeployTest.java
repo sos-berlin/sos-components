@@ -4,6 +4,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -17,25 +18,23 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.sign.keys.sign.SignObject;
 import com.sos.commons.sign.keys.verify.VerifySignature;
 import com.sos.commons.util.SOSString;
-import com.sos.sign.model.lock.Lock;
-import com.sos.sign.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.proxy.ProxyUser;
+import com.sos.sign.model.lock.Lock;
+import com.sos.sign.model.workflow.Workflow;
 
 import io.vavr.control.Either;
 import js7.base.crypt.SignedString;
 import js7.base.problem.Problem;
 import js7.base.web.Uri;
 import js7.data.agent.AgentId;
-import js7.data.agent.AgentRef;
-import js7.data.item.ItemRevision;
 import js7.data.item.VersionId;
 import js7.data.lock.LockId;
-import js7.proxy.javaapi.JControllerApi;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.item.JSimpleItem;
 import js7.data_for_java.item.JUpdateItemOperation;
 import js7.data_for_java.lock.JLock;
+import js7.proxy.javaapi.JControllerApi;
 import reactor.core.publisher.Flux;
 
 public class DeployTest {
@@ -153,13 +152,9 @@ public class DeployTest {
     }
 
     private void addOrChangeAgent(JControllerApi api, String agentId, Uri agentUri) throws InterruptedException, ExecutionException {
-        //JAgentRef agent = JAgentRef.apply(AgentRef.apply(AgentId.of(agentId), agentUri));
-        JAgentRef agent = JAgentRef.apply(AgentRef.apply(AgentId.of(agentId), agentUri, ItemRevision.apply(0)));
-        List<JAgentRef> agents = Arrays.asList(agent);
-
-        Either<Problem, Void> answer = api.updateItems(Flux.fromIterable(agents).map(JUpdateItemOperation::addOrChange)).get();
+        Either<Problem, Void> answer = api.updateItems(Flux.fromIterable(Collections.singleton(JAgentRef.of(AgentId.of(agentId), agentUri))).map(
+                JUpdateItemOperation::addOrChange)).get();
         LOGGER.info("[addOrChangeAgent][" + agentId + "]" + SOSString.toString(answer));
-
     }
 
     private void addOrChangeSignedItem(JControllerApi api, String contentOriginal, String contentSigned, String signatureType, String versionId)

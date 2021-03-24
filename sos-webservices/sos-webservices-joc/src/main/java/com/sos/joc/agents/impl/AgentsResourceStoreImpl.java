@@ -34,8 +34,6 @@ import com.sos.schema.JsonValidator;
 
 import js7.base.web.Uri;
 import js7.data.agent.AgentId;
-import js7.data.agent.AgentRef;
-import js7.data.item.ItemRevision;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.item.JUpdateItemOperation;
 import reactor.core.publisher.Flux;
@@ -142,7 +140,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                         agentDBLayer.updateAgent(dbAgent);
                     }
                     if (controllerUpdateRequired) {
-                        agentRefs.add(JAgentRef.apply(AgentRef.apply(AgentId.of(dbAgent.getAgentId()), Uri.of(dbAgent.getUri()), ItemRevision.apply(0))));
+                        agentRefs.add(JAgentRef.of(AgentId.of(dbAgent.getAgentId()), Uri.of(dbAgent.getUri())));
                     }
 
                     updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
@@ -169,7 +167,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                 agentDBLayer.saveAgent(dbAgent);
 
                 if (controllerUpdateRequired) {
-                    agentRefs.add(JAgentRef.apply(AgentRef.apply(AgentId.of(dbAgent.getAgentId()), Uri.of(dbAgent.getUri()), ItemRevision.apply(0))));
+                    agentRefs.add(JAgentRef.of(AgentId.of(dbAgent.getAgentId()), Uri.of(dbAgent.getUri())));
                 }
 
                 updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));

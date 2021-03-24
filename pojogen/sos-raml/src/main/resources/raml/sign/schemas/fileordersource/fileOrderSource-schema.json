@@ -17,7 +17,9 @@
     "id",
     "workflowPath",
     "agentId",
-    "pattern"
+    "pattern",
+    "orderIdExpression",
+    "delay"
   ],
   
   "description": "deploy object with fixed property 'TYPE':'FileOrderSource'",
@@ -39,7 +41,19 @@
     	"$ref": "../../../inventory/schemas/common/string255-schema.json"
     },
     "pattern": {
-    	"$ref": "../../../inventory/schemas/common/string255-schema.json"
+    	"type": "string"
+    },
+    "timeZone": {
+		"$ref": "../../../inventory/schemas/common/string255-schema.json"
+	},
+    "orderIdExpression": {
+      "description": "'#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ \"#F$epochSecond-$orderWatchId:$1\"",
+      "type": "string"
+    },
+    "delay": {
+      "type": "number",
+      "format":"utc-millisec",
+      "minimum": 0
     }
   },
   "additionalProperties": false

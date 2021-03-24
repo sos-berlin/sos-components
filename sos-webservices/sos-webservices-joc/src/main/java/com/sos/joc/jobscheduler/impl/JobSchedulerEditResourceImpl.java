@@ -40,11 +40,11 @@ import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.ControllerConnectionRefusedException;
-import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerEditResource;
@@ -62,8 +62,6 @@ import com.sos.schema.JsonValidator;
 
 import js7.base.web.Uri;
 import js7.data.agent.AgentId;
-import js7.data.agent.AgentRef;
-import js7.data.item.ItemRevision;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.item.JUpdateItemOperation;
 import reactor.core.publisher.Flux;
@@ -298,8 +296,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                     agentDBLayer.saveAgent(dbAgent);
                 }
                 if (updateAgentRequired) {
-                    agentRefs.add(JAgentRef.apply(AgentRef.apply(AgentId.of(clusterWatcher.getAgentId()), Uri.of(clusterWatcher.getUrl()), ItemRevision.apply(0))));
-                    //agentRefs.add(JAgentRef.apply(AgentRef.apply(AgentId.of(clusterWatcher.getAgentId()), Uri.of(clusterWatcher.getUrl()))));
+                    agentRefs.add(JAgentRef.of(AgentId.of(clusterWatcher.getAgentId()), Uri.of(clusterWatcher.getUrl())));
                 }
             }
             

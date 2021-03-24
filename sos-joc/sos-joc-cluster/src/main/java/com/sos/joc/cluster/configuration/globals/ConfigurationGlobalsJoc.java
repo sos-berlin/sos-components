@@ -34,6 +34,9 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     private ConfigurationEntry restoreSuffix = new ConfigurationEntry("restore_suffix", "restored", GlobalSettingsSectionValueType.STRING);
     private ConfigurationEntry restorePrefix = new ConfigurationEntry("restore_prefix", "", GlobalSettingsSectionValueType.STRING);
     
+    private ConfigurationEntry importSuffix = new ConfigurationEntry("import_suffix", "imported", GlobalSettingsSectionValueType.STRING);
+    private ConfigurationEntry importPrefix = new ConfigurationEntry("import_prefix", "", GlobalSettingsSectionValueType.STRING);
+    
     // "jobstreams"
     private ConfigurationEntry showViewDashboard = new ConfigurationEntry("show_view_dashboard", null, GlobalSettingsSectionValueType.BOOLEAN);
     private ConfigurationEntry showViewDailyplan = new ConfigurationEntry("show_view_dailyplan", null, GlobalSettingsSectionValueType.BOOLEAN);
@@ -62,6 +65,9 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
 
         restoreSuffix.setOrdering(++index);
         restorePrefix.setOrdering(++index);
+        
+        importSuffix.setOrdering(++index);
+        importPrefix.setOrdering(++index);
         
         showViewDashboard.setOrdering(++index);
         showViewDailyplan.setOrdering(++index);
@@ -108,6 +114,14 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
 
     public ConfigurationEntry getRestorePrefix() {
         return restorePrefix;
+    }
+    
+    public ConfigurationEntry getImportSuffix() {
+        return importSuffix;
+    }
+
+    public ConfigurationEntry getImportPrefix() {
+        return importPrefix;
     }
     
     public Map<ShowViewName, Boolean> getShowViews() {
