@@ -38,7 +38,6 @@ public class JobSchedulerLogImpl extends JOCResourceImpl implements IJobSchedule
                 return jocDefaultResponse;
             }
 
-            checkRequiredParameter("controllerId", urlParamSchema.getControllerId());
             try {
                 checkRequiredParameter("url", urlParamSchema.getUrl());
             } catch (JocMissingRequiredParameterException e) {

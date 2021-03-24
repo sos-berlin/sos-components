@@ -66,7 +66,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     private static final Logger LOGGER = LoggerFactory.getLogger(OrdersResourceModifyImpl.class);
 
     private enum Action {
-        CANCEL,CANCEL_DAILYPLAN, SUSPEND, RESUME, REMOVE_WHEN_TERMINATED
+        CANCEL, CANCEL_DAILYPLAN, SUSPEND, RESUME, REMOVE_WHEN_TERMINATED
     }
 
     @Override
@@ -142,16 +142,15 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 return jocDefaultResponse;
             }
             
+            addSubmittedOrderIdsFromDailyplanDate(cancelDailyPlanOrders);
+            
             ModifyOrders modifyOrders = new ModifyOrders();
             modifyOrders.setControllerId(cancelDailyPlanOrders.getControllerId());
-            modifyOrders.setDailyPlanDate(cancelDailyPlanOrders.getDailyPlanDate());
             modifyOrders.setKill(cancelDailyPlanOrders.getKill());
             modifyOrders.setOrderIds(cancelDailyPlanOrders.getOrderIds());
             modifyOrders.setOrderType(cancelDailyPlanOrders.getOrderType());
             modifyOrders.setAuditLog(cancelDailyPlanOrders.getAuditLog());
             
-            addSubmittedOrderIdsFromDailyplanDate(modifyOrders);
-
             postOrdersModify(Action.CANCEL_DAILYPLAN, modifyOrders);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -216,7 +215,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
         final Set<JOrder> jOrders = orderStream.collect(Collectors.toSet());
         if (!jOrders.isEmpty()) {
-            command(currentState,action, modifyOrders, jOrders.stream().map(JOrder::id).collect(Collectors.toSet())).thenAccept(either -> {
+            command(currentState, action, modifyOrders, jOrders.stream().map(JOrder::id).collect(Collectors.toSet())).thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                 if (either.isRight()) {
                     OrdersHelper.createAuditLogFromJOrders(getJocAuditLog(), jOrders, controllerId, modifyOrders).thenAccept(either2 -> ProblemHelper
@@ -240,15 +239,14 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         return cyclicOrderStream;
     }
 
-    private CompletableFuture<Either<Problem, Void>> command(JControllerState currentState, Action action, ModifyOrders modifyOrders, Set<OrderId> oIds)
-            throws SOSHibernateException {
+    private CompletableFuture<Either<Problem, Void>> command(JControllerState currentState, Action action, ModifyOrders modifyOrders, Set<OrderId> oIds) {
 
         switch (action) {
         case CANCEL_DAILYPLAN:
             return OrdersHelper.cancelOrders(modifyOrders, oIds).thenApply(either -> {
                 // TODO This update must be removed when dailyplan service receives events for order state changes
-                ArrayList<String>missingOrders = new ArrayList<String>();
-                for (OrderId orderId:oIds) {
+                ArrayList<String> missingOrders = new ArrayList<>();
+                for (OrderId orderId : oIds) {
                     Optional<JOrder> opt = currentState.idToOrder(orderId);
                     if (!opt.isPresent()) {
                         missingOrders.add(orderId.string());
@@ -342,11 +340,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         return Globals.objectMapper.readValue(filterBytes, ModifyOrders.class);
     }
     
-    private void addSubmittedOrderIdsFromDailyplanDate(ModifyOrders modifyOrders) throws Exception {
-        if (modifyOrders.getDailyPlanDate() != null) {
+    private void addSubmittedOrderIdsFromDailyplanDate(CancelDailyPlanOrders cancelDailyPlanOrders) throws Exception {
+        if (cancelDailyPlanOrders.getDailyPlanDate() != null) {
             SOSHibernateSession sosHibernateSession = null;
-            if (modifyOrders.getOrderIds() == null) {
-                modifyOrders.setOrderIds(new LinkedHashSet<String>());
+            if (cancelDailyPlanOrders.getOrderIds() == null) {
+                cancelDailyPlanOrders.setOrderIds(new LinkedHashSet<String>());
             }
 
             try {
@@ -366,13 +364,13 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
 
                 FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-                filter.setControllerId(modifyOrders.getControllerId());
-                filter.setDailyPlanDate(modifyOrders.getDailyPlanDate(), settings.getTimeZone(), settings.getPeriodBegin());
+                filter.setControllerId(cancelDailyPlanOrders.getControllerId());
+                filter.setDailyPlanDate(cancelDailyPlanOrders.getDailyPlanDate(), settings.getTimeZone(), settings.getPeriodBegin());
                 filter.setSubmitted(true);
 
                 List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
                 if (listOfPlannedOrders != null) {
-                    modifyOrders.getOrderIds().addAll(listOfPlannedOrders.stream().map(DBItemDailyPlanOrders::getOrderId).collect(Collectors.toSet()));
+                    cancelDailyPlanOrders.getOrderIds().addAll(listOfPlannedOrders.stream().map(DBItemDailyPlanOrders::getOrderId).collect(Collectors.toSet()));
                 }
             } finally {
                 Globals.disconnect(sosHibernateSession);

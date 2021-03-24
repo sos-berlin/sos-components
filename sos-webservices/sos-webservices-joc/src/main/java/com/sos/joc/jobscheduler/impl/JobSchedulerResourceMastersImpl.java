@@ -29,8 +29,8 @@ import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceMasters;
 import com.sos.joc.model.agent.Agent;
-import com.sos.joc.model.common.ControllerId;
 import com.sos.joc.model.controller.Controller;
+import com.sos.joc.model.controller.ControllerId;
 import com.sos.joc.model.controller.Controllers;
 import com.sos.schema.JsonValidator;
 

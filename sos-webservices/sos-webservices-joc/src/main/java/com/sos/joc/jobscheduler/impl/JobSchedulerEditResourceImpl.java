@@ -362,7 +362,6 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
                 return jocDefaultResponse;
             }
 
-            checkRequiredParameter("controllerId", jobSchedulerBody.getControllerId());
             checkRequiredComment(jobSchedulerBody.getAuditLog());
             
             for (ProxyUser user : ProxyUser.values()) {

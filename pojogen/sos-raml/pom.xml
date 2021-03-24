@@ -264,7 +264,7 @@
 							<goal>generate</goal>
 						</goals>
 					</execution>
-					<execution>
+					<!-- execution>
 						<id>generate-history-model</id>
 						<phase>generate-sources</phase>
 						<configuration>
@@ -275,7 +275,6 @@
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>false</includeAdditionalProperties>
 							<initializeCollections>true</initializeCollections>
-							<!-- constructorsRequiredPropertiesOnly>true</constructorsRequiredPropertiesOnly -->
 							<includeConstructors>true</includeConstructors>
 							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
 							<addCompileSourceRoot>false</addCompileSourceRoot>
@@ -286,7 +285,7 @@
 						<goals>
 							<goal>generate</goal>
 						</goals>
-					</execution>
+					</execution -->
 					<execution>
 						<id>generate-order-management-model</id>
 						<phase>generate-sources</phase>

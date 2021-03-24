@@ -1,7 +1,7 @@
 package com.sos.joc.agents.impl;
 
 import java.time.Instant;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +46,7 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
             }
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_P);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
-            List<String> controllerIds = agentParameter.getControllerId().isEmpty() ? null : Arrays.asList(agentParameter.getControllerId());
+            List<String> controllerIds = agentParameter.getControllerId().isEmpty() ? null : Collections.singletonList(agentParameter.getControllerId());
             List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIds(controllerIds, false, agentParameter
                     .getOnlyEnabledAgents());
             Agents agents = new Agents();
