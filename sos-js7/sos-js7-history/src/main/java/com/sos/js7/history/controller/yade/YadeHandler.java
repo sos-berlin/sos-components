@@ -49,9 +49,12 @@ public class YadeHandler {
         CompletableFuture<Long> save = CompletableFuture.supplyAsync(() -> {
             AJocClusterService.setLogger(IDENTIFIER);
             SOSHibernateSession session = null;
+            String logMsg = String.format("%s][%s][%s][job name=%s,pos=%s,id=%s", controllerId, workflowPath, orderId, job, jobPosition,
+                    historyOrderStepId);
             try {
                 String serialized = getSerialized(map);
                 if (SOSString.isEmpty(serialized)) {
+                    LOGGER.warn(String.format("[%s][%s]is empty", logMsg, Yade.JOB_ARGUMENT_NAME_RETURN_VALUES));
                     return null;
                 }
 
@@ -78,9 +81,7 @@ public class YadeHandler {
                     } catch (Throwable ex) {
                     }
                 }
-                String msg = String.format("%s][%s][%s][job name=%s,pos=%s,id=%s", controllerId, workflowPath, orderId, job, jobPosition,
-                        historyOrderStepId);
-                LOGGER.error(String.format("[%s]%s", msg, e.toString()), e);
+                LOGGER.error(String.format("[%s]%s", logMsg, e.toString()), e);
             } finally {
                 if (session != null) {
                     session.close();
@@ -154,6 +155,7 @@ public class YadeHandler {
         Integer protocolIntVal = Yade.TransferProtocol.fromValue(protocol.getProtocol()).intValue();
         String key = new StringBuilder(protocol.getHost()).append(protocol.getPort()).append(protocolIntVal).append(protocol.getAccount()).toString();
 
+        // TODO deleted protocols handling ...
         if (protocols.containsKey(key)) {
             return protocols.get(key);
         }
@@ -199,7 +201,7 @@ public class YadeHandler {
         hql.append("where hostname=:hostname ");
         hql.append("and port=:port ");
         hql.append("and protocol=:protocol ");
-        hql.append("and account = :account");
+        hql.append("and account=:account");
 
         Query<Long> query = session.createQuery(hql.toString());
         query.setParameter("hostname", hostname);
@@ -222,12 +224,7 @@ public class YadeHandler {
                 LOGGER.debug(String.format("[%s][%s]is null", controllerId, Yade.JOB_ARGUMENT_NAME_RETURN_VALUES));
                 return null;
             }
-            String serialized = v.convertToString();
-            if (SOSString.isEmpty(serialized)) {
-                LOGGER.warn(String.format("[%s][%s]is empty", controllerId, Yade.JOB_ARGUMENT_NAME_RETURN_VALUES));
-                return null;
-            }
-            return serialized;
+            return v.convertToString();
         } catch (Throwable e) {
             LOGGER.error(String.format("[%s]%s", controllerId, e.toString()), e);
         } finally {
