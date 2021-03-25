@@ -124,7 +124,7 @@ public class OrderHistoryItem {
     @JsonProperty("state")
     private HistoryState state;
     /**
-     * jobChain state
+     * order state
      * <p>
      * 
      * (Required)
@@ -370,7 +370,7 @@ public class OrderHistoryItem {
     }
 
     /**
-     * jobChain state
+     * order state
      * <p>
      * 
      * (Required)
@@ -382,7 +382,7 @@ public class OrderHistoryItem {
     }
 
     /**
-     * jobChain state
+     * order state
      * <p>
      * 
      * (Required)

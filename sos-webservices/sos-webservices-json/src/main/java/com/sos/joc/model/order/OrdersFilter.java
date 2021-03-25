@@ -42,7 +42,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class OrdersFilter {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -122,7 +122,7 @@ public class OrdersFilter {
     private List<Long> historyIds = new ArrayList<Long>();
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -134,7 +134,7 @@ public class OrdersFilter {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

@@ -32,7 +32,7 @@ public class DeleteJobClass implements IDeleteObject
      * 
      */
     @JsonProperty("TYPE")
-    private DeleteType tYPE = DeleteType.JOB_CLASS_PATH;
+    private DeleteType tYPE = DeleteType.JOBCLASS;
     /**
      * string without < and >
      * <p>

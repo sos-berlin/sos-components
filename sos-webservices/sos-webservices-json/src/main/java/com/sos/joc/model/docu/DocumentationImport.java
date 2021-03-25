@@ -27,7 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class DocumentationImport {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -62,7 +62,7 @@ public class DocumentationImport {
     private AuditParams auditLog;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -74,7 +74,7 @@ public class DocumentationImport {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

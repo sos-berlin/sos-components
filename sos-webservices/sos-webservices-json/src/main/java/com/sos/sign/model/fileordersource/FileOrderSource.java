@@ -15,7 +15,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * FileOrderSource
  * <p>
- * deploy object with fixed property 'TYPE':'FileOrderSource'
+ * deploy object with fixed property 'TYPE':'FileWatch'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -73,20 +73,15 @@ public class FileOrderSource implements IDeployObject
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("directory")
     private String directory;
     @JsonProperty("pattern")
     private String pattern;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("timeZone")
-    private String timeZone;
+    private String timeZone = "Etc/UTC";
     /**
      * '#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ "#F$epochSecond-$orderWatchId:$1"
      * 
@@ -229,6 +224,7 @@ public class FileOrderSource implements IDeployObject
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("directory")
@@ -240,6 +236,7 @@ public class FileOrderSource implements IDeployObject
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("directory")
@@ -257,23 +254,11 @@ public class FileOrderSource implements IDeployObject
         this.pattern = pattern;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("timeZone")
     public String getTimeZone() {
         return timeZone;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("timeZone")
     public void setTimeZone(String timeZone) {
         this.timeZone = timeZone;

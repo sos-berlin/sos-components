@@ -26,7 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class ConfigurationsFilter {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -62,7 +62,7 @@ public class ConfigurationsFilter {
     private Boolean shared;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -74,7 +74,7 @@ public class ConfigurationsFilter {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

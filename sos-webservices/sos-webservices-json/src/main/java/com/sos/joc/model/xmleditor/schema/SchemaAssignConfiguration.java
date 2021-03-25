@@ -27,7 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class SchemaAssignConfiguration {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -70,7 +70,7 @@ public class SchemaAssignConfiguration {
     private String fileContent;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -82,7 +82,7 @@ public class SchemaAssignConfiguration {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

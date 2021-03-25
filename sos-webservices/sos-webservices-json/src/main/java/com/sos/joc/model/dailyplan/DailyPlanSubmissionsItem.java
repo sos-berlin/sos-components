@@ -27,7 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class DailyPlanSubmissionsItem {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -62,7 +62,7 @@ public class DailyPlanSubmissionsItem {
     private Date submissionTime;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -73,7 +73,7 @@ public class DailyPlanSubmissionsItem {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 

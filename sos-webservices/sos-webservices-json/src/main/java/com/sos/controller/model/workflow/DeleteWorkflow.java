@@ -32,7 +32,7 @@ public class DeleteWorkflow implements IDeleteObject
      * 
      */
     @JsonProperty("TYPE")
-    private DeleteType tYPE = DeleteType.WORKFLOW_PATH;
+    private DeleteType tYPE = DeleteType.WORKFLOW;
     /**
      * string without < and >
      * <p>

@@ -38,7 +38,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class OrdersFilterV {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -98,7 +98,7 @@ public class OrdersFilterV {
     private String timeZone;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -110,7 +110,7 @@ public class OrdersFilterV {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

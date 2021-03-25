@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class ControllerId {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -32,7 +32,7 @@ public class ControllerId {
     private String controllerId;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -44,7 +44,7 @@ public class ControllerId {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

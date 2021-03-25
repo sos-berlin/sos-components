@@ -29,7 +29,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class StoreConfiguration {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -83,7 +83,7 @@ public class StoreConfiguration {
     private String schemaIdentifier;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -95,7 +95,7 @@ public class StoreConfiguration {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

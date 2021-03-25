@@ -24,14 +24,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class JobPath {
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * (Required)
      * 
      */
     @JsonProperty("workflowPath")
-    @JsonPropertyDescription("absolute path of an object.")
     private String workflowPath;
     /**
      * if job undefined or empty then all jobs of specified workflow are requested
@@ -42,9 +41,9 @@ public class JobPath {
     private String job;
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * (Required)
      * 
      */
@@ -54,9 +53,9 @@ public class JobPath {
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * (Required)
      * 
      */

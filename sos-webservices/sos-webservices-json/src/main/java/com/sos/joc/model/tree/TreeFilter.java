@@ -30,7 +30,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class TreeFilter {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -55,7 +55,7 @@ public class TreeFilter {
     private Boolean forInventoryTrash = false;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -66,7 +66,7 @@ public class TreeFilter {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 

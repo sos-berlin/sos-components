@@ -30,7 +30,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class Configuration {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -89,7 +89,7 @@ public class Configuration {
     private String configurationItem;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -100,7 +100,7 @@ public class Configuration {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 

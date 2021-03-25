@@ -28,7 +28,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class UrlParameter {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -57,7 +57,7 @@ public class UrlParameter {
     private AuditParams auditLog;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -69,7 +69,7 @@ public class UrlParameter {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

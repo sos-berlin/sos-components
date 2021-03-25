@@ -32,7 +32,7 @@ public class DeleteJunction implements IDeleteObject
      * 
      */
     @JsonProperty("TYPE")
-    private DeleteType tYPE = DeleteType.JUNCTION_PATH;
+    private DeleteType tYPE = DeleteType.JUNCTION;
     /**
      * string without < and >
      * <p>

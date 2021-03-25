@@ -26,7 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class ReadConfiguration {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -49,7 +49,7 @@ public class ReadConfiguration {
     private Boolean forceLive;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -61,7 +61,7 @@ public class ReadConfiguration {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

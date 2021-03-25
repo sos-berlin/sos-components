@@ -29,9 +29,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class DailyPlanOrderFilter {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -67,6 +68,7 @@ public class DailyPlanOrderFilter {
      * Daily Plan  Order Filter Definition
      * <p>
      * Define the filter To get orders from the daily plan
+     * (Required)
      * 
      */
     @JsonProperty("filter")
@@ -82,9 +84,10 @@ public class DailyPlanOrderFilter {
     private AuditParams auditLog;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -93,9 +96,10 @@ public class DailyPlanOrderFilter {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -173,6 +177,7 @@ public class DailyPlanOrderFilter {
      * Daily Plan  Order Filter Definition
      * <p>
      * Define the filter To get orders from the daily plan
+     * (Required)
      * 
      */
     @JsonProperty("filter")
@@ -184,6 +189,7 @@ public class DailyPlanOrderFilter {
      * Daily Plan  Order Filter Definition
      * <p>
      * Define the filter To get orders from the daily plan
+     * (Required)
      * 
      */
     @JsonProperty("filter")

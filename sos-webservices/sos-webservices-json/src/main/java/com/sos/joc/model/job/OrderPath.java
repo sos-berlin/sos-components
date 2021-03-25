@@ -25,13 +25,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class OrderPath {
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
     @JsonProperty("workflowPath")
-    @JsonPropertyDescription("absolute path of an object.")
     private String workflowPath;
     /**
      * if orderId undefined or empty then all orders of specified job chain are requested
@@ -44,9 +43,9 @@ public class OrderPath {
     private String position;
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
     @JsonProperty("workflowPath")
@@ -55,9 +54,9 @@ public class OrderPath {
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
     @JsonProperty("workflowPath")

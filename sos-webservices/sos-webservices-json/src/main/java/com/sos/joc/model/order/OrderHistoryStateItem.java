@@ -26,7 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class OrderHistoryStateItem {
 
     /**
-     * jobChain state
+     * order state
      * <p>
      * 
      * (Required)
@@ -48,7 +48,7 @@ public class OrderHistoryStateItem {
     private String stateText;
 
     /**
-     * jobChain state
+     * order state
      * <p>
      * 
      * (Required)
@@ -60,7 +60,7 @@ public class OrderHistoryStateItem {
     }
 
     /**
-     * jobChain state
+     * order state
      * <p>
      * 
      * (Required)

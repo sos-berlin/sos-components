@@ -25,7 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class DeployDocumentations {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -36,7 +36,7 @@ public class DeployDocumentations {
     private List<DeployDocumentation> documentations = new ArrayList<DeployDocumentation>();
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -47,7 +47,7 @@ public class DeployDocumentations {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 

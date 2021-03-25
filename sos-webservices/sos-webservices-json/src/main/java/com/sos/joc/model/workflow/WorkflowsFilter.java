@@ -30,7 +30,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class WorkflowsFilter {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -68,7 +68,7 @@ public class WorkflowsFilter {
     private String regex;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -80,7 +80,7 @@ public class WorkflowsFilter {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

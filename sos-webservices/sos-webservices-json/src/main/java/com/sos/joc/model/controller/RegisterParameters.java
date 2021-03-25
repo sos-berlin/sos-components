@@ -30,7 +30,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class RegisterParameters {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -64,7 +64,7 @@ public class RegisterParameters {
     private AuditParams auditLog;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -75,7 +75,7 @@ public class RegisterParameters {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 

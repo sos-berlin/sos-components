@@ -27,7 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class ReadAgents {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -43,7 +43,7 @@ public class ReadAgents {
     private Boolean onlyEnabledAgents = false;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -55,7 +55,7 @@ public class ReadAgents {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

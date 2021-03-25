@@ -10,7 +10,8 @@
     "TYPE",
     "id",
     "workflowPath",
-    "agentId"
+    "agentId",
+    "directory"
   ],
   "propertyOrder": [
     "TYPE",
@@ -22,38 +23,42 @@
     "delay"
   ],
   
-  "description": "deploy object with fixed property 'TYPE':'FileOrderSource'",
+  "description": "deploy object with fixed property 'TYPE':'FileWatch'",
   "properties": {
     "TYPE": {
       "$ref": "../../../inventory/schemas/deploy/deployType-schema.json",
-      "default": "FileOrderSource" 
+      "default": "FileWatch" 
     },
     "id": {
-      "$ref": "../../../inventory/schemas/common/string255-schema.json"
+      "$ref": "../../../inventory/schemas/common/string255Required-schema.json"
     },
     "workflowPath": {
-      "$ref": "../../../inventory/schemas/common/string255-schema.json"
+      "$ref": "../../../inventory/schemas/common/string255Required-schema.json"
     },
     "agentId": {
-    	"$ref": "../../../inventory/schemas/common/string255-schema.json"
+    	"$ref": "../../../inventory/schemas/common/string255Required-schema.json"
     },
     "directory": {
-    	"$ref": "../../../inventory/schemas/common/string255-schema.json"
+    	"$ref": "../../../inventory/schemas/common/string255Required-schema.json"
     },
     "pattern": {
     	"type": "string"
     },
     "timeZone": {
-		"$ref": "../../../inventory/schemas/common/string255-schema.json"
+		"type": "string",
+        "pattern": "^[^<>]*$",
+        "maxLength": 255,
+        "default": "Etc/UTC"
 	},
     "orderIdExpression": {
       "description": "'#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ \"#F$epochSecond-$orderWatchId:$1\"",
       "type": "string"
     },
     "delay": {
-      "type": "number",
+      "type": "integer",
       "format":"utc-millisec",
-      "minimum": 0
+      "minimum": 1,
+      "maximum": 9999
     }
   },
   "additionalProperties": false

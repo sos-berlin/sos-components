@@ -48,7 +48,7 @@ public class DailyPlanHistoryFilterDef {
     @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
     private String dateTo;
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -113,7 +113,7 @@ public class DailyPlanHistoryFilterDef {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -124,7 +124,7 @@ public class DailyPlanHistoryFilterDef {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 

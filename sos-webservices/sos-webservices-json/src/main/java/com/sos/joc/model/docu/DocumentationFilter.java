@@ -24,7 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class DocumentationFilter {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -44,7 +44,7 @@ public class DocumentationFilter {
     private String documentation;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -56,7 +56,7 @@ public class DocumentationFilter {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

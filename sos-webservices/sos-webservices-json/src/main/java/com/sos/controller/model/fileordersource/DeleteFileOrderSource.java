@@ -14,7 +14,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * delete FileOrderSource
  * <p>
- * delete object with fixed property 'TYPE':'FileOrderSourceId'
+ * delete object with fixed property 'TYPE':'FileWatchId'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -32,7 +32,7 @@ public class DeleteFileOrderSource implements IDeleteObject
      * 
      */
     @JsonProperty("TYPE")
-    private DeleteType tYPE = DeleteType.FILE_ORDER_SOURCE_ID;
+    private DeleteType tYPE = DeleteType.FILEORDERSOURCE;
     /**
      * string without < and >
      * <p>
@@ -53,6 +53,7 @@ public class DeleteFileOrderSource implements IDeleteObject
     /**
      * 
      * @param id
+     * 
      */
     public DeleteFileOrderSource(String id) {
         super();
@@ -68,17 +69,6 @@ public class DeleteFileOrderSource implements IDeleteObject
     @JsonProperty("TYPE")
     public DeleteType getTYPE() {
         return tYPE;
-    }
-
-    /**
-     * deleteType
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("TYPE")
-    public void setTYPE(DeleteType tYPE) {
-        this.tYPE = tYPE;
     }
 
     /**

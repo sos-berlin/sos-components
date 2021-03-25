@@ -32,7 +32,7 @@ public class DeleteLock implements IDeleteObject
      * 
      */
     @JsonProperty("TYPE")
-    private DeleteType tYPE = DeleteType.LOCK_ID;
+    private DeleteType tYPE = DeleteType.LOCK;
     /**
      * string without < and >
      * <p>

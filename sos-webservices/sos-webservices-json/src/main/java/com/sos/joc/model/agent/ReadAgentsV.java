@@ -30,7 +30,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class ReadAgentsV {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -57,7 +57,7 @@ public class ReadAgentsV {
     private Boolean compact = false;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -69,7 +69,7 @@ public class ReadAgentsV {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

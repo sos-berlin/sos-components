@@ -24,7 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class DailyPlanHistoryControllerItem {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -35,7 +35,7 @@ public class DailyPlanHistoryControllerItem {
     private List<DailyPlanSubmissionTimes> submissions = null;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -46,7 +46,7 @@ public class DailyPlanHistoryControllerItem {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 

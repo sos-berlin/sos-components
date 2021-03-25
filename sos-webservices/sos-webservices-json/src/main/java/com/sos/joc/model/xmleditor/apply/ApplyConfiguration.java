@@ -28,7 +28,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class ApplyConfiguration {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -72,7 +72,7 @@ public class ApplyConfiguration {
     private String schemaIdentifier;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -84,7 +84,7 @@ public class ApplyConfiguration {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

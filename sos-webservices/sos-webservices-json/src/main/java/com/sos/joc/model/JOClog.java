@@ -21,14 +21,32 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class JOClog {
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("filename")
     private String filename;
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("filename")
     public String getFilename() {
         return filename;
     }
 
+    /**
+     * filename
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("filename")
     public void setFilename(String filename) {
         this.filename = filename;

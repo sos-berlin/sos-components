@@ -8,13 +8,21 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum DeleteType {
 
-    WORKFLOW_PATH("WorkflowPath"),
-    LOCK_ID("LockId"),
-    JOB_CLASS_PATH("JobClassPath"),
-    JUNCTION_PATH("JunctionPath"),
-    FILE_ORDER_SOURCE_ID("FileOrderSourceId");
+    WORKFLOW("WorkflowPath", 1),
+    JOBCLASS("JobClassPath", 2),
+    LOCK("LockId", 4),
+    JUNCTION("JunctionPath", 5),
+    FILEORDERSOURCE("FileWatchId", 9);
     private final String value;
+    private final Integer intValue;
     private final static Map<String, DeleteType> CONSTANTS = new HashMap<String, DeleteType>();
+    private final static Map<Integer, DeleteType> INTCONSTANTS = new HashMap<Integer, DeleteType>();
+
+    static {
+        for (DeleteType c: values()) {
+            INTCONSTANTS.put(c.intValue, c);
+        }
+    }
 
     static {
         for (DeleteType c: values()) {
@@ -22,8 +30,9 @@ public enum DeleteType {
         }
     }
 
-    private DeleteType(String value) {
+    private DeleteType(String value, Integer intValue) {
         this.value = value;
+        this.intValue = intValue;
     }
 
     @Override
@@ -36,11 +45,24 @@ public enum DeleteType {
         return this.value;
     }
 
+    public Integer intValue() {
+        return this.intValue;
+    }
+
     @JsonCreator
     public static DeleteType fromValue(String value) {
         DeleteType constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
+        } else {
+            return constant;
+        }
+    }
+
+    public static DeleteType fromValue(Integer intValue) {
+        DeleteType constant = INTCONSTANTS.get(intValue);
+        if (constant == null) {
+            throw new IllegalArgumentException(intValue + "");
         } else {
             return constant;
         }

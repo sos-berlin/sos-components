@@ -34,7 +34,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class AgentV {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -97,7 +97,7 @@ public class AgentV {
     private Boolean isClusterWatcher = false;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -108,7 +108,7 @@ public class AgentV {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 

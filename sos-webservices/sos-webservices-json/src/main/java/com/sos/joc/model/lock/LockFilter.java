@@ -23,7 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class LockFilter {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -42,7 +42,7 @@ public class LockFilter {
     private String lockPath;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -54,7 +54,7 @@ public class LockFilter {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

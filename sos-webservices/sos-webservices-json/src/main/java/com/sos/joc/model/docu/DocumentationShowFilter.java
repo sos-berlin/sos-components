@@ -26,7 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class DocumentationShowFilter {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -55,7 +55,7 @@ public class DocumentationShowFilter {
     private String path;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -67,7 +67,7 @@ public class DocumentationShowFilter {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

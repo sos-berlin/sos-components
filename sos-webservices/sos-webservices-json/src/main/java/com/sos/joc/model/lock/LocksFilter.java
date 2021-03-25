@@ -27,7 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class LocksFilter {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -47,7 +47,7 @@ public class LocksFilter {
     private List<Folder> folders = new ArrayList<Folder>();
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -59,7 +59,7 @@ public class LocksFilter {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

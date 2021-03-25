@@ -33,14 +33,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "workflowIds",
     "orderType",
     "kill",
-    "position",
     "arguments",
     "auditLog"
 })
 public class CancelDailyPlanOrders {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -55,7 +54,6 @@ public class CancelDailyPlanOrders {
      * date
      * <p>
      * ISO date YYYY-MM-DD
-     * (Required)
      * 
      */
     @JsonProperty("dailyPlanDate")
@@ -75,15 +73,6 @@ public class CancelDailyPlanOrders {
     @JsonProperty("kill")
     private Boolean kill = false;
     /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
-    @JsonProperty("position")
-    @JsonPropertyDescription("Actually, each even item is a string, each odd item is an integer")
-    private List<Object> position = new ArrayList<Object>();
-    /**
      * key-value pairs
      * <p>
      * a map for arbitrary key-value pairs
@@ -102,7 +91,7 @@ public class CancelDailyPlanOrders {
     private AuditParams auditLog;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -114,7 +103,7 @@ public class CancelDailyPlanOrders {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -139,7 +128,6 @@ public class CancelDailyPlanOrders {
      * date
      * <p>
      * ISO date YYYY-MM-DD
-     * (Required)
      * 
      */
     @JsonProperty("dailyPlanDate")
@@ -151,7 +139,6 @@ public class CancelDailyPlanOrders {
      * date
      * <p>
      * ISO date YYYY-MM-DD
-     * (Required)
      * 
      */
     @JsonProperty("dailyPlanDate")
@@ -202,28 +189,6 @@ public class CancelDailyPlanOrders {
     }
 
     /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
-    @JsonProperty("position")
-    public List<Object> getPosition() {
-        return position;
-    }
-
-    /**
-     * position
-     * <p>
-     * Actually, each even item is a string, each odd item is an integer
-     * 
-     */
-    @JsonProperty("position")
-    public void setPosition(List<Object> position) {
-        this.position = position;
-    }
-
-    /**
      * key-value pairs
      * <p>
      * a map for arbitrary key-value pairs
@@ -269,12 +234,12 @@ public class CancelDailyPlanOrders {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("dailyPlanDate", dailyPlanDate).append("workflowIds", workflowIds).append("orderType", orderType).append("kill", kill).append("position", position).append("arguments", arguments).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("dailyPlanDate", dailyPlanDate).append("workflowIds", workflowIds).append("orderType", orderType).append("kill", kill).append("arguments", arguments).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowIds).append(orderType).append(dailyPlanDate).append(controllerId).append(auditLog).append(arguments).append(orderIds).append(position).append(kill).toHashCode();
+        return new HashCodeBuilder().append(workflowIds).append(orderType).append(dailyPlanDate).append(controllerId).append(auditLog).append(arguments).append(orderIds).append(kill).toHashCode();
     }
 
     @Override
@@ -286,7 +251,7 @@ public class CancelDailyPlanOrders {
             return false;
         }
         CancelDailyPlanOrders rhs = ((CancelDailyPlanOrders) other);
-        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(orderType, rhs.orderType).append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(arguments, rhs.arguments).append(orderIds, rhs.orderIds).append(position, rhs.position).append(kill, rhs.kill).isEquals();
+        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(orderType, rhs.orderType).append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(arguments, rhs.arguments).append(orderIds, rhs.orderIds).append(kill, rhs.kill).isEquals();
     }
 
 }

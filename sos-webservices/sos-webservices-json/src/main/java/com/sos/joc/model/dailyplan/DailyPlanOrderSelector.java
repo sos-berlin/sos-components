@@ -31,7 +31,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class DailyPlanOrderSelector {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -86,7 +86,7 @@ public class DailyPlanOrderSelector {
     private AuditParams auditLog;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -97,7 +97,7 @@ public class DailyPlanOrderSelector {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 

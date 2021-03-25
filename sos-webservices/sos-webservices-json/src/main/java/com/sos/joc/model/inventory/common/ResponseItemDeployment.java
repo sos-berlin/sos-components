@@ -45,7 +45,7 @@ public class ResponseItemDeployment {
     @JsonPropertyDescription("absolute path of an object.")
     private String path;
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -115,7 +115,7 @@ public class ResponseItemDeployment {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -126,7 +126,7 @@ public class ResponseItemDeployment {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 

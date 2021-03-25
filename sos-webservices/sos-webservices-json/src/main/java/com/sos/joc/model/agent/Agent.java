@@ -31,7 +31,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class Agent {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -74,7 +74,7 @@ public class Agent {
     private Boolean disabled = false;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -85,7 +85,7 @@ public class Agent {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 

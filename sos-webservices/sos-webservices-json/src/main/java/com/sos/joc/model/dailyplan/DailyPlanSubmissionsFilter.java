@@ -25,7 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class DailyPlanSubmissionsFilter {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -52,7 +52,7 @@ public class DailyPlanSubmissionsFilter {
     private String timeZone;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -63,7 +63,7 @@ public class DailyPlanSubmissionsFilter {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 

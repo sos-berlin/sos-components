@@ -27,11 +27,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class AddOrder {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("orderName")
     private String orderName;
     /**
@@ -71,21 +66,11 @@ public class AddOrder {
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables arguments;
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("orderName")
     public String getOrderName() {
         return orderName;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("orderName")
     public void setOrderName(String orderName) {
         this.orderName = orderName;

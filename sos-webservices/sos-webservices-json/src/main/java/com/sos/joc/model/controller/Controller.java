@@ -58,7 +58,7 @@ public class Controller {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date surveyDate;
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -199,7 +199,7 @@ public class Controller {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -211,7 +211,7 @@ public class Controller {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

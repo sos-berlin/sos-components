@@ -16,7 +16,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * fileOrderSource
  * <p>
- * deploy object with fixed property 'TYPE':'FileOrderSource'
+ * deploy object with fixed property 'TYPE':'FileWatch'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -64,6 +64,7 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("directory")
@@ -198,6 +199,7 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("directory")
@@ -209,6 +211,7 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("directory")

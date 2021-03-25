@@ -39,7 +39,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class PlannedOrdersFilter {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -107,7 +107,7 @@ public class PlannedOrdersFilter {
     private String orderId;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -118,7 +118,7 @@ public class PlannedOrdersFilter {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 

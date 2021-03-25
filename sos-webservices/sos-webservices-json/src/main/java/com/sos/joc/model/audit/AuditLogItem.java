@@ -63,7 +63,7 @@ public class AuditLogItem {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date created;
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -171,7 +171,7 @@ public class AuditLogItem {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -182,7 +182,7 @@ public class AuditLogItem {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 

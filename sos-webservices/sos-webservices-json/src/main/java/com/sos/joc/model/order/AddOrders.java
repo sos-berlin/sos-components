@@ -27,7 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class AddOrders {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -52,7 +52,7 @@ public class AddOrders {
     private AuditParams auditLog;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -64,7 +64,7 @@ public class AddOrders {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

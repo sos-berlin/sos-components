@@ -24,7 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class OrderRunningLogFilter {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -52,7 +52,7 @@ public class OrderRunningLogFilter {
     private Long eventId;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -64,7 +64,7 @@ public class OrderRunningLogFilter {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

@@ -26,7 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class Xml2JsonConfiguration {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -62,7 +62,7 @@ public class Xml2JsonConfiguration {
     private String schemaIdentifier;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -74,7 +74,7 @@ public class Xml2JsonConfiguration {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

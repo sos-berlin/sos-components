@@ -33,7 +33,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class DocumentationsFilter {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -81,7 +81,7 @@ public class DocumentationsFilter {
     private AuditParams auditLog;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -93,7 +93,7 @@ public class DocumentationsFilter {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

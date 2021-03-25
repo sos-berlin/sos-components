@@ -32,7 +32,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class DailyPlanModifyOrder {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -78,7 +78,7 @@ public class DailyPlanModifyOrder {
     private AuditParams auditLog;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -89,7 +89,7 @@ public class DailyPlanModifyOrder {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 

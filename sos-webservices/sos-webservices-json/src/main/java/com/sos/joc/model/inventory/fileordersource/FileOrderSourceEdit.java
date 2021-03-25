@@ -29,17 +29,17 @@ public class FileOrderSourceEdit
     /**
      * fileOrderSource
      * <p>
-     * deploy object with fixed property 'TYPE':'FileOrderSource'
+     * deploy object with fixed property 'TYPE':'FileWatch'
      * 
      */
     @JsonProperty("configuration")
-    @JsonPropertyDescription("deploy object with fixed property 'TYPE':'FileOrderSource'")
+    @JsonPropertyDescription("deploy object with fixed property 'TYPE':'FileWatch'")
     private FileOrderSource configuration;
 
     /**
      * fileOrderSource
      * <p>
-     * deploy object with fixed property 'TYPE':'FileOrderSource'
+     * deploy object with fixed property 'TYPE':'FileWatch'
      * 
      */
     @JsonProperty("configuration")
@@ -50,7 +50,7 @@ public class FileOrderSourceEdit
     /**
      * fileOrderSource
      * <p>
-     * deploy object with fixed property 'TYPE':'FileOrderSource'
+     * deploy object with fixed property 'TYPE':'FileWatch'
      * 
      */
     @JsonProperty("configuration")

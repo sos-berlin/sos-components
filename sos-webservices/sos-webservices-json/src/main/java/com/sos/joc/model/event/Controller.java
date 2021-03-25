@@ -23,7 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class Controller {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -41,7 +41,7 @@ public class Controller {
     private Long eventId;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -53,7 +53,7 @@ public class Controller {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

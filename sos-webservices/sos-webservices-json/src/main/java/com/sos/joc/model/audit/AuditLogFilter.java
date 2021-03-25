@@ -39,7 +39,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class AuditLogFilter {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -121,7 +121,7 @@ public class AuditLogFilter {
     private String ticketLink;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -133,7 +133,7 @@ public class AuditLogFilter {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

@@ -39,7 +39,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class ModifyOrders {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -96,7 +96,7 @@ public class ModifyOrders {
     private AuditParams auditLog;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -108,7 +108,7 @@ public class ModifyOrders {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

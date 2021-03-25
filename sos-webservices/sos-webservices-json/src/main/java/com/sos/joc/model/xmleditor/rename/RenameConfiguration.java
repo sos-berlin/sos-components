@@ -27,7 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class RenameConfiguration {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -64,7 +64,7 @@ public class RenameConfiguration {
     private String schemaIdentifier;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -76,7 +76,7 @@ public class RenameConfiguration {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

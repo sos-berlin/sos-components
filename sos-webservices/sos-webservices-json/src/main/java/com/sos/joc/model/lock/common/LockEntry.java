@@ -29,7 +29,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class LockEntry {
 
     /**
-     * workflow
+     * lock
      * <p>
      * 
      * (Required)
@@ -68,7 +68,7 @@ public class LockEntry {
     private List<LockWorkflow> workflows = new ArrayList<LockWorkflow>();
 
     /**
-     * workflow
+     * lock
      * <p>
      * 
      * (Required)
@@ -80,7 +80,7 @@ public class LockEntry {
     }
 
     /**
-     * workflow
+     * lock
      * <p>
      * 
      * (Required)

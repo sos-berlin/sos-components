@@ -26,7 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class ValidateConfiguration {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -61,7 +61,7 @@ public class ValidateConfiguration {
     private String schemaIdentifier;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -73,7 +73,7 @@ public class ValidateConfiguration {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)

@@ -37,7 +37,7 @@ public class Documentation {
     @JsonProperty("id")
     private Long id;
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -102,7 +102,7 @@ public class Documentation {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 
@@ -113,7 +113,7 @@ public class Documentation {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * 

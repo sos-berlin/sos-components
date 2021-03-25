@@ -25,7 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class OrderFilter {
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -53,7 +53,7 @@ public class OrderFilter {
     private Boolean compact = false;
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
@@ -65,7 +65,7 @@ public class OrderFilter {
     }
 
     /**
-     * filename
+     * controllerId
      * <p>
      * 
      * (Required)
