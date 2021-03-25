@@ -31,6 +31,17 @@ public class SearchStringHelper {
         }
     }
 
+    public static String getStringSetSql(Collection<String> values, String fieldName) {
+        StringBuilder sql = new StringBuilder();
+
+        for (String s : values) {
+            sql.append(fieldName + getSearchOperator(s) + "'" + s + "'").append(" or ");
+        }
+        sql.append("1=0");
+
+        return " (" + sql.toString() + ") ";
+    }
+
     public static String getIntegerSetSql(final Collection<Integer> values, final String fieldName) {
 
         String clause = values.stream().filter(Objects::nonNull).map(value -> fieldName + "=" + value).collect(Collectors.joining(" or "));
@@ -39,7 +50,7 @@ public class SearchStringHelper {
         }
         return clause;
     }
-    
+
     public static String getLongSetSql(final Collection<Long> values, final String fieldName) {
 
         String clause = values.stream().filter(Objects::nonNull).map(value -> fieldName + "=" + value).collect(Collectors.joining(" or "));
