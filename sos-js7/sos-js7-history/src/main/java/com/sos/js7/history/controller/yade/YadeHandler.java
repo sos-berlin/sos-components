@@ -2,7 +2,6 @@ package com.sos.js7.history.controller.yade;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -43,8 +42,8 @@ public class YadeHandler {
         this.protocols = new ConcurrentHashMap<String, Long>();
     }
 
-    public void process(SOSHibernateFactory dbFactory, Map<String, Value> map, String workflowPath, String orderId, Long historyOrderStepId,
-            String job, String jobPosition) {
+    public void process(SOSHibernateFactory dbFactory, Value value, String workflowPath, String orderId, Long historyOrderStepId, String job,
+            String jobPosition) {
 
         CompletableFuture<Long> save = CompletableFuture.supplyAsync(() -> {
             AJocClusterService.setLogger(IDENTIFIER);
@@ -52,7 +51,7 @@ public class YadeHandler {
             String logMsg = String.format("%s][%s][%s][job name=%s,pos=%s,id=%s", controllerId, workflowPath, orderId, job, jobPosition,
                     historyOrderStepId);
             try {
-                String serialized = getSerialized(map);
+                String serialized = value.convertToString();
                 if (SOSString.isEmpty(serialized)) {
                     LOGGER.warn(String.format("[%s][%s]is empty", logMsg, Yade.JOB_ARGUMENT_NAME_RETURN_VALUES));
                     return null;
@@ -212,23 +211,6 @@ public class YadeHandler {
         List<Long> result = session.getResultList(query);
         if (result != null && result.size() > 0) {
             return result.get(0);
-        }
-        return null;
-    }
-
-    private String getSerialized(Map<String, Value> map) {
-        try {
-            AJocClusterService.setLogger(IDENTIFIER);
-            Value v = map.get(Yade.JOB_ARGUMENT_NAME_RETURN_VALUES);
-            if (v == null) {
-                LOGGER.debug(String.format("[%s][%s]is null", controllerId, Yade.JOB_ARGUMENT_NAME_RETURN_VALUES));
-                return null;
-            }
-            return v.convertToString();
-        } catch (Throwable e) {
-            LOGGER.error(String.format("[%s]%s", controllerId, e.toString()), e);
-        } finally {
-            AJocClusterService.clearLogger();
         }
         return null;
     }

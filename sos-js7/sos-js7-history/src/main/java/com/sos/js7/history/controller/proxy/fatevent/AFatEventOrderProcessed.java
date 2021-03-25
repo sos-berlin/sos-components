@@ -1,9 +1,8 @@
 package com.sos.js7.history.controller.proxy.fatevent;
 
 import java.util.Date;
-import java.util.List;
 
-import com.sos.joc.classes.history.HistoryPosition;
+import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryOrder.WorkflowInfo.Position;
 
 public abstract class AFatEventOrderProcessed extends AFatEvent {
 
@@ -24,7 +23,7 @@ public abstract class AFatEventOrderProcessed extends AFatEvent {
                     this.outcome = (FatOutcome) objects[1];
                 }
                 if (objects.length > 2) {
-                    this.position = HistoryPosition.asString((List<?>) objects[2]);
+                    this.position = ((Position) objects[2]).asString();
                 }
             }
         }

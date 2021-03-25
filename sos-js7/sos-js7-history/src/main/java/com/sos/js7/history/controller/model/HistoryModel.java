@@ -87,6 +87,8 @@ import com.sos.webservices.json.jobscheduler.history.order.LockState;
 import com.sos.webservices.json.jobscheduler.history.order.OrderLogEntry;
 import com.sos.yade.commons.Yade;
 
+import js7.data.value.Value;
+
 public class HistoryModel {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryModel.class);
@@ -1013,7 +1015,7 @@ public class HistoryModel {
 
             item.setWorkflowPath(cw.getPath());
             item.setWorkflowVersionId(entry.getWorkflowVersionId());
-            item.setWorkflowPosition(HistoryPosition.asString(forkOrder.getPosition()));
+            item.setWorkflowPosition(forkOrder.getPosition());
             item.setWorkflowFolder(HistoryUtil.getFolderFromPath(item.getWorkflowPath()));
             item.setWorkflowName(workflowName);
             item.setWorkflowTitle(null);// TODO
@@ -1236,9 +1238,10 @@ public class HistoryModel {
                 le.setErrorText(cos.getStdErr());
             }
             cos.setSeverity(HistorySeverity.map2DbSeverity(le.isError() ? OrderStateText.FAILED : OrderStateText.FINISHED));
-            dbLayer.setOrderStepEnd(cos.getId(), cos.getEndTime(), entry.getEventId(), entry.getOutcome().getNamedValuesAsJsonString(), le
-                    .getReturnCode(), cos.getSeverity(), le.isError(), le.getErrorState(), le.getErrorReason(), le.getErrorCode(), le.getErrorText(),
-                    new Date());
+
+            Map<String, Value> namedValues = handleNamedValues(entry, co, cos);
+            dbLayer.setOrderStepEnd(cos.getId(), cos.getEndTime(), entry.getEventId(), HistoryUtil.map2Json(namedValues), le.getReturnCode(), cos
+                    .getSeverity(), le.isError(), le.getErrorState(), le.getErrorReason(), le.getErrorCode(), le.getErrorText(), new Date());
             le.onOrderStep(cos);
 
             Path log = storeLog2File(le);
@@ -1252,13 +1255,6 @@ public class HistoryModel {
             endedOrderSteps.put(entry.getOrderId(), cos);
 
             tryStoreCurrentState(dbLayer, entry.getEventId());
-
-            if (entry.getOutcome() != null && entry.getOutcome().getNamedValues() != null) {
-                if (entry.getOutcome().getNamedValues().get(Yade.JOB_ARGUMENT_NAME_RETURN_VALUES) != null) {
-                    yadeHandler.process(dbFactory, entry.getOutcome().getNamedValues(), co.getWorkflowPath(), co.getOrderId(), cos.getId(), cos
-                            .getJobName(), cos.getWorkflowPosition());
-                }
-            }
         } else {
             if (isDebugEnabled) {
                 LOGGER.debug(String.format("[%s][%s][skip][%s]order step is already ended[%s]", identifier, entry.getType(), entry.getOrderId(),
@@ -1267,6 +1263,22 @@ public class HistoryModel {
         }
         // clearCache(CacheType.orderStep, cos.getOrderId());
         return cos;
+    }
+
+    private Map<String, Value> handleNamedValues(FatEventOrderStepProcessed entry, CachedOrder co, CachedOrderStep cos) {
+        Map<String, Value> namedValues = entry.getOutcome() == null ? null : entry.getOutcome().getNamedValues();
+        if (namedValues != null) {
+            Value yadeTransfer = namedValues.get(Yade.JOB_ARGUMENT_NAME_RETURN_VALUES);
+            if (yadeTransfer != null) {
+                // copy without yade serialized value
+                namedValues = namedValues.entrySet().stream().filter(e -> !e.getKey().equals(Yade.JOB_ARGUMENT_NAME_RETURN_VALUES)).collect(Collectors
+                        .toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+                yadeHandler.process(dbFactory, yadeTransfer, co.getWorkflowPath(), co.getOrderId(), cos.getId(), cos.getJobName(), cos
+                        .getWorkflowPosition());
+            }
+        }
+        return namedValues;
     }
 
     private void orderStepStd(DBLayerHistory dbLayer, FatEventOrderStepStdWritten entry, EventType eventType) throws Exception {

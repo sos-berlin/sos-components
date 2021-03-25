@@ -33,6 +33,8 @@ import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryControllerR
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryOrder;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryOrder.OrderLock;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryOrder.OutcomeInfo;
+import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryOrder.WorkflowInfo;
+import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryOrder.WorkflowInfo.Position;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.OutcomeType;
 import com.sos.js7.history.controller.proxy.HistoryEventType;
 import com.sos.js7.history.controller.proxy.fatevent.AFatEvent;
@@ -282,23 +284,26 @@ public class HistoryControllerHandler {
                 }
                 event = new FatEventOrderStarted(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId(), order.getWorkflowInfo().getPath(), order.getWorkflowInfo().getVersionId(), order.getWorkflowInfo()
-                        .getPosition().asList(), order.getArguments(), planned);
+                        .getPosition(), order.getArguments(), planned);
                 break;
             case OrderForked:
                 order = entry.getCheckedOrder();
                 JOrderForked jof = (JOrderForked) entry.getJOrderEvent();
 
-                List<Object> position = order.getWorkflowInfo().getPosition().asList();
+                WorkflowInfo wi = order.getWorkflowInfo();
+                Position position = wi.getPosition();
+                List<?> positions = position.asList();
                 childs = new ArrayList<FatForkedChild>();
                 jof.children().forEach(c -> {
                     String branchId = c.branchId().string();
-                    List<Object> childPosition = position.stream().collect(Collectors.toList());
-                    childPosition.add("fork+" + branchId);
-                    childs.add(new FatForkedChild(c.orderId().string(), branchId, childPosition));
+                    // copy
+                    List<Object> childPositions = positions.stream().collect(Collectors.toList());
+                    childPositions.add(branchId);
+                    childPositions.add(0);
+                    childs.add(new FatForkedChild(c.orderId().string(), branchId, wi.createNewPosition(childPositions)));
                 });
                 event = new FatEventOrderForked(entry.getEventId(), entry.getEventDate());
-                event.set(order.getOrderId(), order.getWorkflowInfo().getPath(), order.getWorkflowInfo().getVersionId(), position, order
-                        .getArguments(), childs);
+                event.set(order.getOrderId(), wi.getPath(), wi.getVersionId(), position, order.getArguments(), childs);
                 break;
 
             case OrderJoined:
@@ -319,7 +324,7 @@ public class HistoryControllerHandler {
 
                 event = new FatEventOrderJoined(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId(), order.getWorkflowInfo().getPath(), order.getWorkflowInfo().getVersionId(), order.getWorkflowInfo()
-                        .getPosition().asList(), order.getArguments(), childs, outcome);
+                        .getPosition(), order.getArguments(), childs, outcome);
                 break;
 
             case OrderStepStdoutWritten:
@@ -343,7 +348,7 @@ public class HistoryControllerHandler {
 
                 event = new FatEventOrderStepStarted(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId(), order.getWorkflowInfo().getPath(), order.getWorkflowInfo().getVersionId(), order.getWorkflowInfo()
-                        .getPosition().asList(), order.getArguments(), order.getStepInfo().getAgentId(), order.getStepInfo().getJobName());
+                        .getPosition(), order.getArguments(), order.getStepInfo().getAgentId(), order.getStepInfo().getJobName());
                 break;
 
             case OrderStepProcessed:
@@ -357,7 +362,7 @@ public class HistoryControllerHandler {
                             .getErrorCode(), oi.getErrorMessage());
                 }
                 event = new FatEventOrderStepProcessed(entry.getEventId(), entry.getEventDate());
-                event.set(order.getOrderId(), outcome, order.getWorkflowInfo().getPosition().asList());
+                event.set(order.getOrderId(), outcome, order.getWorkflowInfo().getPosition());
                 break;
 
             case OrderFailed:
@@ -372,7 +377,7 @@ public class HistoryControllerHandler {
                 }
 
                 event = new FatEventOrderFailed(entry.getEventId(), entry.getEventDate());
-                event.set(order.getOrderId(), outcome, order.getWorkflowInfo().getPosition().asList());
+                event.set(order.getOrderId(), outcome, order.getWorkflowInfo().getPosition());
                 break;
 
             case OrderBroken:
@@ -386,21 +391,21 @@ public class HistoryControllerHandler {
                             .getErrorCode(), oi.getErrorMessage());
                 }
                 event = new FatEventOrderBroken(entry.getEventId(), entry.getEventDate());
-                event.set(order.getOrderId(), outcome, order.getWorkflowInfo().getPosition().asList());
+                event.set(order.getOrderId(), outcome, order.getWorkflowInfo().getPosition());
                 break;
 
             case OrderSuspended:
                 order = entry.getCheckedOrder();
 
                 event = new FatEventOrderSuspended(entry.getEventId(), entry.getEventDate());
-                event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition().asList());
+                event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
                 break;
 
             case OrderSuspendMarked:
                 order = entry.getCheckedOrder();
 
                 event = new FatEventOrderSuspendMarked(entry.getEventId(), entry.getEventDate());
-                event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition().asList());
+                event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
                 break;
 
             case OrderResumed:
@@ -414,14 +419,14 @@ public class HistoryControllerHandler {
                 order = entry.getCheckedOrder();
 
                 event = new FatEventOrderResumeMarked(entry.getEventId(), entry.getEventDate());
-                event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition().asList());
+                event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
                 break;
 
             case OrderFinished:
                 order = entry.getCheckedOrder();
 
                 event = new FatEventOrderFinished(entry.getEventId(), entry.getEventDate());
-                event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition().asList());
+                event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
                 break;
 
             case OrderCancelled:
@@ -433,7 +438,7 @@ public class HistoryControllerHandler {
                     LOGGER.warn(String.format("[%s][%s][PreviousState]%s", entry.getEventType().name(), order.getOrderId(), e.toString()), e);
                 }
                 event = new FatEventOrderCancelled(entry.getEventId(), entry.getEventDate(), isStarted);
-                event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition().asList());
+                event.set(order.getOrderId(), null, order.getWorkflowInfo().getPosition());
                 break;
 
             case OrderLockAcquired:
@@ -441,7 +446,7 @@ public class HistoryControllerHandler {
 
                 ol = order.getOrderLock((OrderLockAcquired) entry.getEvent());
                 event = new FatEventOrderLockAcquired(entry.getEventId(), entry.getEventDate(), order.getOrderId(), ol, order.getWorkflowInfo()
-                        .getPosition().asList());
+                        .getPosition());
                 break;
 
             case OrderLockQueued:
@@ -449,7 +454,7 @@ public class HistoryControllerHandler {
 
                 ol = order.getOrderLock((OrderLockQueued) entry.getEvent());
                 event = new FatEventOrderLockQueued(entry.getEventId(), entry.getEventDate(), order.getOrderId(), ol, order.getWorkflowInfo()
-                        .getPosition().asList());
+                        .getPosition());
                 break;
 
             case OrderLockReleased:
@@ -457,7 +462,7 @@ public class HistoryControllerHandler {
 
                 ol = order.getOrderLock((OrderLockReleased) entry.getEvent());
                 event = new FatEventOrderLockReleased(entry.getEventId(), entry.getEventDate(), order.getOrderId(), ol, order.getWorkflowInfo()
-                        .getPosition().asList());
+                        .getPosition());
                 break;
 
             default:

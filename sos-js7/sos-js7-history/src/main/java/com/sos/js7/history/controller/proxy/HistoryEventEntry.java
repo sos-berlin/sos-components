@@ -567,6 +567,15 @@ public class HistoryEventEntry {
                 return position;
             }
 
+            public Position createNewPosition(List<Object> positions) {
+                Either<Problem, JPosition> p = JPosition.fromList(positions);
+                try {
+                    return new Position(getFromEither(p));
+                } catch (Throwable e) {
+                    return null;
+                }
+            }
+
             public class Position {
 
                 private final JPosition underlying;
@@ -583,6 +592,10 @@ public class HistoryEventEntry {
 
                 public List<Object> asList() {
                     return entries;
+                }
+
+                public String asString() {
+                    return underlying.toString();
                 }
             }
         }

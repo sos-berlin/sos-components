@@ -1,17 +1,17 @@
 package com.sos.js7.history.controller.proxy.fatevent;
 
-import java.util.List;
+import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryOrder.WorkflowInfo.Position;
 
 public class FatForkedChild {
 
     private final String orderId;
     private final String branchId;
-    private final List<Object> position;
+    private final String position;
 
-    public FatForkedChild(String orderId, String branchId, List<Object> position) {
+    public FatForkedChild(String orderId, String branchId, Position position) {
         this.orderId = orderId;
         this.branchId = branchId;
-        this.position = position;
+        this.position = position == null ? null : position.asString();
     }
 
     public String getOrderId() {
@@ -22,7 +22,7 @@ public class FatForkedChild {
         return branchId;
     }
 
-    public List<Object> getPosition() {
+    public String getPosition() {
         return position;
     }
 }

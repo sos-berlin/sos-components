@@ -1,11 +1,10 @@
 package com.sos.js7.history.controller.proxy.fatevent;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.sos.joc.classes.history.HistoryPosition;
+import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryOrder.WorkflowInfo.Position;
 import com.sos.js7.history.helper.HistoryUtil;
 
 import js7.data.value.Value;
@@ -31,7 +30,9 @@ public abstract class AFatEventOrder extends AFatEvent {
             this.orderId = (String) objects[0];
             this.workflowPath = (String) objects[1];
             this.workflowVersionId = (String) objects[2];
-            this.position = HistoryPosition.asString((List<?>) objects[3]);
+            if (objects[3] != null) {
+                this.position = ((Position) objects[3]).asString();
+            }
             this.arguments = (Map<String, Value>) objects[4];
         }
     }
