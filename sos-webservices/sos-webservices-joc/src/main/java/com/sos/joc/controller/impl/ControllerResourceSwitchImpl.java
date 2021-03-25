@@ -1,4 +1,4 @@
-package com.sos.joc.jobscheduler.impl;
+package com.sos.joc.controller.impl;
 
 import java.time.Instant;
 import java.util.Date;
@@ -12,13 +12,13 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCPreferences;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.WebserviceConstants;
+import com.sos.joc.controller.resource.IControllerResourceSwitch;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceSwitch;
 import com.sos.joc.model.common.ControllerId;
 import com.sos.schema.JsonValidator;
 
 @Path("controller")
-public class JobSchedulerResourceSwitchImpl extends JOCResourceImpl implements IJobSchedulerResourceSwitch {
+public class ControllerResourceSwitchImpl extends JOCResourceImpl implements IControllerResourceSwitch {
 
     private static final String API_CALL = "./controller/switch";
     private static final String SESSION_KEY = "selectedInstance";

@@ -1,4 +1,4 @@
-package com.sos.joc.jobscheduler.impl;
+package com.sos.joc.controllers.impl;
 
 import java.time.Instant;
 import java.util.Date;
@@ -11,17 +11,17 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.controllers.resource.IControllersResourceSecurityLevels;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceSecurityLevels;
 import com.sos.joc.model.common.ControllerId;
 import com.sos.joc.model.controller.Controller;
 import com.sos.joc.model.controller.Controllers;
 import com.sos.schema.JsonValidator;
 
 @Path("controllers")
-public class JobSchedulerResourceSecurityLevelsImpl extends JOCResourceImpl implements IJobSchedulerResourceSecurityLevels {
+public class ControllersResourceSecurityLevelsImpl extends JOCResourceImpl implements IControllersResourceSecurityLevels {
 
     private static final String API_CALL_LEVELS = "./controllers/security_level";
     private static final String API_CALL_TAKEOVER = API_CALL_LEVELS + "/take_over";

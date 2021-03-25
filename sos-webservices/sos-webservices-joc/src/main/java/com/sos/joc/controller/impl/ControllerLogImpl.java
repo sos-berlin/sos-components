@@ -1,4 +1,4 @@
-package com.sos.joc.jobscheduler.impl;
+package com.sos.joc.controller.impl;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -13,15 +13,15 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.proxy.Proxies;
+import com.sos.joc.controller.resource.IControllerLogResource;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
-import com.sos.joc.jobscheduler.resource.IJobSchedulerLogResource;
 import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 
 @Path("controller")
-public class JobSchedulerLogImpl extends JOCResourceImpl implements IJobSchedulerLogResource {
+public class ControllerLogImpl extends JOCResourceImpl implements IControllerLogResource {
 
     private static final String LOG_API_CALL = "./controller/log";
 

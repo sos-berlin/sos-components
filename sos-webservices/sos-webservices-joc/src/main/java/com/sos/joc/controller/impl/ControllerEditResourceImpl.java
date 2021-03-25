@@ -1,4 +1,4 @@
-package com.sos.joc.jobscheduler.impl;
+package com.sos.joc.controller.impl;
 
 import java.net.URI;
 import java.time.Instant;
@@ -33,6 +33,7 @@ import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.ProxiesEdit;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyUser;
+import com.sos.joc.controller.resource.IControllerEditResource;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryAgentName;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
@@ -47,7 +48,6 @@ import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
-import com.sos.joc.jobscheduler.resource.IJobSchedulerEditResource;
 import com.sos.joc.model.agent.Agent;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.controller.ConnectionStateText;
@@ -67,7 +67,7 @@ import js7.data_for_java.item.JUpdateItemOperation;
 import reactor.core.publisher.Flux;
 
 @Path("controller")
-public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJobSchedulerEditResource {
+public class ControllerEditResourceImpl extends JOCResourceImpl implements IControllerEditResource {
 
     private static final String API_CALL_REGISTER = "./controller/register";
     private static final String API_CALL_DELETE = "./controller/cleanup";
@@ -310,7 +310,7 @@ public class JobSchedulerEditResourceImpl extends JOCResourceImpl implements IJo
             }
             if (clusterUriChanged || controllerUpdateRequired) {
                 try {
-                    JobSchedulerResourceModifyJobSchedulerClusterImpl.appointNodes(controllerId, agentDBLayer, accessToken, getJocError());
+                    ControllerResourceModifyClusterImpl.appointNodes(controllerId, agentDBLayer, accessToken, getJocError());
                 } catch (JocBadRequestException e) {
                 }
             }

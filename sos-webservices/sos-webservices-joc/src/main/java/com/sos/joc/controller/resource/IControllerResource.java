@@ -1,5 +1,5 @@
 
-package com.sos.joc.jobscheduler.resource;
+package com.sos.joc.controller.resource;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;
@@ -10,17 +10,16 @@ import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-public interface IJobSchedulerResourceSecurityLevels {
+public interface IControllerResource {
 
     @POST
-    @Path("security_level")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postControllerIdsWithSecurityLevel(@HeaderParam("X-Access-Token") String xAccessToken);
-    
+    public JOCDefaultResponse postJobscheduler(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes);
+
     @POST
-    @Path("security_level/take_over")
+    @Path("p")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse takeOverSecurityLevel(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    public JOCDefaultResponse postJobschedulerP(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 }

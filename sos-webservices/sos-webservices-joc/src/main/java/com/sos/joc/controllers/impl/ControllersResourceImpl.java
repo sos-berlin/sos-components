@@ -1,4 +1,4 @@
-package com.sos.joc.jobscheduler.impl;
+package com.sos.joc.controllers.impl;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -21,13 +21,13 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.jobscheduler.ControllerAnswer;
 import com.sos.joc.classes.jobscheduler.ControllerCallable;
+import com.sos.joc.controllers.resource.IControllersResource;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceMasters;
 import com.sos.joc.model.agent.Agent;
 import com.sos.joc.model.controller.Controller;
 import com.sos.joc.model.controller.ControllerId;
@@ -35,7 +35,7 @@ import com.sos.joc.model.controller.Controllers;
 import com.sos.schema.JsonValidator;
 
 @Path("controllers")
-public class JobSchedulerResourceMastersImpl extends JOCResourceImpl implements IJobSchedulerResourceMasters {
+public class ControllersResourceImpl extends JOCResourceImpl implements IControllersResource {
 
     private static final String API_CALL = "./controllers";
 

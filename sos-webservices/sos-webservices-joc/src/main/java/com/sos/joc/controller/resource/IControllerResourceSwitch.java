@@ -1,5 +1,5 @@
 
-package com.sos.joc.jobscheduler.resource;
+package com.sos.joc.controller.resource;
 
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -8,7 +8,7 @@ import javax.ws.rs.Produces;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-public interface IJobSchedulerResourceSwitch {
+public interface IControllerResourceSwitch {
 
     @POST
     @Path("switch")

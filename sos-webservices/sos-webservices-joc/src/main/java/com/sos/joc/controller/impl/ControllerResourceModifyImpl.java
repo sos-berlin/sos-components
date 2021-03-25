@@ -1,4 +1,4 @@
-package com.sos.joc.jobscheduler.impl;
+package com.sos.joc.controller.impl;
 
 import java.io.IOException;
 import java.net.URI;
@@ -20,19 +20,19 @@ import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.ModifyJobSchedulerAudit;
 import com.sos.joc.classes.proxy.Proxies;
+import com.sos.joc.controller.resource.IControllerResourceModify;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.ControllerNoResponseException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
-import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceModifyJobScheduler;
 import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
 @Path("controller")
-public class JobSchedulerResourceModifyJobSchedulerImpl extends JOCResourceImpl implements IJobSchedulerResourceModifyJobScheduler {
+public class ControllerResourceModifyImpl extends JOCResourceImpl implements IControllerResourceModify {
 
     private static String API_CALL = "./controller/";
 

@@ -1,4 +1,4 @@
-package com.sos.joc.jobscheduler.impl;
+package com.sos.joc.controllers.impl;
 
 import java.io.InputStream;
 import java.net.UnknownHostException;
@@ -30,6 +30,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.jobscheduler.ControllerAnswer;
 import com.sos.joc.classes.jobscheduler.States;
+import com.sos.joc.controllers.resource.IControllersResourceComponents;
 import com.sos.joc.db.cluster.JocInstancesDBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
@@ -38,7 +39,6 @@ import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceComponents;
 import com.sos.joc.model.common.ControllerId;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.controller.ClusterNodeStateText;
@@ -54,7 +54,7 @@ import com.sos.joc.model.joc.DB;
 import com.sos.schema.JsonValidator;
 
 @Path("controller")
-public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implements IJobSchedulerResourceComponents {
+public class ControllersResourceComponentsImpl extends JOCResourceImpl implements IControllersResourceComponents {
 
     private static final String API_CALL = "./controller/components";
     
@@ -78,7 +78,7 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
 
             Components entity = new Components();
 
-            List<ControllerAnswer> controllers = JobSchedulerResourceMastersImpl.getControllerAnswers(jobSchedulerFilter.getControllerId(), accessToken,
+            List<ControllerAnswer> controllers = ControllersResourceImpl.getControllerAnswers(jobSchedulerFilter.getControllerId(), accessToken,
                     connection);
             //TODO controllerConnectionState from database, here a fake
             List<ControllerConnectionState> fakeControllerConnections = controllers.stream().map(c -> {
@@ -227,7 +227,7 @@ public class JobSchedulerResourceComponentsImpl extends JOCResourceImpl implemen
     private static String readVersion() {
         String versionFile = "/version.json";
         try {
-            InputStream stream = JobSchedulerResourceComponentsImpl.class.getClassLoader().getResourceAsStream(versionFile);
+            InputStream stream = ControllersResourceComponentsImpl.class.getClassLoader().getResourceAsStream(versionFile);
             if (stream != null) {
                 return Json.createReader(stream).readObject().getString("version", "unknown");
             }

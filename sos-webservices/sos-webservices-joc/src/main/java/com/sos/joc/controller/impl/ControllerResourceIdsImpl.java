@@ -1,4 +1,4 @@
-package com.sos.joc.jobscheduler.impl;
+package com.sos.joc.controller.impl;
 
 import java.time.Instant;
 import java.util.Date;
@@ -14,13 +14,13 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCPreferences;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.WebserviceConstants;
+import com.sos.joc.controller.resource.IControllerResourceIds;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceIds;
 import com.sos.joc.model.controller.ControllerIds;
 
 @Path("controller")
-public class JobSchedulerResourceIdsImpl extends JOCResourceImpl implements IJobSchedulerResourceIds {
+public class ControllerResourceIdsImpl extends JOCResourceImpl implements IControllerResourceIds {
 
     private static final String API_CALL = "./controller/ids";
 

@@ -1,5 +1,5 @@
 
-package com.sos.joc.jobscheduler.resource;
+package com.sos.joc.controller.resource;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -10,7 +10,7 @@ import javax.ws.rs.QueryParam;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-public interface IJobSchedulerLogResource {
+public interface IControllerLogResource {
 
     @GET
     @Path("log")

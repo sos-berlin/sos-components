@@ -1,5 +1,5 @@
 
-package com.sos.joc.jobscheduler.resource;
+package com.sos.joc.controllers.resource;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;
@@ -10,11 +10,11 @@ import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-public interface IJobSchedulerResourceIds {
+public interface IControllersResourceComponents {
 
     @POST
-    @Path("ids")
+    @Path("components")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postJobschedulerIds(@HeaderParam("X-Access-Token") String xAccessToken);
+    public JOCDefaultResponse postComponents(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 }

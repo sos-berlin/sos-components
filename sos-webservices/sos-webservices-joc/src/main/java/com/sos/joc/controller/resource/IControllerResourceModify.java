@@ -1,4 +1,4 @@
-package com.sos.joc.jobscheduler.resource;
+package com.sos.joc.controller.resource;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;
@@ -8,7 +8,7 @@ import javax.ws.rs.Produces;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-public interface IJobSchedulerResourceModifyJobScheduler {
+public interface IControllerResourceModify {
 
     @POST
     @Path("terminate")

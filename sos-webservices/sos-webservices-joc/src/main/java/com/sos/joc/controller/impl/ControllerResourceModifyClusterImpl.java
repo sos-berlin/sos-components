@@ -1,4 +1,4 @@
-package com.sos.joc.jobscheduler.impl;
+package com.sos.joc.controller.impl;
 
 import java.time.Instant;
 import java.util.Date;
@@ -21,6 +21,7 @@ import com.sos.joc.classes.audit.ModifyJobSchedulerClusterAudit;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.controller.resource.IControllerResourceModifyCluster;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -32,7 +33,6 @@ import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.jobscheduler.resource.IJobSchedulerResourceModifyJobSchedulerCluster;
 import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 
@@ -40,7 +40,7 @@ import js7.base.web.Uri;
 import js7.data.node.NodeId;
 
 @Path("controller")
-public class JobSchedulerResourceModifyJobSchedulerClusterImpl extends JOCResourceImpl implements IJobSchedulerResourceModifyJobSchedulerCluster {
+public class ControllerResourceModifyClusterImpl extends JOCResourceImpl implements IControllerResourceModifyCluster {
 
     private static String API_CALL_SWITCHOVER = "./controller/cluster/switchover";
     private static String API_CALL_APPOINT_NODES = "./controller/cluster/appoint_nodes";
