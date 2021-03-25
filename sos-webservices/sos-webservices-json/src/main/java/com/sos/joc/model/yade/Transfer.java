@@ -181,13 +181,12 @@ public class Transfer {
     @JsonProperty("orderId")
     private String orderId;
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
     @JsonProperty("job")
-    @JsonPropertyDescription("absolute path of an object.")
     private String job;
     /**
      * string without < and >
@@ -573,9 +572,9 @@ public class Transfer {
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
     @JsonProperty("job")
@@ -584,9 +583,9 @@ public class Transfer {
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
     @JsonProperty("job")
