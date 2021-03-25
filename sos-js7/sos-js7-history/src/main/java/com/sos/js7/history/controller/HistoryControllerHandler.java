@@ -292,7 +292,7 @@ public class HistoryControllerHandler {
 
                 WorkflowInfo wi = order.getWorkflowInfo();
                 Position position = wi.getPosition();
-                List<?> positions = position.asList();
+                List<?> positions = position.getUnderlying().toList();
                 childs = new ArrayList<FatForkedChild>();
                 jof.children().forEach(c -> {
                     String branchId = c.branchId().string();

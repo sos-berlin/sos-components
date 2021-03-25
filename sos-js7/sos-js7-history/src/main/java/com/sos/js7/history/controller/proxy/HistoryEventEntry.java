@@ -528,8 +528,7 @@ public class HistoryEventEntry {
                     JWorkflow workflow = getFromEither(pw);
 
                     Either<Problem, Name> pn = workflow.checkedJobName(workflowInfo.getPosition().getUnderlying());
-                    Name name = getFromEither(pn);
-                    jobName = name.toString();
+                    jobName = getFromEither(pn).toString();
                 }
                 return jobName;
             }
@@ -579,19 +578,13 @@ public class HistoryEventEntry {
             public class Position {
 
                 private final JPosition underlying;
-                private final List<Object> entries;
 
                 public Position(JPosition p) {
                     underlying = p;
-                    entries = underlying.toList();
                 }
 
                 public JPosition getUnderlying() {
                     return underlying;
-                }
-
-                public List<Object> asList() {
-                    return entries;
                 }
 
                 public String asString() {
