@@ -1932,89 +1932,13 @@ public abstract class PublishUtils {
                     }
                 }
                 // process deployables only
-                SignaturePath signaturePath = new SignaturePath();
-                Signature signature = new Signature();
-                if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
-                    WorkflowPublish workflowPublish = new WorkflowPublish();
-                    com.sos.inventory.model.workflow.Workflow workflow = om.readValue(outBuffer.toString(),
-                            com.sos.inventory.model.workflow.Workflow.class);
-                    if (checkObjectNotEmpty(workflow)) {
-                        workflowPublish.setContent(workflow);
-                    } else {
-                        throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", Globals
-                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""))));
-                    }
-                    workflowPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION
-                            .value(), "")));
-                    workflowPublish.setObjectType(DeployType.WORKFLOW);
-                    objects.add(workflowPublish);
-                } else if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-                    signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
-                            ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value(), "")));
-                    signature.setSignatureString(outBuffer.toString());
-                    signaturePath.setSignature(signature);
+                ControllerObject fromArchive = createControllerObjectFromArchiveFileEntry(outBuffer, entryName);
+                if (fromArchive != null) {
+                    objects.add(fromArchive);
+                }
+                SignaturePath signaturePath = createSignatureFromArchiveFileEntry(outBuffer, entryName);
+                if (signaturePath != null) {
                     signaturePaths.add(signaturePath);
-                } else if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value())) {
-                    signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
-                            ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value(), "")));
-                    signature.setSignatureString(outBuffer.toString());
-                    signaturePath.setSignature(signature);
-                    signaturePaths.add(signaturePath);
-                } else if (entryName.endsWith(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
-                    LockPublish lockPublish = new LockPublish();
-                    com.sos.inventory.model.lock.Lock lock = om.readValue(outBuffer.toString(), com.sos.inventory.model.lock.Lock.class);
-                    if (checkObjectNotEmpty(lock)) {
-                        lockPublish.setContent(lock);
-                    } else {
-                        throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", Globals
-                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""))));
-                    }
-                    lockPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
-                            "")));
-                    lockPublish.setObjectType(DeployType.LOCK);
-                    objects.add(lockPublish);
-                } else if (entryName.endsWith(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
-                    JunctionPublish junctionPublish = new JunctionPublish();
-                    com.sos.inventory.model.junction.Junction junction = om.readValue(outBuffer.toString(),
-                            com.sos.inventory.model.junction.Junction.class);
-                    if (checkObjectNotEmpty(junction)) {
-                        junctionPublish.setContent(junction);
-                    } else {
-                        throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", Globals
-                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), ""))));
-                    }
-                    junctionPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION
-                            .value(), "")));
-                    junctionPublish.setObjectType(DeployType.JUNCTION);
-                    objects.add(junctionPublish);
-                } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
-                    JobClassPublish jobClassPublish = new JobClassPublish();
-                    com.sos.inventory.model.jobclass.JobClass jobClass = om.readValue(outBuffer.toString(),
-                            com.sos.inventory.model.jobclass.JobClass.class);
-                    if (checkObjectNotEmpty(jobClass)) {
-                        jobClassPublish.setContent(jobClass);
-                    } else {
-                        throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", Globals
-                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), ""))));
-                    }
-                    jobClassPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION
-                            .value(), "")));
-                    jobClassPublish.setObjectType(DeployType.JOBCLASS);
-                    objects.add(jobClassPublish);
-                } else if (entryName.endsWith(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value())) {
-                    FileOrderSourcePublish fileOrderSourcePublish = new FileOrderSourcePublish();
-                    com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = om.readValue(outBuffer.toString(),
-                            com.sos.inventory.model.fileordersource.FileOrderSource.class);
-                    if (checkObjectNotEmpty(fileOrderSource)) {
-                        fileOrderSourcePublish.setContent(fileOrderSource);
-                    } else {
-                        throw new JocImportException(String.format("FileOrderSource with path %1$s not imported. Object values could not be mapped.", Globals
-                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), ""))));
-                    }
-                    fileOrderSourcePublish.setPath(
-                            Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), "")));
-                    fileOrderSourcePublish.setObjectType(DeployType.FILEORDERSOURCE);
-                    objects.add(fileOrderSourcePublish);
                 }
             }
             objects.stream().forEach(item -> {
@@ -2060,110 +1984,9 @@ public abstract class PublishUtils {
                         jocMetaInfo.setApiVersion(fromFile.getApiVersion());
                     }
                 }
-                // process deployables and releaseables
-                if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
-                    WorkflowEdit workflowEdit = new WorkflowEdit();
-                    com.sos.inventory.model.workflow.Workflow workflow = om.readValue(outBuffer.toString(),
-                            com.sos.inventory.model.workflow.Workflow.class);
-                    if (checkObjectNotEmpty(workflow)) {
-                        workflowEdit.setConfiguration(workflow);
-                    } else {
-                        throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", Globals
-                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""))));
-                    }
-                    workflowEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(),
-                            "")));
-                    workflowEdit.setObjectType(ConfigurationType.WORKFLOW);
-                    objects.add(workflowEdit);
-                } else if (entryName.endsWith(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
-                    LockEdit lockEdit = new LockEdit();
-                    com.sos.inventory.model.lock.Lock lock = om.readValue(outBuffer.toString(), com.sos.inventory.model.lock.Lock.class);
-                    if (checkObjectNotEmpty(lock)) {
-                        lockEdit.setConfiguration(lock);
-                    } else {
-                        throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", ("/"
-                                + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
-                    }
-                    lockEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
-                    lockEdit.setObjectType(ConfigurationType.LOCK);
-                    objects.add(lockEdit);
-                } else if (entryName.endsWith(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
-                    JunctionEdit junctionEdit = new JunctionEdit();
-                    com.sos.inventory.model.junction.Junction junction = om.readValue(outBuffer.toString(),
-                            com.sos.inventory.model.junction.Junction.class);
-                    if (checkObjectNotEmpty(junction)) {
-                        junctionEdit.setConfiguration(junction);
-                    } else {
-                        throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", ("/"
-                                + entryName).replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
-                    }
-                    junctionEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(),
-                            "")));
-                    junctionEdit.setObjectType(ConfigurationType.JUNCTION);
-                    objects.add(junctionEdit);
-                } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
-                    JobClassEdit jobClassEdit = new JobClassEdit();
-                    com.sos.inventory.model.jobclass.JobClass jobClass = om.readValue(outBuffer.toString(),
-                            com.sos.inventory.model.jobclass.JobClass.class);
-                    if (checkObjectNotEmpty(jobClass)) {
-                        jobClassEdit.setConfiguration(jobClass);
-                    } else {
-                        throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", ("/"
-                                + entryName).replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
-                    }
-                    jobClassEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(),
-                            "")));
-                    jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
-                    objects.add(jobClassEdit);
-                } else if (entryName.endsWith(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value())) {
-                    FileOrderSourceEdit fileOrderSourceEdit = new FileOrderSourceEdit();
-                    com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = om.readValue(outBuffer.toString(),
-                            com.sos.inventory.model.fileordersource.FileOrderSource.class);
-                    if (checkObjectNotEmpty(fileOrderSource)) {
-                        fileOrderSourceEdit.setConfiguration(fileOrderSource);
-                    } else {
-                        throw new JocImportException(String.format("FileOrderSource with path %1$s not imported. Object values could not be mapped.", Globals
-                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), ""))));
-                    }
-                    fileOrderSourceEdit.setPath(
-                            Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), "")));
-                    fileOrderSourceEdit.setObjectType(ConfigurationType.FILEORDERSOURCE);
-                    objects.add(fileOrderSourceEdit);
-                } else if (entryName.endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value())) {
-                    ScheduleEdit scheduleEdit = new ScheduleEdit();
-                    Schedule schedule = om.readValue(outBuffer.toString(), Schedule.class);
-                    if (checkObjectNotEmpty(schedule)) {
-                        scheduleEdit.setConfiguration(schedule);
-                    } else {
-                        throw new JocImportException(String.format("Schedule with path %1$s not imported. Object values could not be mapped.", ("/"
-                                + entryName).replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(), "")));
-                    }
-                    scheduleEdit.setPath(Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION
-                            .value(), "")));
-                    scheduleEdit.setObjectType(ConfigurationType.SCHEDULE);
-                    objects.add(scheduleEdit);
-                } else if (entryName.endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
-                    Calendar cal = om.readValue(outBuffer.toString(), Calendar.class);
-                    if (checkObjectNotEmpty(cal)) {
-                        if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
-                            WorkingDaysCalendarEdit wdcEdit = new WorkingDaysCalendarEdit();
-                            wdcEdit.setConfiguration(cal);
-                            wdcEdit.setPath(Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION
-                                    .value(), "")));
-                            wdcEdit.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
-                            objects.add(wdcEdit);
-                        } else if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
-                            NonWorkingDaysCalendarEdit nwdcEdit = new NonWorkingDaysCalendarEdit();
-                            nwdcEdit.setConfiguration(cal);
-                            nwdcEdit.setPath(Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION
-                                    .value(), "")));
-                            nwdcEdit.setObjectType(ConfigurationType.NONWORKINGDAYSCALENDAR);
-                            objects.add(nwdcEdit);
-                        }
-                    } else {
-                        throw new JocImportException(String.format("Calendar with path %1$s not imported. Object values could not be mapped.", ("/"
-                                + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), "")));
-                    }
+                ConfigurationObject fromArchive = createConfigurationObjectFromArchiveFileEntry(outBuffer, entryName);
+                if (fromArchive != null) {
+                    objects.add(fromArchive);
                 }
             }
         } finally {
@@ -2210,89 +2033,13 @@ public abstract class PublishUtils {
                     }
                 }
                 // process deployables only
-                SignaturePath signaturePath = new SignaturePath();
-                Signature signature = new Signature();
-                if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
-                    WorkflowPublish workflowPublish = new WorkflowPublish();
-                    com.sos.inventory.model.workflow.Workflow workflow = om.readValue(outBuffer.toString(),
-                            com.sos.inventory.model.workflow.Workflow.class);
-                    if (checkObjectNotEmpty(workflow)) {
-                        workflowPublish.setContent(workflow);
-                    } else {
-                        throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", Globals
-                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""))));
-                    }
-                    workflowPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION
-                            .value(), "")));
-                    workflowPublish.setObjectType(DeployType.WORKFLOW);
-                    objects.add(workflowPublish);
-                } else if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-                    signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
-                            ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value(), "")));
-                    signature.setSignatureString(outBuffer.toString());
-                    signaturePath.setSignature(signature);
+                ControllerObject fromArchive = createControllerObjectFromArchiveFileEntry(outBuffer, entryName);
+                if (fromArchive != null) {
+                    objects.add(fromArchive);
+                }
+                SignaturePath signaturePath = createSignatureFromArchiveFileEntry(outBuffer, entryName);
+                if (signaturePath != null) {
                     signaturePaths.add(signaturePath);
-                } else if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value())) {
-                    signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
-                            ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value(), "")));
-                    signature.setSignatureString(outBuffer.toString());
-                    signaturePath.setSignature(signature);
-                    signaturePaths.add(signaturePath);
-                } else if (entryName.endsWith(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
-                    LockPublish lockPublish = new LockPublish();
-                    com.sos.inventory.model.lock.Lock lock = om.readValue(outBuffer.toString(), com.sos.inventory.model.lock.Lock.class);
-                    if (checkObjectNotEmpty(lock)) {
-                        lockPublish.setContent(lock);
-                    } else {
-                        throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", Globals
-                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""))));
-                    }
-                    lockPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
-                            "")));
-                    lockPublish.setObjectType(DeployType.LOCK);
-                    objects.add(lockPublish);
-                } else if (entryName.endsWith(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
-                    JunctionPublish junctionPublish = new JunctionPublish();
-                    com.sos.inventory.model.junction.Junction junction = om.readValue(outBuffer.toString(),
-                            com.sos.inventory.model.junction.Junction.class);
-                    if (checkObjectNotEmpty(junction)) {
-                        junctionPublish.setContent(junction);
-                    } else {
-                        throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", Globals
-                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), ""))));
-                    }
-                    junctionPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
-                            "")));
-                    junctionPublish.setObjectType(DeployType.JUNCTION);
-                    objects.add(junctionPublish);
-                } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
-                    JobClassPublish jobClassPublish = new JobClassPublish();
-                    com.sos.inventory.model.jobclass.JobClass jobClass = om.readValue(outBuffer.toString(),
-                            com.sos.inventory.model.jobclass.JobClass.class);
-                    if (checkObjectNotEmpty(jobClass)) {
-                        jobClassPublish.setContent(jobClass);
-                    } else {
-                        throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", Globals
-                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), ""))));
-                    }
-                    jobClassPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
-                            "")));
-                    jobClassPublish.setObjectType(DeployType.JOBCLASS);
-                    objects.add(jobClassPublish);
-                } else if (entryName.endsWith(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value())) {
-                    FileOrderSourcePublish fileOrderSourcePublish = new FileOrderSourcePublish();
-                    com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = om.readValue(outBuffer.toString(),
-                            com.sos.inventory.model.fileordersource.FileOrderSource.class);
-                    if (checkObjectNotEmpty(fileOrderSource)) {
-                        fileOrderSourcePublish.setContent(fileOrderSource);
-                    } else {
-                        throw new JocImportException(String.format("FileOrderSource with path %1$s not imported. Object values could not be mapped.", Globals
-                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), ""))));
-                    }
-                    fileOrderSourcePublish.setPath(
-                            Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), "")));
-                    fileOrderSourcePublish.setObjectType(DeployType.FILEORDERSOURCE);
-                    objects.add(fileOrderSourcePublish);
                 }
             }
             objects.stream().forEach(item -> {
@@ -2343,110 +2090,9 @@ public abstract class PublishUtils {
                         jocMetaInfo.setApiVersion(fromFile.getApiVersion());
                     }
                 }
-                // process deployables and releaseables
-                if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
-                    WorkflowEdit workflowEdit = new WorkflowEdit();
-                    com.sos.inventory.model.workflow.Workflow workflow = om.readValue(outBuffer.toString(),
-                            com.sos.inventory.model.workflow.Workflow.class);
-                    if (checkObjectNotEmpty(workflow)) {
-                        workflowEdit.setConfiguration(workflow);
-                    } else {
-                        throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", ("/"
-                                + entryName).replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
-                    }
-                    workflowEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(),
-                            "")));
-                    workflowEdit.setObjectType(ConfigurationType.WORKFLOW);
-                    objects.add(workflowEdit);
-                } else if (entryName.endsWith(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
-                    LockEdit lockEdit = new LockEdit();
-                    com.sos.inventory.model.lock.Lock lock = om.readValue(outBuffer.toString(), com.sos.inventory.model.lock.Lock.class);
-                    if (checkObjectNotEmpty(lock)) {
-                        lockEdit.setConfiguration(lock);
-                    } else {
-                        throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", ("/"
-                                + entryName).replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
-                    }
-                    lockEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
-                    lockEdit.setObjectType(ConfigurationType.LOCK);
-                    objects.add(lockEdit);
-                } else if (entryName.endsWith(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
-                    JunctionEdit junctionEdit = new JunctionEdit();
-                    com.sos.inventory.model.junction.Junction junction = om.readValue(outBuffer.toString(),
-                            com.sos.inventory.model.junction.Junction.class);
-                    if (checkObjectNotEmpty(junction)) {
-                        junctionEdit.setConfiguration(junction);
-                    } else {
-                        throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", ("/"
-                                + entryName).replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")));
-                    }
-                    junctionEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
-                            "")));
-                    junctionEdit.setObjectType(ConfigurationType.JUNCTION);
-                    objects.add(junctionEdit);
-                } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
-                    JobClassEdit jobClassEdit = new JobClassEdit();
-                    com.sos.inventory.model.jobclass.JobClass jobClass = om.readValue(outBuffer.toString(),
-                            com.sos.inventory.model.jobclass.JobClass.class);
-                    if (checkObjectNotEmpty(jobClass)) {
-                        jobClassEdit.setConfiguration(jobClass);
-                    } else {
-                        throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", ("/"
-                                + entryName).replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")));
-                    }
-                    jobClassEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
-                            "")));
-                    jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
-                    objects.add(jobClassEdit);
-                } else if (entryName.endsWith(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value())) {
-                    FileOrderSourceEdit fileOrderSourceEdit = new FileOrderSourceEdit();
-                    com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = om.readValue(outBuffer.toString(),
-                            com.sos.inventory.model.fileordersource.FileOrderSource.class);
-                    if (checkObjectNotEmpty(fileOrderSource)) {
-                        fileOrderSourceEdit.setConfiguration(fileOrderSource);
-                    } else {
-                        throw new JocImportException(String.format("FileOrderSource with path %1$s not imported. Object values could not be mapped.", Globals
-                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), ""))));
-                    }
-                    fileOrderSourceEdit.setPath(
-                            Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), "")));
-                    fileOrderSourceEdit.setObjectType(ConfigurationType.FILEORDERSOURCE);
-                    objects.add(fileOrderSourceEdit);
-                } else if (entryName.endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value())) {
-                    ScheduleEdit scheduleEdit = new ScheduleEdit();
-                    Schedule schedule = om.readValue(outBuffer.toString(), Schedule.class);
-                    if (checkObjectNotEmpty(schedule)) {
-                        scheduleEdit.setConfiguration(schedule);
-                    } else {
-                        throw new JocImportException(String.format("Schedule with path %1$s not imported. Object values could not be mapped.", ("/"
-                                + entryName).replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(), "")));
-                    }
-                    scheduleEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
-                            "")));
-                    scheduleEdit.setObjectType(ConfigurationType.SCHEDULE);
-                    objects.add(scheduleEdit);
-                } else if (entryName.endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
-                    Calendar cal = om.readValue(outBuffer.toString(), Calendar.class);
-                    if (checkObjectNotEmpty(cal)) {
-                        if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
-                            WorkingDaysCalendarEdit wdcEdit = new WorkingDaysCalendarEdit();
-                            wdcEdit.setConfiguration(cal);
-                            wdcEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
-                                    "")));
-                            wdcEdit.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
-                            objects.add(wdcEdit);
-                        } else if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
-                            NonWorkingDaysCalendarEdit nwdcEdit = new NonWorkingDaysCalendarEdit();
-                            nwdcEdit.setConfiguration(cal);
-                            nwdcEdit.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
-                                    "")));
-                            nwdcEdit.setObjectType(ConfigurationType.NONWORKINGDAYSCALENDAR);
-                            objects.add(nwdcEdit);
-                        }
-                    } else {
-                        throw new JocImportException(String.format("Calendar with path %1$s not imported. Object values could not be mapped.", ("/"
-                                + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), "")));
-                    }
+                ConfigurationObject fromArchive = createConfigurationObjectFromArchiveFileEntry(outBuffer, entryName);
+                if (fromArchive != null) {
+                    objects.add(fromArchive);
                 }
             }
         } finally {
@@ -2461,6 +2107,226 @@ public abstract class PublishUtils {
             }
         }
         return objects;
+    }
+    
+    private static ControllerObject createControllerObjectFromArchiveFileEntry (ByteArrayOutputStream outBuffer, String entryName) 
+            throws JsonParseException, JsonMappingException, IOException {
+        if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+            WorkflowPublish workflowPublish = new WorkflowPublish();
+            com.sos.inventory.model.workflow.Workflow workflow = om.readValue(outBuffer.toString(),
+                    com.sos.inventory.model.workflow.Workflow.class);
+            if (checkObjectNotEmpty(workflow)) {
+                workflowPublish.setContent(workflow);
+            } else {
+                throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", Globals
+                        .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""))));
+            }
+            workflowPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION
+                    .value(), "")));
+            workflowPublish.setObjectType(DeployType.WORKFLOW);
+            return workflowPublish;
+        } else if (entryName.endsWith(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
+            LockPublish lockPublish = new LockPublish();
+            com.sos.inventory.model.lock.Lock lock = om.readValue(outBuffer.toString(), com.sos.inventory.model.lock.Lock.class);
+            if (checkObjectNotEmpty(lock)) {
+                lockPublish.setContent(lock);
+            } else {
+                throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", Globals
+                        .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""))));
+            }
+            lockPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
+                    "")));
+            lockPublish.setObjectType(DeployType.LOCK);
+            return lockPublish;
+        } else if (entryName.endsWith(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
+            JunctionPublish junctionPublish = new JunctionPublish();
+            com.sos.inventory.model.junction.Junction junction = om.readValue(outBuffer.toString(),
+                    com.sos.inventory.model.junction.Junction.class);
+            if (checkObjectNotEmpty(junction)) {
+                junctionPublish.setContent(junction);
+            } else {
+                throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", Globals
+                        .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), ""))));
+            }
+            junctionPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
+                    "")));
+            junctionPublish.setObjectType(DeployType.JUNCTION);
+            return junctionPublish;
+        } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
+            JobClassPublish jobClassPublish = new JobClassPublish();
+            com.sos.inventory.model.jobclass.JobClass jobClass = om.readValue(outBuffer.toString(),
+                    com.sos.inventory.model.jobclass.JobClass.class);
+            if (checkObjectNotEmpty(jobClass)) {
+                jobClassPublish.setContent(jobClass);
+            } else {
+                throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", Globals
+                        .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), ""))));
+            }
+            jobClassPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
+                    "")));
+            jobClassPublish.setObjectType(DeployType.JOBCLASS);
+            return jobClassPublish;
+        } else if (entryName.endsWith(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value())) {
+            FileOrderSourcePublish fileOrderSourcePublish = new FileOrderSourcePublish();
+            com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = om.readValue(outBuffer.toString(),
+                    com.sos.inventory.model.fileordersource.FileOrderSource.class);
+            if (checkObjectNotEmpty(fileOrderSource)) {
+                fileOrderSourcePublish.setContent(fileOrderSource);
+            } else {
+                throw new JocImportException(String.format("FileOrderSource with path %1$s not imported. Object values could not be mapped.", Globals
+                        .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), ""))));
+            }
+            fileOrderSourcePublish.setPath(
+                    Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), "")));
+            fileOrderSourcePublish.setObjectType(DeployType.FILEORDERSOURCE);
+            return fileOrderSourcePublish;
+        }
+        return null;
+    }
+    
+    private static SignaturePath createSignatureFromArchiveFileEntry (ByteArrayOutputStream outBuffer, String entryName) 
+            throws JsonParseException, JsonMappingException, IOException {
+        SignaturePath signaturePath = new SignaturePath();
+        Signature signature = new Signature();
+        if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
+            signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
+                    ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value(), "")));
+            signature.setSignatureString(outBuffer.toString());
+            signaturePath.setSignature(signature);
+            return signaturePath;
+        } else if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value())) {
+            signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
+                    ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value(), "")));
+            signature.setSignatureString(outBuffer.toString());
+            signaturePath.setSignature(signature);
+            return signaturePath;
+        }
+        return null;
+    }
+    
+    private static ConfigurationObject createConfigurationObjectFromArchiveFileEntry (ByteArrayOutputStream outBuffer, String entryName) 
+            throws JsonParseException, JsonMappingException, IOException {
+        // process deployables and releaseables
+        if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+            String normalizedPath = Globals
+                    .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")); 
+            WorkflowEdit workflowEdit = new WorkflowEdit();
+            com.sos.inventory.model.workflow.Workflow workflow = om.readValue(outBuffer.toString(),
+                    com.sos.inventory.model.workflow.Workflow.class);
+            if (checkObjectNotEmpty(workflow)) {
+                workflowEdit.setConfiguration(workflow);
+            } else {
+                throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.",
+                        normalizedPath));
+            }
+            workflowEdit.setName(Paths.get(normalizedPath).getFileName().toString());
+            workflowEdit.setPath(normalizedPath);
+            workflowEdit.setObjectType(ConfigurationType.WORKFLOW);
+            return workflowEdit;
+        } else if (entryName.endsWith(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
+            String normalizedPath = Globals
+                    .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")); 
+            LockEdit lockEdit = new LockEdit();
+            com.sos.inventory.model.lock.Lock lock = om.readValue(outBuffer.toString(), com.sos.inventory.model.lock.Lock.class);
+            if (checkObjectNotEmpty(lock)) {
+                lockEdit.setConfiguration(lock);
+            } else {
+                throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", 
+                        normalizedPath));
+            }
+            lockEdit.setName(Paths.get(normalizedPath).getFileName().toString());
+            lockEdit.setPath(normalizedPath);
+            lockEdit.setObjectType(ConfigurationType.LOCK);
+            return lockEdit;
+        } else if (entryName.endsWith(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
+            String normalizedPath = Globals
+                    .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")); 
+            JunctionEdit junctionEdit = new JunctionEdit();
+            com.sos.inventory.model.junction.Junction junction = om.readValue(outBuffer.toString(),
+                    com.sos.inventory.model.junction.Junction.class);
+            if (checkObjectNotEmpty(junction)) {
+                junctionEdit.setConfiguration(junction);
+            } else {
+                throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.",
+                        normalizedPath));
+            }
+            junctionEdit.setName(Paths.get(normalizedPath).getFileName().toString());
+            junctionEdit.setPath(normalizedPath);
+            junctionEdit.setObjectType(ConfigurationType.JUNCTION);
+            return junctionEdit;
+        } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
+            String normalizedPath = Globals
+                    .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")); 
+            JobClassEdit jobClassEdit = new JobClassEdit();
+            com.sos.inventory.model.jobclass.JobClass jobClass = om.readValue(outBuffer.toString(),
+                    com.sos.inventory.model.jobclass.JobClass.class);
+            if (checkObjectNotEmpty(jobClass)) {
+                jobClassEdit.setConfiguration(jobClass);
+            } else {
+                throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.",
+                        normalizedPath));
+            }
+            jobClassEdit.setName(Paths.get(normalizedPath).getFileName().toString());
+            jobClassEdit.setPath(normalizedPath);
+            jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
+            return jobClassEdit;
+        } else if (entryName.endsWith(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value())) {
+            String normalizedPath = Globals
+                    .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), "")); 
+            FileOrderSourceEdit fileOrderSourceEdit = new FileOrderSourceEdit();
+            com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = om.readValue(outBuffer.toString(),
+                    com.sos.inventory.model.fileordersource.FileOrderSource.class);
+            if (checkObjectNotEmpty(fileOrderSource)) {
+                fileOrderSourceEdit.setConfiguration(fileOrderSource);
+            } else {
+                throw new JocImportException(String.format("FileOrderSource with path %1$s not imported. Object values could not be mapped.", 
+                        normalizedPath));
+            }
+            fileOrderSourceEdit.setName(Paths.get(normalizedPath).getFileName().toString());
+            fileOrderSourceEdit.setPath(normalizedPath);
+            fileOrderSourceEdit.setObjectType(ConfigurationType.FILEORDERSOURCE);
+            return fileOrderSourceEdit;
+        } else if (entryName.endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value())) {
+            String normalizedPath = Globals
+                    .normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(), "")); 
+            ScheduleEdit scheduleEdit = new ScheduleEdit();
+            Schedule schedule = om.readValue(outBuffer.toString(), Schedule.class);
+            if (checkObjectNotEmpty(schedule)) {
+                scheduleEdit.setConfiguration(schedule);
+            } else {
+                throw new JocImportException(String.format("Schedule with path %1$s not imported. Object values could not be mapped.", 
+                        normalizedPath));
+            }
+            scheduleEdit.setName(Paths.get(normalizedPath).getFileName().toString());
+            scheduleEdit.setPath(normalizedPath);
+            scheduleEdit.setObjectType(ConfigurationType.SCHEDULE);
+            return scheduleEdit;
+        } else if (entryName.endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
+            String normalizedPath = Globals
+                    .normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), "")); 
+            Calendar cal = om.readValue(outBuffer.toString(), Calendar.class);
+            if (checkObjectNotEmpty(cal)) {
+                if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
+                    WorkingDaysCalendarEdit wdcEdit = new WorkingDaysCalendarEdit();
+                    wdcEdit.setConfiguration(cal);
+                    wdcEdit.setName(Paths.get(normalizedPath).getFileName().toString());
+                    wdcEdit.setPath(normalizedPath);
+                    wdcEdit.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
+                    return wdcEdit;
+                } else if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
+                    NonWorkingDaysCalendarEdit nwdcEdit = new NonWorkingDaysCalendarEdit();
+                    nwdcEdit.setConfiguration(cal);
+                    nwdcEdit.setName(Paths.get(normalizedPath).getFileName().toString());
+                    nwdcEdit.setPath(normalizedPath);
+                    nwdcEdit.setObjectType(ConfigurationType.NONWORKINGDAYSCALENDAR);
+                    return nwdcEdit;
+                }
+            } else {
+                throw new JocImportException(String.format("Calendar with path %1$s not imported. Object values could not be mapped.", ("/"
+                        + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), "")));
+            }
+        }
+        return null;
     }
 
     public static StreamingOutput writeZipFileForSigning(Set<ControllerObject> deployables, Set<ConfigurationObject> releasables,

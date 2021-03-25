@@ -36,11 +36,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "numOfFiles",
     "hasIntervention",
     "controllerId",
+    "workflowPath",
     "orderId",
-    "jobChain",
-    "jobChainNode",
     "job",
-    "taskId"
+    "jobPosition",
+    "historyId"
 })
 public class Transfer {
 
@@ -155,38 +155,55 @@ public class Transfer {
     private Integer numOfFiles;
     @JsonProperty("hasIntervention")
     private Boolean hasIntervention = false;
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("controllerId")
     private String controllerId;
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
+    @JsonProperty("workflowPath")
+    @JsonPropertyDescription("absolute path of an object.")
+    private String workflowPath;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("orderId")
     private String orderId;
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
      * 
-     */
-    @JsonProperty("jobChain")
-    @JsonPropertyDescription("absolute path of an object.")
-    private String jobChain;
-    @JsonProperty("jobChainNode")
-    private String jobChainNode;
-    /**
-     * path
-     * <p>
-     * absolute path of an object.
      * 
      */
     @JsonProperty("job")
-    @JsonPropertyDescription("absolute path of an object.")
     private String job;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jobPosition")
+    private String jobPosition;
     /**
      * non negative long
      * <p>
      * 
      * 
      */
-    @JsonProperty("taskId")
-    private Long taskId;
+    @JsonProperty("historyId")
+    private Long historyId;
 
     /**
      * timestamp
@@ -488,62 +505,76 @@ public class Transfer {
         this.hasIntervention = hasIntervention;
     }
 
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("controllerId")
     public String getControllerId() {
         return controllerId;
     }
 
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("controllerId")
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
     }
 
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
+    @JsonProperty("workflowPath")
+    public String getWorkflowPath() {
+        return workflowPath;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
+    @JsonProperty("workflowPath")
+    public void setWorkflowPath(String workflowPath) {
+        this.workflowPath = workflowPath;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("orderId")
     public String getOrderId() {
         return orderId;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("orderId")
     public void setOrderId(String orderId) {
         this.orderId = orderId;
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
      * 
-     */
-    @JsonProperty("jobChain")
-    public String getJobChain() {
-        return jobChain;
-    }
-
-    /**
-     * path
-     * <p>
-     * absolute path of an object.
-     * 
-     */
-    @JsonProperty("jobChain")
-    public void setJobChain(String jobChain) {
-        this.jobChain = jobChain;
-    }
-
-    @JsonProperty("jobChainNode")
-    public String getJobChainNode() {
-        return jobChainNode;
-    }
-
-    @JsonProperty("jobChainNode")
-    public void setJobChainNode(String jobChainNode) {
-        this.jobChainNode = jobChainNode;
-    }
-
-    /**
-     * path
-     * <p>
-     * absolute path of an object.
      * 
      */
     @JsonProperty("job")
@@ -552,9 +583,9 @@ public class Transfer {
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
     @JsonProperty("job")
@@ -563,14 +594,25 @@ public class Transfer {
     }
 
     /**
-     * non negative long
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("taskId")
-    public Long getTaskId() {
-        return taskId;
+    @JsonProperty("jobPosition")
+    public String getJobPosition() {
+        return jobPosition;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jobPosition")
+    public void setJobPosition(String jobPosition) {
+        this.jobPosition = jobPosition;
     }
 
     /**
@@ -579,19 +621,30 @@ public class Transfer {
      * 
      * 
      */
-    @JsonProperty("taskId")
-    public void setTaskId(Long taskId) {
-        this.taskId = taskId;
+    @JsonProperty("historyId")
+    public Long getHistoryId() {
+        return historyId;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("historyId")
+    public void setHistoryId(Long historyId) {
+        this.historyId = historyId;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("id", id).append("parent_id", parent_id).append("profile", profile).append("mandator", mandator).append("state", state).append("_operation", _operation).append("start", start).append("end", end).append("error", error).append("source", source).append("target", target).append("jump", jump).append("numOfFiles", numOfFiles).append("hasIntervention", hasIntervention).append("controllerId", controllerId).append("orderId", orderId).append("jobChain", jobChain).append("jobChainNode", jobChainNode).append("job", job).append("taskId", taskId).toString();
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("id", id).append("parent_id", parent_id).append("profile", profile).append("mandator", mandator).append("state", state).append("_operation", _operation).append("start", start).append("end", end).append("error", error).append("source", source).append("target", target).append("jump", jump).append("numOfFiles", numOfFiles).append("hasIntervention", hasIntervention).append("controllerId", controllerId).append("workflowPath", workflowPath).append("orderId", orderId).append("job", job).append("jobPosition", jobPosition).append("historyId", historyId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(mandator).append(numOfFiles).append(surveyDate).append(controllerId).append(orderId).append(profile).append(start).append(jobChain).append(source).append(error).append(hasIntervention).append(target).append(_operation).append(jobChainNode).append(parent_id).append(end).append(id).append(state).append(job).append(taskId).append(jump).toHashCode();
+        return new HashCodeBuilder().append(mandator).append(numOfFiles).append(surveyDate).append(controllerId).append(workflowPath).append(orderId).append(profile).append(start).append(source).append(error).append(hasIntervention).append(target).append(jobPosition).append(_operation).append(parent_id).append(historyId).append(end).append(id).append(state).append(job).append(jump).toHashCode();
     }
 
     @Override
@@ -603,7 +656,7 @@ public class Transfer {
             return false;
         }
         Transfer rhs = ((Transfer) other);
-        return new EqualsBuilder().append(mandator, rhs.mandator).append(numOfFiles, rhs.numOfFiles).append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(orderId, rhs.orderId).append(profile, rhs.profile).append(start, rhs.start).append(jobChain, rhs.jobChain).append(source, rhs.source).append(error, rhs.error).append(hasIntervention, rhs.hasIntervention).append(target, rhs.target).append(_operation, rhs._operation).append(jobChainNode, rhs.jobChainNode).append(parent_id, rhs.parent_id).append(end, rhs.end).append(id, rhs.id).append(state, rhs.state).append(job, rhs.job).append(taskId, rhs.taskId).append(jump, rhs.jump).isEquals();
+        return new EqualsBuilder().append(mandator, rhs.mandator).append(numOfFiles, rhs.numOfFiles).append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(workflowPath, rhs.workflowPath).append(orderId, rhs.orderId).append(profile, rhs.profile).append(start, rhs.start).append(source, rhs.source).append(error, rhs.error).append(hasIntervention, rhs.hasIntervention).append(target, rhs.target).append(jobPosition, rhs.jobPosition).append(_operation, rhs._operation).append(parent_id, rhs.parent_id).append(historyId, rhs.historyId).append(end, rhs.end).append(id, rhs.id).append(state, rhs.state).append(job, rhs.job).append(jump, rhs.jump).isEquals();
     }
 
 }

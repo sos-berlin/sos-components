@@ -124,7 +124,7 @@ public class HistoryControllerHandler {
     public void start() {
         closed.set(false);
 
-        String method = "run";
+        String method = "start";
         try {
             model = new HistoryModel(factory, historyConfig, controllerConfig);
             setIdentifier(controllerConfig.getCurrent().getType());
