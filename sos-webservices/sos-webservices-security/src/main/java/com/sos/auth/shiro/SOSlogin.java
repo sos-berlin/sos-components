@@ -66,7 +66,6 @@ public class SOSlogin {
             token = new SOSUsernameRequestToken(user, pwd, httpServletRequest);
         } else {
             token = new UsernamePasswordToken(user, pwd);
-
         }
         if (currentUser != null) {
             try {

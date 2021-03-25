@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -39,7 +40,7 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     private Set<PlannedOrder> setOfPlannedOrder;
 
     private Set<OrderId> setOfOrders;
-    private List<String> listOfOrders;
+    private Collection<String> listOfOrders;
 
     private List<OrderStateText> states;
     private Set<Folder> setOfFolders;
@@ -55,11 +56,11 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     private List<String> listOfScheduleNames;
     private String scheduleName;
 
-    public List<String> getListOfOrders() {
+    public Collection<String> getListOfOrders() {
         return listOfOrders;
     }
 
-    public void setListOfOrders(List<String> listOfOrders) {
+    public void setListOfOrders(Collection<String> listOfOrders) {
         this.listOfOrders = listOfOrders;
     }
 

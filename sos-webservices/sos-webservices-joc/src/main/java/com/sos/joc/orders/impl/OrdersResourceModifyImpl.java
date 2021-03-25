@@ -207,7 +207,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         if (orders != null && !orders.isEmpty()) {
             orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()));
             // determine possibly fresh cyclic orders in case of CANCEL
-            if (Action.CANCEL.equals(action)) {
+            if (Action.CANCEL.equals(action) || Action.CANCEL_DAILYPLAN.equals(action)) {
                 // determine cyclic ids
                 orderStream = Stream.concat(orderStream, cyclicFreshOrderIds(orders, currentState));
             }
@@ -223,7 +223,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         }
 
         final Set<JOrder> jOrders = orderStream.collect(Collectors.toSet());
-        if (!jOrders.isEmpty()) {
+        if (!jOrders.isEmpty() || Action.CANCEL_DAILYPLAN.equals(action)) {
             command(currentState, action, modifyOrders, jOrders.stream().map(JOrder::id).collect(Collectors.toSet())).thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                 if (either.isRight()) {
@@ -252,29 +252,15 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
         switch (action) {
         case CANCEL_DAILYPLAN:
-            // @Uwe: you want all orders which are unknown in the controller
-            // 
-            //Set<String> orders = modifyOrders.getOrderIds();
-            //orders.removeAll(oIds.stream().map(OrderId::string).collect(Collectors.toSet()));
-            // if updateDailyPlan accepts Collection<String> instead of List<String> then you can call without extra convert
-            //updateDailyPlan(orders);
-            // you can this outside the CompletableFuture
+            Set<String> orders = modifyOrders.getOrderIds();
+            orders.removeAll(oIds.stream().map(OrderId::string).collect(Collectors.toSet()));
+            try {
+                updateDailyPlan(orders);
+            } catch (SOSHibernateException e1) {
+                ProblemHelper.postExceptionEventIfExist(Either.left(e1), getAccessToken(), getJocError(), modifyOrders.getControllerId());
+            }
             
             return OrdersHelper.cancelOrders(modifyOrders, oIds).thenApply(either -> {
-                // TODO This update must be removed when dailyplan service receives events for order state changes
-                ArrayList<String> missingOrders = new ArrayList<>();
-                for (OrderId orderId : oIds) {
-                    Optional<JOrder> opt = currentState.idToOrder(orderId);
-                    if (!opt.isPresent()) {
-                        missingOrders.add(orderId.string());
-                    }
-                }
-                try {
-                    updateDailyPlan(missingOrders);
-                } catch (SOSHibernateException e1) {
-                    ProblemHelper.postExceptionEventIfExist(Either.left(e1), getAccessToken(), getJocError(), modifyOrders.getControllerId());
-                }
-                
                 if (either.isRight()) {
                     try {
                         // only for non-temporary orders
@@ -326,7 +312,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         }
     }
 
-    private static void updateDailyPlan(List<String> orderIds) throws SOSHibernateException {
+    private static void updateDailyPlan(Collection<String> orderIds) throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         if (!orderIds.isEmpty()) {
             try {
