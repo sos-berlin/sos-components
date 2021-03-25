@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.controller.model.order.OrderModeType;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -144,6 +145,14 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             
             addSubmittedOrderIdsFromDailyplanDate(cancelDailyPlanOrders);
             
+            // @Uwe: you have only pending orders then you don't need
+            // arguments, kill, position, orderType in CancelDailyPlanOrders schema
+//            ModifyOrders modifyOrders = new ModifyOrders();
+//            modifyOrders.setControllerId(cancelDailyPlanOrders.getControllerId());
+//            modifyOrders.setOrderIds(cancelDailyPlanOrders.getOrderIds());
+//            modifyOrders.setOrderType(OrderModeType.FRESH_ONLY);
+//            modifyOrders.setAuditLog(cancelDailyPlanOrders.getAuditLog());
+            
             ModifyOrders modifyOrders = new ModifyOrders();
             modifyOrders.setControllerId(cancelDailyPlanOrders.getControllerId());
             modifyOrders.setKill(cancelDailyPlanOrders.getKill());
@@ -243,6 +252,14 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
         switch (action) {
         case CANCEL_DAILYPLAN:
+            // @Uwe: you want all orders which are unknown in the controller
+            // 
+            //Set<String> orders = modifyOrders.getOrderIds();
+            //orders.removeAll(oIds.stream().map(OrderId::string).collect(Collectors.toSet()));
+            // if updateDailyPlan accepts Collection<String> instead of List<String> then you can call without extra convert
+            //updateDailyPlan(orders);
+            // you can this outside the CompletableFuture
+            
             return OrdersHelper.cancelOrders(modifyOrders, oIds).thenApply(either -> {
                 // TODO This update must be removed when dailyplan service receives events for order state changes
                 ArrayList<String> missingOrders = new ArrayList<>();
