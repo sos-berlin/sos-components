@@ -566,7 +566,8 @@ public class DBLayerDeploy {
                         ConfigurationType.WORKFLOW.intValue(), 
                         ConfigurationType.JUNCTION.intValue(),
                         ConfigurationType.JOBCLASS.intValue(),
-                        ConfigurationType.LOCK.intValue()}));
+                        ConfigurationType.LOCK.intValue(),
+                        ConfigurationType.FILEORDERSOURCE.intValue()}));
             } else if (releasablesOnly) {
                 query.setParameterList("types", Arrays.asList(new Integer[] {
                         ConfigurationType.SCHEDULE.intValue(), 
@@ -612,7 +613,8 @@ public class DBLayerDeploy {
                         ConfigurationType.WORKFLOW.intValue(), 
                         ConfigurationType.JUNCTION.intValue(),
                         ConfigurationType.JOBCLASS.intValue(),
-                        ConfigurationType.LOCK.intValue()}));
+                        ConfigurationType.LOCK.intValue(),
+                        ConfigurationType.FILEORDERSOURCE.intValue()}));
             } else if (onlyReleasables) {
                 query.setParameterList("types", Arrays.asList(new Integer[] {
                         ConfigurationType.SCHEDULE.intValue(), 

@@ -66,7 +66,8 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             ExportForSigning forSigning = filter.getForSigning();
             ExportShallowCopy shallowCopy = filter.getShallowCopy();
             
-            Set<ControllerObject> deployables = null;
+            Set<ControllerObject> deployablesForSigning = null;
+            Set<ConfigurationObject> deployablesForShallowCopy = null;
             Set<ConfigurationObject> releasables = null;
             final Set<UpdateableWorkflowJobAgentName> updateableWorkflowJobsAgentNames = new HashSet<UpdateableWorkflowJobAgentName>();
             final Set<UpdateableFileOrderSourceAgentName> updateableFileOrderSourceAgentNames = new HashSet<UpdateableFileOrderSourceAgentName>();
@@ -76,9 +77,9 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             if (forSigning != null) {
                 commitId = UUID.randomUUID().toString();
                 controllerId = forSigning.getControllerId();
-                deployables = PublishUtils.getDeployableObjectsFromDB(forSigning.getDeployables(), dbLayer, commitId);
+                deployablesForSigning = PublishUtils.getDeployableControllerObjectsFromDB(forSigning.getDeployables(), dbLayer, commitId);
                 final String controllerIdUsed = controllerId;
-                deployables.stream()
+                deployablesForSigning.stream()
                 .forEach(deployable -> {
                     if (DeployType.WORKFLOW.equals(deployable.getObjectType())) {
                         try {
@@ -94,8 +95,8 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                         } catch (JsonProcessingException e) {}
                     }
                 });
-            } else {
-                deployables = PublishUtils.getDeployableObjectsFromDB(shallowCopy.getDeployables(), dbLayer);
+            } else { // shallow copy
+                deployablesForShallowCopy = PublishUtils.getDeployableConfigurationObjectsFromDB(shallowCopy.getDeployables(), dbLayer);
                 releasables = PublishUtils.getReleasableObjectsFromDB(shallowCopy.getReleasables(), dbLayer);
             }
             // TODO: create time restricted token to export, too
@@ -121,27 +122,23 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
 
             StreamingOutput stream = null;
             if (filter.getExportFile().getFormat().equals(ArchiveFormat.TAR_GZ)) {
-                stream = PublishUtils.writeTarGzipFile(deployables,
-                        releasables, 
-                        updateableWorkflowJobsAgentNames,
-                        updateableFileOrderSourceAgentNames,
-                        commitId, 
-                        controllerId, 
-                        dbLayer,
-                        jocVersion,
-                        apiVersion,
-                        inventoryVersion);
+                if (forSigning != null) {
+                    stream = PublishUtils.writeTarGzipFileForSigning(deployablesForSigning, releasables, 
+                            updateableWorkflowJobsAgentNames, updateableFileOrderSourceAgentNames,
+                            commitId, controllerId, dbLayer, jocVersion, apiVersion, inventoryVersion);
+                } else { // shallow copy
+                    stream = PublishUtils.writeTarGzipFileShallow(deployablesForShallowCopy, releasables, 
+                            dbLayer, jocVersion, apiVersion, inventoryVersion);
+                }
             } else {
-                stream = PublishUtils.writeZipFile(deployables,
-                        releasables,
-                        updateableWorkflowJobsAgentNames,
-                        updateableFileOrderSourceAgentNames,
-                        commitId,
-                        controllerId,
-                        dbLayer,
-                        jocVersion,
-                        apiVersion,
-                        inventoryVersion);
+                if (forSigning != null) {
+                    stream = PublishUtils.writeZipFileForSigning(deployablesForSigning, releasables,
+                            updateableWorkflowJobsAgentNames, updateableFileOrderSourceAgentNames,
+                            commitId, controllerId, dbLayer, jocVersion, apiVersion, inventoryVersion);
+                } else { // shallow copy
+                    stream = PublishUtils.writeZipFileShallow(deployablesForShallowCopy, releasables,
+                            dbLayer, jocVersion, apiVersion, inventoryVersion);
+                }
             }
             ExportAudit audit = null;
             if (controllerId != null) {

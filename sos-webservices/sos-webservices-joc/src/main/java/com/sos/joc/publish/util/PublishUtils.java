@@ -101,6 +101,7 @@ import com.sos.joc.model.calendar.WorkingDaysCalendarEdit;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.inventory.fileordersource.FileOrderSourceEdit;
 import com.sos.joc.model.inventory.fileordersource.FileOrderSourcePublish;
 import com.sos.joc.model.inventory.jobclass.JobClassEdit;
 import com.sos.joc.model.inventory.jobclass.JobClassPublish;
@@ -2000,6 +2001,20 @@ public abstract class PublishUtils {
                             .value(), "")));
                     jobClassPublish.setObjectType(DeployType.JOBCLASS);
                     objects.add(jobClassPublish);
+                } else if (entryName.endsWith(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value())) {
+                    FileOrderSourcePublish fileOrderSourcePublish = new FileOrderSourcePublish();
+                    com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = om.readValue(outBuffer.toString(),
+                            com.sos.inventory.model.fileordersource.FileOrderSource.class);
+                    if (checkObjectNotEmpty(fileOrderSource)) {
+                        fileOrderSourcePublish.setContent(fileOrderSource);
+                    } else {
+                        throw new JocImportException(String.format("FileOrderSource with path %1$s not imported. Object values could not be mapped.", Globals
+                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), ""))));
+                    }
+                    fileOrderSourcePublish.setPath(
+                            Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), "")));
+                    fileOrderSourcePublish.setObjectType(DeployType.FILEORDERSOURCE);
+                    objects.add(fileOrderSourcePublish);
                 }
             }
             objects.stream().forEach(item -> {
@@ -2100,6 +2115,20 @@ public abstract class PublishUtils {
                             "")));
                     jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
                     objects.add(jobClassEdit);
+                } else if (entryName.endsWith(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value())) {
+                    FileOrderSourceEdit fileOrderSourceEdit = new FileOrderSourceEdit();
+                    com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = om.readValue(outBuffer.toString(),
+                            com.sos.inventory.model.fileordersource.FileOrderSource.class);
+                    if (checkObjectNotEmpty(fileOrderSource)) {
+                        fileOrderSourceEdit.setConfiguration(fileOrderSource);
+                    } else {
+                        throw new JocImportException(String.format("FileOrderSource with path %1$s not imported. Object values could not be mapped.", Globals
+                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), ""))));
+                    }
+                    fileOrderSourceEdit.setPath(
+                            Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), "")));
+                    fileOrderSourceEdit.setObjectType(ConfigurationType.FILEORDERSOURCE);
+                    objects.add(fileOrderSourceEdit);
                 } else if (entryName.endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value())) {
                     ScheduleEdit scheduleEdit = new ScheduleEdit();
                     Schedule schedule = om.readValue(outBuffer.toString(), Schedule.class);
@@ -2250,6 +2279,20 @@ public abstract class PublishUtils {
                             "")));
                     jobClassPublish.setObjectType(DeployType.JOBCLASS);
                     objects.add(jobClassPublish);
+                } else if (entryName.endsWith(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value())) {
+                    FileOrderSourcePublish fileOrderSourcePublish = new FileOrderSourcePublish();
+                    com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = om.readValue(outBuffer.toString(),
+                            com.sos.inventory.model.fileordersource.FileOrderSource.class);
+                    if (checkObjectNotEmpty(fileOrderSource)) {
+                        fileOrderSourcePublish.setContent(fileOrderSource);
+                    } else {
+                        throw new JocImportException(String.format("FileOrderSource with path %1$s not imported. Object values could not be mapped.", Globals
+                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), ""))));
+                    }
+                    fileOrderSourcePublish.setPath(
+                            Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), "")));
+                    fileOrderSourcePublish.setObjectType(DeployType.FILEORDERSOURCE);
+                    objects.add(fileOrderSourcePublish);
                 }
             }
             objects.stream().forEach(item -> {
@@ -2355,6 +2398,20 @@ public abstract class PublishUtils {
                             "")));
                     jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
                     objects.add(jobClassEdit);
+                } else if (entryName.endsWith(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value())) {
+                    FileOrderSourceEdit fileOrderSourceEdit = new FileOrderSourceEdit();
+                    com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = om.readValue(outBuffer.toString(),
+                            com.sos.inventory.model.fileordersource.FileOrderSource.class);
+                    if (checkObjectNotEmpty(fileOrderSource)) {
+                        fileOrderSourceEdit.setConfiguration(fileOrderSource);
+                    } else {
+                        throw new JocImportException(String.format("FileOrderSource with path %1$s not imported. Object values could not be mapped.", Globals
+                                .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), ""))));
+                    }
+                    fileOrderSourceEdit.setPath(
+                            Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), "")));
+                    fileOrderSourceEdit.setObjectType(ConfigurationType.FILEORDERSOURCE);
+                    objects.add(fileOrderSourceEdit);
                 } else if (entryName.endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value())) {
                     ScheduleEdit scheduleEdit = new ScheduleEdit();
                     Schedule schedule = om.readValue(outBuffer.toString(), Schedule.class);
@@ -2406,7 +2463,7 @@ public abstract class PublishUtils {
         return objects;
     }
 
-    public static StreamingOutput writeZipFile(Set<ControllerObject> deployables, Set<ConfigurationObject> releasables,
+    public static StreamingOutput writeZipFileForSigning(Set<ControllerObject> deployables, Set<ConfigurationObject> releasables,
             Set<UpdateableWorkflowJobAgentName> updateableAgentNames, Set<UpdateableFileOrderSourceAgentName> updateableFOSAgentNames, String commitId,
             String controllerId, DBLayerDeploy dbLayer, Version jocVersion, Version apiVersion, Version inventoryVersion) {
         StreamingOutput streamingOutput = new StreamingOutput() {
@@ -2515,7 +2572,96 @@ public abstract class PublishUtils {
         return streamingOutput;
     }
 
-    public static StreamingOutput writeTarGzipFile(Set<ControllerObject> deployables, Set<ConfigurationObject> releasables,
+    public static StreamingOutput writeZipFileShallow(Set<ConfigurationObject> deployables, Set<ConfigurationObject> releasables, DBLayerDeploy dbLayer,
+            Version jocVersion, Version apiVersion, Version inventoryVersion) {
+        StreamingOutput streamingOutput = new StreamingOutput() {
+
+            @Override
+            public void write(OutputStream output) throws IOException {
+                ZipOutputStream zipOut = null;
+                try {
+                    zipOut = new ZipOutputStream(new BufferedOutputStream(output), StandardCharsets.UTF_8);
+                    String content = null;
+                    if (deployables != null && !deployables.isEmpty()) {
+                        for (ConfigurationObject deployable : deployables) {
+                            String extension = null;
+                            switch (deployable.getObjectType()) {
+                            case WORKFLOW:
+                                extension = ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
+                                break;
+                            case LOCK:
+                                extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
+                                break;
+                            case JUNCTION:
+                                extension = ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
+                                break;
+                            case JOBCLASS:
+                                extension = ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
+                                break;
+                            case FILEORDERSOURCE:
+                                extension = ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.toString();
+                                break;
+                            default: 
+                                break;
+                            }
+                            if (extension != null) {
+                                content = om.writeValueAsString(deployable.getConfiguration());
+                                String zipEntryName = deployable.getPath().substring(1).concat(extension);
+                                ZipEntry entry = new ZipEntry(zipEntryName);
+                                zipOut.putNextEntry(entry);
+                                zipOut.write(content.getBytes());
+                                zipOut.closeEntry();
+                            }
+                        }
+                    }
+                    if (releasables != null && !releasables.isEmpty()) {
+                        for (ConfigurationObject releasable : releasables) {
+                            // process releasable objects
+                            String extension = null;
+                            switch (releasable.getObjectType()) {
+                            case SCHEDULE:
+                                extension = ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.toString();
+                                break;
+                            case WORKINGDAYSCALENDAR:
+                            case NONWORKINGDAYSCALENDAR:
+                                extension = ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.toString();
+                                break;
+                            default:
+                                break;
+                            }
+                            if (extension != null) {
+                                content = om.writeValueAsString(releasable.getConfiguration());
+                                String zipEntryName = releasable.getPath().substring(1).concat(extension);
+                                ZipEntry entry = new ZipEntry(zipEntryName);
+                                zipOut.putNextEntry(entry);
+                                zipOut.write(content.getBytes());
+                                zipOut.closeEntry();
+                            }
+                        }
+                    }
+                    JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion);
+                    if (!isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
+                        String zipEntryName = JOC_META_INFO_FILENAME;
+                        ZipEntry entry = new ZipEntry(zipEntryName);
+                        zipOut.putNextEntry(entry);
+                        zipOut.write(om.writeValueAsBytes(jocMetaInfo));
+                        zipOut.closeEntry();
+                    }
+                    zipOut.flush();
+                } finally {
+                    if (zipOut != null) {
+                        try {
+                            zipOut.close();
+                        } catch (Exception e) {
+                        }
+                    }
+                }
+            }
+        };
+        return streamingOutput;
+    }
+
+    public static StreamingOutput writeTarGzipFileForSigning(Set<ControllerObject> deployables, Set<ConfigurationObject> releasables,
             Set<UpdateableWorkflowJobAgentName> updateableAgentNames, Set<UpdateableFileOrderSourceAgentName> updateableFOSAgentNames,
             String commitId, String controllerId, DBLayerDeploy dbLayer, Version jocVersion, Version apiVersion, Version inventoryVersion) {
         StreamingOutput streamingOutput = new StreamingOutput() {
@@ -2579,6 +2725,122 @@ public abstract class PublishUtils {
                             tarOut.putArchiveEntry(entry);
                             tarOut.write(contentBytes);
                             tarOut.closeArchiveEntry();
+                        }
+                    }
+                    if (releasables != null && !releasables.isEmpty()) {
+                        for (ConfigurationObject releasable : releasables) {
+                            // process releasable objects
+                            String extension = null;
+                            switch (releasable.getObjectType()) {
+                            case SCHEDULE:
+                                extension = ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.toString();
+                                break;
+                            case WORKINGDAYSCALENDAR:
+                            case NONWORKINGDAYSCALENDAR:
+                                extension = ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.toString();
+                                break;
+                            default:
+                                break;
+                            }
+                            if (extension != null) {
+                                content = om.writeValueAsString(releasable.getConfiguration());
+                                String zipEntryName = releasable.getPath().substring(1).concat(extension);
+                                TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
+                                byte[] contentBytes = content.getBytes();
+                                entry.setSize(contentBytes.length);
+                                tarOut.putArchiveEntry(entry);
+                                tarOut.write(contentBytes);
+                                tarOut.closeArchiveEntry();
+                            }
+                        }
+                    }
+                    JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion);
+                    if (!isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
+                        String zipEntryName = JOC_META_INFO_FILENAME;
+                        TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
+                        byte[] jocMetaInfoBytes = om.writeValueAsBytes(jocMetaInfo);
+                        entry.setSize(jocMetaInfoBytes.length);
+                        tarOut.putArchiveEntry(entry);
+                        tarOut.write(jocMetaInfoBytes);
+                        tarOut.closeArchiveEntry();
+                    }
+                    tarOut.flush();
+                } finally {
+                    if (tarOut != null) {
+                        try {
+                            tarOut.finish();
+                            tarOut.close();
+                        } catch (Exception e) {
+                        }
+                    }
+                    if (gzipOut != null) {
+                        try {
+                            gzipOut.flush();
+                            gzipOut.close();
+                        } catch (Exception e) {
+                        }
+                    }
+                    if (bOut != null) {
+                        try {
+                            bOut.flush();
+                            bOut.close();
+                        } catch (Exception e) {
+                        }
+                    }
+
+                }
+
+            }
+        };
+        return streamingOutput;
+    }
+
+    public static StreamingOutput writeTarGzipFileShallow(Set<ConfigurationObject> deployables, Set<ConfigurationObject> releasables,
+            DBLayerDeploy dbLayer, Version jocVersion, Version apiVersion, Version inventoryVersion) {
+        StreamingOutput streamingOutput = new StreamingOutput() {
+
+            @Override
+            public void write(OutputStream output) throws IOException {
+                GZIPOutputStream gzipOut = null;
+                TarArchiveOutputStream tarOut = null;
+                BufferedOutputStream bOut = null;
+                try {
+                    bOut = new BufferedOutputStream(output);
+                    gzipOut = new GZIPOutputStream(bOut);
+                    tarOut = new TarArchiveOutputStream(gzipOut);
+                    String content = null;
+                    if (deployables != null && !deployables.isEmpty()) {
+                        for (ConfigurationObject deployable : deployables) {
+                            String extension = null;
+                            switch (deployable.getObjectType()) {
+                            case WORKFLOW:
+                                extension = ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
+                                break;
+                            case LOCK:
+                                extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
+                                break;
+                            case JUNCTION:
+                                extension = ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
+                                break;
+                            case JOBCLASS:
+                                extension = ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
+                                break;
+                            case FILEORDERSOURCE:
+                                extension = ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.toString();
+                                break;
+                            default:
+                                break;
+                            }
+                            if (extension != null) {
+                                content = om.writeValueAsString(deployable.getConfiguration());
+                                String zipEntryName = deployable.getPath().substring(1).concat(extension);
+                                TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
+                                byte[] contentBytes = content.getBytes();
+                                entry.setSize(contentBytes.length);
+                                tarOut.putArchiveEntry(entry);
+                                tarOut.write(contentBytes);
+                                tarOut.closeArchiveEntry();
+                            }
                         }
                     }
                     if (releasables != null && !releasables.isEmpty()) {
@@ -3017,13 +3279,13 @@ public abstract class PublishUtils {
         return entries.stream().filter(item -> item.getOperation().equals(OperationType.DELETE.value())).collect(Collectors.toSet());
     }
 
-    public static Set<ControllerObject> getDeployableObjectsFromDB(DeployablesFilter filter, DBLayerDeploy dbLayer)
+    public static Set<ControllerObject> getDeployableControllerObjectsFromDB(DeployablesValidFilter filter, DBLayerDeploy dbLayer)
             throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException,
             SOSHibernateException {
-        return getDeployableObjectsFromDB(filter, dbLayer, null);
+        return getDeployableControllerObjectsFromDB(filter, dbLayer, null);
     }
 
-    public static Set<ControllerObject> getDeployableObjectsFromDB(DeployablesFilter filter, DBLayerDeploy dbLayer, String commitId)
+    public static Set<ControllerObject> getDeployableControllerObjectsFromDB(DeployablesValidFilter filter, DBLayerDeploy dbLayer, String commitId)
             throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException,
             SOSHibernateException {
         Set<ControllerObject> allObjects = new HashSet<ControllerObject>();
@@ -3045,7 +3307,7 @@ public abstract class PublishUtils {
                                 if (commitId != null) {
                                     dbLayer.storeCommitIdForLaterUsage(item, commitId);
                                 }
-                                allObjects.add(getJSObjectFromDBItem(item, commitId));
+                                allObjects.add(getContollerObjectFromDBItem(item, commitId));
                             });
                 }
             }
@@ -3073,11 +3335,17 @@ public abstract class PublishUtils {
         }
         return allObjects;
     }
-
-    public static Set<ControllerObject> getDeployableObjectsFromDB(DeployablesValidFilter filter, DBLayerDeploy dbLayer, String commitId)
+    
+    public static Set<ConfigurationObject> getDeployableConfigurationObjectsFromDB(DeployablesFilter filter, DBLayerDeploy dbLayer)
             throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException,
             SOSHibernateException {
-        Set<ControllerObject> allObjects = new HashSet<ControllerObject>();
+        return getDeployableConfigurationObjectsFromDB(filter, dbLayer, null);
+    }
+
+    public static Set<ConfigurationObject> getDeployableConfigurationObjectsFromDB(DeployablesFilter filter, DBLayerDeploy dbLayer, String commitId)
+            throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException,
+            SOSHibernateException {
+        Set<ConfigurationObject> allObjects = new HashSet<ConfigurationObject>();
         if (filter != null) {
             if (filter.getDeployConfigurations() != null && !filter.getDeployConfigurations().isEmpty()) {
                 List<Configuration> depFolders = filter.getDeployConfigurations().stream().filter(item -> item.getConfiguration().getObjectType()
@@ -3096,7 +3364,7 @@ public abstract class PublishUtils {
                                 if (commitId != null) {
                                     dbLayer.storeCommitIdForLaterUsage(item, commitId);
                                 }
-                                allObjects.add(getJSObjectFromDBItem(item, commitId));
+                                allObjects.add(getConfigurationObjectFromDBItem(item, commitId));
                             });
                 }
             }
@@ -3113,12 +3381,7 @@ public abstract class PublishUtils {
                 }
                 if (!allItems.isEmpty()) {
                     allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER)).forEach(
-                            item -> {
-                                if (commitId != null) {
-                                    dbLayer.storeCommitIdForLaterUsage(item, commitId);
-                                }
-                                allObjects.add(mapInvConfigToJSObject(item));
-                            });
+                            item -> allObjects.add(getConfigurationObjectFromDBItem(item)));
                 }
             }
         }
@@ -3214,7 +3477,7 @@ public abstract class PublishUtils {
         }
     }
 
-    private static ControllerObject getJSObjectFromDBItem(DBItemDeploymentHistory item, String commitId) {
+    private static ControllerObject getContollerObjectFromDBItem(DBItemDeploymentHistory item, String commitId) {
         try {
             ControllerObject jsObject = new ControllerObject();
             // jsObject.setId(item.getId());
@@ -3251,6 +3514,47 @@ public abstract class PublishUtils {
             jsObject.setVersion(item.getVersion());
             jsObject.setAccount(Globals.getConfigurationGlobalsJoc().getDefaultProfileAccount().getValue());
             return jsObject;
+        } catch (IOException e) {
+            throw new JocException(e);
+        }
+    }
+
+    private static ConfigurationObject getConfigurationObjectFromDBItem(DBItemDeploymentHistory item, String commitId) {
+        try {
+            ConfigurationObject configurationObject = new ConfigurationObject();
+            // jsObject.setId(item.getId());
+            configurationObject.setPath(item.getPath());
+            configurationObject.setObjectType(ConfigurationType.fromValue(item.getType()));
+            switch (configurationObject.getObjectType()) {
+            case WORKFLOW:
+                com.sos.inventory.model.workflow.Workflow workflow = 
+                    om.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.workflow.Workflow.class);
+                configurationObject.setConfiguration(workflow);
+                break;
+            case JOBCLASS:
+                com.sos.inventory.model.jobclass.JobClass jobClass = 
+                    om.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.jobclass.JobClass.class);
+                configurationObject.setConfiguration(jobClass);
+                break;
+            case LOCK:
+                com.sos.inventory.model.lock.Lock lock = 
+                    om.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.lock.Lock.class);
+                configurationObject.setConfiguration(lock);
+                break;
+            case JUNCTION:
+                com.sos.inventory.model.junction.Junction junction = 
+                    om.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.junction.Junction.class);
+                configurationObject.setConfiguration(junction);
+                break;
+            case FILEORDERSOURCE:
+                com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = 
+                    om.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
+                configurationObject.setConfiguration(fileOrderSource);
+                break;
+            }
+//            configurationObject.setVersion(item.getVersion());
+//            configurationObject.setAccount(Globals.getConfigurationGlobalsJoc().getDefaultProfileAccount().getValue());
+            return configurationObject;
         } catch (IOException e) {
             throw new JocException(e);
         }
@@ -3327,6 +3631,16 @@ public abstract class PublishUtils {
     private static boolean checkObjectNotEmpty(com.sos.inventory.model.jobclass.JobClass jobClass) {
         if (jobClass.getDocumentationPath() == null && jobClass.getMaxProcesses() == null && jobClass.getPriority() == null && jobClass
                 .getTYPE() == null) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private static boolean checkObjectNotEmpty(com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource) {
+        if (fileOrderSource.getDocumentationPath() == null && fileOrderSource.getAgentId() == null && fileOrderSource.getDelay() == null 
+                && fileOrderSource.getTYPE() == null && fileOrderSource.getPattern() == null && fileOrderSource.getWorkflowPath() == null
+                && fileOrderSource.getDirectory() == null) {
             return false;
         } else {
             return true;
@@ -3570,6 +3884,7 @@ public abstract class PublishUtils {
         if (timeZone == null || timeZone.isEmpty()) {
             timeZone = "Etc/UTC";
         }
+        fileOrderSource.setTimeZone(null);
         return Optional.of(String.format(idPattern, timeZone));
     }
 
