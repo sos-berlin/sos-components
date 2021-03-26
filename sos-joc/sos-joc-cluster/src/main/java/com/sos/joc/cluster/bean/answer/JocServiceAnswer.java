@@ -10,7 +10,7 @@ import com.sos.joc.cluster.JocCluster;
 public class JocServiceAnswer {
 
     public enum JocServiceAnswerState {
-        BUSY, RELAX, UNKNOWN
+        UNKNOWN, BUSY, RELAX
     }
 
     private static boolean checkJocStartTime = true;
