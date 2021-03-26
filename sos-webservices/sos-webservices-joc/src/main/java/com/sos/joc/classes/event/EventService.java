@@ -70,6 +70,7 @@ import js7.data.order.OrderEvent.OrderRetrying;
 import js7.data.order.OrderEvent.OrderStarted$;
 import js7.data.order.OrderEvent.OrderTerminated;
 import js7.data.order.OrderId;
+import js7.data.orderwatch.OrderWatchId;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
@@ -292,6 +293,8 @@ public class EventService {
                     addEvent(createAgentEvent(eventId, itemId.string(), eventType));
                 } else if (itemId instanceof LockId) {
                     addEvent(createLockEvent(eventId, itemId.string(), eventType));
+                } else if (itemId instanceof OrderWatchId) {
+                    addEvent(createFileOrderSourceEvent(eventId, itemId.string(), eventType));
                 } else {
                     // TODO other simple objects
                 }
@@ -374,6 +377,14 @@ public class EventService {
         evt.setEventType(eventType);
         evt.setPath(path);
         evt.setObjectType(EventType.LOCK);
+        return evt;
+    }
+    
+    private EventSnapshot createFileOrderSourceEvent(long eventId, String path, String eventType) {
+        EventSnapshot evt = new EventSnapshot();
+        evt.setEventType(eventType);
+        evt.setPath(path);
+        evt.setObjectType(EventType.FILEORDERSOURCE);
         return evt;
     }
     

@@ -35,7 +35,6 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSec
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
-import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.order.CancelDailyPlanOrders;
 import com.sos.joc.model.order.ModifyOrders;
@@ -81,6 +80,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            // for AuditLog
+            modifyOrders.setArguments(null);
+            modifyOrders.setKill(null);
+            modifyOrders.setOrderType(null);
+            modifyOrders.setPosition(null);
             postOrdersModify(Action.SUSPEND, modifyOrders);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -100,6 +104,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            // for AuditLog
+            modifyOrders.setKill(null);
             postOrdersModify(Action.RESUME, modifyOrders);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -120,7 +126,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-
+            // for AuditLog
+            modifyOrders.setArguments(null);
+            modifyOrders.setPosition(null);
             postOrdersModify(Action.CANCEL, modifyOrders);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -182,6 +190,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            // for AuditLog
+            modifyOrders.setArguments(null);
+            modifyOrders.setKill(null);
+            modifyOrders.setOrderType(null);
+            modifyOrders.setPosition(null);
             postOrdersModify(Action.REMOVE_WHEN_TERMINATED, modifyOrders);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -198,6 +211,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         Set<String> orders = modifyOrders.getOrderIds();
 
         List<WorkflowId> workflowIds = modifyOrders.getWorkflowIds();
+        if (workflowIds != null && workflowIds.isEmpty()) {
+            modifyOrders.setWorkflowIds(null); // for AuditLog 
+        }
         // final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
 
         String controllerId = modifyOrders.getControllerId();
@@ -301,13 +317,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             } else {
                 return OrdersHelper.cancelOrders(modifyOrders, oIds).thenApply(either -> {
                     if (either.isRight()) {
-                        try {
-                            // only for non-temporary and non-file orders
-                            LOGGER.debug("Cancel orders. Calling updateDailyPlan");
-                            updateDailyPlan(oIds.stream().map(OrderId::string).filter(s -> !s.matches(".*#(T|F)[0-9]+-.*")).collect(Collectors.toSet()));
-                        } catch (Exception e) {
-                            ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), modifyOrders.getControllerId());
-                        }
+                        updateDailyPlan(oIds, modifyOrders.getControllerId());
                     }
                     return either;
                 });
@@ -316,13 +326,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             return OrdersHelper.cancelOrders(modifyOrders, oIds).thenApply(either -> {
                 // TODO This update must be removed when dailyplan service receives events for order state changes
                 if (either.isRight()) {
-                    try {
-                        // only for non-temporary orders
-                        LOGGER.debug("Cancel orders. Calling updateDailyPlan");
-                        updateDailyPlan(oIds.stream().map(OrderId::string).filter(s -> !s.matches(".*#T[0-9]+-.*")).collect(Collectors.toList()));
-                    } catch (Exception e) {
-                        ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), modifyOrders.getControllerId());
-                    }
+                    updateDailyPlan(oIds, modifyOrders.getControllerId());
                 }
                 return either;
             });
@@ -349,6 +353,16 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             return ControllerApi.of(modifyOrders.getControllerId()).suspendOrders(oIds, suspendMode);
         default: // case REMOVE_WHEN_TERMINATED
             return ControllerApi.of(modifyOrders.getControllerId()).removeOrdersWhenTerminated(oIds);
+        }
+    }
+    
+    private void updateDailyPlan(Set<OrderId> oIds, String controllerId) {
+        try {
+            // only for non-temporary and non-file orders
+            LOGGER.debug("Cancel orders. Calling updateDailyPlan");
+            updateDailyPlan(oIds.stream().map(OrderId::string).filter(s -> !s.matches(".*#(T|F)[0-9]+-.*")).collect(Collectors.toSet()));
+        } catch (Exception e) {
+            ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), controllerId);
         }
     }
 

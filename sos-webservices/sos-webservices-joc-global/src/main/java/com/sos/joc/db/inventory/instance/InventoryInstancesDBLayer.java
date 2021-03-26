@@ -246,6 +246,7 @@ public class InventoryInstancesDBLayer {
             StringBuilder sql = new StringBuilder();
             sql.append("select securityLevel from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
             sql.append(" where controllerId = :controllerId");
+            sql.append(" group by securityLevel");
             Query<Integer> query = session.createQuery(sql.toString());
             query.setParameter("controllerId", controllerId);
             query.setMaxResults(1);
