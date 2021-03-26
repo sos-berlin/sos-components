@@ -6,6 +6,7 @@ import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.util.SOSShell;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.db.joc.DBItemJocInstance;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.db.DBLayerJocCluster;
 
@@ -19,7 +20,7 @@ public class JocInstance {
         config = jocConfig;
     }
 
-    public DBItemJocInstance getInstance(Date startTime) throws Exception {
+    public DBItemJocInstance getInstance(StartupMode mode, Date startTime) throws Exception {
         DBLayerJocCluster dbLayer = null;
         try {
             dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());
@@ -45,12 +46,12 @@ public class JocInstance {
                 // item.setTitle(config.getTitle());
                 // item.setOrdering(config.getOrdering());
                 // item.setUri(null);
-
-                item.setSecurityLevel(config.getSecurityLevel().name());
-                item.setStartedAt(startTime);
-                item.setHeartBeat(new Date());
-                dbLayer.getSession().update(item);
-
+                if (StartupMode.automatic.equals(mode)) {
+                    item.setSecurityLevel(config.getSecurityLevel().name());
+                    item.setStartedAt(startTime);
+                    item.setHeartBeat(new Date());
+                    dbLayer.getSession().update(item);
+                }
                 config.setTimeZone(item.getTimezone());
                 config.setTitle(item.getTitle());
             }

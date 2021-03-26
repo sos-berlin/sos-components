@@ -108,7 +108,7 @@ public class JocClusterService {
                         createFactory(config.getHibernateConfiguration());
 
                         cluster = new JocCluster(factory, clusterConfig, config, startTime);
-                        Globals.configurationGlobals = cluster.getConfigurationGlobals();
+                        Globals.configurationGlobals = cluster.getConfigurationGlobals(mode);
                         cluster.doProcessing(mode, Globals.configurationGlobals);
 
                     } catch (Throwable e) {
@@ -228,7 +228,7 @@ public class JocClusterService {
 
     private void handleGlobalsOnNonActiveMember(ConfigurationGlobalsChanged evt) {
         AJocClusterService.setLogger(JocClusterConfiguration.IDENTIFIER);
-        Globals.configurationGlobals = cluster.getConfigurationGlobals();
+        Globals.configurationGlobals = cluster.getConfigurationGlobals(StartupMode.unknown);
         LOGGER.info(String.format("[%s]%s updated", StartupMode.settings_changed.name(), ConfigurationGlobals.class.getSimpleName()));
     }
 

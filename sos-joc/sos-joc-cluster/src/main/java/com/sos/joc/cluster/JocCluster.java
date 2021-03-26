@@ -51,6 +51,7 @@ public class JocCluster {
     private static final Logger LOGGER = LoggerFactory.getLogger(JocCluster.class);
 
     public static final int MAX_AWAIT_TERMINATION_TIMEOUT = 30;
+    private static Date jocStartTime = null;
 
     private final SOSHibernateFactory dbFactory;
     private final JocClusterConfiguration config;
@@ -59,7 +60,6 @@ public class JocCluster {
     private final Object lock = new Object();
     private final Object lockMember = new Object();
     private final String currentMemberId;
-    private final Date jocStartTime;
 
     private volatile boolean closed;
 
@@ -72,17 +72,17 @@ public class JocCluster {
     private boolean instanceProcessed;
 
     public JocCluster(final SOSHibernateFactory factory, final JocClusterConfiguration jocClusterConfiguration,
-            final JocConfiguration jocConfiguration, final Date jocStartTime) {
+            final JocConfiguration jocConfiguration, final Date jocStartDateTime) {
         this.dbFactory = factory;
         this.config = jocClusterConfiguration;
         this.jocConfig = jocConfiguration;
         this.handler = new JocClusterHandler(this);
         this.currentMemberId = jocConfig.getMemberId();
-        this.jocStartTime = jocStartTime;
+        jocStartTime = jocStartDateTime;
     }
 
-    public ConfigurationGlobals getConfigurationGlobals() {
-        return getInstance();
+    public ConfigurationGlobals getConfigurationGlobals(StartupMode mode) {
+        return getInstance(mode);
     }
 
     public void doProcessing(StartupMode mode, ConfigurationGlobals configurations) {
@@ -100,7 +100,7 @@ public class JocCluster {
         }
     }
 
-    private ConfigurationGlobals getInstance() {
+    private ConfigurationGlobals getInstance(StartupMode mode) {
         JocInstance instance = new JocInstance(dbFactory, jocConfig);
 
         instanceProcessed = false;
@@ -111,7 +111,7 @@ public class JocCluster {
                     LOGGER.info("[getInstance][skip]because closed");
                     return configurations;
                 }
-                instance.getInstance(jocStartTime);
+                instance.getInstance(mode, jocStartTime);
                 jocTimeZone = jocConfig.getTimeZone();
                 configurations = getStoredSettings();
                 instanceProcessed = true;
@@ -878,6 +878,10 @@ public class JocCluster {
 
     public void setNotification(AtomicReference<List<String>> val) {
         notification = val;
+    }
+
+    public static Date getJocStartTime() {
+        return jocStartTime;
     }
 
 }
