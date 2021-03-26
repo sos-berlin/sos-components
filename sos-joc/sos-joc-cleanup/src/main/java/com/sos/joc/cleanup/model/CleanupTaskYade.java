@@ -15,11 +15,11 @@ import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.bean.answer.JocServiceTaskAnswer.JocServiceTaskAnswerState;
 import com.sos.joc.db.DBLayer;
 
-public class CleanupTaskAuditLog extends CleanupTaskModel {
+public class CleanupTaskYade extends CleanupTaskModel {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CleanupTaskAuditLog.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CleanupTaskYade.class);
 
-    public CleanupTaskAuditLog(JocClusterHibernateFactory factory, int batchSize, String identifier) {
+    public CleanupTaskYade(JocClusterHibernateFactory factory, int batchSize, String identifier) {
         super(factory, batchSize, identifier);
     }
 
@@ -73,15 +73,17 @@ public class CleanupTaskAuditLog extends CleanupTaskModel {
     private List<Long> getIds(TaskDateTime datetime) throws SOSHibernateException {
         getDbLayer().getSession().beginTransaction();
         StringBuilder hql = new StringBuilder("select id from ");
-        hql.append(DBLayer.DBITEM_JOC_AUDIT_LOG).append(" ");
-        hql.append("where created < :created ");
+        hql.append(DBLayer.DBITEM_YADE_TRANSFERS).append(" ");
+        hql.append("where start < :start ");
+
         Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
-        query.setParameter("created", datetime.getDatetime());
+        query.setParameter("start", datetime.getDatetime());
         query.setMaxResults(getBatchSize());
         List<Long> r = getDbLayer().getSession().getResultList(query);
         getDbLayer().getSession().commit();
 
-        LOGGER.info(String.format("[%s][%s][%s]found=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.TABLE_JOC_AUDIT_LOG, r.size()));
+        LOGGER.info(String.format("[%s][%s][%s]found=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.TABLE_YADE_TRANSFERS, r
+                .size()));
         return r;
     }
 
@@ -91,13 +93,28 @@ public class CleanupTaskAuditLog extends CleanupTaskModel {
 
         getDbLayer().getSession().beginTransaction();
         StringBuilder hql = new StringBuilder("delete from ");
-        hql.append(DBLayer.DBITEM_JOC_AUDIT_LOG).append(" ");
-        hql.append("where id in (:ids)");
+        hql.append(DBLayer.DBITEM_YADE_FILES).append(" ");
+        hql.append("where transferId in (:ids)");
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
         int r = getDbLayer().getSession().executeUpdate(query);
         getDbLayer().getSession().commit();
-        log.append("[").append(DBLayer.TABLE_JOC_AUDIT_LOG).append("=").append(r).append("]");
+        log.append("[").append(DBLayer.TABLE_YADE_FILES).append("=").append(r).append("]");
+
+        if (isStopped()) {
+            LOGGER.info(log.toString());
+            return;
+        }
+
+        getDbLayer().getSession().beginTransaction();
+        hql = new StringBuilder("delete from ");
+        hql.append(DBLayer.DBITEM_YADE_TRANSFERS).append(" ");
+        hql.append("where id in (:ids)");
+        query = getDbLayer().getSession().createQuery(hql.toString());
+        query.setParameterList("ids", ids);
+        r = getDbLayer().getSession().executeUpdate(query);
+        getDbLayer().getSession().commit();
+        log.append("[").append(DBLayer.TABLE_YADE_TRANSFERS).append("=").append(r).append("]");
 
         LOGGER.info(log.toString());
     }

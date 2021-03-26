@@ -148,8 +148,8 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
         int r = getDbLayer().getSession().executeUpdate(query);
-        log.append("[").append(DBLayer.TABLE_DEP_SUBMISSIONS).append("=").append(r).append("]");
         // getDbLayer().getSession().commit();
+        log.append("[").append(DBLayer.TABLE_DEP_SUBMISSIONS).append("=").append(r).append("]");
 
         if (isStopped()) {
             LOGGER.info(log.toString());
@@ -163,9 +163,8 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
         r = getDbLayer().getSession().executeUpdate(query);
-
-        log.append("[").append(DBLayer.TABLE_DEP_COMMIT_IDS).append("=").append(r).append("]");
         // getDbLayer().getSession().commit();
+        log.append("[").append(DBLayer.TABLE_DEP_COMMIT_IDS).append("=").append(r).append("]");
 
         if (isStopped()) {
             LOGGER.info(log.toString());
@@ -179,8 +178,8 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
         r = getDbLayer().getSession().executeUpdate(query);
-        log.append("[").append(DBLayer.TABLE_DEP_SIGNATURES).append("=").append(r).append("]");
         // getDbLayer().getSession().commit();
+        log.append("[").append(DBLayer.TABLE_DEP_SIGNATURES).append("=").append(r).append("]");
 
         if (isStopped()) {
             LOGGER.info(log.toString());
@@ -194,9 +193,8 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
         r = getDbLayer().getSession().executeUpdate(query);
-        log.append("[").append(DBLayer.TABLE_SEARCH_WORKFLOWS_DEPLOYMENT_HISTORY).append("=").append(r).append("]");
-
         // getDbLayer().getSession().commit();
+        log.append("[").append(DBLayer.TABLE_SEARCH_WORKFLOWS_DEPLOYMENT_HISTORY).append("=").append(r).append("]");
 
         if (Math.abs(r) > 0) {
             // getDbLayer().getSession().beginTransaction();
@@ -208,8 +206,8 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
             hql.append(")");
             query = getDbLayer().getSession().createQuery(hql.toString());
             r = getDbLayer().getSession().executeUpdate(query);
-            log.append("[").append(DBLayer.TABLE_SEARCH_WORKFLOWS).append("=").append(r).append("]");
             // getDbLayer().getSession().commit();
+            log.append("[").append(DBLayer.TABLE_SEARCH_WORKFLOWS).append("=").append(r).append("]");
         }
 
         if (isStopped()) {
@@ -224,8 +222,8 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
         r = getDbLayer().getSession().executeUpdate(query);
-        log.append("[").append(DBLayer.TABLE_DEP_HISTORY).append("=").append(r).append("]");
         // getDbLayer().getSession().commit();
+        log.append("[").append(DBLayer.TABLE_DEP_HISTORY).append("=").append(r).append("]");
 
         LOGGER.info(log.toString());
     }
@@ -234,10 +232,12 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
         getDbLayer().getSession().beginTransaction();
         StringBuilder hql = new StringBuilder("select max(deploymentDate) from ");
         hql.append(DBLayer.DBITEM_DEP_HISTORY).append(" ");
+
         Query<Date> query = getDbLayer().getSession().createQuery(hql.toString());
         Date r = getDbLayer().getSession().getSingleResult(query);
-        // LOGGER.info(String.format("[%s][%s][last deployment]found=%s", getIdentifier(), DBLayer.TABLE_DEP_HISTORY, r));
         getDbLayer().getSession().commit();
+
+        // LOGGER.info(String.format("[%s][%s][last deployment]found=%s", getIdentifier(), DBLayer.TABLE_DEP_HISTORY, r));
         return r;
     }
 
@@ -250,12 +250,13 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
         hql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
         hql.append("group by dh.inventoryConfigurationId,dh.controllerId ");
         hql.append("having count(dh.id) > :versions ");
-        Query<DeploymentVersion> query = getDbLayer().getSession().createQuery(hql.toString(), DeploymentVersion.class);
 
+        Query<DeploymentVersion> query = getDbLayer().getSession().createQuery(hql.toString(), DeploymentVersion.class);
         query.setParameter("versions", new Long(versions));
         List<DeploymentVersion> r = getDbLayer().getSession().getResultList(query);
-        LOGGER.info(String.format("[%s][%s][versions > %s]found=%s", getIdentifier(), DBLayer.TABLE_DEP_HISTORY, versions, r == null ? 0 : r.size()));
         getDbLayer().getSession().commit();
+
+        LOGGER.info(String.format("[%s][%s][versions > %s]found=%s", getIdentifier(), DBLayer.TABLE_DEP_HISTORY, versions, r == null ? 0 : r.size()));
         return r;
     }
 

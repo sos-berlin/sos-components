@@ -205,13 +205,15 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         hql.append(DBLayer.DBITEM_HISTORY_ORDER).append(" ");
         hql.append("where startTime < :startTime ");
         hql.append("and parentId=0");
+
         Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameter("startTime", datetime.getDatetime());
         query.setMaxResults(getBatchSize());
         List<Long> r = getDbLayer().getSession().getResultList(query);
+        getDbLayer().getSession().commit();
+
         LOGGER.info(String.format("[%s][%s][%s][main]found=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.TABLE_HISTORY_ORDERS, r
                 .size()));
-        getDbLayer().getSession().commit();
         return r;
     }
 
@@ -220,13 +222,15 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         StringBuilder hql = new StringBuilder("select id from ");
         hql.append(DBLayer.DBITEM_HISTORY_ORDER).append(" ");
         hql.append("where startTime < :startTime ");
+
         Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameter("startTime", datetime.getDatetime());
         query.setMaxResults(getBatchSize());
         List<Long> r = getDbLayer().getSession().getResultList(query);
+        getDbLayer().getSession().commit();
+
         LOGGER.info(String.format("[%s][%s][%s]found=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.TABLE_HISTORY_ORDERS, r
                 .size()));
-        getDbLayer().getSession().commit();
         return r;
     }
 
@@ -235,12 +239,14 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         StringBuilder hql = new StringBuilder("select historyOrderMainParentId ");
         hql.append("from ").append(DBLayer.DBITEM_HISTORY_TEMP_LOG).append(" ");
         hql.append("group by historyOrderMainParentId");
+
         Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setMaxResults(SOSHibernate.LIMIT_IN_CLAUSE);
         List<Long> r = getDbLayer().getSession().getResultList(query);
+        getDbLayer().getSession().commit();
+
         LOGGER.info(String.format("[%s][%s][%s]found=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.TABLE_HISTORY_TEMP_LOGS, r
                 .size()));
-        getDbLayer().getSession().commit();
         return r;
     }
 
@@ -249,13 +255,15 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         StringBuilder hql = new StringBuilder("select id from ");
         hql.append(DBLayer.DBITEM_HISTORY_ORDER).append(" ");
         hql.append("where parentId in (:mainOrderIds)");
+
         Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("mainOrderIds", mainOrderIds);
         query.setMaxResults(getBatchSize());
         List<Long> r = getDbLayer().getSession().getResultList(query);
+        getDbLayer().getSession().commit();
+
         LOGGER.info(String.format("[%s][%s][%s][childs]found=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.TABLE_HISTORY_ORDERS, r
                 .size()));
-        getDbLayer().getSession().commit();
         return r;
     }
 
@@ -272,9 +280,9 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("orderIds", orderIds);
         int r = getDbLayer().getSession().executeUpdate(query);
-        log.append("[").append(DBLayer.TABLE_HISTORY_ORDER_STATES).append("=").append(r).append("]");
         getDbLayer().getSession().commit();
-
+        log.append("[").append(DBLayer.TABLE_HISTORY_ORDER_STATES).append("=").append(r).append("]");
+        
         if (isStopped()) {
             LOGGER.info(log.toString());
             return false;
@@ -287,9 +295,9 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("orderIds", orderIds);
         r = getDbLayer().getSession().executeUpdate(query);
-        log.append("[").append(DBLayer.TABLE_HISTORY_ORDER_STEPS).append("=").append(r).append("]");
         getDbLayer().getSession().commit();
-
+        log.append("[").append(DBLayer.TABLE_HISTORY_ORDER_STEPS).append("=").append(r).append("]");
+        
         if (isStopped()) {
             LOGGER.info(log.toString());
             return false;
@@ -303,9 +311,9 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             query = getDbLayer().getSession().createQuery(hql.toString());
             query.setParameterList("orderIds", orderIds);
             r = getDbLayer().getSession().executeUpdate(query);
-            log.append("[").append(DBLayer.TABLE_HISTORY_LOGS).append("=").append(r).append("]");
             getDbLayer().getSession().commit();
-
+            log.append("[").append(DBLayer.TABLE_HISTORY_LOGS).append("=").append(r).append("]");
+            
             if (isStopped()) {
                 LOGGER.info(log.toString());
                 return false;
@@ -320,9 +328,9 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             query = getDbLayer().getSession().createQuery(hql.toString());
             query.setParameterList("orderIds", orderIds);
             r = getDbLayer().getSession().executeUpdate(query);
-            log.append("[").append(DBLayer.TABLE_HISTORY_TEMP_LOGS).append("=").append(r).append("]");
             getDbLayer().getSession().commit();
-
+            log.append("[").append(DBLayer.TABLE_HISTORY_TEMP_LOGS).append("=").append(r).append("]");
+            
             if (isStopped()) {
                 LOGGER.info(log.toString());
                 return false;
@@ -336,9 +344,9 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("orderIds", orderIds);
         r = getDbLayer().getSession().executeUpdate(query);
-        log.append("[").append(DBLayer.TABLE_HISTORY_ORDERS).append("=").append(r).append("]");
         getDbLayer().getSession().commit();
-
+        log.append("[").append(DBLayer.TABLE_HISTORY_ORDERS).append("=").append(r).append("]");
+        
         LOGGER.info(log.toString());
         return true;
     }
