@@ -458,7 +458,7 @@ public class OrdersHelper {
     public static CompletableFuture<Either<Exception, Void>> createAuditLogFromJOrders(JocAuditLog jocAuditLog, Collection<JOrder> jOrders,
             String controllerId, ModifyOrders modifyOrders) {
         return CompletableFuture.supplyAsync(() -> {
-            if (jOrders != null) {
+            if (jOrders != null && !jOrders.isEmpty()) {
                 try {
                     final SOSHibernateSession connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntryForOrders");
                     try {

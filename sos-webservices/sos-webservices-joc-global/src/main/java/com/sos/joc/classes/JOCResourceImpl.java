@@ -296,6 +296,9 @@ public class JOCResourceImpl {
         String bodyStr = "-";
         if (body != null) {
             bodyStr = new String(body, StandardCharsets.UTF_8);
+            if (bodyStr.length() > 4096) {
+                bodyStr = bodyStr.substring(0, 4093) + "...";
+            }
         }
         jocAuditLog = new JocAuditLog(user, request);
         LOGGER.debug("REQUEST: " + request + ", PARAMS: " + bodyStr);

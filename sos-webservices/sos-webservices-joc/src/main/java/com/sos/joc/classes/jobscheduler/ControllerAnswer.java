@@ -101,7 +101,9 @@ public class ControllerAnswer extends Controller {
                     break;
                 }
 	        }
-			if (clusterState != null && clusterState == ClusterType.PREPARED_TO_BE_COUPLED) {
+			if (clusterState == null) {
+			    setComponentState(States.getComponentState(ComponentStateText.unknown));
+			} else if (!isActive && clusterState == ClusterType.PREPARED_TO_BE_COUPLED) {
 			    setComponentState(States.getComponentState(ComponentStateText.inoperable));
 			} else {
 			    setComponentState(States.getComponentState(ComponentStateText.operational));

@@ -136,8 +136,6 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 }
                 return cycle;
             }).collect(Collectors.toMap(CyclicOrderInfos::getFirstOrderId, Function.identity()));
-//            cycledOrderStream = cycledOrderStream.collect(Collectors.groupingBy(o -> o.id().string().substring(0, 24))).values().stream().map(l -> l
-//                    .stream().min(Comparator.comparing(o -> o.id().string()))).filter(Optional::isPresent).map(Optional::get);
 
             // merge cycledOrders to orderStream and grouping by workflow name for folder permissions
             Map<String, List<JOrder>> groupedByWorkflowPath = Stream.concat(orderStream, cycledOrderStream).collect(Collectors.groupingBy(o -> o
@@ -220,12 +218,16 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     }
                     either = Either.right(order);
                 } catch (Exception e) {
+                    if (getJocError() != null && !getJocError().getMetaInfo().isEmpty()) {
+                        LOGGER.info(getJocError().printMetaInfo());
+                        getJocError().clearMetaInfo();
+                    }
                     either = Either.left(e);
-                    LOGGER.warn(e.toString());
+                    LOGGER.error(String.format("[%s] %s", o.id().string(), e.toString()));
                 }
                 return either;
             });
-            // TODO consider Either::isLeft, maybe at least LOGGER usage
+            // TODO something with Either::isLeft?
             entity.setOrders(ordersV.filter(Either::isRight).map(Either::get).filter(Objects::nonNull).sorted(Comparator.comparingLong(
                     o -> o.getScheduledFor() == null ? surveyDateMillis : o.getScheduledFor())).collect(Collectors.toList()));
             entity.setDeliveryDate(Date.from(Instant.now()));

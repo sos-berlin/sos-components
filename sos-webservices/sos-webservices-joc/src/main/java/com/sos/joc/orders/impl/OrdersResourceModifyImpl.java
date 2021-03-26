@@ -2,11 +2,12 @@ package com.sos.joc.orders.impl;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -21,7 +22,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.controller.model.order.OrderModeType;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -34,6 +34,8 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
+import com.sos.joc.exceptions.ControllerObjectNotExistException;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.order.CancelDailyPlanOrders;
 import com.sos.joc.model.order.ModifyOrders;
@@ -222,7 +224,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             orderStream = currentState.ordersBy(workflowFilter);
         }
 
-        final Set<JOrder> jOrders = orderStream.collect(Collectors.toSet());
+        final Set<JOrder> jOrders = getJOrders(action, orderStream, controllerId);
         if (!jOrders.isEmpty() || Action.CANCEL_DAILYPLAN.equals(action)) {
             command(currentState, action, modifyOrders, jOrders.stream().map(JOrder::id).collect(Collectors.toSet())).thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
@@ -231,7 +233,37 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                             .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
                 }
             });
+        } else {
+            throwControllerObjectNotExistException(action);
         }
+    }
+    
+    private void throwControllerObjectNotExistException(Action action) throws ControllerObjectNotExistException {
+        switch (action) {
+        case RESUME:
+            throw new ControllerObjectNotExistException("No suspended orders found.");
+        default:
+            throw new ControllerObjectNotExistException("No orders found.");
+        }
+        
+    }
+
+    private Set<JOrder> getJOrders(Action action, Stream<JOrder> orderStream, String controllerId) {
+        if (Action.RESUME.equals(action)) {
+            Map<Boolean, Set<JOrder>> suspendedOrders = orderStream.collect(Collectors.groupingBy(o -> o.asScala().isSuspended(), Collectors
+                    .toSet()));
+            if (suspendedOrders.containsKey(Boolean.FALSE)) {
+                String msg = suspendedOrders.get(Boolean.FALSE).stream().map(o -> o.id().string()).collect(Collectors.joining("', '", "Orders '",
+                        "' not suspended"));
+                //ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
+                LOGGER.info(getJocError().printMetaInfo());
+                LOGGER.warn(msg);
+                getJocError().clearMetaInfo();
+                
+            }
+            return suspendedOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
+        }
+        return orderStream.collect(Collectors.toSet());
     }
 
     private static Stream<JOrder> cyclicFreshOrderIds(Collection<String> orderIds, JControllerState currentState) {
@@ -241,9 +273,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 Optional::isPresent).map(Optional::get).filter(o -> Order.Fresh.class.isInstance(o.asScala().state())).map(o -> o.id().string()
                         .substring(0, 24)).collect(Collectors.toSet());
         if (!freshCyclicIds.isEmpty()) {
-            Function1<Order<Order.State>, Object> cyclicOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class),
-                    o -> freshCyclicIds.contains(o.id().string().substring(0, 24)));
-            cyclicOrderStream = currentState.ordersBy(cyclicOrderFilter);
+            cyclicOrderStream = currentState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class), o -> freshCyclicIds
+                    .contains(o.id().string().substring(0, 24))));
         }
         return cyclicOrderStream;
     }
@@ -252,26 +283,35 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
         switch (action) {
         case CANCEL_DAILYPLAN:
-            Set<String> orders = modifyOrders.getOrderIds();
-            orders.removeAll(oIds.stream().map(OrderId::string).collect(Collectors.toSet()));
-            try {
-                updateDailyPlan(orders);
-            } catch (SOSHibernateException e1) {
-                ProblemHelper.postExceptionEventIfExist(Either.left(e1), getAccessToken(), getJocError(), modifyOrders.getControllerId());
+            
+            if (modifyOrders.getOrderIds() != null) {
+                Set<String> orders = modifyOrders.getOrderIds().stream().filter(s -> !s.matches(".*#(T|F)[0-9]+-.*")).collect(Collectors.toSet());
+                orders.removeAll(oIds.stream().map(OrderId::string).collect(Collectors.toSet()));
+                try {
+                    updateDailyPlan(orders);
+                    // TODO @Uwe auditLog stuff for these orders
+                } catch (SOSHibernateException e1) {
+                    // TODO @Uwe Why catch with ProblemHelper.postExceptionEventIfExist instead of throw Exception
+                    ProblemHelper.postExceptionEventIfExist(Either.left(e1), getAccessToken(), getJocError(), modifyOrders.getControllerId());
+                }
             }
             
-            return OrdersHelper.cancelOrders(modifyOrders, oIds).thenApply(either -> {
-                if (either.isRight()) {
-                    try {
-                        // only for non-temporary orders
-                        LOGGER.debug("Cancel orders. Calling updateDailyPlan");
-                        updateDailyPlan(oIds.stream().map(OrderId::string).filter(s -> !s.matches(".*#T[0-9]+-.*")).collect(Collectors.toList()));
-                    } catch (Exception e) {
-                        ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), modifyOrders.getControllerId());
+            if (oIds.isEmpty()) {
+                return CompletableFuture.supplyAsync(() -> Either.right(null));
+            } else {
+                return OrdersHelper.cancelOrders(modifyOrders, oIds).thenApply(either -> {
+                    if (either.isRight()) {
+                        try {
+                            // only for non-temporary and non-file orders
+                            LOGGER.debug("Cancel orders. Calling updateDailyPlan");
+                            updateDailyPlan(oIds.stream().map(OrderId::string).filter(s -> !s.matches(".*#(T|F)[0-9]+-.*")).collect(Collectors.toSet()));
+                        } catch (Exception e) {
+                            ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), modifyOrders.getControllerId());
+                        }
                     }
-                }
-                return either;
-            });
+                    return either;
+                });
+            }
         case CANCEL:
             return OrdersHelper.cancelOrders(modifyOrders, oIds).thenApply(either -> {
                 // TODO This update must be removed when dailyplan service receives events for order state changes
@@ -332,7 +372,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             } finally {
                 Globals.disconnect(sosHibernateSession);
             }
-        }else {
+        } else {
             LOGGER.debug("No orderIds to be updated in daily plan");
         }
     }

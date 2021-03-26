@@ -93,6 +93,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
                 s.setState(States.getConnectionState(ConnectionStateText.unknown));
                 return s;
             }).collect(Collectors.toList());
+            
             ClusterType clusterType = getClusterType(controllers);
             entity.setClusterState(States.getClusterState(clusterType));
             entity.setControllers(controllers.stream().map(Controller.class::cast).collect(Collectors.toList()));
@@ -310,7 +311,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
                         masters.get(otherIndex).setClusterNodeState(States.getClusterNodeState(true, true));
                     }
                     if (j.getClusterState() == ClusterType.PREPARED_TO_BE_COUPLED) {
-                        masters.get(otherIndex).setComponentState(States.getComponentState(ComponentStateText.inoperable));
+                        //masters.get(otherIndex).setComponentState(States.getComponentState(ComponentStateText.inoperable));
                     }
                     if (j.getClusterState() == ClusterType.COUPLED) {
                         masters.get(otherIndex).setIsCoupled(true);

@@ -76,6 +76,7 @@ public class ProblemHelper {
         if (either == null || either.isLeft()) {
             if (err != null && !err.getMetaInfo().isEmpty()) {
                 LOGGER.info(err.printMetaInfo());
+                err.clearMetaInfo();
             }
             if (either == null) {
                 if (accessToken != null && !accessToken.isEmpty()) {
@@ -96,6 +97,7 @@ public class ProblemHelper {
         if (either == null || either.isLeft()) {
             if (err != null && !err.getMetaInfo().isEmpty()) {
                 LOGGER.info(err.printMetaInfo());
+                err.clearMetaInfo();
             }
             if (either == null) {
                 if (accessToken != null && !accessToken.isEmpty()) {
