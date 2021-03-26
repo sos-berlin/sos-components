@@ -31,8 +31,8 @@ public class CleanupServiceConfiguration {
     private Age orderHistoryAge;
     private Age orderHistoryLogsAge;
     private Age dailyPlanHistoryAge;
+    private Age fileTransferHistoryAge;
     private Age auditLogAge;
-    private Age yadeAge;
     private int deploymentHistoryVersions;
     private int batchSize;
 
@@ -54,8 +54,8 @@ public class CleanupServiceConfiguration {
             }
         }
         this.dailyPlanHistoryAge = new Age(configuration.getDailyPlanHistoryAge());
+        this.fileTransferHistoryAge = new Age(configuration.getFileTransferHistoryAge());
         this.auditLogAge = new Age(configuration.getAuditLogAge());
-        this.yadeAge = new Age(configuration.getYadeAge());
         try {
             this.deploymentHistoryVersions = Integer.parseInt(configuration.getDeploymentHistoryVersions().getValue());
         } catch (Throwable e) {
@@ -96,8 +96,8 @@ public class CleanupServiceConfiguration {
         return auditLogAge;
     }
 
-    public Age getYadeAge() {
-        return yadeAge;
+    public Age getFileTransferHistoryAge() {
+        return fileTransferHistoryAge;
     }
 
     public int getDeploymentHistoryVersions() {
@@ -144,7 +144,8 @@ public class CleanupServiceConfiguration {
         sb.append(",dailyPlanHistory=[configured=").append(dailyPlanHistoryAge.getConfigured()).append(",minutes=").append(dailyPlanHistoryAge
                 .getMinutes()).append("]");
         sb.append(",auditLogAge=[configured=").append(auditLogAge.getConfigured()).append(",minutes=").append(auditLogAge.getMinutes()).append("]");
-        sb.append(",yadeAge=[configured=").append(yadeAge.getConfigured()).append(",minutes=").append(yadeAge.getMinutes()).append("]");
+        sb.append(",fileTransferHistoryAge=[configured=").append(fileTransferHistoryAge.getConfigured()).append(",minutes=").append(
+                fileTransferHistoryAge.getMinutes()).append("]");
         sb.append(",deploymentHistoryVersions=").append(deploymentHistoryVersions);
         sb.append("]");
         sb.append("]");

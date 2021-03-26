@@ -40,7 +40,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
 
     private final String MANUAL_TASK_IDENTIFIER_DEPLOYMENT = "deployment";
     private final String MANUAL_TASK_IDENTIFIER_AUDITLOG = "auditlog";
-    private final String MANUAL_TASK_IDENTIFIER_YADE = "yade";
+    private final String MANUAL_TASK_IDENTIFIER_YADE = "file_transfer";
     private final CleanupServiceSchedule schedule;
     private final String identifier;
     private final String logIdentifier;
@@ -160,8 +160,8 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
 
                         } else if (manualTask.getIdentifier().equals(MANUAL_TASK_IDENTIFIER_YADE)) {
                             List<TaskDateTime> datetimes = new ArrayList<TaskDateTime>();
-                            TaskDateTime datetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getYadeAge(), cleanupSchedule
-                                    .getFirstStart());
+                            TaskDateTime datetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getFileTransferHistoryAge(),
+                                    cleanupSchedule.getFirstStart());
                             if (datetime.getDatetime() == null) {
                                 LOGGER.info(String.format("[%s][%s][skip]age=0", logIdentifier, manualTask.getIdentifier()));
                                 LOGGER.info(String.format("[%s][%s]completed", logIdentifier, manualTask.getIdentifier()));

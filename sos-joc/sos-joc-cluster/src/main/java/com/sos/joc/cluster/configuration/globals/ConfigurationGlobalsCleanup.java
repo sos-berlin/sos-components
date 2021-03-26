@@ -16,9 +16,10 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
 
     private ConfigurationEntry orderHistoryAge = new ConfigurationEntry("order_history_age", "90d", GlobalSettingsSectionValueType.DURATION);
     private ConfigurationEntry orderHistoryLogsAge = new ConfigurationEntry("order_history_logs_age", "90d", GlobalSettingsSectionValueType.DURATION);
-    private ConfigurationEntry auditLogAge = new ConfigurationEntry("audit_log_age", "90d", GlobalSettingsSectionValueType.DURATION);
-    private ConfigurationEntry yadeAge = new ConfigurationEntry("yade_age", "90d", GlobalSettingsSectionValueType.DURATION);
+    private ConfigurationEntry fileTransferHistoryAge = new ConfigurationEntry("file_transfer_history_age", "90d",
+            GlobalSettingsSectionValueType.DURATION);
     private ConfigurationEntry dailyPlanHistoryAge = new ConfigurationEntry("daily_plan_history_age", "30d", GlobalSettingsSectionValueType.DURATION);
+    private ConfigurationEntry auditLogAge = new ConfigurationEntry("audit_log_age", "90d", GlobalSettingsSectionValueType.DURATION);
     private ConfigurationEntry deploymentHistoryVersions = new ConfigurationEntry("deployment_history_versions", "10",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
 
@@ -32,8 +33,8 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
 
         orderHistoryAge.setOrdering(++index);
         orderHistoryLogsAge.setOrdering(++index);
+        fileTransferHistoryAge.setOrdering(++index);
         auditLogAge.setOrdering(++index);
-        yadeAge.setOrdering(++index);
         dailyPlanHistoryAge.setOrdering(++index);
         deploymentHistoryVersions.setOrdering(++index);
     }
@@ -70,8 +71,8 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
         return auditLogAge;
     }
 
-    public ConfigurationEntry getYadeAge() {
-        return yadeAge;
+    public ConfigurationEntry getFileTransferHistoryAge() {
+        return fileTransferHistoryAge;
     }
 
     public ConfigurationEntry getDailyPlanHistoryAge() {

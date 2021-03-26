@@ -27,11 +27,6 @@ public class CleanupTaskYade extends CleanupTaskModel {
     public JocServiceTaskAnswerState cleanup(List<TaskDateTime> datetimes) throws Exception {
         try {
             TaskDateTime datetime = datetimes.get(0);
-            if (datetime.getDatetime() == null) {
-                LOGGER.info(String.format("[%s][%s]skip", getIdentifier(), datetime.getAge().getConfigured()));
-                return JocServiceTaskAnswerState.COMPLETED;
-            }
-
             LOGGER.info(String.format("[%s][%s][%s]start cleanup", getIdentifier(), datetime.getAge().getConfigured(), datetime.getZonedDatetime()));
 
             boolean run = true;
