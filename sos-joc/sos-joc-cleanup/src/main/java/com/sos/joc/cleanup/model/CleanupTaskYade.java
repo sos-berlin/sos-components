@@ -27,22 +27,27 @@ public class CleanupTaskYade extends CleanupTaskModel {
     public JocServiceTaskAnswerState cleanup(List<TaskDateTime> datetimes) throws Exception {
         try {
             TaskDateTime datetime = datetimes.get(0);
+            if (datetime.getDatetime() == null) {
+                LOGGER.info(String.format("[%s][%s]skip", getIdentifier(), datetime.getAge().getConfigured()));
+                return JocServiceTaskAnswerState.COMPLETED;
+            }
+
             LOGGER.info(String.format("[%s][%s][%s]start cleanup", getIdentifier(), datetime.getAge().getConfigured(), datetime.getZonedDatetime()));
 
             boolean run = true;
             while (run) {
                 getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
-                List<Long> r = getIds(datetime);
-                if (r == null || r.size() == 0) {
+                List<Long> ids = getIds(datetime);
+                if (ids == null || ids.size() == 0) {
                     return JocServiceTaskAnswerState.COMPLETED;
                 }
                 if (isStopped()) {
                     return JocServiceTaskAnswerState.UNCOMPLETED;
                 }
 
-                int size = r.size();
+                int size = ids.size();
                 if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
-                    ArrayList<Long> copy = (ArrayList<Long>) r.stream().collect(Collectors.toList());
+                    ArrayList<Long> copy = (ArrayList<Long>) ids.stream().collect(Collectors.toList());
 
                     for (int i = 0; i < size; i += SOSHibernate.LIMIT_IN_CLAUSE) {
                         List<Long> subList;
@@ -55,10 +60,8 @@ public class CleanupTaskYade extends CleanupTaskModel {
                     }
 
                 } else {
-                    cleanupEntries(datetime, r);
+                    cleanupEntries(datetime, ids);
                 }
-
-                cleanupEntries(datetime, r);
                 getDbLayer().close();
             }
         } catch (Throwable e) {

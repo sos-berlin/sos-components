@@ -32,17 +32,17 @@ public class CleanupTaskAuditLog extends CleanupTaskModel {
             boolean run = true;
             while (run) {
                 getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
-                List<Long> r = getIds(datetime);
-                if (r == null || r.size() == 0) {
+                List<Long> ids = getIds(datetime);
+                if (ids == null || ids.size() == 0) {
                     return JocServiceTaskAnswerState.COMPLETED;
                 }
                 if (isStopped()) {
                     return JocServiceTaskAnswerState.UNCOMPLETED;
                 }
 
-                int size = r.size();
+                int size = ids.size();
                 if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
-                    ArrayList<Long> copy = (ArrayList<Long>) r.stream().collect(Collectors.toList());
+                    ArrayList<Long> copy = (ArrayList<Long>) ids.stream().collect(Collectors.toList());
 
                     for (int i = 0; i < size; i += SOSHibernate.LIMIT_IN_CLAUSE) {
                         List<Long> subList;
@@ -55,10 +55,8 @@ public class CleanupTaskAuditLog extends CleanupTaskModel {
                     }
 
                 } else {
-                    cleanupEntries(datetime, r);
+                    cleanupEntries(datetime, ids);
                 }
-
-                cleanupEntries(datetime, r);
                 getDbLayer().close();
             }
         } catch (Throwable e) {
