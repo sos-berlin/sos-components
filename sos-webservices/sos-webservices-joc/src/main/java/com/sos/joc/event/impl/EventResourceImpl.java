@@ -104,9 +104,13 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
 
             Set<String> lockNames = evt.getEventSnapshots().stream().filter(e -> EventType.LOCK.equals(e.getObjectType())).map(EventSnapshot::getPath)
                     .filter(Objects::nonNull).collect(Collectors.toSet());
+            
+            Set<String> fileOrderSourceNames = evt.getEventSnapshots().stream().filter(e -> EventType.FILEORDERSOURCE.equals(e.getObjectType())).map(
+                    EventSnapshot::getPath).filter(Objects::nonNull).collect(Collectors.toSet());
 
-            Map<String, String> namePathWorkflowMap = null;
-            Map<String, String> namePathLockMap = null;
+            Map<String, String> namePathWorkflowMap = Collections.emptyMap();
+            Map<String, String> namePathLockMap = Collections.emptyMap();
+            Map<String, String> namePathFileOrderSourceMap = Collections.emptyMap();
             try {
                 namePathWorkflowMap = dbCLayer.getNamePathMapping(evt.getControllerId(), workflowNames, DeployType.WORKFLOW.intValue());
             } catch (SOSHibernateException e1) {
@@ -117,11 +121,10 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             } catch (SOSHibernateException e1) {
                 LOGGER.warn(e1.toString());
             }
-            if (namePathWorkflowMap == null) {
-                namePathWorkflowMap = Collections.emptyMap();
-            }
-            if (namePathLockMap == null) {
-                namePathLockMap = Collections.emptyMap();
+            try {
+                namePathFileOrderSourceMap = dbCLayer.getNamePathMapping(evt.getControllerId(), fileOrderSourceNames, DeployType.FILEORDERSOURCE.intValue());
+            } catch (SOSHibernateException e1) {
+                LOGGER.warn(e1.toString());
             }
             for (EventSnapshot e : evt.getEventSnapshots()) {
                 if (e.getWorkflow() != null) {
@@ -134,6 +137,8 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
                     e.setPath(namePathWorkflowMap.getOrDefault(e.getPath(), e.getPath()));
                 } else if (EventType.LOCK.equals(e.getObjectType()) && e.getPath() != null) {
                     e.setPath(namePathLockMap.getOrDefault(e.getPath(), e.getPath()));
+                } else if (EventType.FILEORDERSOURCE.equals(e.getObjectType()) && e.getPath() != null) {
+                    e.setPath(namePathFileOrderSourceMap.getOrDefault(e.getPath(), e.getPath()));
                 }
             }
             return evt;
