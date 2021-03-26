@@ -171,6 +171,22 @@ public class OrdersHelper {
         return groupedState;
     }
 
+    public static OrderStateText getState(JOrder order) {
+        Order<Order.State> o = order.asScala();
+        if (o.isSuspended()) {
+            return OrderStateText.SUSPENDED;
+        }
+        return getGroupedState(o.state().getClass());
+    }
+    
+    public static boolean isSuspendedOrFailed(JOrder order) {
+        Order<Order.State> o = order.asScala();
+        if (o.isSuspended()) {
+            return true;
+        }
+        return OrderStateText.FAILED.equals(getGroupedState(o.state().getClass()));
+    }
+
     public static OrderState getState(String state, Boolean isSuspended) {
         OrderState oState = new OrderState();
         if (isSuspended == Boolean.TRUE) {
@@ -181,7 +197,7 @@ public class OrdersHelper {
         oState.setSeverity(severityByGroupedStates.get(groupedState));
         return oState;
     }
-
+    
     public static OrderState getState(OrderStateText st) {
         OrderState state = new OrderState();
         state.set_text(st);

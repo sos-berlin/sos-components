@@ -18,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -91,6 +90,9 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
     public static Event processAfter(Event evt) {
         SOSHibernateSession connection = null;
         try {
+            if (EventServiceFactory.isClosed.get()) {
+                return evt;
+            }
             if (evt.getEventSnapshots() == null || evt.getEventSnapshots().isEmpty()) {
                 return evt;
             }
@@ -113,17 +115,17 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             Map<String, String> namePathFileOrderSourceMap = Collections.emptyMap();
             try {
                 namePathWorkflowMap = dbCLayer.getNamePathMapping(evt.getControllerId(), workflowNames, DeployType.WORKFLOW.intValue());
-            } catch (SOSHibernateException e1) {
+            } catch (Exception e1) {
                 LOGGER.warn(e1.toString());
             }
             try {
                 namePathLockMap = dbCLayer.getNamePathMapping(evt.getControllerId(), lockNames, DeployType.LOCK.intValue());
-            } catch (SOSHibernateException e1) {
+            } catch (Exception e1) {
                 LOGGER.warn(e1.toString());
             }
             try {
                 namePathFileOrderSourceMap = dbCLayer.getNamePathMapping(evt.getControllerId(), fileOrderSourceNames, DeployType.FILEORDERSOURCE.intValue());
-            } catch (SOSHibernateException e1) {
+            } catch (Exception e1) {
                 LOGGER.warn(e1.toString());
             }
             for (EventSnapshot e : evt.getEventSnapshots()) {

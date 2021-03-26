@@ -257,7 +257,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     private void throwControllerObjectNotExistException(Action action) throws ControllerObjectNotExistException {
         switch (action) {
         case RESUME:
-            throw new ControllerObjectNotExistException("No suspended orders found.");
+            throw new ControllerObjectNotExistException("No failed or suspended orders found.");
         default:
             throw new ControllerObjectNotExistException("No orders found.");
         }
@@ -266,18 +266,18 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
     private Set<JOrder> getJOrders(Action action, Stream<JOrder> orderStream, String controllerId) {
         if (Action.RESUME.equals(action)) {
-            Map<Boolean, Set<JOrder>> suspendedOrders = orderStream.collect(Collectors.groupingBy(o -> o.asScala().isSuspended(), Collectors
-                    .toSet()));
-            if (suspendedOrders.containsKey(Boolean.FALSE)) {
-                String msg = suspendedOrders.get(Boolean.FALSE).stream().map(o -> o.id().string()).collect(Collectors.joining("', '", "Orders '",
-                        "' not suspended"));
-                //ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
+            Map<Boolean, Set<JOrder>> suspendedOrFailedOrders = orderStream.collect(Collectors.groupingBy(o -> OrdersHelper.isSuspendedOrFailed(o),
+                    Collectors.toSet()));
+            if (suspendedOrFailedOrders.containsKey(Boolean.FALSE)) {
+                String msg = suspendedOrFailedOrders.get(Boolean.FALSE).stream().map(o -> o.id().string()).collect(Collectors.joining("', '",
+                        "Orders '", "' not failed or suspended"));
+                // ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
                 LOGGER.info(getJocError().printMetaInfo());
                 LOGGER.warn(msg);
                 getJocError().clearMetaInfo();
-                
+
             }
-            return suspendedOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
+            return suspendedOrFailedOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
         }
         return orderStream.collect(Collectors.toSet());
     }
