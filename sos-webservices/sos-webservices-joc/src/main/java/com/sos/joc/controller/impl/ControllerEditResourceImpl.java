@@ -84,6 +84,10 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             
             checkRequiredComment(body.getAuditLog());
             String controllerId = body.getControllerId();
+            if (controllerId == null) {
+                controllerId = ""; 
+            }
+            
             if (body.getAgents() == null) {
                 body.setAgents(Collections.emptyList());
             }
@@ -416,6 +420,9 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             TestConnect jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, TestConnect.class);
             
             String controllerId = jobSchedulerBody.getControllerId();
+            if (controllerId == null) {
+                controllerId = ""; 
+            }
             
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getPermissonsJocCockpit(controllerId, accessToken).getJS7Controller()
                     .getView().isStatus());
@@ -423,8 +430,6 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 return jocDefaultResponse;
             }
 
-            checkRequiredParameter("url", jobSchedulerBody.getUrl());
-            
             Controller jobScheduler = testConnection(jobSchedulerBody.getUrl(), controllerId, null);
             
             JobScheduler200 entity = new JobScheduler200();
