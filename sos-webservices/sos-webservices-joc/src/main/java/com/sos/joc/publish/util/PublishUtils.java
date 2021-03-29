@@ -151,7 +151,9 @@ import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.item.JUpdateItemOperation;
 import js7.data_for_java.lock.JLock;
 import js7.data_for_java.orderwatch.JFileWatch;
+import net.bytebuddy.asm.Advice.Return;
 import reactor.core.publisher.Flux;
+import shapeless.newtype;
 
 public abstract class PublishUtils {
 
@@ -716,9 +718,13 @@ public abstract class PublishUtils {
                             return null;
                         }
                     }).filter(Objects::nonNull).collect(Collectors.toSet()));
-            updateItemOperationsVersioned.addAll(drafts.keySet().stream().filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(
-                    item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.of(item.getContent(), SOSKeyConstants.PGP_ALGORITHM_NAME, drafts
-                            .get(item).getSignature()))).collect(Collectors.toSet()));
+            updateItemOperationsVersioned.addAll(drafts.keySet().stream()
+            		.filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(item -> {
+            			LOGGER.debug("JSON send to controller: ");
+            			LOGGER.debug(item.getContent());
+            			return JUpdateItemOperation.addOrChangeVersioned(
+            					SignedString.of(item.getContent(), SOSKeyConstants.PGP_ALGORITHM_NAME, drafts.get(item).getSignature()));
+            		}).collect(Collectors.toSet()));
         }
         if (alreadyDeployed != null) {
             updateItemOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() != ConfigurationType.WORKFLOW
@@ -757,8 +763,12 @@ public abstract class PublishUtils {
                         }
                     }).filter(Objects::nonNull).collect(Collectors.toSet()));
             updateItemOperationsVersioned.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
-                    .map(item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.of(item.getContent(), SOSKeyConstants.PGP_ALGORITHM_NAME,
-                            alreadyDeployed.get(item).getSignature()))).collect(Collectors.toSet()));
+                    .map(item -> { 
+            			LOGGER.debug("JSON send to controller: ");
+            			LOGGER.debug(item.getContent());
+                    	return JUpdateItemOperation.addOrChangeVersioned(SignedString.of(item.getContent(), SOSKeyConstants.PGP_ALGORITHM_NAME,
+                            alreadyDeployed.get(item).getSignature()));
+                    }).collect(Collectors.toSet()));
         }
         return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemOperationsSimple), Flux.just(JUpdateItemOperation
                 .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemOperationsVersioned)));
@@ -771,8 +781,11 @@ public abstract class PublishUtils {
         Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
         updateItemsOperationsVersioned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.WORKFLOW)).map(item -> {
             try {
-                return JUpdateItemOperation.addOrChangeVersioned(SignedString.of(om.writeValueAsString(item.getContent()),
-                        SOSKeyConstants.PGP_ALGORITHM_NAME, drafts.get(item).getSignature()));
+    			LOGGER.debug("JSON send to controller: ");
+    			String json = om.writeValueAsString(item.getContent());
+    			LOGGER.debug(json);
+                return JUpdateItemOperation.addOrChangeVersioned(
+                		SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, drafts.get(item).getSignature()));
             } catch (JsonProcessingException e1) {
                 throw new JocDeployException(e1);
             }
@@ -814,8 +827,11 @@ public abstract class PublishUtils {
         updateItemsOperationsVersioned.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
                 item -> {
                     try {
-                        return JUpdateItemOperation.addOrChangeVersioned(SignedString.of(om.writeValueAsString(item.getContent()),
-                                SOSKeyConstants.PGP_ALGORITHM_NAME, drafts.get(item).getSignature()));
+            			LOGGER.debug("JSON send to controller: ");
+            			String json = om.writeValueAsString(item.getContent());
+            			LOGGER.debug(json);
+                        return JUpdateItemOperation.addOrChangeVersioned(
+                        		SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, drafts.get(item).getSignature()));
                     } catch (JsonProcessingException e1) {
                         throw new JocDeployException(e1);
                     }
@@ -862,11 +878,12 @@ public abstract class PublishUtils {
             String controllerId) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         Set<JUpdateItemOperation> updateItemsOperationsVersioned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
-        ;
         updateItemsOperationsVersioned.addAll(alreadyDeployed.stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(item -> {
             try {
-                return JUpdateItemOperation.addOrChangeVersioned(SignedString.of(item.getContent(), SOSKeyConstants.PGP_ALGORITHM_NAME, item
-                        .getSignedContent()));
+    			LOGGER.debug("JSON send to controller: ");
+    			LOGGER.debug(item.getContent());
+                return JUpdateItemOperation.addOrChangeVersioned(
+                		SignedString.of(item.getContent(), SOSKeyConstants.PGP_ALGORITHM_NAME, item.getSignedContent()));
             } catch (Exception e1) {
                 throw new JocDeployException(e1);
             }
@@ -916,9 +933,14 @@ public abstract class PublishUtils {
         Set<JUpdateItemOperation> updateRepoOperationsVersioned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateRepoOperationsSimple = new HashSet<JUpdateItemOperation>();
         if (drafts != null) {
-            updateRepoOperationsVersioned.addAll(drafts.keySet().stream().filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(
-                    item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(item.getContent(), drafts.get(item)
-                            .getSignature(), signatureAlgorithm, certificate))).collect(Collectors.toSet()));
+            updateRepoOperationsVersioned.addAll(drafts.keySet().stream()
+            		.filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW))
+            		.map(item -> {
+            			LOGGER.debug("JSON send to controller: ");
+            			LOGGER.debug(item.getContent());
+            			return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(item.getContent(), drafts.get(item)
+                                .getSignature(), signatureAlgorithm, certificate));
+            		}).collect(Collectors.toSet()));
             updateRepoOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(
                     item -> {
                         switch (item.getTypeAsEnum()) {
@@ -956,9 +978,14 @@ public abstract class PublishUtils {
                     }).collect(Collectors.toSet()));
         }
         if (alreadyDeployed != null) {
-            updateRepoOperationsVersioned.addAll(alreadyDeployed.entrySet().stream().filter(item -> item.getKey().getType() == DeployType.WORKFLOW
-                    .intValue()).map(item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(item.getKey().getContent(),
-                            item.getValue().getSignature(), signatureAlgorithm, certificate))).collect(Collectors.toSet()));
+            updateRepoOperationsVersioned.addAll(alreadyDeployed.entrySet().stream()
+            		.filter(item -> item.getKey().getType() == DeployType.WORKFLOW.intValue())
+            		.map(item -> { 
+            			LOGGER.debug("JSON send to controller: ");
+            			LOGGER.debug(item.getKey().getContent());
+            			return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(item.getKey().getContent(),
+                            item.getValue().getSignature(), signatureAlgorithm, certificate));
+            			}).collect(Collectors.toSet()));
             updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
                     item -> {
                         switch (DeployType.fromValue(item.getType())) {
@@ -1006,9 +1033,15 @@ public abstract class PublishUtils {
         Set<JUpdateItemOperation> updateRepoOperationsVersioned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateRepoOperationsSimple = new HashSet<JUpdateItemOperation>();
         if (drafts != null) {
-            updateRepoOperationsVersioned.addAll(drafts.keySet().stream().filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(
-                    item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithSignedId(item.getContent(), drafts.get(item)
-                            .getSignature(), signatureAlgorithm, SignerId.of(signerDN)))).collect(Collectors.toSet()));
+            updateRepoOperationsVersioned.addAll(drafts.keySet().stream()
+            		.filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW))
+            		.map(item -> {
+            			LOGGER.debug("JSON send to controller: ");
+            			LOGGER.debug(item.getContent());
+            			return JUpdateItemOperation.addOrChangeVersioned(
+            					SignedString.x509WithSignedId(item.getContent(), drafts.get(item).getSignature(), signatureAlgorithm, 
+            							SignerId.of(signerDN)));
+            		}).collect(Collectors.toSet()));
             updateRepoOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(
                     item -> {
                         switch (item.getTypeAsEnum()) {
@@ -1047,9 +1080,15 @@ public abstract class PublishUtils {
                     }).collect(Collectors.toSet()));
         }
         if (alreadyDeployed != null) {
-            updateRepoOperationsVersioned.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
-                    .map(item -> JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithSignedId(item.getContent(), alreadyDeployed.get(item)
-                            .getSignature(), signatureAlgorithm, SignerId.of(signerDN)))).collect(Collectors.toSet()));
+            updateRepoOperationsVersioned.addAll(alreadyDeployed.keySet().stream()
+            		.filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
+            		.map(item -> {
+            			LOGGER.debug("JSON send to controller: ");
+            			LOGGER.debug(item.getContent());
+            			return JUpdateItemOperation.addOrChangeVersioned(
+            					SignedString.x509WithSignedId(item.getContent(), alreadyDeployed.get(item).getSignature(), signatureAlgorithm, 
+            							SignerId.of(signerDN)));
+        			}).collect(Collectors.toSet()));
             updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
                     item -> {
                         switch (DeployType.fromValue(item.getType())) {
@@ -1100,8 +1139,11 @@ public abstract class PublishUtils {
             updateItemsOperationsVersioned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.WORKFLOW)).map(
                     item -> {
                         try {
-                            return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(om.writeValueAsString(
-                                    ((WorkflowPublish) item).getContent()), drafts.get(item).getSignature(), signatureAlgorithm, certificate));
+                			LOGGER.debug("JSON send to controller: ");
+                			String json = om.writeValueAsString(item.getContent());
+                			LOGGER.debug(json);
+                            return JUpdateItemOperation.addOrChangeVersioned(
+                            		SignedString.x509WithCertificate(json, drafts.get(item).getSignature(), signatureAlgorithm, certificate));
                         } catch (JsonProcessingException e1) {
                             throw new JocDeployException(e1);
                         }
@@ -1145,6 +1187,8 @@ public abstract class PublishUtils {
         if (alreadyDeployed != null) {
             updateItemsOperationsVersioned.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
                     .map(item -> {
+            			LOGGER.debug("JSON send to controller: ");
+            			LOGGER.debug(item.getContent());
                         return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(item.getContent(), alreadyDeployed.get(item)
                                 .getSignature(), signatureAlgorithm, certificate));
                     }).collect(Collectors.toSet()));
@@ -1198,9 +1242,11 @@ public abstract class PublishUtils {
             updateItemsOperationsVersioned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.WORKFLOW)).map(
                     item -> {
                         try {
-                            return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithSignedId(om.writeValueAsString(
-                                    ((WorkflowPublish) item).getContent()), drafts.get(item).getSignature(), signatureAlgorithm, SignerId.of(
-                                            signerDN)));
+                			LOGGER.debug("JSON send to controller: ");
+                			String json = om.writeValueAsString(item.getContent());
+                			LOGGER.debug(json);
+                            return JUpdateItemOperation.addOrChangeVersioned(
+                            		SignedString.x509WithSignedId(json, drafts.get(item).getSignature(), signatureAlgorithm, SignerId.of(signerDN)));
                         } catch (JsonProcessingException e1) {
                             throw new JocDeployException(e1);
                         }
@@ -1244,8 +1290,11 @@ public abstract class PublishUtils {
         if (alreadyDeployed != null) {
             updateItemsOperationsVersioned.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
                     .map(item -> {
-                        return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithSignedId(item.getContent(), alreadyDeployed.get(item)
-                                .getSignature(), signatureAlgorithm, SignerId.of(signerDN)));
+            			LOGGER.debug("JSON send to controller: ");
+            			LOGGER.debug(item.getContent());
+                        return JUpdateItemOperation.addOrChangeVersioned(
+                        		SignedString.x509WithSignedId(item.getContent(), alreadyDeployed.get(item).getSignature(), signatureAlgorithm, 
+                        				SignerId.of(signerDN)));
                     }).collect(Collectors.toSet()));
             updateItemsOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
                     item -> {
@@ -1292,10 +1341,14 @@ public abstract class PublishUtils {
             IOException, InterruptedException, ExecutionException, TimeoutException {
         Set<JUpdateItemOperation> updateItemsOperationsVersioned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
-        updateItemsOperationsVersioned.addAll(alreadyDeployed.stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(item -> {
-            return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(item.getContent(), item.getSignedContent(),
-                    signatureAlgorithm, certificate));
-        }).collect(Collectors.toSet()));
+        updateItemsOperationsVersioned.addAll(alreadyDeployed.stream()
+        		.filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
+        		.map(item -> {
+        			LOGGER.debug("JSON send to controller: ");
+        			LOGGER.debug(item.getContent());
+        			return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(item.getContent(), item.getSignedContent(),
+        					signatureAlgorithm, certificate));
+    			}).collect(Collectors.toSet()));
         updateItemsOperationsSimple.addAll(alreadyDeployed.stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(item -> {
             switch (DeployType.fromValue(item.getType())) {
             case LOCK:
@@ -1339,10 +1392,12 @@ public abstract class PublishUtils {
             IOException, InterruptedException, ExecutionException, TimeoutException {
         Set<JUpdateItemOperation> updateItemsOperationsVersioned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
-        updateItemsOperationsVersioned.addAll(alreadyDeployed.stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(item -> {
-            return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithSignedId(item.getContent(), item.getSignedContent(),
-                    signatureAlgorithm, SignerId.of(signerDN)));
-        }).collect(Collectors.toSet()));
+        updateItemsOperationsVersioned.addAll(alreadyDeployed.stream()
+        		.filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
+        		.map(item -> {
+        			return JUpdateItemOperation.addOrChangeVersioned(
+        					SignedString.x509WithSignedId(item.getContent(), item.getSignedContent(), signatureAlgorithm, SignerId.of(signerDN)));
+    			}).collect(Collectors.toSet()));
         updateItemsOperationsSimple.addAll(alreadyDeployed.stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(item -> {
             switch (DeployType.fromValue(item.getType())) {
             case LOCK:
@@ -3211,7 +3266,7 @@ public abstract class PublishUtils {
     public static Set<ConfigurationObject> getDeployableConfigurationObjectsFromDB(DeployablesFilter filter, DBLayerDeploy dbLayer, String commitId)
             throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException,
             SOSHibernateException {
-        Set<ConfigurationObject> allObjects = new HashSet<ConfigurationObject>();
+        Map<String, ConfigurationObject> allObjectsMap = new HashMap<String, ConfigurationObject>();
         if (filter != null) {
             if (filter.getDeployConfigurations() != null && !filter.getDeployConfigurations().isEmpty()) {
                 List<Configuration> depFolders = filter.getDeployConfigurations().stream().filter(item -> item.getConfiguration().getObjectType()
@@ -3230,7 +3285,7 @@ public abstract class PublishUtils {
                                 if (commitId != null) {
                                     dbLayer.storeCommitIdForLaterUsage(item, commitId);
                                 }
-                                allObjects.add(getConfigurationObjectFromDBItem(item, commitId));
+                                allObjectsMap.put(item.getName(), getConfigurationObjectFromDBItem(item, commitId));
                             });
                 }
             }
@@ -3247,11 +3302,16 @@ public abstract class PublishUtils {
                 }
                 if (!allItems.isEmpty()) {
                     allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER)).forEach(
-                            item -> allObjects.add(getConfigurationObjectFromDBItem(item)));
+                            item -> {
+                            	if(!allObjectsMap.containsKey(item.getName())) {
+                            		allObjectsMap.put(item.getName(), getConfigurationObjectFromDBItem(item));
+                            	}
+                        	});
                 }
             }
         }
-        return allObjects;
+        Set<ConfigurationObject> withoutDuplicates = new HashSet<ConfigurationObject>(allObjectsMap.values());
+        return withoutDuplicates;
     }
 
     public static Set<ConfigurationObject> getReleasableObjectsFromDB(ReleasablesFilter filter, DBLayerDeploy dbLayer)
@@ -3390,6 +3450,7 @@ public abstract class PublishUtils {
             ConfigurationObject configurationObject = new ConfigurationObject();
             // jsObject.setId(item.getId());
             configurationObject.setPath(item.getPath());
+            configurationObject.setName(item.getName());
             configurationObject.setObjectType(ConfigurationType.fromValue(item.getType()));
             switch (configurationObject.getObjectType()) {
             case WORKFLOW:
@@ -3442,7 +3503,30 @@ public abstract class PublishUtils {
                 Schedule schedule = om.readValue(item.getContent(), Schedule.class);
                 configuration.setConfiguration(schedule);
                 break;
-            default:
+            case WORKFLOW:
+                com.sos.inventory.model.workflow.Workflow workflow = 
+                    om.readValue(item.getContent().getBytes(), com.sos.inventory.model.workflow.Workflow.class);
+                configuration.setConfiguration(workflow);
+                break;
+            case JOBCLASS:
+                com.sos.inventory.model.jobclass.JobClass jobClass = 
+                    om.readValue(item.getContent().getBytes(), com.sos.inventory.model.jobclass.JobClass.class);
+                configuration.setConfiguration(jobClass);
+                break;
+            case LOCK:
+                com.sos.inventory.model.lock.Lock lock = 
+                    om.readValue(item.getContent().getBytes(), com.sos.inventory.model.lock.Lock.class);
+                configuration.setConfiguration(lock);
+                break;
+            case JUNCTION:
+                com.sos.inventory.model.junction.Junction junction = 
+                    om.readValue(item.getContent().getBytes(), com.sos.inventory.model.junction.Junction.class);
+                configuration.setConfiguration(junction);
+                break;
+            case FILEORDERSOURCE:
+                com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = 
+                    om.readValue(item.getContent().getBytes(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
+                configuration.setConfiguration(fileOrderSource);
                 break;
             }
             return configuration;

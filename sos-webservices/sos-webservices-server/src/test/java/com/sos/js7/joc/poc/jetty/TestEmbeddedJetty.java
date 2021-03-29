@@ -38,6 +38,7 @@ import com.sos.joc2.poc.jetty.server.JettyServer;
 import com.sos.js7.joc.poc.jetty.server.JettyTestServer;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Ignore
 public class TestEmbeddedJetty {
 
     private JettyTestServer testServer;
