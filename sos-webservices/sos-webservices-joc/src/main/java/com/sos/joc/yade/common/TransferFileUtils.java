@@ -1,9 +1,10 @@
 package com.sos.joc.yade.common;
 
-import java.nio.file.Paths;
-
+import com.sos.commons.util.SOSString;
+import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.db.yade.DBItemYadeFile;
 import com.sos.joc.model.common.Err;
+import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.yade.FileTransferState;
 import com.sos.joc.model.yade.FileTransferStateText;
 import com.sos.joc.model.yade.TransferFile;
@@ -23,10 +24,10 @@ public class TransferFileUtils {
         file.setInterventionTransferId(0L);// file.getInterventionTransferId()
         file.setModificationDate(item.getModificationDate());
         file.setSize(item.getSize());
-        file.setSourceName(Paths.get(item.getSourcePath()).getFileName().toString());
+        file.setSourceName(getBasenameFromPath(item.getSourcePath()));
         file.setSourcePath(item.getSourcePath());
-        if (item.getTargetPath() != null && !item.getTargetPath().isEmpty()) {
-            file.setTargetName(Paths.get(item.getTargetPath()).getFileName().toString());
+        if (!SOSString.isEmpty(item.getTargetPath())) {
+            file.setTargetName(getBasenameFromPath(item.getTargetPath()));
             file.setTargetPath(item.getTargetPath());
         }
         file.setTransferId(item.getTransferId());
@@ -39,74 +40,73 @@ public class TransferFileUtils {
     public static FileTransferState getState(TransferEntryState val) {
         FileTransferState state = new FileTransferState();
         switch (val) {
-        // severity=0
+        // severity=FINISHED
         case TRANSFERRED:
             state.set_text(FileTransferStateText.TRANSFERRED);
-            state.setSeverity(0);
+            state.setSeverity(OrdersHelper.getState(OrderStateText.FINISHED).getSeverity());
             break;
         case COMPRESSED:
             state.set_text(FileTransferStateText.COMPRESSED);
-            state.setSeverity(0);
+            state.setSeverity(OrdersHelper.getState(OrderStateText.FINISHED).getSeverity());
             break;
         case RENAMED:
             state.set_text(FileTransferStateText.RENAMED);
-            state.setSeverity(0);
+            state.setSeverity(OrdersHelper.getState(OrderStateText.FINISHED).getSeverity());
             break;
         case MOVED:
             state.set_text(FileTransferStateText.RENAMED);
-            state.setSeverity(0);
+            state.setSeverity(OrdersHelper.getState(OrderStateText.FINISHED).getSeverity());
             break;
-        // severity=1
         case NOT_OVERWRITTEN:
             state.set_text(FileTransferStateText.NOT_OVERWRITTEN);
-            state.setSeverity(1);
+            state.setSeverity(OrdersHelper.getState(OrderStateText.FINISHED).getSeverity());
             break;
         case IGNORED_DUE_TO_ZEROBYTE_CONSTRAINT:
             state.set_text(FileTransferStateText.IGNORED_DUE_TO_ZEROBYTE_CONSTRAINT);
-            state.setSeverity(1);
+            state.setSeverity(OrdersHelper.getState(OrderStateText.FINISHED).getSeverity());
             break;
         case SKIPPED:
             state.set_text(FileTransferStateText.SKIPPED);
-            state.setSeverity(1);
-            break;
-        // severity=2
-        case FAILED:
-            state.set_text(FileTransferStateText.FAILED);
-            state.setSeverity(2);
-            break;
-        case ABORTED:
-            state.set_text(FileTransferStateText.ABORTED);
-            state.setSeverity(2);
+            state.setSeverity(OrdersHelper.getState(OrderStateText.FINISHED).getSeverity());
             break;
         case DELETED:
             state.set_text(FileTransferStateText.DELETED);
-            state.setSeverity(2);
+            state.setSeverity(OrdersHelper.getState(OrderStateText.FINISHED).getSeverity());
+            break;
+        case ROLLED_BACK:
+            state.set_text(FileTransferStateText.ROLLED_BACK);
+            state.setSeverity(OrdersHelper.getState(OrderStateText.FINISHED).getSeverity());
+            break;
+        // severity=INPROGRESS
+        case WAITING:
+            state.set_text(FileTransferStateText.WAITING);
+            state.setSeverity(OrdersHelper.getState(OrderStateText.INPROGRESS).getSeverity());
+            break;
+        case TRANSFERRING:
+            state.set_text(FileTransferStateText.TRANSFERRING);
+            state.setSeverity(OrdersHelper.getState(OrderStateText.INPROGRESS).getSeverity());
+            break;
+        case IN_PROGRESS:
+            state.set_text(FileTransferStateText.IN_PROGRESS);
+            state.setSeverity(OrdersHelper.getState(OrderStateText.INPROGRESS).getSeverity());
+            break;
+        case POLLING:
+            state.set_text(FileTransferStateText.POLLING);
+            state.setSeverity(OrdersHelper.getState(OrderStateText.INPROGRESS).getSeverity());
+            break;
+        // severity=FAILED
+        case FAILED:
+            state.set_text(FileTransferStateText.FAILED);
+            state.setSeverity(OrdersHelper.getState(OrderStateText.FAILED).getSeverity());
+            break;
+        case ABORTED:
+            state.set_text(FileTransferStateText.ABORTED);
+            state.setSeverity(OrdersHelper.getState(OrderStateText.FAILED).getSeverity());
             break;
         // severity=3
         case UNKNOWN:
             state.set_text(FileTransferStateText.UNDEFINED);
-            state.setSeverity(3);
-            break;
-        // severity=5
-        case WAITING:
-            state.set_text(FileTransferStateText.WAITING);
-            state.setSeverity(5);
-            break;
-        case TRANSFERRING:
-            state.set_text(FileTransferStateText.TRANSFERRING);
-            state.setSeverity(5);
-            break;
-        case IN_PROGRESS:
-            state.set_text(FileTransferStateText.IN_PROGRESS);
-            state.setSeverity(5);
-            break;
-        case ROLLED_BACK:
-            state.set_text(FileTransferStateText.ROLLED_BACK);
-            state.setSeverity(5);
-            break;
-        case POLLING:
-            state.set_text(FileTransferStateText.POLLING);
-            state.setSeverity(5);
+            state.setSeverity(OrdersHelper.getState(OrderStateText.FAILED).getSeverity());
             break;
         default:
             break;
@@ -149,6 +149,11 @@ public class TransferFileUtils {
             return TransferEntryState.POLLING.intValue();
         }
         return null;
+    }
+
+    private static String getBasenameFromPath(String path) {
+        int li = path.lastIndexOf("/");
+        return li > -1 ? path.substring(li + 1) : path;
     }
 
 }
