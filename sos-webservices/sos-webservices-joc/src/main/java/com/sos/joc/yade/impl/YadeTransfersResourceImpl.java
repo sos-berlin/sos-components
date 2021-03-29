@@ -249,45 +249,6 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
         }
     }
 
-    private Operation getOperationFromValue(Yade.TransferOperation op) {
-        switch (op) {
-        case COPY:
-            return Operation.COPY;
-        case MOVE:
-            return Operation.MOVE;
-        case GETLIST:
-            return Operation.GETLIST;
-        case RENAME:
-            return Operation.RENAME;
-        case COPYTOINTERNET:
-            return Operation.COPYTOINTERNET;
-        case COPYFROMINTERNET:
-            return Operation.COPYFROMINTERNET;
-        default:
-            return null;
-        }
-    }
-
-    private TransferState getTransferState(Yade.TransferState value) {
-        TransferState state = new TransferState();
-        switch (value) {
-        case SUCCESSFUL:
-            state.setSeverity(OrdersHelper.getState(OrderStateText.FINISHED).getSeverity());
-            state.set_text(TransferStateText.SUCCESSFUL);
-            return state;
-        case INCOMPLETE:
-            state.setSeverity(OrdersHelper.getState(OrderStateText.INPROGRESS).getSeverity());
-            state.set_text(TransferStateText.INCOMPLETE);
-            return state;
-        case FAILED:
-            state.setSeverity(OrdersHelper.getState(OrderStateText.FAILED).getSeverity());
-            state.set_text(TransferStateText.FAILED);
-            return state;
-        default:
-            return null;
-        }
-    }
-
     private Transfer fillTransfer(JocDBLayerYade dbLayer, DBItemYadeTransfer item, Boolean compact) throws Exception {
         Transfer transfer = new Transfer();
         transfer.setId(item.getId());
@@ -296,8 +257,8 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
         // transfer.setMandator(item.getMandator());
         // transfer.setParent_id(item.getParentTransferId());
         transfer.setHistoryId(item.getHistoryOrderStepId());
-        transfer.set_operation(getOperationFromValue(Yade.TransferOperation.fromValue(item.getOperation())));
-        transfer.setState(getTransferState(Yade.TransferState.fromValue(item.getState())));
+        transfer.set_operation(getOperation(Yade.TransferOperation.fromValue(item.getOperation())));
+        transfer.setState(getState(Yade.TransferState.fromValue(item.getState())));
         transfer.setProfile(item.getProfileName());
         transfer.setNumOfFiles(item.getNumOfFiles() == null ? null : item.getNumOfFiles().intValue());
         transfer.setStart(item.getStart());
@@ -334,6 +295,45 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
             }
         }
         return null;
+    }
+
+    private Operation getOperation(Yade.TransferOperation op) {
+        switch (op) {
+        case COPY:
+            return Operation.COPY;
+        case MOVE:
+            return Operation.MOVE;
+        case GETLIST:
+            return Operation.GETLIST;
+        case RENAME:
+            return Operation.RENAME;
+        case COPYTOINTERNET:
+            return Operation.COPYTOINTERNET;
+        case COPYFROMINTERNET:
+            return Operation.COPYFROMINTERNET;
+        default:
+            return null;
+        }
+    }
+
+    private TransferState getState(Yade.TransferState value) {
+        TransferState state = new TransferState();
+        switch (value) {
+        case SUCCESSFUL:
+            state.setSeverity(OrdersHelper.getState(OrderStateText.FINISHED).getSeverity());
+            state.set_text(TransferStateText.SUCCESSFUL);
+            return state;
+        case INCOMPLETE:
+            state.setSeverity(OrdersHelper.getState(OrderStateText.INPROGRESS).getSeverity());
+            state.set_text(TransferStateText.INCOMPLETE);
+            return state;
+        case FAILED:
+            state.setSeverity(OrdersHelper.getState(OrderStateText.FAILED).getSeverity());
+            state.set_text(TransferStateText.FAILED);
+            return state;
+        default:
+            return null;
+        }
     }
 
     private Protocol getProtocol(Yade.TransferProtocol value) {
