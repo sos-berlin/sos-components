@@ -16,6 +16,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
+import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.filters.FilterAfterResponse;
 import com.sos.joc.db.yade.DBItemYadeProtocol;
 import com.sos.joc.db.yade.DBItemYadeTransfer;
@@ -24,6 +25,7 @@ import com.sos.joc.db.yade.JocYadeFilter;
 import com.sos.joc.db.yade.YadeSourceTargetFiles;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Err;
+import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.yade.FileFilter;
 import com.sos.joc.model.yade.Operation;
 import com.sos.joc.model.yade.Protocol;
@@ -35,7 +37,7 @@ import com.sos.joc.model.yade.TransferStateText;
 import com.sos.joc.model.yade.Transfers;
 import com.sos.joc.yade.resource.IYadeTransfersResource;
 import com.sos.schema.JsonValidator;
-import com.sos.yade.commons.Yade.TransferOperation;
+import com.sos.yade.commons.Yade;
 
 @Path("yade")
 public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeTransfersResource {
@@ -86,13 +88,13 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
             for (TransferStateText state : states) {
                 switch (state) {
                 case SUCCESSFUL:
-                    stateValues.add(1);
+                    stateValues.add(Yade.TransferState.SUCCESSFUL.intValue());
                     break;
                 case INCOMPLETE:
-                    stateValues.add(2);
+                    stateValues.add(Yade.TransferState.INCOMPLETE.intValue());
                     break;
                 case FAILED:
-                    stateValues.add(3);
+                    stateValues.add(Yade.TransferState.FAILED.intValue());
                     break;
                 }
             }
@@ -108,7 +110,7 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
                         sourceHosts.add(source.getHost());
                     }
                     if (source.getProtocol() != null) {
-                        sourceProtocols.add(getValueFromProtocol(source.getProtocol()));
+                        sourceProtocols.add(getProtocol(source.getProtocol()));
                     }
                 }
             }
@@ -122,7 +124,7 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
                         targetHosts.add(target.getHost());
                     }
                     if (target.getProtocol() != null) {
-                        targetProtocols.add(getValueFromProtocol(target.getProtocol()));
+                        targetProtocols.add(getProtocol(target.getProtocol()));
                     }
                 }
             }
@@ -132,25 +134,25 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
                 for (Operation operation : in.getOperations()) {
                     switch (operation) {
                     case COPY:
-                        operationValues.add(1);
+                        operationValues.add(Yade.TransferOperation.COPY.intValue());
                         break;
                     case MOVE:
-                        operationValues.add(2);
+                        operationValues.add(Yade.TransferOperation.MOVE.intValue());
                         break;
                     case GETLIST:
-                        operationValues.add(3);
+                        operationValues.add(Yade.TransferOperation.GETLIST.intValue());
                         break;
                     case RENAME:
-                        operationValues.add(4);
+                        operationValues.add(Yade.TransferOperation.RENAME.intValue());
                         break;
                     case COPYTOINTERNET:
-                        operationValues.add(5);
+                        operationValues.add(Yade.TransferOperation.COPYTOINTERNET.intValue());
                         break;
                     case COPYFROMINTERNET:
-                        operationValues.add(6);
+                        operationValues.add(Yade.TransferOperation.COPYFROMINTERNET.intValue());
                         break;
                     default:
-                        operationValues.add(0);
+                        operationValues.add(Yade.TransferOperation.UNKNOWN.intValue());
                         break;
                     }
                 }
@@ -247,7 +249,7 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
         }
     }
 
-    private Operation getOperationFromValue(TransferOperation op) {
+    private Operation getOperationFromValue(Yade.TransferOperation op) {
         switch (op) {
         case COPY:
             return Operation.COPY;
@@ -266,69 +268,19 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
         }
     }
 
-    private Protocol getProtocolFromValue(Integer value) {
-        switch (value) {
-        case 1:
-            return Protocol.LOCAL;
-        case 2:
-            return Protocol.FTP;
-        case 3:
-            return Protocol.FTPS;
-        case 4:
-            return Protocol.SFTP;
-        case 5:
-            return Protocol.HTTP;
-        case 6:
-            return Protocol.HTTPS;
-        case 7:
-            return Protocol.WEBDAV;
-        case 8:
-            return Protocol.WEBDAVS;
-        case 9:
-            return Protocol.SMB;
-        default:
-            return null;
-        }
-    }
-
-    private Integer getValueFromProtocol(Protocol protocol) {
-        switch (protocol) {
-        case LOCAL:
-            return 1;
-        case FTP:
-            return 2;
-        case FTPS:
-            return 3;
-        case SFTP:
-            return 4;
-        case HTTP:
-            return 5;
-        case HTTPS:
-            return 6;
-        case WEBDAV:
-            return 7;
-        case WEBDAVS:
-            return 8;
-        case SMB:
-            return 9;
-        default:
-            return null;
-        }
-    }
-
-    private TransferState getTransferStateFromValue(Integer value) {
+    private TransferState getTransferState(Yade.TransferState value) {
         TransferState state = new TransferState();
         switch (value) {
-        case 1:
-            state.setSeverity(0);
+        case SUCCESSFUL:
+            state.setSeverity(OrdersHelper.getState(OrderStateText.FINISHED).getSeverity());
             state.set_text(TransferStateText.SUCCESSFUL);
             return state;
-        case 2:
-            state.setSeverity(1);
+        case INCOMPLETE:
+            state.setSeverity(OrdersHelper.getState(OrderStateText.INPROGRESS).getSeverity());
             state.set_text(TransferStateText.INCOMPLETE);
             return state;
-        case 3:
-            state.setSeverity(2);
+        case FAILED:
+            state.setSeverity(OrdersHelper.getState(OrderStateText.FAILED).getSeverity());
             state.set_text(TransferStateText.FAILED);
             return state;
         default:
@@ -344,8 +296,8 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
         // transfer.setMandator(item.getMandator());
         // transfer.setParent_id(item.getParentTransferId());
         transfer.setHistoryId(item.getHistoryOrderStepId());
-        transfer.set_operation(getOperationFromValue(TransferOperation.fromValue(item.getOperation())));
-        transfer.setState(getTransferStateFromValue(item.getState()));
+        transfer.set_operation(getOperationFromValue(Yade.TransferOperation.fromValue(item.getOperation())));
+        transfer.setState(getTransferState(Yade.TransferState.fromValue(item.getState())));
         transfer.setProfile(item.getProfileName());
         transfer.setNumOfFiles(item.getNumOfFiles() == null ? null : item.getNumOfFiles().intValue());
         transfer.setStart(item.getStart());
@@ -377,11 +329,60 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
                 pf.setAccount(protocol.getAccount());
                 pf.setHost(protocol.getHostname());
                 pf.setPort(protocol.getPort());
-                pf.setProtocol(getProtocolFromValue(protocol.getProtocol()));
+                pf.setProtocol(getProtocol(Yade.TransferProtocol.fromValue(protocol.getProtocol())));
                 return pf;
             }
         }
         return null;
     }
 
+    private Protocol getProtocol(Yade.TransferProtocol value) {
+        switch (value) {
+        case LOCAL:
+            return Protocol.LOCAL;
+        case FTP:
+            return Protocol.FTP;
+        case FTPS:
+            return Protocol.FTPS;
+        case SFTP:
+            return Protocol.SFTP;
+        case HTTP:
+            return Protocol.HTTP;
+        case HTTPS:
+            return Protocol.HTTPS;
+        case WEBDAV:
+            return Protocol.WEBDAV;
+        case WEBDAVS:
+            return Protocol.WEBDAVS;
+        case SMB:
+            return Protocol.SMB;
+        default:
+            return null;
+        }
+    }
+
+    private Integer getProtocol(Protocol protocol) {
+        switch (protocol) {
+        case LOCAL:
+            return Yade.TransferProtocol.LOCAL.intValue();
+        case FTP:
+            return Yade.TransferProtocol.FTP.intValue();
+        case FTPS:
+            return Yade.TransferProtocol.FTPS.intValue();
+        case SFTP:
+            return Yade.TransferProtocol.SFTP.intValue();
+        case HTTP:
+            return Yade.TransferProtocol.HTTP.intValue();
+        case HTTPS:
+            return Yade.TransferProtocol.HTTPS.intValue();
+        case WEBDAV:
+            return Yade.TransferProtocol.WEBDAV.intValue();
+        case WEBDAVS:
+            return Yade.TransferProtocol.WEBDAVS.intValue();
+        case SMB:
+            return Yade.TransferProtocol.SMB.intValue();
+        default:
+            return null;
+        }
+    }
 }
