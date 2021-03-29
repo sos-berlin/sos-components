@@ -127,6 +127,13 @@ public class ReleasableResourceImpl extends JOCResourceImpl implements IReleasab
         }
     }
     
+    public static Set<ResponseReleasableVersion> getVersion(Long confId, List<DBItemInventoryReleasedConfiguration> releases, boolean withoutReleased) {
+        if (releases == null || releases.isEmpty() || withoutReleased) {
+            return Collections.emptySet();
+        }
+        return getVersion(confId, releases.get(0), withoutReleased);
+    }
+    
     public static Set<ResponseReleasableVersion> getVersion(Long confId, DBItemInventoryReleasedConfiguration release, boolean withoutReleased) {
         if (release == null || withoutReleased) {
             return Collections.emptySet();

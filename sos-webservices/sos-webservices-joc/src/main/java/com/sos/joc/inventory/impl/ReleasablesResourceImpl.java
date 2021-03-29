@@ -192,7 +192,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
                                 draft.setVersionDate(item.getModified());
                                 versions.add(draft);
                             }
-                            versions.addAll(ReleasableResourceImpl.getVersion(item.getId(), releasedItems.get(item.getId()).get(0), withoutReleased));
+                            versions.addAll(ReleasableResourceImpl.getVersion(item.getId(), releasedItems.get(item.getId()), withoutReleased));
                             // if (versions.isEmpty()) {
                             // versions = null;
                             // }
