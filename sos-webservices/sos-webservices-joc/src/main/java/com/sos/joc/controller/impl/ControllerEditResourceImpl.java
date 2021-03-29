@@ -56,6 +56,7 @@ import com.sos.joc.model.controller.JobScheduler200;
 import com.sos.joc.model.controller.RegisterParameter;
 import com.sos.joc.model.controller.RegisterParameters;
 import com.sos.joc.model.controller.Role;
+import com.sos.joc.model.controller.TestConnect;
 import com.sos.joc.model.controller.UrlParameter;
 import com.sos.joc.model.security.SecurityConfigurationMaster;
 import com.sos.schema.JsonValidator;
@@ -411,8 +412,8 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
     public JOCDefaultResponse testControllerConnection(String accessToken, byte[] filterBytes) {
         try {
             initLogging(API_CALL_TEST, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
-            UrlParameter jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
+            JsonValidator.validateFailFast(filterBytes, TestConnect.class);
+            TestConnect jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, TestConnect.class);
             
             String controllerId = jobSchedulerBody.getControllerId();
             
