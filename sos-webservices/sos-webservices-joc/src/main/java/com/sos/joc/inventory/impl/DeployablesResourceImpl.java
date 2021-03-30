@@ -49,7 +49,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             JsonValidator.validate(inBytes, DeployablesFilter.class);
             DeployablesFilter in = Globals.objectMapper.readValue(inBytes, DeployablesFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getView());
 
             if (response == null) {
                 if (!folderPermissions.isPermittedForFolder(in.getFolder())) {

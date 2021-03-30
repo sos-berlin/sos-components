@@ -58,8 +58,8 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             JsonValidator.validateFailFast(filterBytes, OrdersFilterV.class);
             OrdersFilterV body = Globals.objectMapper.readValue(filterBytes, OrdersFilterV.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(body.getControllerId(), getPermissonsJocCockpit(body.getControllerId(),
-                    accessToken).getOrder().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(body.getControllerId(), getControllerPermissions(body.getControllerId(),
+                    accessToken).getOrders().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

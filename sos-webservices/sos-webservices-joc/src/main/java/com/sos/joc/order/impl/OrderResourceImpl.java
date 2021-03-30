@@ -43,8 +43,8 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrderFilter.class);
             OrderFilter orderFilter = Globals.objectMapper.readValue(filterBytes, OrderFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(orderFilter.getControllerId(), getPermissonsJocCockpit(orderFilter
-                    .getControllerId(), accessToken).getOrder().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(orderFilter.getControllerId(), getControllerPermissions(orderFilter
+                    .getControllerId(), accessToken).getOrders().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

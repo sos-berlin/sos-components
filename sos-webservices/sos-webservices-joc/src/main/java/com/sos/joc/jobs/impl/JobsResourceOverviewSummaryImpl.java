@@ -37,8 +37,8 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
             JsonValidator.validateFailFast(filterBytes, JobsFilter.class);
             JobsFilter jobsFilter = Globals.objectMapper.readValue(filterBytes, JobsFilter.class);
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions(jobsFilter.getControllerId(), getPermissonsJocCockpit(jobsFilter
-                    .getControllerId(), accessToken).getJob().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(jobsFilter.getControllerId(), getControllerPermissions(jobsFilter
+                    .getControllerId(), accessToken).getOrders().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

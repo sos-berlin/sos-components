@@ -75,7 +75,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     public JOCDefaultResponse postOrdersSuspend(String accessToken, byte[] filterBytes) {
         try {
             ModifyOrders modifyOrders = initRequest(Action.SUSPEND, accessToken, filterBytes);
-            boolean perm = getPermissonsJocCockpit(modifyOrders.getControllerId(), accessToken).getOrder().getExecute().isSuspend();
+            boolean perm = getControllerPermissions(modifyOrders.getControllerId(), accessToken).getOrders().getSuspendResume();
             JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), perm);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -99,7 +99,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     public JOCDefaultResponse postOrdersResume(String accessToken, byte[] filterBytes) {
         try {
             ModifyOrders modifyOrders = initRequest(Action.RESUME, accessToken, filterBytes);
-            boolean perm = getPermissonsJocCockpit(modifyOrders.getControllerId(), accessToken).getOrder().getExecute().isResume();
+            boolean perm = getControllerPermissions(modifyOrders.getControllerId(), accessToken).getOrders().getSuspendResume();
             JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), perm);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -121,7 +121,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         try {
             ModifyOrders modifyOrders = initRequest(Action.CANCEL, accessToken, filterBytes);
             // TODO permissions
-            boolean perm = getPermissonsJocCockpit(modifyOrders.getControllerId(), accessToken).getOrder().getExecute().isSuspend();
+            boolean perm = getControllerPermissions(modifyOrders.getControllerId(), accessToken).getOrders().getCancel();
             JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), perm);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -147,7 +147,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             CancelDailyPlanOrders cancelDailyPlanOrders = Globals.objectMapper.readValue(filterBytes, CancelDailyPlanOrders.class);
             
             // TODO permissions
-            boolean perm = getPermissonsJocCockpit(cancelDailyPlanOrders.getControllerId(), accessToken).getOrder().getExecute().isSetSuspend();
+            boolean perm = getControllerPermissions(cancelDailyPlanOrders.getControllerId(), accessToken).getOrders().getCancel();
             JOCDefaultResponse jocDefaultResponse = initPermissions(cancelDailyPlanOrders.getControllerId(), perm);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -185,7 +185,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         try {
             ModifyOrders modifyOrders = initRequest(Action.REMOVE_WHEN_TERMINATED, accessToken, filterBytes);
             // TODO permissions
-            boolean perm = getPermissonsJocCockpit(modifyOrders.getControllerId(), accessToken).getOrder().getExecute().isSuspend();
+            boolean perm = getControllerPermissions(modifyOrders.getControllerId(), accessToken).getOrders().getView();
             JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), perm);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

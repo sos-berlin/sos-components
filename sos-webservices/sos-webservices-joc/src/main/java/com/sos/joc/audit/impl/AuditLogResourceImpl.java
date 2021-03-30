@@ -1,5 +1,6 @@
 package com.sos.joc.audit.impl;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -8,6 +9,10 @@ import java.util.regex.Pattern;
 
 import javax.ws.rs.Path;
 
+import org.apache.shiro.session.InvalidSessionException;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.joc.Globals;
@@ -35,8 +40,8 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
             initLogging(API_CALL, bytes, accessToken);
             JsonValidator.validateFailFast(bytes, AuditLogFilter.class);
             AuditLogFilter auditLogFilter = Globals.objectMapper.readValue(bytes, AuditLogFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(auditLogFilter.getControllerId(), getPermissonsJocCockpit(auditLogFilter
-                    .getControllerId(), accessToken).getAuditLog().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(auditLogFilter.getControllerId(), getJocPermissions(accessToken).getAuditLog()
+                    .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -83,13 +88,14 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
         return filteredAuditLogs;
     }
 
-    private List<AuditLogItem> fillAuditLogItems(List<DBItemJocAuditLog> auditLogsFromDb, String controllerId) throws JocException {
+    private List<AuditLogItem> fillAuditLogItems(List<DBItemJocAuditLog> auditLogsFromDb, String controllerId) throws JocException,
+            InvalidSessionException, JsonParseException, JsonMappingException, IOException {
         List<AuditLogItem> audits = new ArrayList<AuditLogItem>();
         if (auditLogsFromDb != null) {
             for (DBItemJocAuditLog auditLogFromDb : auditLogsFromDb) {
                 AuditLogItem auditLogItem = new AuditLogItem();
                 if (controllerId.isEmpty()) {
-                    if (!getPermissonsJocCockpit(auditLogFromDb.getControllerId(), getAccessToken()).getAuditLog().getView().isStatus()) {
+                    if (!getJocPermissions(getAccessToken()).getAuditLog().getView()) {
                         continue;
                     }
                     auditLogItem.setControllerId(auditLogFromDb.getControllerId());

@@ -24,7 +24,7 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
     public JOCDefaultResponse validate(final String accessToken, String objectType, final byte[] inBytes) {
         try {
             initLogging(IMPL_PATH, inBytes, accessToken);
-            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
             if (response != null) {
                 return response;
             }

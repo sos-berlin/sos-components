@@ -6,7 +6,6 @@ import java.time.Instant;
 
 import javax.ws.rs.Path;
 
-import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -52,35 +51,8 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
     @Override
     public JOCDefaultResponse show(String xAccessToken, DocumentationShowFilter documentationFilter) throws Exception {
         try {
-            boolean perm = false;
-            if (documentationFilter.getType() != null) {
-                SOSPermissionJocCockpit sosPermission = getPermissonsJocCockpit(documentationFilter.getControllerId(), xAccessToken);
-                switch (documentationFilter.getType()) {
-                case JOB:
-                    perm = sosPermission.getJob().getView().isDocumentation();
-                    break;
-                case WORKFLOW: // workflow permissions
-                    perm = sosPermission.getWorkflow().getView().isDocumentation();
-                    break;
-                case LOCK:
-                    perm = sosPermission.getLock().getView().isDocumentation();
-                    break;
-                case SCHEDULE:
-                    perm = sosPermission.getOrder().getView().isDocumentation();
-                    break;
-                //case PROCESSCLASS:
-                //    perm = sosPermission.getProcessClass().getView().isDocumentation();
-                //    break;
-                case NONWORKINGDAYSCALENDAR:
-                case WORKINGDAYSCALENDAR:
-                    perm = sosPermission.getCalendar().getView().isDocumentation();
-                    break;
-                default:
-                    break;
-                }
-            }
             JOCDefaultResponse jocDefaultResponse = init(API_CALL_SHOW, documentationFilter, xAccessToken, documentationFilter.getControllerId(),
-                    perm);
+                    getJocPermissions(xAccessToken).getInventory().getView() || getJocPermissions(xAccessToken).getDocumentations().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -114,7 +86,7 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
     public JOCDefaultResponse preview(String xAccessToken, DocumentationShowFilter documentationFilter) throws Exception {
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL_PREVIEW, documentationFilter, xAccessToken, documentationFilter.getControllerId(),
-                    getPermissonsJocCockpit(documentationFilter.getControllerId(), xAccessToken).getDocumentation().isView());
+                    getJocPermissions(xAccessToken).getDocumentations().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

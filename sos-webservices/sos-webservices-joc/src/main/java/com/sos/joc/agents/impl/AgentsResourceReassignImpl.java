@@ -34,8 +34,7 @@ public class AgentsResourceReassignImpl extends JOCResourceImpl implements IAgen
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter body = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             
-            // TODO permissions
-            boolean permission = true; //getPermissonsJocCockpit(agentStoreParameter.getControllerId(), accessToken).getJS7Controller().getExecute().isContinue();
+            boolean permission = getJocPermissions(accessToken).getAdministration().getControllers().getManage();
             String controllerId = body.getControllerId();
             
             JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, permission);

@@ -17,7 +17,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.sos.auth.rest.SOSShiroFolderPermissions;
-import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
@@ -29,13 +28,15 @@ import com.sos.joc.db.joc.DBItemJocLock;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.security.permissions.ControllerPermissions;
+import com.sos.joc.model.security.permissions.JocPermissions;
 import com.sos.joc.model.tree.Tree;
 import com.sos.joc.model.tree.TreeFilter;
 import com.sos.joc.model.tree.TreeType;
 
 public class TreePermanent {
 
-    public static List<TreeType> getAllowedTypes(List<TreeType> bodyTypes, SOSPermissionJocCockpit sosPermission, boolean treeForInventory, boolean treeForInventoryTrash) {
+    public static List<TreeType> getAllowedTypes(List<TreeType> bodyTypes, JocPermissions jocPermissions, ControllerPermissions controllerPermission, boolean treeForInventory, boolean treeForInventoryTrash) {
         
         if (bodyTypes == null || bodyTypes.isEmpty()) {
             if (treeForInventory || treeForInventoryTrash) {
@@ -45,11 +46,12 @@ public class TreePermanent {
             }
         }
         Set<TreeType> types = new HashSet<TreeType>();
+        boolean inventoryPermission = jocPermissions.getInventory().getView();
 
         for (TreeType type : bodyTypes) {
             switch (type) {
             case INVENTORY:
-                if ((treeForInventory || treeForInventoryTrash) && sosPermission.getInventory().getConfigurations().isView()) {
+                if ((treeForInventory || treeForInventoryTrash) && inventoryPermission) {
                     types.add(TreeType.FOLDER);
                     types.add(TreeType.WORKFLOW);
                     types.add(TreeType.JOB);
@@ -64,86 +66,84 @@ public class TreePermanent {
                 break;
             case WORKFLOW:
                 if (treeForInventory || treeForInventoryTrash) {
-                    if (sosPermission.getInventory().getConfigurations().isView()) {
+                    if (inventoryPermission) {
                         types.add(type);
                     }
                 } else {
-                    if (sosPermission.getWorkflow().getView().isStatus()) {
+                    if (controllerPermission.getWorkflows().getView()) {
                         types.add(type);
                     }
                 }
                 break;
             case JOB:
                 if (treeForInventory || treeForInventoryTrash) {
-                    if (sosPermission.getInventory().getConfigurations().isView()) {
-                        types.add(type);
-                    }
-                } else { // TODO  Which job view needs tree?
-                    if (sosPermission.getJob().getView().isStatus()) {
+                    if (inventoryPermission) {
                         types.add(type);
                     }
                 }
                 break;
             case JOBCLASS:
                 if (treeForInventory || treeForInventoryTrash) {
-                    if (sosPermission.getInventory().getConfigurations().isView()) {
+                    if (inventoryPermission) {
                         types.add(type);
                     }
-                } else {
-                    // if (sosPermission.getProcessClass().getView().isStatus()) {
-                        types.add(type);
-                    // }
                 }
                 break;
             case LOCK:
                 if (treeForInventory || treeForInventoryTrash) {
-                    if (sosPermission.getInventory().getConfigurations().isView()) {
+                    if (inventoryPermission) {
                         types.add(type);
                     }
                 } else {
-                    if (sosPermission.getLock().getView().isStatus()) {
+                    if (controllerPermission.getLocks().getView()) {
                         types.add(type);
                     }
                 }
                 break;
             case JUNCTION:
                 if (treeForInventory || treeForInventoryTrash) {
-                    if (sosPermission.getInventory().getConfigurations().isView()) {
+                    if (inventoryPermission) {
                         types.add(type);
                     }
-                } else {
-                    // TODO if (sosPermission.getJunction().getView().isStatus()) {
-                    types.add(type);
-                    // }
                 }
                 break;
             case FILEORDERSOURCE:
                 if (treeForInventory || treeForInventoryTrash) {
-                    if (sosPermission.getInventory().getConfigurations().isView()) {
+                    if (inventoryPermission) {
                         types.add(type);
                     }
-                } else {
-                    // TODO if (sosPermission.getJunction().getView().isStatus()) {
-                    types.add(type);
-                    // }
                 }
                 break;
             case SCHEDULE:
-                // OrderTemplate always inventory objects
-                if (sosPermission.getInventory().getConfigurations().isView()) {
+                // Schedule???
+                if (inventoryPermission) {
                     types.add(type);
+                }
+                if (treeForInventory || treeForInventoryTrash) {
+                    if (inventoryPermission) {
+                        types.add(type);
+                    }
+                } else {
+                    if (jocPermissions.getDailyPlan().getView()) {
+                        types.add(type);
+                    }
                 }
                 break;
             case WORKINGDAYSCALENDAR:
             case NONWORKINGDAYSCALENDAR:
-                // Calendar always inventory objects
-                if (sosPermission.getInventory().getConfigurations().isView()) {
-                    types.add(type);
+                if (treeForInventory || treeForInventoryTrash) {
+                    if (inventoryPermission) {
+                        types.add(type);
+                    }
+                } else {
+                    if (jocPermissions.getCalendars().getView()) {
+                        types.add(type);
+                    }
                 }
                 break;
             case FOLDER:
                 if (treeForInventory || treeForInventoryTrash) {
-                    if (sosPermission.getInventory().getConfigurations().isView()) {
+                    if (inventoryPermission) {
                         types.add(type);
                     }
                 }

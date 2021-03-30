@@ -4,7 +4,6 @@ import java.util.Date;
 
 import javax.ws.rs.Path;
 
-import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -14,6 +13,7 @@ import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.security.permissions.ControllerPermissions;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.rename.RenameConfiguration;
 import com.sos.joc.model.xmleditor.rename.RenameConfigurationAnswer;
@@ -113,8 +113,9 @@ public class RenameResourceImpl extends JOCResourceImpl implements IRenameResour
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final RenameConfiguration in) throws Exception {
-        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getControllerId(), accessToken);
-        boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
+        // TODO premission - maybe getJocPermissions(accessToken)
+        ControllerPermissions permissions = getControllerPermissions(in.getControllerId(), accessToken);
+        boolean permission = true; //permissions.getJS7Controller().getAdministration().isEditPermissions();
         return initPermissions(in.getControllerId(), permission);
     }
 

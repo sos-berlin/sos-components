@@ -65,8 +65,8 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             JsonValidator.validateFailFast(importKeyFilter.getBytes(StandardCharsets.UTF_8), ImportKeyFilter.class);
             ImportKeyFilter filter = Globals.objectMapper.readValue(importKeyFilter, ImportKeyFilter.class);
             filter.setAuditLog(auditLog);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", 
-                    getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isImportKey());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getAdministration().getCertificates()
+                    .getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

@@ -44,8 +44,8 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
             initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, OrdersFilter.class);
             OrdersFilter in = Globals.objectMapper.readValue(inBytes, OrdersFilter.class);
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), getPermissonsJocCockpit(in.getControllerId(), accessToken)
-                    .getHistory().getView().isStatus());
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), getControllerPermissions(in.getControllerId(), accessToken)
+                    .getOrders().getView());
             if (response != null) {
                 return response;
             }
@@ -134,8 +134,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                         // LOGGER.info(String.format(" [%s][%s]first entry retrieved", range, i));
                         // }
 
-                        if (in.getControllerId().isEmpty() && !getPermissonsJocCockpit(item.getControllerId(), accessToken).getHistory().getView()
-                                .isStatus()) {
+                        if (in.getControllerId().isEmpty() && !getControllerPermissions(item.getControllerId(), accessToken).getOrders().getView()) {
                             continue;
                         }
                         if (matcher != null && !matcher.reset(item.getWorkflowPath() + "," + item.getOrderId()).find()) {

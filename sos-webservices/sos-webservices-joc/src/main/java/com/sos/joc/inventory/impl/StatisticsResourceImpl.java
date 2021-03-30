@@ -30,8 +30,7 @@ public class StatisticsResourceImpl extends JOCResourceImpl implements IStatisti
             JsonValidator.validateFailFast(filterBytes, ControllerId.class);
             ControllerId controller = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
 
-            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit(controller.getControllerId(), accessToken).getInventory()
-                    .getConfigurations().isView());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getView());
             if (response != null) {
                 return response;
             }

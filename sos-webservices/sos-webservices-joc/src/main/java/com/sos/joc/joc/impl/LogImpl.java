@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 
 import javax.ws.rs.core.StreamingOutput;
 
+import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
@@ -35,155 +36,22 @@ public class LogImpl extends JOCResourceImpl implements ILogResource {
     private final Predicate<String> pattern = Pattern.compile("^(joc.log|joc-.*\\.log\\.gz)$").asPredicate();
 
     @Override
-    public JOCDefaultResponse postLog(String accessToken, JOClog jocLog) {
+    public JOCDefaultResponse postLog(String accessToken, byte[] filterBytes) {
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, jocLog, accessToken, "", getPermissonsJocCockpit("", accessToken).getJoc()
-                    .getView().isLog());
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
-            }
-            
-            Path logDir = Paths.get(logDirectory);
-            if (!Files.exists(logDir)) {
-                throw new FileNotFoundException("JOC Cockpit logs directory not found:" + toAbsolutePath(logDir));
-            }
-            
-            String logFilename = (jocLog.getFilename() != null && !jocLog.getFilename().isEmpty()) ? jocLog.getFilename() : currentLogFileName;
-            final Path log = logDir.resolve(logFilename);
-            if (!Files.isReadable(log)) {
-                throw new FileNotFoundException("JOC Cockpit log is not readable: " + toAbsolutePath(log));
-            }
-            
-            StreamingOutput fileStream = new StreamingOutput() {
-
-                @Override
-                public void write(OutputStream output) throws IOException {
-                    InputStream in = null;
-                    try {
-                        in = Files.newInputStream(log);
-                        byte[] buffer = new byte[4096];
-                        int length;
-                        while ((length = in.read(buffer)) > 0) {
-                            output.write(buffer, 0, length);
-                        }
-                        output.flush();
-                    } finally {
-                        try {
-                            output.close();
-                        } catch (Exception e) {
-                        }
-                        if (in != null) {
-                            try {
-                                in.close();
-                            } catch (Exception e) {
-                            }
-                        }
-                    }
-                }
-            };
-            
-            // log file could be already compressed
-            if (logFilename.endsWith(".gz")) {
-                return JOCDefaultResponse.responseOctetStreamDownloadStatus200(fileStream, log.getFileName().toString(), 0L);
-            }
-            return JOCDefaultResponse.responseOctetStreamDownloadStatus200(fileStream, log.getFileName().toString());
+            initLogging(API_CALL, filterBytes, accessToken);
+            JOClog jocLog = Globals.objectMapper.readValue(filterBytes, JOClog.class);
+    
+            return postLog(accessToken, jocLog);
         } catch (Exception e) {
             ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, getJocError(), null);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
     }
     
-//    public JOCDefaultResponse postLog_old(String accessToken, JOClog jocLog) {
-//        try {
-//            JOCDefaultResponse jocDefaultResponse = init(API_CALL, jocLog, accessToken, "", getPermissonsJocCockpit("", accessToken).getJoc()
-//                    .getView().isLog());
-//            if (jocDefaultResponse != null) {
-//                return jocDefaultResponse;
-//            }
-//
-//            if (!System.getProperties().containsKey("jetty.base")) {
-//                throw new JocConfigurationException("This function is only available with Jetty.");
-//            }
-//
-//            readJettyLoggingProperties();
-//
-//            Path logDir = Paths.get(logDirectory);
-//            if (!Files.exists(logDir)) {
-//                throw new FileNotFoundException("JOC Cockpit logs directory doesn't exist.");
-//            }
-//            Path latestLogFile = null;
-//            String pattern = "^\\d{4}_\\d{2}_\\d{2}\\.stderrout\\.log$";
-//            if (jocLog.getFilename() != null) {
-//                if (jocLog.getFilename().matches(pattern)) {
-//                    latestLogFile = logDir.resolve(jocLog.getFilename());
-//                }
-//            } else {
-//                latestLogFile = logDir.resolve(DateTimeFormatter.ofPattern("yyyy_MM_dd").format(ZonedDateTime.of(LocalDateTime.now(), ZoneId.of(
-//                        logTimezone))) + ".stderrout.log");
-//                if (!Files.isReadable(latestLogFile) || Files.size(latestLogFile) == 0) {
-//                    latestLogFile = null;
-//                    List<Path> filenames = new ArrayList<Path>();
-//                    for (Path logFile : getFileListStream(logDir, pattern)) {
-//                        filenames.add(logFile);
-//                    }
-//                    filenames.sort(Comparator.reverseOrder());
-//                    if (!filenames.isEmpty()) {
-//                        latestLogFile = filenames.get(0);
-//                    }
-//                }
-//            }
-//
-//            if (latestLogFile == null) {
-//                throw new FileNotFoundException("JOC Cockpit log not found.");
-//            }
-//            if (!Files.isReadable(latestLogFile)) {
-//                throw new FileNotFoundException("JOC Cockpit log is not readable.");
-//            }
-//
-//            final Path log = latestLogFile;
-//
-//            StreamingOutput fileStream = new StreamingOutput() {
-//
-//                @Override
-//                public void write(OutputStream output) throws IOException {
-//                    InputStream in = null;
-//                    try {
-//                        in = Files.newInputStream(log);
-//                        byte[] buffer = new byte[4096];
-//                        int length;
-//                        while ((length = in.read(buffer)) > 0) {
-//                            output.write(buffer, 0, length);
-//                        }
-//                        output.flush();
-//                    } finally {
-//                        try {
-//                            output.close();
-//                        } catch (Exception e) {
-//                        }
-//                        if (in != null) {
-//                            try {
-//                                in.close();
-//                            } catch (Exception e) {
-//                            }
-//                        }
-//                    }
-//                }
-//            };
-//
-//            return JOCDefaultResponse.responseOctetStreamDownloadStatus200(fileStream, log.getFileName().toString());
-//        } catch (Exception e) {
-//            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-//        }
-//    }
-
     @Override
     public JOCDefaultResponse postLogs(String accessToken) {
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL + "s", null, accessToken, "", getPermissonsJocCockpit("", accessToken).getJoc()
-                    .getView().isLog());
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
-            }
+            initLogging(API_CALL + "s", null, accessToken);
 
             Path logDir = Paths.get(logDirectory);
             if (!Files.exists(logDir)) {
@@ -207,56 +75,74 @@ public class LogImpl extends JOCResourceImpl implements ILogResource {
         }
     }
     
-//    public JOCDefaultResponse postLogs_old(String accessToken) {
-//        try {
-//            JOCDefaultResponse jocDefaultResponse = init(API_CALL + "s", null, accessToken, "", getPermissonsJocCockpit("", accessToken).getJoc()
-//                    .getView().isLog());
-//            if (jocDefaultResponse != null) {
-//                return jocDefaultResponse;
-//            }
-//
-//            if (!System.getProperties().containsKey("jetty.base")) {
-//                throw new JocConfigurationException("This function is only available with Jetty.");
-//            }
-//
-//            readJettyLoggingProperties();
-//
-//            Path logDir = Paths.get(logDirectory);
-//            String pattern = "^\\d{4}_\\d{2}_\\d{2}\\.stderrout\\.log$";
-//            List<String> filenames = new ArrayList<String>();
-//            for (Path logFile : getFileListStream(logDir, pattern)) {
-//                filenames.add(logFile.getFileName().toString());
-//            }
-//            filenames.sort(Comparator.reverseOrder());
-//            JOClogs entity = new JOClogs();
-//            entity.setFilenames(filenames);
-//
-//            return JOCDefaultResponse.responseStatus200(entity);
-//        } catch (JocException e) {
-//            e.addErrorMetaInfo(getJocError());
-//            return JOCDefaultResponse.responseStatusJSError(e);
-//        } catch (Exception e) {
-//            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-//        }
-//    }
-
     @Override
     public JOCDefaultResponse getLog(String accessToken, String queryAccessToken, String filename) {
-        if (accessToken == null) {
-            accessToken = queryAccessToken;
+        try {
+            if (accessToken == null) {
+                accessToken = queryAccessToken;
+            }
+            String s = "{\"filename\":\"" + filename + "\"}";
+            initLogging(API_CALL, s.getBytes(), accessToken);
+            JOClog jocLog = new JOClog();
+            jocLog.setFilename(filename);
+            return postLog(accessToken, jocLog);
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
-        JOClog jocLog = new JOClog();
-        jocLog.setFilename(filename);
-        return postLog(accessToken, jocLog);
+    }
+    
+    private JOCDefaultResponse postLog(String accessToken, JOClog jocLog) throws FileNotFoundException {
+        Path logDir = Paths.get(logDirectory);
+        if (!Files.exists(logDir)) {
+            throw new FileNotFoundException("JOC Cockpit logs directory not found:" + toAbsolutePath(logDir));
+        }
+        
+        String logFilename = (jocLog.getFilename() != null && !jocLog.getFilename().isEmpty()) ? jocLog.getFilename() : currentLogFileName;
+        final Path log = logDir.resolve(logFilename);
+        if (!Files.isReadable(log)) {
+            throw new FileNotFoundException("JOC Cockpit log is not readable: " + toAbsolutePath(log));
+        }
+        
+        StreamingOutput fileStream = new StreamingOutput() {
+
+            @Override
+            public void write(OutputStream output) throws IOException {
+                InputStream in = null;
+                try {
+                    in = Files.newInputStream(log);
+                    byte[] buffer = new byte[4096];
+                    int length;
+                    while ((length = in.read(buffer)) > 0) {
+                        output.write(buffer, 0, length);
+                    }
+                    output.flush();
+                } finally {
+                    try {
+                        output.close();
+                    } catch (Exception e) {
+                    }
+                    if (in != null) {
+                        try {
+                            in.close();
+                        } catch (Exception e) {
+                        }
+                    }
+                }
+            }
+        };
+        
+        // log file could be already compressed
+        if (logFilename.endsWith(".gz")) {
+            return JOCDefaultResponse.responseOctetStreamDownloadStatus200(fileStream, log.getFileName().toString(), 0L);
+        }
+        return JOCDefaultResponse.responseOctetStreamDownloadStatus200(fileStream, log.getFileName().toString());
     }
     
     private static String toAbsolutePath(Path p) {
         return p.toString().replace('\\', '/');
-//        try {
-//            return p.toAbsolutePath().toString();
-//        } catch (Exception e) {
-//            return p.toString();
-//        }
     }
 
     private static DirectoryStream<Path> getFileListStream(final Path folder, final Predicate<String> pattern) throws IOException {
@@ -281,37 +167,5 @@ public class LogImpl extends JOCResourceImpl implements ILogResource {
             return pattern.test(path.getFileName().toString());
         });
     }
-
-//    private void readJettyLoggingProperties() {
-//        InputStream stream = null;
-//        Properties properties = new Properties();
-//        Path jettyLoggingConf = Paths.get("start.d/logging.ini");
-//        if (!Files.exists(jettyLoggingConf)) {
-//            jettyLoggingConf = Paths.get("start.ini");
-//        }
-//        if (Files.exists(jettyLoggingConf)) {
-//            try {
-//                stream = Files.newInputStream(jettyLoggingConf);
-//                if (stream != null) {
-//                    properties.load(stream);
-//                }
-//                if (properties.containsKey("jetty.logging.dir")) {
-//                    logDirectory = properties.getProperty("jetty.logging.dir");
-//                }
-//                if (properties.containsKey("jetty.logging.timezone")) {
-//                    logTimezone = properties.getProperty("jetty.logging.timezone");
-//                }
-//            } catch (Exception e) {
-//                LOGGER.warn(String.format("Error while reading %1$s:", jettyLoggingConf.toString()), e);
-//            } finally {
-//                try {
-//                    if (stream != null) {
-//                        stream.close();
-//                    }
-//                } catch (Exception e) {
-//                }
-//            }
-//        }
-//    }
 
 }

@@ -45,7 +45,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             JsonValidator.validate(inBytes, RequestFilters.class);
             RequestFilters in = Globals.objectMapper.readValue(inBytes, RequestFilters.class);
 
-            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
             if (response == null) {
                 response = remove(accessToken, in);
             }
@@ -66,7 +66,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             JsonValidator.validate(inBytes, RequestFolder.class);
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 
-            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
             if (response == null) {
                 response = removeFolder(accessToken, in);
             }
@@ -87,7 +87,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             JsonValidator.validate(inBytes, RequestFilters.class);
             RequestFilters in = Globals.objectMapper.readValue(inBytes, RequestFilters.class);
 
-            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
             if (response == null) {
                 response = delete(accessToken, in);
             }
@@ -108,7 +108,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             JsonValidator.validate(inBytes, RequestFolder.class);
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 
-            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
             if (response == null) {
                 response = deleteFolder(accessToken, in);
             }

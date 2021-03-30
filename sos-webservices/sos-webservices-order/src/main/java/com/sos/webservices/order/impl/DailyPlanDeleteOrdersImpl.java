@@ -56,8 +56,8 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
             DailyPlanOrderFilter dailyPlanOrderFilter = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
             JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanOrderFilter.getControllerId(), getPermissonsJocCockpit(
-                    dailyPlanOrderFilter.getControllerId(), accessToken).getDailyPlan().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanOrderFilter.getControllerId(), getControllerPermissions(
+                    dailyPlanOrderFilter.getControllerId(), accessToken).getOrders().getCancel());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

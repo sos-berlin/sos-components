@@ -42,7 +42,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             JsonValidator.validate(inBytes, RequestFilters.class);
             RequestFilters in = Globals.objectMapper.readValue(inBytes, RequestFilters.class);
 
-            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
             if (response == null) {
                 response = replace(in);
             }
@@ -62,7 +62,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             JsonValidator.validate(inBytes, RequestFolder.class);
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 
-            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
             if (response == null) {
                 response = replaceFolder(in);
             }

@@ -50,10 +50,6 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             initLogging(API_CALL, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, Controller.class);
             Controller in = Globals.objectMapper.readValue(inBytes, Controller.class);
-            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getJS7Controller().getView().isStatus());
-            if (response != null) {
-                return response;
-            }
             
             try {
                 session = getJobschedulerUser().getSosShiroCurrentUser().getCurrentSubject().getSession(false);

@@ -48,8 +48,8 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
             initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, JobsFilter.class);
             JobsFilter in = Globals.objectMapper.readValue(inBytes, JobsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(in.getControllerId(), getPermissonsJocCockpit(in.getControllerId(), accessToken)
-                    .getHistory().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(in.getControllerId(), getControllerPermissions(in.getControllerId(), accessToken)
+                    .getOrders().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -167,8 +167,8 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                             // LOGGER.info(String.format(" [%s][%s]first entry retrieved", range, i));
                             // }
 
-                            if (in.getControllerId().isEmpty() && !getPermissonsJocCockpit(step.getControllerId(), accessToken).getHistory().getView()
-                                    .isStatus()) {
+                            if (in.getControllerId().isEmpty() && !getControllerPermissions(step.getControllerId(), accessToken).getOrders()
+                                    .getView()) {
                                 continue;
                             }
                             if (matcher != null && !matcher.reset(step.getWorkflowPath() + "," + step.getJobName()).find()) {

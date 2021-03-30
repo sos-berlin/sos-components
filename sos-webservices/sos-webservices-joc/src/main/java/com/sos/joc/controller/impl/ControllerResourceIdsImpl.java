@@ -48,8 +48,7 @@ public class ControllerResourceIdsImpl extends JOCResourceImpl implements IContr
                     if (dbControllerId == null || dbControllerId.isEmpty()) {
                         continue;
                     }
-                    if (!getPermissonsJocCockpit(dbControllerId, accessToken).getJS7ControllerCluster().getView().isStatus()
-                            && !getPermissonsJocCockpit(dbControllerId, accessToken).getJS7Controller().getView().isStatus()) {
+                    if (!getControllerPermissions(dbControllerId, accessToken).getView()) {
                         continue;
                     }
                     controllerIds.add(dbControllerId);

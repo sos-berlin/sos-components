@@ -35,8 +35,8 @@ public JOCDefaultResponse postOrdersOverviewSummary(String accessToken, byte[] f
         initLogging(API_CALL, filterBytes, accessToken);
         JsonValidator.validateFailFast(filterBytes, OrdersFilter.class);
         OrdersFilter ordersFilter = Globals.objectMapper.readValue(filterBytes, OrdersFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(ordersFilter.getControllerId(), getPermissonsJocCockpit(ordersFilter
-                    .getControllerId(), accessToken).getOrder().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(ordersFilter.getControllerId(), getControllerPermissions(ordersFilter
+                    .getControllerId(), accessToken).getOrders().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

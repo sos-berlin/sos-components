@@ -5,13 +5,13 @@ import java.nio.file.StandardCopyOption;
 
 import javax.ws.rs.Path;
 
-import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
+import com.sos.joc.model.security.permissions.ControllerPermissions;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.schema.SchemaAssignConfiguration;
 import com.sos.joc.model.xmleditor.schema.SchemaAssignConfigurationAnswer;
@@ -55,8 +55,9 @@ public class SchemaAssignResourceImpl extends JOCResourceImpl implements ISchema
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final SchemaAssignConfiguration in) throws Exception {
-        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getControllerId(), accessToken);
-        boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
+        // TODO premission - maybe getJocPermissions(accessToken)
+        ControllerPermissions permissions = getControllerPermissions(in.getControllerId(), accessToken);
+        boolean permission = true; //permissions.getJS7Controller().getAdministration().isEditPermissions();
         return initPermissions(in.getControllerId(), permission);
     }
 

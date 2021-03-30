@@ -60,8 +60,8 @@ public class ControllersResourceImpl extends JOCResourceImpl implements IControl
             initLogging(apiCall, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ControllerId.class);
             ControllerId controllerId = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId.getControllerId(), getPermissonsJocCockpit(controllerId
-                    .getControllerId(), accessToken).getJS7Controller().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId.getControllerId(), getControllerPermissions(controllerId
+                    .getControllerId(), accessToken).getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -127,8 +127,8 @@ public class ControllersResourceImpl extends JOCResourceImpl implements IControl
             List<ControllerCallable> tasks = new ArrayList<ControllerCallable>();
             for (DBItemInventoryJSInstance schedulerInstance : schedulerInstances) {
                 // skip all masters where the user doesn't have the permission to see its status
-                if (jobSchedulerId.isEmpty() && user != null && !user.getSosPermissionJocCockpit(schedulerInstance.getControllerId())
-                        .getJS7Controller().getView().isStatus()) {
+                if (jobSchedulerId.isEmpty() && user != null && !user.getControllerPermissions(schedulerInstance.getControllerId())
+                        .getView()) {
                     continue;
                 }
                 tasks.add(new ControllerCallable(schedulerInstance, osDBLayer.getInventoryOperatingSystem(schedulerInstance.getOsId()), accessToken,

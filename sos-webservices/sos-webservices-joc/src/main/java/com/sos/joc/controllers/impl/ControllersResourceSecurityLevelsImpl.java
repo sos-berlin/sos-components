@@ -6,7 +6,6 @@ import java.util.List;
 
 import javax.ws.rs.Path;
 
-import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit.JS7Controller;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -32,10 +31,11 @@ public class ControllersResourceSecurityLevelsImpl extends JOCResourceImpl imple
 
         try {
             initLogging(API_CALL_LEVELS, null, accessToken);
-            JS7Controller controllerPermissions = getPermissonsJocCockpit("", accessToken).getJS7Controller();
+            com.sos.joc.model.security.permissions.joc.admin.Controllers controllerPermissions = getJocPermissions(accessToken).getAdministration()
+                    .getControllers();
             // TODO admin permissions to take over security level
-            boolean adminPermission = controllerPermissions.getAdministration().isEditPermissions();
-            boolean showPermission = controllerPermissions.getView().isStatus();
+            boolean adminPermission = controllerPermissions.getManage();
+            boolean showPermission = controllerPermissions.getView();
             
             JOCDefaultResponse jocDefaultResponse = initPermissions("", adminPermission || showPermission);
             if (jocDefaultResponse != null) {
@@ -73,8 +73,7 @@ public class ControllersResourceSecurityLevelsImpl extends JOCResourceImpl imple
             ControllerId controllerId = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
             
             // TODO admin permissions to take over security level
-            boolean permission = getPermissonsJocCockpit(controllerId.getControllerId(), accessToken).getJS7Controller().getAdministration()
-                    .isEditPermissions();
+            boolean permission = getJocPermissions(accessToken).getAdministration().getControllers().getManage();
 
             JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId.getControllerId(), permission);
             if (jocDefaultResponse != null) {

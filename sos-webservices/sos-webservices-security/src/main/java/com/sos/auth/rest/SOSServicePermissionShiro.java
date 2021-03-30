@@ -34,14 +34,13 @@ import org.slf4j.MDC;
 
 import com.sos.auth.client.ClientCertificateHandler;
 //import com.sos.auth.rest.permission.model.SOSPermissionCommandsControllers;
-import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitControllers;
+//import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitControllers;
 import com.sos.auth.rest.permission.model.SOSPermissionRoles;
 import com.sos.auth.rest.permission.model.SOSPermissionShiro;
 import com.sos.auth.shiro.SOSlogin;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.util.SOSSerializerUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JocCockpitProperties;
@@ -58,6 +57,7 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.SessionNotExistException;
+import com.sos.joc.model.security.Permissions;
 import com.sos.joc.model.security.SecurityConfiguration;
 
 @Path("/authentication")
@@ -89,7 +89,7 @@ public class SOSServicePermissionShiro {
         SOSSecurityConfiguration sosSecurityConfiguration = new SOSSecurityConfiguration();
         SecurityConfiguration entity = sosSecurityConfiguration.readConfiguration();
 
-        SOSPermissionJocCockpitControllers sosPermissionMasters = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(accessToken,
+        Permissions sosPermissionMasters = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(accessToken,
                 entity.getMasters());
         return JOCDefaultResponse.responseStatus200(sosPermissionMasters);
     }
@@ -116,7 +116,7 @@ public class SOSServicePermissionShiro {
     public JOCDefaultResponse postJocCockpitPermissions(@HeaderParam(ACCESS_TOKEN) String accessTokenFromHeader,
             @HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader) {
 
-        MDC.put("context", ThreadCtx);
+        //MDC.put("context", ThreadCtx);
         SOSWebserviceAuthenticationRecord sosWebserviceAuthenticationRecord = new SOSWebserviceAuthenticationRecord();
         try {
             String accessToken = getAccessToken(accessTokenFromHeader, xAccessTokenFromHeader, EMPTY_STRING);
@@ -143,8 +143,8 @@ public class SOSServicePermissionShiro {
         } catch (Exception ee) {
             LOGGER.error(ee.getMessage());
             return JOCDefaultResponse.responseStatusJSError(ee.getMessage());
-        } finally {
-            MDC.remove("context");
+//        } finally {
+//            MDC.remove("context");
         }
     }
 
@@ -517,10 +517,10 @@ public class SOSServicePermissionShiro {
         SOSSecurityConfiguration sosSecurityConfiguration = new SOSSecurityConfiguration();
         SecurityConfiguration entity = sosSecurityConfiguration.readConfiguration();
 
-        SOSPermissionJocCockpitControllers sosPermissionJocCockpitControllers = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(
+        Permissions sosPermissionJocCockpitControllers = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(
                 accessToken, entity.getMasters());
         currentUser.setSosPermissionJocCockpitControllers(sosPermissionJocCockpitControllers);
-        currentUser.getCurrentSubject().getSession().setAttribute("username_joc_permissions", SOSSerializerUtil.object2toString(
+        currentUser.getCurrentSubject().getSession().setAttribute("username_joc_permissions", Globals.objectMapper.writeValueAsBytes(
                 sosPermissionJocCockpitControllers));
 
         currentUser.initFolders();
@@ -592,13 +592,12 @@ public class SOSServicePermissionShiro {
     private String getRolesAsString(boolean forUser) {
         SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentUser);
 
-        String roles = "  ";
         if (currentUser != null) {
             SOSPermissionRoles listOfRoles = sosPermissionsCreator.getRoles(forUser);
-            for (int i = 0; i < listOfRoles.getSOSPermissionRole().size(); i++) {
-                roles = roles + listOfRoles.getSOSPermissionRole().get(i) + ",";
+            if (listOfRoles.getSOSPermissionRole() != null) {
+                return String.join(",", listOfRoles.getSOSPermissionRole());
             }
-            return roles.substring(0, roles.length() - 1).trim();
+            return EMPTY_STRING;
         } else {
             return EMPTY_STRING;
         }

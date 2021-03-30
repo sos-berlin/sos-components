@@ -49,8 +49,8 @@ public class DailyPlanSubmissionsImpl extends JOCResourceImpl implements IDailyP
             JsonValidator.validateFailFast(filterBytes, DailyPlanSubmissionsFilter.class);
             DailyPlanSubmissionsFilter dailyPlanSubmissionHistoryFilter = Globals.objectMapper.readValue(filterBytes,
                     DailyPlanSubmissionsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanSubmissionHistoryFilter.getControllerId(), getPermissonsJocCockpit(
-                    dailyPlanSubmissionHistoryFilter.getControllerId(), accessToken).getDailyPlan().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanSubmissionHistoryFilter.getControllerId(), getJocPermissions(
+                    accessToken).getDailyPlan().getView());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -117,8 +117,8 @@ public class DailyPlanSubmissionsImpl extends JOCResourceImpl implements IDailyP
             DailyPlanSubmissionsFilter dailyPlanSubmissionHistoryFilter = Globals.objectMapper.readValue(filterBytes,
                     DailyPlanSubmissionsFilter.class);
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanSubmissionHistoryFilter.getControllerId(), getPermissonsJocCockpit(
-                    dailyPlanSubmissionHistoryFilter.getControllerId(), accessToken).getDailyPlan().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanSubmissionHistoryFilter.getControllerId(), getJocPermissions(
+                    accessToken).getDailyPlan().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

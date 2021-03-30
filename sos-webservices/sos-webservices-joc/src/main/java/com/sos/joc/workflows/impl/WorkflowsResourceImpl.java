@@ -56,8 +56,8 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             JsonValidator.validateFailFast(filterBytes, WorkflowsFilter.class);
             WorkflowsFilter workflowsFilter = Globals.objectMapper.readValue(filterBytes, WorkflowsFilter.class);
             String controllerId = workflowsFilter.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getPermissonsJocCockpit(controllerId, accessToken).getWorkflow()
-                    .getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getWorkflows()
+                    .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

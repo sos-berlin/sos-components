@@ -63,8 +63,8 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
 
         SOSHibernateSession connection = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, filter.getControllerId(), getPermissonsJocCockpit(filter
-                    .getControllerId(), xAccessToken).getDocumentation().isExport());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, filter.getControllerId(), getJocPermissions(xAccessToken)
+                    .getDocumentations().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -115,8 +115,8 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
             xAccessToken = getAccessToken(xAccessToken, accessToken);
             ExportInfo file = new ExportInfo();
             file.setFilename(filename);
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, file, xAccessToken, controllerId, getPermissonsJocCockpit(controllerId,
-                    xAccessToken).getDocumentation().isExport());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, file, xAccessToken, controllerId, getJocPermissions(xAccessToken)
+                    .getDocumentations().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -178,7 +178,7 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
         ZipOutputStream zipOut = null;
         try {
             JOCDefaultResponse jocDefaultResponse = init(API_CALL + "/info", filter, xAccessToken, filter.getControllerId(),
-                    getPermissonsJocCockpit(filter.getControllerId(), xAccessToken).getDocumentation().isExport());
+                    getJocPermissions(xAccessToken).getDocumentations().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

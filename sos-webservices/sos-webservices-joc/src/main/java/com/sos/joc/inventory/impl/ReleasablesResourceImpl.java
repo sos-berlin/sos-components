@@ -49,7 +49,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
             JsonValidator.validate(inBytes, ReleasablesFilter.class);
             ReleasablesFilter in = Globals.objectMapper.readValue(inBytes, ReleasablesFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getView());
 
             if (response == null) {
                 if (!folderPermissions.isPermittedForFolder(in.getFolder())) {

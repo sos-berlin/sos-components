@@ -29,8 +29,8 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
         
         SOSHibernateSession connection = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, filter.getControllerId(), getPermissonsJocCockpit(filter
-                    .getControllerId(), xAccessToken).getDocumentation().isDelete());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, filter.getControllerId(), getJocPermissions(xAccessToken)
+                    .getDocumentations().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

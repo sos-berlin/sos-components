@@ -8,7 +8,6 @@ import javax.ws.rs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
@@ -18,6 +17,7 @@ import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.security.permissions.ControllerPermissions;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.delete.DeleteDraft;
 import com.sos.joc.model.xmleditor.delete.DeleteOtherDraftAnswer;
@@ -70,8 +70,9 @@ public class DeleteResourceImpl extends JOCResourceImpl implements IDeleteResour
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final DeleteDraft in) throws Exception {
-        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getControllerId(), accessToken);
-        boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
+        // TODO permission maybe getJocPermissions(accessToken)
+        ControllerPermissions permissions = getControllerPermissions(in.getControllerId(), accessToken);
+        boolean permission = true; //permissions.getJS7Controller().getAdministration().isEditPermissions();
         return initPermissions(in.getControllerId(), permission);
     }
 

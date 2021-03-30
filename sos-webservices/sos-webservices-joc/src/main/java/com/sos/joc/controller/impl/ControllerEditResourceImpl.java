@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 
 import com.sos.auth.rest.SOSPermissionsCreator;
-import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitControllers;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.command.Overview;
 import com.sos.joc.Globals;
@@ -58,6 +57,7 @@ import com.sos.joc.model.controller.RegisterParameters;
 import com.sos.joc.model.controller.Role;
 import com.sos.joc.model.controller.TestConnect;
 import com.sos.joc.model.controller.UrlParameter;
+import com.sos.joc.model.security.Permissions;
 import com.sos.joc.model.security.SecurityConfigurationMaster;
 import com.sos.schema.JsonValidator;
 
@@ -149,8 +149,8 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 agentDBLayer.agentIdAlreadyExists(Arrays.asList(clusterWatcher.getAgentId()), controllerId);
             }
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getPermissonsJocCockpit(controllerId, accessToken).getJS7Controller()
-                    .getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).getAdministration().getControllers()
+                    .getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -335,7 +335,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 listOfMasters.add(securityConfigurationMaster);
                 
                 SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(getJobschedulerUser().getSosShiroCurrentUser());
-                SOSPermissionJocCockpitControllers sosPermissionControllers = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(accessToken,listOfMasters);
+                Permissions sosPermissionControllers = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(accessToken, listOfMasters);
                 return JOCDefaultResponse.responseStatus200(sosPermissionControllers);
             } else {
                 return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -358,8 +358,8 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getPermissonsJocCockpit(jobSchedulerBody.getControllerId(), accessToken)
-                    .getJS7Controller().getAdministration().isRemoveOldInstances());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).getAdministration().getControllers()
+                    .getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -424,8 +424,8 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 controllerId = ""; 
             }
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getPermissonsJocCockpit(controllerId, accessToken).getJS7Controller()
-                    .getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).getAdministration().getControllers()
+                    .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

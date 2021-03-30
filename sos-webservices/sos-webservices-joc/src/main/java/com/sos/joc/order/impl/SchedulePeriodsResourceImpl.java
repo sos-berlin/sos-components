@@ -58,7 +58,7 @@ public class SchedulePeriodsResourceImpl extends JOCResourceImpl implements ISch
             JsonValidator.validate(filterBytes, ScheduleDatesFilter.class);
             ScheduleDatesFilter in = Globals.objectMapper.readValue(filterBytes, ScheduleDatesFilter.class);
             // TODO permission
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getPermissonsJocCockpit(null, accessToken).getOrder().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getControllerPermissions(null, accessToken).getOrders().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

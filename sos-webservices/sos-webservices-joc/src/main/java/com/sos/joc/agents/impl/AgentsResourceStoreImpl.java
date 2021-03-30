@@ -50,9 +50,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, StoreAgents.class);
             StoreAgents agentStoreParameter = Globals.objectMapper.readValue(filterBytes, StoreAgents.class);
-            // TODO permissions
-            boolean permission = true; // getPermissonsJocCockpit(agentStoreParameter.getControllerId(),
-                                       // accessToken).getJS7Controller().getExecute().isContinue();
+            boolean permission = getJocPermissions(accessToken).getAdministration().getControllers().getManage();
             String controllerId = agentStoreParameter.getControllerId();
 
             JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, permission);

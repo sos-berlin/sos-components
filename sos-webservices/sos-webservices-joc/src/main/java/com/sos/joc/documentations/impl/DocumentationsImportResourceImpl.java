@@ -95,8 +95,8 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
             }
             filter.setAuditLog(auditLog);
 
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, controllerId, getPermissonsJocCockpit(filter
-                    .getControllerId(), xAccessToken).getDocumentation().isImport());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, controllerId, getJocPermissions(xAccessToken)
+                    .getDocumentations().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

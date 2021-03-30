@@ -101,8 +101,8 @@ public class DailyPlanOrdersSummaryImpl extends JOCResourceImpl implements IDail
             JsonValidator.validateFailFast(filterBytes, DailyPlanOrderSelector.class);
             DailyPlanOrderFilter dailyPlanOrderFilter = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanOrderFilter.getControllerId(), getPermissonsJocCockpit(
-                    dailyPlanOrderFilter.getControllerId(), accessToken).getDailyPlan().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanOrderFilter.getControllerId(), getControllerPermissions(
+                    dailyPlanOrderFilter.getControllerId(), accessToken).getOrders().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

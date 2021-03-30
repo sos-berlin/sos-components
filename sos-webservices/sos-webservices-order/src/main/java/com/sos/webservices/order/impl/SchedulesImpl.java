@@ -41,8 +41,8 @@ public class SchedulesImpl extends JOCResourceImpl implements ISchedulesResource
             JsonValidator.validateFailFast(filterBytes, DailyPlanSubmissionsFilter.class);
             ScheduleSelector scheduleSelector = Globals.objectMapper.readValue(filterBytes, ScheduleSelector.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(scheduleSelector.getControllerId(), getPermissonsJocCockpit(scheduleSelector
-                    .getControllerId(), accessToken).getWorkflow().getExecute().isAddOrder());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(scheduleSelector.getControllerId(), getJocPermissions(accessToken).getDailyPlan()
+                    .getView());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

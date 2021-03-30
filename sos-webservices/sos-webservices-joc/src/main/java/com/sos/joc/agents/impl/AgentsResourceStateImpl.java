@@ -72,8 +72,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             JsonValidator.validateFailFast(filterBytes, ReadAgentsV.class);
             ReadAgentsV agentsParam = Globals.objectMapper.readValue(filterBytes, ReadAgentsV.class);
             String controllerId = agentsParam.getControllerId();
-            // TODO permissions?
-            boolean permission = getPermissonsJocCockpit(controllerId, accessToken).getJS7Controller().getView().isStatus();
+            boolean permission = getControllerPermissions(controllerId, accessToken).getAgents().getView();
 
             JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, permission);
             if (jocDefaultResponse != null) {

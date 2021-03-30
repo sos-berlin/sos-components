@@ -45,8 +45,8 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, null, xAccessToken);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("",
-                    getPermissonsJocCockpit(null, xAccessToken).getInventory().getConfigurations().getPublish().isShowKey());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getAdministration().getCertificates()
+                    .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

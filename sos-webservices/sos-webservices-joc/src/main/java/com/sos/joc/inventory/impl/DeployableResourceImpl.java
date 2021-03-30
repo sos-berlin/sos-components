@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -51,7 +50,7 @@ public class DeployableResourceImpl extends JOCResourceImpl implements IDeployab
             JsonValidator.validate(inBytes, DeployableFilter.class);
             DeployableFilter in = Globals.objectMapper.readValue(inBytes, DeployableFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getView());
 
             if (response == null) {
                 response = JOCDefaultResponse.responseStatus200(deployable(in));

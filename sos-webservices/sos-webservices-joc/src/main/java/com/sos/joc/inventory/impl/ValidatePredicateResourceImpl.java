@@ -20,7 +20,7 @@ public class ValidatePredicateResourceImpl extends JOCResourceImpl implements IV
     public JOCDefaultResponse parse(final String accessToken, byte[] body) {
         try {
             initLogging(IMPL_PATH, body, accessToken);
-            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
             if (response != null) {
                 return response;
             }

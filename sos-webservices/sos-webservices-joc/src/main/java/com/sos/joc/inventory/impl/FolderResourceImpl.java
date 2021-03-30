@@ -36,7 +36,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 
             in.setPath(normalizeFolder(in.getPath()));
-            boolean permission = getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit();
+            boolean permission = getJocPermissions(accessToken).getInventory().getView();
             JOCDefaultResponse response = checkPermissions(accessToken, in, permission);
             if (response == null) {
                 response = JOCDefaultResponse.responseStatus200(readFolder(in, IMPL_PATH));
@@ -58,7 +58,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             RequestFolder in = Globals.objectMapper.readValue(inBytes, RequestFolder.class);
 
             in.setPath(normalizeFolder(in.getPath()));
-            boolean permission = getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isView();
+            boolean permission = getJocPermissions(accessToken).getInventory().getView();
             JOCDefaultResponse response = checkPermissions(accessToken, in, permission);
             if (response == null) {
                 response = JOCDefaultResponse.responseStatus200(readFolder(in, TRASH_IMPL_PATH));

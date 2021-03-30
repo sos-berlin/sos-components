@@ -53,7 +53,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             JsonValidator.validate(inBytes, ReleaseFilter.class);
             ReleaseFilter in = Globals.objectMapper.readValue(inBytes, ReleaseFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getView());
 
             if (response == null) {
                 response = getReleaseResponse(in, true);

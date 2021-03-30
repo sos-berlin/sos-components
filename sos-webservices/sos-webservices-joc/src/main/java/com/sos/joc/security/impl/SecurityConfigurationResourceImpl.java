@@ -23,23 +23,15 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 	private static final String API_CALL_READ = "./authentication/shiro";
 	private static final String API_CALL_WRITE = "./authentication/store";
 
+	
 	@Override
-	public JOCDefaultResponse postShiroRead(String xAccessToken, String accessToken) throws Exception {
-		return postSecurityConfigurationRead(getAccessToken(xAccessToken, accessToken));
-	}
-
-	public JOCDefaultResponse postSecurityConfigurationRead(String accessToken) throws Exception {
+	public JOCDefaultResponse postShiroRead(String accessToken) {
 	    SOSHibernateSession connection = null;
 	    try {
-			JOCDefaultResponse jocDefaultResponse = init(API_CALL_READ, null, accessToken, "", true);
+	        initLogging(API_CALL_READ, null, accessToken);
+			JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getView());
 			if (jocDefaultResponse != null) {
 				return jocDefaultResponse;
-			}
-
-			/** check permissions */
-			if (!getPermissonsJocCockpit("", accessToken).getJS7Controller().getAdministration()
-					.isEditPermissions()) {
-				return this.accessDeniedResponse();
 			}
 
 			SOSSecurityConfigurationMasters.resetInstance();
@@ -68,35 +60,23 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 	}
 
 	@Override
-	public JOCDefaultResponse postShiroStore(String xAccessToken, String accessToken,
-			SecurityConfiguration securityConfiguration) throws Exception {
-		return postSecurityConfigurationWrite(getAccessToken(xAccessToken, accessToken), securityConfiguration);
-	}
-
-	public JOCDefaultResponse postSecurityConfigurationWrite(String accessToken,
-			SecurityConfiguration securityConfiguration) throws Exception {
+	public JOCDefaultResponse postShiroStore(String accessToken, byte[] body)  {
 		try {
-			JOCDefaultResponse jocDefaultResponse = init(API_CALL_WRITE, null, accessToken, "", true);
-			if (jocDefaultResponse != null) {
-				return jocDefaultResponse;
-			}
-
-			/** check permissions */
-			if (!getPermissonsJocCockpit("", accessToken).getJS7Controller().getAdministration()
-					.isEditPermissions()) {
-				return this.accessDeniedResponse();
-			}
+		    initLogging(API_CALL_WRITE, body, accessToken);
+		    // TODO JsonValidator
+		    SecurityConfiguration securityConfiguration = Globals.objectMapper.readValue(body, SecurityConfiguration.class);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
 
 			SOSSecurityConfiguration sosSecurityConfiguration = new SOSSecurityConfiguration();
-
-			return JOCDefaultResponse
-					.responseStatus200(sosSecurityConfiguration.writeConfiguration(securityConfiguration));
+			return JOCDefaultResponse.responseStatus200(sosSecurityConfiguration.writeConfiguration(securityConfiguration));
 		} catch (JocException e) {
 			e.addErrorMetaInfo(getJocError());
 			return JOCDefaultResponse.responseStatusJSError(e);
 		} catch (Exception e) {
 			return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-		} finally {
 		}
 
 	}

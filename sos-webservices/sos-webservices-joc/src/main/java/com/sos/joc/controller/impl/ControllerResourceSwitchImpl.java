@@ -29,16 +29,15 @@ public class ControllerResourceSwitchImpl extends JOCResourceImpl implements ICo
         try {
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ControllerId.class);
-            ControllerId controllerId = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
-
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId.getControllerId(), getPermissonsJocCockpit(controllerId
-                    .getControllerId(), accessToken).getJS7Controller().getView().isStatus());
+            ControllerId controller = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
+            String controllerId = controller.getControllerId();
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
             SOSShiroCurrentUser shiroUser = jobschedulerUser.getSosShiroCurrentUser();
             JOCPreferences jocPreferences = new JOCPreferences(shiroUser.getUsername());
-            String selectedInstance = controllerId.getControllerId();
+            String selectedInstance = controllerId;
             jocPreferences.put(WebserviceConstants.SELECTED_INSTANCE, selectedInstance);
             SOSShiroSession sosShiroSession = new SOSShiroSession(shiroUser);
             sosShiroSession.setAttribute(SESSION_KEY, selectedInstance);

@@ -28,10 +28,7 @@ public class CommentsResourceImpl extends JOCResourceImpl implements ICommentsRe
         
         try {
             initLogging(API_CALL, null, accessToken);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, true);
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
-            }
+            
             ConfigurationGlobalsJoc clusterSettings = Globals.getConfigurationGlobalsJoc();
             Comments entity = new Comments();
             entity.setForceCommentsForAuditLog(ClusterSettings.getForceCommentsForAuditLog(clusterSettings));

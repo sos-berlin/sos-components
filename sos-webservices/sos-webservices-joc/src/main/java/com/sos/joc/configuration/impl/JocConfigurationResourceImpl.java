@@ -27,7 +27,6 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.configuration.Configuration;
 import com.sos.joc.model.configuration.Configuration200;
-import com.sos.joc.model.configuration.ConfigurationObjectType;
 import com.sos.joc.model.configuration.ConfigurationOk;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.configuration.globals.GlobalSettings;
@@ -124,21 +123,22 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                     //dbItem.setObjectType(configuration.getObjectType().name());
                     dbItem.setObjectType(configuration.getObjectType());
                 }
-
+                
+                // TODO
                 /** check permissions */
-                boolean shareStatusMakePrivate = (dbItem != null && dbItem.getShared() && !configuration.getShared());
-                boolean shareStatusMakeShare = (dbItem != null && !dbItem.getShared() && configuration.getShared());
-                if (shareStatusMakePrivate && !getPermissonsJocCockpit(configuration.getControllerId(), accessToken).getJOCConfigurations().getShare()
-                        .getChange().getSharedStatus().isMakePrivate() || (shareStatusMakeShare && !getPermissonsJocCockpit(configuration
-                                .getControllerId(), accessToken).getJOCConfigurations().getShare().getChange().getSharedStatus().isMakeShared())) {
-                    return this.accessDeniedResponse();
-                }
-                Boolean owner = this.getJobschedulerUser().getSosShiroCurrentUser().getUsername().equals(dbItem.getAccount());
-                Boolean permission = owner || (dbItem != null && dbItem.getShared() && getPermissonsJocCockpit(configuration.getControllerId(),
-                        accessToken).getJOCConfigurations().getShare().getChange().isEditContent());
-                if (!permission) {
-                    return this.accessDeniedResponse();
-                }
+//                boolean shareStatusMakePrivate = (dbItem != null && dbItem.getShared() && !configuration.getShared());
+//                boolean shareStatusMakeShare = (dbItem != null && !dbItem.getShared() && configuration.getShared());
+//                if (shareStatusMakePrivate && !getControllerPermissions(configuration.getControllerId(), accessToken).getJOCConfigurations().getShare()
+//                        .getChange().getSharedStatus().isMakePrivate() || (shareStatusMakeShare && !getControllerPermissions(configuration
+//                                .getControllerId(), accessToken).getJOCConfigurations().getShare().getChange().getSharedStatus().isMakeShared())) {
+//                    return this.accessDeniedResponse();
+//                }
+//                Boolean owner = this.getJobschedulerUser().getSosShiroCurrentUser().getUsername().equals(dbItem.getAccount());
+//                Boolean permission = owner || (dbItem != null && dbItem.getShared() && getControllerPermissions(configuration.getControllerId(),
+//                        accessToken).getJOCConfigurations().getShare().getChange().isEditContent());
+//                if (!permission) {
+//                    return this.accessDeniedResponse();
+//                }
             }
             dbItem.setConfigurationType(configuration.getConfigurationType().name());
             dbItem.setConfigurationItem(configuration.getConfigurationItem());
@@ -192,13 +192,14 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             }
             Configuration config = setConfigurationValues(dbItem, configuration.getControllerId());
 
+            // TODO
             /** check permissions */
-            Boolean owner = this.getJobschedulerUser().getSosShiroCurrentUser().getUsername().equals(dbItem.getAccount());
-            Boolean permission = owner || (dbItem.getShared() && getPermissonsJocCockpit(configuration.getControllerId(), accessToken)
-                    .getJOCConfigurations().getShare().getView().isStatus());
-            if (!permission) {
-                return this.accessDeniedResponse();
-            }
+//            Boolean owner = this.getJobschedulerUser().getSosShiroCurrentUser().getUsername().equals(dbItem.getAccount());
+//            Boolean permission = owner || (dbItem.getShared() && getControllerPermissions(configuration.getControllerId(), accessToken)
+//                    .getJOCConfigurations().getShare().getView().isStatus());
+//            if (!permission) {
+//                return this.accessDeniedResponse();
+//            }
 
             /** fill response */
             Configuration200 entity = new Configuration200();
@@ -234,13 +235,14 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 throw new DBMissingDataException(String.format("no entry found for configuration id: %d", configuration.getId()));
             }
 
+            // TODO
             /** check permissions */
-            Boolean owner = this.getJobschedulerUser().getSosShiroCurrentUser().getUsername().equals(dbItem.getAccount());
-            Boolean permission = owner || (dbItem.getShared() && getPermissonsJocCockpit(configuration.getControllerId(), accessToken)
-                    .getJOCConfigurations().getShare().getChange().isDelete());
-            if (!permission) {
-                return this.accessDeniedResponse();
-            }
+//            Boolean owner = this.getJobschedulerUser().getSosShiroCurrentUser().getUsername().equals(dbItem.getAccount());
+//            Boolean permission = owner || (dbItem.getShared() && getControllerPermissions(configuration.getControllerId(), accessToken)
+//                    .getJOCConfigurations().getShare().getChange().isDelete());
+//            if (!permission) {
+//                return this.accessDeniedResponse();
+//            }
 
             /** delete item */
             ConfigurationOk ok = new ConfigurationOk();
@@ -261,9 +263,11 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
     @Override
     public JOCDefaultResponse postShareConfiguration(String accessToken, byte[] body) {
         try {
+            // TODO initLogging, jsonValiadtor, initPermission
             Configuration configuration = getConfiguration(API_CALL_SHARE, accessToken, body);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(configuration.getControllerId(), getPermissonsJocCockpit(configuration
-                    .getControllerId(), accessToken).getJOCConfigurations().getShare().getChange().getSharedStatus().isMakeShared());
+//            JOCDefaultResponse jocDefaultResponse = initPermissions(configuration.getControllerId(), getControllerPermissions(configuration
+//                    .getControllerId(), accessToken).getJOCConfigurations().getShare().getChange().getSharedStatus().isMakeShared());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(configuration.getControllerId(), true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -298,8 +302,9 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
     public JOCDefaultResponse postMakePrivate(String accessToken, byte[] body) {
         try {
             Configuration configuration = getConfiguration(API_CALL_PRIVATE, accessToken, body);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(configuration.getControllerId(), getPermissonsJocCockpit(configuration
-                    .getControllerId(), accessToken).getJOCConfigurations().getShare().getChange().getSharedStatus().isMakePrivate());
+//            JOCDefaultResponse jocDefaultResponse = initPermissions(configuration.getControllerId(), getControllerPermissions(configuration
+//                    .getControllerId(), accessToken).getJOCConfigurations().getShare().getChange().getSharedStatus().isMakePrivate());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(configuration.getControllerId(), true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

@@ -7,7 +7,6 @@ import javax.ws.rs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -16,6 +15,7 @@ import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.security.permissions.ControllerPermissions;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.delete.all.DeleteAll;
 import com.sos.joc.model.xmleditor.delete.all.DeleteAllAnswer;
@@ -68,8 +68,9 @@ public class DeleteAllResourceImpl extends JOCResourceImpl implements IDeleteAll
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final DeleteAll in) throws Exception {
-        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getControllerId(), accessToken);
-        boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
+        // TODO premission - maybe getJocPermissions(accessToken)
+        ControllerPermissions permissions = getControllerPermissions(in.getControllerId(), accessToken);
+        boolean permission = true; //permissions.getJS7Controller().getAdministration().isEditPermissions();
         return initPermissions(in.getControllerId(), permission);
     }
 

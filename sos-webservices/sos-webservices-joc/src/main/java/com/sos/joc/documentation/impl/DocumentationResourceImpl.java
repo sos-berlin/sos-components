@@ -37,7 +37,7 @@ public class DocumentationResourceImpl extends JOCResourceImpl implements IDocum
         try {
             String request = String.format("%s/%s/%s/%s", API_CALL, jobschedulerId, accessToken, path);
             initLogging(request, null, accessToken);
-            boolean perm = getPermissonsJocCockpit(jobschedulerId, accessToken).getDocumentation().isView();
+            boolean perm = getJocPermissions(accessToken).getDocumentations().getView();
             JOCDefaultResponse jocDefaultResponse = initPermissions(jobschedulerId, perm);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

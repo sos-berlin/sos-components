@@ -9,9 +9,6 @@ import java.util.Map;
 
 import javax.ws.rs.Path;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -160,7 +157,6 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
     
     private static final String ERROR = "ERROR:";
     private static final String WARN = "WARN:";
-    private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanHistoryImpl.class);
     private static final String API_CALL = "./daily_plan/history";
 
     @Override
@@ -171,8 +167,8 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilter.class);
             DailyPlanHistoryFilter dailyPlanHistoryFilter = Globals.objectMapper.readValue(filterBytes, DailyPlanHistoryFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanHistoryFilter.getControllerId(), getPermissonsJocCockpit(
-                    dailyPlanHistoryFilter.getControllerId(), accessToken).getDailyPlan().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanHistoryFilter.getControllerId(), getJocPermissions(
+                    accessToken).getDailyPlan().getView());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

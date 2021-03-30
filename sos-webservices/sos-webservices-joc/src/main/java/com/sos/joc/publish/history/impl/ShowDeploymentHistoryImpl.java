@@ -35,7 +35,8 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
             initLogging(API_CALL, showDepHistoryFilter, xAccessToken);
             JsonValidator.validate(showDepHistoryFilter, ShowDepHistoryFilter.class);
             ShowDepHistoryFilter filter = Globals.objectMapper.readValue(showDepHistoryFilter, ShowDepHistoryFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getPermissonsJocCockpit(null, xAccessToken).getHistory().getView().isStatus());
+            // TODO permissions - filter response per controllerId
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(null, xAccessToken).getDeployments().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

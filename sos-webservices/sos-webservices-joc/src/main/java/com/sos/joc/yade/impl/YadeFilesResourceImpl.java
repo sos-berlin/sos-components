@@ -35,8 +35,7 @@ public class YadeFilesResourceImpl extends JOCResourceImpl implements IYadeFiles
             JsonValidator.validate(inBytes, FileFilter.class);
             FilesFilter in = Globals.objectMapper.readValue(inBytes, FilesFilter.class);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), getPermissonsJocCockpit(in.getControllerId(), accessToken).getYADE()
-                    .getView().isFiles());
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), getJocPermissions(accessToken).getFileTransfer().getView());
             if (response != null) {
                 return response;
             }

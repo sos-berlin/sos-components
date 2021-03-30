@@ -68,8 +68,8 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
             JsonValidator.validateFailFast(filterBytes, ControllerId.class);
             ControllerId jobSchedulerFilter = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(jobSchedulerFilter.getControllerId(), getPermissonsJocCockpit(jobSchedulerFilter
-                    .getControllerId(), accessToken).getJS7Controller().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(jobSchedulerFilter.getControllerId(), getControllerPermissions(jobSchedulerFilter
+                    .getControllerId(), accessToken).getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

@@ -41,7 +41,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             JsonValidator.validate(inBytes, ConfigurationObject.class);
             ConfigurationObject in = Globals.objectMapper.readValue(inBytes, ConfigurationObject.class);
 
-            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
             if (response == null) {
                 response = store(in);
             }

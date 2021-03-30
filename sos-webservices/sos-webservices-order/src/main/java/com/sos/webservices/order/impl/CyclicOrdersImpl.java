@@ -44,8 +44,8 @@ public class CyclicOrdersImpl extends JOCResourceImpl implements ICyclicOrdersRe
             JsonValidator.validateFailFast(filterBytes, DailyPlanSubmissionsFilter.class);
             OrdersFilterV ordersFilterV = Globals.objectMapper.readValue(filterBytes, OrdersFilterV.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(ordersFilterV.getControllerId(), getPermissonsJocCockpit(ordersFilterV
-                    .getControllerId(), accessToken).getWorkflow().getExecute().isAddOrder());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(ordersFilterV.getControllerId(), getControllerPermissions(ordersFilterV
+                    .getControllerId(), accessToken).getOrders().getView());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

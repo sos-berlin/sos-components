@@ -68,8 +68,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             initLogging(API_CALL, filter, xAccessToken);
             JsonValidator.validate(filter, DeployFilter.class);
             DeployFilter deployFilter = Globals.objectMapper.readValue(filter, DeployFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", 
-                    getPermissonsJocCockpit("", xAccessToken).getInventory().getConfigurations().getPublish().isDeploy());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getInventory().getDeploy());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

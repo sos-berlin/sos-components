@@ -67,8 +67,8 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrdersFilterV.class);
             OrdersFilterV ordersFilter = Globals.objectMapper.readValue(filterBytes, OrdersFilterV.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(ordersFilter.getControllerId(), getPermissonsJocCockpit(ordersFilter
-                    .getControllerId(), accessToken).getOrder().getView().isStatus());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(ordersFilter.getControllerId(), getControllerPermissions(ordersFilter
+                    .getControllerId(), accessToken).getOrders().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -227,7 +227,6 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 }
                 return either;
             });
-            // TODO something with Either::isLeft?
             entity.setOrders(ordersV.filter(Either::isRight).map(Either::get).filter(Objects::nonNull).sorted(Comparator.comparingLong(
                     o -> o.getScheduledFor() == null ? surveyDateMillis : o.getScheduledFor())).collect(Collectors.toList()));
             entity.setDeliveryDate(Date.from(Instant.now()));

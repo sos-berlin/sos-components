@@ -32,8 +32,7 @@ public class YadeOverviewSummaryResourceImpl extends JOCResourceImpl implements 
             JsonValidator.validate(inBytes, FileFilter.class);
             TransferFilter in = Globals.objectMapper.readValue(inBytes, TransferFilter.class);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), getPermissonsJocCockpit(in.getControllerId(), accessToken).getYADE()
-                    .getView().isStatus());
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), getJocPermissions(accessToken).getFileTransfer().getView());
             if (response != null) {
                 return response;
             }

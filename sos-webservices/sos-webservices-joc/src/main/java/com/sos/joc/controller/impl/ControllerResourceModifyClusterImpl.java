@@ -53,10 +53,8 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             UrlParameter urlParameter = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             String controllerId = urlParameter.getControllerId();
 
-            boolean permission = getPermissonsJocCockpit(controllerId, accessToken).getJS7ControllerCluster().getExecute()
-                    .isSwitchOver();
-
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, permission);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken)
+                    .getSwitchOver());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -107,11 +105,9 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             initLogging(API_CALL_APPOINT_NODES, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter urlParameter = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
-            // TODO permissions
-            boolean permission = true; //getPermissonsJocCockpit(urlParameter.getControllerId(), accessToken).getJS7ControllerCluster().getExecute()
-//                    .isSwitchOver();
-
-            JOCDefaultResponse jocDefaultResponse = initPermissions(urlParameter.getControllerId(), permission);
+            String controllerId = urlParameter.getControllerId();
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken)
+                    .getSwitchOver());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -121,7 +117,7 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             ModifyJobSchedulerClusterAudit jobschedulerAudit = new ModifyJobSchedulerClusterAudit(urlParameter);
             logAuditMessage(jobschedulerAudit);
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_APPOINT_NODES);
-            appointNodes(urlParameter.getControllerId(), new InventoryAgentInstancesDBLayer(connection), accessToken, getJocError());
+            appointNodes(controllerId, new InventoryAgentInstancesDBLayer(connection), accessToken, getJocError());
             storeAuditLogEntry(jobschedulerAudit);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

@@ -7,7 +7,6 @@ import javax.ws.rs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
@@ -206,9 +205,12 @@ public class ApplyResourceImpl extends JOCResourceImpl implements IApplyResource
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final ApplyConfiguration in) throws Exception {
-        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getControllerId(), accessToken);
-        boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return initPermissions(in.getControllerId(), permission);
+
+//        TODO new Permissions
+//        SOSPermissionJocCockpit permissions = getControllerPermissions(in.getControllerId(), accessToken);
+//        boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
+        
+        return initPermissions(in.getControllerId(), true);
     }
 
     private DBItemXmlEditorConfiguration getObject(DbLayerXmlEditor dbLayer, ApplyConfiguration in, String name) throws Exception {

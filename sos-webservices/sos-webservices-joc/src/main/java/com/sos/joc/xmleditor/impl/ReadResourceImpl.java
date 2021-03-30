@@ -11,7 +11,6 @@ import javax.ws.rs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
@@ -22,6 +21,7 @@ import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.security.permissions.ControllerPermissions;
 import com.sos.joc.model.xmleditor.read.ReadConfiguration;
 import com.sos.joc.model.xmleditor.read.other.AnswerConfiguration;
 import com.sos.joc.model.xmleditor.read.other.ReadOtherConfigurationAnswer;
@@ -74,8 +74,9 @@ public class ReadResourceImpl extends JOCResourceImpl implements IReadResource {
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final ReadConfiguration in) throws Exception {
-        SOSPermissionJocCockpit permissions = getPermissonsJocCockpit(in.getControllerId(), accessToken);
-        boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
+        // TODO permissions
+        ControllerPermissions permissions = getControllerPermissions(in.getControllerId(), accessToken);
+        boolean permission = true; // permissions.getJS7Controller().getAdministration().isEditPermissions();
         return initPermissions(in.getControllerId(), permission);
     }
 

@@ -21,7 +21,6 @@ import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.configuration.Configuration;
-import com.sos.joc.model.configuration.ConfigurationObjectType;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.configuration.Configurations;
 import com.sos.joc.model.configuration.ConfigurationsDeleteFilter;
@@ -115,8 +114,9 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             }
 
             if (listOfJocConfigurationDbItem != null && !listOfJocConfigurationDbItem.isEmpty()) {
-                boolean sharePerm = getPermissonsJocCockpit(configurationsFilter.getControllerId(), accessToken).getJOCConfigurations().getShare()
-                        .getView().isStatus();
+                // TODO permission
+                boolean sharePerm = true; //getControllerPermissions(configurationsFilter.getControllerId(), accessToken).getJOCConfigurations().getShare()
+                        //.getView().isStatus();
                 for (DBItemJocConfiguration jocConfigurationDbItem : listOfJocConfigurationDbItem) {
                     Configuration configuration = new Configuration();
                     configuration.setAccount(jocConfigurationDbItem.getAccount());
@@ -160,8 +160,10 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             initLogging(API_CALL_DELETE, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ConfigurationsDeleteFilter.class);
             ConfigurationsDeleteFilter configurationsFilter = Globals.objectMapper.readValue(filterBytes, ConfigurationsDeleteFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getPermissonsJocCockpit("", accessToken).getJS7Controller()
-                    .getAdministration().isEditPermissions());
+            // TODO permission
+//            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions("", accessToken).getJS7Controller()
+//                    .getAdministration().isEditPermissions());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

@@ -41,8 +41,7 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
         try {
             UrlParameter urlParameter = getUrlParameter(filterBytes, accessToken, "terminate");
 
-            boolean permission = getPermissonsJocCockpit(urlParameter.getControllerId(), accessToken).getJS7Controller().getExecute()
-                    .isTerminate();
+            boolean permission = getControllerPermissions(urlParameter.getControllerId(), accessToken).getTerminate();
             Terminate terminateCommand = new Terminate();
             if (urlParameter.getWithFailover() != null && urlParameter.getWithFailover()) {
                 terminateCommand.setClusterAction(new ClusterAction());
@@ -61,8 +60,7 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
         try {
             UrlParameter urlParameter = getUrlParameter(filterBytes, accessToken, "restart");
 
-            boolean permission = getPermissonsJocCockpit(urlParameter.getControllerId(), accessToken).getJS7Controller().getExecute()
-                    .getRestart().isTerminate();
+            boolean permission = getControllerPermissions(urlParameter.getControllerId(), accessToken).getRestart();
             Terminate terminateCommand = new Terminate(true, null);
             if (urlParameter.getWithFailover() != null && urlParameter.getWithFailover()) {
                 terminateCommand.setClusterAction(new ClusterAction());
@@ -81,8 +79,7 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
         try {
             UrlParameter urlParameter = getUrlParameter(filterBytes, accessToken, "abort");
 
-            boolean permission = getPermissonsJocCockpit(urlParameter.getControllerId(), accessToken).getJS7Controller().getExecute()
-                    .isAbort();
+            boolean permission = getControllerPermissions(urlParameter.getControllerId(), accessToken).getTerminate();
             return executeModifyJobSchedulerCommand("abort", new Abort(), urlParameter, accessToken, permission);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -97,8 +94,7 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
         try {
             UrlParameter urlParameter = getUrlParameter(filterBytes, accessToken, "abort_and_restart");
 
-            boolean permission = getPermissonsJocCockpit(urlParameter.getControllerId(), accessToken).getJS7Controller().getExecute()
-                    .getRestart().isAbort();
+            boolean permission = getControllerPermissions(urlParameter.getControllerId(), accessToken).getRestart();
             return executeModifyJobSchedulerCommand("abort_and_restart", new Abort(true), urlParameter, accessToken, permission);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

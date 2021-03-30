@@ -64,7 +64,7 @@
 			</xs:sequence>
 		</xs:complexType>
 	</xs:element>
-	<xs:element name="SOSPermissionJocCockpit">
+	<!--  xs:element name="SOSPermissionJocCockpit">
 		<xs:complexType>
 			<xs:sequence>
 				<xs:element name="JS7Controller">
@@ -577,7 +577,7 @@
 			<xs:attribute name="jobschedulerId" type="xs:string"/>
 			<xs:attribute name="precedence" type="xs:int"/>
 		</xs:complexType>
-	</xs:element>
+	</xs:element -->
 	<!-- xs:element name="SOSPermissionCommands">
 		<xs:complexType>
 			<xs:sequence>
@@ -826,21 +826,21 @@
 			<xs:attribute name="accessToken" type="xs:string"/>
 		</xs:complexType>
 	</xs:element -->
-	<xs:element name="SOSPermissionJocCockpitControllers">
+	<!-- xs:element name="SOSPermissionJocCockpitControllers">
 		<xs:complexType>
 			<xs:sequence maxOccurs="unbounded">
 				<xs:element ref="SOSPermissionJocCockpitController"/>
 			</xs:sequence>
 		</xs:complexType>
-	</xs:element>
-	<xs:element name="SOSPermissionJocCockpitController">
+	</xs:element -->
+	<!-- xs:element name="SOSPermissionJocCockpitController">
 		<xs:complexType>
 			<xs:sequence>
 				<xs:element name="JS7Controller" type="xs:string"/>
 				<xs:element ref="SOSPermissionJocCockpit"/>
 			</xs:sequence>
 		</xs:complexType>
-	</xs:element>
+	</xs:element -->
 	<!-- xs:element name="SOSPermissionCommandsController">
 		<xs:complexType>
 			<xs:sequence>

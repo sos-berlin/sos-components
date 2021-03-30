@@ -1,5 +1,6 @@
 package com.sos.joc.classes;
 
+import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -11,13 +12,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.apache.shiro.session.InvalidSessionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.auth.rest.SOSPermissionsCreator;
 import com.sos.auth.rest.SOSShiroFolderPermissions;
-import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.audit.IAuditLog;
@@ -32,6 +35,8 @@ import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.security.permissions.ControllerPermissions;
+import com.sos.joc.model.security.permissions.JocPermissions;
 
 public class JOCResourceImpl {
 
@@ -43,7 +48,8 @@ public class JOCResourceImpl {
 
     private JocError jocError = new JocError();
 
-    protected void initGetPermissions(String accessToken) throws JocException {
+    protected void initGetPermissions(String accessToken) throws JocException, InvalidSessionException, JsonParseException, JsonMappingException,
+            IOException {
         if (jobschedulerUser == null) {
             this.accessToken = accessToken;
             jobschedulerUser = new JobSchedulerUser(accessToken);
@@ -69,10 +75,17 @@ public class JOCResourceImpl {
         return masterId;
     }
 
-    protected SOSPermissionJocCockpit getPermissonsJocCockpit(String masterId, String accessToken) throws JocException {
+    protected ControllerPermissions getControllerPermissions(String masterId, String accessToken) throws JocException, InvalidSessionException,
+            JsonParseException, JsonMappingException, IOException {
         initGetPermissions(accessToken);
         masterId = getMasterId(masterId);
-        return jobschedulerUser.getSosShiroCurrentUser().getSosPermissionJocCockpit(masterId);
+        return jobschedulerUser.getSosShiroCurrentUser().getControllerPermissions(masterId);
+    }
+    
+    protected JocPermissions getJocPermissions(String accessToken) throws JocException, InvalidSessionException, JsonParseException,
+            JsonMappingException, IOException {
+        initGetPermissions(accessToken);
+        return jobschedulerUser.getSosShiroCurrentUser().getJocPermissions();
     }
 
     public String getAccessToken() {
@@ -121,7 +134,8 @@ public class JOCResourceImpl {
         return Date.from(fromEpochMilli);
     }
 
-    public JOCDefaultResponse init(String request, Object body, String accessToken, String controllerId, boolean permission) throws JocException {
+    public JOCDefaultResponse init(String request, Object body, String accessToken, String controllerId, boolean permission) throws JocException,
+            InvalidSessionException, JsonParseException, JsonMappingException, IOException {
         this.accessToken = accessToken;
         if (jobschedulerUser == null) {
             jobschedulerUser = new JobSchedulerUser(accessToken);
@@ -258,7 +272,8 @@ public class JOCResourceImpl {
         return JOCDefaultResponse.responseStatus403(JOCDefaultResponse.getError401Schema(jobschedulerUser, jocError));
     }
 
-    public void initLogging(String request, byte[] body, String accessToken) throws JocException {
+    public void initLogging(String request, byte[] body, String accessToken) throws JocException, InvalidSessionException, JsonParseException,
+            JsonMappingException, IOException {
         this.accessToken = accessToken;
         if (jobschedulerUser == null) {
             jobschedulerUser = new JobSchedulerUser(accessToken);

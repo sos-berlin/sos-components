@@ -34,7 +34,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
             JsonValidator.validate(inBytes, RequestFilter.class);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isEdit());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getView());
             if (response == null) {
                 response = read(in);
             }
@@ -56,7 +56,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
             JsonValidator.validate(inBytes, RequestFilter.class);
             RequestFilter in = Globals.objectMapper.readValue(inBytes, RequestFilter.class);
 
-            JOCDefaultResponse response = initPermissions(null, getPermissonsJocCockpit("", accessToken).getInventory().getConfigurations().isView());
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getView());
             if (response == null) {
                 response = readTrash(in);
             }

@@ -6,9 +6,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -16,10 +13,29 @@ import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.auth.rest.permission.model.SOSPermissionJocCockpit;
-import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitController;
-import com.sos.auth.rest.permission.model.SOSPermissionJocCockpitControllers;
-import com.sos.joc.classes.JOCJsonCommand;
+import com.sos.joc.model.security.Permissions;
+import com.sos.joc.model.security.permissions.ControllerPermissions;
+import com.sos.joc.model.security.permissions.JocPermissions;
+import com.sos.joc.model.security.permissions.controller.Agents;
+import com.sos.joc.model.security.permissions.controller.Deployments;
+import com.sos.joc.model.security.permissions.controller.Locks;
+import com.sos.joc.model.security.permissions.controller.Orders;
+import com.sos.joc.model.security.permissions.controller.Workflows;
+import com.sos.joc.model.security.permissions.joc.Administration;
+import com.sos.joc.model.security.permissions.joc.AuditLog;
+import com.sos.joc.model.security.permissions.joc.Calendars;
+import com.sos.joc.model.security.permissions.joc.Cluster;
+import com.sos.joc.model.security.permissions.joc.DailyPlan;
+import com.sos.joc.model.security.permissions.joc.Documentations;
+import com.sos.joc.model.security.permissions.joc.FileTransfer;
+import com.sos.joc.model.security.permissions.joc.Inventory;
+import com.sos.joc.model.security.permissions.joc.Notification;
+import com.sos.joc.model.security.permissions.joc.Others;
+import com.sos.joc.model.security.permissions.joc.admin.Accounts;
+import com.sos.joc.model.security.permissions.joc.admin.Certificates;
+import com.sos.joc.model.security.permissions.joc.admin.Controllers;
+import com.sos.joc.model.security.permissions.joc.admin.Settings;
+
 
 public class SOSShiroCurrentUser {
 
@@ -32,11 +48,9 @@ public class SOSShiroCurrentUser {
     private Boolean haveAnyIpPermission;
     private HttpServletRequest httpServletRequest;
 
-    private SOSPermissionJocCockpitControllers sosPermissionJocCockpitControllers;
-    private Map<String, SOSPermissionJocCockpit> listOfSOSPermissionJocCockpit;
+    private Permissions sosPermissionJocCockpitControllers;
     private SOSShiroFolderPermissions sosShiroFolderPermissions;
     private SOSShiroFolderPermissions sosShiroCalendarFolderPermissions;
-    private Set<JOCJsonCommand> jocJsonCommands;
 
     public SOSShiroCurrentUser(String username, String password) {
         super();
@@ -52,39 +66,9 @@ public class SOSShiroCurrentUser {
         this.password = password;
     }
 
-    private Boolean getHaveAnyIpPermission() {
-        if (this.haveAnyIpPermission == null) {
-
-            if (currentSubject != null) {
-                SOSListOfPermissions sosListOfPermissions = new SOSListOfPermissions(this,false);
- 
-                this.haveAnyIpPermission = false;
-                String[] ipParts = this.getCallerIpAddress().split("\\.");
-                for (String p : sosListOfPermissions.getSosPermissionShiro().getSOSPermissions().getSOSPermissionListJoc().getSOSPermission()) {
-                    if (this.haveAnyIpPermission) {
-                        break;
-                    }
-                    String es = "ip=";
-
-                    for (int i = 0; i < ipParts.length; i++) {
-                        es = es + ipParts[i];
-                        this.haveAnyIpPermission = currentSubject.isPermitted(es + ":" + p) || currentSubject.isPermitted("-" + es + ":" + p);
-                        if (this.haveAnyIpPermission) {
-                            break;
-                        }
-                        es = es + ".";
-                    }
-
-                }
-
-            }
-        }
-        return this.haveAnyIpPermission;
-    }
-
-    public SOSPermissionJocCockpit getSosPermissionJocCockpit(String controllerId) {
-        if (listOfSOSPermissionJocCockpit == null) {
-            initListOfSOSPermissionJocCockpit();
+    public ControllerPermissions getControllerPermissions(String controllerId) {
+        if (sosPermissionJocCockpitControllers == null) {
+            sosPermissionJocCockpitControllers = initPermissions();
         }
 
         if (httpServletRequest != null) {
@@ -92,34 +76,34 @@ public class SOSShiroCurrentUser {
             String ipControllerKey = "ip=" + ip + ":" + controllerId;
             String ipKey = "ip=" + ip;
 
-            if (listOfSOSPermissionJocCockpit.containsKey(ipControllerKey)) {
-                return listOfSOSPermissionJocCockpit.get(ipControllerKey);
+            if (sosPermissionJocCockpitControllers.getAdditionalProperties().containsKey(ipControllerKey)) {
+                return sosPermissionJocCockpitControllers.getAdditionalProperties().get(ipControllerKey);
             }
 
-            if (listOfSOSPermissionJocCockpit.containsKey(ipKey)) {
-                return listOfSOSPermissionJocCockpit.get(ipKey);
+            if (sosPermissionJocCockpitControllers.getAdditionalProperties().containsKey(ipKey)) {
+                return sosPermissionJocCockpitControllers.getAdditionalProperties().get(ipKey);
             }
         }
 
-        if (listOfSOSPermissionJocCockpit.containsKey(controllerId)) {
-            return listOfSOSPermissionJocCockpit.get(controllerId);
+        if (sosPermissionJocCockpitControllers.getAdditionalProperties().containsKey(controllerId)) {
+            return sosPermissionJocCockpitControllers.getAdditionalProperties().get(controllerId);
         } else {
-            return listOfSOSPermissionJocCockpit.get("");
+            return sosPermissionJocCockpitControllers.getControllerDefaults();
         }
     }
-
-    private void initListOfSOSPermissionJocCockpit() {
-        listOfSOSPermissionJocCockpit = new HashMap<String, SOSPermissionJocCockpit>();
-        for (SOSPermissionJocCockpitController permission : sosPermissionJocCockpitControllers.getSOSPermissionJocCockpitController()) {
-            listOfSOSPermissionJocCockpit.put(permission.getJS7Controller(), permission.getSOSPermissionJocCockpit());
+    
+    public JocPermissions getJocPermissions() {
+        if (sosPermissionJocCockpitControllers == null) {
+            sosPermissionJocCockpitControllers = initPermissions();
         }
+        return sosPermissionJocCockpitControllers.getJoc();
     }
 
-    public SOSPermissionJocCockpitControllers getSosPermissionJocCockpitControllers() {
+    public Permissions getSosPermissionJocCockpitControllers() {
         return sosPermissionJocCockpitControllers;
     }
 
-    public void setSosPermissionJocCockpitControllers(SOSPermissionJocCockpitControllers sosPermissionJocCockpitControllers) {
+    public void setSosPermissionJocCockpitControllers(Permissions sosPermissionJocCockpitControllers) {
         this.sosPermissionJocCockpitControllers = sosPermissionJocCockpitControllers;
     }
 
@@ -153,6 +137,43 @@ public class SOSShiroCurrentUser {
         } else {
             return false;
         }
+    }
+    
+    protected static Permissions initPermissions() {
+        Administration administration = new Administration(new Accounts(), new Settings(), new Controllers(), new Certificates());
+        ControllerPermissions controllerDefaults = new ControllerPermissions(false, false, false, false, new Deployments(), new Orders(), new Agents(),
+                new Locks(), new Workflows());
+        JocPermissions joc = new JocPermissions(administration, new Cluster(), new Inventory(), new Calendars(), new Documentations(), new AuditLog(),
+                new DailyPlan(), new FileTransfer(), new Notification(), new Others());
+        return new Permissions(joc, controllerDefaults);
+    }
+    
+    private Boolean getHaveAnyIpPermission() {
+        if (this.haveAnyIpPermission == null) {
+
+            if (currentSubject != null) {
+                SOSListOfPermissions sosListOfPermissions = new SOSListOfPermissions(this,false);
+ 
+                this.haveAnyIpPermission = false;
+                String[] ipParts = this.getCallerIpAddress().split("\\.");
+                for (String p : sosListOfPermissions.getSosPermissionShiro().getSOSPermissions().getSOSPermissionListJoc().getSOSPermission()) {
+                    if (this.haveAnyIpPermission) {
+                        break;
+                    }
+                    String es = "ip=";
+
+                    for (int i = 0; i < ipParts.length; i++) {
+                        es = es + ipParts[i];
+                        this.haveAnyIpPermission = currentSubject.isPermitted(es + ":" + p) || currentSubject.isPermitted("-" + es + ":" + p);
+                        if (this.haveAnyIpPermission) {
+                            break;
+                        }
+                        es = es + ".";
+                    }
+                }
+            }
+        }
+        return this.haveAnyIpPermission;
     }
 
     private boolean getExcludedController(String permission, String controllerId) {

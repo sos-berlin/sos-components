@@ -136,7 +136,29 @@
 								<exclude>calendar/*.json</exclude>
 								<exclude>inventory/*.json</exclude>
 								<exclude>configuration/globals/*.json</exclude>
+								<exclude>security/permissions-schema.json</exclude>
 							</excludes>
+						</configuration>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>generate-joc-model-permissions</id>
+						<phase>generate-sources</phase>
+						<configuration>
+							<sourceDirectory>${basedir}/src/main/resources/raml/api/schemas/security</sourceDirectory>
+							<targetPackage>com.sos.joc.model</targetPackage>
+							<removeOldOutput>false</removeOldOutput>
+							<includeConstructors>true</includeConstructors>
+							<annotationStyle>jackson2</annotationStyle>
+							<propertyWordDelimiters>- </propertyWordDelimiters>
+							<includeAdditionalProperties>true</includeAdditionalProperties>
+							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
+							<addCompileSourceRoot>false</addCompileSourceRoot>
+							<includes>
+								<include>permissions-schema.json</include>
+							</includes>
 						</configuration>
 						<goals>
 							<goal>generate</goal>
@@ -193,11 +215,11 @@
 							<targetPackage>com.sos.controller.model</targetPackage>
 							<removeOldOutput>false</removeOldOutput>
 							<annotationStyle>none</annotationStyle>
-							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator>
+							<!-- customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator -->
+							<annotationStyle>jackson2</annotationStyle>
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>true</includeAdditionalProperties>
 							<initializeCollections>false</initializeCollections>
-							<!-- constructorsRequiredPropertiesOnly>true</constructorsRequiredPropertiesOnly -->
 							<includeConstructors>true</includeConstructors>
 							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
 							<addCompileSourceRoot>false</addCompileSourceRoot>
