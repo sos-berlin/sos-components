@@ -91,7 +91,7 @@ public class SOSServicePermissionShiro {
 
         Permissions sosPermissionMasters = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(accessToken,
                 entity.getMasters());
-        return JOCDefaultResponse.responseStatus200(sosPermissionMasters);
+        return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(sosPermissionMasters));
     }
 
     @GET
@@ -134,7 +134,7 @@ public class SOSServicePermissionShiro {
                 return JOCDefaultResponse.responseStatusJSError(USER_IS_NULL + " " + AUTHORIZATION_HEADER_WITH_BASIC_BASED64PART_EXPECTED);
             }
 
-            return JOCDefaultResponse.responseStatus200(currentUser.getSosPermissionJocCockpitControllers());
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(currentUser.getSosPermissionJocCockpitControllers()));
         } catch (org.apache.shiro.session.ExpiredSessionException e) {
             LOGGER.error(e.getMessage());
             SOSShiroCurrentUserAnswer sosShiroCurrentUserAnswer = createSOSShiroCurrentUserAnswer(accessTokenFromHeader,

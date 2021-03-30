@@ -76,17 +76,17 @@ public class SOSShiroCurrentUser {
             String ipControllerKey = "ip=" + ip + ":" + controllerId;
             String ipKey = "ip=" + ip;
 
-            if (sosPermissionJocCockpitControllers.getAdditionalProperties().containsKey(ipControllerKey)) {
-                return sosPermissionJocCockpitControllers.getAdditionalProperties().get(ipControllerKey);
+            if (sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().containsKey(ipControllerKey)) {
+                return sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().get(ipControllerKey);
             }
 
-            if (sosPermissionJocCockpitControllers.getAdditionalProperties().containsKey(ipKey)) {
-                return sosPermissionJocCockpitControllers.getAdditionalProperties().get(ipKey);
+            if (sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().containsKey(ipKey)) {
+                return sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().get(ipKey);
             }
         }
 
-        if (sosPermissionJocCockpitControllers.getAdditionalProperties().containsKey(controllerId)) {
-            return sosPermissionJocCockpitControllers.getAdditionalProperties().get(controllerId);
+        if (sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().containsKey(controllerId)) {
+            return sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().get(controllerId);
         } else {
             return sosPermissionJocCockpitControllers.getControllerDefaults();
         }
@@ -145,7 +145,7 @@ public class SOSShiroCurrentUser {
                 new Locks(), new Workflows());
         JocPermissions joc = new JocPermissions(administration, new Cluster(), new Inventory(), new Calendars(), new Documentations(), new AuditLog(),
                 new DailyPlan(), new FileTransfer(), new Notification(), new Others());
-        return new Permissions(joc, controllerDefaults);
+        return new Permissions(joc, controllerDefaults, new com.sos.joc.model.security.permissions.Controllers());
     }
     
     private Boolean getHaveAnyIpPermission() {

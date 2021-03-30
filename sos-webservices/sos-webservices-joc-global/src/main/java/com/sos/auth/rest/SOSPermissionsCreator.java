@@ -154,12 +154,12 @@ public class SOSPermissionsCreator {
     public Permissions createJocCockpitPermissionControllerObjectList(String accessToken,
             List<SecurityConfigurationMaster> listOfControllers) throws JocException {
 
-        Permissions permissions = new Permissions();
+        Permissions permissions = new Permissions(null, null, new com.sos.joc.model.security.permissions.Controllers());
         permissions.setJoc(getJocPermissions());
         permissions.setControllerDefaults(getControllerPermissions(""));
         for (SecurityConfigurationMaster instance : listOfControllers) {
             if (!instance.getMaster().isEmpty()) {
-                permissions.setAdditionalProperty(instance.getMaster(), getControllerPermissions(instance.getMaster()));
+                permissions.getControllers().setAdditionalProperty(instance.getMaster(), getControllerPermissions(instance.getMaster()));
             }
         }
 

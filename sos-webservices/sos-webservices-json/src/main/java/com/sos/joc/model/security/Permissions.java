@@ -1,15 +1,11 @@
 
 package com.sos.joc.model.security;
 
-import java.util.HashMap;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.security.permissions.ControllerPermissions;
+import com.sos.joc.model.security.permissions.Controllers;
 import com.sos.joc.model.security.permissions.JocPermissions;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -25,7 +21,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "joc",
-    "controllerDefaults"
+    "controllerDefaults",
+    "controllers"
 })
 public class Permissions {
 
@@ -39,8 +36,8 @@ public class Permissions {
      */
     @JsonProperty("controllerDefaults")
     private ControllerPermissions controllerDefaults;
-    @JsonIgnore
-    private Map<String, ControllerPermissions> additionalProperties = new HashMap<String, ControllerPermissions>();
+    @JsonProperty("controllers")
+    private Controllers controllers;
 
     /**
      * No args constructor for use in serialization
@@ -51,13 +48,15 @@ public class Permissions {
 
     /**
      * 
+     * @param controllers
      * @param controllerDefaults
      * @param joc
      */
-    public Permissions(JocPermissions joc, ControllerPermissions controllerDefaults) {
+    public Permissions(JocPermissions joc, ControllerPermissions controllerDefaults, Controllers controllers) {
         super();
         this.joc = joc;
         this.controllerDefaults = controllerDefaults;
+        this.controllers = controllers;
     }
 
     @JsonProperty("joc")
@@ -92,24 +91,24 @@ public class Permissions {
         this.controllerDefaults = controllerDefaults;
     }
 
-    @JsonAnyGetter
-    public Map<String, ControllerPermissions> getAdditionalProperties() {
-        return this.additionalProperties;
+    @JsonProperty("controllers")
+    public Controllers getControllers() {
+        return controllers;
     }
 
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, ControllerPermissions value) {
-        this.additionalProperties.put(name, value);
+    @JsonProperty("controllers")
+    public void setControllers(Controllers controllers) {
+        this.controllers = controllers;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("joc", joc).append("controllerDefaults", controllerDefaults).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("joc", joc).append("controllerDefaults", controllerDefaults).append("controllers", controllers).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(additionalProperties).append(controllerDefaults).append(joc).toHashCode();
+        return new HashCodeBuilder().append(controllers).append(controllerDefaults).append(joc).toHashCode();
     }
 
     @Override
@@ -121,7 +120,7 @@ public class Permissions {
             return false;
         }
         Permissions rhs = ((Permissions) other);
-        return new EqualsBuilder().append(additionalProperties, rhs.additionalProperties).append(controllerDefaults, rhs.controllerDefaults).append(joc, rhs.joc).isEquals();
+        return new EqualsBuilder().append(controllers, rhs.controllers).append(controllerDefaults, rhs.controllerDefaults).append(joc, rhs.joc).isEquals();
     }
 
 }
