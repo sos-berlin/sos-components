@@ -247,6 +247,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                         controllerId, countWorkflows, countLocks, countJunctions, countJobClasses));
                 JocInventory.handleWorkflowSearch(dbLayer.getSession(), deployedObjects, false);
             }
+            ImportDeployAudit audit = new ImportDeployAudit(filter, controllerId, commitId, "update", account);
             boolean verified = false;
             String signerDN = null;
             X509Certificate cert = null;
@@ -292,6 +293,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                             });
                 }
                 break;
+            }
+            if (audit != null) {
+                logAuditMessage(audit);
+                storeAuditLogEntry(audit);
             }
             // no error occurred
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

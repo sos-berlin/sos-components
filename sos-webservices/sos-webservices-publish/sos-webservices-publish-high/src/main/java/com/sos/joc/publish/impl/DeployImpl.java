@@ -24,6 +24,7 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.audit.DeployAudit;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -160,6 +161,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             }
             List<DBItemDeploymentHistory> itemsFromFolderToDelete = new ArrayList<DBItemDeploymentHistory>();
 
+            DeployAudit audit = null;
             // call ControllerApi for all provided Controllers
             for (String controllerId : controllerIds) {
                 // store new history entries and update inventory for update operation optimistically
@@ -197,6 +199,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 }
                 if ((verifiedConfigurations != null && !verifiedConfigurations.isEmpty())
                         || (verifiedReDeployables != null && !verifiedReDeployables.isEmpty())) {
+                    audit = new DeployAudit(deployFilter, controllerId, commitId, "update", account);
                     // call updateRepo command via ControllerApi for given controllers
                     boolean verified = false;
                     String signerDN = null;
@@ -268,6 +271,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     invConfigurationsToDelete.addAll(
                             DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
                                     DeleteDeployments.storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitIdForDeleteFromFolder)));
+                    audit = new DeployAudit(deployFilter, null, commitId, "delete", account);
                 }
             }
             // delete configurations optimistically
@@ -294,6 +298,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                             DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError());
                         }); 
                 } 
+            }
+            if (audit != null) {
+                logAuditMessage(audit);
+                storeAuditLogEntry(audit);
             }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {

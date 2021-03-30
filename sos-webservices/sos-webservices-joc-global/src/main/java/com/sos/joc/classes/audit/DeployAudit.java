@@ -15,9 +15,6 @@ import com.sos.joc.model.publish.DeployFilter;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "workflow",
-    "update",
-    "delete",
     "reason",
     "commitId",
     "profile"
@@ -28,12 +25,6 @@ public class DeployAudit implements IAuditLog {
     
     private String commitId;
 
-    private String workflowPath;
-    
-    private Boolean update;
-    
-    private Boolean delete;
-    
     private String reason;
     
     @JsonIgnore
@@ -45,12 +36,6 @@ public class DeployAudit implements IAuditLog {
     @JsonIgnore
     private String ticketLink;
     
-    @JsonIgnore
-    private Long depHistoryId;
-    
-    @JsonIgnore
-    private String folder;
-    
     private String profile;
 
     public DeployAudit(DeployFilter filter, String reason) {
@@ -58,21 +43,11 @@ public class DeployAudit implements IAuditLog {
         this.reason = reason;
     }
 
-    public DeployAudit(DeployFilter filter, boolean update, String controllerId, String commitId, Long depHistoryId, String path, String reason, String profile) {
+    public DeployAudit(DeployFilter filter, String controllerId, String commitId, String reason, String profile) {
         setAuditParams(filter.getAuditLog());
         this.reason = reason;
         this.commitId = commitId;
         this.controllerId = controllerId;
-        this.depHistoryId = depHistoryId;
-        this.workflowPath = path;
-        this.folder = Paths.get(workflowPath).getParent().toString().replace('\\', '/');
-        if (update) {
-            this.update = true;
-            this.delete = null;
-        } else {
-            this.update = null;
-            this.delete = true;
-        }
         this.profile = profile;
     }
 
@@ -84,26 +59,23 @@ public class DeployAudit implements IAuditLog {
         }
     }
 
-    @Override
-    public String getFolder() {
-        return folder;
+    public String getCommitId() {
+        return commitId;
     }
-
-    @Override
-    public String getWorkflow() {
-        return workflowPath;
-    }
-
+    
     @Override
     public String getControllerId() {
         return controllerId;
     }
     
-    @Override
-    public Long getDepHistoryId() {
-        return depHistoryId;
+    public String getReason() {
+        return reason;
     }
 
+    public String getProfile() {
+        return profile;
+    }
+    
     @Override
 	public String getComment() {
 		return comment;
@@ -134,35 +106,30 @@ public class DeployAudit implements IAuditLog {
 		return null;
 	}
 
-    public Boolean getUpdate() {
-        return update;
-    }
+	@Override
+	public String getFolder() {
+		return null;
+	}
 
-    public Boolean getDelete() {
-        return delete;
-    }
-	
-    public String getReason() {
-        return reason;
-    }
+	@Override
+	public String getWorkflow() {
+		return null;
+	}
 
-    public String getCommitId() {
-        return commitId;
-    }
-    
-    public String getProfile() {
-        return profile;
-    }
-    
+	@Override
+	public Long getDepHistoryId() {
+		return null;
+	}
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("commitId", commitId).append("workflowPath", workflowPath)
-                .append("update", update).append("delete", delete).append("reason", reason).append("profile", profile).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("commitId", commitId).append("reason", reason)
+        		.append("profile", profile).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(commitId).append(workflowPath).append(update).append(delete).append(reason).append(profile)
+        return new HashCodeBuilder().append(controllerId).append(commitId).append(reason).append(profile)
                 .toHashCode();
     }
 
@@ -175,8 +142,8 @@ public class DeployAudit implements IAuditLog {
             return false;
         }
         DeployAudit rhs = ((DeployAudit) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(commitId, rhs.commitId).append(workflowPath, rhs.workflowPath)
-                .append(update, rhs.update).append(delete, rhs.delete).append(reason, rhs.reason).append(profile, rhs.profile).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(commitId, rhs.commitId).append(reason, rhs.reason)
+        		.append(profile, rhs.profile).isEquals();
     }
 
 }
