@@ -3317,7 +3317,7 @@ public abstract class PublishUtils {
     public static Set<ConfigurationObject> getReleasableObjectsFromDB(ReleasablesFilter filter, DBLayerDeploy dbLayer)
             throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException,
             SOSHibernateException {
-        Set<ConfigurationObject> allObjects = new HashSet<ConfigurationObject>();
+        Map<String, ConfigurationObject> allObjectsMap = new HashMap<String, ConfigurationObject>();
         if (filter != null) {
             if (filter.getReleasedConfigurations() != null && !filter.getReleasedConfigurations().isEmpty()) {
                 List<Configuration> releasedFolders = filter.getReleasedConfigurations().stream().filter(item -> item.getConfiguration()
@@ -3332,7 +3332,7 @@ public abstract class PublishUtils {
                 }
                 if (!allItems.isEmpty()) {
                     allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER)).forEach(
-                            item -> allObjects.add(getConfigurationObjectFromDBItem(item)));
+                            item -> allObjectsMap.put(item.getName(), getConfigurationObjectFromDBItem(item)));
                 }
             }
             if (filter.getDraftConfigurations() != null && !filter.getDraftConfigurations().isEmpty()) {
@@ -3348,11 +3348,16 @@ public abstract class PublishUtils {
                 }
                 if (!allItems.isEmpty()) {
                     allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER)).forEach(
-                            item -> allObjects.add(getConfigurationObjectFromDBItem(item)));
+                            item -> {
+                                if(!allObjectsMap.containsKey(item.getName())) {
+                                    allObjectsMap.put(item.getName(), getConfigurationObjectFromDBItem(item));
+                                }
+                            });
                 }
             }
         }
-        return allObjects;
+        Set<ConfigurationObject> withoutDuplicates = new HashSet<ConfigurationObject>(allObjectsMap.values());
+        return withoutDuplicates;
     }
 
     private static ControllerObject mapInvConfigToJSObject(DBItemInventoryConfiguration item) {
