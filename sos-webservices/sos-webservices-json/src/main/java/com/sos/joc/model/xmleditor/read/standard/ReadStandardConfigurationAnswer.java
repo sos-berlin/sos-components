@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.xmleditor.common.AnswerMessage;
+import com.sos.joc.model.xmleditor.validate.ValidateConfigurationAnswer;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -26,6 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "schema",
     "schemaIdentifier",
     "state",
+    "validation",
     "warning",
     "modified"
 })
@@ -61,6 +63,15 @@ public class ReadStandardConfigurationAnswer {
     @JsonProperty("state")
     @JsonPropertyDescription("Describes the situation live/draft")
     private ReadStandardConfigurationAnswerState state;
+    /**
+     * xmleditor validate configuration answer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("validation")
+    @JsonPropertyDescription("")
+    private ValidateConfigurationAnswer validation;
     /**
      * xmleditor answer message
      * <p>
@@ -174,6 +185,28 @@ public class ReadStandardConfigurationAnswer {
     }
 
     /**
+     * xmleditor validate configuration answer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("validation")
+    public ValidateConfigurationAnswer getValidation() {
+        return validation;
+    }
+
+    /**
+     * xmleditor validate configuration answer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("validation")
+    public void setValidation(ValidateConfigurationAnswer validation) {
+        this.validation = validation;
+    }
+
+    /**
      * xmleditor answer message
      * <p>
      * 
@@ -219,12 +252,12 @@ public class ReadStandardConfigurationAnswer {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("configuration", configuration).append("configurationJson", configurationJson).append("recreateJson", recreateJson).append("schema", schema).append("schemaIdentifier", schemaIdentifier).append("state", state).append("warning", warning).append("modified", modified).toString();
+        return new ToStringBuilder(this).append("configuration", configuration).append("configurationJson", configurationJson).append("recreateJson", recreateJson).append("schema", schema).append("schemaIdentifier", schemaIdentifier).append("state", state).append("validation", validation).append("warning", warning).append("modified", modified).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(schema).append(configuration).append(configurationJson).append(recreateJson).append(warning).append(modified).append(schemaIdentifier).append(state).toHashCode();
+        return new HashCodeBuilder().append(schema).append(configuration).append(configurationJson).append(recreateJson).append(warning).append(modified).append(schemaIdentifier).append(state).append(validation).toHashCode();
     }
 
     @Override
@@ -236,7 +269,7 @@ public class ReadStandardConfigurationAnswer {
             return false;
         }
         ReadStandardConfigurationAnswer rhs = ((ReadStandardConfigurationAnswer) other);
-        return new EqualsBuilder().append(schema, rhs.schema).append(configuration, rhs.configuration).append(configurationJson, rhs.configurationJson).append(recreateJson, rhs.recreateJson).append(warning, rhs.warning).append(modified, rhs.modified).append(schemaIdentifier, rhs.schemaIdentifier).append(state, rhs.state).isEquals();
+        return new EqualsBuilder().append(schema, rhs.schema).append(configuration, rhs.configuration).append(configurationJson, rhs.configurationJson).append(recreateJson, rhs.recreateJson).append(warning, rhs.warning).append(modified, rhs.modified).append(schemaIdentifier, rhs.schemaIdentifier).append(state, rhs.state).append(validation, rhs.validation).isEquals();
     }
 
 }

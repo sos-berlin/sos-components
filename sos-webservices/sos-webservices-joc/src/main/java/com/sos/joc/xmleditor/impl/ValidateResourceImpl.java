@@ -113,7 +113,7 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
         return m;
     }
 
-    private ValidateConfigurationAnswer getSuccess() {
+    public static ValidateConfigurationAnswer getSuccess() {
         ValidateConfigurationAnswer answer = new ValidateConfigurationAnswer();
         answer.setValidated(new Date());
         return answer;
