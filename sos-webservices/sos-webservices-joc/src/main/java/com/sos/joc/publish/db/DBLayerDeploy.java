@@ -69,6 +69,7 @@ import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.mapper.FilterAttributesMapper;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
+import com.sos.joc.publish.util.ImportConfigurationUtils;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
@@ -999,6 +1000,7 @@ public class DBLayerDeploy {
             Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
             query.setParameter("type", configuration.getObjectType().intValue());
             query.setParameter("name", configuration.getName());
+            query.setMaxResults(1);
             existingConfiguration = session.getSingleResult(query);
             boolean valid = false;
             try {
@@ -1066,6 +1068,25 @@ public class DBLayerDeploy {
                     newConfiguration.setReleased(false);
                     newConfiguration.setValid(valid);
                     session.save(newConfiguration);
+                } else {
+                	// update reference?
+                    DBItemInventoryConfiguration newConfiguration = new DBItemInventoryConfiguration();
+                    Date now = Date.from(Instant.now());
+                    newConfiguration.setModified(now);
+                    newConfiguration.setCreated(now);
+                    newConfiguration.setContent(om.writeValueAsString(configuration.getConfiguration()));
+                    configuration = ImportConfigurationUtils.updateImportNameAndPath(getSession(), existingConfiguration, configuration);
+                    newConfiguration.setPath(configuration.getPath());
+                    newConfiguration.setFolder(Paths.get(configuration.getPath()).getParent().toString().replace('\\', '/'));
+                    newConfiguration.setName(configuration.getName());
+                    newConfiguration.setType(configuration.getObjectType());
+                    newConfiguration.setAuditLogId(auditLogId);
+                    newConfiguration.setDocumentationId(0L);
+                    newConfiguration.setDeployed(false);
+                    newConfiguration.setReleased(false);
+                    newConfiguration.setValid(valid);
+                    session.save(newConfiguration);
+                	
                 }
             }
         } catch (SOSHibernateException e) {

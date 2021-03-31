@@ -59,7 +59,7 @@ public class MapUrls {
 
         {
             put("oh", centosdev_secondary_urlMapper);
-            put("santiago", centosdev_third_urlMapper);
+            put("sp", centosdev_third_urlMapper);
         }
     });
     
