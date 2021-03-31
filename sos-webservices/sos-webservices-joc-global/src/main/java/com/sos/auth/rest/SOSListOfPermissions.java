@@ -3,7 +3,6 @@ package com.sos.auth.rest;
 import java.util.List;
 
 import com.sos.auth.rest.permission.model.ObjectFactory;
-import com.sos.auth.rest.permission.model.SOSPermissionListJoc;
 import com.sos.auth.rest.permission.model.SOSPermissionRoles;
 import com.sos.auth.rest.permission.model.SOSPermissionShiro;
 import com.sos.auth.rest.permission.model.SOSPermissions;
@@ -32,55 +31,51 @@ public class SOSListOfPermissions {
 
         SOSPermissions sosPermissions = o.createSOSPermissions();
 
-        SOSPermissionListJoc sosPermissionJoc = o.createSOSPermissionListJoc();
-        
         // JocPermissions
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc:adminstration:accounts:view");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc:adminstration:accounts:manage");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc:adminstration:certificates:view");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc:adminstration:certificates:manage");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc:adminstration:controllers:view");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc:adminstration:controllers:manage");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc:adminstration:settings:view");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc:adminstration:settings:manage");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:adminstration:accounts:view");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:adminstration:accounts:manage");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:adminstration:certificates:view");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:adminstration:certificates:manage");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:adminstration:controllers:view");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:adminstration:controllers:manage");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:adminstration:settings:view");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:adminstration:settings:manage");
         
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc:auditlog:view");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc:calendars:view");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc:cluster:manage");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc:dailyplan:view");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc:dailyplan:manage");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc:documentations:view");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc:documentations:manage");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc:filetransfer:view");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc:filetransfer:manage");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc:inventory:view");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc:inventory:manage");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc:inventory:deploy");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc:notification:view");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc:notification:manage");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc:others:view");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:joc:others:manage");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:auditlog:view");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:calendars:view");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:cluster:manage");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:dailyplan:view");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:dailyplan:manage");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:documentations:view");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:documentations:manage");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:filetransfer:view");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:filetransfer:manage");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:inventory:view");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:inventory:manage");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:inventory:deploy");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:notification:view");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:notification:manage");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:others:view");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:others:manage");
         
         // ControllerPermissions
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:controller:view");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:controller:restart");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:controller:terminate");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:controller:switch_over");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:view");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:restart");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:terminate");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:switch_over");
         
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:controller:agents:view");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:controller:deployment:view");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:controller:deployment:deploy");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:controller:locks:view");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:controller:workflows:view");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:agents:view");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:deployment:view");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:deployment:deploy");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:locks:view");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:workflows:view");
         
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:controller:orders:view");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:controller:orders:create");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:controller:orders:cancel");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:controller:orders:modify");
-        addPermission(forUser, sosPermissionJoc.getSOSPermission(), "sos:products:controller:orders:suspend_resume");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:orders:view");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:orders:create");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:orders:cancel");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:orders:modify");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:orders:suspend_resume");
         
-        sosPermissions.setSOSPermissionListJoc(sosPermissionJoc);
-
         sosPermissionShiro.setSOSPermissionRoles(roles);
         sosPermissionShiro.setSOSPermissions(sosPermissions);
     }

@@ -156,7 +156,7 @@ public class SOSShiroCurrentUser {
  
                 this.haveAnyIpPermission = false;
                 String[] ipParts = this.getCallerIpAddress().split("\\.");
-                for (String p : sosListOfPermissions.getSosPermissionShiro().getSOSPermissions().getSOSPermissionListJoc().getSOSPermission()) {
+                for (String p : sosListOfPermissions.getSosPermissionShiro().getSOSPermissions().getSOSPermission()) {
                     if (this.haveAnyIpPermission) {
                         break;
                     }

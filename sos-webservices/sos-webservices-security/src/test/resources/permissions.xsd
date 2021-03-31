@@ -26,37 +26,40 @@
 			<xs:restriction base="xs:string"/>
 		</xs:simpleType>
 	</xs:element>
-	<xs:element name="SOSPermissionListJoc">
+	<!-- xs:element name="SOSPermissionListJoc">
 		<xs:complexType>
 			<xs:sequence minOccurs="0" maxOccurs="unbounded">
 				<xs:element ref="SOSPermission"/>
 			</xs:sequence>
 		</xs:complexType>
-	</xs:element>
-	<xs:element name="SOSPermissionListCommands">
+	</xs:element -->
+	<!-- xs:element name="SOSPermissionListCommands">
 		<xs:complexType>
 			<xs:sequence minOccurs="0" maxOccurs="unbounded">
 				<xs:element ref="SOSPermission"/>
 			</xs:sequence>
 		</xs:complexType>
-	</xs:element>
+	</xs:element -->
 	<xs:element name="SOSPermission">
 		<xs:simpleType>
-			<xs:restriction base="xs:string">
-				<xs:enumeration value="edit"/>
-				<xs:enumeration value="shart_job"/>
-				<xs:enumeration value="show"/>
-			</xs:restriction>
+			<xs:restriction base="xs:string"/>
 		</xs:simpleType>
 	</xs:element>
 	<xs:element name="SOSPermissions">
+		<xs:complexType>
+			<xs:sequence minOccurs="0" maxOccurs="unbounded">
+				<xs:element ref="SOSPermission"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- xs:element name="SOSPermissions">
 		<xs:complexType>
 			<xs:sequence>
 				<xs:element ref="SOSPermissionListCommands"/>
 				<xs:element ref="SOSPermissionListJoc"/>
 			</xs:sequence>
 		</xs:complexType>
-	</xs:element>
+	</xs:element -->
 	<xs:element name="SOSPermissionRoles">
 		<xs:complexType>
 			<xs:sequence>

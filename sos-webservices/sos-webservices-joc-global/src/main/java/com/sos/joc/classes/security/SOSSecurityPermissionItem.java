@@ -65,7 +65,7 @@ public class SOSSecurityPermissionItem {
         if (s.startsWith("sos:products")) {
             return "";
         } else {
-            return s.replaceAll("^(.*):sos:products(:.+)*.*$", "$1");
+            return s.replaceFirst("^(.*):sos:products(:.+)*.*$", "$1");
         }
     }
 
@@ -74,7 +74,7 @@ public class SOSSecurityPermissionItem {
             permission = permission.substring(1);
             excluded = true;
         }
-        return permission.replaceAll("^.*:(sos:products:.*$)", "$1");
+        return permission.replaceFirst("^(?:.*:)*(sos:products:.*)$", "$1");
 
     }
 

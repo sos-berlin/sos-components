@@ -17,11 +17,8 @@ public class SOSJaxbSubject {
 
     public boolean isPermitted(String permission) {
 
-        if (permission.startsWith("sos:products:joc_cockpit:")) {
-            return (sosPermissionShiro != null && sosPermissionShiro.getSOSPermissions().getSOSPermissionListJoc().getSOSPermission().contains(permission));
-        }
-        if (permission.startsWith("sos:products:commands:")) {
-            return (sosPermissionShiro != null && sosPermissionShiro.getSOSPermissions().getSOSPermissionListCommands().getSOSPermission().contains(permission));
+        if (permission.startsWith("sos:products:")) {
+            return (sosPermissionShiro != null && sosPermissionShiro.getSOSPermissions().getSOSPermission().contains(permission));
         }
         return false;
     }
