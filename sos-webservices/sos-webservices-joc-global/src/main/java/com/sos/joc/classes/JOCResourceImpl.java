@@ -12,7 +12,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.session.InvalidSessionException;
+import org.apache.shiro.session.Session;
+import org.apache.shiro.session.mgt.DefaultSessionKey;
+import org.apache.shiro.session.mgt.SessionKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,13 +24,19 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.auth.rest.SOSPermissionsCreator;
+import com.sos.auth.rest.SOSShiroCurrentUserAnswer;
 import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.audit.IAuditLog;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.settings.ClusterSettings;
+import com.sos.joc.db.configuration.JocConfigurationDbLayer;
+import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.db.joc.DBItemJocConfiguration;
+import com.sos.joc.exceptions.JocAuthenticationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
@@ -42,6 +52,7 @@ public class JOCResourceImpl {
 
     protected JobSchedulerUser jobschedulerUser;
     protected SOSShiroFolderPermissions folderPermissions;
+    private static final String SHIRO_SESSION = "SHIRO_SESSION";
     private static final Logger LOGGER = LoggerFactory.getLogger(JOCResourceImpl.class);
     private String accessToken;
     private JocAuditLog jocAuditLog;
@@ -65,10 +76,10 @@ public class JOCResourceImpl {
         // it should be part of the webservice if the controllerId is required or not
         // Here, the last selected controllId is returnd in the case where not no controllerId is given.
         // I think that's wrong
-//        if (masterId == null || masterId.isEmpty()) {
-//            SOSShiroSession sosShiroSession = new SOSShiroSession(jobschedulerUser.getSosShiroCurrentUser());
-//            masterId = sosShiroSession.getStringAttribute(SESSION_KEY);
-//        }
+        // if (masterId == null || masterId.isEmpty()) {
+        // SOSShiroSession sosShiroSession = new SOSShiroSession(jobschedulerUser.getSosShiroCurrentUser());
+        // masterId = sosShiroSession.getStringAttribute(SESSION_KEY);
+        // }
         if (masterId == null) {
             masterId = "";
         }
@@ -235,7 +246,7 @@ public class JOCResourceImpl {
             return true;
         }
     }
-    
+
     public JocAuditLog getJocAuditLog() {
         return jocAuditLog;
     }
@@ -247,7 +258,7 @@ public class JOCResourceImpl {
     public DBItemJocAuditLog storeAuditLogEntry(IAuditLog body) {
         return jocAuditLog.storeAuditLogEntry(body);
     }
-    
+
     public DBItemJocAuditLog storeAuditLogEntry(IAuditLog body, SOSHibernateSession connection) {
         return jocAuditLog.storeAuditLogEntry(body, connection);
     }
@@ -272,8 +283,32 @@ public class JOCResourceImpl {
         return JOCDefaultResponse.responseStatus403(JOCDefaultResponse.getError401Schema(jobschedulerUser, jocError));
     }
 
-    public void initLogging(String request, byte[] body, String accessToken) throws JocException, InvalidSessionException, JsonParseException,
-            JsonMappingException, IOException {
+    private boolean sessionExistInDb(String sessionIdString) {
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("JOCResourceImpl");
+
+            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+            JocConfigurationFilter filter = new JocConfigurationFilter();
+
+            filter.setAccount(".");
+            filter.setName(sessionIdString);
+            filter.setConfigurationType(SHIRO_SESSION);
+            List<DBItemJocConfiguration> listOfConfigurtions = jocConfigurationDBLayer.getJocConfigurationList(filter, 0);
+            sosHibernateSession.close();
+
+            return (listOfConfigurtions.size() > 0);
+        } catch (SOSHibernateException e) {
+            throw new RuntimeException(e);
+
+        } catch (JocException e) {
+            throw new RuntimeException(e);
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
+    }
+
+    public void initLogging(String request, byte[] body, String accessToken) throws JocException, InvalidSessionException, JsonParseException, JsonMappingException, IOException {
         this.accessToken = accessToken;
         if (jobschedulerUser == null) {
             jobschedulerUser = new JobSchedulerUser(accessToken);
@@ -281,6 +316,35 @@ public class JOCResourceImpl {
         initLogging(request, body);
         SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(null);
         sosPermissionsCreator.loginFromAccessToken(accessToken);
+
+        SessionKey s = new DefaultSessionKey(accessToken);
+        Session session = null;
+        session = SecurityUtils.getSecurityManager().getSession(s);
+
+        if (session != null && "true".equals(session.getAttribute("dao"))) {
+            if (!sessionExistInDb(accessToken)) {
+                if (Globals.jocWebserviceDataContainer.getCurrentUsersList() != null) {
+                    Globals.jocWebserviceDataContainer.getCurrentUsersList().removeUser(accessToken);
+                }
+            }
+        }
+
+        if (Globals.jocWebserviceDataContainer == null || Globals.jocWebserviceDataContainer.getCurrentUsersList() == null) {
+            SOSShiroCurrentUserAnswer sosShiroCurrentUserAnswer = new SOSShiroCurrentUserAnswer();
+            sosShiroCurrentUserAnswer.setMessage("Session is broken and no longer valid. New login neccessary");
+            throw new JocAuthenticationException(sosShiroCurrentUserAnswer);
+        }
+
+        SOSShiroCurrentUserAnswer sosShiroCurrentUserAnswer = Globals.jocWebserviceDataContainer.getCurrentUsersList().getUserByToken(accessToken);
+        if (sosShiroCurrentUserAnswer.getSessionTimeout() == 0L) {
+            sosShiroCurrentUserAnswer.setMessage("Session is broken and no longer valid. New login neccessary");
+            throw new JocAuthenticationException(sosShiroCurrentUserAnswer);
+        }
+
+        if (jobschedulerUser == null) {
+            jobschedulerUser = new JobSchedulerUser(accessToken);
+        }
+
     }
 
     private void initLogging(String request, Object body) {
