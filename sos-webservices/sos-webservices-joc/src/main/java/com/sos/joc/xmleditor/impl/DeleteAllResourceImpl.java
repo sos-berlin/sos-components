@@ -10,12 +10,10 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.security.permissions.ControllerPermissions;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.delete.all.DeleteAll;
 import com.sos.joc.model.xmleditor.delete.all.DeleteAllAnswer;
@@ -25,7 +23,7 @@ import com.sos.schema.JsonValidator;
 import jersey.repackaged.com.google.common.base.Joiner;
 
 @Path(JocXmlEditor.APPLICATION_PATH)
-public class DeleteAllResourceImpl extends JOCResourceImpl implements IDeleteAllResource {
+public class DeleteAllResourceImpl extends ACommonResourceImpl implements IDeleteAllResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeleteAllResourceImpl.class);
     private static final boolean isTraceEnabled = LOGGER.isTraceEnabled();
@@ -39,7 +37,7 @@ public class DeleteAllResourceImpl extends JOCResourceImpl implements IDeleteAll
 
             checkRequiredParameters(in);
 
-            JOCDefaultResponse response = checkPermissions(accessToken, in);
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), accessToken, in.getObjectTypes().get(0), Role.MANAGE);
             if (response == null) {
                 ObjectType type = in.getObjectTypes().get(0);
                 switch (type) {
@@ -65,13 +63,6 @@ public class DeleteAllResourceImpl extends JOCResourceImpl implements IDeleteAll
     private void checkRequiredParameters(final DeleteAll in) throws Exception {
         checkRequiredParameter("controllerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectTypes", in.getObjectTypes());
-    }
-
-    private JOCDefaultResponse checkPermissions(final String accessToken, final DeleteAll in) throws Exception {
-        // TODO premission - maybe getJocPermissions(accessToken)
-        ControllerPermissions permissions = getControllerPermissions(in.getControllerId(), accessToken);
-        boolean permission = true; //permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return initPermissions(in.getControllerId(), permission);
     }
 
     private DeleteAllAnswer getSuccess() throws Exception {

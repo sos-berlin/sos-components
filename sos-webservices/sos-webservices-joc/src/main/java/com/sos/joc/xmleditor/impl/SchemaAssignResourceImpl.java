@@ -7,11 +7,9 @@ import javax.ws.rs.Path;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
-import com.sos.joc.model.security.permissions.ControllerPermissions;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.schema.SchemaAssignConfiguration;
 import com.sos.joc.model.xmleditor.schema.SchemaAssignConfigurationAnswer;
@@ -20,7 +18,7 @@ import com.sos.joc.xmleditor.resource.ISchemaAssignResource;
 import com.sos.schema.JsonValidator;
 
 @Path(JocXmlEditor.APPLICATION_PATH)
-public class SchemaAssignResourceImpl extends JOCResourceImpl implements ISchemaAssignResource {
+public class SchemaAssignResourceImpl extends ACommonResourceImpl implements ISchemaAssignResource {
 
     @Override
     public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
@@ -31,7 +29,7 @@ public class SchemaAssignResourceImpl extends JOCResourceImpl implements ISchema
 
             checkRequiredParameters(in);
 
-            JOCDefaultResponse response = checkPermissions(accessToken, in);
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), accessToken, in.getObjectType(), Role.MANAGE);
             if (response == null) {
                 response = JOCDefaultResponse.responseStatus200(getSuccess(in));
             }
@@ -52,13 +50,6 @@ public class SchemaAssignResourceImpl extends JOCResourceImpl implements ISchema
                 throw new JocMissingRequiredParameterException("uri param is null. missing fileName or fileContent parameters.");
             }
         }
-    }
-
-    private JOCDefaultResponse checkPermissions(final String accessToken, final SchemaAssignConfiguration in) throws Exception {
-        // TODO premission - maybe getJocPermissions(accessToken)
-        ControllerPermissions permissions = getControllerPermissions(in.getControllerId(), accessToken);
-        boolean permission = true; //permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return initPermissions(in.getControllerId(), permission);
     }
 
     private SchemaAssignConfigurationAnswer getSuccess(final SchemaAssignConfiguration in) throws Exception {

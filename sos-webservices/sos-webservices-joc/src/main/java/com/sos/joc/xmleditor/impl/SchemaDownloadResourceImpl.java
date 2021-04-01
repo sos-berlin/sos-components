@@ -13,17 +13,15 @@ import javax.ws.rs.core.StreamingOutput;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.security.permissions.ControllerPermissions;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.schema.SchemaDownloadConfiguration;
 import com.sos.joc.xmleditor.resource.ISchemaDownloadResource;
 import com.sos.schema.JsonValidator;
 
 @Path(JocXmlEditor.APPLICATION_PATH)
-public class SchemaDownloadResourceImpl extends JOCResourceImpl implements ISchemaDownloadResource {
+public class SchemaDownloadResourceImpl extends ACommonResourceImpl implements ISchemaDownloadResource {
 
     @Override
     public JOCDefaultResponse process(final String xAccessToken, String accessToken, String controllerId, String objectType, String show,
@@ -51,7 +49,7 @@ public class SchemaDownloadResourceImpl extends JOCResourceImpl implements ISche
 
             checkRequiredParameters(in);
 
-            JOCDefaultResponse response = checkPermissions(accessToken, in);
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), accessToken, in.getObjectType(), Role.VIEW);
             if (response == null) {
                 return download(in);
             }
@@ -70,13 +68,6 @@ public class SchemaDownloadResourceImpl extends JOCResourceImpl implements ISche
         if (!in.getObjectType().equals(ObjectType.NOTIFICATION)) {
             checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
         }
-    }
-
-    private JOCDefaultResponse checkPermissions(final String accessToken, final SchemaDownloadConfiguration in) throws Exception {
-        // TODO permissiosn - maybe getJocPermissions(accessToken)
-        ControllerPermissions permissions = getControllerPermissions(in.getControllerId(), accessToken);
-        boolean permission = true; //permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return initPermissions(in.getControllerId(), permission);
     }
 
     private JOCDefaultResponse download(SchemaDownloadConfiguration in) throws Exception {

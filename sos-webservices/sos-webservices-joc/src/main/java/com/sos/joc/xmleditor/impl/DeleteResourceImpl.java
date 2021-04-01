@@ -12,12 +12,10 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.security.permissions.ControllerPermissions;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.delete.DeleteDraft;
 import com.sos.joc.model.xmleditor.delete.DeleteOtherDraftAnswer;
@@ -27,7 +25,7 @@ import com.sos.joc.xmleditor.resource.IDeleteResource;
 import com.sos.schema.JsonValidator;
 
 @Path(JocXmlEditor.APPLICATION_PATH)
-public class DeleteResourceImpl extends JOCResourceImpl implements IDeleteResource {
+public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeleteResourceImpl.class);
     private static final boolean isTraceEnabled = LOGGER.isTraceEnabled();
@@ -41,7 +39,7 @@ public class DeleteResourceImpl extends JOCResourceImpl implements IDeleteResour
 
             checkRequiredParameters(in);
 
-            JOCDefaultResponse response = checkPermissions(accessToken, in);
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), accessToken, in.getObjectType(), Role.MANAGE);
             if (response == null) {
                 switch (in.getObjectType()) {
                 case YADE:
@@ -67,13 +65,6 @@ public class DeleteResourceImpl extends JOCResourceImpl implements IDeleteResour
     private void checkRequiredParameters(final DeleteDraft in) throws Exception {
         checkRequiredParameter("controllerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
-    }
-
-    private JOCDefaultResponse checkPermissions(final String accessToken, final DeleteDraft in) throws Exception {
-        // TODO permission maybe getJocPermissions(accessToken)
-        ControllerPermissions permissions = getControllerPermissions(in.getControllerId(), accessToken);
-        boolean permission = true; //permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return initPermissions(in.getControllerId(), permission);
     }
 
     private ReadStandardConfigurationAnswer handleStandardConfiguration(DeleteDraft in) throws Exception {

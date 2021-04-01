@@ -11,7 +11,6 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.classes.xmleditor.exceptions.XsdValidatorException;
 import com.sos.joc.classes.xmleditor.validator.XsdValidator;
@@ -28,7 +27,7 @@ import com.sos.joc.xmleditor.resource.IApplyResource;
 import com.sos.schema.JsonValidator;
 
 @Path(JocXmlEditor.APPLICATION_PATH)
-public class ApplyResourceImpl extends JOCResourceImpl implements IApplyResource {
+public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplyResourceImpl.class);
 
@@ -40,10 +39,9 @@ public class ApplyResourceImpl extends JOCResourceImpl implements IApplyResource
             JsonValidator.validateFailFast(filterBytes, ApplyConfiguration.class);
             ApplyConfiguration in = Globals.objectMapper.readValue(filterBytes, ApplyConfiguration.class);
 
-            // TODO check folder permissions
             checkRequiredParameters(in);
 
-            JOCDefaultResponse response = checkPermissions(accessToken, in);
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), accessToken, in.getObjectType(), Role.MANAGE);
             if (response == null) {
                 // step 1 - check for vulnerabilities and validate
                 response = check(in, false);
@@ -202,15 +200,6 @@ public class ApplyResourceImpl extends JOCResourceImpl implements IApplyResource
             checkRequiredParameter("configuration", in.getConfiguration());
             break;
         }
-    }
-
-    private JOCDefaultResponse checkPermissions(final String accessToken, final ApplyConfiguration in) throws Exception {
-
-//        TODO new Permissions
-//        SOSPermissionJocCockpit permissions = getControllerPermissions(in.getControllerId(), accessToken);
-//        boolean permission = permissions.getJS7Controller().getAdministration().isEditPermissions();
-        
-        return initPermissions(in.getControllerId(), true);
     }
 
     private DBItemXmlEditorConfiguration getObject(DbLayerXmlEditor dbLayer, ApplyConfiguration in, String name) throws Exception {

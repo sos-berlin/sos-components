@@ -15,7 +15,6 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.classes.xmleditor.exceptions.XsdValidatorException;
 import com.sos.joc.classes.xmleditor.validator.XsdValidator;
@@ -23,7 +22,6 @@ import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.security.permissions.ControllerPermissions;
 import com.sos.joc.model.xmleditor.read.ReadConfiguration;
 import com.sos.joc.model.xmleditor.read.other.AnswerConfiguration;
 import com.sos.joc.model.xmleditor.read.other.ReadOtherConfigurationAnswer;
@@ -35,7 +33,7 @@ import com.sos.joc.xmleditor.resource.IReadResource;
 import com.sos.schema.JsonValidator;
 
 @Path(JocXmlEditor.APPLICATION_PATH)
-public class ReadResourceImpl extends JOCResourceImpl implements IReadResource {
+public class ReadResourceImpl extends ACommonResourceImpl implements IReadResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReadResourceImpl.class);
     private static final boolean isTraceEnabled = LOGGER.isTraceEnabled();
@@ -49,7 +47,7 @@ public class ReadResourceImpl extends JOCResourceImpl implements IReadResource {
 
             checkRequiredParameters(in);
 
-            JOCDefaultResponse response = checkPermissions(accessToken, in);
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), accessToken, in.getObjectType(), Role.VIEW);
             if (response == null) {
                 JocXmlEditor.setRealPath();
                 switch (in.getObjectType()) {
@@ -74,13 +72,6 @@ public class ReadResourceImpl extends JOCResourceImpl implements IReadResource {
     private void checkRequiredParameters(final ReadConfiguration in) throws Exception {
         checkRequiredParameter("controllerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
-    }
-
-    private JOCDefaultResponse checkPermissions(final String accessToken, final ReadConfiguration in) throws Exception {
-        // TODO permissions
-        ControllerPermissions permissions = getControllerPermissions(in.getControllerId(), accessToken);
-        boolean permission = true; // permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return initPermissions(in.getControllerId(), permission);
     }
 
     private ReadStandardConfigurationAnswer handleStandardConfiguration(ReadConfiguration in) throws Exception {

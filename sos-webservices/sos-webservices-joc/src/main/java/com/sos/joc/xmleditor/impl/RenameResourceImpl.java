@@ -7,13 +7,11 @@ import javax.ws.rs.Path;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.security.permissions.ControllerPermissions;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.rename.RenameConfiguration;
 import com.sos.joc.model.xmleditor.rename.RenameConfigurationAnswer;
@@ -21,7 +19,7 @@ import com.sos.joc.xmleditor.resource.IRenameResource;
 import com.sos.schema.JsonValidator;
 
 @Path(JocXmlEditor.APPLICATION_PATH)
-public class RenameResourceImpl extends JOCResourceImpl implements IRenameResource {
+public class RenameResourceImpl extends ACommonResourceImpl implements IRenameResource {
 
     @Override
     public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
@@ -37,7 +35,7 @@ public class RenameResourceImpl extends JOCResourceImpl implements IRenameResour
             }
             checkRequiredParameters(in);
 
-            JOCDefaultResponse response = checkPermissions(accessToken, in);
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), accessToken, in.getObjectType(), Role.MANAGE);
             if (response == null) {
                 session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                 session.beginTransaction();
@@ -110,13 +108,6 @@ public class RenameResourceImpl extends JOCResourceImpl implements IRenameResour
         checkRequiredParameter("id", in.getId());
         checkRequiredParameter("name", in.getName());
         checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
-    }
-
-    private JOCDefaultResponse checkPermissions(final String accessToken, final RenameConfiguration in) throws Exception {
-        // TODO premission - maybe getJocPermissions(accessToken)
-        ControllerPermissions permissions = getControllerPermissions(in.getControllerId(), accessToken);
-        boolean permission = true; //permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return initPermissions(in.getControllerId(), permission);
     }
 
     private RenameConfigurationAnswer getSuccess(Long id, Date modified) {

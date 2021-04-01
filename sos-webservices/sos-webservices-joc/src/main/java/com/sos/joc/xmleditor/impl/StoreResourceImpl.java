@@ -8,12 +8,10 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.security.permissions.ControllerPermissions;
 import com.sos.joc.model.xmleditor.common.AnswerMessage;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.store.StoreConfiguration;
@@ -22,7 +20,7 @@ import com.sos.joc.xmleditor.resource.IStoreResource;
 import com.sos.schema.JsonValidator;
 
 @Path(JocXmlEditor.APPLICATION_PATH)
-public class StoreResourceImpl extends JOCResourceImpl implements IStoreResource {
+public class StoreResourceImpl extends ACommonResourceImpl implements IStoreResource {
 
     @Override
     public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
@@ -34,7 +32,7 @@ public class StoreResourceImpl extends JOCResourceImpl implements IStoreResource
 
             checkRequiredParameters(in);
 
-            JOCDefaultResponse response = checkPermissions(accessToken, in);
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), accessToken, in.getObjectType(), Role.MANAGE);
             if (response == null) {
                 JocXmlEditor.parseXml(in.getConfiguration());
 
@@ -139,13 +137,6 @@ public class StoreResourceImpl extends JOCResourceImpl implements IStoreResource
             checkRequiredParameter("name", in.getName());
             checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
         }
-    }
-
-    private JOCDefaultResponse checkPermissions(final String accessToken, final StoreConfiguration in) throws Exception {
-        // TODO premission - maybe getJocPermissions(accessToken)
-        ControllerPermissions permissions = getControllerPermissions(in.getControllerId(), accessToken);
-        boolean permission = true; //permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return initPermissions(in.getControllerId(), permission);
     }
 
     private StoreConfigurationAnswer getSuccess(ObjectType type, Long id, Date modified, Date deployed) {
