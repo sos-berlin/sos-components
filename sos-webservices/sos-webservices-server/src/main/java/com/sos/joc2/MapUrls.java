@@ -15,9 +15,11 @@ public class MapUrls {
         {
             put("http://controller-2-0-primary:4444", "http://centosdev_secondary.sos:5444");
             put("http://controller-2-0-backup:4444", "http://centosdev_secondary.sos:5544");
+            put("http://controller-2-0-secondary:4444", "http://centosdev_secondary.sos:5544");
             put("http://controller-2-0-standalone:4444", "http://centosdev_secondary.sos:5344");
             put("https://controller-2-0-primary:4443", "http://centosdev_secondary.sos:5444");
             put("https://controller-2-0-backup:4443", "http://centosdev_secondary.sos:5544");
+            put("https://controller-2-0-secondary:4443", "http://centosdev_secondary.sos:5544");
             put("https://controller-2-0-standalone:4443", "http://centosdev_secondary.sos:5344");
 //            put("https://controller-2-0-primary:4443", "https://centosdev_secondary.sos:5443");
 //            put("https://controller-2-0-backup:4443", "https://centosdev_secondary.sos:5543");
@@ -30,7 +32,7 @@ public class MapUrls {
         private static final long serialVersionUID = 1L;
 
         {
-            put("http://controller-2-0-primary:4444", "http://centostest_primary.sos:5444/");
+            put("http://controller-2-0-primary:4444", "http://centostest_primary.sos:5444");
             put("http://controller-2-0-secondary:4444", "http://centostest_primary.sos:5544");
             put("http://controller-2-0-standalone:4444", "http://centostest_primary.sos:5344");
             put("https://controller-2-0-primary:4443", "http://centostest_primary.sos:5444");
@@ -44,7 +46,7 @@ public class MapUrls {
         private static final long serialVersionUID = 1L;
 
         {
-            put("http://controller-2-0-primary:4444", "http://centosdev_third.sos:5444/");
+            put("http://controller-2-0-primary:4444", "http://centosdev_third.sos:5444");
             put("http://controller-2-0-secondary:4444", "http://centosdev_third.sos:5544");
             put("http://controller-2-0-standalone:4444", "http://centosdev_third.sos:5344");
             put("https://controller-2-0-primary:4443", "http://centosdev_third.sos:5444");

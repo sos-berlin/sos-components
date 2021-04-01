@@ -136,12 +136,10 @@ public class SOSServicePermissionShiro {
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(currentUser.getSosPermissionJocCockpitControllers()));
         } catch (org.apache.shiro.session.ExpiredSessionException e) {
-            LOGGER.error(e.getMessage());
             SOSShiroCurrentUserAnswer sosShiroCurrentUserAnswer = createSOSShiroCurrentUserAnswer(accessTokenFromHeader,
                     sosWebserviceAuthenticationRecord.getUser(), e.getMessage());
             return JOCDefaultResponse.responseStatus440(sosShiroCurrentUserAnswer);
         } catch (Exception ee) {
-            LOGGER.error(ee.getMessage());
             return JOCDefaultResponse.responseStatusJSError(ee.getMessage());
 //        } finally {
 //            MDC.remove("context");

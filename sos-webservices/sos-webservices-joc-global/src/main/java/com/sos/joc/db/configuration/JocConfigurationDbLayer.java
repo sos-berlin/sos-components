@@ -28,7 +28,7 @@ public class JocConfigurationDbLayer {
     }
 
     public DBItemJocConfiguration getDBItemJocConfiguration(final Long id) throws SOSHibernateException {
-        return (DBItemJocConfiguration) (this.session.get(DBItemJocConfiguration.class, id));
+        return this.session.get(DBItemJocConfiguration.class, id);
     }
 
     public int delete(JocConfigurationFilter filter) throws SOSHibernateException {
@@ -113,7 +113,7 @@ public class JocConfigurationDbLayer {
             query.setParameter("shared", filter.isShared(), BooleanType.INSTANCE);
         }
     }
-
+    
     public List<DBItemJocConfiguration> getJocConfigurationList(JocConfigurationFilter filter, final int limit) throws SOSHibernateException {
 
         String sql = "from " + DBLayer.DBITEM_JOC_CONFIGURATIONS + " " + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();

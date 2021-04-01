@@ -358,8 +358,14 @@ public class JOCResourceImpl {
             request = "-";
         }
         jocAuditLog = new JocAuditLog(user, request);
-        LOGGER.debug("REQUEST: " + request + ", PARAMS: " + getJsonString(body));
-        jocError.addMetaInfoOnTop("\nREQUEST: " + request, "PARAMS: " + getJsonString(body), "USER: " + user);
+        String bodyStr = getJsonString(body);
+        if (bodyStr != null) {
+            if (bodyStr.length() > 4096) {
+                bodyStr = bodyStr.substring(0, 4093) + "...";
+            }
+        }
+        LOGGER.debug("REQUEST: " + request + ", PARAMS: " + bodyStr);
+        jocError.addMetaInfoOnTop("\nREQUEST: " + request, "PARAMS: " + bodyStr, "USER: " + user);
     }
 
     public void initLogging(String request, byte[] body) {

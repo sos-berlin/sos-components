@@ -38,6 +38,9 @@ public class SOSListOfPermissions {
         addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:adminstration:certificates:manage");
         addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:adminstration:controllers:view");
         addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:adminstration:controllers:manage");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:adminstration:customization:view");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:adminstration:customization:manage");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:adminstration:customization:share");
         addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:adminstration:settings:view");
         addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:adminstration:settings:manage");
         
