@@ -31,12 +31,13 @@ import com.sos.joc.event.bean.proxy.ProxyCoupled;
 import com.sos.joc.event.bean.proxy.ProxyEvent;
 import com.sos.joc.event.bean.proxy.ProxyRemoved;
 import com.sos.joc.event.bean.proxy.ProxyRestarted;
+import com.sos.joc.event.bean.yade.YadeEvent;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.ControllerConnectionRefusedException;
-import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.event.EventSnapshot;
 import com.sos.joc.model.event.EventType;
@@ -204,6 +205,18 @@ public class EventService {
             eventSnapshot.setObjectType(EventType.TASKHISTORY);
             eventSnapshot.setWorkflow(orders.get(evt.getOrderId().substring(0, 24)));
             //eventSnapshot.setPath(evt.getJobName());
+            addEvent(eventSnapshot);
+        }
+    }
+    
+    @Subscribe({ YadeEvent.class })
+    public void createHistoryTaskEvent(YadeEvent evt) {
+        if (controllerId.equals(evt.getControllerId())) {
+            EventSnapshot eventSnapshot = new EventSnapshot();
+            eventSnapshot.setEventId(evt.getEventId());
+            eventSnapshot.setEventType(evt.getKey());
+            eventSnapshot.setObjectType(EventType.FILETRANSFER);
+            //eventSnapshot.setPath(evt.getTransferId().toString());
             addEvent(eventSnapshot);
         }
     }

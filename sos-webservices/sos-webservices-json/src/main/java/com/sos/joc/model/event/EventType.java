@@ -24,7 +24,8 @@ public enum EventType {
     SCHEDULE("SCHEDULE"),
     CALENDAR("CALENDAR"),
     ORDERHISTORY("ORDERHISTORY"),
-    TASKHISTORY("TASKHISTORY");
+    TASKHISTORY("TASKHISTORY"),
+    FILETRANSFER("FILETRANSFER");
     private final String value;
     private final static Map<String, EventType> CONSTANTS = new HashMap<String, EventType>();
 
