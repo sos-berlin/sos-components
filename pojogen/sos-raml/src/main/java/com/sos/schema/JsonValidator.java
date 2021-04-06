@@ -148,6 +148,9 @@ public class JsonValidator {
             put("com.sos.webservices.order.initiator.model.ScheduleSelector", "orderManagement/orders/schedulesSelector-schema.json");
             put("com.sos.joc.model.dailyplan.RelativeDatesConverter", "orderManagement/dailyplan/relativeDatesConverter-schema.json");
             
+            put("com.sos.joc.model.yade.FileFilter","yade/fileFilter-schema.json");
+            put("com.sos.joc.model.yade.FilesFilter","yade/filesFilter-schema.json");
+            
             //put("com.sos.joc.model.publish.RedeployFilter", "publish/redeploy-schema.json");
 
             // TODO complete the map
