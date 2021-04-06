@@ -321,8 +321,8 @@ public class JocCluster {
             if (dbLayer != null) {
                 dbLayer.rollback();
             }
-            LOGGER.error(e.toString(), e);
-            LOGGER.error(String.format("[%s][exception][current=%s][active=%s][lastActive=%s][locked]%s", mode, currentMemberId, activeMemberId,
+            LOGGER.warn(e.toString(), e);
+            LOGGER.warn(String.format("[%s][exception][current=%s][active=%s][lastActive=%s][locked]%s", mode, currentMemberId, activeMemberId,
                     lastActiveMemberId, SOSHibernate.toString(item)));
 
         } catch (SOSHibernateObjectOperationException e) {
