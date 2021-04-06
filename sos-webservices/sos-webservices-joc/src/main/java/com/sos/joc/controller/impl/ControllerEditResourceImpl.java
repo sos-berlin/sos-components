@@ -326,13 +326,14 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             
             storeAuditLogEntry(jobSchedulerAudit);
             
-            if (firstController) { //GUI needs permissions directly for the first controller(s)
+            if (firstController) { // GUI needs permissions directly for the first controller(s)
                 List<SecurityConfigurationMaster> listOfMasters = new ArrayList<SecurityConfigurationMaster>();
                 SecurityConfigurationMaster securityConfigurationMaster = new SecurityConfigurationMaster();
                 securityConfigurationMaster.setMaster(controllerId);
                 listOfMasters.add(securityConfigurationMaster);
-                
-                return JOCDefaultResponse.responseStatus200(getJobschedulerUser().getSosShiroCurrentUser().getSosPermissionJocCockpitControllers());
+
+                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getJobschedulerUser().getSosShiroCurrentUser()
+                        .getSosPermissionJocCockpitControllers()));
             } else {
                 return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             }
