@@ -19,7 +19,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.ImportAudit;
+import com.sos.joc.classes.audit.DeployAudit;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
@@ -103,7 +103,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(hibernateSession);
             Set<String> agentNames = agentDbLayer.getEnabledAgentNames();
-            ImportAudit importAudit = new ImportAudit(filter, 
+            DeployAudit importAudit = new DeployAudit(filter.getAuditLog(), 
                     String.format("%1$d configuration object(s) imported with profile %2$s", configurations.size(), account));
             logAuditMessage(importAudit);
             DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(importAudit);

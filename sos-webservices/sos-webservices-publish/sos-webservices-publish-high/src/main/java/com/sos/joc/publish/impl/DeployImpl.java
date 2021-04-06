@@ -15,9 +15,6 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
@@ -52,17 +49,13 @@ import com.sos.schema.JsonValidator;
 public class DeployImpl extends JOCResourceImpl implements IDeploy {
 
     private static final String API_CALL = "./inventory/deployment/deploy";
-    private static final Logger LOGGER = LoggerFactory.getLogger(DeployImpl.class);
     private DBLayerDeploy dbLayer = null;
-    private boolean withoutFolderDeletion = false;
-
     @Override
     public JOCDefaultResponse postDeploy(String xAccessToken, byte[] filter) throws Exception {
         return postDeploy(xAccessToken, filter, false);
     }
 
     public JOCDefaultResponse postDeploy(String xAccessToken, byte[] filter, boolean withoutFolderDeletion) throws Exception {
-        this.withoutFolderDeletion = withoutFolderDeletion;
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, filter, xAccessToken);
@@ -198,7 +191,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 }
                 if ((verifiedConfigurations != null && !verifiedConfigurations.isEmpty())
                         || (verifiedReDeployables != null && !verifiedReDeployables.isEmpty())) {
-                    audit = new DeployAudit(deployFilter, controllerId, commitId, "update", account);
+                    audit = new DeployAudit(deployFilter.getAuditLog(), controllerId, commitId, "update", account);
                     // call updateRepo command via ControllerApi for given controllers
                     boolean verified = false;
                     String signerDN = null;
@@ -270,7 +263,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     invConfigurationsToDelete.addAll(
                             DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
                                     DeleteDeployments.storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitIdForDeleteFromFolder)));
-                    audit = new DeployAudit(deployFilter, null, commitId, "delete", account);
+                    audit = new DeployAudit(deployFilter.getAuditLog(), null, commitId, "delete", account);
                 }
             }
             // delete configurations optimistically

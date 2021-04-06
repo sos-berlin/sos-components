@@ -2,15 +2,11 @@ package com.sos.joc.classes.audit;
 
 import java.nio.file.Paths;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.publish.DeployFilter;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -21,11 +17,17 @@ import com.sos.joc.model.publish.DeployFilter;
 })
 public class DeployAudit implements IAuditLog {
 
+    @JsonProperty("controllerId")
     private String controllerId;
     
-    private String commitId;
-
+    @JsonProperty("reason")
     private String reason;
+    
+    @JsonProperty("commitId")
+    private String commitId;
+    
+    @JsonProperty("profile")
+    private String profile;
     
     @JsonIgnore
     private String comment;
@@ -36,19 +38,38 @@ public class DeployAudit implements IAuditLog {
     @JsonIgnore
     private String ticketLink;
     
-    private String profile;
+    @JsonIgnore
+    private String workflow;
+    
+    @JsonIgnore
+    private String folder;
+    
+    @JsonIgnore
+    private Long depHistoryId;
 
-    public DeployAudit(DeployFilter filter, String reason) {
-        setAuditParams(filter.getAuditLog());
+    public DeployAudit(AuditParams auditParams, String reason) {
+        setAuditParams(auditParams);
         this.reason = reason;
     }
 
-    public DeployAudit(DeployFilter filter, String controllerId, String commitId, String reason, String profile) {
-        setAuditParams(filter.getAuditLog());
+    public DeployAudit(AuditParams auditParams, String controllerId, String commitId, String reason, String profile) {
+        setAuditParams(auditParams);
         this.reason = reason;
         this.commitId = commitId;
         this.controllerId = controllerId;
         this.profile = profile;
+    }
+    
+    public DeployAudit(AuditParams auditParams, String controllerId, String commitId, Long depHistoryId, String path, String reason) {
+        setAuditParams(auditParams);
+        this.reason = reason;
+        this.commitId = commitId;
+        this.controllerId = controllerId;
+        this.depHistoryId = depHistoryId;
+        this.workflow = path;
+        if (path != null) {
+            this.folder = Paths.get(path).getParent().toString().replace('\\', '/');
+        }
     }
 
     private void setAuditParams(AuditParams auditParams) {
@@ -59,91 +80,79 @@ public class DeployAudit implements IAuditLog {
         }
     }
 
+    @JsonProperty("commitId")
     public String getCommitId() {
         return commitId;
     }
     
     @Override
+    @JsonProperty("controllerId")
     public String getControllerId() {
         return controllerId;
     }
     
+    @JsonProperty("reason")
     public String getReason() {
         return reason;
     }
 
+    @JsonProperty("profile")
     public String getProfile() {
         return profile;
     }
     
     @Override
+    @JsonIgnore
 	public String getComment() {
 		return comment;
 	}
 
 	@Override
-	public Integer getTimeSpent() {
+	@JsonIgnore
+    public Integer getTimeSpent() {
 		return timeSpent;
 	}
 
 	@Override
-	public String getTicketLink() {
+	@JsonIgnore
+    public String getTicketLink() {
 		return ticketLink;
 	}
 
 	@Override
-	public String getJob() {
+	@JsonIgnore
+    public String getJob() {
 		return null;
 	}
 
 	@Override
-	public String getOrderId() {
+	@JsonIgnore
+    public String getOrderId() {
 		return null;
 	}
 
 	@Override
-	public String getCalendar() {
+	@JsonIgnore
+    public String getCalendar() {
 		return null;
 	}
 
 	@Override
-	public String getFolder() {
-		return null;
+	@JsonIgnore
+    public String getFolder() {
+		return folder;
 	}
 
 	@Override
-	public String getWorkflow() {
-		return null;
+	@JsonIgnore
+    public String getWorkflow() {
+		return workflow;
 	}
 
 	@Override
-	public Long getDepHistoryId() {
-		return null;
+	@JsonIgnore
+    public Long getDepHistoryId() {
+		return depHistoryId;
 	}
-
-    @Override
-    public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("commitId", commitId).append("reason", reason)
-        		.append("profile", profile).toString();
-    }
-
-    @Override
-    public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(commitId).append(reason).append(profile)
-                .toHashCode();
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (other == this) {
-            return true;
-        }
-        if ((other instanceof DeployAudit) == false) {
-            return false;
-        }
-        DeployAudit rhs = ((DeployAudit) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(commitId, rhs.commitId).append(reason, rhs.reason)
-        		.append(profile, rhs.profile).isEquals();
-    }
 
 }

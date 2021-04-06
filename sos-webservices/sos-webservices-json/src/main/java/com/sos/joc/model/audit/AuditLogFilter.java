@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.job.JobPath;
 import com.sos.joc.model.order.OrderPath;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -24,9 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "jobs",
     "orders",
-    "calendars",
     "folders",
     "account",
     "regex",
@@ -42,17 +39,12 @@ public class AuditLogFilter {
      * controllerId
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
     private String controllerId;
-    @JsonProperty("jobs")
-    private List<JobPath> jobs = new ArrayList<JobPath>();
     @JsonProperty("orders")
     private List<OrderPath> orders = new ArrayList<OrderPath>();
-    @JsonProperty("calendars")
-    private List<String> calendars = new ArrayList<String>();
     /**
      * folders
      * <p>
@@ -124,7 +116,6 @@ public class AuditLogFilter {
      * controllerId
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -136,22 +127,11 @@ public class AuditLogFilter {
      * controllerId
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
-    }
-
-    @JsonProperty("jobs")
-    public List<JobPath> getJobs() {
-        return jobs;
-    }
-
-    @JsonProperty("jobs")
-    public void setJobs(List<JobPath> jobs) {
-        this.jobs = jobs;
     }
 
     @JsonProperty("orders")
@@ -162,16 +142,6 @@ public class AuditLogFilter {
     @JsonProperty("orders")
     public void setOrders(List<OrderPath> orders) {
         this.orders = orders;
-    }
-
-    @JsonProperty("calendars")
-    public List<String> getCalendars() {
-        return calendars;
-    }
-
-    @JsonProperty("calendars")
-    public void setCalendars(List<String> calendars) {
-        this.calendars = calendars;
     }
 
     /**
@@ -348,12 +318,12 @@ public class AuditLogFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("jobs", jobs).append("orders", orders).append("calendars", calendars).append("folders", folders).append("account", account).append("regex", regex).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("limit", limit).append("ticketLink", ticketLink).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("orders", orders).append("folders", folders).append("account", account).append("regex", regex).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("limit", limit).append("ticketLink", ticketLink).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folders).append(controllerId).append(jobs).append(timeZone).append(dateFrom).append(ticketLink).append(regex).append(calendars).append(dateTo).append(limit).append(orders).append(account).toHashCode();
+        return new HashCodeBuilder().append(regex).append(folders).append(controllerId).append(dateTo).append(limit).append(timeZone).append(orders).append(dateFrom).append(account).append(ticketLink).toHashCode();
     }
 
     @Override
@@ -365,7 +335,7 @@ public class AuditLogFilter {
             return false;
         }
         AuditLogFilter rhs = ((AuditLogFilter) other);
-        return new EqualsBuilder().append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(jobs, rhs.jobs).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(ticketLink, rhs.ticketLink).append(regex, rhs.regex).append(calendars, rhs.calendars).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(orders, rhs.orders).append(account, rhs.account).isEquals();
+        return new EqualsBuilder().append(regex, rhs.regex).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(timeZone, rhs.timeZone).append(orders, rhs.orders).append(dateFrom, rhs.dateFrom).append(account, rhs.account).append(ticketLink, rhs.ticketLink).isEquals();
     }
 
 }

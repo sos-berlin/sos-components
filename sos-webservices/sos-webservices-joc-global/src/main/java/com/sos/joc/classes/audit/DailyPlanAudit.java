@@ -2,17 +2,8 @@ package com.sos.joc.classes.audit;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 
 public class DailyPlanAudit implements IAuditLog {
-
-    @JsonIgnore
-    private String folder;
-
-    private String workflow;
-
-    @JsonIgnore
-    private String orderId;
 
     @JsonIgnore
     private String comment;
@@ -23,13 +14,12 @@ public class DailyPlanAudit implements IAuditLog {
     @JsonIgnore
     private String ticketLink;
 
-    // @JsonIgnore
     private String controllerId;
 
     public DailyPlanAudit(String controllerId, AuditParams auditParams) {
+        this.controllerId = controllerId;
         if (auditParams != null) {
             setAuditParams(auditParams);
-            this.controllerId = controllerId;
         }
     }
 
@@ -62,7 +52,7 @@ public class DailyPlanAudit implements IAuditLog {
     @Override
     @JsonIgnore
     public String getFolder() {
-        return folder;
+        return null;
     }
 
     @Override
@@ -73,7 +63,7 @@ public class DailyPlanAudit implements IAuditLog {
 
     @Override
     public String getWorkflow() {
-        return workflow;
+        return null;
     }
 
     @Override
@@ -83,7 +73,6 @@ public class DailyPlanAudit implements IAuditLog {
     }
 
     @Override
-    // @JsonIgnore
     public String getControllerId() {
         return controllerId;
     }
@@ -96,7 +85,7 @@ public class DailyPlanAudit implements IAuditLog {
 
     @Override
     public String getOrderId() {
-        return orderId;
+        return null;
     }
 
 }

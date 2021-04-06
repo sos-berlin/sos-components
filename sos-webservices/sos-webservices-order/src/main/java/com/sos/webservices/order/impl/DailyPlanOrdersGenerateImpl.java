@@ -76,7 +76,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
             if (settings != null) {
             orderInitiatorSettings.setTimeZone(settings.getTimeZone());
             orderInitiatorSettings.setPeriodBegin(settings.getPeriodBegin());
-            }else {
+            } else {
                 orderInitiatorSettings.setTimeZone("Europe/Berlin");
                 orderInitiatorSettings.setPeriodBegin("00:00");
             }
@@ -94,7 +94,8 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
             OrderInitiatorGlobals.dailyPlanDate = DailyPlanHelper.getDailyPlanDateAsDate(DailyPlanHelper.stringAsDate(dailyPlanOrderSelector
                     .getDailyPlanDate()).getTime());
             OrderInitiatorGlobals.submissionTime = new Date();
-
+            
+            logAuditMessage(dailyPlanOrderSelector.getAuditLog());
             for (String controllerId : dailyPlanOrderSelector.getControllerIds()) {
 
                 ScheduleSource scheduleSource = null;
@@ -105,9 +106,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
                         dailyPlanOrderSelector.getWithSubmit());
 
                 DailyPlanAudit orderAudit = new DailyPlanAudit(controllerId, dailyPlanOrderSelector.getAuditLog());
-                logAuditMessage(orderAudit);
                 storeAuditLogEntry(orderAudit);
-
             }
 
             return JOCDefaultResponse.responseStatusJSOk(new Date());

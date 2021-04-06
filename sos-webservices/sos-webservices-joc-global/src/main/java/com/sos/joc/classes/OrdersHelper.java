@@ -481,16 +481,11 @@ public class OrdersHelper {
                         DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
                         final Map<String, String> nameToPath = dbLayer.getNamePathMapping(controllerId, jOrders.stream().map(o -> o.workflowId()
                                 .path().string()).collect(Collectors.toSet()), DeployType.WORKFLOW.intValue());
+                        jocAuditLog.logAuditMessage(modifyOrders.getAuditLog());
                         for (JOrder o : jOrders) {
                             ModifyOrderAudit audit = new ModifyOrderAudit(o, controllerId, modifyOrders, nameToPath);
-                            jocAuditLog.logAuditMessage(audit);
                             jocAuditLog.storeAuditLogEntry(audit, connection);
                         }
-//                        jOrders.forEach(o -> {
-//                            ModifyOrderAudit audit = new ModifyOrderAudit(o, controllerId, modifyOrders, nameToPath);
-//                            jocAuditLog.logAuditMessage(audit);
-//                            jocAuditLog.storeAuditLogEntry(audit, connection);
-//                        });
                     } finally {
                         Globals.disconnect(connection);
                     }
@@ -512,16 +507,11 @@ public class OrdersHelper {
                         DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
                         final Map<String, String> nameToPath = dbLayer.getNamePathMapping(controllerId, jOrders.stream().map(o -> o.asScala()
                                 .workflowPath().string()).collect(Collectors.toSet()), DeployType.WORKFLOW.intValue());
+                        jocAuditLog.logAuditMessage(auditParams);
                         for (JFreshOrder o : jOrders) {
                             ModifyOrderAudit audit = new ModifyOrderAudit(o, controllerId, auditParams, nameToPath);
-                            jocAuditLog.logAuditMessage(audit);
                             jocAuditLog.storeAuditLogEntry(audit, connection);
                         }
-//                        jOrders.forEach(o -> {
-//                            ModifyOrderAudit audit = new ModifyOrderAudit(o, controllerId, auditParams, nameToPath);
-//                            jocAuditLog.logAuditMessage(audit);
-//                            jocAuditLog.storeAuditLogEntry(audit, connection);
-//                        });
                     } finally {
                         Globals.disconnect(connection);
                     }
@@ -540,10 +530,10 @@ public class OrdersHelper {
                     final SOSHibernateSession connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntryForOrders");
                     String controllerId = addOrders.getControllerId();
                     AuditParams auditParams = addOrders.getAuditLog();
+                    jocAuditLog.logAuditMessage(auditParams);
                     try {
                         addOrders.getOrders().stream().filter(o -> o.getOrderName().contains("#T")).forEach(o -> {
                             AddOrderAudit audit = new AddOrderAudit(o, controllerId, auditParams);
-                            jocAuditLog.logAuditMessage(audit);
                             jocAuditLog.storeAuditLogEntry(audit, connection);
                         });
                     } finally {

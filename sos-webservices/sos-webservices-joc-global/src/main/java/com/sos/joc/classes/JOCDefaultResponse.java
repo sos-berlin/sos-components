@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.auth.rest.SOSShiroCurrentUser;
 import com.sos.auth.rest.SOSShiroCurrentUserAnswer;
+import com.sos.joc.exceptions.JocAuthenticationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.SessionNotExistException;
@@ -386,11 +387,12 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         if (sosShiroCurrentUser != null) {
             entity.setAccessToken(sosShiroCurrentUser.getAccessToken());
             entity.setUser(sosShiroCurrentUser.getUsername());
+            entity.setRole(String.join(", ", sosShiroCurrentUser.getRoles()));
         } else {
             entity.setAccessToken("");
             entity.setUser("");
+            entity.setHasRole(false);
         }
-        entity.setHasRole(false);
         entity.setIsPermitted(false);
         entity.setIsAuthenticated(sosJobschedulerUser.isAuthenticated());
         entity.setMessage(message);
@@ -407,6 +409,8 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
     public static String getErrorMessage(Throwable e) {
         if (UnknownSessionException.class.isInstance(e)) {
             //LOGGER.error(e.toString());
+        } else if (JocAuthenticationException.class.isInstance(e)) {
+            LOGGER.error(e.toString());
         } else {
             LOGGER.error(e.toString(), e);
         }

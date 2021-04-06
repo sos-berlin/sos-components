@@ -44,7 +44,7 @@ public class Globals {
     public static SOSHibernateFactory sosHibernateFactory;
     public static JocWebserviceDataContainer jocWebserviceDataContainer = JocWebserviceDataContainer.getInstance();
     @SuppressWarnings("deprecation")
-    public static IniSecurityManagerFactory factory = null;
+    public static org.apache.shiro.config.IniSecurityManagerFactory factory = null;
     public static ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
             SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
     public static JocCockpitProperties sosCockpitProperties;

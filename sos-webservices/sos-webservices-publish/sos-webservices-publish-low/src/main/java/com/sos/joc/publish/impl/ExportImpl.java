@@ -16,7 +16,7 @@ import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.ExportAudit;
+import com.sos.joc.classes.audit.DeployAudit;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.Version;
 import com.sos.joc.model.inventory.ConfigurationObject;
@@ -139,14 +139,14 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                             dbLayer, jocVersion, apiVersion, inventoryVersion);
                 }
             }
-            ExportAudit audit = null;
+            DeployAudit audit = null;
             if (controllerId != null) {
-                audit = new ExportAudit(filter, 
-                        String.format("objects exported for controller <%1$s> to file <%2$s> with profile <%3$s>.", 
+                audit = new DeployAudit(filter.getAuditLog(), 
+                        String.format("objects exported for controller '%1$s' to file '%2$s' with profile '%3$s'.", 
                                 controllerId, filter.getExportFile().getFilename(), account));
             } else {
-                audit = new ExportAudit(filter, 
-                        String.format("objects exported to file <%1$s> with profile <%2$s>.", filter.getExportFile().getFilename(), account));
+                audit = new DeployAudit(filter.getAuditLog(), 
+                        String.format("objects exported to file '%1$s' with profile '%2$s'.", filter.getExportFile().getFilename(), account));
             }
             logAuditMessage(audit);
             storeAuditLogEntry(audit);

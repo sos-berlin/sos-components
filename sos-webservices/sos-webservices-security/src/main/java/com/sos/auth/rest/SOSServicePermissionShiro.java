@@ -46,7 +46,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.audit.JocAuditLog;
-import com.sos.joc.classes.audit.SecurityAudit;
 import com.sos.joc.classes.security.SOSSecurityConfiguration;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
@@ -57,9 +56,11 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.SessionNotExistException;
+import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.security.Permissions;
 import com.sos.joc.model.security.SecurityConfiguration;
 
+@SuppressWarnings("deprecation")
 @Path("/authentication")
 public class SOSServicePermissionShiro {
 
@@ -89,8 +90,8 @@ public class SOSServicePermissionShiro {
         SOSSecurityConfiguration sosSecurityConfiguration = new SOSSecurityConfiguration();
         SecurityConfiguration entity = sosSecurityConfiguration.readConfiguration();
 
-        Permissions sosPermissionMasters = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(accessToken,
-                entity.getMasters());
+        currentUser.setRoles(entity);
+        Permissions sosPermissionMasters = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(accessToken, entity.getMasters());
         return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(sosPermissionMasters));
     }
 
@@ -116,7 +117,7 @@ public class SOSServicePermissionShiro {
     public JOCDefaultResponse postJocCockpitPermissions(@HeaderParam(ACCESS_TOKEN) String accessTokenFromHeader,
             @HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader) {
 
-        //MDC.put("context", ThreadCtx);
+        MDC.put("context", ThreadCtx);
         SOSWebserviceAuthenticationRecord sosWebserviceAuthenticationRecord = new SOSWebserviceAuthenticationRecord();
         try {
             String accessToken = getAccessToken(accessTokenFromHeader, xAccessTokenFromHeader, EMPTY_STRING);
@@ -141,8 +142,8 @@ public class SOSServicePermissionShiro {
             return JOCDefaultResponse.responseStatus440(sosShiroCurrentUserAnswer);
         } catch (Exception ee) {
             return JOCDefaultResponse.responseStatusJSError(ee.getMessage());
-//        } finally {
-//            MDC.remove("context");
+        } finally {
+            MDC.remove("context");
         }
     }
 
@@ -316,8 +317,9 @@ public class SOSServicePermissionShiro {
         }
 
         JocAuditLog jocAuditLog = new JocAuditLog(user, "./logout");
-        SecurityAudit s = new SecurityAudit(comment);
-        jocAuditLog.logAuditMessage(s);
+        AuditParams audit = new AuditParams();
+        audit.setComment(comment);
+        jocAuditLog.logAuditMessage(audit);
         try {
             if (currentUser != null && currentUser.getCurrentSubject() != null) {
                 sosShiroSession.getTimeout();
@@ -514,7 +516,8 @@ public class SOSServicePermissionShiro {
 
         SOSSecurityConfiguration sosSecurityConfiguration = new SOSSecurityConfiguration();
         SecurityConfiguration entity = sosSecurityConfiguration.readConfiguration();
-
+        currentUser.setRoles(entity);
+        
         Permissions sosPermissionJocCockpitControllers = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(
                 accessToken, entity.getMasters());
         currentUser.setSosPermissionJocCockpitControllers(sosPermissionJocCockpitControllers);
@@ -573,6 +576,8 @@ public class SOSServicePermissionShiro {
         sosShiroCurrentUserAnswer.setIsAuthenticated(currentUser.getCurrentSubject().isAuthenticated());
         sosShiroCurrentUserAnswer.setAccessToken(currentUser.getAccessToken());
         sosShiroCurrentUserAnswer.setUser(currentUser.getUsername());
+        sosShiroCurrentUserAnswer.setRole(String.join(", ", currentUser.getRoles()));
+        sosShiroCurrentUserAnswer.setHasRole(!currentUser.getRoles().isEmpty());
         sosShiroCurrentUserAnswer.setSessionTimeout(sosShiroSession.getTimeout());
         sosShiroCurrentUserAnswer.setCallerHostName(currentUser.getCallerHostName());
         sosShiroCurrentUserAnswer.setCallerIpAddress(currentUser.getCallerIpAddress());
@@ -650,8 +655,9 @@ public class SOSServicePermissionShiro {
             Globals.jocWebserviceDataContainer.getCurrentUsersList().removeTimedOutUser(currentUser.getUsername());
 
             JocAuditLog jocAuditLog = new JocAuditLog(currentUser.getUsername(), "./login");
-            SecurityAudit s = new SecurityAudit(getRolesAsString(true));
-            jocAuditLog.logAuditMessage(s);
+            AuditParams audit = new AuditParams();
+            audit.setComment(currentUser.getRolesAsString());
+            jocAuditLog.logAuditMessage(audit);
 
             if (!sosShiroCurrentUserAnswer.isAuthenticated()) {
                 if (sosLogin != null) {

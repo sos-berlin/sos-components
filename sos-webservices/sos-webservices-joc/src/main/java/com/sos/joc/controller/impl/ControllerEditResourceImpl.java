@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
-import com.sos.auth.rest.SOSPermissionsCreator;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.command.Overview;
 import com.sos.joc.Globals;
@@ -57,7 +56,6 @@ import com.sos.joc.model.controller.RegisterParameters;
 import com.sos.joc.model.controller.Role;
 import com.sos.joc.model.controller.TestConnect;
 import com.sos.joc.model.controller.UrlParameter;
-import com.sos.joc.model.security.Permissions;
 import com.sos.joc.model.security.SecurityConfigurationMaster;
 import com.sos.schema.JsonValidator;
 
@@ -329,14 +327,12 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             storeAuditLogEntry(jobSchedulerAudit);
             
             if (firstController) { //GUI needs permissions directly for the first controller(s)
-                List<SecurityConfigurationMaster> listOfMasters = new  ArrayList<SecurityConfigurationMaster>();
+                List<SecurityConfigurationMaster> listOfMasters = new ArrayList<SecurityConfigurationMaster>();
                 SecurityConfigurationMaster securityConfigurationMaster = new SecurityConfigurationMaster();
                 securityConfigurationMaster.setMaster(controllerId);
                 listOfMasters.add(securityConfigurationMaster);
                 
-                SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(getJobschedulerUser().getSosShiroCurrentUser());
-                Permissions sosPermissionControllers = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(accessToken, listOfMasters);
-                return JOCDefaultResponse.responseStatus200(sosPermissionControllers);
+                return JOCDefaultResponse.responseStatus200(getJobschedulerUser().getSosShiroCurrentUser().getSosPermissionJocCockpitControllers());
             } else {
                 return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
             }

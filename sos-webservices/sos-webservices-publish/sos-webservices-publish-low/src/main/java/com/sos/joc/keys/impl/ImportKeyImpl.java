@@ -20,7 +20,7 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.ImportKeyAudit;
+import com.sos.joc.classes.audit.DeployAudit;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
@@ -140,7 +140,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.LOW);
-            ImportKeyAudit importAudit = new ImportKeyAudit(filter, reason);
+            DeployAudit importAudit = new DeployAudit(filter.getAuditLog(), reason);
             logAuditMessage(importAudit);
             storeAuditLogEntry(importAudit);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

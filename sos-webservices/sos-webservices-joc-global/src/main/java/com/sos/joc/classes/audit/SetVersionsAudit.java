@@ -35,11 +35,6 @@ public class SetVersionsAudit extends SetVersionsFilter implements IAuditLog {
     @JsonIgnore
     private String folder;
 
-    public SetVersionsAudit(SetVersionsFilter filter, String reason) {
-        setAuditParams(filter.getAuditLog());
-        this.reason = reason;
-    }
-
     public SetVersionsAudit(SetVersionsFilter filter, Map<String, String> versionsWithPath, String reason) {
         setAuditParams(filter.getAuditLog());
         this.versionsWithPath = versionsWithPath;

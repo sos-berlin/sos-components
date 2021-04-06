@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.order.ModifyOrders;
 
@@ -33,37 +34,40 @@ public class ModifyOrderAudit extends ModifyOrders implements IAuditLog {
     private String ticketLink;
 
 
-    public ModifyOrderAudit(JOrder jOrders, String controllerId, AuditParams auditParams, Map<String, String> nameToPath) {
+    public ModifyOrderAudit(JOrder jOrder, String controllerId, AuditParams auditParams, Map<String, String> nameToPath) {
         setControllerId(controllerId);
-        this.orderId = jOrders.id().string();
+        this.orderId = jOrder.id().string();
         setOrderIds(Collections.singleton(this.orderId));
-        this.workflow = jOrders.workflowId().path().string();
+        this.workflow = jOrder.workflowId().path().string();
         this.workflow = nameToPath.getOrDefault(this.workflow, this.workflow);
+        setWorkflowIds(Collections.singletonList(new WorkflowId(this.workflow, null)));
         Path f = Paths.get(this.workflow).getParent();
         this.folder = f == null ? "/" : f.toString().replace('\\', '/');
         setAuditParams(auditParams);
     }
     
-    public ModifyOrderAudit(JFreshOrder jOrders, String controllerId, AuditParams auditParams, Map<String, String> nameToPath) {
+    public ModifyOrderAudit(JFreshOrder jOrder, String controllerId, AuditParams auditParams, Map<String, String> nameToPath) {
         setControllerId(controllerId);
-        this.orderId = jOrders.id().string();
+        this.orderId = jOrder.id().string();
         setOrderIds(Collections.singleton(this.orderId));
-        this.workflow = jOrders.asScala().workflowPath().string();
+        this.workflow = jOrder.asScala().workflowPath().string();
         this.workflow = nameToPath.getOrDefault(this.workflow, this.workflow);
+        setWorkflowIds(Collections.singletonList(new WorkflowId(this.workflow, null)));
         Path f = Paths.get(this.workflow).getParent();
         this.folder = f == null ? "/" : f.toString().replace('\\', '/');
         setAuditParams(auditParams);
     }
     
-    public ModifyOrderAudit(JOrder jOrders, String controllerId, ModifyOrders modifyOrders, Map<String, String> nameToPath) {
+    public ModifyOrderAudit(JOrder jOrder, String controllerId, ModifyOrders modifyOrders, Map<String, String> nameToPath) {
         setControllerId(controllerId);
-        this.orderId = jOrders.id().string();
+        this.orderId = jOrder.id().string();
         setOrderIds(Collections.singleton(this.orderId));
         setKill(modifyOrders.getKill());
         setArguments(modifyOrders.getArguments());
         setOrderType(modifyOrders.getOrderType());
-        this.workflow = jOrders.workflowId().path().string();
+        this.workflow = jOrder.workflowId().path().string();
         this.workflow = nameToPath.getOrDefault(this.workflow, this.workflow);
+        setWorkflowIds(Collections.singletonList(new WorkflowId(this.workflow, null)));
         Path f = Paths.get(this.workflow).getParent();
         this.folder = f == null ? "/" : f.toString().replace('\\', '/');
         setAuditParams(modifyOrders.getAuditLog());
@@ -108,6 +112,7 @@ public class ModifyOrderAudit extends ModifyOrders implements IAuditLog {
     }
 
     @Override
+    @JsonIgnore
     public String getWorkflow() {
         return workflow;
     }
@@ -125,6 +130,7 @@ public class ModifyOrderAudit extends ModifyOrders implements IAuditLog {
     }
 
     @Override
+    @JsonIgnore
     public String getOrderId() {
         return orderId;
     }

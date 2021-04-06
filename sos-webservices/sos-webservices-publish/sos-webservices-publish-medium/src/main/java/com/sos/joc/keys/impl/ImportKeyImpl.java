@@ -20,7 +20,7 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.ImportKeyAudit;
+import com.sos.joc.classes.audit.DeployAudit;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
@@ -32,8 +32,8 @@ import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.resource.IImportKey;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.JocSecurityLevel;
-import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.publish.ImportKeyFilter;
+import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
 
@@ -141,7 +141,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.MEDIUM);
-            ImportKeyAudit importAudit = new ImportKeyAudit(filter, reason);
+            DeployAudit importAudit = new DeployAudit(filter.getAuditLog(), reason);
             logAuditMessage(importAudit);
             storeAuditLogEntry(importAudit);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

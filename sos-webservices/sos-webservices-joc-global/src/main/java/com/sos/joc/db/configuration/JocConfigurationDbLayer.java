@@ -90,7 +90,7 @@ public class JocConfigurationDbLayer {
         return where;
     }
 
-    private void bindParameters(JocConfigurationFilter filter, Query<DBItemJocConfiguration> query) {
+    private void bindParameters(JocConfigurationFilter filter, Query<?> query) {
         if (filter.getName() != null && !"".equals(filter.getName())) {
             query.setParameter("name", filter.getName());
         }
@@ -123,7 +123,14 @@ public class JocConfigurationDbLayer {
             query.setMaxResults(limit);
         }
         return this.session.getResultList(query);
+    }
+    
+    public boolean jocConfigurationExists(JocConfigurationFilter filter) throws SOSHibernateException {
 
+        String sql = "select count(id) from " + DBLayer.DBITEM_JOC_CONFIGURATIONS + " " + getWhere(filter);
+        Query<Long> query = this.session.createQuery(sql);
+        bindParameters(filter, query);
+        return this.session.getSingleResult(query) > 0L;
     }
 
     public List<Profile> getJocConfigurationProfiles(JocConfigurationFilter filter) throws SOSHibernateException {

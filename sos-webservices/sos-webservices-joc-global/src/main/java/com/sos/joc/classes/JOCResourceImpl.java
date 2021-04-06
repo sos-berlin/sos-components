@@ -22,12 +22,12 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.auth.rest.SOSPermissionsCreator;
 import com.sos.auth.rest.SOSShiroCurrentUserAnswer;
 import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.audit.IAuditLog;
 import com.sos.joc.classes.audit.JocAuditLog;
@@ -35,7 +35,8 @@ import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-import com.sos.joc.db.joc.DBItemJocConfiguration;
+import com.sos.joc.exceptions.DBConnectionRefusedException;
+import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocAuthenticationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
@@ -254,6 +255,10 @@ public class JOCResourceImpl {
     public void logAuditMessage(IAuditLog body) {
         jocAuditLog.logAuditMessage(body);
     }
+    
+    public void logAuditMessage(AuditParams audit) {
+        jocAuditLog.logAuditMessage(audit);
+    }
 
     public DBItemJocAuditLog storeAuditLogEntry(IAuditLog body) {
         return jocAuditLog.storeAuditLogEntry(body);
@@ -266,7 +271,7 @@ public class JOCResourceImpl {
     public String getJsonString(Object body) {
         if (body != null) {
             try {
-                return new ObjectMapper().writeValueAsString(body);
+                return new Globals().objectMapper.writeValueAsString(body);
             } catch (Exception e) {
                 return body.toString();
             }
@@ -294,21 +299,21 @@ public class JOCResourceImpl {
             filter.setAccount(".");
             filter.setName(sessionIdString);
             filter.setConfigurationType(SHIRO_SESSION);
-            List<DBItemJocConfiguration> listOfConfigurtions = jocConfigurationDBLayer.getJocConfigurationList(filter, 0);
-            sosHibernateSession.close();
 
-            return (listOfConfigurtions.size() > 0);
+            return jocConfigurationDBLayer.jocConfigurationExists(filter);
+        } catch (SOSHibernateInvalidSessionException e) {
+            throw new DBConnectionRefusedException(e);
         } catch (SOSHibernateException e) {
-            throw new RuntimeException(e);
-
+            throw new DBInvalidDataException(e);
         } catch (JocException e) {
-            throw new RuntimeException(e);
+            throw e;
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
     }
 
-    public void initLogging(String request, byte[] body, String accessToken) throws JocException, InvalidSessionException, JsonParseException, JsonMappingException, IOException {
+    public void initLogging(String request, byte[] body, String accessToken) throws JocException, InvalidSessionException, JsonParseException,
+            JsonMappingException, IOException {
         this.accessToken = accessToken;
         if (jobschedulerUser == null) {
             jobschedulerUser = new JobSchedulerUser(accessToken);
@@ -317,13 +322,13 @@ public class JOCResourceImpl {
         SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(null);
         sosPermissionsCreator.loginFromAccessToken(accessToken);
 
-        SessionKey s = new DefaultSessionKey(accessToken);
-        Session session = null;
-        session = SecurityUtils.getSecurityManager().getSession(s);
+        if (Globals.jocWebserviceDataContainer != null && Globals.jocWebserviceDataContainer.getCurrentUsersList() != null) {
+            SessionKey s = new DefaultSessionKey(accessToken);
+            Session session = null;
+            session = SecurityUtils.getSecurityManager().getSession(s);
 
-        if (session != null && "true".equals(session.getAttribute("dao"))) {
-            if (!sessionExistInDb(accessToken)) {
-                if (Globals.jocWebserviceDataContainer.getCurrentUsersList() != null) {
+            if (session != null && "true".equals(session.getAttribute("dao"))) {
+                if (!sessionExistInDb(accessToken)) {
                     Globals.jocWebserviceDataContainer.getCurrentUsersList().removeUser(accessToken);
                 }
             }
@@ -357,13 +362,13 @@ public class JOCResourceImpl {
         if (request == null || request.isEmpty()) {
             request = "-";
         }
-        jocAuditLog = new JocAuditLog(user, request);
         String bodyStr = getJsonString(body);
         if (bodyStr != null) {
             if (bodyStr.length() > 4096) {
                 bodyStr = bodyStr.substring(0, 4093) + "...";
             }
         }
+        jocAuditLog = new JocAuditLog(user, request, bodyStr);
         LOGGER.debug("REQUEST: " + request + ", PARAMS: " + bodyStr);
         jocError.addMetaInfoOnTop("\nREQUEST: " + request, "PARAMS: " + bodyStr, "USER: " + user);
     }
@@ -385,7 +390,7 @@ public class JOCResourceImpl {
                 bodyStr = bodyStr.substring(0, 4093) + "...";
             }
         }
-        jocAuditLog = new JocAuditLog(user, request);
+        jocAuditLog = new JocAuditLog(user, request, bodyStr);
         LOGGER.debug("REQUEST: " + request + ", PARAMS: " + bodyStr);
         jocError.addMetaInfoOnTop("\nREQUEST: " + request, "PARAMS: " + bodyStr, "USER: " + user);
     }

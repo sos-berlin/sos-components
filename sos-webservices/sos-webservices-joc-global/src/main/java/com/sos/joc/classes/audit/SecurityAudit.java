@@ -56,12 +56,7 @@ public class SecurityAudit implements IAuditLog {
     @Override
     @JsonIgnore
     public String getControllerId() {
-        return "-";
-    }
-
-    @Override
-    public String toString() {
-        return "{}";
+        return null;
     }
 
     @Override

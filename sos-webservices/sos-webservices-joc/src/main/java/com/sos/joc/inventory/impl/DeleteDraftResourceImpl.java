@@ -102,6 +102,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             Set<String> foldersForEvent = new HashSet<>();
             ResponseItem entity = new ResponseItem();
             Set<RequestFilter> requests = in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet());
+            logAuditMessage(in.getAuditLog());
             for (RequestFilter r : requests) {
                 DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, r, folderPermissions);
                 if (config.getDeployed() || config.getReleased()) {
@@ -151,6 +152,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             ResponseItem entity = new ResponseItem();
 
             List<DBItemInventoryConfiguration> dbFolderContent = dbLayer.getFolderContent(config.getPath(), true, null);
+            logAuditMessage(in.getAuditLog());
             for (DBItemInventoryConfiguration item : dbFolderContent) {
                 if (!item.getDeployed() && !item.getReleased() && !ConfigurationType.FOLDER.intValue().equals(item.getType())) {
                     deleteUpdateDraft(item.getTypeAsEnum(), dbLayer, item, in.getAuditLog());
@@ -186,7 +188,6 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
 
     private void createAuditLog(DBItemInventoryConfiguration config, AuditParams auditParams) {
         InventoryAudit audit = new InventoryAudit(config.getTypeAsEnum(), config.getPath(), config.getFolder(), auditParams);
-        logAuditMessage(audit);
         DBItemJocAuditLog auditItem = storeAuditLogEntry(audit);
         if (auditItem != null) {
             config.setAuditLogId(auditItem.getId());

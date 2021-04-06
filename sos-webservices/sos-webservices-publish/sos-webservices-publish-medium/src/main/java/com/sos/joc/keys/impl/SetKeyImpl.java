@@ -10,15 +10,15 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.SetKeyAudit;
+import com.sos.joc.classes.audit.DeployAudit;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocKeyNotValidException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.resource.ISetKey;
 import com.sos.joc.model.common.JocSecurityLevel;
-import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.publish.SetKeyFilter;
+import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
 
@@ -62,7 +62,7 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
             } else {
               throw new JocMissingRequiredParameterException("No key was provided");
             }
-            SetKeyAudit audit = new SetKeyAudit(setKeyFilter, reason);
+            DeployAudit audit = new DeployAudit(setKeyFilter.getAuditLog(), reason);
             logAuditMessage(audit);
             storeAuditLogEntry(audit);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

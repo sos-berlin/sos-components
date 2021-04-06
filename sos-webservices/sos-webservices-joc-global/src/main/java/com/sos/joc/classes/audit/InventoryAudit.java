@@ -57,9 +57,6 @@ public class InventoryAudit implements IAuditLog {
         case FOLDER:
             this.path = folder;
             break;
-        case SCHEDULE:
-            this.orderId = path;
-            break;
         case WORKFLOW:
             this.workflow = path;
             break;
@@ -120,8 +117,9 @@ public class InventoryAudit implements IAuditLog {
     }
 
     @Override
+    @JsonIgnore
     public String getControllerId() {
-        return "-";
+        return null;
     }
 
     @Override

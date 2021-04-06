@@ -249,6 +249,9 @@ public class DeleteDeployments {
         }
         // delete and put to trash
         InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
+        if (auditLogger != null) {
+            auditLogger.logAuditMessage(auditParams); 
+        }
         for (DBItemInventoryConfiguration invConfiguration : itemsToDelete) {
             createAuditLog(invConfiguration, invConfiguration.getTypeAsEnum(), auditLogger, auditParams);
             JocInventory.deleteInventoryConfigurationAndPutToTrash(invConfiguration, invDbLayer);
@@ -279,7 +282,6 @@ public class DeleteDeployments {
             AuditParams auditParams) {
         if (auditLogger != null) {
             InventoryAudit audit = new InventoryAudit(objectType, config.getPath(), config.getFolder(), auditParams);
-            auditLogger.logAuditMessage(audit);
             DBItemJocAuditLog auditItem = auditLogger.storeAuditLogEntry(audit);
             if (auditItem != null) {
                 config.setAuditLogId(auditItem.getId());

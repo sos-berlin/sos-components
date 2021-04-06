@@ -40,9 +40,9 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
             List<DBItemDocumentation> docs = dbLayer.getDocumentations(filter.getControllerId(), filter.getDocumentations());
+            logAuditMessage(filter.getAuditLog());
             for (DBItemDocumentation dbDoc : docs) {
                 DeleteDocumentationAudit deleteAudit = new DeleteDocumentationAudit(filter, dbDoc.getPath(), dbDoc.getDirectory());
-                logAuditMessage(deleteAudit);
                 List<DBItemDocumentationUsage> dbUsages = dbLayer.getDocumentationUsages(filter.getControllerId(), dbDoc.getId());
                 if (dbUsages != null && !dbUsages.isEmpty()) {
                     for (DBItemDocumentationUsage dbUsage : dbUsages) {
