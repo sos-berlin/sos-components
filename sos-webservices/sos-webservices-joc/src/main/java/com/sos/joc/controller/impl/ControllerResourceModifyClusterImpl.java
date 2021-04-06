@@ -17,19 +17,19 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
-import com.sos.joc.classes.audit.ModifyJobSchedulerClusterAudit;
+import com.sos.joc.classes.audit.ModifyControllerAudit;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.controller.resource.IControllerResourceModifyCluster;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocBadRequestException;
-import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
@@ -60,9 +60,7 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             }
 
             checkRequiredComment(urlParameter.getAuditLog());
-            ModifyJobSchedulerClusterAudit jobschedulerAudit = new ModifyJobSchedulerClusterAudit(urlParameter);
-            logAuditMessage(jobschedulerAudit);
-
+            
             // ask for cluster
             List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(controllerId);
             if (controllerInstances != null && controllerInstances.size() < 2) { // is not cluster
@@ -77,16 +75,12 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
                 throw new JocBadRequestException("Switchover is not available because the cluster is not coupled");
             }
 
-            // ask for active node is not necessary with ControllerApi
-//            try {
-//                Either<Problem, String> response = ControllerApi.of(controllerId).executeCommandJson(Globals.objectMapper
-//                        .writeValueAsString(new ClusterSwitchOver())).get(Globals.httpSocketTimeout, TimeUnit.MILLISECONDS);
-//                ProblemHelper.throwProblemIfExist(response);
-//            } catch (TimeoutException e) {
-//            }
             ControllerApi.of(controllerId).executeCommandJson(Globals.objectMapper.writeValueAsString(new ClusterSwitchOver()))
                     .thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId));
 
+            // TODO maybe auditlog into thenAccept?
+            ModifyControllerAudit jobschedulerAudit = new ModifyControllerAudit(controllerId, urlParameter.getAuditLog());
+            logAuditMessage(jobschedulerAudit);
             storeAuditLogEntry(jobschedulerAudit);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -113,11 +107,13 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             }
 
             checkRequiredComment(urlParameter.getAuditLog());
-            urlParameter.setWithFailover(null);
-            ModifyJobSchedulerClusterAudit jobschedulerAudit = new ModifyJobSchedulerClusterAudit(urlParameter);
-            logAuditMessage(jobschedulerAudit);
+            logAuditMessage(urlParameter.getAuditLog());
+            
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_APPOINT_NODES);
             appointNodes(controllerId, new InventoryAgentInstancesDBLayer(connection), accessToken, getJocError());
+            
+            //TODO storeAudit in thenAccept()?
+            ModifyControllerAudit jobschedulerAudit = new ModifyControllerAudit(controllerId, urlParameter.getAuditLog());
             storeAuditLogEntry(jobschedulerAudit);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
@@ -139,26 +135,6 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
         if (controllerInstances == null || controllerInstances.size() < 2) { // is not cluster
             throw new JocBadRequestException("There is no cluster configured with the Id: " + controllerId);
         }
-//        ClusterAppointNodes command = new ClusterAppointNodes();
-//        command.setActiveId("Primary");
-//        IdToUri idToUri = new IdToUri();
-//        for (DBItemInventoryJSInstance inst : controllerInstances) {
-//            idToUri.getAdditionalProperties().put(inst.getIsPrimary() ? "Primary" : "Backup", inst.getClusterUri());
-//        }
-//        command.setIdToUri(idToUri);
-//        List<String> watchers = dbLayer.getUrisOfEnabledClusterWatcherByControllerId(controllerId);
-//        if (watchers == null || watchers.isEmpty()) {
-//            throw new JobSchedulerBadRequestException("There must exist at least one Agent Cluster Watcher");
-//        }
-//        List<ClusterWatcher> cWatchers = watchers.stream().map(item -> {
-//            ClusterWatcher watcher = new ClusterWatcher();
-//            watcher.setUri(URI.create(item));
-//            return watcher;
-//        }).distinct().collect(Collectors.toList());
-//        command.setClusterWatches(cWatchers);
-//
-//        ControllerApi.of(controllerId).executeCommandJson(Globals.objectMapper.writeValueAsString(command)).thenAccept(e -> ProblemHelper
-//                .postProblemEventIfExist(e, jocError, controllerId));
 
         NodeId activeId = NodeId.of("Primary");
         Map<NodeId, Uri> idToUri = new HashMap<>();

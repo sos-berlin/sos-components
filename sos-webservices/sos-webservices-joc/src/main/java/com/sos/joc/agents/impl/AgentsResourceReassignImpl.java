@@ -11,7 +11,7 @@ import com.sos.joc.agents.resource.IAgentsResourceReassign;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
-import com.sos.joc.classes.audit.ModifyJobSchedulerAudit;
+import com.sos.joc.classes.audit.ModifyControllerAudit;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.exceptions.JocException;
@@ -43,9 +43,7 @@ public class AgentsResourceReassignImpl extends JOCResourceImpl implements IAgen
             }
 
             checkRequiredComment(body.getAuditLog());
-            body.setWithFailover(null);
-            ModifyJobSchedulerAudit reassignAudit = new ModifyJobSchedulerAudit(body);
-            logAuditMessage(reassignAudit);
+            logAuditMessage(body.getAuditLog());
             
             List<JAgentRef> agents = Proxies.getAgents(controllerId, null);
             if (!agents.isEmpty()) {
@@ -53,6 +51,9 @@ public class AgentsResourceReassignImpl extends JOCResourceImpl implements IAgen
                     .thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
             }
             
+            // TODO maybe in then Accept()?
+            body.setWithFailover(null);
+            ModifyControllerAudit reassignAudit = new ModifyControllerAudit(body);
             storeAuditLogEntry(reassignAudit);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

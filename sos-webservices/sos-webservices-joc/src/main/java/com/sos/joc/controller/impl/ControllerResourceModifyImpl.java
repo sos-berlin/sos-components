@@ -18,7 +18,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.ModifyJobSchedulerAudit;
+import com.sos.joc.classes.audit.ModifyControllerAudit;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.controller.resource.IControllerResourceModify;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
@@ -128,9 +128,8 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
             }
         }
         checkRequiredComment(urlParameter.getAuditLog());
-        ModifyJobSchedulerAudit jobschedulerAudit = new ModifyJobSchedulerAudit(urlParameter);
-        logAuditMessage(jobschedulerAudit);
-
+        logAuditMessage(urlParameter.getAuditLog());
+        
         JOCJsonCommand jocJsonCommand = new JOCJsonCommand(urlParameter.getUrl(), accessToken);
         jocJsonCommand.setUriBuilderForCommands();
         String body = new ObjectMapper().writeValueAsString(cmd);
@@ -144,6 +143,7 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
             jocJsonCommand.getJsonObjectFromPost(body);
         }
         // TODO expected answer { "TYPE": "Accepted" }
+        ModifyControllerAudit jobschedulerAudit = new ModifyControllerAudit(urlParameter);
         storeAuditLogEntry(jobschedulerAudit);
         return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
     }

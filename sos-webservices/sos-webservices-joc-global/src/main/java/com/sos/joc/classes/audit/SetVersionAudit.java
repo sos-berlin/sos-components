@@ -4,6 +4,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.publish.SetVersionFilter;
 
@@ -16,10 +17,10 @@ public class SetVersionAudit extends SetVersionFilter implements IAuditLog {
     @JsonIgnore
     private String workflow;
     
+    @JsonProperty("reason")
     private String reason;
 
-    private String version;
-
+    @JsonProperty("paths")
     private Set<String> paths;
     
     @JsonIgnore
@@ -37,15 +38,10 @@ public class SetVersionAudit extends SetVersionFilter implements IAuditLog {
     @JsonIgnore
     private String folder;
 
-    public SetVersionAudit(SetVersionFilter filter, String reason) {
-        setAuditParams(filter.getAuditLog());
-        this.reason = reason;
-    }
-
     public SetVersionAudit(SetVersionFilter filter, Set<String> paths, String reason) {
         setAuditParams(filter.getAuditLog());
         this.paths = paths;
-        this.version = filter.getVersion();
+        setVersion(filter.getVersion());
         this.reason = reason;
     }
 
@@ -58,63 +54,71 @@ public class SetVersionAudit extends SetVersionFilter implements IAuditLog {
     }
 
     @Override
+    @JsonIgnore
     public String getFolder() {
         return folder;
     }
 
     @Override
+    @JsonIgnore
     public String getWorkflow() {
         return workflow;
     }
 
     @Override
+    @JsonIgnore
     public String getControllerId() {
         return controllerId;
     }
     
     @Override
+    @JsonIgnore
     public Long getDepHistoryId() {
         return depHistoryId;
     }
 
     @Override
+    @JsonIgnore
 	public String getComment() {
 		return comment;
 	}
 
 	@Override
+	@JsonIgnore
 	public Integer getTimeSpent() {
 		return timeSpent;
 	}
 
 	@Override
+	@JsonIgnore
 	public String getTicketLink() {
 		return ticketLink;
 	}
 
 	@Override
+	@JsonIgnore
 	public String getJob() {
 		return null;
 	}
 
 	@Override
+	@JsonIgnore
 	public String getOrderId() {
 		return null;
 	}
 
 	@Override
+	@JsonIgnore
 	public String getCalendar() {
 		return null;
 	}
 
+	@JsonProperty("reason")
     public String getReason() {
         return reason;
     }
-
-    public String getVersion() {
-        return version;
-    }
     
+	@JsonProperty("paths")
     public Set<String> getPaths() {
         return paths;
     }

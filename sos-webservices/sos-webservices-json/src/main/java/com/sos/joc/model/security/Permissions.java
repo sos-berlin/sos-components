@@ -1,9 +1,12 @@
 
 package com.sos.joc.model.security;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.joc.model.security.permissions.ControllerPermissions;
 import com.sos.joc.model.security.permissions.Controllers;
 import com.sos.joc.model.security.permissions.JocPermissions;
@@ -20,12 +23,16 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "roles",
     "joc",
     "controllerDefaults",
     "controllers"
 })
 public class Permissions {
 
+    @JsonProperty("roles")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> roles = new LinkedHashSet<String>();
     @JsonProperty("joc")
     private JocPermissions joc;
     /**
@@ -48,15 +55,27 @@ public class Permissions {
 
     /**
      * 
+     * @param roles
      * @param controllers
      * @param controllerDefaults
      * @param joc
      */
-    public Permissions(JocPermissions joc, ControllerPermissions controllerDefaults, Controllers controllers) {
+    public Permissions(Set<String> roles, JocPermissions joc, ControllerPermissions controllerDefaults, Controllers controllers) {
         super();
+        this.roles = roles;
         this.joc = joc;
         this.controllerDefaults = controllerDefaults;
         this.controllers = controllers;
+    }
+
+    @JsonProperty("roles")
+    public Set<String> getRoles() {
+        return roles;
+    }
+
+    @JsonProperty("roles")
+    public void setRoles(Set<String> roles) {
+        this.roles = roles;
     }
 
     @JsonProperty("joc")
@@ -103,12 +122,12 @@ public class Permissions {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("joc", joc).append("controllerDefaults", controllerDefaults).append("controllers", controllers).toString();
+        return new ToStringBuilder(this).append("roles", roles).append("joc", joc).append("controllerDefaults", controllerDefaults).append("controllers", controllers).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllers).append(controllerDefaults).append(joc).toHashCode();
+        return new HashCodeBuilder().append(controllers).append(controllerDefaults).append(roles).append(joc).toHashCode();
     }
 
     @Override
@@ -120,7 +139,7 @@ public class Permissions {
             return false;
         }
         Permissions rhs = ((Permissions) other);
-        return new EqualsBuilder().append(controllers, rhs.controllers).append(controllerDefaults, rhs.controllerDefaults).append(joc, rhs.joc).isEquals();
+        return new EqualsBuilder().append(controllers, rhs.controllers).append(controllerDefaults, rhs.controllerDefaults).append(roles, rhs.roles).append(joc, rhs.joc).isEquals();
     }
 
 }

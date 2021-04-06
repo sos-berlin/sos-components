@@ -32,7 +32,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
-import com.sos.joc.classes.audit.ImportDeployAudit;
+import com.sos.joc.classes.audit.DeployAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -153,7 +153,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     commitId = ((Workflow) config.getContent()).getVersionId();
                 }
             }
-            ImportDeployAudit mainAudit = new ImportDeployAudit(filter, String.format("%1$d object(s) imported with profile %2$s",
+            DeployAudit mainAudit = new DeployAudit(filter.getAuditLog(), String.format("%1$d object(s) imported with profile %2$s",
                     objectsWithSignature.size(), account));
             logAuditMessage(mainAudit);
             DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(mainAudit);
@@ -246,7 +246,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                         controllerId, countWorkflows, countLocks, countJunctions, countJobClasses));
                 JocInventory.handleWorkflowSearch(dbLayer.getSession(), deployedObjects, false);
             }
-            ImportDeployAudit audit = new ImportDeployAudit(filter, controllerId, commitId, "update", account);
+            DeployAudit audit = new DeployAudit(filter.getAuditLog(), controllerId, commitId, "update", account);
             boolean verified = false;
             String signerDN = null;
             X509Certificate cert = null;

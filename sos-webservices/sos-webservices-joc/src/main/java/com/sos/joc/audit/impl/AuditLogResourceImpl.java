@@ -40,12 +40,13 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
             initLogging(API_CALL, bytes, accessToken);
             JsonValidator.validateFailFast(bytes, AuditLogFilter.class);
             AuditLogFilter auditLogFilter = Globals.objectMapper.readValue(bytes, AuditLogFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(auditLogFilter.getControllerId(), getJocPermissions(accessToken).getAuditLog()
-                    .getView());
+            String controllerId = auditLogFilter.getControllerId() == null ? "" : auditLogFilter.getControllerId();
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getJocPermissions(accessToken).getAuditLog().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
+            // controllerId == "-" for requests ./inventory, ./profile
             AuditLogDBFilter auditLogDBFilter = new AuditLogDBFilter(auditLogFilter);
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
@@ -61,7 +62,7 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
                 auditLogs = filterComment(auditLogs, filterRegex);
             }
             AuditLog entity = new AuditLog();
-            entity.setAuditLog(fillAuditLogItems(auditLogs, auditLogFilter.getControllerId()));
+            entity.setAuditLog(fillAuditLogItems(auditLogs, controllerId));
             entity.setDeliveryDate(new Date());
 
             return JOCDefaultResponse.responseStatus200(entity);

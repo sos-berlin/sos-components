@@ -28,7 +28,7 @@ public class JocConfigurationDbLayer {
     }
 
     public DBItemJocConfiguration getDBItemJocConfiguration(final Long id) throws SOSHibernateException {
-        return (DBItemJocConfiguration) (this.session.get(DBItemJocConfiguration.class, id));
+        return this.session.get(DBItemJocConfiguration.class, id);
     }
 
     public int delete(JocConfigurationFilter filter) throws SOSHibernateException {
@@ -90,7 +90,7 @@ public class JocConfigurationDbLayer {
         return where;
     }
 
-    private void bindParameters(JocConfigurationFilter filter, Query<DBItemJocConfiguration> query) {
+    private void bindParameters(JocConfigurationFilter filter, Query<?> query) {
         if (filter.getName() != null && !"".equals(filter.getName())) {
             query.setParameter("name", filter.getName());
         }
@@ -113,7 +113,7 @@ public class JocConfigurationDbLayer {
             query.setParameter("shared", filter.isShared(), BooleanType.INSTANCE);
         }
     }
-
+    
     public List<DBItemJocConfiguration> getJocConfigurationList(JocConfigurationFilter filter, final int limit) throws SOSHibernateException {
 
         String sql = "from " + DBLayer.DBITEM_JOC_CONFIGURATIONS + " " + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
@@ -123,7 +123,14 @@ public class JocConfigurationDbLayer {
             query.setMaxResults(limit);
         }
         return this.session.getResultList(query);
+    }
+    
+    public boolean jocConfigurationExists(JocConfigurationFilter filter) throws SOSHibernateException {
 
+        String sql = "select count(id) from " + DBLayer.DBITEM_JOC_CONFIGURATIONS + " " + getWhere(filter);
+        Query<Long> query = this.session.createQuery(sql);
+        bindParameters(filter, query);
+        return this.session.getSingleResult(query) > 0L;
     }
 
     public List<Profile> getJocConfigurationProfiles(JocConfigurationFilter filter) throws SOSHibernateException {

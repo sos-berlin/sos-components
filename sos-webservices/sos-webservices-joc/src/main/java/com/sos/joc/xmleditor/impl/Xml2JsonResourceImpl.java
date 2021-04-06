@@ -4,10 +4,8 @@ import javax.ws.rs.Path;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.security.permissions.ControllerPermissions;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.xml2json.Xml2JsonConfiguration;
 import com.sos.joc.model.xmleditor.xml2json.Xml2JsonConfigurationAnswer;
@@ -16,7 +14,7 @@ import com.sos.joc.xmleditor.resource.IXml2JsonResource;
 import com.sos.schema.JsonValidator;
 
 @Path(JocXmlEditor.APPLICATION_PATH)
-public class Xml2JsonResourceImpl extends JOCResourceImpl implements IXml2JsonResource {
+public class Xml2JsonResourceImpl extends ACommonResourceImpl implements IXml2JsonResource {
 
     @Override
     public JOCDefaultResponse process(final String accessToken, final byte[] filterBytes) {
@@ -27,7 +25,7 @@ public class Xml2JsonResourceImpl extends JOCResourceImpl implements IXml2JsonRe
 
             checkRequiredParameters(in);
 
-            JOCDefaultResponse response = checkPermissions(accessToken, in);
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), accessToken, in.getObjectType(), Role.VIEW);
             if (response == null) {
                 JocXmlEditor.parseXml(in.getConfiguration());
 
@@ -60,13 +58,6 @@ public class Xml2JsonResourceImpl extends JOCResourceImpl implements IXml2JsonRe
         if (!in.getObjectType().equals(ObjectType.NOTIFICATION)) {
             checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
         }
-    }
-
-    private JOCDefaultResponse checkPermissions(final String accessToken, final Xml2JsonConfiguration in) throws Exception {
-        // TODO permissions ggf. getJocPermissions
-        ControllerPermissions permissions = getControllerPermissions(in.getControllerId(), accessToken);
-        boolean permission = true; //permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return initPermissions(in.getControllerId(), permission);
     }
 
     private Xml2JsonConfigurationAnswer getSuccess(String json) {

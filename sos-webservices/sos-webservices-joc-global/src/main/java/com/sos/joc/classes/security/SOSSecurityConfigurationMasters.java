@@ -33,14 +33,14 @@ public class SOSSecurityConfigurationMasters {
 
     public void createConfigurations(SecurityConfiguration securityConfiguration) {
         for (Map.Entry<String, SecurityConfigurationMaster> entry : listOfMasters.entrySet()) {
-            securityConfiguration.getMasters().add(listOfMasters.get(entry.getKey()));
+            securityConfiguration.getMasters().add(entry.getValue());
         }
 
     }
 
     public SecurityConfigurationMaster getDefaultMaster(SecurityConfiguration securityConfiguration) {
         for (Map.Entry<String, SecurityConfigurationMaster> entry : listOfMasters.entrySet()) {
-            SecurityConfigurationMaster securityConfigurationMaster = listOfMasters.get(entry.getKey());
+            SecurityConfigurationMaster securityConfigurationMaster = entry.getValue();
             if ("".equals(securityConfigurationMaster.getMaster())) {
                 return securityConfigurationMaster;
             }

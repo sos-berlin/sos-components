@@ -10,7 +10,7 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.GenerateKeyAudit;
+import com.sos.joc.classes.audit.DeployAudit;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
@@ -64,7 +64,7 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
             dbLayerKeys.saveOrUpdateGeneratedKey(keyPair, 
                     jobschedulerUser.getSosShiroCurrentUser().getUsername(),
                     JocSecurityLevel.LOW);
-            GenerateKeyAudit audit = new GenerateKeyAudit(filter, 
+            DeployAudit audit = new DeployAudit(filter.getAuditLog(), 
                     String.format("new Private Key generated for profile - %1$s -", ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc())));
             logAuditMessage(audit);
             storeAuditLogEntry(audit);

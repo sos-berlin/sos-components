@@ -32,13 +32,13 @@ public class AuditLogDBFilter {
 	public AuditLogDBFilter(AuditLogFilter auditLogFilter) throws ControllerInvalidResponseDataException {
 	    controllerId = auditLogFilter.getControllerId();
 		listOfFolders = auditLogFilter.getFolders();
-		for (JobPath j: auditLogFilter.getJobs()) {
-			addJob(j.getJob());
-		}
+//		for (JobPath j: auditLogFilter.getJobs()) {
+//			addJob(j.getJob());
+//		}
 		listOfOrders = auditLogFilter.getOrders();
 		ticketLink = auditLogFilter.getTicketLink();
 		account = auditLogFilter.getAccount();
-		listOfCalendars = auditLogFilter.getCalendars();
+//		listOfCalendars = auditLogFilter.getCalendars();
 
 		createdFrom = JobSchedulerDate.getDateFrom(auditLogFilter.getDateFrom(), auditLogFilter.getTimeZone());
 		createdTo = JobSchedulerDate.getDateTo(auditLogFilter.getDateTo(), auditLogFilter.getTimeZone());

@@ -6,6 +6,10 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -14,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.model.security.Permissions;
+import com.sos.joc.model.security.SecurityConfiguration;
+import com.sos.joc.model.security.SecurityConfigurationRole;
 import com.sos.joc.model.security.permissions.ControllerPermissions;
 import com.sos.joc.model.security.permissions.JocPermissions;
 import com.sos.joc.model.security.permissions.controller.Agents;
@@ -34,6 +40,7 @@ import com.sos.joc.model.security.permissions.joc.Others;
 import com.sos.joc.model.security.permissions.joc.admin.Accounts;
 import com.sos.joc.model.security.permissions.joc.admin.Certificates;
 import com.sos.joc.model.security.permissions.joc.admin.Controllers;
+import com.sos.joc.model.security.permissions.joc.admin.Customization;
 import com.sos.joc.model.security.permissions.joc.admin.Settings;
 
 
@@ -45,6 +52,7 @@ public class SOSShiroCurrentUser {
     private String password;
     private String accessToken;
     private String authorization;
+    private Set<String> roles = Collections.emptySet();
     private Boolean haveAnyIpPermission;
     private HttpServletRequest httpServletRequest;
 
@@ -70,23 +78,27 @@ public class SOSShiroCurrentUser {
         if (sosPermissionJocCockpitControllers == null) {
             sosPermissionJocCockpitControllers = initPermissions();
         }
+        
+        if (sosPermissionJocCockpitControllers.getControllers() != null) {
+            if (httpServletRequest != null) {
+                String ip = getCallerIpAddress();
+                String ipControllerKey = "ip=" + ip + ":" + controllerId;
+                String ipKey = "ip=" + ip;
 
-        if (httpServletRequest != null) {
-            String ip = getCallerIpAddress();
-            String ipControllerKey = "ip=" + ip + ":" + controllerId;
-            String ipKey = "ip=" + ip;
+                if (sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().containsKey(ipControllerKey)) {
+                    return sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().get(ipControllerKey);
+                }
 
-            if (sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().containsKey(ipControllerKey)) {
-                return sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().get(ipControllerKey);
+                if (sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().containsKey(ipKey)) {
+                    return sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().get(ipKey);
+                }
             }
 
-            if (sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().containsKey(ipKey)) {
-                return sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().get(ipKey);
+            if (sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().containsKey(controllerId)) {
+                return sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().get(controllerId);
+            } else {
+                return sosPermissionJocCockpitControllers.getControllerDefaults();
             }
-        }
-
-        if (sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().containsKey(controllerId)) {
-            return sosPermissionJocCockpitControllers.getControllers().getAdditionalProperties().get(controllerId);
         } else {
             return sosPermissionJocCockpitControllers.getControllerDefaults();
         }
@@ -126,6 +138,33 @@ public class SOSShiroCurrentUser {
     public String getPassword() {
         return password;
     }
+    
+    public void setRoles(Set<String> roles) {
+        this.roles = roles;
+    }
+    
+    public void setRoles(SecurityConfiguration securityConf) {
+        if (currentSubject != null) {
+            this.roles = Stream.concat(securityConf.getUsers().stream().filter(user -> user.getRoles() != null).flatMap(user -> user.getRoles()
+                    .stream()), securityConf.getMasters().stream().filter(controller -> controller.getRoles() != null).flatMap(
+                            controller -> controller.getRoles().stream().map(SecurityConfigurationRole::getRole))).filter(role -> currentSubject
+                                    .hasRole(role)).collect(Collectors.toSet());
+        }
+    }
+    
+    public Set<String> getRoles() {
+        if (roles == null) {
+            return Collections.emptySet();
+        }
+        return roles;
+    }
+    
+    public String getRolesAsString() {
+        if (roles == null) {
+            return "";
+        }
+        return String.join(",", roles);
+    }
 
     public void setCurrentSubject(Subject currentSubject) {
         this.currentSubject = currentSubject;
@@ -139,13 +178,14 @@ public class SOSShiroCurrentUser {
         }
     }
     
-    protected static Permissions initPermissions() {
-        Administration administration = new Administration(new Accounts(), new Settings(), new Controllers(), new Certificates());
-        ControllerPermissions controllerDefaults = new ControllerPermissions(false, false, false, false, new Deployments(), new Orders(), new Agents(),
-                new Locks(), new Workflows());
+    private Permissions initPermissions() {
+        Administration administration = new Administration(new Accounts(), new Settings(), new Controllers(), new Certificates(),
+                new Customization());
+        ControllerPermissions controllerDefaults = new ControllerPermissions(false, false, false, false, new Deployments(), new Orders(),
+                new Agents(), new Locks(), new Workflows());
         JocPermissions joc = new JocPermissions(administration, new Cluster(), new Inventory(), new Calendars(), new Documentations(), new AuditLog(),
                 new DailyPlan(), new FileTransfer(), new Notification(), new Others());
-        return new Permissions(joc, controllerDefaults, new com.sos.joc.model.security.permissions.Controllers());
+        return new Permissions(getRoles(), joc, controllerDefaults, new com.sos.joc.model.security.permissions.Controllers());
     }
     
     private Boolean getHaveAnyIpPermission() {

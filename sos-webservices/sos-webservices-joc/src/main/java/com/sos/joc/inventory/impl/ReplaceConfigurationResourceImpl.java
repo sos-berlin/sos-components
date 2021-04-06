@@ -111,6 +111,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 isUpdated = true;
             }
             if (isUpdated) {
+                logAuditMessage(in.getAuditLog());
                 createAuditLog(config, in.getAuditLog());
             }
             
@@ -146,6 +147,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             Set<String> events = new HashSet<>();
             String search = in.getSearch().replaceAll("%", ".*");
             Set<RequestFilter> requests = in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet());
+            logAuditMessage(in.getAuditLog());
             for (RequestFilter r : requests) {
                 DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, r, folderPermissions);
 
@@ -201,7 +203,6 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
 
     private void createAuditLog(DBItemInventoryConfiguration config, AuditParams auditParams) throws Exception {
         InventoryAudit audit = new InventoryAudit(config.getTypeAsEnum(), config.getPath(), config.getFolder(), auditParams);
-        logAuditMessage(audit);
         DBItemJocAuditLog auditItem = storeAuditLogEntry(audit);
         if (auditItem != null) {
             config.setAuditLogId(auditItem.getId());

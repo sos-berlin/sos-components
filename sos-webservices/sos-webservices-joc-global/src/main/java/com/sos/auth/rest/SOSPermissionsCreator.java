@@ -3,6 +3,7 @@ package com.sos.auth.rest;
 import java.io.IOException;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.stream.Stream;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.config.Ini;
@@ -49,6 +50,7 @@ import com.sos.joc.model.security.permissions.joc.Others;
 import com.sos.joc.model.security.permissions.joc.admin.Accounts;
 import com.sos.joc.model.security.permissions.joc.admin.Certificates;
 import com.sos.joc.model.security.permissions.joc.admin.Controllers;
+import com.sos.joc.model.security.permissions.joc.admin.Customization;
 import com.sos.joc.model.security.permissions.joc.admin.Settings;
 
 
@@ -151,26 +153,26 @@ public class SOSPermissionsCreator {
         }
     }
     
-    public Permissions createJocCockpitPermissionControllerObjectList(String accessToken,
-            List<SecurityConfigurationMaster> listOfControllers) throws JocException {
+    public Permissions createJocCockpitPermissionControllerObjectList(String accessToken, List<SecurityConfigurationMaster> controllers) {
+        Permissions permissions = new Permissions(currentUser.getRoles(), getJocPermissions(), getControllerPermissions(""),
+                new com.sos.joc.model.security.permissions.Controllers());
 
-        Permissions permissions = new Permissions(null, null, new com.sos.joc.model.security.permissions.Controllers());
-        permissions.setJoc(getJocPermissions());
-        permissions.setControllerDefaults(getControllerPermissions(""));
-        for (SecurityConfigurationMaster instance : listOfControllers) {
-            if (!instance.getMaster().isEmpty()) {
-                permissions.getControllers().setAdditionalProperty(instance.getMaster(), getControllerPermissions(instance.getMaster()));
-            }
+        Stream<SecurityConfigurationMaster> controllersStream = controllers.stream();
+        if (!permissions.getRoles().isEmpty()) {
+            controllersStream = controllersStream.filter(c -> permissions.getRoles() != null && permissions.getRoles().stream().anyMatch(r -> c
+                    .getRoles().contains(r)));
         }
+        controllersStream.map(SecurityConfigurationMaster::getMaster).filter(s -> s != null && !s.isEmpty()).forEach(controller -> permissions
+                .getControllers().setAdditionalProperty(controller, getControllerPermissions(controller)));
 
         return permissions;
     }
     
     private JocPermissions getJocPermissions() {
         
-        JocPermissions jocPermissions = new JocPermissions(new Administration(new Accounts(), new Settings(), new Controllers(), new Certificates()),
-                new Cluster(), new Inventory(), new Calendars(), new Documentations(), new AuditLog(), new DailyPlan(), new FileTransfer(),
-                new Notification(), new Others());
+        JocPermissions jocPermissions = new JocPermissions(new Administration(new Accounts(), new Settings(), new Controllers(), new Certificates(),
+                new Customization()), new Cluster(), new Inventory(), new Calendars(), new Documentations(), new AuditLog(), new DailyPlan(),
+                new FileTransfer(), new Notification(), new Others());
 
         if (currentUser != null && currentUser.getCurrentSubject() != null) {
             
@@ -183,6 +185,9 @@ public class SOSPermissionsCreator {
             admin.getControllers().setManage(haveRight("", "sos:products:joc:adminstration:controllers:manage"));
             admin.getSettings().setView(haveRight("", "sos:products:joc:adminstration:settings:view"));
             admin.getSettings().setManage(haveRight("", "sos:products:joc:adminstration:settings:manage"));
+            admin.getCustomization().setView(haveRight("", "sos:products:joc:adminstration:customization:view"));
+            admin.getCustomization().setManage(haveRight("", "sos:products:joc:adminstration:customization:manage"));
+            admin.getCustomization().setShare(haveRight("", "sos:products:joc:adminstration:customization:share"));
             jocPermissions.setAdministration(admin);
             jocPermissions.getAuditLog().setView(haveRight("", "sos:products:joc:auditlog:view"));
             jocPermissions.getCalendars().setView(haveRight("", "sos:products:joc:calendars:view"));

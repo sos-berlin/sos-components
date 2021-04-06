@@ -2,10 +2,11 @@ package com.sos.joc.classes.audit;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.joc.model.audit.AuditParams;
+import com.sos.joc.model.controller.RegisterParameters;
 import com.sos.joc.model.controller.UrlParameter;
 
 
-public class ModifyJobSchedulerClusterAudit extends UrlParameter implements IAuditLog {
+public class ModifyControllerAudit extends UrlParameter implements IAuditLog {
     
     @JsonIgnore
     private String comment;
@@ -16,16 +17,27 @@ public class ModifyJobSchedulerClusterAudit extends UrlParameter implements IAud
     @JsonIgnore
     private String ticketLink;
     
-    public ModifyJobSchedulerClusterAudit(UrlParameter urlParameter) {
-        if (urlParameter != null) {
-            setAuditParams(urlParameter.getAuditLog());
-            setWithFailover(urlParameter.getWithFailover());
-            setControllerId(urlParameter.getControllerId());
+    public ModifyControllerAudit(UrlParameter uriParamSchema) {
+        if (uriParamSchema != null) {
+            setAuditParams(uriParamSchema.getAuditLog());
+            setUrl(uriParamSchema.getUrl());
+            setWithFailover(uriParamSchema.getWithFailover());
+            setControllerId(uriParamSchema.getControllerId()); 
         }
     }
     
-    public ModifyJobSchedulerClusterAudit(String controllerId, AuditParams auditLog) {
+    public ModifyControllerAudit(RegisterParameters uriParamSchema) {
+        if (uriParamSchema != null) {
+            setAuditParams(uriParamSchema.getAuditLog());
+            setUrl(null);
+            setWithFailover(null);
+            setControllerId(uriParamSchema.getControllerId()); 
+        }
+    }
+    
+    public ModifyControllerAudit(String controllerId, AuditParams auditLog) {
         setAuditParams(auditLog);
+        setUrl(null);
         setWithFailover(null);
         setControllerId(controllerId);
     }

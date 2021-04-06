@@ -48,7 +48,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
 
     private static final String API_CALL = "./inventory/deployment/deploy";
     private DBLayerDeploy dbLayer = null;
-    private boolean withoutFolderDeletion = false;
 
     @Override
     public JOCDefaultResponse postDeploy(String xAccessToken, byte[] filter) throws Exception {
@@ -56,7 +55,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
     }
 
     public JOCDefaultResponse postDeploy(String xAccessToken, byte[] filter, boolean withoutFolderDeletion) throws Exception {
-        this.withoutFolderDeletion = withoutFolderDeletion;
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, filter, xAccessToken);
@@ -228,7 +226,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 }
                 if ((verifiedConfigurations != null && !verifiedConfigurations.isEmpty())
                         || (verifiedReDeployables != null && !verifiedReDeployables.isEmpty())) {
-                    audit = new DeployAudit(deployFilter, controllerId, commitId, "update", account);
+                    audit = new DeployAudit(deployFilter.getAuditLog(), controllerId, commitId, "update", account);
                     SignedItemsSpec signedItemsSpec = 
                             new SignedItemsSpec(keyPair, verifiedConfigurations, verifiedReDeployables, updateableAgentNames, updateableAgentNamesFileOrderSources);
                     // call updateRepo command via ControllerApi for given controller
@@ -256,7 +254,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     invConfigurationsToDelete.addAll(
                             DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
                                     DeleteDeployments.storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitIdForDeleteFromFolder)));
-                    audit = new DeployAudit(deployFilter, null, commitId, "delete", account);
+                    audit = new DeployAudit(deployFilter.getAuditLog(), null, commitId, "delete", account);
                 }
             }
             // delete configurations optimistically

@@ -176,11 +176,13 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            
+            checkRequiredComment(dailyPlanOrderFilter.getAuditLog());
+            logAuditMessage(dailyPlanOrderFilter.getAuditLog());
 
             submitOrdersToController(dailyPlanOrderFilter);
 
             DailyPlanAudit orderAudit = new DailyPlanAudit(dailyPlanOrderFilter.getControllerId(), dailyPlanOrderFilter.getAuditLog());
-            logAuditMessage(orderAudit);
             storeAuditLogEntry(orderAudit);
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 

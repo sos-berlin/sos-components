@@ -7,7 +7,6 @@ import java.util.Map;
 
 import org.apache.shiro.config.Ini;
 import org.apache.shiro.config.Ini.Section;
-import org.apache.shiro.config.IniSecurityManagerFactory;
 import org.apache.shiro.mgt.SecurityManager;
 import org.ini4j.InvalidFileFormatException;
 import org.ini4j.Profile;
@@ -290,7 +289,9 @@ public class SOSSecurityConfiguration {
 			writeMasters();
 			writeIni.store();
 
-			IniSecurityManagerFactory factory = Globals.getShiroIniSecurityManagerFactory();
+			@SuppressWarnings("deprecation")
+            org.apache.shiro.config.IniSecurityManagerFactory factory = Globals.getShiroIniSecurityManagerFactory();
+            @SuppressWarnings("unused")
             SecurityManager securityManager = factory.getInstance();
 
             SOSShiroIniShare sosShiroIniShare = new SOSShiroIniShare(sosHibernateSession);

@@ -9,12 +9,10 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.classes.xmleditor.exceptions.XsdValidatorException;
 import com.sos.joc.classes.xmleditor.validator.XsdValidator;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.security.permissions.ControllerPermissions;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.validate.ErrorMessage;
 import com.sos.joc.model.xmleditor.validate.ValidateConfiguration;
@@ -23,7 +21,7 @@ import com.sos.joc.xmleditor.resource.IValidateResource;
 import com.sos.schema.JsonValidator;
 
 @Path(JocXmlEditor.APPLICATION_PATH)
-public class ValidateResourceImpl extends JOCResourceImpl implements IValidateResource {
+public class ValidateResourceImpl extends ACommonResourceImpl implements IValidateResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ValidateResourceImpl.class);
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
@@ -37,8 +35,7 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
 
             checkRequiredParameters(in);
 
-            JOCDefaultResponse response = checkPermissions(accessToken, in);
-
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), accessToken, in.getObjectType(), Role.VIEW);
             if (response == null) {
                 java.nio.file.Path schema = null;
                 switch (in.getObjectType()) {
@@ -81,13 +78,6 @@ public class ValidateResourceImpl extends JOCResourceImpl implements IValidateRe
         } else {
             checkRequiredParameter("schemaIdentifier", in.getSchemaIdentifier());
         }
-    }
-
-    private JOCDefaultResponse checkPermissions(final String accessToken, final ValidateConfiguration in) throws Exception {
-        // TODO premission - maybe getJocPermissions(accessToken)
-        ControllerPermissions permissions = getControllerPermissions(in.getControllerId(), accessToken);
-        boolean permission = true; //permissions.getJS7Controller().getAdministration().isEditPermissions();
-        return initPermissions(in.getControllerId(), permission);
     }
 
     public static ValidateConfigurationAnswer getError(XsdValidatorException e) {

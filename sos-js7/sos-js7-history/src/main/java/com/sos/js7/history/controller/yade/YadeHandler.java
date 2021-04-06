@@ -19,6 +19,8 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.yade.DBItemYadeFile;
 import com.sos.joc.db.yade.DBItemYadeProtocol;
 import com.sos.joc.db.yade.DBItemYadeTransfer;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.yade.history.YadeTransferHistoryTerminated;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.js7.history.helper.HistoryUtil;
 import com.sos.yade.commons.Yade;
@@ -81,19 +83,20 @@ public class YadeHandler {
                     }
                 }
                 LOGGER.error(String.format("[%s]%s", logMsg, e.toString()), e);
+                return null;
             } finally {
                 if (session != null) {
                     session.close();
                 }
                 AJocClusterService.clearLogger();
             }
-            return null;
         });
         save.thenAccept(transferId -> {
             if (transferId != null) {
                 AJocClusterService.setLogger(IDENTIFIER);
                 LOGGER.debug("[stored]transferId=" + transferId);
                 AJocClusterService.clearLogger();
+                postEventTransferHistoryTerminated(transferId);
             }
         });
     }
@@ -221,6 +224,13 @@ public class YadeHandler {
             return null;
         }
         return new Date(timestamp - TimeZone.getDefault().getOffset(timestamp));
+    }
+
+    private void postEventTransferHistoryTerminated(Long transferId) {
+        if (transferId == null) {
+            return;
+        }
+        EventBus.getInstance().post(new YadeTransferHistoryTerminated(controllerId, transferId));
     }
 
 }
