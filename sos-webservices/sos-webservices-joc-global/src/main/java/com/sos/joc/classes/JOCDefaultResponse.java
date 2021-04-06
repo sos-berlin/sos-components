@@ -88,13 +88,6 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         return responseStatus200(entity, MediaType.TEXT_PLAIN + "; charset=UTF-8", headers);
     }
     
-    public static JOCDefaultResponse responseTxtDownloadStatus200(Object entity, String filename) {
-        Response.ResponseBuilder responseBuilder = Response.status(200).header("Content-Type", MediaType.TEXT_PLAIN + "; charset=UTF-8").header(
-                "Content-Disposition", "attachment; filename=" + filename).cacheControl(setNoCaching());
-        responseBuilder.entity(entity);
-        return new JOCDefaultResponse(responseBuilder.build());
-    }
-    
     public static JOCDefaultResponse responseOctetStreamDownloadStatus200(Object entity, String filename) {
         return responseOctetStreamDownloadStatus200(entity, filename, null);
     }
@@ -105,7 +98,7 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         } catch (UnsupportedEncodingException e) {
         }
         Response.ResponseBuilder responseBuilder = Response.ok(entity, MediaType.APPLICATION_OCTET_STREAM).header("Content-Disposition",
-                "attachment; filename*=UTF-8''" + filename).cacheControl(setNoCaching());
+                "attachment; filename*=UTF-8''" + filename).header("Access-Control-Expose-Headers", "Content-Dispositon").cacheControl(setNoCaching());
 
         if (uncompressedLength != null) {
             responseBuilder.header("X-Uncompressed-Length", uncompressedLength);
@@ -130,13 +123,6 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         }
         entity.setDeliveryDate(new Date());
         entity.setOk(true);
-        responseBuilder.entity(entity);
-        return new JOCDefaultResponse(responseBuilder.build());
-    }
-    
-    public static JOCDefaultResponse responseTxtDownloadStatus200(Object entity, String filename, Long uncompressedLength) {
-        Response.ResponseBuilder responseBuilder = Response.ok(entity, MediaType.TEXT_PLAIN + "; charset=UTF-8").header(
-                "Content-Disposition", "attachment; filename=" + filename).cacheControl(setNoCaching());
         responseBuilder.entity(entity);
         return new JOCDefaultResponse(responseBuilder.build());
     }
