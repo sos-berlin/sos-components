@@ -12,38 +12,7 @@
 	<artifactId>sos-jitl</artifactId>
 	<packaging>pom</packaging>
 
-
-
-	<dependencies>
-		<!-- SOS Dependencies -->
-		<dependency>
-			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-joc-db</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>com.sos-berlin.js7.engine</groupId>
-			<artifactId>js7-executor-for-java_2.13</artifactId>
-		</dependency>
-
-		<!-- 3rd Party Dependencies -->
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-core</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-slf4j-impl</artifactId>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
-
+	<modules>
+		<module>sos-jitl-jobs</module>
+	</modules>
 </project>
