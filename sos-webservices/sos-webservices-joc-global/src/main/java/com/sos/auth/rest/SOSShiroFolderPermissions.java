@@ -1,5 +1,7 @@
 package com.sos.auth.rest;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -44,13 +46,17 @@ public class SOSShiroFolderPermissions {
         return retListOfFolders;
     }
     
-    public Map<String, Set<String>> getNotPermittedParentFolders() {
-        if (listOfNotPermittedParentFoldersForInstance.isEmpty()) {
-            
-        } else {
-            return listOfNotPermittedParentFoldersForInstance;
-        }
-    }
+//    public Map<String, Set<String>> getNotPermittedParentFolders() {
+//        if (listOfNotPermittedParentFoldersForInstance.isEmpty()) {
+//            listOfFoldersForInstance.forEach((k, v) -> {
+//                v.forEach(f -> {
+//                    Path p = Paths.get(f.getFolder());
+//                });
+//            });
+//        } else {
+//            return listOfNotPermittedParentFoldersForInstance;
+//        }
+//    }
 
     public void setFolders(String jobSchedulerId, String folders) {
         String[] stringlistOfFolders = folders.split(",");
@@ -75,7 +81,7 @@ public class SOSShiroFolderPermissions {
                     listOfFolders.add(filterFolder);
                 }
             } else {
-                if (!filterFolder.getFolder().startsWith("/*" + objectFilter)) {
+                if (!filterFolder.getFolder().startsWith("/*")) {
                     listOfFolders.add(filterFolder);
                 }
 
