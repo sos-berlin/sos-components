@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.common.Folder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -20,15 +21,15 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class ControllerFolders {
 
     @JsonIgnore
-    private Map<String, List<SecurityConfigurationFolder>> additionalProperties = new HashMap<String, List<SecurityConfigurationFolder>>();
+    private Map<String, List<Folder>> additionalProperties = new HashMap<String, List<Folder>>();
 
     @JsonAnyGetter
-    public Map<String, List<SecurityConfigurationFolder>> getAdditionalProperties() {
+    public Map<String, List<Folder>> getAdditionalProperties() {
         return this.additionalProperties;
     }
 
     @JsonAnySetter
-    public void setAdditionalProperty(String name, List<SecurityConfigurationFolder> value) {
+    public void setAdditionalProperty(String name, List<Folder> value) {
         this.additionalProperties.put(name, value);
     }
 

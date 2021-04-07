@@ -13,15 +13,18 @@ import com.sos.joc.model.common.Folder;
 public class SOSShiroFolderPermissions {
 
     private Map<String, Set<Folder>> listOfFoldersForInstance;
+    private Map<String, Set<String>> listOfNotPermittedParentFoldersForInstance;
     private String objectFilter = "";
     private String schedulerId;
 
     public SOSShiroFolderPermissions() {
         listOfFoldersForInstance = new HashMap<String, Set<Folder>>();
+        listOfNotPermittedParentFoldersForInstance = new HashMap<String, Set<String>>();
     }
 
     public SOSShiroFolderPermissions(String objectFilter) {
         listOfFoldersForInstance = new HashMap<String, Set<Folder>>();
+        listOfNotPermittedParentFoldersForInstance = new HashMap<String, Set<String>>();
         this.objectFilter = objectFilter;
     }
 
@@ -39,6 +42,14 @@ public class SOSShiroFolderPermissions {
         }
 
         return retListOfFolders;
+    }
+    
+    public Map<String, Set<String>> getNotPermittedParentFolders() {
+        if (listOfNotPermittedParentFoldersForInstance.isEmpty()) {
+            
+        } else {
+            return listOfNotPermittedParentFoldersForInstance;
+        }
     }
 
     public void setFolders(String jobSchedulerId, String folders) {
@@ -146,6 +157,19 @@ public class SOSShiroFolderPermissions {
     }
 
     public static boolean isPermittedForFolder(String folder, Collection<Folder> listOfFolders) {
+        if (listOfFolders == null || listOfFolders.isEmpty()) {
+            return true;
+        }
+        if (folder == null || folder.isEmpty()) {
+            return true;
+        }
+        final String _folder = normalizeFolder(folder);
+        Predicate<Folder> filter = f -> f.getFolder().equals(_folder) || (f.getRecursive() && ("/".equals(f.getFolder()) || _folder.startsWith(f
+                .getFolder() + "/")));
+        return listOfFolders.stream().parallel().anyMatch(filter);
+    }
+    
+    public static boolean isNotPermittedParentFolderOfPermittedSubFolder(String folder, Collection<Folder> listOfFolders) {
         if (listOfFolders == null || listOfFolders.isEmpty()) {
             return true;
         }

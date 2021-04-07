@@ -57,7 +57,6 @@ public class SOSShiroCurrentUser {
 
     private Permissions sosPermissionJocCockpitControllers;
     private SOSShiroFolderPermissions sosShiroFolderPermissions;
-    private SOSShiroFolderPermissions sosShiroCalendarFolderPermissions;
 
     public SOSShiroCurrentUser(String username, String password) {
         super();
@@ -331,7 +330,6 @@ public class SOSShiroCurrentUser {
 
     public void initFolders() {
         sosShiroFolderPermissions = new SOSShiroFolderPermissions();
-        sosShiroCalendarFolderPermissions = new SOSShiroFolderPermissions("calendar");
     }
 
     public void addFolder(String role, String folders) {
@@ -351,7 +349,6 @@ public class SOSShiroCurrentUser {
         if (hasRole(role)) {
             LOGGER.debug(String.format("Adding folders %s for role %s", folders, role));
             sosShiroFolderPermissions.setFolders(jobSchedulerId, folders);
-            sosShiroCalendarFolderPermissions.setFolders(jobSchedulerId, folders);
         }
     }
 
@@ -365,10 +362,6 @@ public class SOSShiroCurrentUser {
 
     public SOSShiroFolderPermissions getSosShiroFolderPermissions() {
         return sosShiroFolderPermissions;
-    }
-
-    public SOSShiroFolderPermissions getSosShiroCalendarFolderPermissions() {
-        return sosShiroCalendarFolderPermissions;
     }
 
     public void setHttpServletRequest(HttpServletRequest httpServletRequest) {

@@ -3,7 +3,7 @@ package com.sos.joc.classes.security;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.sos.joc.model.security.permissions.SecurityConfigurationFolder;
+import com.sos.joc.model.common.Folder;
 
 public class SOSSecurityConfigurationFolderEntry {
 
@@ -26,9 +26,9 @@ public class SOSSecurityConfigurationFolderEntry {
         }
     }
 
-    public void addFolder(SecurityConfigurationFolder folder) {
-        if (folder.getPath() != null && !folder.getPath().isEmpty()) {
-            String f = folder.getPath();
+    public void addFolder(Folder folder) {
+        if (folder.getFolder() != null && !folder.getFolder().isEmpty()) {
+            String f = folder.getFolder();
             if (folder.getRecursive() == Boolean.TRUE) {
                 f += "/*";
             }

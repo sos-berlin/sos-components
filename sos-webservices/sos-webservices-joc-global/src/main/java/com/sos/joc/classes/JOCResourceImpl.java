@@ -271,7 +271,7 @@ public class JOCResourceImpl {
     public String getJsonString(Object body) {
         if (body != null) {
             try {
-                return new Globals().objectMapper.writeValueAsString(body);
+                return Globals.objectMapper.writeValueAsString(body);
             } catch (Exception e) {
                 return body.toString();
             }

@@ -22,6 +22,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.security.IniPermissions;
 import com.sos.joc.model.security.SecurityConfiguration;
 import com.sos.joc.model.security.SecurityConfigurationMainEntry;
@@ -29,7 +30,6 @@ import com.sos.joc.model.security.SecurityConfigurationUser;
 import com.sos.joc.model.security.permissions.ControllerFolders;
 import com.sos.joc.model.security.permissions.IniControllers;
 import com.sos.joc.model.security.permissions.IniPermission;
-import com.sos.joc.model.security.permissions.SecurityConfigurationFolder;
 import com.sos.joc.model.security.permissions.SecurityConfigurationFolders;
 import com.sos.joc.model.security.permissions.SecurityConfigurationRole;
 import com.sos.joc.model.security.permissions.SecurityConfigurationRoles;
@@ -146,16 +146,22 @@ public class SOSSecurityConfiguration {
                         cf.setAdditionalProperty(e.getKey().split("\\|", 2)[0], Arrays.asList(e.getValue().trim().split("\\s*,\\s*")).stream().map(
                                 f -> {
                                     SOSSecurityFolderItem i = new SOSSecurityFolderItem(f);
-                                    return new SecurityConfigurationFolder(i.getNormalizedFolder(), i.isRecursive());
+                                    Folder folder = new Folder();
+                                    folder.setFolder(i.getNormalizedFolder());
+                                    folder.setRecursive(i.isRecursive());
+                                    return folder;
                                 }).collect(Collectors.toList()));
                         return cf;
                     }));
 
-            Map<String, List<SecurityConfigurationFolder>> jocFolders = s.entrySet().stream().filter(e -> !e.getKey().contains("|") && !e.getKey().isEmpty()).collect(
+            Map<String, List<Folder>> jocFolders = s.entrySet().stream().filter(e -> !e.getKey().contains("|") && !e.getKey().isEmpty()).collect(
                     Collectors.toMap(Map.Entry::getKey, e -> {
                         return Arrays.asList(e.getValue().trim().split("\\s*,\\s*")).stream().map(f -> {
                             SOSSecurityFolderItem i = new SOSSecurityFolderItem(f);
-                            return new SecurityConfigurationFolder(i.getNormalizedFolder(), i.isRecursive());
+                            Folder folder = new Folder();
+                            folder.setFolder(i.getNormalizedFolder());
+                            folder.setRecursive(i.isRecursive());
+                            return folder;
                         }).collect(Collectors.toList());
                     }));
 
@@ -274,19 +280,19 @@ public class SOSSecurityConfiguration {
         List<SOSSecurityConfigurationFolderEntry> folderList = new ArrayList<>();
         if (folders.getJoc() != null && !folders.getJoc().isEmpty()) {
             SOSSecurityConfigurationFolderEntry sosSecurityConfigurationFolderEntry = new SOSSecurityConfigurationFolderEntry("", role);
-            for (SecurityConfigurationFolder folder : folders.getJoc()) {
+            for (Folder folder : folders.getJoc()) {
                 sosSecurityConfigurationFolderEntry.addFolder(folder);
             }
             folderList.add(sosSecurityConfigurationFolderEntry);
         }
         if (folders.getControllers() != null && folders.getControllers().getAdditionalProperties() != null && !folders.getControllers()
                 .getAdditionalProperties().isEmpty()) {
-            for (Map.Entry<String, List<SecurityConfigurationFolder>> folderPermissions : folders.getControllers().getAdditionalProperties()
+            for (Map.Entry<String, List<Folder>> folderPermissions : folders.getControllers().getAdditionalProperties()
                     .entrySet()) {
                 if (folderPermissions.getValue() != null) {
                     SOSSecurityConfigurationFolderEntry sosSecurityConfigurationFolderEntry = new SOSSecurityConfigurationFolderEntry(
                             folderPermissions.getKey(), role);
-                    for (SecurityConfigurationFolder folder : folderPermissions.getValue()) {
+                    for (Folder folder : folderPermissions.getValue()) {
                         sosSecurityConfigurationFolderEntry.addFolder(folder);
                     }
                     folderList.add(sosSecurityConfigurationFolderEntry);

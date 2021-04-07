@@ -1,6 +1,6 @@
 package com.sos.joc.classes.security;
 
-import com.sos.joc.model.security.permissions.SecurityConfigurationFolder;
+import com.sos.joc.model.common.Folder;
 
 public class SOSSecurityFolderItem {
 
@@ -13,8 +13,8 @@ public class SOSSecurityFolderItem {
         this.normalizedFolder = normalizeFolder();
     }
     
-    public SOSSecurityFolderItem(SecurityConfigurationFolder securityConfigurationFolder) {
-        this.folder = securityConfigurationFolder.getPath();
+    public SOSSecurityFolderItem(Folder securityConfigurationFolder) {
+        this.folder = securityConfigurationFolder.getFolder();
         this.normalizedFolder = this.normalizeFolder();
         this.recursive = securityConfigurationFolder.getRecursive();
     }

@@ -5,12 +5,6 @@ import java.util.Date;
 
 import javax.ws.rs.Path;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -27,7 +21,6 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 
 	private static final String API_CALL_READ = "./authentication/shiro";
 	private static final String API_CALL_WRITE = "./authentication/store";
-	private static final Logger LOGGER = LoggerFactory.getLogger(SecurityConfigurationResourceImpl.class);
 
 	
 	@Override
@@ -74,7 +67,6 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            LOGGER.info(Globals.getIniFileForShiro(Globals.getShiroIniInClassPath()));
             SOSSecurityConfiguration sosSecurityConfiguration = new SOSSecurityConfiguration();
             SecurityConfiguration s = sosSecurityConfiguration.writeConfiguration(securityConfiguration);
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(s));

@@ -6,6 +6,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.joc.model.common.Folder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -17,8 +18,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class SecurityConfigurationFolders {
 
+    /**
+     * folders
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("joc")
-    private List<SecurityConfigurationFolder> joc = new ArrayList<SecurityConfigurationFolder>();
+    private List<Folder> joc = new ArrayList<Folder>();
     @JsonProperty("controllers")
     private ControllerFolders controllers;
 
@@ -34,19 +41,31 @@ public class SecurityConfigurationFolders {
      * @param controllers
      * @param joc
      */
-    public SecurityConfigurationFolders(List<SecurityConfigurationFolder> joc, ControllerFolders controllers) {
+    public SecurityConfigurationFolders(List<Folder> joc, ControllerFolders controllers) {
         super();
         this.joc = joc;
         this.controllers = controllers;
     }
 
+    /**
+     * folders
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("joc")
-    public List<SecurityConfigurationFolder> getJoc() {
+    public List<Folder> getJoc() {
         return joc;
     }
 
+    /**
+     * folders
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("joc")
-    public void setJoc(List<SecurityConfigurationFolder> joc) {
+    public void setJoc(List<Folder> joc) {
         this.joc = joc;
     }
 

@@ -15,6 +15,7 @@ import com.sos.joc.classes.tree.TreePermanent;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.security.permissions.ControllerPermissions;
 import com.sos.joc.model.tree.Tree;
 import com.sos.joc.model.tree.TreeFilter;
 import com.sos.joc.model.tree.TreeType;
@@ -37,10 +38,12 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             boolean treeForInventoryTrash = (treeBody.getForInventoryTrash() != null && treeBody.getForInventoryTrash());
             boolean treeForInventory = !treeForInventoryTrash && ((treeBody.getForInventory() != null && treeBody.getForInventory()) || (treeBody
                     .getTypes() != null && treeBody.getTypes().contains(TreeType.INVENTORY)));
-            List<TreeType> types = TreePermanent.getAllowedTypes(treeBody.getTypes(), getJocPermissions(accessToken), getControllerPermissions(treeBody.getControllerId(),
-                    accessToken), treeForInventory, treeForInventoryTrash);
-
-            JOCDefaultResponse jocDefaultResponse = initPermissions(treeBody.getControllerId(), types.size() > 0);
+            
+            List<TreeType> types = TreePermanent.getAllowedTypes(treeBody.getTypes(), getJocPermissions(accessToken), getControllerPermissions(
+                    treeBody.getControllerId(), accessToken), treeForInventory, treeForInventoryTrash);
+            
+            String controllerId = (treeForInventory || treeForInventoryTrash) ? "" : treeBody.getControllerId();
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, types.size() > 0);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -57,12 +60,6 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
             } else {
                 folders = TreePermanent.initFoldersByFoldersForViews(treeBody);
             }
-
-            // TODO do we need again separate folder permissions for Calendar?
-            // if (!treeBody.getTypes().isEmpty() && treeBody.getTypes().get(0) == JobSchedulerObjectType.WORKINGDAYSCALENDAR) {
-            // folderPermissions = jobschedulerUser.getSosShiroCurrentUser().getSosShiroCalendarFolderPermissions();
-            // folderPermissions.setSchedulerId(treeBody.getJobschedulerId());
-            // }
 
             Tree root = TreePermanent.getTree(folders, folderPermissions);
             TreeView entity = new TreeView();

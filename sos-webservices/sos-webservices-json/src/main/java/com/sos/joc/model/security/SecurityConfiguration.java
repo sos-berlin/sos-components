@@ -40,6 +40,11 @@ public class SecurityConfiguration {
     @JsonProperty("deliveryDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("main")
     private List<SecurityConfigurationMainEntry> main = new ArrayList<SecurityConfigurationMainEntry>();
     @JsonProperty("users")
@@ -95,11 +100,21 @@ public class SecurityConfiguration {
         this.deliveryDate = deliveryDate;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("main")
     public List<SecurityConfigurationMainEntry> getMain() {
         return main;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("main")
     public void setMain(List<SecurityConfigurationMainEntry> main) {
         this.main = main;

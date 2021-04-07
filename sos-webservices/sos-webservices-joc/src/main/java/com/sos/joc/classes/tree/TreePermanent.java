@@ -36,8 +36,9 @@ import com.sos.joc.model.tree.TreeType;
 
 public class TreePermanent {
 
-    public static List<TreeType> getAllowedTypes(List<TreeType> bodyTypes, JocPermissions jocPermissions, ControllerPermissions controllerPermission, boolean treeForInventory, boolean treeForInventoryTrash) {
-        
+    public static List<TreeType> getAllowedTypes(List<TreeType> bodyTypes, JocPermissions jocPermissions, ControllerPermissions controllerPermission,
+            boolean treeForInventory, boolean treeForInventoryTrash) {
+
         if (bodyTypes == null || bodyTypes.isEmpty()) {
             if (treeForInventory || treeForInventoryTrash) {
                 bodyTypes = Arrays.asList(TreeType.INVENTORY, TreeType.DOCUMENTATION); 
@@ -115,19 +116,19 @@ public class TreePermanent {
                 }
                 break;
             case SCHEDULE:
-                // Schedule???
-                if (inventoryPermission) {
-                    types.add(type);
-                }
-                if (treeForInventory || treeForInventoryTrash) {
-                    if (inventoryPermission) {
-                        types.add(type);
-                    }
-                } else {
-                    if (jocPermissions.getDailyPlan().getView()) {
-                        types.add(type);
-                    }
-                }
+//                // Schedule???
+//                if (inventoryPermission) {
+//                    types.add(type);
+//                }
+//                if (treeForInventory || treeForInventoryTrash) {
+//                    if (inventoryPermission) {
+//                        types.add(type);
+//                    }
+//                } else {
+//                    if (jocPermissions.getDailyPlan().getView()) {
+//                        types.add(type);
+//                    }
+//                }
                 break;
             case WORKINGDAYSCALENDAR:
             case NONWORKINGDAYSCALENDAR:
@@ -149,7 +150,15 @@ public class TreePermanent {
                 }
                 break;
             case DOCUMENTATION:
-                types.add(type);
+                if (treeForInventory || treeForInventoryTrash) {
+                    if (inventoryPermission) {
+                        types.add(type);
+                    }
+                } else {
+                    if (jocPermissions.getDocumentations().getView()) {
+                        types.add(type);
+                    }
+                }
                 break;
             }
         }
