@@ -209,7 +209,8 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 throw new DBMissingDataException(String.format("no entry found for configuration id: %d", configuration.getId()));
             }
             
-            switch (configuration.getConfigurationType()) {
+            ConfigurationType confType = ConfigurationType.fromValue(dbItem.getConfigurationType());
+            switch (confType) {
             case GLOBALS:
                 if (!getJocPermissions(accessToken).getAdministration().getSettings().getView()) {
                     return accessDeniedResponse();
@@ -260,7 +261,8 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 throw new DBMissingDataException(String.format("no entry found for configuration id: %d", configuration.getId()));
             }
             
-            switch (configuration.getConfigurationType()) {
+            ConfigurationType confType = ConfigurationType.fromValue(dbItem.getConfigurationType());
+            switch (confType) {
             case GLOBALS:
                 if (!getJocPermissions(accessToken).getAdministration().getSettings().getManage()) {
                     return accessDeniedResponse();
@@ -317,7 +319,8 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 throw new DBMissingDataException(String.format("no entry found for configuration id: %d", configuration.getId()));
             }
             
-            switch (configuration.getConfigurationType()) {
+            ConfigurationType confType = ConfigurationType.fromValue(dbItem.getConfigurationType());
+            switch (confType) {
             case GLOBALS:
                 // Nothing to do, always shared = false
                 break;
@@ -369,7 +372,8 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 throw new DBMissingDataException(String.format("no entry found for configuration id: %d", configuration.getId()));
             }
             
-            switch (configuration.getConfigurationType()) {
+            ConfigurationType confType = ConfigurationType.fromValue(dbItem.getConfigurationType());
+            switch (confType) {
             case GLOBALS:
                 // Nothing to do, always shared = false
                 break;
