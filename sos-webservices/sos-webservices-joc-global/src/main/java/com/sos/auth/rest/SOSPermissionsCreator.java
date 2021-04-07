@@ -2,6 +2,7 @@ package com.sos.auth.rest;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.stream.Stream;
 
@@ -29,9 +30,10 @@ import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.security.Permissions;
-import com.sos.joc.model.security.SecurityConfigurationMaster;
+import com.sos.joc.model.security.SecurityConfiguration;
 import com.sos.joc.model.security.permissions.ControllerPermissions;
 import com.sos.joc.model.security.permissions.JocPermissions;
+import com.sos.joc.model.security.permissions.SecurityConfigurationRole;
 import com.sos.joc.model.security.permissions.controller.Agents;
 import com.sos.joc.model.security.permissions.controller.Deployments;
 import com.sos.joc.model.security.permissions.controller.Locks;
@@ -153,17 +155,17 @@ public class SOSPermissionsCreator {
         }
     }
     
-    public Permissions createJocCockpitPermissionControllerObjectList(String accessToken, List<SecurityConfigurationMaster> controllers) {
+    public Permissions createJocCockpitPermissionControllerObjectList(String accessToken, SecurityConfiguration secConf) {
         Permissions permissions = new Permissions(currentUser.getRoles(), getJocPermissions(), getControllerPermissions(""),
                 new com.sos.joc.model.security.permissions.Controllers());
 
-        Stream<SecurityConfigurationMaster> controllersStream = controllers.stream();
+        Stream<Map.Entry<String, SecurityConfigurationRole>> controllersStream = secConf.getRoles().getAdditionalProperties().entrySet().stream();
         if (!permissions.getRoles().isEmpty()) {
-            controllersStream = controllersStream.filter(c -> permissions.getRoles() != null && permissions.getRoles().stream().anyMatch(r -> c
-                    .getRoles().contains(r)));
+            controllersStream = controllersStream.filter(c -> permissions.getRoles() != null && permissions.getRoles().contains(c.getKey()));
         }
-        controllersStream.map(SecurityConfigurationMaster::getMaster).filter(s -> s != null && !s.isEmpty()).forEach(controller -> permissions
-                .getControllers().setAdditionalProperty(controller, getControllerPermissions(controller)));
+        controllersStream.flatMap(e -> e.getValue().getPermissions().getControllers().getAdditionalProperties().keySet().stream()).filter(
+                s -> s != null && !s.isEmpty()).forEach(controller -> permissions.getControllers().setAdditionalProperty(controller,
+                        getControllerPermissions(controller)));
 
         return permissions;
     }

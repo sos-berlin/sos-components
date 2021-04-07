@@ -25,6 +25,26 @@ public class SecurityConfigurationUser {
     @JsonProperty("roles")
     private List<String> roles = new ArrayList<String>();
 
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public SecurityConfigurationUser() {
+    }
+
+    /**
+     * 
+     * @param password
+     * @param roles
+     * @param user
+     */
+    public SecurityConfigurationUser(String user, String password, List<String> roles) {
+        super();
+        this.user = user;
+        this.password = password;
+        this.roles = roles;
+    }
+
     @JsonProperty("user")
     public String getUser() {
         return user;

@@ -25,6 +25,26 @@ public class SecurityConfigurationMainEntry {
     @JsonProperty("entryComment")
     private List<String> entryComment = new ArrayList<String>();
 
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public SecurityConfigurationMainEntry() {
+    }
+
+    /**
+     * 
+     * @param entryComment
+     * @param entryName
+     * @param entryValue
+     */
+    public SecurityConfigurationMainEntry(String entryName, List<String> entryValue, List<String> entryComment) {
+        super();
+        this.entryName = entryName;
+        this.entryValue = entryValue;
+        this.entryComment = entryComment;
+    }
+
     @JsonProperty("entryName")
     public String getEntryName() {
         return entryName;

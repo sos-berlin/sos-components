@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.model.security.Permissions;
 import com.sos.joc.model.security.SecurityConfiguration;
-import com.sos.joc.model.security.SecurityConfigurationRole;
 import com.sos.joc.model.security.permissions.ControllerPermissions;
 import com.sos.joc.model.security.permissions.JocPermissions;
 import com.sos.joc.model.security.permissions.controller.Agents;
@@ -146,9 +145,8 @@ public class SOSShiroCurrentUser {
     public void setRoles(SecurityConfiguration securityConf) {
         if (currentSubject != null) {
             this.roles = Stream.concat(securityConf.getUsers().stream().filter(user -> user.getRoles() != null).flatMap(user -> user.getRoles()
-                    .stream()), securityConf.getMasters().stream().filter(controller -> controller.getRoles() != null).flatMap(
-                            controller -> controller.getRoles().stream().map(SecurityConfigurationRole::getRole))).filter(role -> currentSubject
-                                    .hasRole(role)).collect(Collectors.toSet());
+                    .stream()), securityConf.getRoles().getAdditionalProperties().keySet().stream()).filter(role -> currentSubject.hasRole(role))
+                    .collect(Collectors.toSet());
         }
     }
     

@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.security;
+package com.sos.joc.model.security.permissions;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -8,23 +8,66 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+
+/**
+ * Ini Permissions
+ * <p>
+ * 
+ * 
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "path",
     "excluded"
 })
-public class SecurityConfigurationPermission {
+public class IniPermission {
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("path")
     private String path;
     @JsonProperty("excluded")
     private Boolean excluded;
 
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public IniPermission() {
+    }
+
+    /**
+     * 
+     * @param excluded
+     * @param path
+     */
+    public IniPermission(String path, Boolean excluded) {
+        super();
+        this.path = path;
+        this.excluded = excluded;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("path")
     public String getPath() {
         return path;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("path")
     public void setPath(String path) {
         this.path = path;
@@ -55,10 +98,10 @@ public class SecurityConfigurationPermission {
         if (other == this) {
             return true;
         }
-        if ((other instanceof SecurityConfigurationPermission) == false) {
+        if ((other instanceof IniPermission) == false) {
             return false;
         }
-        SecurityConfigurationPermission rhs = ((SecurityConfigurationPermission) other);
+        IniPermission rhs = ((IniPermission) other);
         return new EqualsBuilder().append(excluded, rhs.excluded).append(path, rhs.path).isEquals();
     }
 

@@ -91,7 +91,7 @@ public class SOSServicePermissionShiro {
         SecurityConfiguration entity = sosSecurityConfiguration.readConfiguration();
 
         currentUser.setRoles(entity);
-        Permissions sosPermissionMasters = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(accessToken, entity.getMasters());
+        Permissions sosPermissionMasters = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(accessToken, entity);
         return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(sosPermissionMasters));
     }
 
@@ -519,7 +519,7 @@ public class SOSServicePermissionShiro {
         currentUser.setRoles(entity);
         
         Permissions sosPermissionJocCockpitControllers = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(
-                accessToken, entity.getMasters());
+                accessToken, entity);
         currentUser.setSosPermissionJocCockpitControllers(sosPermissionJocCockpitControllers);
         currentUser.getCurrentSubject().getSession().setAttribute("username_joc_permissions", Globals.objectMapper.writeValueAsBytes(
                 sosPermissionJocCockpitControllers));

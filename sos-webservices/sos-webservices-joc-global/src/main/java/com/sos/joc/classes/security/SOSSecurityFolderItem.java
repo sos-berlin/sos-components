@@ -1,6 +1,6 @@
 package com.sos.joc.classes.security;
 
-import com.sos.joc.model.security.SecurityConfigurationFolder;
+import com.sos.joc.model.security.permissions.SecurityConfigurationFolder;
 
 public class SOSSecurityFolderItem {
 
@@ -9,14 +9,12 @@ public class SOSSecurityFolderItem {
     private String normalizedFolder;
 
     public SOSSecurityFolderItem(String folder) {
-        super();
         this.folder = folder.trim();
         this.normalizedFolder = normalizeFolder();
     }
-
-    public SOSSecurityFolderItem(String master, SecurityConfigurationFolder securityConfigurationFolder) {
-        super();
-        this.folder = securityConfigurationFolder.getFolder();
+    
+    public SOSSecurityFolderItem(SecurityConfigurationFolder securityConfigurationFolder) {
+        this.folder = securityConfigurationFolder.getPath();
         this.normalizedFolder = this.normalizeFolder();
         this.recursive = securityConfigurationFolder.getRecursive();
     }
@@ -35,9 +33,10 @@ public class SOSSecurityFolderItem {
 
     private String normalizeFolder() {
         if (folder.endsWith("/*")) {
-            String f = folder;
-            folder = ("/" + f.trim()).replaceAll("//+", "/").replaceFirst("/\\*$", "");
+            folder = ("/" + folder.trim().replaceFirst("/\\*$", "")).replaceAll("//+", "/");
             recursive = true;
+        } else {
+            folder = ("/" + folder.trim().replaceFirst("/$", "")).replaceAll("//+", "/");
         }
         return folder;
     }

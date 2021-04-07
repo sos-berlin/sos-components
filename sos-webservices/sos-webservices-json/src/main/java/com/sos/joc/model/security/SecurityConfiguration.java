@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.configuration.Profile;
+import com.sos.joc.model.security.permissions.SecurityConfigurationRoles;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -26,7 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "main",
     "users",
     "profiles",
-    "masters"
+    "roles"
 })
 public class SecurityConfiguration {
 
@@ -34,7 +35,6 @@ public class SecurityConfiguration {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * (Required)
      * 
      */
     @JsonProperty("deliveryDate")
@@ -46,14 +46,37 @@ public class SecurityConfiguration {
     private List<SecurityConfigurationUser> users = new ArrayList<SecurityConfigurationUser>();
     @JsonProperty("profiles")
     private List<Profile> profiles = new ArrayList<Profile>();
-    @JsonProperty("masters")
-    private List<SecurityConfigurationMaster> masters = new ArrayList<SecurityConfigurationMaster>();
+    @JsonProperty("roles")
+    private SecurityConfigurationRoles roles;
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public SecurityConfiguration() {
+    }
+
+    /**
+     * 
+     * @param roles
+     * @param profiles
+     * @param main
+     * @param deliveryDate
+     * @param users
+     */
+    public SecurityConfiguration(Date deliveryDate, List<SecurityConfigurationMainEntry> main, List<SecurityConfigurationUser> users, List<Profile> profiles, SecurityConfigurationRoles roles) {
+        super();
+        this.deliveryDate = deliveryDate;
+        this.main = main;
+        this.users = users;
+        this.profiles = profiles;
+        this.roles = roles;
+    }
 
     /**
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * (Required)
      * 
      */
     @JsonProperty("deliveryDate")
@@ -65,7 +88,6 @@ public class SecurityConfiguration {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * (Required)
      * 
      */
     @JsonProperty("deliveryDate")
@@ -103,24 +125,24 @@ public class SecurityConfiguration {
         this.profiles = profiles;
     }
 
-    @JsonProperty("masters")
-    public List<SecurityConfigurationMaster> getMasters() {
-        return masters;
+    @JsonProperty("roles")
+    public SecurityConfigurationRoles getRoles() {
+        return roles;
     }
 
-    @JsonProperty("masters")
-    public void setMasters(List<SecurityConfigurationMaster> masters) {
-        this.masters = masters;
+    @JsonProperty("roles")
+    public void setRoles(SecurityConfigurationRoles roles) {
+        this.roles = roles;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("main", main).append("users", users).append("profiles", profiles).append("masters", masters).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("main", main).append("users", users).append("profiles", profiles).append("roles", roles).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(profiles).append(masters).append(main).append(deliveryDate).append(users).toHashCode();
+        return new HashCodeBuilder().append(profiles).append(main).append(deliveryDate).append(users).append(roles).toHashCode();
     }
 
     @Override
@@ -132,7 +154,7 @@ public class SecurityConfiguration {
             return false;
         }
         SecurityConfiguration rhs = ((SecurityConfiguration) other);
-        return new EqualsBuilder().append(profiles, rhs.profiles).append(masters, rhs.masters).append(main, rhs.main).append(deliveryDate, rhs.deliveryDate).append(users, rhs.users).isEquals();
+        return new EqualsBuilder().append(profiles, rhs.profiles).append(main, rhs.main).append(deliveryDate, rhs.deliveryDate).append(users, rhs.users).append(roles, rhs.roles).isEquals();
     }
 
 }

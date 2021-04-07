@@ -1,26 +1,17 @@
 package com.sos.joc.classes.security;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import com.sos.joc.model.security.SecurityConfigurationMainEntry;
 
 public class SOSSecurityConfigurationMainEntry {
-	private SecurityConfigurationMainEntry securityConfigurationMainEntry;
-
-	public SOSSecurityConfigurationMainEntry(SecurityConfigurationMainEntry securityConfigurationMainEntry) {
-		super();
-		this.securityConfigurationMainEntry = securityConfigurationMainEntry;
-
-	}
-
-	public SOSSecurityConfigurationMainEntry() {
-		super();
-	}
 
 
-	public String getIniWriteString() {
+	public static String getIniWriteString(SecurityConfigurationMainEntry securityConfigurationMainEntry) {
 		if (securityConfigurationMainEntry.getEntryName().contains(".groupRolesMap")) {
 			String s = "  ";
 			if (securityConfigurationMainEntry.getEntryValue().size() > 1) {
@@ -45,28 +36,12 @@ public class SOSSecurityConfigurationMainEntry {
 		}
 	}
 
-	private String removeCharInQuotes(String s, char source, char target) {
-		boolean inQuote = false;
-		StringBuffer str = new StringBuffer(s);
-		for (int i = 0; i < s.length(); i++) {
-		    char c = s.charAt(i);
-			if ('"' == c) {
-				inQuote = !inQuote;
-			}
-			if (inQuote && source == c) {
-				str.setCharAt(i, target);
-			}
-		}
-		return str.toString();
+//	public static String removeCharInQuotesTest(String s) {
+//		return removeCharInQuotes(s, ',', '^');
+//	}
 
-	}
-
-	public String removeCharInQuotesTest(String s) {
-		return removeCharInQuotes(s, ',', '^');
-	}
-
-	public List<String> getMultiLineValue(String entryKey, String entryMultiLineValue) {
-		List<String> entryValue = new ArrayList<String>();
+	public static List<String> getMultiLineValue(String entryKey, String entryMultiLineValue) {
+		List<String> entryValue = new ArrayList<>();
 		if (entryKey.contains(".groupRolesMap")) {
 			entryMultiLineValue = removeCharInQuotes(entryMultiLineValue, ',', '°');
 			String s[] = entryMultiLineValue.split(",");
@@ -79,15 +54,27 @@ public class SOSSecurityConfigurationMainEntry {
 		return entryValue;
 	}
 
-	public List<String> getMultiLineComment(String main, HashMap<String, String> comments) {
-		List<String> entryComment = new ArrayList<String>();
-		if (comments.get(main) != null) {
-			String s[] = comments.get(main).split("\\r\\n|\\n|\\r");
-			for (int i = 0; i < s.length; i++) {
-				entryComment.add(s[i]);
-			}
+	public static List<String> getMultiLineComment(String main, Map<String, String> comments) {
+		if (comments != null && comments.get(main) != null) {
+		    return Arrays.asList(comments.get(main).trim().split("\\r?\\n"));
 		}
-		return entryComment;
+		return Collections.emptyList();
 	}
+	
+	private static String removeCharInQuotes(String s, char source, char target) {
+        boolean inQuote = false;
+        StringBuffer str = new StringBuffer(s);
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if ('"' == c) {
+                inQuote = !inQuote;
+            }
+            if (inQuote && source == c) {
+                str.setCharAt(i, target);
+            }
+        }
+        return str.toString();
+
+    }
 
 }

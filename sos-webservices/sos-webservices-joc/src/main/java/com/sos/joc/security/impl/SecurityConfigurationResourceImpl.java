@@ -5,12 +5,17 @@ import java.util.Date;
 
 import javax.ws.rs.Path;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.security.SOSSecurityConfiguration;
-import com.sos.joc.classes.security.SOSSecurityConfigurationMasters;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.exceptions.JocException;
@@ -22,6 +27,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 
 	private static final String API_CALL_READ = "./authentication/shiro";
 	private static final String API_CALL_WRITE = "./authentication/store";
+	private static final Logger LOGGER = LoggerFactory.getLogger(SecurityConfigurationResourceImpl.class);
 
 	
 	@Override
@@ -34,7 +40,6 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 				return jocDefaultResponse;
 			}
 
-			SOSSecurityConfigurationMasters.resetInstance();
 			SOSSecurityConfiguration sosSecurityConfiguration = new SOSSecurityConfiguration();
 			SecurityConfiguration entity = sosSecurityConfiguration.readConfiguration();
 			
@@ -47,7 +52,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 			
             entity.setDeliveryDate(Date.from(Instant.now()));
 
-			return JOCDefaultResponse.responseStatus200(entity);
+			return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
 		} catch (JocException e) {
 			e.addErrorMetaInfo(getJocError());
 			return JOCDefaultResponse.responseStatusJSError(e);
@@ -69,10 +74,11 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-
-			SOSSecurityConfiguration sosSecurityConfiguration = new SOSSecurityConfiguration();
-			return JOCDefaultResponse.responseStatus200(sosSecurityConfiguration.writeConfiguration(securityConfiguration));
-		} catch (JocException e) {
+            LOGGER.info(Globals.getIniFileForShiro(Globals.getShiroIniInClassPath()));
+            SOSSecurityConfiguration sosSecurityConfiguration = new SOSSecurityConfiguration();
+            SecurityConfiguration s = sosSecurityConfiguration.writeConfiguration(securityConfiguration);
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(s));
+        } catch (JocException e) {
 			e.addErrorMetaInfo(getJocError());
 			return JOCDefaultResponse.responseStatusJSError(e);
 		} catch (Exception e) {
