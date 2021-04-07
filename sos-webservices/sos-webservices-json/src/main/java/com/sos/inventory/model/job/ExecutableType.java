@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum ExecutableType {
 
     ScriptExecutable("ScriptExecutable"),
-    Java("Java");
+    InternalExecutable("InternalExecutable");
     private final String value;
     private final static Map<String, ExecutableType> CONSTANTS = new HashMap<String, ExecutableType>();
 

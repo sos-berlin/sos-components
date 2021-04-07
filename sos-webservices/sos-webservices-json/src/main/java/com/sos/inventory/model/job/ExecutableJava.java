@@ -12,24 +12,19 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * java executable
  * <p>
- * executable with fixed property 'TYPE':'Java'
+ * executable with fixed property 'TYPE':'InternalExecutable'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "javaClass"
+    "className"
 })
 public class ExecutableJava
     extends Executable
 {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("javaClass")
-    private String javaClass;
+    @JsonProperty("className")
+    private String className;
 
     /**
      * No args constructor for use in serialization
@@ -40,41 +35,30 @@ public class ExecutableJava
 
     /**
      * 
-     * @param javaClass
-     * @param tYPE
+     * @param className
      */
-    public ExecutableJava(String javaClass) {
-        this.javaClass = javaClass;
+    public ExecutableJava(String className) {
+        this.className = className;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("javaClass")
-    public String getJavaClass() {
-        return javaClass;
+    @JsonProperty("className")
+    public String getClassName() {
+        return className;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("javaClass")
-    public void setJavaClass(String javaClass) {
-        this.javaClass = javaClass;
+    @JsonProperty("className")
+    public void setClassName(String className) {
+        this.className = className;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("javaClass", javaClass).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("className", className).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(javaClass).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(className).toHashCode();
     }
 
     @Override
@@ -86,7 +70,7 @@ public class ExecutableJava
             return false;
         }
         ExecutableJava rhs = ((ExecutableJava) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(javaClass, rhs.javaClass).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(className, rhs.className).isEquals();
     }
 
 }
