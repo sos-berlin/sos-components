@@ -136,7 +136,7 @@
 								<exclude>calendar/*.json</exclude>
 								<exclude>inventory/*.json</exclude>
 								<exclude>configuration/globals/*.json</exclude>
-								<exclude>security/permissions-schema.json</exclude>
+								<exclude>security/*.json</exclude>
 							</excludes>
 						</configuration>
 						<goals>
@@ -156,9 +156,9 @@
 							<includeAdditionalProperties>true</includeAdditionalProperties>
 							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
 							<addCompileSourceRoot>false</addCompileSourceRoot>
-							<includes>
+							<!-- includes>
 								<include>permissions-schema.json</include>
-							</includes>
+							</includes -->
 						</configuration>
 						<goals>
 							<goal>generate</goal>

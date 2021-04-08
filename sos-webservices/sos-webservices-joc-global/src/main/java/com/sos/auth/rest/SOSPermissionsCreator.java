@@ -27,6 +27,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.classes.security.SOSSecurityConfiguration;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.security.Permissions;
@@ -109,7 +110,7 @@ public class SOSPermissionsCreator {
                     LOGGER.debug("loginFromAccessToken --> subject created");
                     if (subject.isAuthenticated()) {
 
-                        LOGGER.debug(getClass().getName() + ": loginFromAccessToken --> subject is authenticated");
+                        LOGGER.debug("loginFromAccessToken --> subject is authenticated");
                         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
                         currentUser = new SOSShiroCurrentUser((String) subject.getPrincipals().getPrimaryPrincipal(), "", "");
 
@@ -127,15 +128,20 @@ public class SOSPermissionsCreator {
                         if (subject.getSession().getAttribute("username_joc_permissions") != null) {
                             sosPermissionJocCockpitControllers = Globals.objectMapper.readValue((byte[]) subject.getSession().getAttribute(
                                     "username_joc_permissions"), Permissions.class);
+                            currentUser.setRoles(sosPermissionJocCockpitControllers.getRoles());
                         } else {
                             LOGGER.warn("Could not read username_joc_permissions after fail over in the session object for access token "
                                     + accessToken);
+                            SOSSecurityConfiguration sosSecurityConfiguration = new SOSSecurityConfiguration();
+                            SecurityConfiguration entity = sosSecurityConfiguration.readConfigurationFromFilesystem();
+                            currentUser.setRoles(entity);
+                            sosPermissionJocCockpitControllers = createJocCockpitPermissionControllerObjectList(accessToken, entity);
                         }
 
                         LOGGER.debug("loginFromAccessToken --> JocCockpitPermissionControllerObjectList created");
                         currentUser.setSosPermissionJocCockpitControllers(sosPermissionJocCockpitControllers);
                         currentUser.initFolders();
-                        LOGGER.debug(getClass().getName() + ": loginFromAccessToken --> folders initialized");
+                        LOGGER.debug("loginFromAccessToken --> folders initialized");
 
                         Section section = getIni().getSection("folders");
                         if (section != null) {

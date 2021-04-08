@@ -229,7 +229,7 @@ public class SOSSecurityConfiguration {
 		            // TODO role without perms?
 		        } else {
 		            String iniEntry = writeRoles(role, roleEntry.getValue().getPermissions());
-		            if (!iniEntry.isEmpty()) {
+		            if (!iniEntry.trim().isEmpty()) {
 		                writeIni.get(SECTION_ROLES).put(role, iniEntry);
 		            }
 		        }
@@ -241,7 +241,7 @@ public class SOSSecurityConfiguration {
 
 		for (SOSSecurityConfigurationFolderEntry folder : folders) {
             String iniEntry = folder.getIniWriteString();
-            if (!iniEntry.isEmpty()) {
+            if (!iniEntry.trim().isEmpty()) {
                 writeIni.get(SECTION_FOLDERS).put(folder.getFolderKey(), iniEntry);
             }
         }
@@ -317,34 +317,37 @@ public class SOSSecurityConfiguration {
 
 	public SecurityConfiguration readConfiguration()
 			throws InvalidFileFormatException, IOException, JocException, SOSHibernateException {
-		SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("Import shiro.ini");
-
+		SOSHibernateSession sosHibernateSession = null;
 		try {
-
+		    sosHibernateSession = Globals.createSosHibernateStatelessConnection("Export shiro.ini");
 			SOSShiroIniShare sosShiroIniShare = new SOSShiroIniShare(sosHibernateSession);
 			sosShiroIniShare.provideIniFile();
 
-			writeIni = new Wini(Globals.getShiroIniFile().toFile());
-			
-			SecurityConfiguration secConfig = new SecurityConfiguration();
-			
-			secConfig.setMain(getMain());
-			secConfig.setUsers(getUsers());
-            Stream<String> userRoles = secConfig.getUsers().stream().filter(u -> u.getRoles() != null).flatMap(u -> u.getRoles().stream());
-            secConfig.setRoles(getRoles(userRoles));
-
-			return secConfig;
+			return readConfigurationFromFilesystem();
 		} finally {
-			sosHibernateSession.close();
+		    Globals.disconnect(sosHibernateSession);
 		}
 	}
+	
+    public SecurityConfiguration readConfigurationFromFilesystem() throws InvalidFileFormatException, IOException, JocException {
+        writeIni = new Wini(Globals.getShiroIniFile().toFile());
+
+        SecurityConfiguration secConfig = new SecurityConfiguration();
+
+        secConfig.setMain(getMain());
+        secConfig.setUsers(getUsers());
+        Stream<String> userRoles = secConfig.getUsers().stream().filter(u -> u.getRoles() != null).flatMap(u -> u.getRoles().stream());
+        secConfig.setRoles(getRoles(userRoles));
+
+        return secConfig;
+    }
 
 	public SecurityConfiguration writeConfiguration(SecurityConfiguration securityConfiguration)
 			throws IOException, SOSHibernateException, JocException {
-		writeIni = new Wini(Globals.getShiroIniFile().toFile());
-		SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("Import shiro.ini");
-
+		SOSHibernateSession sosHibernateSession = null;
 		try {
+		    writeIni = new Wini(Globals.getShiroIniFile().toFile());
+		    sosHibernateSession = Globals.createSosHibernateStatelessConnection("Import shiro.ini");
 			writeMain(securityConfiguration.getMain());
 			writeUsers(securityConfiguration.getUsers());
 			writeRolesAndFolders(securityConfiguration.getRoles());

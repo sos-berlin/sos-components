@@ -72,37 +72,41 @@ public class SOSShiroIniShare {
     }
 
     public void copyFileToDb(File iniFile) throws SOSHibernateException, JocException, UnsupportedEncodingException, IOException {
-        Globals.beginTransaction(sosHibernateSession);
+        try {
+            Globals.beginTransaction(sosHibernateSession);
 
-        DBItemJocConfiguration jocConfigurationDbItem;
-        JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-        JocConfigurationFilter filter = new JocConfigurationFilter();
+            DBItemJocConfiguration jocConfigurationDbItem;
+            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+            JocConfigurationFilter filter = new JocConfigurationFilter();
 
-        filter.setAccount(".");
-        filter.setConfigurationType("SHIRO");
-        List<DBItemJocConfiguration> listOfConfigurtions = jocConfigurationDBLayer.getJocConfigurationList(filter,0);
-        if (listOfConfigurtions.size() > 0) {
-            jocConfigurationDbItem = listOfConfigurtions.get(0);
-        } else {
-            jocConfigurationDbItem = new DBItemJocConfiguration();
-            jocConfigurationDbItem.setId(null);
-            jocConfigurationDbItem.setAccount(".");
-            jocConfigurationDbItem.setConfigurationType("SHIRO");
-            jocConfigurationDbItem.setName("shiro.ini");
-            jocConfigurationDbItem.setShared(true);
-            jocConfigurationDbItem.setInstanceId(0L);
-            jocConfigurationDbItem.setControllerId("");
+            filter.setAccount(".");
+            filter.setConfigurationType("SHIRO");
+            List<DBItemJocConfiguration> listOfConfigurtions = jocConfigurationDBLayer.getJocConfigurationList(filter,0);
+            if (listOfConfigurtions.size() > 0) {
+                jocConfigurationDbItem = listOfConfigurtions.get(0);
+            } else {
+                jocConfigurationDbItem = new DBItemJocConfiguration();
+                jocConfigurationDbItem.setId(null);
+                jocConfigurationDbItem.setAccount(".");
+                jocConfigurationDbItem.setConfigurationType("SHIRO");
+                jocConfigurationDbItem.setName("shiro.ini");
+                jocConfigurationDbItem.setShared(true);
+                jocConfigurationDbItem.setInstanceId(0L);
+                jocConfigurationDbItem.setControllerId("");
+            }
+
+            String content = new String(Files.readAllBytes(Paths.get(iniFile.getAbsolutePath())), "UTF-8");
+
+            jocConfigurationDbItem.setConfigurationItem(content);
+            Long id = jocConfigurationDBLayer.saveOrUpdateConfiguration(jocConfigurationDbItem);
+            if (jocConfigurationDbItem.getId() == null) {
+                jocConfigurationDbItem.setId(id);
+            }
+            Globals.commit(sosHibernateSession);
+        } catch (Exception e) {
+            Globals.rollback(sosHibernateSession);
+            throw e;
         }
-
-        String content = new String(Files.readAllBytes(Paths.get(iniFile.getAbsolutePath())), "UTF-8");
-
-        jocConfigurationDbItem.setConfigurationItem(content);
-        Long id = jocConfigurationDBLayer.saveOrUpdateConfiguration(jocConfigurationDbItem);
-        if (jocConfigurationDbItem.getId() == null) {
-            jocConfigurationDbItem.setId(id);
-        }
-        Globals.commit(sosHibernateSession);
-        ;
     }
 
     private void createShiroIniFileFromDb(String inifileContent, File iniFileActive) throws IOException {
