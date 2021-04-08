@@ -4,18 +4,19 @@ public class GlobalsTest {
 
     private static final String PASSWORD = "root";
     private static final String USER = "root";
-    public static final String SCHEDULER_ID = "scheduler.1.12";
-    public static SOSServicePermissionShiro sosServicePermissionShiro;
-    public static SOSShiroCurrentUserAnswer sosShiroCurrentUserAnswer;
+    protected static final String SHIRO_ROLE = "all";
+    protected static SOSServicePermissionShiro sosServicePermissionShiro;
+    protected static SOSShiroCurrentUserAnswer sosShiroCurrentUserAnswer;
 
-    public static String getAccessToken() throws Exception {
+    protected static String getAccessToken() throws Exception {
         sosServicePermissionShiro = new SOSServicePermissionShiro();
-        sosShiroCurrentUserAnswer = (SOSShiroCurrentUserAnswer) sosServicePermissionShiro.loginPost(null,"", "",USER, PASSWORD).getEntity();
+        sosShiroCurrentUserAnswer = (SOSShiroCurrentUserAnswer) sosServicePermissionShiro.login(null, "", USER, PASSWORD).getEntity();
         return sosShiroCurrentUserAnswer.getAccessToken();
     }
 
-    public static void logout() {
-        sosServicePermissionShiro.logoutPost(sosShiroCurrentUserAnswer.getAccessToken(), "");
+    protected static void logout() {
+        sosShiroCurrentUserAnswer = (SOSShiroCurrentUserAnswer) sosServicePermissionShiro.logout(sosShiroCurrentUserAnswer.getAccessToken())
+                .getEntity();
     }
 
 }

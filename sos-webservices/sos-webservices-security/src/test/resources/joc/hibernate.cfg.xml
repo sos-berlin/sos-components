@@ -3,7 +3,7 @@
  <session-factory>
   <property name="hibernate.connection.driver_class">org.mariadb.jdbc.Driver</property>
   <property name="hibernate.connection.password">jobscheduler</property>
-  <property name="hibernate.connection.url">jdbc:mysql://centostest_secondary.sos:5306/jobscheduler200</property>
+  <property name="hibernate.connection.url">jdbc:mysql://centosdev_secondary.sos:5306/jobscheduler200</property>
   <property name="hibernate.connection.username">jobscheduler</property>
   <property name="hibernate.dialect">org.hibernate.dialect.MySQLInnoDBDialect</property>
   <property name="hibernate.show_sql">false</property>
