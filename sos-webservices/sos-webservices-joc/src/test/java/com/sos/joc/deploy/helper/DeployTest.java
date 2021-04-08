@@ -3,10 +3,8 @@ package com.sos.joc.deploy.helper;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -50,6 +48,7 @@ public class DeployTest {
 
     private static final Path WORKFLOW_WITH_FORK = Paths.get("src/test/resources/deploy/helper/workflow_fork.workflow.json");
     private static final Path WORKFLOW_WITH_LOCK = Paths.get("src/test/resources/deploy/helper/workflow_lock.workflow.json");
+    private static final Path WORKFLOW_WITH_JAVA_JOB = Paths.get("src/test/resources/deploy/helper/workflow_java.workflow.json");
     private static final Path WORKFLOW_WITH_ORDER_PARAMETERS = Paths.get("src/test/resources/deploy/helper/workflow_order_parameters.workflow.json");
 
     @Ignore
@@ -79,6 +78,21 @@ public class DeployTest {
 
             JControllerApi api = proxy.getControllerApi(ProxyUser.JOC, CONTROLLER_URI_PRIMARY);
             addOrChangeSimpleItem(api, JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+        } catch (Throwable e) {
+            throw e;
+        } finally {
+            proxy.close();
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testDeployJava() throws Exception {
+        JProxyTestClass proxy = new JProxyTestClass();
+
+        try {
+            JControllerApi api = proxy.getControllerApi(ProxyUser.JOC, CONTROLLER_URI_PRIMARY);
+            deployWorkflow(api, WORKFLOW_WITH_JAVA_JOB, "1");
         } catch (Throwable e) {
             throw e;
         } finally {
