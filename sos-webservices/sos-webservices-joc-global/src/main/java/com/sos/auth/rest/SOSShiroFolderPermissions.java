@@ -46,17 +46,23 @@ public class SOSShiroFolderPermissions {
         return retListOfFolders;
     }
     
-//    public Map<String, Set<String>> getNotPermittedParentFolders() {
-//        if (listOfNotPermittedParentFoldersForInstance.isEmpty()) {
-//            listOfFoldersForInstance.forEach((k, v) -> {
-//                v.forEach(f -> {
-//                    Path p = Paths.get(f.getFolder());
-//                });
-//            });
-//        } else {
-//            return listOfNotPermittedParentFoldersForInstance;
-//        }
-//    }
+    public Map<String, Set<String>> getNotPermittedParentFolders() {
+        if (listOfNotPermittedParentFoldersForInstance.isEmpty()) {
+            listOfFoldersForInstance.forEach((k, v) -> {
+                Set<String> paths = new HashSet<>();
+                v.forEach(f -> {
+                    Path p = Paths.get(f.getFolder());
+                    p = p.getParent();
+                    while (p != null) {
+                        paths.add(p.toString().replace('\\', '/'));
+                        p = p.getParent();
+                    }
+                });
+                listOfNotPermittedParentFoldersForInstance.put(k, paths);
+            });
+        }
+        return listOfNotPermittedParentFoldersForInstance;
+    }
 
     public void setFolders(String jobSchedulerId, String folders) {
         String[] stringlistOfFolders = folders.split(",");

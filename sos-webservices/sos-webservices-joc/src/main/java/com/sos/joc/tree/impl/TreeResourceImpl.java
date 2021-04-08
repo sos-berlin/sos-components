@@ -61,7 +61,7 @@ public class TreeResourceImpl extends JOCResourceImpl implements ITreeResource {
                 folders = TreePermanent.initFoldersByFoldersForViews(treeBody);
             }
 
-            Tree root = TreePermanent.getTree(folders, folderPermissions);
+            Tree root = TreePermanent.getTree(folders, controllerId, folderPermissions);
             TreeView entity = new TreeView();
             if (root != null) {
                 entity.getFolders().add(root);

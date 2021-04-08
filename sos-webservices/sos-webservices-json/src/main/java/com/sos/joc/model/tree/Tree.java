@@ -24,6 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "path",
     "name",
     "deleted",
+    "permitted",
     "lockedBy",
     "lockedSince",
     "folders"
@@ -49,6 +50,8 @@ public class Tree {
     private String name;
     @JsonProperty("deleted")
     private Boolean deleted;
+    @JsonProperty("permitted")
+    private Boolean permitted = true;
     @JsonProperty("lockedBy")
     private String lockedBy;
     /**
@@ -117,6 +120,16 @@ public class Tree {
         this.deleted = deleted;
     }
 
+    @JsonProperty("permitted")
+    public Boolean getPermitted() {
+        return permitted;
+    }
+
+    @JsonProperty("permitted")
+    public void setPermitted(Boolean permitted) {
+        this.permitted = permitted;
+    }
+
     @JsonProperty("lockedBy")
     public String getLockedBy() {
         return lockedBy;
@@ -161,12 +174,12 @@ public class Tree {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("name", name).append("deleted", deleted).append("lockedBy", lockedBy).append("lockedSince", lockedSince).append("folders", folders).toString();
+        return new ToStringBuilder(this).append("path", path).append("name", name).append("deleted", deleted).append("permitted", permitted).append("lockedBy", lockedBy).append("lockedSince", lockedSince).append("folders", folders).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(deleted).append(folders).append(lockedBy).append(lockedSince).append(name).toHashCode();
+        return new HashCodeBuilder().append(path).append(deleted).append(folders).append(permitted).append(lockedBy).append(lockedSince).append(name).toHashCode();
     }
 
     @Override
@@ -178,7 +191,7 @@ public class Tree {
             return false;
         }
         Tree rhs = ((Tree) other);
-        return new EqualsBuilder().append(path, rhs.path).append(deleted, rhs.deleted).append(folders, rhs.folders).append(lockedBy, rhs.lockedBy).append(lockedSince, rhs.lockedSince).append(name, rhs.name).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(deleted, rhs.deleted).append(folders, rhs.folders).append(permitted, rhs.permitted).append(lockedBy, rhs.lockedBy).append(lockedSince, rhs.lockedSince).append(name, rhs.name).isEquals();
     }
 
 }

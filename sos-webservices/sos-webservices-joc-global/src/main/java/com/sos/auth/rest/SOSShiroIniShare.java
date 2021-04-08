@@ -125,22 +125,27 @@ public class SOSShiroIniShare {
     }
 
     private String getContentFromDatabase() throws SOSHibernateException {
-        Globals.beginTransaction(sosHibernateSession);
+        try {
+            Globals.beginTransaction(sosHibernateSession);
 
-        DBItemJocConfiguration jocConfigurationDbItem;
-        JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-        JocConfigurationFilter filter = new JocConfigurationFilter();
+            DBItemJocConfiguration jocConfigurationDbItem;
+            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+            JocConfigurationFilter filter = new JocConfigurationFilter();
 
-        filter.setAccount(".");
-        filter.setConfigurationType("SHIRO");
-        List<DBItemJocConfiguration> listOfConfigurtions = jocConfigurationDBLayer.getJocConfigurationList(filter,0);
-        Globals.commit(sosHibernateSession);
+            filter.setAccount(".");
+            filter.setConfigurationType("SHIRO");
+            List<DBItemJocConfiguration> listOfConfigurtions = jocConfigurationDBLayer.getJocConfigurationList(filter,0);
+            Globals.commit(sosHibernateSession);
 
-        if (listOfConfigurtions.size() > 0) {
-            jocConfigurationDbItem = listOfConfigurtions.get(0);
-            return jocConfigurationDbItem.getConfigurationItem();
-        } else {
-            return "";
+            if (listOfConfigurtions.size() > 0) {
+                jocConfigurationDbItem = listOfConfigurtions.get(0);
+                return jocConfigurationDbItem.getConfigurationItem();
+            } else {
+                return "";
+            }
+        } catch (Exception e) {
+            Globals.rollback(sosHibernateSession);
+            throw e;
         }
 
     }

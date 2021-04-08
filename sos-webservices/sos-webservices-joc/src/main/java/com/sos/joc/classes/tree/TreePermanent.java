@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -386,23 +387,28 @@ public class TreePermanent {
         }
     }
 
-    public static Tree getTree(SortedSet<Tree> folders, SOSShiroFolderPermissions sosShiroFolderPermissions) {
+    public static Tree getTree(SortedSet<Tree> folders, String controllerId, SOSShiroFolderPermissions sosShiroFolderPermissions) {
         Map<Path, TreeModel> treeMap = new HashMap<Path, TreeModel>();
         Set<Folder> listOfFolders = sosShiroFolderPermissions.getListOfFolders();
+        Set<String> notPermittedParentFolders = sosShiroFolderPermissions.getNotPermittedParentFolders().getOrDefault(controllerId, Collections
+                .emptySet());
         for (Tree folder : folders) {
-            if (SOSShiroFolderPermissions.isPermittedForFolder(folder.getPath(), listOfFolders)) {
+            boolean isPermittedForFolder = SOSShiroFolderPermissions.isPermittedForFolder(folder.getPath(), listOfFolders);
+            boolean isNotPermittedParentFolder = notPermittedParentFolders.contains(folder.getPath());
+            
+            if (isPermittedForFolder || isNotPermittedParentFolder) {
 
                 Path pFolder = Paths.get(folder.getPath());
                 TreeModel tree = new TreeModel();
                 if (treeMap.containsKey(pFolder)) {
                     tree = treeMap.get(pFolder);
-                    tree = setFolderItemProps(folder, tree);
+                    tree = setFolderItemProps(folder, !isNotPermittedParentFolder, tree);
                 } else {
                     tree.setPath(folder.getPath());
                     Path fileName = pFolder.getFileName();
                     tree.setName(fileName == null ? "" : fileName.toString());
                     tree.setFolders(null);
-                    tree = setFolderItemProps(folder, tree);
+                    tree = setFolderItemProps(folder, !isNotPermittedParentFolder, tree);
                     treeMap.put(pFolder, tree);
                 }
                 fillTreeMap(treeMap, pFolder, tree);
@@ -415,7 +421,7 @@ public class TreePermanent {
         return treeMap.get(Paths.get("/"));
     }
 
-    private static TreeModel setFolderItemProps(Tree folder, TreeModel tree) {
+    private static TreeModel setFolderItemProps(Tree folder, boolean isPermitted, TreeModel tree) {
         if (folder.getDeleted() != null && folder.getDeleted()) {
             tree.setDeleted(true);
         }
@@ -425,6 +431,7 @@ public class TreePermanent {
         if (folder.getLockedSince() != null) {
             tree.setLockedSince(folder.getLockedSince());
         }
+        tree.setPermitted(isPermitted);
         return tree;
     }
 
