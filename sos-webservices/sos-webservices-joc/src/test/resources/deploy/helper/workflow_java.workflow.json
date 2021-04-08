@@ -1,0 +1,30 @@
+{
+	"TYPE": "Workflow",
+	"path": "workflow_java",
+	"versionId": "1",
+	"instructions": [
+		{
+			"TYPE": "Execute.Named",
+			"jobName": "java_job",
+			"label": "javaJob_label"
+		}
+	],
+	"jobs": {
+		"java_job": {
+			"agentId": "agent",
+			"executable": {
+				"TYPE": "InternalExecutable",
+				"className": "com.sos.jitl.jobs.MyTestJob",
+				"jobArguments": {
+					"stringArgument": "An Argument for the intantiated class",
+					"numericArgument": 3
+				},
+				"arguments": {
+					"arg": "$ARG",
+					"numericArg": "7"
+				}
+			},
+			"taskLimit": 1
+		}
+	}
+}
