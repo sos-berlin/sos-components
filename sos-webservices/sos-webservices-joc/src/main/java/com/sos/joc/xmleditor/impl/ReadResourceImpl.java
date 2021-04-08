@@ -27,6 +27,7 @@ import com.sos.joc.model.xmleditor.read.other.AnswerConfiguration;
 import com.sos.joc.model.xmleditor.read.other.ReadOtherConfigurationAnswer;
 import com.sos.joc.model.xmleditor.read.standard.ReadStandardConfigurationAnswer;
 import com.sos.joc.model.xmleditor.validate.ValidateConfigurationAnswer;
+import com.sos.joc.xmleditor.common.Utils;
 import com.sos.joc.xmleditor.common.Xml2JsonConverter;
 import com.sos.joc.xmleditor.common.standard.ReadConfigurationHandler;
 import com.sos.joc.xmleditor.resource.IReadResource;
@@ -148,7 +149,7 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
                 }
             } else {
                 answer.getConfiguration().setRecreateJson(false);
-                answer.getConfiguration().setConfigurationJson(item.getConfigurationDraftJson());
+                answer.getConfiguration().setConfigurationJson(Utils.deserializeJson(item.getConfigurationDraftJson()));
             }
             // answer.getConfiguration().setState(new AnswerConfigurationState());
             // answer.getConfiguration().getState().setMessage(new AnswerMessage());

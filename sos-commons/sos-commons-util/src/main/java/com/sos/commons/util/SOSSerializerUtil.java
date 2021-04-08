@@ -7,6 +7,12 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Base64;
 
+/**
+ * 
+ * @deprecated use com.sos.commons.util.SOSSerializer
+ *
+ */
+@Deprecated
 public class SOSSerializerUtil {
 
     public static Object fromString(String s) {

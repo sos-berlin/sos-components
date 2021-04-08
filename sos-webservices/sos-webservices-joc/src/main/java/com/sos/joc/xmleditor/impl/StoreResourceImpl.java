@@ -16,6 +16,7 @@ import com.sos.joc.model.xmleditor.common.AnswerMessage;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.store.StoreConfiguration;
 import com.sos.joc.model.xmleditor.store.StoreConfigurationAnswer;
+import com.sos.joc.xmleditor.common.Utils;
 import com.sos.joc.xmleditor.resource.IStoreResource;
 import com.sos.schema.JsonValidator;
 
@@ -33,38 +34,40 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
             checkRequiredParameters(in);
 
             JOCDefaultResponse response = initPermissions(in.getControllerId(), accessToken, in.getObjectType(), Role.MANAGE);
-            if (response == null) {
-                JocXmlEditor.parseXml(in.getConfiguration());
-
-                session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
-                session.beginTransaction();
-                DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
-
-                DBItemXmlEditorConfiguration item = null;
-                String name = null;
-                switch (in.getObjectType()) {
-                case YADE:
-                case OTHER:
-                    name = in.getName();
-                    item = getObject(dbLayer, in, name);
-                    break;
-                default:
-                    name = JocXmlEditor.getConfigurationName(in.getObjectType());
-                    item = getStandardObject(dbLayer, in);
-                    break;
-                }
-
-                if (item == null) {
-                    item = create(session, in, name);
-
-                } else {
-                    item = update(session, in, item, name);
-                }
-
-                session.commit();
-                response = JOCDefaultResponse.responseStatus200(getSuccess(in.getObjectType(), item.getId(), item.getModified(), item.getDeployed()));
+            if (response != null) {
+                return response;
             }
-            return response;
+            JocXmlEditor.parseXml(in.getConfiguration());
+
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+            session.beginTransaction();
+            DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
+
+            DBItemXmlEditorConfiguration item = null;
+            String name = null;
+            switch (in.getObjectType()) {
+            case YADE:
+            case OTHER:
+                name = in.getName();
+                item = getObject(dbLayer, in, name);
+                break;
+            default:
+                name = JocXmlEditor.getConfigurationName(in.getObjectType());
+                item = getStandardObject(dbLayer, in);
+                break;
+            }
+
+            if (item == null) {
+                item = create(session, in, name);
+
+            } else {
+                item = update(session, in, item, name);
+            }
+
+            session.commit();
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getSuccess(in.getObjectType(), item.getId(), item
+                    .getModified(), item.getDeployed())));
+
         } catch (JocException e) {
             Globals.rollback(session);
             e.addErrorMetaInfo(getJocError());
@@ -96,7 +99,7 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
         item.setType(in.getObjectType().name());
         item.setName(name.trim());
         item.setConfigurationDraft(in.getConfiguration());
-        item.setConfigurationDraftJson(in.getConfigurationJson());
+        item.setConfigurationDraftJson(Utils.serialize(in.getConfigurationJson()));
         if (in.getObjectType().equals(ObjectType.NOTIFICATION)) {
             item.setSchemaLocation(JocXmlEditor.getStandardRelativeSchemaLocation(in.getObjectType()));
         } else {
@@ -114,7 +117,7 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
             throws Exception {
         item.setName(name.trim());
         item.setConfigurationDraft(SOSString.isEmpty(in.getConfiguration()) ? null : in.getConfiguration());
-        item.setConfigurationDraftJson(in.getConfigurationJson());
+        item.setConfigurationDraftJson(Utils.serialize(in.getConfigurationJson()));
         if (in.getObjectType().equals(ObjectType.NOTIFICATION)) {
             item.setSchemaLocation(JocXmlEditor.getStandardRelativeSchemaLocation(in.getObjectType()));
         } else {

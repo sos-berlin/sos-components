@@ -3,14 +3,15 @@ package com.sos.joc.xmleditor.common.standard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
+import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.model.xmleditor.common.AnswerMessage;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.common.ObjectVersionState;
 import com.sos.joc.model.xmleditor.read.standard.ReadStandardConfigurationAnswer;
 import com.sos.joc.model.xmleditor.read.standard.ReadStandardConfigurationAnswerState;
+import com.sos.joc.xmleditor.common.Utils;
 import com.sos.joc.xmleditor.common.Xml2JsonConverter;
 
 public class ReadConfigurationHandler {
@@ -41,7 +42,7 @@ public class ReadConfigurationHandler {
         current = new ReadConfigurationItem();
 
         if (item != null) {
-            draft.set(item.getConfigurationDraft(), item.getConfigurationDraftJson(), item.getModified());
+            draft.set(item.getConfigurationDraft(), Utils.deserializeJson(item.getConfigurationDraftJson()), item.getModified());
         }
         if (forceLive || draft.getConfiguration() == null) {
             current.set(live);
@@ -73,7 +74,7 @@ public class ReadConfigurationHandler {
                 if (answer.getWarning() == null) { // not found
                     deployed = false;
                 } else { // connection refused
-                    live.set(item.getConfigurationDeployed(), item.getConfigurationDeployedJson(), item.getDeployed());
+                    live.set(item.getConfigurationDeployed(), Utils.deserializeJson(item.getConfigurationDeployedJson()), item.getDeployed());
                 }
             }
         }

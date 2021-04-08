@@ -26,23 +26,25 @@ public class Xml2JsonResourceImpl extends ACommonResourceImpl implements IXml2Js
             checkRequiredParameters(in);
 
             JOCDefaultResponse response = initPermissions(in.getControllerId(), accessToken, in.getObjectType(), Role.VIEW);
-            if (response == null) {
-                JocXmlEditor.parseXml(in.getConfiguration());
-
-                java.nio.file.Path schema = null;
-                switch (in.getObjectType()) {
-                case YADE:
-                case OTHER:
-                    schema = JocXmlEditor.getSchema(in.getObjectType(), in.getSchemaIdentifier(), false);
-                    break;
-                default:
-                    schema = JocXmlEditor.getStandardAbsoluteSchemaLocation(in.getObjectType());
-                    break;
-                }
-                Xml2JsonConverter converter = new Xml2JsonConverter();
-                response = JOCDefaultResponse.responseStatus200(getSuccess(converter.convert(in.getObjectType(), schema, in.getConfiguration())));
+            if (response != null) {
+                return response;
             }
-            return response;
+            JocXmlEditor.parseXml(in.getConfiguration());
+
+            java.nio.file.Path schema = null;
+            switch (in.getObjectType()) {
+            case YADE:
+            case OTHER:
+                schema = JocXmlEditor.getSchema(in.getObjectType(), in.getSchemaIdentifier(), false);
+                break;
+            default:
+                schema = JocXmlEditor.getStandardAbsoluteSchemaLocation(in.getObjectType());
+                break;
+            }
+            Xml2JsonConverter converter = new Xml2JsonConverter();
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getSuccess(converter.convert(in.getObjectType(),
+                    schema, in.getConfiguration()))));
+
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
