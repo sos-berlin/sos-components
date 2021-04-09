@@ -29,13 +29,13 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     private ConfigurationEntry enableRememberMe = new ConfigurationEntry("enable_remember_me", "true", GlobalSettingsSectionValueType.BOOLEAN);
 
     private ConfigurationEntry copyPasteSuffix = new ConfigurationEntry("copy_paste_suffix", "copy", GlobalSettingsSectionValueType.STRING);
-    private ConfigurationEntry copyPastePrefix = new ConfigurationEntry("copy_paste_prefix", "", GlobalSettingsSectionValueType.STRING);
+    private ConfigurationEntry copyPastePrefix = new ConfigurationEntry("copy_paste_prefix", "copy", GlobalSettingsSectionValueType.STRING);
 
     private ConfigurationEntry restoreSuffix = new ConfigurationEntry("restore_suffix", "restored", GlobalSettingsSectionValueType.STRING);
-    private ConfigurationEntry restorePrefix = new ConfigurationEntry("restore_prefix", "", GlobalSettingsSectionValueType.STRING);
+    private ConfigurationEntry restorePrefix = new ConfigurationEntry("restore_prefix", "restored", GlobalSettingsSectionValueType.STRING);
     
     private ConfigurationEntry importSuffix = new ConfigurationEntry("import_suffix", "imported", GlobalSettingsSectionValueType.STRING);
-    private ConfigurationEntry importPrefix = new ConfigurationEntry("import_prefix", "", GlobalSettingsSectionValueType.STRING);
+    private ConfigurationEntry importPrefix = new ConfigurationEntry("import_prefix", "imported", GlobalSettingsSectionValueType.STRING);
     
     // "jobstreams"
     private ConfigurationEntry showViewDashboard = new ConfigurationEntry("show_view_dashboard", null, GlobalSettingsSectionValueType.BOOLEAN);
