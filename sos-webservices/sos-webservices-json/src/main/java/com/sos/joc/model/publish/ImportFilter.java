@@ -22,6 +22,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "overwrite",
     "targetFolder",
     "format",
+    "suffix",
+    "prefix",
     "auditLog"
 })
 public class ImportFilter {
@@ -50,6 +52,22 @@ public class ImportFilter {
      */
     @JsonProperty("format")
     private ArchiveFormat format = ArchiveFormat.fromValue("ZIP");
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("suffix")
+    private String suffix;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("prefix")
+    private String prefix;
     /**
      * auditParams
      * <p>
@@ -124,6 +142,50 @@ public class ImportFilter {
     }
 
     /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("suffix")
+    public String getSuffix() {
+        return suffix;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("suffix")
+    public void setSuffix(String suffix) {
+        this.suffix = suffix;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("prefix")
+    public String getPrefix() {
+        return prefix;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("prefix")
+    public void setPrefix(String prefix) {
+        this.prefix = prefix;
+    }
+
+    /**
      * auditParams
      * <p>
      * 
@@ -147,12 +209,12 @@ public class ImportFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("overwrite", overwrite).append("targetFolder", targetFolder).append("format", format).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("overwrite", overwrite).append("targetFolder", targetFolder).append("format", format).append("suffix", suffix).append("prefix", prefix).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(targetFolder).append(format).append(auditLog).append(overwrite).toHashCode();
+        return new HashCodeBuilder().append(targetFolder).append(auditLog).append(prefix).append(format).append(suffix).append(overwrite).toHashCode();
     }
 
     @Override
@@ -164,7 +226,7 @@ public class ImportFilter {
             return false;
         }
         ImportFilter rhs = ((ImportFilter) other);
-        return new EqualsBuilder().append(targetFolder, rhs.targetFolder).append(format, rhs.format).append(auditLog, rhs.auditLog).append(overwrite, rhs.overwrite).isEquals();
+        return new EqualsBuilder().append(targetFolder, rhs.targetFolder).append(auditLog, rhs.auditLog).append(prefix, rhs.prefix).append(format, rhs.format).append(suffix, rhs.suffix).append(overwrite, rhs.overwrite).isEquals();
     }
 
 }
