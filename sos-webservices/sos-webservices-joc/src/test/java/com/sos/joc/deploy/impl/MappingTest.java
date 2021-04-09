@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -169,7 +171,8 @@ public class MappingTest {
     public void test08GetDeploymentHistoryDBLayerDeployTest () throws SOSHibernateException {
         ShowDepHistoryFilter filter = DeploymentTestUtils.createShowDepHistoryFilterByDeploymentDateAndPath();
 
-        Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter.getDetailFilter());
+        Collection<String> allowedControllers = Collections.singleton(filter.getDetailFilter().getControllerId());
+        Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter.getDetailFilter(), allowedControllers);
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
         hql.append(
                 presentFilterAttributes.stream()
@@ -209,23 +212,21 @@ public class MappingTest {
      * No Unit test. DB connection needed to test query parameters
      * */
 //    @Test
-    public void test09GetDeploymentHistoryFromToDBLayerDeployTest () throws SOSHibernateException {
-       ShowDepHistoryFilter filter = DeploymentTestUtils.createShowDepHistoryFilterByFromToAndPath();
+    public void test09GetDeploymentHistoryFromToDBLayerDeployTest() throws SOSHibernateException {
+        ShowDepHistoryFilter filter = DeploymentTestUtils.createShowDepHistoryFilterByFromToAndPath();
 
-        Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter.getDetailFilter());
+        Collection<String> allowedControllers = Collections.singleton(filter.getDetailFilter().getControllerId());
+        Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter.getDetailFilter(), allowedControllers);
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-        hql.append(
-                presentFilterAttributes.stream()
-                .map(item -> {
-                    if("from".equals(item)) {
-                        return FROM_DEP_DATE;
-                    } else if("to".equals(item)) {
-                        return TO_DEP_DATE;
-                    } else {
-                        return item + " = :" + item;
-                    }
-                })
-                .collect(Collectors.joining(" and ", " where ", "")));
+        hql.append(presentFilterAttributes.stream().map(item -> {
+            if ("from".equals(item)) {
+                return FROM_DEP_DATE;
+            } else if ("to".equals(item)) {
+                return TO_DEP_DATE;
+            } else {
+                return item + " = :" + item;
+            }
+        }).collect(Collectors.joining(" and ", " where ", "")));
         SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/sp_hibernate.cfg.xml"));
         factory.setAutoCommit(true);
         factory.addClassMapping(DBLayer.getJocClassMapping());
@@ -238,7 +239,8 @@ public class MappingTest {
             switch (item) {
             case "from":
             case "to":
-                query.setParameter(item + "Date", FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item), TemporalType.TIMESTAMP);
+                query.setParameter(item + "Date", FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item),
+                        TemporalType.TIMESTAMP);
                 break;
             case "deploymentDate":
             case "deleteDate":
@@ -255,9 +257,8 @@ public class MappingTest {
         LOGGER.trace("Get property and value from query.getParameters().stream(): ");
         query.getParameters().stream().forEach(item -> LOGGER.trace(item.getName() + ": " + query.getParameterValue(item.getName()).toString()));
         LOGGER.trace("Replace hql in StringBuilder with property and value from query.getParameters().stream(): ");
-        query.getParameters().stream().forEach(item ->  
-        hql.replace(hql.indexOf(":" + item.getName()), hql.indexOf(":" + item.getName()) + item.getName().length() + 1, 
-                "'" + query.getParameterValue(item.getName()).toString() + "'"));
+        query.getParameters().stream().forEach(item -> hql.replace(hql.indexOf(":" + item.getName()), hql.indexOf(":" + item.getName()) + item
+                .getName().length() + 1, "'" + query.getParameterValue(item.getName()).toString() + "'"));
         LOGGER.trace("Replaced hql:\n" + hql.toString());
         StringBuilder hql2 = new StringBuilder("where controllerId = :controllerId and account = :account");
         LOGGER.trace("hql2.indexOf(\":controllerId\") : " + hql2.indexOf(":controllerId"));
