@@ -2154,7 +2154,11 @@ public class DBLayerDeploy {
         return folder;
     }
 
-    public List<DBItemDeploymentHistory> getDeploymentHistoryCommits(ShowDepHistoryFilter filter) throws SOSHibernateException {
+    public List<DBItemDeploymentHistory> getDeploymentHistoryCommits(ShowDepHistoryFilter filter, Collection<String> allowedControllers)
+            throws SOSHibernateException {
+        if (allowedControllers == null) {
+            allowedControllers = Collections.emptySet();
+        }
         if(filter.getCompactFilter() != null) {
             StringBuilder hql = new StringBuilder();
             /*
@@ -2171,9 +2175,12 @@ public class DBLayerDeploy {
                 if (filter.getCompactFilter().getAccount() != null) {
                     hql.append(" and history.account = :account");
                 }
-                if (filter.getCompactFilter().getControllerId() != null) {
-                    hql.append(" and history.controllerId = :controllerId");
+                if (!allowedControllers.isEmpty()) {
+                    hql.append(" and history.controllerId in (:controllerIds)");
                 }
+//                if (filter.getCompactFilter().getControllerId() != null) {
+//                    hql.append(" and history.controllerId = :controllerId");
+//                }
                 if (filter.getCompactFilter().getFolder() != null) {
                     hql.append(" and history.folder = :folder");
                 }
@@ -2207,9 +2214,12 @@ public class DBLayerDeploy {
             if (filter.getCompactFilter().getAccount() != null) {
                 query.setParameter("account", filter.getCompactFilter().getAccount());
             }
-            if (filter.getCompactFilter().getControllerId() != null) {
-                query.setParameter("controllerId", filter.getCompactFilter().getControllerId());
+            if (!allowedControllers.isEmpty()) {
+                query.setParameterList("controllerIds", allowedControllers);
             }
+//            if (filter.getCompactFilter().getControllerId() != null) {
+//                query.setParameter("controllerId", filter.getCompactFilter().getControllerId());
+//            }
             if (filter.getCompactFilter().getFolder() != null) {
                 query.setParameter("folder", filter.getCompactFilter().getFolder());
             }
@@ -2236,13 +2246,17 @@ public class DBLayerDeploy {
             }
             return getSession().getResultList(query);
         } else {
-            return new ArrayList<DBItemDeploymentHistory>();
+            return Collections.emptyList();
         }
     }
     
-    public List<DBItemDeploymentHistory> getDeploymentHistoryDetails(ShowDepHistoryFilter filter) throws SOSHibernateException {
+    public List<DBItemDeploymentHistory> getDeploymentHistoryDetails(ShowDepHistoryFilter filter, Collection<String> allowedControllers)
+            throws SOSHibernateException {
+        if (allowedControllers == null) {
+            allowedControllers = Collections.emptySet();
+        }
         if(filter.getDetailFilter() != null) {
-            Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter.getDetailFilter());
+            Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter.getDetailFilter(), allowedControllers);
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
             hql.append(
                     presentFilterAttributes.stream()
@@ -2253,6 +2267,8 @@ public class DBLayerDeploy {
                             return TO_DEP_DATE;
                         } else if ("limit".equals(item)) {
                             return null;
+                        } else if ("controllerIds".equals(item)) {
+                            return "controllerId in (:controllerIds)";
                         } else {
                             return item + " = :" + item;
                         }
@@ -2260,7 +2276,7 @@ public class DBLayerDeploy {
                     .collect(Collectors.joining(" and ", " where ", "")));
             hql.append(" order by deploymentDate desc");
             Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
-            presentFilterAttributes.stream().forEach(item -> {
+            for (String item : presentFilterAttributes) {
                 switch (item) {
                 case "from":
                 case "to":
@@ -2270,6 +2286,9 @@ public class DBLayerDeploy {
                 case "deleteDate":
                     query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item), TemporalType.TIMESTAMP);
                     break;
+                case "controllerIds":
+                    query.setParameterList(item, allowedControllers);
+                    break;
                 case "limit":
                     query.setMaxResults((Integer)FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item));
                     break;
@@ -2277,10 +2296,10 @@ public class DBLayerDeploy {
                     query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item));
                     break;
                 }
-            });
+            }
             return getSession().getResultList(query);
         } else {
-            return new ArrayList<DBItemDeploymentHistory>();
+            return Collections.emptyList();
         }
     }
     
