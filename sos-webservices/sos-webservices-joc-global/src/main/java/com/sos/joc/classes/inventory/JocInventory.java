@@ -155,6 +155,10 @@ public class JocInventory {
     public static boolean isFolder(ConfigurationType type) {
         return ConfigurationType.FOLDER.equals(type);
     }
+    
+    public static boolean isFolder(Integer type) {
+        return ConfigurationType.FOLDER.intValue() == type;
+    }
 
     public static boolean isCalendar(ConfigurationType type) {
         return ConfigurationType.WORKINGDAYSCALENDAR.equals(type) || ConfigurationType.NONWORKINGDAYSCALENDAR.equals(type);
@@ -402,18 +406,26 @@ public class JocInventory {
             SOSShiroFolderPermissions folderPermissions) throws Exception {
         DBItemInventoryConfiguration config = null;
         String name = null;
+        Set<String> notPermittedParentFolders = folderPermissions.getNotPermittedParentFolders().getOrDefault("", Collections.emptySet());
+        
         if (id != null) {
             config = dbLayer.getConfiguration(id);
             if (config == null) {
                 throw new DBMissingDataException(String.format("configuration not found: %s", id));
             }
-            if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
+            if (isFolder(config.getType())) {
+                boolean isPermittedForFolder = folderPermissions.isPermittedForFolder(config.getPath());
+                boolean isNotPermittedParentFolder = notPermittedParentFolders.contains(config.getPath());
+                if (!isPermittedForFolder && !isNotPermittedParentFolder) {
+                    throw new JocFolderPermissionsException("Access denied for folder: " + config.getPath());
+                }
+            } else if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
                 throw new JocFolderPermissionsException("Access denied for folder: " + config.getFolder());
             }
             // temp. because of rename error on root folder
             config.setPath(config.getPath().replace("//+", "/"));
         } else {
-            if (!ConfigurationType.FOLDER.equals(type) && path != null && !path.contains("/")) {
+            if (!isFolder(type) && path != null && !path.contains("/")) {
                 name = path;
                 path = null;
             }
@@ -429,9 +441,16 @@ public class JocInventory {
                     config.setDeployed(false);
                     config.setReleased(false);
                 } else {
-                    path = normalizePath(path).toString().replace('\\', '/');
-                    if (!folderPermissions.isPermittedForFolder(path)) {
-                        throw new JocFolderPermissionsException("Access denied for folder: " + path);
+                    Path p = normalizePath(path);
+                    path = p.toString().replace('\\', '/');
+                    if (isFolder(type)) {
+                        boolean isPermittedForFolder = folderPermissions.isPermittedForFolder(path);
+                        boolean isNotPermittedParentFolder = notPermittedParentFolders.contains(path);
+                        if (!isPermittedForFolder && !isNotPermittedParentFolder) {
+                            throw new JocFolderPermissionsException("Access denied for folder: " + path);
+                        }
+                    } else if (!folderPermissions.isPermittedForFolder(p.getParent().toString().replace('\\', '/'))) {
+                        throw new JocFolderPermissionsException("Access denied for folder: " + p.getParent().toString().replace('\\', '/'));
                     }
                     config = dbLayer.getConfiguration(path, type.intValue());
                     if (config == null) {
