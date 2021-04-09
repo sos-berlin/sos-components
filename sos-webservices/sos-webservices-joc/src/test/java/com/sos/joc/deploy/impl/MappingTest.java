@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -171,7 +170,7 @@ public class MappingTest {
     public void test08GetDeploymentHistoryDBLayerDeployTest () throws SOSHibernateException {
         ShowDepHistoryFilter filter = DeploymentTestUtils.createShowDepHistoryFilterByDeploymentDateAndPath();
 
-        Collection<String> allowedControllers = Collections.singleton(filter.getDetailFilter().getControllerId());
+        Set<String> allowedControllers = Collections.singleton(filter.getDetailFilter().getControllerId());
         Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter.getDetailFilter(), allowedControllers);
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
         hql.append(
@@ -215,7 +214,7 @@ public class MappingTest {
     public void test09GetDeploymentHistoryFromToDBLayerDeployTest() throws SOSHibernateException {
         ShowDepHistoryFilter filter = DeploymentTestUtils.createShowDepHistoryFilterByFromToAndPath();
 
-        Collection<String> allowedControllers = Collections.singleton(filter.getDetailFilter().getControllerId());
+        Set<String> allowedControllers = Collections.singleton(filter.getDetailFilter().getControllerId());
         Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter.getDetailFilter(), allowedControllers);
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
         hql.append(presentFilterAttributes.stream().map(item -> {
