@@ -1,6 +1,6 @@
 package com.sos.joc.classes.security;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class SOSSecurityConfigurationRoleEntry {
@@ -9,7 +9,7 @@ public class SOSSecurityConfigurationRoleEntry {
     private Set<String> listOWritePermissions;
 
     public SOSSecurityConfigurationRoleEntry(String role) {
-        listOWritePermissions = new HashSet<String>();
+        listOWritePermissions = new LinkedHashSet<String>();
         this.role = role;
     }
 

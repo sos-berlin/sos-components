@@ -1,16 +1,18 @@
 
 package com.sos.joc.model.security.permissions;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -19,7 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class SecurityConfigurationRoles {
 
     @JsonIgnore
-    private Map<String, SecurityConfigurationRole> additionalProperties = new HashMap<String, SecurityConfigurationRole>();
+    private Map<String, SecurityConfigurationRole> additionalProperties = new LinkedHashMap<String, SecurityConfigurationRole>();
 
     @JsonAnyGetter
     public Map<String, SecurityConfigurationRole> getAdditionalProperties() {

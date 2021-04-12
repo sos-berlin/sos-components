@@ -140,8 +140,6 @@ public class EventServiceFactory {
         EventCondition eventArrived = createCondition();
         try {
             service = getEventService(controllerId);
-            //service.addCondition(eventArrived);
-            //service.setIsCurrentController(isCurrentController);
             SortedSet<Long> evtIds = new TreeSet<>(Comparator.comparing(Long::longValue));
             Set<EventSnapshot> evt = new HashSet<>();
             Mode mode = service.hasOldEvent(eventId, eventArrived);

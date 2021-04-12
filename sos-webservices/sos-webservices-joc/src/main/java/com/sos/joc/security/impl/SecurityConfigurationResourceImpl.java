@@ -2,6 +2,7 @@ package com.sos.joc.security.impl;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.Map;
 
 import javax.ws.rs.Path;
 
@@ -14,7 +15,10 @@ import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.security.SecurityConfiguration;
+import com.sos.joc.model.security.permissions.SecurityConfigurationRole;
 import com.sos.joc.security.resource.ISecurityConfigurationResource;
+import com.sos.schema.JsonValidator;
+import com.sos.schema.exception.SOSJsonSchemaException;
 
 @Path("authentication")
 public class SecurityConfigurationResourceImpl extends JOCResourceImpl implements ISecurityConfigurationResource {
@@ -61,14 +65,24 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 	public JOCDefaultResponse postShiroStore(String accessToken, byte[] body)  {
 		try {
 		    initLogging(API_CALL_WRITE, body, accessToken);
-		    // TODO JsonValidator
+		    JsonValidator.validate(body, SecurityConfiguration.class);
 		    SecurityConfiguration securityConfiguration = Globals.objectMapper.readValue(body, SecurityConfiguration.class);
+		    if (securityConfiguration.getRoles() != null) {
+		        for (Map.Entry<String, SecurityConfigurationRole> entry : securityConfiguration.getRoles().getAdditionalProperties().entrySet()) {
+		            try {
+                        JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(entry.getValue()), SecurityConfigurationRole.class);
+                    } catch (SOSJsonSchemaException e) {
+                        throw new SOSJsonSchemaException(e.getMessage().replaceFirst("(\\[\\$\\.)", "$1roles." + entry.getKey() + "."));
+                    }
+		        }
+		    }
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
             SOSSecurityConfiguration sosSecurityConfiguration = new SOSSecurityConfiguration();
             SecurityConfiguration s = sosSecurityConfiguration.writeConfiguration(securityConfiguration);
+            s.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(s));
         } catch (JocException e) {
 			e.addErrorMetaInfo(getJocError());

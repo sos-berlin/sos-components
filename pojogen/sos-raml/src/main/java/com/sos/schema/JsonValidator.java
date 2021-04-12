@@ -111,6 +111,8 @@ public class JsonValidator {
             put("Xml2JsonConfiguration", "xmleditor/xml2json/xml2json-configuration-schema.json");
 
             put("TreeFilter", "tree/treeFilter-schema.json");
+            put("SecurityConfiguration", "security/security-configuration-schema.json");
+            put("SecurityConfigurationRole", "security/role-schema.json");
 
             put("ReleaseFilter", "inventory/release/release-schema.json");
             put("com.sos.joc.model.inventory.common.RequestFolder", "inventory/common/request-folder-schema.json");
