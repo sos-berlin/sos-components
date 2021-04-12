@@ -66,10 +66,10 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
         try {
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ControllerId.class);
-            ControllerId jobSchedulerFilter = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
+            ControllerId controllerIdObj = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(jobSchedulerFilter.getControllerId(), getControllerPermissions(jobSchedulerFilter
-                    .getControllerId(), accessToken).getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerIdObj.getControllerId(), accessToken)
+                    .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -78,7 +78,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
 
             Components entity = new Components();
 
-            List<ControllerAnswer> controllers = ControllersResourceImpl.getControllerAnswers(jobSchedulerFilter.getControllerId(), accessToken,
+            List<ControllerAnswer> controllers = ControllersResourceImpl.getControllerAnswers(controllerIdObj.getControllerId(), accessToken,
                     connection);
             //TODO controllerConnectionState from database, here a fake
             List<ControllerConnectionState> fakeControllerConnections = controllers.stream().map(c -> {

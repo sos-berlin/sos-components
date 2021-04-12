@@ -20,7 +20,7 @@ public class HistoryFilter {
     private Date executedTo;
     private Date startTime;
     private Date endTime;
-    private String schedulerId = "";
+    private Collection<String> controllerIds;
     private Set<Folder> folders;
     private Set<HistoryStateText> states;
     private Set<String> criticalities;
@@ -147,12 +147,12 @@ public class HistoryFilter {
         return executedTo;
     }
 
-    public void setSchedulerId(String schedulerId) {
-        this.schedulerId = schedulerId;
+    public void setControllerIds(Collection<String> controllerIds) {
+        this.controllerIds = controllerIds;
     }
 
-    public String getSchedulerId() {
-        return schedulerId;
+    public Collection<String> getControllerIds() {
+        return controllerIds;
     }
 
     public void setStartTime(final Date start) {
