@@ -401,12 +401,16 @@ public class JocInventory {
             SOSShiroFolderPermissions folderPermissions) throws Exception {
         return getConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), folderPermissions);
     }
-
+    
     public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, Long id, String path, ConfigurationType type,
             SOSShiroFolderPermissions folderPermissions) throws Exception {
+        return getConfiguration(dbLayer, id, path, type, folderPermissions, false);
+    }
+
+    public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, Long id, String path, ConfigurationType type,
+            SOSShiroFolderPermissions folderPermissions, boolean withIsNotPermittedParentFolder) throws Exception {
         DBItemInventoryConfiguration config = null;
         String name = null;
-        Set<String> notPermittedParentFolders = folderPermissions.getNotPermittedParentFolders().getOrDefault("", Collections.emptySet());
         
         if (id != null) {
             config = dbLayer.getConfiguration(id);
@@ -415,8 +419,7 @@ public class JocInventory {
             }
             if (isFolder(config.getType())) {
                 boolean isPermittedForFolder = folderPermissions.isPermittedForFolder(config.getPath());
-                boolean isNotPermittedParentFolder = notPermittedParentFolders.contains(config.getPath());
-                if (!isPermittedForFolder && !isNotPermittedParentFolder) {
+                if (!isPermittedForFolder && !isNotPermittedParentFolder(folderPermissions, config.getPath(), withIsNotPermittedParentFolder)) {
                     throw new JocFolderPermissionsException("Access denied for folder: " + config.getPath());
                 }
             } else if (!folderPermissions.isPermittedForFolder(config.getFolder())) {
@@ -445,8 +448,7 @@ public class JocInventory {
                     path = p.toString().replace('\\', '/');
                     if (isFolder(type)) {
                         boolean isPermittedForFolder = folderPermissions.isPermittedForFolder(path);
-                        boolean isNotPermittedParentFolder = notPermittedParentFolders.contains(path);
-                        if (!isPermittedForFolder && !isNotPermittedParentFolder) {
+                        if (!isPermittedForFolder && !isNotPermittedParentFolder(folderPermissions, path, withIsNotPermittedParentFolder)) {
                             throw new JocFolderPermissionsException("Access denied for folder: " + path);
                         }
                     } else if (!folderPermissions.isPermittedForFolder(p.getParent().toString().replace('\\', '/'))) {
@@ -471,6 +473,14 @@ public class JocInventory {
             }
         }
         return config;
+    }
+    
+    private static boolean isNotPermittedParentFolder(SOSShiroFolderPermissions folderPermissions, String path, boolean withIsNotPermittedParentFolder) {
+        if (!withIsNotPermittedParentFolder) {
+            return true;
+        }
+        Set<String> notPermittedParentFolders = folderPermissions.getNotPermittedParentFolders().getOrDefault("", Collections.emptySet());
+        return notPermittedParentFolders.contains(path);
     }
     
     public static DBItemInventoryConfigurationTrash getTrashConfiguration(InventoryDBLayer dbLayer, RequestFilter in,
