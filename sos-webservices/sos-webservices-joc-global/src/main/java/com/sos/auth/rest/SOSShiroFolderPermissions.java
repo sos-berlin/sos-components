@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.sos.joc.model.common.Folder;
 
@@ -31,19 +32,19 @@ public class SOSShiroFolderPermissions {
     }
 
     private Set<Folder> getListOfFolders(String jobSchedulerId) {
-        Set<Folder> retListOfFolders = new HashSet<Folder>();
-        if (jobSchedulerId != null && !jobSchedulerId.isEmpty()) {
-            Set<Folder> listOfFolders = listOfFoldersForInstance.get(jobSchedulerId);
-            if (listOfFolders != null) {
-                retListOfFolders.addAll(listOfFolders);
+        if (jobSchedulerId != null && !jobSchedulerId.isEmpty() && listOfFoldersForInstance.get(jobSchedulerId) != null) {
+            Set<Folder> retListOfFolders = listOfFoldersForInstance.get(jobSchedulerId);
+            if (listOfFoldersForInstance.get("") != null) {
+                Set<String> folderNames = retListOfFolders.stream().map(Folder::getFolder).collect(Collectors.toSet());
+                retListOfFolders.addAll(listOfFoldersForInstance.get("").stream().filter(f -> !folderNames.contains(f.getFolder())).collect(Collectors
+                        .toSet()));
             }
+            return retListOfFolders;
+        } else if (listOfFoldersForInstance.get("") != null) {
+            return listOfFoldersForInstance.get("");
+        } else {
+            return Collections.emptySet();
         }
-        Set<Folder> listOfFoldersDefault = listOfFoldersForInstance.get("");
-        if (listOfFoldersDefault != null) {
-            retListOfFolders.addAll(listOfFoldersDefault);
-        }
-
-        return retListOfFolders;
     }
     
     public Map<String, Set<String>> getNotPermittedParentFolders() {
@@ -169,19 +170,6 @@ public class SOSShiroFolderPermissions {
     }
 
     public static boolean isPermittedForFolder(String folder, Collection<Folder> listOfFolders) {
-        if (listOfFolders == null || listOfFolders.isEmpty()) {
-            return true;
-        }
-        if (folder == null || folder.isEmpty()) {
-            return true;
-        }
-        final String _folder = normalizeFolder(folder);
-        Predicate<Folder> filter = f -> f.getFolder().equals(_folder) || (f.getRecursive() && ("/".equals(f.getFolder()) || _folder.startsWith(f
-                .getFolder() + "/")));
-        return listOfFolders.stream().parallel().anyMatch(filter);
-    }
-    
-    public static boolean isNotPermittedParentFolderOfPermittedSubFolder(String folder, Collection<Folder> listOfFolders) {
         if (listOfFolders == null || listOfFolders.isEmpty()) {
             return true;
         }

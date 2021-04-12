@@ -189,15 +189,15 @@ public class SOSSecurityConfiguration {
             Profile.Section s = writeIni.get(SECTION_USERS);
             SOSSecurityHashSettings sosSecurityHashSettings = new SOSSecurityHashSettings();
             sosSecurityHashSettings.setMain(getSection(SECTION_MAIN));
-
-            for (SecurityConfigurationUser securityConfigurationUser : users) {
+            
+            users.stream().distinct().forEach(securityConfigurationUser -> {
                 SOSSecurityConfigurationUserEntry sosSecurityConfigurationUserEntry = new SOSSecurityConfigurationUserEntry(securityConfigurationUser,
                         oldSection, sosSecurityHashSettings);
                 if ((securityConfigurationUser.getPassword() != null && !securityConfigurationUser.getPassword().isEmpty())
-                        || securityConfigurationUser.getRoles().size() > 0) {
+                        || !securityConfigurationUser.getRoles().isEmpty()) {
                     s.put(securityConfigurationUser.getUser(), sosSecurityConfigurationUserEntry.getIniWriteString());
                 }
-            }
+            });
         }
 	}
 
@@ -218,7 +218,7 @@ public class SOSSecurityConfiguration {
 		clearSection(SECTION_ROLES);
 		clearSection(SECTION_FOLDERS);
 		List<SOSSecurityConfigurationFolderEntry> folders = new ArrayList<>();
-		
+        
 		for (Map.Entry<String, SecurityConfigurationRole> roleEntry : confRoles.getAdditionalProperties().entrySet()) {
 		    String role = roleEntry.getKey();
 		    
@@ -238,13 +238,13 @@ public class SOSSecurityConfiguration {
                 }
 		    }
 		}
-
-		for (SOSSecurityConfigurationFolderEntry folder : folders) {
-            String iniEntry = folder.getIniWriteString();
+		
+		folders.stream().distinct().forEach(folder -> {
+		    String iniEntry = folder.getIniWriteString();
             if (!iniEntry.trim().isEmpty()) {
                 writeIni.get(SECTION_FOLDERS).put(folder.getFolderKey(), iniEntry);
             }
-        }
+		});
 	}
 
     private String writeRoles(String role, IniPermissions permissions) {
@@ -306,12 +306,12 @@ public class SOSSecurityConfiguration {
         clearSection(SECTION_MAIN);
         if (main != null) {
             Profile.Section s = writeIni.get(SECTION_MAIN);
-            for (SecurityConfigurationMainEntry securityConfigurationMainEntry : main) {
+            main.stream().distinct().forEach(securityConfigurationMainEntry -> {
                 String comment = String.join(System.lineSeparator(), securityConfigurationMainEntry.getEntryComment());
                 s.putComment(securityConfigurationMainEntry.getEntryName(), comment);
                 s.put(securityConfigurationMainEntry.getEntryName(), SOSSecurityConfigurationMainEntry.getIniWriteString(
                         securityConfigurationMainEntry));
-            }
+            });
         }
     }
 
