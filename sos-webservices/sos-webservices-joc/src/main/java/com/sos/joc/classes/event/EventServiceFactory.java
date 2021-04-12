@@ -150,15 +150,22 @@ public class EventServiceFactory {
                 if (isDebugEnabled) {
                     LOGGER.debug("waiting for Events for " + controllerId + ": maxdelay " + delay + "ms");
                 }
-                ScheduledFuture<Void> watchdog = startWatchdog(delay, eventArrived);
-                mode = waitingForEvents(eventArrived, service);
-                if (!watchdog.isDone()) {
-                    watchdog.cancel(false);
-                    if (isDebugEnabled) {
-                        LOGGER.debug("event watchdog is cancelled");
+                if (delay > 200) {
+                    ScheduledFuture<Void> watchdog = startWatchdog(delay, eventArrived);
+                    mode = waitingForEvents(eventArrived, service);
+                    if (!watchdog.isDone()) {
+                        watchdog.cancel(false);
+                        if (isDebugEnabled) {
+                            LOGGER.debug("event watchdog is cancelled");
+                        }
+                    } else if (isDebugEnabled) {
+                        LOGGER.debug("watchdog has stopped waiting events for " + controllerId);
                     }
-                } else if (isDebugEnabled) {
-                    LOGGER.debug("watchdog has stopped waiting events for " + controllerId);
+                } else {
+                    if (delay > 0) {
+                       TimeUnit.MILLISECONDS.sleep(delay); 
+                    }
+                    mode = Mode.TRUE;
                 }
             }
             if (isDebugEnabled) {
@@ -256,8 +263,12 @@ public class EventServiceFactory {
             if (session == null) {
                 throw new SessionNotExistException("session is invalid");
             }
-            long l = session.getTimeout()-1000;
-            if (l < 0) {
+            long timeout = session.getTimeout();
+            if (timeout < 0L) {
+                return cleanupPeriodInMillis;
+            }
+            long l = timeout-1000;
+            if (l < 0L) {
                 return 0L;
             }
             return l;
