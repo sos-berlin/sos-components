@@ -87,22 +87,17 @@ public class SOSSecurityConfiguration {
         }).collect(Collectors.toList());
     }
 	
-    private SecurityConfigurationRoles getRoles(Stream<String> userRoles) {
+    private SecurityConfigurationRoles getRoles() {
 
         final Section s = getSection(SECTION_ROLES);
         SecurityConfigurationRoles roles = new SecurityConfigurationRoles();
         if (s != null) {
-            Map<String, IniPermissions> permissions = s.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                    e -> mapIniPermissionsToPermissionsObject(e.getValue())));
             Map<String, SecurityConfigurationFolders> folders = getFolders();
-            Stream<String> rolesStream = permissions.keySet().stream();
-            rolesStream = Stream.concat(rolesStream, folders.keySet().stream());
-            rolesStream = Stream.concat(rolesStream, userRoles);
-            rolesStream.distinct().forEachOrdered(r -> {
-                SecurityConfigurationRole role = new SecurityConfigurationRole();
-                role.setPermissions(permissions.get(r));
-                role.setFolders(folders.get(r));
-                roles.setAdditionalProperty(r, role);
+            s.forEach((role, perms) -> {
+                SecurityConfigurationRole r = new SecurityConfigurationRole();
+                r.setPermissions(mapIniPermissionsToPermissionsObject(perms));
+                r.setFolders(folders.get(role));
+                roles.setAdditionalProperty(role, r);
             });
         }
         return roles;
@@ -342,8 +337,7 @@ public class SOSSecurityConfiguration {
 
         secConfig.setMain(getMain());
         secConfig.setUsers(getUsers());
-        Stream<String> userRoles = secConfig.getUsers().stream().filter(u -> u.getRoles() != null).flatMap(u -> u.getRoles().stream());
-        secConfig.setRoles(getRoles(userRoles));
+        secConfig.setRoles(getRoles());
 
         return secConfig;
     }
