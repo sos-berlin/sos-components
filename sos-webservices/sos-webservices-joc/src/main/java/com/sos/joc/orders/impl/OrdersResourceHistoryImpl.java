@@ -2,10 +2,11 @@ package com.sos.joc.orders.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -22,6 +23,7 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.history.HistoryMapper;
+import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
@@ -44,8 +46,25 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
             initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, OrdersFilter.class);
             OrdersFilter in = Globals.objectMapper.readValue(inBytes, OrdersFilter.class);
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), getControllerPermissions(in.getControllerId(), accessToken)
-                    .getOrders().getView());
+            
+            String controllerId = in.getControllerId();
+            Set<String> allowedControllers = Collections.emptySet();
+            boolean permitted = false;
+            if (controllerId == null || controllerId.isEmpty()) {
+                controllerId = "";
+                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
+                        availableController -> getControllerPermissions(availableController, accessToken).getOrders().getView()).collect(
+                                Collectors.toSet());
+                permitted = !allowedControllers.isEmpty();
+                if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
+                    allowedControllers = Collections.emptySet(); 
+                }
+            } else {
+                allowedControllers = Collections.singleton(controllerId);
+                permitted = getControllerPermissions(controllerId, accessToken).getOrders().getView();
+            }
+            
+            JOCDefaultResponse response = initPermissions(controllerId, permitted);
             if (response != null) {
                 return response;
             }
@@ -56,7 +75,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
             Set<Folder> folders = addPermittedFolder(in.getFolders());
 
             HistoryFilter dbFilter = new HistoryFilter();
-            dbFilter.setSchedulerId(in.getControllerId());
+            dbFilter.setControllerIds(allowedControllers);
             if (in.getHistoryIds() != null && !in.getHistoryIds().isEmpty()) {
                 dbFilter.setHistoryIds(in.getHistoryIds());
             } else {
@@ -115,9 +134,9 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                 JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, dbFilter);
                 ScrollableResults sr = null;
                 try {
-                    Matcher matcher = null;
+                    Predicate<String> predicate = null;
                     if (in.getRegex() != null && !in.getRegex().isEmpty()) {
-                        matcher = Pattern.compile(in.getRegex()).matcher("");
+                        predicate = Pattern.compile(in.getRegex()).asPredicate();
                     }
                     sr = dbLayer.getMainOrders();
 
@@ -134,10 +153,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                         // LOGGER.info(String.format(" [%s][%s]first entry retrieved", range, i));
                         // }
 
-                        if (in.getControllerId().isEmpty() && !getControllerPermissions(item.getControllerId(), accessToken).getOrders().getView()) {
-                            continue;
-                        }
-                        if (matcher != null && !matcher.reset(item.getWorkflowPath() + "," + item.getOrderId()).find()) {
+                        if (predicate != null && !predicate.test(item.getWorkflowPath() + "," + item.getOrderId())) {
                             continue;
                         }
                         history.add(HistoryMapper.map2OrderHistoryItem(item));

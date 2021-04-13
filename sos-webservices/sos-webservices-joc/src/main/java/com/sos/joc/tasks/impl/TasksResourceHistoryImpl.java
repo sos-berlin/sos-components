@@ -3,6 +3,7 @@ package com.sos.joc.tasks.impl;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -24,6 +25,7 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.history.HistoryMapper;
+import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
@@ -48,10 +50,27 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
             initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, JobsFilter.class);
             JobsFilter in = Globals.objectMapper.readValue(inBytes, JobsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(in.getControllerId(), getControllerPermissions(in.getControllerId(), accessToken)
-                    .getOrders().getView());
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
+            
+            String controllerId = in.getControllerId();
+            Set<String> allowedControllers = Collections.emptySet();
+            boolean permitted = false;
+            if (controllerId == null || controllerId.isEmpty()) {
+                controllerId = "";
+                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
+                        availableController -> getControllerPermissions(availableController, accessToken).getOrders().getView()).collect(
+                                Collectors.toSet());
+                permitted = !allowedControllers.isEmpty();
+                if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
+                    allowedControllers = Collections.emptySet(); 
+                }
+            } else {
+                allowedControllers = Collections.singleton(controllerId);
+                permitted = getControllerPermissions(controllerId, accessToken).getOrders().getView();
+            }
+            
+            JOCDefaultResponse response = initPermissions(controllerId, permitted);
+            if (response != null) {
+                return response;
             }
 
             List<TaskHistoryItem> history = new ArrayList<TaskHistoryItem>();
@@ -62,7 +81,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
             Set<Folder> folders = addPermittedFolder(in.getFolders());
 
             HistoryFilter dbFilter = new HistoryFilter();
-            dbFilter.setSchedulerId(in.getControllerId());
+            dbFilter.setControllerIds(allowedControllers);
 
             if (in.getTaskIds() != null && !in.getTaskIds().isEmpty()) {
                 dbFilter.setHistoryIds(in.getTaskIds());

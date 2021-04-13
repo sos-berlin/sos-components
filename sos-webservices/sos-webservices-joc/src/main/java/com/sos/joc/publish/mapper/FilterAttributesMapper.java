@@ -1,5 +1,6 @@
 package com.sos.joc.publish.mapper;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -17,7 +18,7 @@ import com.sos.joc.model.publish.RedeployFilter;
 
 public abstract class FilterAttributesMapper {
 
-    public static Set<String> getDefaultAttributesFromFilter (DepHistoryDetailFilter filter) {
+    public static Set<String> getDefaultAttributesFromFilter (DepHistoryDetailFilter filter, Collection<String> allowedControllers) {
         Set<String> filterAttributes = new HashSet<String>();
         if (filter.getAccount() != null) {
             filterAttributes.add("account");
@@ -31,9 +32,12 @@ public abstract class FilterAttributesMapper {
         if (filter.getDeployType() != null) {
             filterAttributes.add("type");
         }
-        if (filter.getControllerId() != null) {
-            filterAttributes.add("controllerId");
+        if (!allowedControllers.isEmpty()) {
+            filterAttributes.add("controllerIds");
         }
+//        if (filter.getControllerId() != null) {
+//            filterAttributes.add("controllerId");
+//        }
         if (filter.getCommitId() != null) {
             filterAttributes.add("commitId");
         }

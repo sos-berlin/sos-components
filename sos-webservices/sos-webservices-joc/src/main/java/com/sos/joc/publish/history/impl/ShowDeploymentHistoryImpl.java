@@ -1,8 +1,10 @@
 package com.sos.joc.publish.history.impl;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -12,6 +14,7 @@ import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.publish.DepHistory;
@@ -35,16 +38,38 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
             initLogging(API_CALL, showDepHistoryFilter, xAccessToken);
             JsonValidator.validate(showDepHistoryFilter, ShowDepHistoryFilter.class);
             ShowDepHistoryFilter filter = Globals.objectMapper.readValue(showDepHistoryFilter, ShowDepHistoryFilter.class);
-            // TODO permissions - filter response per controllerId
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(null, xAccessToken).getDeployments().getView());
+            
+            String controllerId = null;
+            if (filter.getCompactFilter() != null) {
+                controllerId = filter.getCompactFilter().getControllerId();
+            } else {
+                controllerId = filter.getDetailFilter().getControllerId();
+            }
+            Set<String> allowedControllers = Collections.emptySet();
+            boolean permitted = false;
+            if (controllerId == null || controllerId.isEmpty()) {
+                controllerId = "";
+                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
+                        availableController -> getControllerPermissions(availableController, xAccessToken).getDeployments().getView()).collect(
+                                Collectors.toSet());
+                permitted = !allowedControllers.isEmpty();
+                if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
+                    allowedControllers = Collections.emptySet(); 
+                }
+            } else {
+                allowedControllers = Collections.singleton(controllerId);
+                permitted = getControllerPermissions(controllerId, xAccessToken).getDeployments().getView();
+            }
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, permitted);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             List<DBItemDeploymentHistory> dbHistoryItems = null;
             if (filter.getCompactFilter() != null) {
-                dbHistoryItems = dbLayer.getDeploymentHistoryCommits(filter);
+                dbHistoryItems = dbLayer.getDeploymentHistoryCommits(filter, allowedControllers);
                 dbHistoryItems.stream().forEach(item -> {
                     item.setId(null);
                     item.setType(null);
@@ -56,7 +81,7 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
                     item.setInventoryConfigurationId(null);
                 });
             } else {
-                dbHistoryItems = dbLayer.getDeploymentHistoryDetails(filter);
+                dbHistoryItems = dbLayer.getDeploymentHistoryDetails(filter, allowedControllers);
             }
             return JOCDefaultResponse.responseStatus200(getDepHistoryFromDBItems(dbHistoryItems));
         } catch (JocException e) {

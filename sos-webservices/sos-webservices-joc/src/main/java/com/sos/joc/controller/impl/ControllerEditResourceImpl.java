@@ -23,6 +23,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.audit.ModifyControllerAudit;
 import com.sos.joc.classes.audit.RegisterControllerAudit;
 import com.sos.joc.classes.jobscheduler.ControllerAnswer;
 import com.sos.joc.classes.jobscheduler.ControllerCallable;
@@ -347,7 +348,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
         try {
             initLogging(API_CALL_DELETE, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
-            UrlParameter jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
+            UrlParameter controllerObj = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).getAdministration().getControllers()
                     .getManage());
@@ -355,10 +356,14 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 return jocDefaultResponse;
             }
 
-            checkRequiredComment(jobSchedulerBody.getAuditLog());
+            String controllerId = controllerObj.getControllerId();
+            checkRequiredComment(controllerObj.getAuditLog());
+            ModifyControllerAudit audit = new ModifyControllerAudit(controllerId, controllerObj.getAuditLog());
+            logAuditMessage(audit);
+            storeAuditLogEntry(audit);
             
             for (ProxyUser user : ProxyUser.values()) {
-                Proxy.close(jobSchedulerBody.getControllerId(), user);
+                Proxy.close(controllerId, user);
             }
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
@@ -366,7 +371,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             InventoryOperatingSystemsDBLayer osDBLayer = new InventoryOperatingSystemsDBLayer(connection);
             InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
             
-            List<DBItemInventoryJSInstance> instances = instanceDBLayer.getInventoryInstancesByControllerId(jobSchedulerBody.getControllerId());
+            List<DBItemInventoryJSInstance> instances = instanceDBLayer.getInventoryInstancesByControllerId(controllerId);
             if (instances != null) {
                for (DBItemInventoryJSInstance instance : instances) {
                    instanceDBLayer.deleteInstance(instance);
@@ -375,9 +380,9 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                    }
                    //TODO some other tables should maybe deleted !!!
                }
-               ProxiesEdit.remove(jobSchedulerBody.getControllerId());
+               ProxiesEdit.remove(controllerId);
             }
-            List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(Arrays.asList(jobSchedulerBody.getControllerId()));
+            List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(Collections.singleton(controllerId));
             if (dbAgents != null) {
                 Map<String, Set<DBItemInventoryAgentName>> allAliases = agentDBLayer.getAgentNameAliases(dbAgents.stream().map(
                         DBItemInventoryAgentInstance::getAgentId).collect(Collectors.toSet()));
@@ -435,13 +440,13 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
         }
     }
     
-    private Controller testConnection(URI jobschedulerURI, String controllerId, URI otherJobschedulerURI) throws ControllerInvalidResponseDataException {
+    private Controller testConnection(URI controllerURI, String controllerId, URI otherControllerURI) throws ControllerInvalidResponseDataException {
         Controller jobScheduler = new Controller();
-        jobScheduler.setUrl(jobschedulerURI.toString());
+        jobScheduler.setUrl(controllerURI.toString());
         jobScheduler.setIsCoupled(null);
         Overview answer = null;
         try {
-            JOCJsonCommand jocJsonCommand = new JOCJsonCommand(jobschedulerURI, getAccessToken());
+            JOCJsonCommand jocJsonCommand = new JOCJsonCommand(controllerURI, getAccessToken());
             jocJsonCommand.setUriBuilderForOverview();
             answer = jocJsonCommand.getJsonObjectFromGet(Overview.class);
         } catch (ControllerInvalidResponseDataException e) {
@@ -450,10 +455,10 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
         }
         if (answer != null) {
             if (!controllerId.isEmpty() && !controllerId.equals(answer.getId())) {
-                if (otherJobschedulerURI != null) {
+                if (otherControllerURI != null) {
                     throw new ControllerInvalidResponseDataException(String.format(
-                            "The cluster members must have the same Controller Id: %1$s -> %2$s, %3$s -> %4$s", otherJobschedulerURI.toString(),
-                            controllerId, jobschedulerURI, answer.getId()));
+                            "The cluster members must have the same Controller Id: %1$s -> %2$s, %3$s -> %4$s", otherControllerURI.toString(),
+                            controllerId, controllerURI, answer.getId()));
                 } else {
                     throw new ControllerInvalidResponseDataException(String.format(
                             "Connection was successful but controllerId '%s' of URL '%s' is not the expected controllerId '%s'", answer.getId(),
@@ -469,9 +474,9 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
     }
     
     private DBItemInventoryJSInstance storeNewInventoryInstance(InventoryInstancesDBLayer instanceDBLayer, InventoryOperatingSystemsDBLayer osDBLayer,
-            RegisterParameter controller, String jobschedulerId) throws DBInvalidDataException, DBConnectionRefusedException,
+            RegisterParameter controller, String controllerId) throws DBInvalidDataException, DBConnectionRefusedException,
             JocObjectAlreadyExistException, ControllerInvalidResponseDataException {
-        DBItemInventoryJSInstance instance = setInventoryInstance(null, controller, jobschedulerId);
+        DBItemInventoryJSInstance instance = setInventoryInstance(null, controller, controllerId);
         Long newId = instanceDBLayer.saveInstance(instance);
         instance.setId(newId);
 
@@ -486,7 +491,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
         return instance;
     }
     
-    private DBItemInventoryJSInstance setInventoryInstance(DBItemInventoryJSInstance instance, RegisterParameter controller, String jobschedulerId) {
+    private DBItemInventoryJSInstance setInventoryInstance(DBItemInventoryJSInstance instance, RegisterParameter controller, String controllerId) {
         if (instance == null) {
             instance = new DBItemInventoryJSInstance();
             instance.setId(null);
@@ -496,7 +501,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
         }
         Role role = controller.getRole();
         instance.setSecurityLevel(Globals.getJocSecurityLevel().intValue());
-        instance.setControllerId(jobschedulerId);
+        instance.setControllerId(controllerId);
         instance.setUri(controller.getUrl().toString());
         if (controller.getTitle() == null || controller.getTitle().isEmpty()) {
             instance.setTitle(role.value());

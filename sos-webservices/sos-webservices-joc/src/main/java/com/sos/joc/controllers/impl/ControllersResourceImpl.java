@@ -2,6 +2,7 @@ package com.sos.joc.controllers.impl;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.jobscheduler.ControllerAnswer;
 import com.sos.joc.classes.jobscheduler.ControllerCallable;
+import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.controllers.resource.IControllersResource;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
@@ -59,16 +61,33 @@ public class ControllersResourceImpl extends JOCResourceImpl implements IControl
             }
             initLogging(apiCall, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ControllerId.class);
-            ControllerId controllerId = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId.getControllerId(), getControllerPermissions(controllerId
-                    .getControllerId(), accessToken).getView());
+            ControllerId controllerIdObj = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
+            
+            String controllerId = controllerIdObj.getControllerId();
+            Set<String> allowedControllers = Collections.emptySet();
+            boolean permitted = false;
+            if (controllerId == null || controllerId.isEmpty()) {
+                controllerId = "";
+                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
+                        availableController -> getControllerPermissions(availableController, accessToken).getView()).collect(
+                                Collectors.toSet());
+                permitted = !allowedControllers.isEmpty();
+                if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
+                    allowedControllers = Collections.emptySet(); 
+                }
+            } else {
+                allowedControllers = Collections.singleton(controllerId);
+                permitted = getControllerPermissions(controllerId, accessToken).getView();
+            }
+            
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", permitted);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
             connection = Globals.createSosHibernateStatelessConnection(apiCall);
             Controllers entity = new Controllers();
-            entity.setControllers(getControllers(controllerId.getControllerId(), accessToken, connection, onlyDb, jobschedulerUser.getSosShiroCurrentUser()));
+            entity.setControllers(getControllers(allowedControllers, accessToken, connection, onlyDb, jobschedulerUser.getSosShiroCurrentUser()));
             if (onlyDb) {
                 entity.setAgents(getAgents(entity.getControllers().stream().map(Controller::getControllerId).collect(Collectors.toSet()), connection));
             }
@@ -105,32 +124,26 @@ public class ControllersResourceImpl extends JOCResourceImpl implements IControl
         return null;
     }
 
-    private static List<Controller> getControllers(String controllerId, String accessToken, SOSHibernateSession connection, boolean onlyDb,
+    private static List<Controller> getControllers(Set<String> allowedControllers, String accessToken, SOSHibernateSession connection, boolean onlyDb,
             SOSShiroCurrentUser user) throws InterruptedException, JocException, Exception {
-        return getControllerAnswers(controllerId, accessToken, connection, onlyDb, user).stream()
+        return getControllerAnswers(allowedControllers, accessToken, connection, onlyDb).stream()
                 .map(Controller.class::cast).collect(Collectors.toList());
     }
 
     public static List<ControllerAnswer> getControllerAnswers(String controllerId, String accessToken, SOSHibernateSession connection)
             throws InterruptedException, JocException, Exception {
-        return getControllerAnswers(controllerId, accessToken, connection, false, null);
+        return getControllerAnswers(Collections.singleton(controllerId), accessToken, connection, false);
     }
 
-    public static List<ControllerAnswer> getControllerAnswers(String jobSchedulerId, String accessToken, SOSHibernateSession connection, boolean onlyDb,
-            SOSShiroCurrentUser user) throws InterruptedException, JocException, Exception {
+    public static List<ControllerAnswer> getControllerAnswers(Set<String> allowedControllers, String accessToken, SOSHibernateSession connection,
+            boolean onlyDb) throws InterruptedException, JocException, Exception {
         InventoryInstancesDBLayer instanceLayer = new InventoryInstancesDBLayer(connection);
-        //List<DBItemInventoryJSInstance> schedulerInstances = Proxies.getControllerDbInstances().get(jobSchedulerId);
-        List<DBItemInventoryJSInstance> schedulerInstances = instanceLayer.getInventoryInstancesByControllerId(jobSchedulerId);
+        List<DBItemInventoryJSInstance> schedulerInstances = instanceLayer.getInventoryInstancesByControllerIds(allowedControllers);
         List<ControllerAnswer> masters = new ArrayList<ControllerAnswer>();
         if (schedulerInstances != null) {
             InventoryOperatingSystemsDBLayer osDBLayer = new InventoryOperatingSystemsDBLayer(connection);
             List<ControllerCallable> tasks = new ArrayList<ControllerCallable>();
             for (DBItemInventoryJSInstance schedulerInstance : schedulerInstances) {
-                // skip all masters where the user doesn't have the permission to see its status
-                if (jobSchedulerId.isEmpty() && user != null && !user.getControllerPermissions(schedulerInstance.getControllerId())
-                        .getView()) {
-                    continue;
-                }
                 tasks.add(new ControllerCallable(schedulerInstance, osDBLayer.getInventoryOperatingSystem(schedulerInstance.getOsId()), accessToken,
                         onlyDb));
             }

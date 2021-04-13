@@ -370,6 +370,7 @@
 	                	<target description="modify initial values">
 	                		<!-- replaceregexp flags="ig" byline="true" match="(private List&lt;)(com\.sos\.jobscheduler\.model\.instruction\.)?(Instruction&gt; instructions = ).*" replace="\1\2\3new ArrayList&lt;\2Instruction&gt;();" file="${project.build.directory}/java-gen/com/sos/controller/model/instruction/Instructions.java" preserveLastModified="true" /-->
 	                		<replaceregexp flags="ig" byline="true" match="(private OrderMode mode = )null;" replace="\1new OrderMode();" file="${project.build.directory}/java-gen/com/sos/controller/model/command/CancelSuspendOrder.java" preserveLastModified="true" />
+	                		<replaceregexp flags="ig" byline="true" match="(HashMap)" replace="Linked\1" file="${project.build.directory}/java-gen/com/sos/joc/model/security/permissions/SecurityConfigurationRoles.java" preserveLastModified="true" />
 	                	</target>
 	                </configuration>
 	        	</execution>

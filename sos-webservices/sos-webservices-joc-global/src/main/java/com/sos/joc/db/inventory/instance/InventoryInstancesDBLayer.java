@@ -4,6 +4,7 @@ import java.net.URI;
 import java.sql.Date;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -116,6 +117,36 @@ public class InventoryInstancesDBLayer {
             Query<DBItemInventoryJSInstance> query = session.createQuery(sql.toString());
             if (!controllerId.isEmpty()) {
                 query.setParameter("controllerId", controllerId);
+            }
+            query.setParameter("securityLevel", level.intValue());
+            return session.getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public List<DBItemInventoryJSInstance> getInventoryInstancesByControllerIds(Collection<String> controllerIds) throws DBInvalidDataException,
+            DBConnectionRefusedException {
+        try {
+            if (controllerIds == null) {
+                controllerIds = Collections.emptySet();
+            }
+            StringBuilder sql = new StringBuilder();
+            sql.append("from ").append(DBLayer.DBITEM_INV_JS_INSTANCES);
+            sql.append(" where securityLevel = :securityLevel");
+            if (!controllerIds.isEmpty()) {
+                sql.append(" and controllerId in (:controllerIds)");
+            }
+            if (!controllerIds.isEmpty()) {
+                sql.append(" order by isPrimary desc, startedAt desc");
+            } else {
+                sql.append(" order by controllerId asc, isPrimary desc, startedAt desc");
+            }
+            Query<DBItemInventoryJSInstance> query = session.createQuery(sql.toString());
+            if (!controllerIds.isEmpty()) {
+                query.setParameterList("controllerIds", controllerIds);
             }
             query.setParameter("securityLevel", level.intValue());
             return session.getResultList(query);

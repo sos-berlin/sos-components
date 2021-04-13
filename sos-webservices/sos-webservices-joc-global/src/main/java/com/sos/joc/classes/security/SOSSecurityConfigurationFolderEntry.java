@@ -1,7 +1,7 @@
 package com.sos.joc.classes.security;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import com.sos.joc.model.common.Folder;
 
@@ -9,11 +9,11 @@ public class SOSSecurityConfigurationFolderEntry {
 
     private String controllerId;
     private String role;
-    private List<String> listOWriteFolders;
+    private Set<String> listOWriteFolders;
 
 
     public SOSSecurityConfigurationFolderEntry(String controllerId, String role) {
-        listOWriteFolders = new ArrayList<>();
+        listOWriteFolders = new LinkedHashSet<>();
         this.role = role;
         this.controllerId = controllerId;
     }

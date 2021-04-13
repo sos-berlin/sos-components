@@ -1,15 +1,15 @@
 package com.sos.joc.classes.security;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 public class SOSSecurityConfigurationRoleEntry {
 
     private String role;
-    private List<String> listOWritePermissions;
+    private Set<String> listOWritePermissions;
 
     public SOSSecurityConfigurationRoleEntry(String role) {
-        listOWritePermissions = new ArrayList<String>();
+        listOWritePermissions = new LinkedHashSet<String>();
         this.role = role;
     }
 

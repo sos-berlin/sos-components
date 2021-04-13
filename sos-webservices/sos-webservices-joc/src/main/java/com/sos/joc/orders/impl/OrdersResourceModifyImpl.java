@@ -335,7 +335,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             if (oIds.size() == 1) { // position and historicOutcome only for one Order!
                 Optional<List<JHistoricOutcome>> historyOutcomes = Optional.empty(); // TODO parameter resp. historicOutcome
                 Optional<JPosition> position = Optional.empty();
-                if (modifyOrders.getPosition() != null) {
+                if (modifyOrders.getPosition() != null && !modifyOrders.getPosition().isEmpty()) {
                     Either<Problem, JPosition> posEither = JPosition.fromList(modifyOrders.getPosition());
                     ProblemHelper.throwProblemIfExist(posEither);
                     position = Optional.of(posEither.get());
