@@ -32,6 +32,11 @@
 
 		<!-- 3rd Party Dependencies -->
 		<dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+        </dependency>
+        <!-- for tests -->
+		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
 			<scope>test</scope>

@@ -81,6 +81,7 @@
 		<bouncycastle.version>1.66</bouncycastle.version>
 		<dom4j.version>1.6.1</dom4j.version>
 		<xml.apis.version>1.4.01</xml.apis.version>
+		<google.findbugs.version>3.0.2</google.findbugs.version>
 
 		<!-- SP: for sos-webservice-server proof-of-concept with jetty -->
 		<jetty.version>9.4.18.v20190429</jetty.version>
@@ -470,6 +471,11 @@
 				<artifactId>vavr</artifactId>
 				<version>${io.vavr.version}</version>
 			</dependency>
+			<dependency>
+            	<groupId>com.google.code.findbugs</groupId>
+            	<artifactId>jsr305</artifactId>
+            	<version>${google.findbugs.version}</version>
+        	</dependency>
 
 
 			<!-- hibernate libraries -->
