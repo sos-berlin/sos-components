@@ -2,11 +2,26 @@
 	"TYPE": "Workflow",
 	"path": "workflow_java",
 	"versionId": "1",
+	"orderRequirements": {
+		"parameters": {
+			"order_param_1": {
+				"type": "String",
+				"default": "order_param_1_value"
+			},
+			"order_param_2": {
+				"type": "String",
+				"default": "order_param_2_value"
+			}
+		}
+	},
 	"instructions": [
 		{
 			"TYPE": "Execute.Named",
 			"jobName": "java_job",
-			"label": "javaJob_label"
+			"label": "javaJob_label",
+			"defaultArguments": {
+				"node_param_1": "node_param_1_value"
+			}
 		}
 	],
 	"jobs": {
@@ -14,14 +29,13 @@
 			"agentId": "agent",
 			"executable": {
 				"TYPE": "InternalExecutable",
-				"className": "com.sos.jitl.jobs.MyTestJob",
+				"className": "com.sos.jitl.jobs.examples.InfoJob",
 				"jobArguments": {
-					"stringArgument": "An Argument for the intantiated class",
-					"numericArgument": 3
+					"job_job_arg_1": "job_job_arg_1_value",
+					"job_job_arg_2": 2
 				},
 				"arguments": {
-					"arg": "$ARG",
-					"numericArg": "7"
+					"my_order_param_1": "$order_param_1"
 				}
 			},
 			"taskLimit": 1

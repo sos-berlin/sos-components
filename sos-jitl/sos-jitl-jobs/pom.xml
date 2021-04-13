@@ -15,7 +15,13 @@
 		<!-- SOS Dependencies -->
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-joc-db</artifactId>
+			<artifactId>sos-commons-exception</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-commons-util</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 
