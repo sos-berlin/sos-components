@@ -24,6 +24,8 @@ public interface IImportResource {
             @FormDataParam("format") String format,
             @FormDataParam("overwrite") boolean overwrite,
             @FormDataParam("targetFolder") String targetFolder,
+            @FormDataParam("prefix") String prefix,
+            @FormDataParam("suffix") String suffix,
             @FormDataParam("timeSpent") String timeSpent,
             @FormDataParam("ticketLink") String ticketLink,
             @FormDataParam("comment") String comment) throws Exception;

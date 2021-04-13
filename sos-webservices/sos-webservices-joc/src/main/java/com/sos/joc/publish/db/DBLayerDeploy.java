@@ -69,7 +69,6 @@ import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.mapper.FilterAttributesMapper;
 import com.sos.joc.publish.mapper.UpDownloadMapper;
-import com.sos.joc.publish.util.ImportConfigurationUtils;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
@@ -332,6 +331,37 @@ public class DBLayerDeploy {
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
+    }
+
+    public List<DBItemInventoryConfiguration> getInventoryConfigurationByTypes(String folder, Collection<Integer> types)
+    		throws SOSHibernateException {
+        if (folder == null) {
+            folder = "/";
+        }
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        if (!"/".equals(folder)) {
+            hql.append(" where (folder=:folder or folder like :likeFolder)");
+        } else {
+        	hql.append(" where folder like :folder");
+        }
+        if (types != null && !types.isEmpty()) {
+            hql.append(" and type in (:types)");
+        }
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        if (!"/".equals(folder)) {
+            query.setParameter("folder", folder);
+            query.setParameter("likeFolder", folder + "/%");
+        } else {
+        	query.setParameter("folder", folder + "%");
+        }
+        if (types != null && !types.isEmpty()) {
+            query.setParameterList("types", types);
+        }
+        List<DBItemInventoryConfiguration> result = getSession().getResultList(query);
+        if (result == null) {
+            return Collections.emptyList();
+        }
+        return result;
     }
 
     public DBItemInventoryConfiguration getInventoryConfigurationByNameAndType(String name, Integer type)
@@ -1026,6 +1056,7 @@ public class DBLayerDeploy {
                     valid = false;
                 }
             }
+            
             if (overwrite) {
                 if (existingConfiguration != null) {
                     existingConfiguration.setModified(Date.from(Instant.now()));
@@ -1052,42 +1083,21 @@ public class DBLayerDeploy {
                     session.save(newConfiguration);
                 }
             } else {
-                if (existingConfiguration == null) {
-                    DBItemInventoryConfiguration newConfiguration = new DBItemInventoryConfiguration();
-                    Date now = Date.from(Instant.now());
-                    newConfiguration.setModified(now);
-                    newConfiguration.setCreated(now);
-                    newConfiguration.setContent(om.writeValueAsString(configuration.getConfiguration()));
-                    newConfiguration.setPath(configuration.getPath());
-                    newConfiguration.setFolder(Paths.get(configuration.getPath()).getParent().toString().replace('\\', '/'));
-                    newConfiguration.setName(Paths.get(newConfiguration.getPath()).getFileName().toString());
-                    newConfiguration.setType(configuration.getObjectType());
-                    newConfiguration.setAuditLogId(auditLogId);
-                    newConfiguration.setDocumentationId(0L);
-                    newConfiguration.setDeployed(false);
-                    newConfiguration.setReleased(false);
-                    newConfiguration.setValid(valid);
-                    session.save(newConfiguration);
-                } else {
-                	// update reference?
-                    DBItemInventoryConfiguration newConfiguration = new DBItemInventoryConfiguration();
-                    Date now = Date.from(Instant.now());
-                    newConfiguration.setModified(now);
-                    newConfiguration.setCreated(now);
-                    newConfiguration.setContent(om.writeValueAsString(configuration.getConfiguration()));
-                    configuration = ImportConfigurationUtils.updateImportNameAndPath(getSession(), existingConfiguration, configuration);
-                    newConfiguration.setPath(configuration.getPath());
-                    newConfiguration.setFolder(Paths.get(configuration.getPath()).getParent().toString().replace('\\', '/'));
-                    newConfiguration.setName(configuration.getName());
-                    newConfiguration.setType(configuration.getObjectType());
-                    newConfiguration.setAuditLogId(auditLogId);
-                    newConfiguration.setDocumentationId(0L);
-                    newConfiguration.setDeployed(false);
-                    newConfiguration.setReleased(false);
-                    newConfiguration.setValid(valid);
-                    session.save(newConfiguration);
-                	
-                }
+                DBItemInventoryConfiguration newConfiguration = new DBItemInventoryConfiguration();
+                Date now = Date.from(Instant.now());
+                newConfiguration.setModified(now);
+                newConfiguration.setCreated(now);
+                newConfiguration.setContent(om.writeValueAsString(configuration.getConfiguration()));
+                newConfiguration.setPath(configuration.getPath());
+                newConfiguration.setFolder(Paths.get(configuration.getPath()).getParent().toString().replace('\\', '/'));
+                newConfiguration.setName(Paths.get(newConfiguration.getPath()).getFileName().toString());
+                newConfiguration.setType(configuration.getObjectType());
+                newConfiguration.setAuditLogId(auditLogId);
+                newConfiguration.setDocumentationId(0L);
+                newConfiguration.setDeployed(false);
+                newConfiguration.setReleased(false);
+                newConfiguration.setValid(valid);
+                session.save(newConfiguration);
             }
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
@@ -1209,15 +1219,6 @@ public class DBLayerDeploy {
         DBItemDepSignatures dbItemSig = getSignature(invConfId);
         String signature = null;
         signature = jsObject.getSignedContent();
-    //        switch (type) {
-    //            case WORKFLOW:
-    //                // Why cast WorkflowPublish?
-    //                signature = ((WorkflowPublish) jsObject).getSignedContent();
-    //                break;
-    //            case JUNCTION:
-    //            default:
-    //                throw new JocNotImplementedException();
-    //        }
         if (signature != null && !signature.isEmpty()) {
             if (dbItemSig != null) {
                 dbItemSig.setAccount(account);
@@ -1758,20 +1759,7 @@ public class DBLayerDeploy {
                 } catch (SOSHibernateException e) {
                     continue;
                 }
-                switch (jsObject.getObjectType()) {
-                case WORKFLOW:
-                    inventoryConfig = getConfigurationByPath(((WorkflowPublish)jsObject).getContent().getPath(), ConfigurationType.WORKFLOW);
-                    break;
-                case LOCK:
-                    inventoryConfig = getConfigurationByPath(((LockPublish)jsObject).getPath(), ConfigurationType.LOCK);
-                    break;
-                case JUNCTION:
-                    inventoryConfig = getConfigurationByPath(((JunctionPublish)jsObject).getContent().getPath(), ConfigurationType.JUNCTION);
-                    break;
-                case JOBCLASS:
-                    inventoryConfig = getConfigurationByPath(((JobClassPublish)jsObject).getContent().getPath(), ConfigurationType.JOBCLASS);
-                    break;
-                }
+                inventoryConfig = getConfigurationByPath(jsObject.getPath(), ConfigurationType.fromValue(jsObject.getObjectType().intValue()));
                 newDepHistoryItem.setControllerInstanceId(controllerInstanceId);
                 newDepHistoryItem.setControllerId(controllerId);
                 newDepHistoryItem.setDeleteDate(null);
@@ -2491,4 +2479,85 @@ public class DBLayerDeploy {
         } 
     }
 
+    public List<DBItemInventoryConfiguration> getUsedWorkflowsByLockId(String lockId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where type=:type ");
+        hql.append(" and content like :lockId");
+        Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
+        query.setParameter("lockId", "%\"" + lockId + "\"%");
+        List<DBItemInventoryConfiguration> results = session.getResultList(query);
+        if (results != null) {  
+        	return results;
+        } else {
+        	return Collections.emptyList();
+        }
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedSchedulesByWorkflowPath(String workflowPath) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+        hql.append("where type=:type ");
+//        hql.append("and ");
+        hql.append(" and content like :workflowPath");
+//        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "content", "$.workflowPath")).append("=:workflowPath");
+
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
+        query.setParameter("workflowPath", "%\"" + workflowPath + "\"%");
+        return getSession().getResultList(query);
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedSchedulesByWorkflowName(String workflowName) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+        hql.append("where type=:type ");
+        hql.append(" and content like :workflowName");
+//        hql.append("and ");
+//        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "content", "$.workflowName")).append("=:workflowName");
+
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
+        query.setParameter("workflowName", "%\"" + workflowName + "\"%");
+        return getSession().getResultList(query);
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedFileOrderSourcesByWorkflowName(String workflowName) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+        hql.append("where type=:type ");
+        hql.append(" and content like :workflowName");
+//        hql.append("and ");
+//        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "content", "$.workflowPath")).append("=:workflowName");
+
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.FILEORDERSOURCE.intValue());
+        query.setParameter("workflowName", "%\"" + workflowName + "\"%");
+        return getSession().getResultList(query);
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedSchedulesByCalendarPath(String calendarPath) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+        hql.append("where type=:type ");
+        hql.append(" and content like :calendarPath");
+//        hql.append("and ");
+//        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "content", "$.calendars");
+//        hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":calendarPath"));
+
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
+        query.setParameter("calendarPath", "%\"" + calendarPath + "\"%");
+        return getSession().getResultList(query);
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedSchedulesByCalendarName(String calendarName) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+        hql.append("where type=:type ");
+        hql.append(" and content like :calendarName");
+//        hql.append("and ");
+//        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "content", "$.calendars");
+//        hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":calendarName"));
+
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
+        query.setParameter("calendarName", "%\"" + calendarName + "\"%");
+        return getSession().getResultList(query);
+    }
 }

@@ -553,8 +553,8 @@ public class InventoryDBLayer extends DBLayer {
         if (result == null || result.isEmpty()) {
             return 0;
         }
-        Predicate<String> predicate = Pattern.compile(".+-" + suffix + "[0-9]*$").asPredicate();
-        Function<String, Integer> mapper = n -> Integer.parseInt(n.replaceFirst(".+-" + suffix + "([0-9]*)$", "0$1"));
+        Predicate<String> predicate = Pattern.compile(".+-" + suffix + "[0-9]*$", Pattern.CASE_INSENSITIVE).asPredicate();
+        Function<String, Integer> mapper = n -> Integer.parseInt(n.replaceFirst(".+-" + suffix.toLowerCase() + "([0-9]*)$", "0$1"));
         SortedSet<Integer> numbers = result.stream().map(String::toLowerCase).distinct().filter(predicate).map(mapper).sorted().collect(Collectors
                 .toCollection(TreeSet::new));
         if (numbers.isEmpty()) {
@@ -593,8 +593,8 @@ public class InventoryDBLayer extends DBLayer {
         if (result == null || result.isEmpty()) {
             return 0;
         }
-        Predicate<String> predicate = Pattern.compile("^" + prefix + "[0-9]*-.+").asPredicate();
-        Function<String, Integer> mapper = n -> Integer.parseInt(n.replaceFirst("^" + prefix + "([0-9]*)-.+", "0$1"));
+        Predicate<String> predicate = Pattern.compile("^" + prefix + "[0-9]*-.+", Pattern.CASE_INSENSITIVE).asPredicate();
+        Function<String, Integer> mapper = n -> Integer.parseInt(n.replaceFirst("^" + prefix.toLowerCase() + "([0-9]*)-.+", "0$1"));
         SortedSet<Integer> numbers = result.stream().map(String::toLowerCase).distinct().filter(predicate).map(mapper).sorted().collect(Collectors
                 .toCollection(TreeSet::new));
         if (numbers.isEmpty()) {

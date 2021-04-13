@@ -20,6 +20,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.DeployAudit;
+import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
@@ -31,7 +32,9 @@ import com.sos.joc.model.joc.JocMetaInfo;
 import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.model.publish.ImportFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
+import com.sos.joc.publish.mapper.UpdateableConfigurationObject;
 import com.sos.joc.publish.resource.IImportResource;
+import com.sos.joc.publish.util.ImportUtils;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
 
@@ -47,6 +50,8 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             String format,
 			boolean overwrite,
 			String targetFolder,
+			String prefix, 
+			String suffix,
 			String timeSpent,
 			String ticketLink,
 			String comment) throws Exception {
@@ -60,6 +65,8 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
         filter.setAuditLog(auditLog);
         filter.setTargetFolder(targetFolder);
         filter.setOverwrite(overwrite);
+        filter.setPrefix(prefix);
+        filter.setSuffix(suffix);
 		return postImportConfiguration(xAccessToken, body, filter, auditLog);
 	}
 
@@ -107,6 +114,53 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                     String.format("%1$d configuration object(s) imported with profile %2$s", configurations.size(), account));
             logAuditMessage(importAudit);
             DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(importAudit);
+            
+        	if (filter.getOverwrite()) {
+            	for (ConfigurationObject configuration : configurations) {
+	                if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
+	                    configuration.setPath(filter.getTargetFolder() + configuration.getPath());
+	                    dbLayer.saveOrUpdateInventoryConfiguration(
+	                		configuration, account, dbItemAuditLog.getId(), filter.getOverwrite(), filter.getTargetFolder(), agentNames);
+	                } else {
+	                    dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, dbItemAuditLog.getId(), filter.getOverwrite(), agentNames);
+	                }
+            	}
+        	} else {
+                if ((filter.getSuffix() != null && !filter.getSuffix().isEmpty()) ||
+                		(filter.getPrefix() != null && !filter.getPrefix().isEmpty())) {
+                	// process prefix/suffix only if overwrite==false AND one of both not empty 
+            		// TargetFolder
+                	for (ConfigurationObject configuration : configurations) {
+                		DBItemInventoryConfiguration existingConfiguration = 
+                				dbLayer.getConfigurationByName(configuration.getName(), configuration.getObjectType());
+                		if (existingConfiguration != null) {
+                        	UpdateableConfigurationObject updateable = 
+                        			ImportUtils.createUpdateableConfiguration(existingConfiguration, configuration, filter.getPrefix(),
+                        					filter.getSuffix(), filter.getTargetFolder(), dbLayer);
+                        	ImportUtils.replaceReferences(updateable, dbLayer);
+                		} else {
+                            if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
+                                configuration.setPath(filter.getTargetFolder() + configuration.getPath());
+                            dbLayer.saveOrUpdateInventoryConfiguration(
+                            		configuration, account, dbItemAuditLog.getId(), filter.getOverwrite(), filter.getTargetFolder(), agentNames);
+                            } else {
+                                dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, dbItemAuditLog.getId(), filter.getOverwrite(), agentNames);
+                            }
+                		}
+                	}
+                } else {
+                	// check if items to import already exist in current configuration and ignore them
+                	// import only if item does not exist yet
+                	for (ConfigurationObject configuration : configurations) {
+                		DBItemInventoryConfiguration existingConfiguration = 
+                				dbLayer.getConfigurationByName(configuration.getName(), configuration.getObjectType());
+                		if (existingConfiguration == null) {
+                			dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, dbItemAuditLog.getId(), filter.getOverwrite(), agentNames);
+                		}
+                	}
+                	
+                }
+        	}
             Set<java.nio.file.Path> folders = new HashSet<java.nio.file.Path>();
             if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
                 configurations.stream().map(item -> {
