@@ -30,6 +30,12 @@
 			<artifactId>js7-executor-for-java_2.13</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-commons-sign</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
 		<!-- 3rd Party Dependencies -->
 		<dependency>
             <groupId>com.google.code.findbugs</groupId>
