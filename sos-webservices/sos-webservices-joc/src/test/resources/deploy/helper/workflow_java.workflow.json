@@ -4,13 +4,13 @@
 	"versionId": "1",
 	"orderRequirements": {
 		"parameters": {
-			"order_param_1": {
+			"order_req_param_1": {
 				"type": "String",
-				"default": "order_param_1_value"
+				"default": "order_req_param_1_value"
 			},
-			"order_param_2": {
+			"order_req_param_2": {
 				"type": "String",
-				"default": "order_param_2_value"
+				"default": "order_req_param_2_value"
 			}
 		}
 	},
@@ -18,9 +18,17 @@
 		{
 			"TYPE": "Execute.Named",
 			"jobName": "java_job",
-			"label": "javaJob_label",
+			"label": "javaJob1_label",
 			"defaultArguments": {
-				"node_param_1": "node_param_1_value"
+				"job_inst_1_param_1": "job_inst_1_param_1_value"
+			}
+		},
+		{
+			"TYPE": "Execute.Named",
+			"jobName": "java_job",
+			"label": "javaJob2_label",
+			"defaultArguments": {
+				"job_inst_1_param_1": "job_inst_2_param_1_value"
 			}
 		}
 	],
@@ -35,7 +43,11 @@
 					"job_job_arg_2": 2
 				},
 				"arguments": {
-					"my_order_param_1": "$order_param_1"
+					"my_order_req_param_1": "$order_req_param_1: String = 'DEFAULT'",
+					"my_info_result": "variable('info_result', default='NO $\\ info_result')",
+					"my_order_req_param_3": "'XXX'++$order_req_param_1",
+					"my_order_req_param_4": "2",
+					"my_order_req_param_5": "$job_inst_1_param_1"
 				}
 			},
 			"taskLimit": 1
