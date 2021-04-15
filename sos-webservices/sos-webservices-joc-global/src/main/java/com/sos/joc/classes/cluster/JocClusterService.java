@@ -21,6 +21,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
@@ -31,6 +32,7 @@ import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
+import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Action;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
@@ -38,6 +40,10 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.configuration.ConfigurationGlobalsChanged;
+import com.sos.joc.event.bean.proxy.ProxyClosed;
+import com.sos.joc.event.bean.proxy.ProxyEvent;
+import com.sos.joc.event.bean.proxy.ProxyRestarted;
+import com.sos.joc.event.bean.proxy.ProxyStarted;
 import com.sos.joc.model.cluster.ClusterRestart;
 import com.sos.joc.model.cluster.common.ClusterServices;
 
@@ -157,6 +163,47 @@ public class JocClusterService {
         return answer;
     }
 
+    /** not occur during JOC start/stop */
+    /** TODO: will be sent for each user - JOC, HISTORY */
+    @Subscribe({ ProxyStarted.class })
+    public void handleControllerAdded(ProxyStarted evt) {
+        if (!checkControllerEvent(evt)) {
+            return;
+        }
+        AJocClusterService.setLogger();
+        LOGGER.info(String.format("[ControllerAdded]%s", evt.getControllerId()));
+        AJocClusterService.clearLogger();
+        updateControllerInfos(evt.getControllerId(), Action.ADDED);
+    }
+
+    /** not occur during JOC start/stop */
+    @Subscribe({ ProxyRestarted.class })
+    public void handleControllerUpdated(ProxyRestarted evt) {
+        if (!checkControllerEvent(evt)) {
+            return;
+        }
+        AJocClusterService.setLogger();
+        LOGGER.info(String.format("[ControllerUpdated]%s", evt.getControllerId()));
+        AJocClusterService.clearLogger();
+        updateControllerInfos(evt.getControllerId(), Action.UPDATED);
+    }
+
+    /** not occur during JOC start/stop */
+    @Subscribe({ ProxyClosed.class })
+    public void handleControllerRemoved(ProxyClosed evt) {
+        if (!checkControllerEvent(evt)) {
+            return;
+        }
+        AJocClusterService.setLogger();
+        LOGGER.info(String.format("[ControllerRemoved]%s", evt.getControllerId()));
+        AJocClusterService.clearLogger();
+        updateControllerInfos(evt.getControllerId(), Action.REMOVED);
+    }
+
+    private boolean checkControllerEvent(ProxyEvent evt) {
+        return evt.getKey().equals(ProxyUser.HISTORY.name());
+    }
+
     @Subscribe({ ConfigurationGlobalsChanged.class })
     public void respondConfigurationChanges(ConfigurationGlobalsChanged evt) {
         if (cluster == null) {
@@ -167,7 +214,6 @@ public class JocClusterService {
         } else {
             handleGlobalsOnNonActiveMember(evt);
         }
-
     }
 
     private void handleGlobalsOnActiveMember(ConfigurationGlobalsChanged evt) {
@@ -244,6 +290,14 @@ public class JocClusterService {
             cluster.close(mode, Globals.configurationGlobals, deleteActiveCurrentMember);
             cluster = null;
         }
+    }
+
+    public void updateControllerInfos(String controllerId, Action action) {
+        if (cluster == null || !cluster.getHandler().isActive()) {
+            return;
+        }
+        cluster.getHandler().updateControllerInfos();
+        cluster.getHandler().updateService(ClusterServices.history.name(), controllerId, action);
     }
 
     public JocClusterAnswer restartService(ClusterRestart r, StartupMode mode) {

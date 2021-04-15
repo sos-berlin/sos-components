@@ -6,6 +6,10 @@ import com.sos.commons.util.SOSString;
 
 public class ControllerConfiguration {
 
+    public enum Action {
+        ADDED, UPDATED, REMOVED
+    }
+
     private Properties config;
     private Controller primary;
     private Controller secondary;

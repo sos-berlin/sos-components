@@ -13,5 +13,6 @@
 		<Logger name="org.hibernate" level="fatal" />
 		<Logger name="com.mchange.v2" level="fatal" />
 		<Logger name="com.sos" level="debug" />
+		<Logger name="js7" level="debug" />
 	</Loggers>
 </Configuration>

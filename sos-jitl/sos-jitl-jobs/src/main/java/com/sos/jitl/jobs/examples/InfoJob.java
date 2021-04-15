@@ -40,32 +40,32 @@ public class InfoJob extends ABlockingInternalJob {
     }
 
     private void usePrintWriter(BlockingInternalJob.Step step, long result) throws Exception {
-        step.out().println("[OUT]----------Workflow-----------------");
-        step.out().println("[OUT]name=" + Job.getWorkflowName(step));
-        step.out().println("[OUT]versionId=" + Job.getWorkflowVersionId(step));
-        step.out().println("[OUT]position=" + Job.getWorkflowPosition(step));
+        Job.info(step, "[OUT]----------Workflow-----------------");
+        Job.info(step, "[OUT]name=" + Job.getWorkflowName(step));
+        Job.info(step, "[OUT]versionId=" + Job.getWorkflowVersionId(step));
+        Job.info(step, "[OUT]position=" + Job.getWorkflowPosition(step));
 
-        step.out().println("[OUT]----------ORDER-----------------");
-        step.out().println("[OUT]id: " + Job.getOrderId(step));
-        step.out().println("[OUT]arguments(scala): " + step.order().arguments());
-        step.out().println("[OUT]arguments(java): " + Job.convert(step.order().arguments()));
+        Job.info(step, "[OUT]----------ORDER-----------------");
+        Job.info(step, "[OUT]id: " + Job.getOrderId(step));
+        Job.info(step, "[OUT]arguments(scala): " + step.order().arguments());
+        Job.info(step, "[OUT]arguments(java): " + Job.convert(step.order().arguments()));
 
-        step.out().println("[OUT]----------JOB-----------------");
-        step.out().println("[OUT]arguments(scala): " + getJobContext().jobArguments());
-        step.out().println("[OUT]arguments(java): " + Job.convert(getJobContext().jobArguments()));
+        Job.info(step, "[OUT]----------JOB-----------------");
+        Job.info(step, "[OUT]arguments(scala): " + getJobContext().jobArguments());
+        Job.info(step, "[OUT]arguments(java): " + Job.convert(getJobContext().jobArguments()));
 
         // step.asScala().scope().evaluator().eval(NamedValue.MODULE$.)
 
-        step.out().println("[OUT]----------NODE-----------------");
-        step.out().println("[OUT]agentId: " + Job.getAgentId(step));
-        step.out().println("[OUT]name=" + Job.getJobName(step));
-        step.out().println("[OUT]arguments(scala): " + step.arguments());
-        step.out().println("[OUT]arguments(java): " + Job.convert(step.arguments()));
+        Job.info(step, "[OUT]----------NODE-----------------");
+        Job.info(step, "[OUT]agentId: " + Job.getAgentId(step));
+        Job.info(step, "[OUT]name=" + Job.getJobName(step));
+        Job.info(step, "[OUT]arguments(scala): " + step.arguments());
+        Job.info(step, "[OUT]arguments(java): " + Job.convert(step.arguments()));
 
-        step.err().println("[ERR]position written to err=" + Job.getWorkflowPosition(step));
+        Job.error(step, "[ERR]position written to err=" + Job.getWorkflowPosition(step));
 
-        step.out().println("[OUT]----------RETURN-----------------");
-        step.out().println("[OUT]returns Succeeded and \"info_result\"=" + result);
+        Job.info(step, "[OUT]----------RETURN-----------------");
+        Job.info(step, "[OUT]returns Succeeded and \"info_result\"=" + result);
     }
 
     @SuppressWarnings("unused")

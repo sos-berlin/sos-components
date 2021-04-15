@@ -25,6 +25,7 @@ import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
+import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Action;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsCleanup;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.model.cluster.common.ClusterServices;
@@ -55,7 +56,7 @@ public class CleanupService extends AJocClusterService {
             lastActivityStart.set(new Date().getTime());
             AJocClusterService.setLogger(IDENTIFIER);
 
-            setConfig((ConfigurationGlobalsCleanup)configuration);
+            setConfig((ConfigurationGlobalsCleanup) configuration);
 
             LOGGER.info(String.format("[%s][%s]start...", getIdentifier(), mode));
             LOGGER.info(String.format("[%s][%s]%s", getIdentifier(), mode, config.toString()));
@@ -128,6 +129,11 @@ public class CleanupService extends AJocClusterService {
     @Override
     public JocServiceAnswer getInfo() {
         return new JocServiceAnswer(Instant.ofEpochMilli(lastActivityStart.get()), Instant.ofEpochMilli(lastActivityEnd.get()));
+    }
+
+    @Override
+    public void update(List<ControllerConfiguration> controllers, String controllerId, Action action) {
+
     }
 
     private void setConfig(ConfigurationGlobalsCleanup configuration) {

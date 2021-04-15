@@ -9,9 +9,13 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
@@ -32,6 +36,7 @@ import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
+import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Action;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.DBItemHistoryTempLog;
@@ -43,7 +48,6 @@ import com.sos.js7.history.controller.configuration.HistoryConfiguration;
 public class HistoryService extends AJocClusterService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryService.class);
-    private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
     private static final String IDENTIFIER = ClusterServices.history.name();
     private static final long AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER = 3;// in seconds
@@ -53,10 +57,10 @@ public class HistoryService extends AJocClusterService {
     private Configuration config;
     private JocClusterHibernateFactory factory;
     private ExecutorService threadPool;
-    private boolean processingStarted;
+    private AtomicBoolean processingStarted = new AtomicBoolean(false);
 
     // private final List<HistoryControllerHandler> activeHandlers = Collections.synchronizedList(new ArrayList<HistoryControllerHandler>());
-    private static List<HistoryControllerHandler> activeHandlers = new ArrayList<>();
+    private static CopyOnWriteArrayList<HistoryControllerHandler> activeHandlers = new CopyOnWriteArrayList<>();
 
     public HistoryService(final JocConfiguration jocConf, ThreadGroup parentThreadGroup) {
         super(jocConf, parentThreadGroup, IDENTIFIER);
@@ -80,14 +84,14 @@ public class HistoryService extends AJocClusterService {
             AJocClusterService.setLogger(IDENTIFIER);
             LOGGER.info(String.format("[%s][%s]start...", getIdentifier(), mode));
 
-            processingStarted = false;
+            processingStarted.set(true);
             Mailer mailer = new Mailer(config.getMailer());
             // config.setControllers(controllers);
 
             checkLogDirectory();
             createFactory(getJocConfig().getHibernateConfiguration(), controllers.size());
             handleTempLogsOnStart();
-            threadPool = Executors.newFixedThreadPool(controllers.size(), new JocClusterThreadFactory(getThreadGroup(), IDENTIFIER));
+            threadPool = Executors.newFixedThreadPool((controllers.size() + 1), new JocClusterThreadFactory(getThreadGroup(), IDENTIFIER));
             AJocClusterService.clearLogger();
 
             for (ControllerConfiguration controllerConfig : controllers) {
@@ -102,7 +106,6 @@ public class HistoryService extends AJocClusterService {
 
                         LOGGER.info(String.format("[%s][run]start ...", controllerHandler.getIdentifier()));
                         controllerHandler.start();
-                        processingStarted = true;
                         LOGGER.info(String.format("[%s][run]end", controllerHandler.getIdentifier()));
 
                         AJocClusterService.clearLogger();
@@ -123,13 +126,16 @@ public class HistoryService extends AJocClusterService {
         LOGGER.info(String.format("[%s][%s]stop...", getIdentifier(), mode));
         AJocClusterService.clearLogger();
 
-        closeEventHandlers(mode);
+        int size = closeEventHandlers(mode);
 
         AJocClusterService.setLogger(IDENTIFIER);
-        handleTempLogsOnEnd();
+        if (size > 0) {
+            handleTempLogsOnEnd();
+        }
         closeFactory();
         JocCluster.shutdownThreadPool(mode, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
 
+        processingStarted.set(false);
         LOGGER.info(String.format("[%s][%s]stopped", getIdentifier(), mode));
 
         return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
@@ -150,6 +156,45 @@ public class HistoryService extends AJocClusterService {
             }
         }
         return new JocServiceAnswer(start == 0 ? null : Instant.ofEpochMilli(start), end == 0 ? null : Instant.ofEpochMilli(end));
+    }
+
+    @Override
+    public void update(List<ControllerConfiguration> controllers, String controllerId, Action action) {
+        Runnable task = new Runnable() {
+
+            @Override
+            public void run() {
+                AJocClusterService.setLogger(IDENTIFIER);
+                LOGGER.info(String.format("[%s][%s]start ...", action, controllerId));
+                Optional<HistoryControllerHandler> oh = activeHandlers.stream().filter(c -> c.getControllerId().equals(controllerId)).findAny();
+                if (oh.isPresent()) {
+                    HistoryControllerHandler h = oh.get();
+                    h.close();
+                    activeHandlers.remove(h);
+                }
+                HistoryControllerHandler h = null;
+                if (!action.equals(Action.REMOVED)) {
+                    Optional<ControllerConfiguration> occ = controllers.stream().filter(c -> c.getCurrent().getId().equals(controllerId)).findAny();
+                    if (occ.isPresent()) {
+                        h = new HistoryControllerHandler(factory, config, occ.get(), new Mailer(config.getMailer()));
+                        activeHandlers.add(h);
+                    } else {
+                        LOGGER.error(String.format("[%s]counfiguration not found", controllerId));
+                    }
+                }
+                int poolSize = getThreadPoolSize();
+                int newPoolSize = activeHandlers.size() + 1;
+                if (newPoolSize != poolSize) {
+                    adjustThreadPoolSize(newPoolSize > 0 ? newPoolSize : 1);
+                }
+                if (h != null) {
+                    h.start();
+                }
+                LOGGER.info(String.format("[%s][%s]end", action, controllerId));
+                AJocClusterService.clearLogger();
+            }
+        };
+        threadPool.submit(task);
     }
 
     private void setConfig() {
@@ -174,7 +219,7 @@ public class HistoryService extends AJocClusterService {
         if (!Files.exists(logDir)) {
             try {
                 Files.createDirectory(logDir);
-                if (isDebugEnabled) {
+                if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug(String.format("[history_log_dir=%s]created", logDir));
                 }
             } catch (Throwable e) {
@@ -249,7 +294,7 @@ public class HistoryService extends AJocClusterService {
     }
 
     private void handleTempLogsOnEnd() {
-        if (factory == null || !processingStarted) {
+        if (factory == null) {
             return;
         }
         SOSHibernateSession session = null;
@@ -344,10 +389,13 @@ public class HistoryService extends AJocClusterService {
         return logDir.resolve(String.valueOf(historyOrderMainParentId));
     }
 
-    private void closeEventHandlers(StartupMode mode) {
+    private int closeEventHandlers(StartupMode mode) {
         String method = "closeEventHandlers";
 
         int size = activeHandlers.size();
+        AJocClusterService.setLogger(IDENTIFIER);
+        LOGGER.info(String.format("[%s]found %s active handlers", method, size));
+        AJocClusterService.clearLogger();
         if (size > 0) {
             // close all event handlers
             ExecutorService threadPool = Executors.newFixedThreadPool(size, new JocClusterThreadFactory(getThreadGroup(), IDENTIFIER + "-stop"));
@@ -369,14 +417,25 @@ public class HistoryService extends AJocClusterService {
             AJocClusterService.setLogger(IDENTIFIER);
             JocCluster.shutdownThreadPool(mode, threadPool, AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER);
             AJocClusterService.clearLogger();
-            activeHandlers = new ArrayList<>();
+            activeHandlers = new CopyOnWriteArrayList<>();
         } else {
-            if (isDebugEnabled) {
+            if (LOGGER.isDebugEnabled()) {
                 AJocClusterService.setLogger(IDENTIFIER);
                 LOGGER.debug(String.format("[%s][skip]already closed", method));
                 AJocClusterService.clearLogger();
             }
         }
+        return size;
+    }
+
+    private void adjustThreadPoolSize(int size) {
+        ThreadPoolExecutor tp = (ThreadPoolExecutor) threadPool;
+        tp.setCorePoolSize(size);
+        tp.setMaximumPoolSize(size);
+    }
+
+    private int getThreadPoolSize() {
+        return ((ThreadPoolExecutor) threadPool).getPoolSize();
     }
 
     private void createFactory(Path configFile, int maxPoolSize) throws Exception {

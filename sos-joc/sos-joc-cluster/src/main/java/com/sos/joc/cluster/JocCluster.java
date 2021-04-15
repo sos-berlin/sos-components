@@ -1,11 +1,11 @@
 package com.sos.joc.cluster;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -63,7 +63,7 @@ public class JocCluster {
 
     private volatile boolean closed;
 
-    private List<ControllerConfiguration> controllers;
+    private CopyOnWriteArrayList<ControllerConfiguration> controllers;
     private AtomicReference<List<String>> notification;
     private static String jocTimeZone = null;
     private String activeMemberId;
@@ -86,6 +86,7 @@ public class JocCluster {
     }
 
     public void doProcessing(StartupMode mode, ConfigurationGlobals configurations) {
+        AJocClusterService.setLogger();
         LOGGER.info(String.format("[inactive][current memberId]%s", currentMemberId));
 
         while (!closed) {
@@ -142,6 +143,8 @@ public class JocCluster {
                 } else {
                     dbLayer.close();
                     dbLayer = null;
+
+                    AJocClusterService.setLogger();
                     LOGGER.info(String.format("[%s]no controllers found. sleep 1m and try again ...", jocConfig.getSecurityLevel().name()));
                     waitFor(60);
                 }
@@ -151,6 +154,7 @@ public class JocCluster {
                     dbLayer.close();
                     dbLayer = null;
                 }
+                AJocClusterService.setLogger();
                 LOGGER.error(String.format("[error occured][sleep 1m and try again ...]%s", e.toString()));
                 waitFor(60);
             } finally {
@@ -173,7 +177,7 @@ public class JocCluster {
             dbLayer.commit();
 
             if (result != null && result.size() > 0) {
-                controllers = new ArrayList<ControllerConfiguration>();
+                controllers = new CopyOnWriteArrayList<ControllerConfiguration>();
                 Map<String, Properties> map = new HashMap<String, Properties>();
                 for (int i = 0; i < result.size(); i++) {
                     DBItemInventoryJSInstance item = result.get(i);
@@ -198,6 +202,7 @@ public class JocCluster {
                     }
                     map.put(item.getControllerId(), p);
                 }
+                AJocClusterService.setLogger();
                 for (Map.Entry<String, Properties> entry : map.entrySet()) {
                     LOGGER.info(String.format("[add][controllerConfiguration]%s", entry));
                     ControllerConfiguration mc = new ControllerConfiguration();

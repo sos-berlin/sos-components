@@ -98,6 +98,7 @@ public class HistoryControllerHandler {
     private final HistoryConfiguration historyConfig;
     private final ControllerConfiguration controllerConfig;
     private final INotifier notifier;
+    private final String controllerId;
 
     private JControllerApi api;
     private EventFluxStopper stopper = new EventFluxStopper();
@@ -120,6 +121,7 @@ public class HistoryControllerHandler {
         this.historyConfig = (HistoryConfiguration) config.getApp();
         this.controllerConfig = controllerConfig;
         this.notifier = notifier == null ? new DefaultNotifier() : notifier;
+        this.controllerId = controllerConfig.getCurrent().getId();
         setIdentifier(controllerConfig.getCurrent().getType());
     }
 
@@ -145,11 +147,11 @@ public class HistoryControllerHandler {
 
     private void start(AtomicLong eventId) throws Exception {
         String method = getMethodName("start");
-        if (isDebugEnabled) {
-            LOGGER.debug(String.format("%seventId=%s", method, eventId));
-        }
+        LOGGER.info(String.format("%seventId=%s", method, eventId));
+
         initReleaseEvents(model.getHistoryConfiguration());
         api = ControllerApi.of(controllerConfig.getCurrent().getId(), ProxyUser.HISTORY);
+        long errorCounter = 0;
         while (!closed.get()) {
             try {
                 if (tornAfterEventId != null) {
@@ -157,13 +159,16 @@ public class HistoryControllerHandler {
                     tornAfterEventId = null;
                 }
                 eventId = process(eventId);
+                errorCounter = 0;
             } catch (Throwable ex) {
                 if (closed.get()) {
                     LOGGER.info(String.format("%s[closed][exception ignored]%s", method, ex.toString()));
                 } else {
-                    if (isTornException(ex)) {
-                        LOGGER.warn(String.format("%s[TORN]%s", method, ex.toString()));
-                        tornAfterEventId = new AtomicLong(getTornEventId());
+                    if (isProblemException(ex)) {
+                        if (isTornException((ProblemException) ex)) {
+                            LOGGER.warn(String.format("%s[TORN]%s", method, ex.toString()));
+                            tornAfterEventId = new AtomicLong(getTornEventId());
+                        }
                     } else if (isReactorException(ex)) {
                         LOGGER.warn(String.format("%s[exception]%s", method, ex.toString()), ex);
                     } else {
@@ -171,7 +176,13 @@ public class HistoryControllerHandler {
                     }
                     // notifier.notifyOnError(method, ex); //TODO avoid flooding
                 }
-                wait(config.getHandler().getWaitIntervalOnError());
+                errorCounter++;
+                int interval = config.getHandler().getWaitIntervalOnError();
+                if (errorCounter > 10) {
+                    interval = interval * 2;
+                }
+                wait(interval);
+
             }
         }
 
@@ -484,34 +495,36 @@ public class HistoryControllerHandler {
     @SuppressWarnings("unused")
     private void fluxDoOnNext(JEventAndControllerState<Event> state) {
         // releaseEvents(model.getStoredEventId());
-        LOGGER.info(String.format("[fluxDoOnNext]%s", SOSString.toString(state)));
+        LOGGER.info(String.format("[%s][fluxDoOnNext]%s", controllerId, SOSString.toString(state)));
     }
 
     private void fluxDoOnCancel() {
-        LOGGER.info("[fluxDoOnCancel]");
+        LOGGER.debug(String.format("[%s][fluxDoOnCancel]", controllerId));
     }
 
     private Throwable fluxDoOnError(Throwable t) {
-        LOGGER.info("[fluxDoOnError]" + t.toString());
+        LOGGER.warn(String.format("[%s][fluxDoOnError]%s", controllerId, t.toString()));
         return t;
     }
 
     private void fluxDoOnComplete() {
-        LOGGER.info("[fluxDoOnComplete]");
+        LOGGER.info(String.format("[%s][fluxDoOnComplete]", controllerId));
     }
 
     private void fluxDoFinally(SignalType type) {
-        LOGGER.info("[fluxDoFinally] - " + type);
+        LOGGER.info(String.format("[%s][fluxDoFinally]SignalType=%s", controllerId, type));
     }
 
-    private boolean isTornException(Throwable t) {
+    private boolean isProblemException(Throwable t) {
+        return t != null && t instanceof ProblemException;
+    }
+
+    private boolean isTornException(ProblemException ex) {
         try {
-            if (t instanceof ProblemException) {
-                Optional<ProblemCode> code = JProblem.apply(((ProblemException) t).problem()).maybeCode();
-                if (code.isPresent()) {
-                    if (TORN_PROBLEM_CODE.equalsIgnoreCase(code.get().string())) {
-                        return true;
-                    }
+            Optional<ProblemCode> code = JProblem.apply(ex.problem()).maybeCode();
+            if (code.isPresent()) {
+                if (TORN_PROBLEM_CODE.equalsIgnoreCase(code.get().string())) {
+                    return true;
                 }
             }
         } catch (Throwable e) {
@@ -602,6 +615,10 @@ public class HistoryControllerHandler {
         return lastActivityEnd;
     }
 
+    public String getControllerId() {
+        return controllerId;
+    }
+
     private void executeGetEventId() {
         String method = "executeGetEventId";
         int count = 0;
@@ -614,7 +631,9 @@ public class HistoryControllerHandler {
             try {
                 model.setStoredEventId(model.getEventId());
                 run = false;
-                LOGGER.info(String.format("[%s][%s]%s", identifier, method, model.getStoredEventId()));
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug(String.format("[%s][%s]%s", identifier, method, model.getStoredEventId()));
+                }
             } catch (Throwable e) {
                 LOGGER.error(String.format("[%s][%s][%s]%s", identifier, method, count, e.toString()), e);
                 notifier.notifyOnError(String.format("[%s][%s]", method, count), e);

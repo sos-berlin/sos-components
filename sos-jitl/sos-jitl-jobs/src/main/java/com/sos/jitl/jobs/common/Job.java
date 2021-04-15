@@ -19,27 +19,43 @@ import js7.executor.forjava.internal.BlockingInternalJob;
 public class Job {
 
     public static JOutcome.Completed success() {
-        return success(null);
+        return JOutcome.succeeded();
     }
 
     public static JOutcome.Completed success(String returnValueKey, Object returnValue) {
-        Map<String, Object> map = null;
         if (returnValueKey != null && returnValue != null) {
-            map = Collections.singletonMap(returnValueKey, returnValue);
+            return JOutcome.succeeded(convert4engine(Collections.singletonMap(returnValueKey, returnValue)));
         }
-        return JOutcome.succeeded(convert4engine(map));
+        return JOutcome.succeeded();
     }
 
     public static JOutcome.Completed success(Map<String, Object> returnValues) {
+        if (returnValues == null || returnValues.size() == 0) {
+            return JOutcome.succeeded();
+        }
         return JOutcome.succeeded(convert4engine(returnValues));
     }
 
     public static JOutcome.Completed failed() {
-        return failed(null);
+        return JOutcome.failed();
     }
 
     public static JOutcome.Completed failed(String msg) {
         return JOutcome.failed(msg);
+    }
+
+    public static JOutcome.Completed failed(String msg, String returnValueKey, Object returnValue) {
+        if (returnValueKey != null && returnValue != null) {
+            return JOutcome.failed(msg, convert4engine(Collections.singletonMap(returnValueKey, returnValue)));
+        }
+        return JOutcome.failed(msg);
+    }
+
+    public static JOutcome.Completed failed(String msg, Map<String, Object> returnValues) {
+        if (returnValues == null || returnValues.size() == 0) {
+            return JOutcome.failed(msg);
+        }
+        return JOutcome.failed(msg, convert4engine(returnValues));
     }
 
     public static Map<String, Object> convert(Map<String, Value> map) {
@@ -47,6 +63,26 @@ public class Job {
             return Collections.emptyMap();
         }
         return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> getValue(e.getValue())));
+    }
+
+    public static void info(BlockingInternalJob.Step step, String msg) {
+        step.out().println(msg);
+    }
+
+    public static void debug(BlockingInternalJob.Step step, String msg) {
+        step.out().println(msg);
+    }
+
+    public static void trace(BlockingInternalJob.Step step, String msg) {
+        step.out().println(msg);
+    }
+
+    public static void warn(BlockingInternalJob.Step step, String msg) {
+        step.out().println(msg);
+    }
+
+    public static void error(BlockingInternalJob.Step step, String msg) {
+        step.err().println(msg);
     }
 
     public static <T> T getFromEither(Either<Problem, T> either) throws JobProblemException {

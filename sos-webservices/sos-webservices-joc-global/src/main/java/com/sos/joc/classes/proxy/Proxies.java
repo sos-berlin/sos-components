@@ -184,6 +184,7 @@ public class Proxies {
                 ProxyCredentials newCredentials = ProxyCredentialsBuilder.withDbInstancesOfCluster(controllerDbInstances).withAccount(account)
                         .build();
                 // History needs only ControllerAPI (not Proxy)
+                // in case of changes - see eg JocClusterService.java->handleControllerAdded
                 if (isNew) {
                     if (account == ProxyUser.JOC) {
                         start(newCredentials);

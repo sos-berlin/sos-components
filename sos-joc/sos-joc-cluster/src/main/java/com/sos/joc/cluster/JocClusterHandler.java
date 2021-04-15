@@ -21,6 +21,7 @@ import com.sos.joc.cluster.bean.answer.JocServiceAnswer.JocServiceAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
+import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Action;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
@@ -172,6 +173,22 @@ public class JocClusterHandler {
                 }
             }
         }
+    }
+
+    public void updateControllerInfos() {
+        cluster.readCurrentDbInfos();
+    }
+
+    public void updateService(String identifier, String controllerId, Action action) {
+        Optional<IJocClusterService> os = services.stream().filter(h -> h.getIdentifier().equals(identifier)).findAny();
+        if (!os.isPresent()) {
+            AJocClusterService.setLogger();
+            LOGGER.error((String.format("handler not found for %s", identifier)));
+            AJocClusterService.clearLogger();
+            return;
+        }
+        IJocClusterService s = os.get();
+        s.update(cluster.getControllers(), controllerId, action);
     }
 
     public JocClusterAnswer restartService(String identifier, StartupMode mode, AConfigurationSection configuration) {
