@@ -40,4 +40,32 @@ public class SOSKeyConstants {
     public static final String PGP_SIGNATURE_FOOTER     = "-----END PGP SIGNATURE-----";
     public static final String X509_SIGNATURE_HEADER    = "-----BEGIN X.509 SIGNATURE-----";
     public static final String X509_SIGNATURE_FOOTER    = "-----END X.509 SIGNATURE-----";
+    public static final String CLIENT_AUTH_OID = "1.3.6.1.5.5.7.3.2";
+    public static final String SERVER_AUTH_OID = "1.3.6.1.5.5.7.3.1";
+    public static final String KEY_USAGE_OID = "2.5.29.15";
+    public static final String BASIC_CONSTRAINTS_OID = "2.5.29.19";
+    public static final String SUBJECT_KEY_IDENTIFIER_OID = "2.5.29.14";
+    public static final String AUTHORITY_KEY_IDENTIFIER_OID = "2.5.29.35";
+    public static final String EXTENDED_KEY_USAGE_OID = "2.5.29.37";
+    public static final String NETSCAPE_CERTIFICATE_TYPE_OID = "2.16.840.1.113730.1.1";
+    public static final String SUBJECT_ALTERNATIVE_NAME_OID = "2.5.29.17";
+    public static final int SAN_KEY_OTHERNAME = 0;
+    public static final String SAN_KEYNAME_OTHERNAME = "otherName";
+    public static final int SAN_KEY_RFC822NAME = 1;
+    public static final String SAN_KEYNAME_RFC822NAME = "rfc822Name";
+    public static final int SAN_KEY_DNSNAME = 2;
+    public static final String SAN_KEYNAME_DNSNAME = "dNSName";
+    public static final int SAN_KEY_X400ADDRESS = 3;
+    public static final String SAN_KEYNAME_X400ADDRESS = "x400Address";
+    public static final int SAN_KEY_DIRECTORYNAME = 4;
+    public static final String SAN_KEYNAME_DIRECTORYNAME = "directoryName";
+    public static final int SAN_KEY_EDIPARTYNAME = 5;
+    public static final String SAN_KEYNAME_EDIPARTYNAME = "ediPartyName";
+    public static final int SAN_KEY_UNIFORMRESOURCEIDENTIFIER = 6;
+    public static final String SAN_KEYNAME_UNIFORMRESOURCEIDENTIFIER = "uniformResourceIdentifier";
+    public static final int SAN_KEY_IPADDRESS = 7;
+    public static final String SAN_KEYNAME_IPADDRESS = "iPAddress";
+    public static final int SAN_KEY_REGISTEREDID = 8;
+    public static final String SAN_KEYNAME_REGISTEREDID = "registeredID";
+
 }
