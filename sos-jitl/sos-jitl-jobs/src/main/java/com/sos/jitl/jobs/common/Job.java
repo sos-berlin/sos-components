@@ -1,10 +1,16 @@
 package com.sos.jitl.jobs.common;
 
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import com.sos.commons.util.SOSParameterSubstitutor;
+import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.exception.JobProblemException;
 
 import io.vavr.control.Either;
@@ -15,6 +21,7 @@ import js7.data.value.StringValue;
 import js7.data.value.Value;
 import js7.data_for_java.order.JOutcome;
 import js7.executor.forjava.internal.BlockingInternalJob;
+import js7.executor.forjava.internal.BlockingInternalJob.JobContext;
 
 public class Job {
 
@@ -22,14 +29,14 @@ public class Job {
         return JOutcome.succeeded();
     }
 
-    public static JOutcome.Completed success(String returnValueKey, Object returnValue) {
+    public static JOutcome.Completed success(final String returnValueKey, final Object returnValue) {
         if (returnValueKey != null && returnValue != null) {
             return JOutcome.succeeded(convert4engine(Collections.singletonMap(returnValueKey, returnValue)));
         }
         return JOutcome.succeeded();
     }
 
-    public static JOutcome.Completed success(Map<String, Object> returnValues) {
+    public static JOutcome.Completed success(final Map<String, Object> returnValues) {
         if (returnValues == null || returnValues.size() == 0) {
             return JOutcome.succeeded();
         }
@@ -40,90 +47,177 @@ public class Job {
         return JOutcome.failed();
     }
 
-    public static JOutcome.Completed failed(String msg) {
+    public static JOutcome.Completed failed(final String msg) {
         return JOutcome.failed(msg);
     }
 
-    public static JOutcome.Completed failed(String msg, String returnValueKey, Object returnValue) {
+    public static JOutcome.Completed failed(final String msg, final String returnValueKey, final Object returnValue) {
         if (returnValueKey != null && returnValue != null) {
             return JOutcome.failed(msg, convert4engine(Collections.singletonMap(returnValueKey, returnValue)));
         }
         return JOutcome.failed(msg);
     }
 
-    public static JOutcome.Completed failed(String msg, Map<String, Object> returnValues) {
+    public static JOutcome.Completed failed(final String msg, final Map<String, Object> returnValues) {
         if (returnValues == null || returnValues.size() == 0) {
             return JOutcome.failed(msg);
         }
         return JOutcome.failed(msg, convert4engine(returnValues));
     }
 
-    public static Map<String, Object> convert(Map<String, Value> map) {
+    @Deprecated
+    public static Map<String, Object> mergeArguments(final JobContext jobContext, final BlockingInternalJob.Step step) {
+        if (step == null) {
+            return convert(jobContext.jobArguments());
+        }
+        Stream<Map<String, Value>> stream = null;
+        if (jobContext == null) {
+            stream = Stream.of(step.order().arguments(), step.arguments());
+        } else {
+            stream = Stream.of(jobContext.jobArguments(), step.order().arguments(), step.arguments());
+        }
+        return convert(stream.flatMap(m -> m.entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+    }
+
+    @Deprecated
+    @SuppressWarnings("unchecked")
+    public static <T> T getArgument(Map<String, Object> args, String name) {
+        T val = (T) args.get(name);
+        if (val != null && val instanceof String) {
+            val = (T) val.toString().trim();
+        }
+        return val;
+    }
+
+    @Deprecated
+    public static <T> T getArgument(Map<String, Object> args, String name, T defaultValue) {
+        T val = getArgument(args, name);
+        if (val == null || val.toString().length() == 0) {
+            val = defaultValue;
+        }
+        return val;
+    }
+
+    public static SOSParameterSubstitutor getSubstitutor(final Map<String, Object> args) {
+        if (args == null) {
+            return null;
+        }
+        SOSParameterSubstitutor s = new SOSParameterSubstitutor();
+        args.entrySet().stream().filter(e -> !SOSString.isEmpty(e.getValue().toString())).forEach(e -> {
+            s.addKey(e.getKey(), e.getValue().toString());
+        });
+        return s;
+    }
+
+    @SuppressWarnings("rawtypes")
+    public static <T> SOSParameterSubstitutor getSubstitutor(final T args) {
+        if (args == null) {
+            return null;
+        }
+        SOSParameterSubstitutor s = new SOSParameterSubstitutor();
+        List<Field> fields = getJobArgumentFields(args);
+        for (Field field : fields) {
+            try {
+                field.setAccessible(true);
+                JobArgument arg = (JobArgument<?>) field.get(args);
+                if (arg != null) {
+                    s.addKey(arg.getName(), arg.getValue().toString());
+                }
+            } catch (Throwable e) {
+            }
+        }
+        return s;
+    }
+
+    public static List<Field> getJobArgumentFields(Object o) {
+        return Arrays.stream(o.getClass().getDeclaredFields()).filter(f -> f.getType().equals(JobArgument.class)).collect(Collectors.toList());
+    }
+
+    public static String replaceVars(SOSParameterSubstitutor substitutor, final String val) {
+        if (substitutor == null || val == null) {
+            return val;
+        }
+        String result = val;
+        if (val.matches("(?s).*\\$\\{[^{]+\\}.*")) {
+            substitutor.setOpenTag("${");
+            substitutor.setCloseTag("}");
+            result = substitutor.replace(val);
+        }
+
+        if (result.contains("%")) {
+            substitutor.setOpenTag("%");
+            substitutor.setCloseTag("%");
+            result = substitutor.replace(result);
+        }
+        return result;
+    }
+
+    public static Map<String, Object> convert(final Map<String, Value> map) {
         if (map == null || map.size() == 0) {
             return Collections.emptyMap();
         }
         return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> getValue(e.getValue())));
     }
 
-    public static void info(BlockingInternalJob.Step step, String msg) {
+    public static void info(final BlockingInternalJob.Step step, final Object msg) {
         step.out().println(msg);
     }
 
-    public static void debug(BlockingInternalJob.Step step, String msg) {
-        step.out().println(msg);
+    public static void debug(final BlockingInternalJob.Step step, final Object msg) {
+        step.out().println(String.format("[DEBUG]%s", msg));
     }
 
-    public static void trace(BlockingInternalJob.Step step, String msg) {
-        step.out().println(msg);
+    public static void trace(final BlockingInternalJob.Step step, final Object msg) {
+        step.out().println(String.format("[TRACE]%s", msg));
     }
 
-    public static void warn(BlockingInternalJob.Step step, String msg) {
-        step.out().println(msg);
+    public static void warn(final BlockingInternalJob.Step step, final Object msg) {
+        step.out().println(String.format("[WARN]%s", msg));
     }
 
-    public static void error(BlockingInternalJob.Step step, String msg) {
-        step.err().println(msg);
+    public static void error(final BlockingInternalJob.Step step, final Object msg) {
+        step.err().println(String.format("[ERROR]%s", msg));
     }
 
-    public static <T> T getFromEither(Either<Problem, T> either) throws JobProblemException {
+    public static <T> T getFromEither(final Either<Problem, T> either) throws JobProblemException {
         if (either.isLeft()) {
             throw new JobProblemException(either.getLeft());
         }
         return either.get();
     }
 
-    public static String getOrderId(BlockingInternalJob.Step step) throws JobProblemException {
+    public static String getOrderId(final BlockingInternalJob.Step step) throws JobProblemException {
         return step.order().id().string();
     }
 
-    public static String getAgentId(BlockingInternalJob.Step step) throws JobProblemException {
+    public static String getAgentId(final BlockingInternalJob.Step step) throws JobProblemException {
         return getFromEither(step.order().attached()).string();
     }
 
-    public static String getJobName(BlockingInternalJob.Step step) throws JobProblemException {
+    public static String getJobName(final BlockingInternalJob.Step step) throws JobProblemException {
         return getFromEither(step.workflow().checkedJobName(step.order().workflowPosition().position())).toString();
     }
 
-    public static String getWorkflowName(BlockingInternalJob.Step step) {
+    public static String getWorkflowName(final BlockingInternalJob.Step step) {
         return step.order().workflowId().path().name();
     }
 
-    public static String getWorkflowVersionId(BlockingInternalJob.Step step) {
+    public static String getWorkflowVersionId(final BlockingInternalJob.Step step) {
         return step.order().workflowId().versionId().toString();
     }
 
-    public static String getWorkflowPosition(BlockingInternalJob.Step step) {
+    public static String getWorkflowPosition(final BlockingInternalJob.Step step) {
         return step.order().workflowPosition().position().toString();
     }
 
-    private static Map<String, Value> convert4engine(Map<String, Object> map) {
+    private static Map<String, Value> convert4engine(final Map<String, Object> map) {
         if (map == null || map.size() == 0) {
             return Collections.emptyMap();
         }
         return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> getValue(e.getValue())));
     }
 
-    private static Value getValue(Object o) {
+    private static Value getValue(final Object o) {
         if (o == null) {
             return null;
         }
@@ -145,7 +239,7 @@ public class Job {
         return null;
     }
 
-    private static Object getValue(Value o) {
+    private static Object getValue(final Value o) {
         if (o == null) {
             return null;
         }

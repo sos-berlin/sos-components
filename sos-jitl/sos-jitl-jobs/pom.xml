@@ -15,13 +15,7 @@
 		<!-- SOS Dependencies -->
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-commons-exception</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-commons-util</artifactId>
+			<artifactId>sos-commons-hibernate</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 
@@ -45,10 +39,10 @@
 
 		<!-- 3rd Party Dependencies -->
 		<dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-        </dependency>
-        <!-- for tests -->
+			<groupId>com.google.code.findbugs</groupId>
+			<artifactId>jsr305</artifactId>
+		</dependency>
+		<!-- for tests -->
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>

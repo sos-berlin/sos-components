@@ -128,7 +128,7 @@ public class JocClusterHandler {
         }
 
         AJocClusterService.setLogger();
-        LOGGER.info(String.format("[%s][%s][active=%s]start ...", mode, type.name(), active));
+        LOGGER.info(String.format("[%s][%s][active=%s]start...", mode, type.name(), active));
 
         ExecutorService es = Executors.newFixedThreadPool(services.size(), new JocClusterThreadFactory(cluster.getConfig().getThreadGroup(),
                 "cluster-" + type.name().toLowerCase()));

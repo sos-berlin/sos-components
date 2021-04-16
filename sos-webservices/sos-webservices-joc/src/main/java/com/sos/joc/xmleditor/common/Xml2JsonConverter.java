@@ -2,6 +2,7 @@ package com.sos.joc.xmleditor.common;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.net.ConnectException;
 import java.nio.file.Files;
@@ -51,10 +52,12 @@ public class Xml2JsonConverter {
     private XPath xpathXml;
     private Node rootSchema;
     private Node rootXml;
-    private String rootElementNameXml;
-    private Map<String, String> xsdDocs;
+    private Map<String, String> xsdElementsDoc;
+    private Map<String, String> xsdAttributesDoc;
     private List<String> elements;
+    private String rootElementNameXml;
     private long uuid;
+    private boolean generateGlobalDocs = false;
 
     public String convert(ObjectType type, Path schema, String xml) throws Exception {
         if (Files.exists(schema) && Files.isReadable(schema)) {
@@ -87,13 +90,15 @@ public class Xml2JsonConverter {
         JsonGenerator gen = null;
         try {
             uuid = -1;
-            xsdDocs = new HashMap<String, String>();
+            xsdElementsDoc = new HashMap<String, String>();
+            xsdAttributesDoc = new HashMap<String, String>();
             elements = new ArrayList<String>();
             elements.add(rootElementNameXml);
 
             baos = new ByteArrayOutputStream();
             gen = new JsonFactory().createGenerator(baos, JsonEncoding.UTF8);
             writeElements(gen, null, rootXml, 0, 0);
+            writeDocs(gen);
             gen.writeNumberField("lastUuid", uuid);
             gen.writeEndObject();
             gen.close();
@@ -256,22 +261,50 @@ public class Xml2JsonConverter {
         }
     }
 
+    private void writeDocs(JsonGenerator gen) throws Exception {
+        if (!generateGlobalDocs) {
+            return;
+        }
+        gen.writeFieldName("docs");
+        gen.writeStartObject();
+        writeDocs(gen, "elements", xsdElementsDoc);
+        writeDocs(gen, "attributes", xsdAttributesDoc);
+        gen.writeEndObject();
+    }
+
+    private void writeDocs(JsonGenerator gen, String range, Map<String, String> map) throws Exception {
+        gen.writeFieldName(range);
+        gen.writeStartObject();
+        map.entrySet().stream().forEach(e -> {
+            try {
+                gen.writeStringField(e.getKey(), e.getValue());
+            } catch (IOException e1) {
+                LOGGER.error(e.toString(), e);
+            }
+        });
+        gen.writeEndObject();
+    }
+
     private void writeDoc(JsonGenerator gen, Node parent, Node attribute) throws Exception {
         Node node = null;
         String doc = null;
         String attrDefaultValue = null;
         String mapKey = null;
         if (attribute == null) {
-            mapKey = new StringBuilder("sosel_").append(parent.getNodeName()).toString();
-            doc = xsdDocs.get(mapKey);
+            mapKey = parent.getNodeName();
+            doc = xsdElementsDoc.get(mapKey);
             if (doc == null) {
                 String xpath = String.format("./xs:element[@name='%s']/xs:annotation/xs:documentation", parent.getNodeName());
                 XPathExpression ex = xpathSchema.compile(xpath);
                 node = (Node) ex.evaluate(rootSchema, XPathConstants.NODE);
+            } else {
+                if (generateGlobalDocs) {
+                    return;
+                }
             }
         } else {
-            mapKey = new StringBuilder("sosattr_").append(parent.getNodeName()).append("_").append(attribute.getNodeName()).toString();
-            doc = xsdDocs.get(mapKey);
+            mapKey = new StringBuilder(parent.getNodeName()).append("_").append(attribute.getNodeName()).toString();
+            doc = xsdAttributesDoc.get(mapKey);
             if (doc == null) {
                 String xpath = String.format("./xs:element[@name='%s']//xs:attribute[@name='%s']/xs:annotation/xs:documentation", parent
                         .getNodeName(), attribute.getNodeName());
@@ -285,6 +318,10 @@ public class Xml2JsonConverter {
                     }
                 } catch (Throwable e) {
 
+                }
+            } else {
+                if (generateGlobalDocs) {
+                    return;
                 }
             }
         }
@@ -307,10 +344,14 @@ public class Xml2JsonConverter {
                     doc += "<br />Default: " + attrDefaultValue;
                 }
             }
-            xsdDocs.put(mapKey, SOSString.isEmpty(doc) ? "" : doc);
+            Map<String, String> map = attribute == null ? xsdElementsDoc : xsdAttributesDoc;
+            map.put(mapKey, SOSString.isEmpty(doc) ? "" : doc);
         }
-        gen.writeFieldName("text");
+        if (generateGlobalDocs) {
+            return;
+        }
 
+        gen.writeFieldName("text");
         gen.writeStartObject();
         gen.writeStringField("parent", parent.getNodeName());
         if (SOSString.isEmpty(doc)) {

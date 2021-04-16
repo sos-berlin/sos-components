@@ -104,7 +104,7 @@ public class HistoryService extends AJocClusterService {
                     public void run() {
                         AJocClusterService.setLogger(IDENTIFIER);
 
-                        LOGGER.info(String.format("[%s][run]start ...", controllerHandler.getIdentifier()));
+                        LOGGER.info(String.format("[%s][run]start...", controllerHandler.getIdentifier()));
                         controllerHandler.start();
                         LOGGER.info(String.format("[%s][run]end", controllerHandler.getIdentifier()));
 
@@ -165,7 +165,7 @@ public class HistoryService extends AJocClusterService {
             @Override
             public void run() {
                 AJocClusterService.setLogger(IDENTIFIER);
-                LOGGER.info(String.format("[%s][%s]start ...", action, controllerId));
+                LOGGER.info(String.format("[%s][%s]start...", controllerId, action));
                 Optional<HistoryControllerHandler> oh = activeHandlers.stream().filter(c -> c.getControllerId().equals(controllerId)).findAny();
                 if (oh.isPresent()) {
                     HistoryControllerHandler h = oh.get();
@@ -190,7 +190,7 @@ public class HistoryService extends AJocClusterService {
                 if (h != null) {
                     h.start();
                 }
-                LOGGER.info(String.format("[%s][%s]end", action, controllerId));
+                LOGGER.info(String.format("[%s][%s]end", controllerId, action));
                 AJocClusterService.clearLogger();
             }
         };

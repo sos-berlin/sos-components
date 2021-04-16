@@ -9,27 +9,27 @@ import com.sos.jitl.jobs.common.Job;
 import js7.data_for_java.order.JOutcome;
 import js7.executor.forjava.internal.BlockingInternalJob;
 
-public class InfoJob extends ABlockingInternalJob {
+public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InfoJob.class);
 
     public InfoJob(JobContext jobContext) {
-        super(jobContext);
+        super(jobContext, InfoJobArguments.class);
         LOGGER.info("[CONSTRUCTOR]jobArguments=" + Job.convert(getJobContext().jobArguments()));
     }
 
     @Override
-    public void onStart() throws Exception {
+    public void onStart(InfoJobArguments args) throws Exception {
         LOGGER.info("start");
     }
 
     @Override
-    public void onStop() {
+    public void onStop(InfoJobArguments args) {
         LOGGER.info("stop");
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(BlockingInternalJob.Step step) throws Exception {
+    public JOutcome.Completed onOrderProcess(BlockingInternalJob.Step step, InfoJobArguments args) throws Exception {
         LOGGER.info("processOrder: " + step.order().id());
 
         long result = 1;

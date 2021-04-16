@@ -728,7 +728,7 @@ public class JocCluster {
     }
 
     public void close(StartupMode mode, ConfigurationGlobals configurations, boolean deleteActiveCurrentMember) {
-        LOGGER.info("[" + mode + "][cluster][close]start ...----------------------------------------------");
+        LOGGER.info("[" + mode + "][cluster][close]start...----------------------------------------------");
         closed = true;
         synchronized (lock) {
             lock.notifyAll();
@@ -740,18 +740,18 @@ public class JocCluster {
         if (deleteActiveCurrentMember) {
             tryDeleteActiveCurrentMember();
         }
-        LOGGER.info("[" + mode + "][cluster][close]closed----------------------------------------------");
+        LOGGER.info("[" + mode + "][cluster][close]end----------------------------------------------");
     }
 
     private JocClusterAnswer closeServices(StartupMode mode, ConfigurationGlobals configurations) {
-        LOGGER.info("[" + mode + "][cluster][closeServices][isActive=" + handler.isActive() + "]start ...");
+        LOGGER.info("[" + mode + "][cluster][closeServices][isActive=" + handler.isActive() + "]start...");
         JocClusterAnswer answer = null;
         if (handler.isActive()) {
             answer = handler.perform(mode, PerformType.STOP, configurations);
         } else {
             answer = getOKAnswer(JocClusterAnswerState.ALREADY_STOPPED);
         }
-        LOGGER.info("[" + mode + "][cluster][closeServices][isActive=" + handler.isActive() + "]closed");
+        LOGGER.info("[" + mode + "][cluster][closeServices][isActive=" + handler.isActive() + "]end");
         return answer;
     }
 

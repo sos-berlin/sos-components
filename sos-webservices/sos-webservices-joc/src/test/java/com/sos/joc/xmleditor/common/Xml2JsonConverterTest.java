@@ -51,14 +51,13 @@ public class Xml2JsonConverterTest {
     @Test
     public void xml2jsonYade() throws Exception {
         ObjectType type = ObjectType.YADE;
-        String xmlFile = "src/test/resources/xmleditor/yade.xml";
-        String xml = new String(Files.readAllBytes(Paths.get(xmlFile)));
-        Path schema = Paths.get("../../jade/jade-engine/src/main/resources/YADE_configuration_v1.12.xsd");
+        Path xml = Paths.get("src/test/resources/xmleditor/yade.xml");
+        Path schema = Paths.get("src/test/resources/xmleditor/YADE_configuration_v1.12.xsd");
         LOGGER.info(schema.toFile().getCanonicalPath());
 
         Xml2JsonConverter c = new Xml2JsonConverter();
         try {
-            String s = c.convert(type, schema, xml);
+            String s = c.convert(type, schema, new String(Files.readAllBytes(xml)));
             LOGGER.info(s);
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
@@ -69,14 +68,13 @@ public class Xml2JsonConverterTest {
     @Test
     public void xml2jsonYade220() throws Exception {
         ObjectType type = ObjectType.YADE;
-        String xmlFile = "src/test/resources/xmleditor/yade_220.xml";
-        String xml = new String(Files.readAllBytes(Paths.get(xmlFile)));
-        Path schema = Paths.get("../../jade/jade-engine/src/main/resources/YADE_configuration_v1.12.xsd");
+        Path xml = Paths.get("src/test/resources/xmleditor/yade_220.xml");
+        Path schema = Paths.get("src/test/resources/xmleditor/YADE_configuration_v1.12.xsd");
         LOGGER.info(schema.toFile().getCanonicalPath());
 
         Xml2JsonConverter c = new Xml2JsonConverter();
         try {
-            String s = c.convert(type, schema, xml);
+            String s = c.convert(type, schema, new String(Files.readAllBytes(xml)));
             LOGGER.info("end: len=" + s.length());
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
@@ -88,41 +86,39 @@ public class Xml2JsonConverterTest {
     @Test
     public void xml2jsonYade660() throws Exception {
         ObjectType type = ObjectType.YADE;
-        String xmlFile = "src/test/resources/xmleditor/yade_660.xml";
-        String xml = new String(Files.readAllBytes(Paths.get(xmlFile)));
-        Path schema = Paths.get("../../jade/jade-engine/src/main/resources/YADE_configuration_v1.12.xsd");
+        Path xml = Paths.get("src/test/resources/xmleditor/yade_660.xml");
+        Path output = Paths.get("src/test/resources/xmleditor/yade_660.json");
+        Path schema = Paths.get("src/test/resources/xmleditor/YADE_configuration_v1.12.xsd");
         LOGGER.info(schema.toFile().getCanonicalPath());
 
         Xml2JsonConverter c = new Xml2JsonConverter();
         try {
-            String s = c.convert(type, schema, xml);
+            String s = c.convert(type, schema, new String(Files.readAllBytes(xml)));
             LOGGER.info("end: len=" + s.length());
+            Files.write(output, s.getBytes());
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
         }
-
     }
 
-   
     @Ignore
     @Test
     public void xml2jsonOthers() throws Exception {
         ObjectType type = ObjectType.OTHER;
-        String xmlFile = "src/test/resources/xmleditor/other.xml";
-        String xml = new String(Files.readAllBytes(Paths.get(xmlFile)));
-        Path schema = Paths.get("../../jade/jade-engine/src/main/resources/YADE_configuration_v1.12.xsd");
+        Path xml = Paths.get("src/test/resources/xmleditor/other.xml");
+        Path schema = Paths.get("src/test/resources/xmleditor/YADE_configuration_v1.12.xsd");
         LOGGER.info(schema.toFile().getCanonicalPath());
 
         Xml2JsonConverter c = new Xml2JsonConverter();
         try {
-            String s = c.convert(type, schema, xml);
+            String s = c.convert(type, schema, new String(Files.readAllBytes(xml)));
             LOGGER.info(s);
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);
         }
 
     }
-    
+
     @Ignore
     @Test
     public void jsonFactoryTest() throws Exception {
@@ -165,7 +161,7 @@ public class Xml2JsonConverterTest {
             gen.writeNumberField("age", 25);
             gen.writeFieldName("address");
             gen.writeStartArray();
-            gen.writeString("Poland");
+            gen.writeString("Berlin");
             gen.writeString("5th avenue");
             gen.writeEndArray();
             gen.writeEndObject();
