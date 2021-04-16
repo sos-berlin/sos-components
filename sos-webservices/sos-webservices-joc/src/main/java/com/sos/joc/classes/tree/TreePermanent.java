@@ -21,7 +21,6 @@ import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -118,19 +117,15 @@ public class TreePermanent {
                 }
                 break;
             case SCHEDULE:
-//                // Schedule???
-//                if (inventoryPermission) {
-//                    types.add(type);
-//                }
-//                if (treeForInventory || treeForInventoryTrash) {
-//                    if (inventoryPermission) {
-//                        types.add(type);
-//                    }
-//                } else {
-//                    if (jocPermissions.getDailyPlan().getView()) {
-//                        types.add(type);
-//                    }
-//                }
+                if (treeForInventory || treeForInventoryTrash) {
+                    if (inventoryPermission) {
+                        types.add(type);
+                    }
+                } else {
+                    if (jocPermissions.getDailyPlan().getView()) {
+                        types.add(type);
+                    }
+                }
                 break;
             case WORKINGDAYSCALENDAR:
             case NONWORKINGDAYSCALENDAR:
@@ -208,12 +203,6 @@ public class TreePermanent {
                 }
             } else {
                 results = dbLayer.getFoldersByFolderAndTypeForInventory("/", inventoryTypes, treeBody.getOnlyValidObjects());
-                if (results != null && results.isEmpty()) {
-                    Tree root = new Tree();
-                    root.setPath(JocInventory.ROOT_FOLDER);
-                    root.setDeleted(false);
-                    results.add(root);
-                }
                 if (withDocus) {
                     docResults = dbDocLayer.getFoldersByFolder("/");
                     if (docResults != null && !docResults.isEmpty()) {

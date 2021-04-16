@@ -534,6 +534,8 @@ public class InventoryDBLayer extends DBLayer {
     public Integer getSuffixNumber(String suffix, String name, Integer type) throws SOSHibernateException {
         if (name == null || name.isEmpty() || type == ConfigurationType.FOLDER.intValue()) {
             name = "%";
+        } else {
+            name = name.toLowerCase();
         }
         StringBuilder hql = new StringBuilder("select name from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where lower(name) like :likename");
@@ -543,7 +545,7 @@ public class InventoryDBLayer extends DBLayer {
             hql.append(" and type = :type");
         }
         Query<String> query = getSession().createQuery(hql.toString());
-        query.setParameter("likename", name + "-" + suffix + "%");
+        query.setParameter("likename", name + "-" + suffix.toLowerCase() + "%");
         if (type == null || type == ConfigurationType.FOLDER.intValue()) {
             query.setParameter("type", ConfigurationType.FOLDER.intValue());
         } else {
@@ -580,9 +582,9 @@ public class InventoryDBLayer extends DBLayer {
         }
         Query<String> query = getSession().createQuery(hql.toString());
         if (name == null || name.isEmpty() || type == ConfigurationType.FOLDER.intValue()) {
-            query.setParameter("likename", prefix + "%");
+            query.setParameter("likename", prefix.toLowerCase() + "%");
         } else {
-            query.setParameter("likename", prefix + "%-" + name);
+            query.setParameter("likename", prefix.toLowerCase() + "%-" + name.toLowerCase());
         }
         if (type == null || type == ConfigurationType.FOLDER.intValue()) {
             query.setParameter("type", ConfigurationType.FOLDER.intValue());
@@ -1062,6 +1064,14 @@ public class InventoryDBLayer extends DBLayer {
                 root.setDeleted(false);
                 tree.add(root);
 
+                return tree;
+            } else if (JocInventory.ROOT_FOLDER.equals(folder)) {
+                Set<Tree> tree = new HashSet<>();
+                Tree root = new Tree();
+                root.setPath(JocInventory.ROOT_FOLDER);
+                root.setDeleted(false);
+                tree.add(root);
+                
                 return tree;
             }
             return new HashSet<>();
