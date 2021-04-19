@@ -2,17 +2,13 @@ package com.sos.jitl.common;
 
 import static org.junit.Assert.assertNotNull;
 
-import java.io.IOException;
 import java.net.URI;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
-import java.security.cert.CertificateExpiredException;
-import java.security.cert.CertificateNotYetValidException;
-import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
-import java.util.Collection;
 import java.util.List;
-import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -20,10 +16,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.httpclient.SOSRestApiClient;
-import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.certificate.CertificateUtils;
 import com.sos.commons.sign.keys.keyStore.KeyStoreType;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
+import com.sos.jitl.jobs.common.Authenticator;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
 public class HttpClientTests {
 
@@ -33,6 +31,7 @@ public class HttpClientTests {
 	private static final String TRUSTORE_PATH = "C:/sp/devel/js7/keys/sp-truststore.p12";
 	private static final String ALIAS_SP = "sp";
 	private static final String ALIAS_ICLOUD = "icloud";
+	private static final String ENV = "JS7_AGENT_CONFIG_DIR";
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(HttpClientTests.class);
 
@@ -103,21 +102,9 @@ public class HttpClientTests {
 			restApiClient.setSSLContext(keyStore, "".toCharArray(), truststore);
 			restApiClient.setBasicAuthorization("cm9vdDpyb290");
 			String response = restApiClient.postRestService(URI.create("https://joc-2-0-secondary.sos:7543/joc/api/authentication/login"), null);
-			LOGGER.info(response);
+			String accessToken = restApiClient.getResponseHeader("X-Access-Token");
+			LOGGER.info(accessToken);
 			assertNotNull(response);
-			String accessToken = null;
-			if (response.contains("X-Access-Token")) {
-				int indexTokenStart = response.indexOf("X-Access-Token");
-				int indexAccesTokenEnd = indexTokenStart + 1;
-			}
-			if (response.contains("accessToken")) {
-				int indexTokenStart = response.indexOf("accessToken");
-				int indexAccessTokenValue = indexTokenStart + "accessToken".length() + 3;
-				String substring = response.substring(indexAccessTokenValue);
-				int indexSubstring = substring.indexOf('"');
-				accessToken = substring.substring(0, indexSubstring);
-				LOGGER.info("accessToken: " + accessToken);
-			}
 			if (accessToken != null) {
 				restApiClient.addHeader("X-Access-Token", accessToken);
 				response = restApiClient.postRestService(URI.create("https://joc-2-0-secondary.sos:7543/joc/api/authentication/logout"), null);
@@ -149,6 +136,36 @@ public class HttpClientTests {
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage(), e);
 		}
+	}
+	
+	@Ignore
+	@Test
+	public void readPrivateConf() {
+		System.setProperty("js7.config-directory", "C:/sp/devel/js7/local/agents/agent/agent_2111/config");
+		Config defaultConfig = ConfigFactory.load();
+		Config config = Authenticator.readPrivateConf("C:/sp/devel/js7/centosdev_third/agent/private.conf");
+		assertNotNull(config);
+		try {
+			LOGGER.info("KeyStore File Path: " + config.getString("js7.web.https.keystore.file"));
+			LOGGER.info("KeyStore Key Passwd: " + config.getString("js7.web.https.keystore.key-password"));
+			LOGGER.info("KeyStore Store Passwd: " + config.getString("js7.web.https.keystore.store-password"));
+			LOGGER.info("Truststores list:");
+			List<? extends Config> truststores = config.getConfigList("js7.web.https.truststores");
+			truststores.stream().forEach(item -> {
+				LOGGER.info(" TrustStore File Path: " + item.getString("file"));
+				LOGGER.info(" TrustStore Store Passwd: " + item.getString("store-password"));
+				LOGGER.info(" ----------------------------------------------");
+			});
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage(), e);
+		}
+	}
+	
+	@Ignore
+	@Test
+	public void readAgentConfigFolder() {
+		LOGGER.info(System.getenv(ENV));
+		LOGGER.info(System.getProperty(ENV));
 	}
 	
 }

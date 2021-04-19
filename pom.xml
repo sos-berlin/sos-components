@@ -82,7 +82,8 @@
 		<dom4j.version>1.6.1</dom4j.version>
 		<xml.apis.version>1.4.01</xml.apis.version>
 		<google.findbugs.version>3.0.2</google.findbugs.version>
-
+		<typesafe.config.version>1.4.1</typesafe.config.version>
+		
 		<!-- SP: for sos-webservice-server proof-of-concept with jetty -->
 		<jetty.version>9.4.18.v20190429</jetty.version>
 
@@ -664,6 +665,11 @@
 				<groupId>xml-apis</groupId>
 				<artifactId>xml-apis</artifactId>
 				<version>${xml.apis.version}</version>
+			</dependency>
+			<dependency>
+			  <groupId>com.typesafe</groupId>
+			  <artifactId>config</artifactId>
+			  <version>${typesafe.config.version}</version>
 			</dependency>
 			<!-- SP: for sos-webservice-server proof-of-concept with jetty -->
 			<dependency>

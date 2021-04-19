@@ -60,9 +60,37 @@ public class SOSString {
      * 
      * @param val
      * @return */
+    @Deprecated
     public static String hash(String val) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(val.getBytes(StandardCharsets.UTF_8));
+            StringBuffer hexString = new StringBuffer();
+
+            for (int i = 0; i < hash.length; i++) {
+                String hex = Integer.toHexString(0xff & hash[i]);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+
+            return hexString.toString();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+    
+    public static String hash256(String val) {
+    	return hash(val, "SHA-256");
+    }
+    public static String hash512(String val) {
+    	return hash(val, "SHA-512");
+    }
+    
+    private static String hash(String val, String hashAlgorithm) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance(hashAlgorithm);
             byte[] hash = digest.digest(val.getBytes(StandardCharsets.UTF_8));
             StringBuffer hexString = new StringBuffer();
 
