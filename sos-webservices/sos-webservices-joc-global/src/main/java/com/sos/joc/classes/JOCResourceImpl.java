@@ -38,7 +38,6 @@ import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
-import com.sos.joc.exceptions.JocAuthenticationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
@@ -337,15 +336,12 @@ public class JOCResourceImpl {
         }
 
         if (Globals.jocWebserviceDataContainer == null || Globals.jocWebserviceDataContainer.getCurrentUsersList() == null) {
-            SOSShiroCurrentUserAnswer sosShiroCurrentUserAnswer = new SOSShiroCurrentUserAnswer();
-            sosShiroCurrentUserAnswer.setMessage("Session is broken and no longer valid. New login neccessary");
-            throw new JocAuthenticationException(sosShiroCurrentUserAnswer);
+            throw new SessionNotExistException("Session is broken and no longer valid. New login is neccessary");
         }
 
         SOSShiroCurrentUserAnswer sosShiroCurrentUserAnswer = Globals.jocWebserviceDataContainer.getCurrentUsersList().getUserByToken(accessToken);
         if (sosShiroCurrentUserAnswer.getSessionTimeout() == 0L) {
-            sosShiroCurrentUserAnswer.setMessage("Session is broken and no longer valid. New login neccessary");
-            throw new JocAuthenticationException(sosShiroCurrentUserAnswer);
+            throw new SessionNotExistException("Session has expired. New login is neccessary");
         }
 
         if (jobschedulerUser == null) {

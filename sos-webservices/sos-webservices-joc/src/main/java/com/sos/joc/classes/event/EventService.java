@@ -288,7 +288,7 @@ public class EventService {
                 addEvent(createControllerEvent(eventId));
                 
             } else if (evt instanceof VersionedItemEvent) {
-                // VersionedItemAdded and VersionedItemChanged etc.
+                // VersionedItemAdded, VersionedItemChanged and VersionedItemDeleted.
                 String eventType = evt.getClass().getSimpleName().replaceFirst("Versioned", "");
                 ItemPath path = ((VersionedItemEvent) evt).path();
                 if (path instanceof WorkflowPath) {

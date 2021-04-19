@@ -123,7 +123,7 @@ public class SOSShiroCurrentUsersList {
                 if (user.getCurrentSubject() != null && user.getCurrentSubject().getSession() != null) {
                     sosShiroCurrentUserAnswer.setSessionTimeout(user.getCurrentSubject().getSession().getTimeout());
                 } else {
-                    sosShiroCurrentUserAnswer.setSessionTimeout(0l);
+                    sosShiroCurrentUserAnswer.setSessionTimeout(0L);
                 }
             } catch (ShiroException e) {
                 sosShiroCurrentUserAnswer.setMessage("token not valid");

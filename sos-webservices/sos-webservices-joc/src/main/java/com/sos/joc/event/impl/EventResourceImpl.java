@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
-import org.apache.shiro.session.InvalidSessionException;
 import org.apache.shiro.session.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,8 +53,21 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             
             try {
                 session = getJobschedulerUser().getSosShiroCurrentUser().getCurrentSubject().getSession(false);
-            } catch (InvalidSessionException e1) {
-                throw new SessionNotExistException(e1);
+                long timeout = session.getTimeout();
+                LOGGER.info("Session timeout: " + timeout);
+                if (timeout < 0L) {
+                    //unlimited session 
+                } else if (timeout == 0L) {
+                    throw new SessionNotExistException("Session has expired");
+                } else if (timeout - 1000L < 0L) {
+                    TimeUnit.SECONDS.sleep(1);
+                }
+            } catch (SessionNotExistException e) {
+                TimeUnit.SECONDS.sleep(1);
+                throw e;
+            } catch (Exception e) {
+                TimeUnit.SECONDS.sleep(1);
+                throw new SessionNotExistException(e);
             }
             
             String controllerId = in.getControllerId();
@@ -72,7 +85,6 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (InvalidSessionException e) {
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }

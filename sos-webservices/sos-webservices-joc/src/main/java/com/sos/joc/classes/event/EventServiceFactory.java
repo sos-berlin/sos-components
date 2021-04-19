@@ -265,7 +265,7 @@ public class EventServiceFactory {
             if (timeout < 0L) {
                 return cleanupPeriodInMillis;
             }
-            long l = timeout-1000;
+            long l = timeout - 1000L;
             if (l < 0L) {
                 return 0L;
             }

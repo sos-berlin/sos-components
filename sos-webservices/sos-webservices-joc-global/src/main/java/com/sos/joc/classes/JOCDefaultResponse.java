@@ -11,7 +11,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.shiro.session.UnknownSessionException;
+import org.apache.shiro.session.InvalidSessionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -211,7 +211,7 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
             ee.addErrorMetaInfo(err);
             return responseStatusJSError(ee, mediaType);
         }
-        if (!UnknownSessionException.class.isInstance(e) && !"".equals(err.printMetaInfo())) {
+        if (!InvalidSessionException.class.isInstance(e) && !"".equals(err.printMetaInfo())) {
             LOGGER.info(err.printMetaInfo());
         }
         return responseStatus420(getErr420(new JocError(getErrorMessage(e))), mediaType);
@@ -391,8 +391,8 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
     }
     
     public static String getErrorMessage(Throwable e) {
-        if (UnknownSessionException.class.isInstance(e)) {
-            //LOGGER.error(e.toString());
+        if (InvalidSessionException.class.isInstance(e) || SessionNotExistException.class.isInstance(e)) {
+            //LOGGER.warn(e.toString());
         } else if (JocAuthenticationException.class.isInstance(e)) {
             LOGGER.error(e.toString());
         } else {
