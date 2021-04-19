@@ -25,6 +25,10 @@ import js7.executor.forjava.internal.BlockingInternalJob.JobContext;
 
 public class Job {
 
+    private static final String ENV_NAME_AGENT_HOME = "JS7_AGENT_HOME";
+    private static final String ENV_NAME_AGENT_CONFIG_DIR = "JS7_AGENT_CONFIG_DIR";
+    private static final String ENV_NAME_AGENT_WORK_DIR = "JS7_AGENT_WORK_DIR";
+
     public static JOutcome.Completed success() {
         return JOutcome.succeeded();
     }
@@ -98,6 +102,18 @@ public class Job {
         return val;
     }
 
+    public static String getAgentHome() {
+        return System.getenv(ENV_NAME_AGENT_HOME);
+    }
+
+    public static String getAgentConfigDir() {
+        return System.getenv(ENV_NAME_AGENT_CONFIG_DIR);
+    }
+
+    public static String getAgentWorkDir() {
+        return System.getenv(ENV_NAME_AGENT_WORK_DIR);
+    }
+
     public static SOSParameterSubstitutor getSubstitutor(final Map<String, Object> args) {
         if (args == null) {
             return null;
@@ -163,20 +179,40 @@ public class Job {
         step.out().println(msg);
     }
 
+    public static void info(final BlockingInternalJob.Step step, final String format, final Object... msg) {
+        info(step, String.format(format, msg));
+    }
+
     public static void debug(final BlockingInternalJob.Step step, final Object msg) {
         step.out().println(String.format("[DEBUG]%s", msg));
+    }
+
+    public static void debug(final BlockingInternalJob.Step step, final String format, final Object... msg) {
+        debug(step, String.format(format, msg));
     }
 
     public static void trace(final BlockingInternalJob.Step step, final Object msg) {
         step.out().println(String.format("[TRACE]%s", msg));
     }
 
+    public static void trace(final BlockingInternalJob.Step step, final String format, final Object... msg) {
+        trace(step, String.format(format, msg));
+    }
+
     public static void warn(final BlockingInternalJob.Step step, final Object msg) {
         step.out().println(String.format("[WARN]%s", msg));
     }
 
+    public static void warn(final BlockingInternalJob.Step step, final String format, final Object... msg) {
+        warn(step, String.format(format, msg));
+    }
+
     public static void error(final BlockingInternalJob.Step step, final Object msg) {
         step.err().println(String.format("[ERROR]%s", msg));
+    }
+
+    public static void error(final BlockingInternalJob.Step step, final String format, final Object... msg) {
+        error(step, String.format(format, msg));
     }
 
     public static <T> T getFromEither(final Either<Problem, T> either) throws JobProblemException {

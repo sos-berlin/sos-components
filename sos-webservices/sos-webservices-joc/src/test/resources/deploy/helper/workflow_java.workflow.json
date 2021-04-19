@@ -17,23 +17,28 @@
 	"instructions": [
 		{
 			"TYPE": "Execute.Named",
-			"jobName": "java_job",
-			"label": "javaJob1_label",
+			"jobName": "info",
+			"label": "info_1_label",
 			"defaultArguments": {
 				"job_inst_1_param_1": "job_inst_1_param_1_value"
 			}
 		},
 		{
 			"TYPE": "Execute.Named",
-			"jobName": "java_job",
-			"label": "javaJob2_label",
+			"jobName": "sql_executor",
+			"label": "sql_executor_1_label"
+		},
+		{
+			"TYPE": "Execute.Named",
+			"jobName": "info",
+			"label": "info_2_label",
 			"defaultArguments": {
 				"job_inst_1_param_1": "job_inst_2_param_1_value"
 			}
 		}
 	],
 	"jobs": {
-		"java_job": {
+		"info": {
 			"agentId": "agent",
 			"executable": {
 				"TYPE": "InternalExecutable",
@@ -43,11 +48,25 @@
 					"job_job_arg_2": 2
 				},
 				"arguments": {
-					"my_order_req_param_1": "$order_req_param_1: String = 'DEFAULT'",
+					"my_order_req_param_1": "$order_req_param_1",
 					"my_info_result": "variable('info_result', default='NO $\\ info_result')",
 					"my_order_req_param_3": "'XXX'++$order_req_param_1",
 					"my_order_req_param_4": "2",
 					"my_order_req_param_5": "$job_inst_1_param_1"
+				}
+			},
+			"taskLimit": 1
+		},
+		"sql_executor": {
+			"agentId": "agent",
+			"executable": {
+				"TYPE": "InternalExecutable",
+				"className": "com.sos.jitl.jobs.db.SQLExecutorJob",
+				"jobArguments": {
+					
+				},
+				"arguments": {
+					"command": "'select 1'"
 				}
 			},
 			"taskLimit": 1

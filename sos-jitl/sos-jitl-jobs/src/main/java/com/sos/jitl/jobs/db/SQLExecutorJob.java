@@ -63,7 +63,7 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
         try {
             Path path = Paths.get(args.getCommand());
             if (Files.exists(path)) {
-                Job.debug(step, String.format("[load from file]%s", path));
+                Job.debug(step, "[load from file]%s", path);
                 statements = executor.getStatements(path);
             }
         } catch (Throwable e) {
@@ -75,7 +75,7 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
         Map<String, Object> map = new HashMap<String, Object>();
         session.beginTransaction();
         for (String statement : statements) {
-            Job.info(step, String.format("executing database statement: %s", statement));
+            Job.info(step, "executing database statement: %s", statement);
             if (SOSHibernateSQLExecutor.isResultListQuery(statement, args.getExecReturnsResultset())) {
                 executeResultSet(step, args, executor, statement, map);
             } else {
@@ -118,14 +118,14 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
                                 }
                             }
                             if (paramKey != null && paramValue != null) {
-                                Job.debug(step, String.format("[order][set param]%s=%s", paramKey, paramValue));
+                                Job.debug(step, "[order][set param]%s=%s", paramKey, paramValue);
                                 map.put(paramKey, paramValue);
                             }
                         } else {
                             if (rowCount == 1) {
                                 for (String key : record.keySet()) {
                                     String value = record.get(key);
-                                    Job.debug(step, String.format("[order][set param]%s=%s", key, value));
+                                    Job.debug(step, "[order][set param]%s=%s", key, value);
                                     map.put(key, value);
                                 }
                             }

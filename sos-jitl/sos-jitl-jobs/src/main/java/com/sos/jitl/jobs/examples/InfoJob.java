@@ -40,6 +40,16 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
     }
 
     private void usePrintWriter(BlockingInternalJob.Step step, long result) throws Exception {
+        Job.info(step, "[OUT]----------ENV-----------------");
+        Job.info(step, "[OUT]    JS7");
+        System.getenv().entrySet().stream().filter(e -> e.getKey().startsWith("JS7")).forEach(e -> {
+            Job.info(step, "        " + e.getKey() + "=" + e.getValue());
+        });
+        Job.info(step, "[OUT]    System");
+        System.getenv().entrySet().stream().filter(e -> !e.getKey().startsWith("JS7")).forEach(e -> {
+            Job.info(step, "        " + e.getKey() + "=" + e.getValue());
+        });
+
         Job.info(step, "[OUT]----------Workflow-----------------");
         Job.info(step, "[OUT]name=" + Job.getWorkflowName(step));
         Job.info(step, "[OUT]versionId=" + Job.getWorkflowVersionId(step));
