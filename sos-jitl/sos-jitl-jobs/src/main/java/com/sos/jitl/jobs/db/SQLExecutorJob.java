@@ -39,7 +39,7 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
             factory.setIdentifier(SQLExecutorJob.class.getSimpleName());
             factory.build();
             session = factory.openStatelessSession();
-
+            
             return Job.success(process(step, session, args));
         } catch (Throwable e) {
             throw e;

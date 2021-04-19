@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSString;
-import com.sos.jitl.jobs.exception.JobProblemException;
+import com.sos.jitl.jobs.exception.SOSJobProblemException;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
@@ -137,6 +137,9 @@ public class Job {
                 field.setAccessible(true);
                 JobArgument arg = (JobArgument<?>) field.get(args);
                 if (arg != null) {
+                    if (arg.getName() == null) {
+                        continue;// internal usage
+                    }
                     s.addKey(arg.getName(), arg.getValue().toString());
                 }
             } catch (Throwable e) {
@@ -166,6 +169,26 @@ public class Job {
             result = substitutor.replace(result);
         }
         return result;
+    }
+
+    public static JobArgument<String> setTimeAsSeconds(final JobArgument<String> arg) {
+        if (arg.getNumberValue() != null) {
+            return arg;
+        }
+        String val = SOSString.isEmpty(arg.getValue()) ? arg.getDefault() : arg.getValue();
+        if (SOSString.isEmpty(val)) {
+            return arg;
+        }
+
+        int[] num = { 1, 60, 3600, 3600 * 24 };
+        String[] arr = val.split(":");
+        int j = 0;
+        int seconds = 0;
+        for (int i = arr.length - 1; i >= 0; i--) {
+            seconds += new Integer(arr[i]) * num[j++];
+        }
+        arg.setNumberValue(seconds);
+        return arg;
     }
 
     public static Map<String, Object> convert(final Map<String, Value> map) {
@@ -215,22 +238,22 @@ public class Job {
         error(step, String.format(format, msg));
     }
 
-    public static <T> T getFromEither(final Either<Problem, T> either) throws JobProblemException {
+    public static <T> T getFromEither(final Either<Problem, T> either) throws SOSJobProblemException {
         if (either.isLeft()) {
-            throw new JobProblemException(either.getLeft());
+            throw new SOSJobProblemException(either.getLeft());
         }
         return either.get();
     }
 
-    public static String getOrderId(final BlockingInternalJob.Step step) throws JobProblemException {
+    public static String getOrderId(final BlockingInternalJob.Step step) throws SOSJobProblemException {
         return step.order().id().string();
     }
 
-    public static String getAgentId(final BlockingInternalJob.Step step) throws JobProblemException {
+    public static String getAgentId(final BlockingInternalJob.Step step) throws SOSJobProblemException {
         return getFromEither(step.order().attached()).string();
     }
 
-    public static String getJobName(final BlockingInternalJob.Step step) throws JobProblemException {
+    public static String getJobName(final BlockingInternalJob.Step step) throws SOSJobProblemException {
         return getFromEither(step.workflow().checkedJobName(step.order().workflowPosition().position())).toString();
     }
 

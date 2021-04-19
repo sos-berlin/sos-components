@@ -4,13 +4,13 @@ import com.sos.commons.exception.SOSException;
 
 import js7.base.problem.Problem;
 
-public class JobProblemException extends SOSException {
+public class SOSJobProblemException extends SOSException {
 
     private static final long serialVersionUID = 1L;
 
     private String message = null;
 
-    public JobProblemException(Problem problem) {
+    public SOSJobProblemException(Problem problem) {
         if (problem == null) {
             message = "unknown problem";
         } else {
