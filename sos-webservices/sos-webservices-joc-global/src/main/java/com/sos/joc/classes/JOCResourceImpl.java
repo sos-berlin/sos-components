@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import org.apache.shiro.SecurityUtils;
@@ -451,6 +452,15 @@ public class JOCResourceImpl {
 
     protected Set<Folder> addPermittedFolder(Collection<Folder> folders) {
         return folderPermissions.getPermittedFolders(folders);
+    }
+    
+    protected static boolean folderIsPermitted(String folder, Set<Folder> listOfFolders) {
+        if (listOfFolders == null || listOfFolders.isEmpty()) {
+            return true;
+        }
+        Predicate<Folder> filter = f -> f.getFolder().equals(folder) || (f.getRecursive() && ("/".equals(f.getFolder()) || folder.startsWith(f
+                .getFolder() + "/")));
+        return listOfFolders.stream().parallel().anyMatch(filter);
     }
 
     public String getAccount() {

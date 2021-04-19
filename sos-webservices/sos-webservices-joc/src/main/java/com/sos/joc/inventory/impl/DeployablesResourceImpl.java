@@ -110,15 +110,6 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
         }
     }
     
-    private static boolean folderIsPermitted(String folder, Set<Folder> listOfFolders) {
-        if (listOfFolders == null || listOfFolders.isEmpty()) {
-            return true;
-        }
-        Predicate<Folder> filter = f -> f.getFolder().equals(folder) || (f.getRecursive() && ("/".equals(f.getFolder()) || folder.startsWith(f
-                .getFolder() + "/")));
-        return listOfFolders.stream().parallel().anyMatch(filter);
-    }
-    
     private Set<ResponseDeployableTreeItem> getResponseStreamOfDeletedItem(List<DBItemInventoryConfiguration> deletedConfs,
             List<DBItemInventoryConfiguration> folders, Set<Folder> permittedFolders) {
         if (deletedConfs != null) {

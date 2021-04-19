@@ -211,10 +211,4 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
 //  }
 //      return folderIsPermitted(Paths.get(order.workflowId().path().string()).getParent().toString().replace('\\', '/'), listOfFolders);
     }
-
-    private static boolean folderIsPermitted(String folder, Set<Folder> listOfFolders) {
-        Predicate<Folder> filter = f -> f.getFolder().equals(folder) || (f.getRecursive() && ("/".equals(f.getFolder()) || folder.startsWith(f
-                .getFolder() + "/")));
-        return listOfFolders.stream().parallel().anyMatch(filter);
-    }
 }

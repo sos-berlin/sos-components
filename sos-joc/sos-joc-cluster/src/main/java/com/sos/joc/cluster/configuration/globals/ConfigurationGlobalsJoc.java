@@ -16,7 +16,7 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     }
     
     private static final List<String> AUDIT_LOG_COMMENTS = Arrays.asList("System maintenance", "Repeat execution", "Business requirement",
-            "Restart failed execution", "Re-instantiate stopped object", "Temporary stop", "Change of JobScheduler object",
+            "Restart failed execution", "Re-instantiate stopped object", "Temporary stop", "Change of Controller object",
             "Rerun with parameter changes", "Change of external dependency", "Application deployment and upgrade");
 
     private ConfigurationEntry forceCommentsForAuditLog = new ConfigurationEntry("force_comments_for_audit_log", "false",

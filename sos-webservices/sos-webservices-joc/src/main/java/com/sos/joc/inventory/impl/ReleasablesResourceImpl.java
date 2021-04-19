@@ -120,15 +120,6 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
         }
     }
     
-    private static boolean folderIsPermitted(String folder, Set<Folder> listOfFolders) {
-        if (listOfFolders == null || listOfFolders.isEmpty()) {
-            return true;
-        }
-        Predicate<Folder> filter = f -> f.getFolder().equals(folder) || (f.getRecursive() && ("/".equals(f.getFolder()) || folder.startsWith(f
-                .getFolder() + "/")));
-        return listOfFolders.stream().parallel().anyMatch(filter);
-    }
-    
     private Set<ResponseReleasableTreeItem> getResponseStreamOfDeletedItem(List<DBItemInventoryConfiguration> deletedConfs,
             List<DBItemInventoryConfiguration> folders, Set<Folder> permittedFolders) {
         if (deletedConfs != null) {

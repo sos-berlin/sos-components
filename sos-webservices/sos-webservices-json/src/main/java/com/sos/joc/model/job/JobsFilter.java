@@ -27,8 +27,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "jobs",
     "excludeJobs",
     "orders",
-    "compact",
-    "compactView",
     "regex",
     "dateFrom",
     "dateTo",
@@ -46,7 +44,6 @@ public class JobsFilter {
      * controllerId
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -58,24 +55,13 @@ public class JobsFilter {
     @JsonProperty("orders")
     private List<OrderPath> orders = new ArrayList<OrderPath>();
     /**
-     * compact parameter
-     * <p>
-     * controls if the object's data is compact or detailed
-     * 
-     */
-    @JsonProperty("compact")
-    @JsonPropertyDescription("controls if the object's data is compact or detailed")
-    private Boolean compact = false;
-    @JsonProperty("compactView")
-    private Boolean compactView = false;
-    /**
      * filter with regex
      * <p>
-     * regular expression to filter JobScheduler objects by matching the path
+     * regular expression to filter Controller objects by matching the path
      * 
      */
     @JsonProperty("regex")
-    @JsonPropertyDescription("regular expression to filter JobScheduler objects by matching the path")
+    @JsonPropertyDescription("regular expression to filter Controller objects by matching the path")
     private String regex;
     /**
      * string for dateFrom and dateTo as search filter
@@ -130,7 +116,6 @@ public class JobsFilter {
      * controllerId
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -142,7 +127,6 @@ public class JobsFilter {
      * controllerId
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -181,41 +165,9 @@ public class JobsFilter {
     }
 
     /**
-     * compact parameter
-     * <p>
-     * controls if the object's data is compact or detailed
-     * 
-     */
-    @JsonProperty("compact")
-    public Boolean getCompact() {
-        return compact;
-    }
-
-    /**
-     * compact parameter
-     * <p>
-     * controls if the object's data is compact or detailed
-     * 
-     */
-    @JsonProperty("compact")
-    public void setCompact(Boolean compact) {
-        this.compact = compact;
-    }
-
-    @JsonProperty("compactView")
-    public Boolean getCompactView() {
-        return compactView;
-    }
-
-    @JsonProperty("compactView")
-    public void setCompactView(Boolean compactView) {
-        this.compactView = compactView;
-    }
-
-    /**
      * filter with regex
      * <p>
-     * regular expression to filter JobScheduler objects by matching the path
+     * regular expression to filter Controller objects by matching the path
      * 
      */
     @JsonProperty("regex")
@@ -226,7 +178,7 @@ public class JobsFilter {
     /**
      * filter with regex
      * <p>
-     * regular expression to filter JobScheduler objects by matching the path
+     * regular expression to filter Controller objects by matching the path
      * 
      */
     @JsonProperty("regex")
@@ -378,12 +330,12 @@ public class JobsFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("jobs", jobs).append("excludeJobs", excludeJobs).append("orders", orders).append("compact", compact).append("compactView", compactView).append("regex", regex).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("folders", folders).append("limit", limit).append("historyStates", historyStates).append("criticalities", criticalities).append("taskIds", taskIds).append("historyIds", historyIds).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("jobs", jobs).append("excludeJobs", excludeJobs).append("orders", orders).append("regex", regex).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("folders", folders).append("limit", limit).append("historyStates", historyStates).append("criticalities", criticalities).append("taskIds", taskIds).append("historyIds", historyIds).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folders).append(controllerId).append(compact).append(jobs).append(historyStates).append(timeZone).append(criticalities).append(dateFrom).append(taskIds).append(historyIds).append(compactView).append(regex).append(dateTo).append(limit).append(orders).append(excludeJobs).toHashCode();
+        return new HashCodeBuilder().append(folders).append(controllerId).append(jobs).append(historyStates).append(timeZone).append(criticalities).append(dateFrom).append(taskIds).append(historyIds).append(regex).append(dateTo).append(limit).append(orders).append(excludeJobs).toHashCode();
     }
 
     @Override
@@ -395,7 +347,7 @@ public class JobsFilter {
             return false;
         }
         JobsFilter rhs = ((JobsFilter) other);
-        return new EqualsBuilder().append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(jobs, rhs.jobs).append(historyStates, rhs.historyStates).append(timeZone, rhs.timeZone).append(criticalities, rhs.criticalities).append(dateFrom, rhs.dateFrom).append(taskIds, rhs.taskIds).append(historyIds, rhs.historyIds).append(compactView, rhs.compactView).append(regex, rhs.regex).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(orders, rhs.orders).append(excludeJobs, rhs.excludeJobs).isEquals();
+        return new EqualsBuilder().append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(jobs, rhs.jobs).append(historyStates, rhs.historyStates).append(timeZone, rhs.timeZone).append(criticalities, rhs.criticalities).append(dateFrom, rhs.dateFrom).append(taskIds, rhs.taskIds).append(historyIds, rhs.historyIds).append(regex, rhs.regex).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(orders, rhs.orders).append(excludeJobs, rhs.excludeJobs).isEquals();
     }
 
 }
