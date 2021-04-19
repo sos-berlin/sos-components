@@ -10,7 +10,7 @@ public class GlobalsTest {
 
     protected static String getAccessToken() throws Exception {
         sosServicePermissionShiro = new SOSServicePermissionShiro();
-        sosShiroCurrentUserAnswer = (SOSShiroCurrentUserAnswer) sosServicePermissionShiro.login(null, "", USER, PASSWORD).getEntity();
+        sosShiroCurrentUserAnswer = (SOSShiroCurrentUserAnswer) sosServicePermissionShiro.login(null, "","", USER, PASSWORD).getEntity();
         return sosShiroCurrentUserAnswer.getAccessToken();
     }
 

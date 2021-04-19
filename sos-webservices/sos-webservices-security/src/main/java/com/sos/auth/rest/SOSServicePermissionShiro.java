@@ -218,9 +218,9 @@ public class SOSServicePermissionShiro {
             @HeaderParam("X-CLIENT-ID") String loginClientId, @QueryParam("user") String user, @QueryParam("pwd") String pwd)  {
         MDC.put("context", ThreadCtx);
         Globals.loginClientId = loginClientId;
+        String clientCertCN = null;
         try {
             if (request != null) {
-                String clientCertCN = null;
                 try {
                     ClientCertificateHandler clientCertHandler = new ClientCertificateHandler(request);
                     clientCertCN = clientCertHandler.getClientCN();
@@ -233,7 +233,7 @@ public class SOSServicePermissionShiro {
                     LOGGER.debug("No Client certificate read from HttpServletRequest.");
                 } 
             }
-            return login(request, basicAuthorization, user, pwd);
+            return login(request, basicAuthorization, clientCertCN, user, pwd);
         } catch (JocAuthenticationException e) {
             return JOCDefaultResponse.responseStatus401(e.getSosShiroCurrentUserAnswer());
         } catch (UnsupportedEncodingException e) {
@@ -567,7 +567,7 @@ public class SOSServicePermissionShiro {
 
     }
 
-    private SOSShiroCurrentUser getUserPwdFromHeaderOrQuery(String basicAuthorization, String user, String pwd) throws UnsupportedEncodingException,
+    private SOSShiroCurrentUser getUserPwdFromHeaderOrQuery(String basicAuthorization, String clientCertCN, String user, String pwd) throws UnsupportedEncodingException,
             JocException {
         String authorization = EMPTY_STRING;
 
@@ -591,7 +591,10 @@ public class SOSServicePermissionShiro {
             user = authorization.substring(0, idx);
             pwd = authorization.substring(idx + 1);
         }
-
+        
+        if (user.isEmpty() && clientCertCN != null){
+            user = clientCertCN;
+        }
         return new SOSShiroCurrentUser(user, pwd, authorization);
     }
 
@@ -620,7 +623,7 @@ public class SOSServicePermissionShiro {
 
     }
 
-    protected JOCDefaultResponse login(HttpServletRequest request, String basicAuthorization, String user, String pwd) throws Exception {
+    protected JOCDefaultResponse login(HttpServletRequest request, String basicAuthorization, String clientCertCN, String user, String pwd) throws Exception {
         Globals.setServletBaseUri(uriInfo);
 
         if (Globals.sosCockpitProperties == null) {
@@ -631,6 +634,12 @@ public class SOSServicePermissionShiro {
         SOSHibernateSession sosHibernateSession = null;
 
         if (basicAuthorization == null || basicAuthorization.isEmpty()) {
+            if (user == null){
+                user = clientCertCN;
+            }
+            if (pwd==null) {
+                pwd = "";
+            }
             String s = user + ":" + pwd;
             byte[] authEncBytes = org.apache.commons.codec.binary.Base64.encodeBase64(s.getBytes());
             String authStringEnc = new String(authEncBytes);
@@ -645,7 +654,7 @@ public class SOSServicePermissionShiro {
             SOSShiroIniShare sosShiroIniShare = new SOSShiroIniShare(sosHibernateSession);
             sosShiroIniShare.provideIniFile();
 
-            currentUser = getUserPwdFromHeaderOrQuery(basicAuthorization, user, pwd);
+            currentUser = getUserPwdFromHeaderOrQuery(basicAuthorization, clientCertCN, user, pwd);
 
             if (currentUser == null || currentUser.getAuthorization() == null) {
                 return JOCDefaultResponse.responseStatusJSError(USER_IS_NULL + " " + AUTHORIZATION_HEADER_WITH_BASIC_BASED64PART_EXPECTED);

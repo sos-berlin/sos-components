@@ -44,7 +44,7 @@ public class SOSX509AuthorizingRealm extends AuthorizingRealm {
         return authzInfo;
     }
 
-    //Only for testing
+    // Only for testing
     protected AuthenticationInfo doGetAuthenticationInfo2(AuthenticationToken authcToken) throws AuthenticationException {
         UsernamePasswordToken myAuthToken = (UsernamePasswordToken) authcToken;
         return new SimpleAuthenticationInfo(myAuthToken.getUsername(), myAuthToken.getPassword(), getRealmIdentifier());
@@ -63,9 +63,23 @@ public class SOSX509AuthorizingRealm extends AuthorizingRealm {
                 ClientCertificateHandler clientCertHandler = new ClientCertificateHandler(request);
                 clientCertCN = clientCertHandler.getClientCN();
                 Date now = new Date();
-                LOGGER.debug("Now:" + now.getTime());
-                LOGGER.debug("NotAfter:" + clientCertHandler.getClientCertificate().getNotAfter().getTime());
-                LOGGER.debug("NotBefore:" +clientCertHandler.getClientCertificate().getNotBefore().getTime());
+                if (clientCertHandler.getClientCertificate() == null) {
+                    LOGGER.debug("Certificate is null");
+                } else {
+                    if (clientCertHandler.getClientCertificate().getNotAfter() == null) {
+                        LOGGER.warn("Certificate not_after is null");
+                    }
+                    if (clientCertHandler.getClientCertificate().getNotBefore() == null) {
+                        LOGGER.warn("Certificate not_before is null");
+                    }
+                    LOGGER.debug("Now:" + now.getTime());
+                    if ((clientCertHandler.getClientCertificate() != null) && (clientCertHandler.getClientCertificate().getNotAfter() != null)) {
+                        LOGGER.debug("NotAfter:" + clientCertHandler.getClientCertificate().getNotAfter().getTime());
+                    }
+                    if ((clientCertHandler.getClientCertificate() != null) && (clientCertHandler.getClientCertificate().getNotBefore() != null)) {
+                        LOGGER.debug("NotBefore:" + clientCertHandler.getClientCertificate().getNotBefore().getTime());
+                    }
+                }
 
                 if (clientCertCN != null) {
                     LOGGER.info("Login with certificate");
